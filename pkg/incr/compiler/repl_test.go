@@ -85,3 +85,11 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(`a:=10; a`))), cv.ShouldMatchModuloWhiteSpace, "a=10; print(a);")
 	})
 }
+
+func Test005BacktickStringsToLua(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("In order for Lua to parse Go's literal backtick strings containing ]=] correctly, Go's backtick strings `like ]=] this one` need to be translated from Go into Lua as: [=[\\nlike ]=] .. ']=]' .. [=[\\n this one]=]", t, func() {
+		cv.So(string(inc.Tr([]byte("s:=`like ]=] this one`"))), cv.ShouldEqual, "s = [=[\nlike ]=] .. ']=]' .. [=[\n this one]=];")
+	})
+}
