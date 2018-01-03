@@ -226,9 +226,10 @@ type Info struct {
 }
 
 type NewStuff struct {
-	Obj   Object
-	Scope *Scope
-	Node  ast.Node
+	Obj    Object
+	Scope  *Scope
+	Node   ast.Node
+	IsExpr bool
 }
 
 // TypeOf returns the type of expression e, or nil if not found.

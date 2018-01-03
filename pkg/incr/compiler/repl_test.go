@@ -8,7 +8,7 @@ import (
 	"github.com/glycerine/luajit"
 )
 
-func Test001JavascriptTranslation(t *testing.T) {
+func Test001LuaTranslation(t *testing.T) {
 	inc := NewIncrState()
 
 	cv.Convey("assignment", t, func() {
@@ -82,6 +82,6 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 	inc := NewIncrState()
 
 	cv.Convey("expressions alone at top level", t, func() {
-		cv.So(string(inc.Tr([]byte(`a:=10; a`))), cv.ShouldMatchModuloWhiteSpace, "a=10; a;")
+		cv.So(string(inc.Tr([]byte(`a:=10; a`))), cv.ShouldMatchModuloWhiteSpace, "a=10; print(a);")
 	})
 }

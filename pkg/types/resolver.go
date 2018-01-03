@@ -455,7 +455,7 @@ func (check *Checker) collectObjects() {
 					msg = "is not an expression"
 					check.errorf(x.pos(), "%s %s", &x, msg)
 				}
-				check.NewCode = append(check.NewCode, &NewStuff{Node: d})
+				check.NewCode = append(check.NewCode, &NewStuff{Node: d, IsExpr: true})
 
 			default:
 				check.invalidAST(d.Pos(), "unknown ast.Node node %T", d)

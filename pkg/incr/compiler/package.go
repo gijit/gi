@@ -586,10 +586,21 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 				c.translateStmt(s, nil)
 				//pp("in codegen, %T/val='%#v'", s, s)
 			default:
-				//pp("in codegen, unknown type %T", s)
+				pp("in codegen, unknown type %T", s)
 				continue
 			}
-			newCodeText = append(newCodeText, c.output)
+			if newStuff.IsExpr {
+				newCodeText = append(newCodeText, []byte("print("))
+				n := len(c.output)
+				if bytes.HasSuffix(c.output, []byte(";\n")) {
+					newCodeText = append(newCodeText, c.output[:n-2])
+				} else {
+					newCodeText = append(newCodeText, c.output)
+				}
+				newCodeText = append(newCodeText, []byte(");"))
+			} else {
+				newCodeText = append(newCodeText, c.output)
+			}
 			//pp("place4, appending to newCodeText: c.output='%s'", string(c.output))
 		}
 	}
