@@ -26,6 +26,13 @@ func Test001JavascriptTranslation(t *testing.T) {
 		cv.So(string(inc.Tr([]byte("sum2 := adder(a,a)"))), cv.ShouldMatchModuloWhiteSpace,
 			`sum2 = adder(a, a);`)
 		pp("GOOD: past 3rd")
+
+		cv.So(string(inc.Tr([]byte("func multiplier(a, b int) int { return a * b};  prod1 := multiplier(5,5)"))), cv.ShouldMatchModuloWhiteSpace,
+			`multiplier = function(a, b) 
+				         return (a * b);
+                     end;
+			         prod1 = multiplier(5,5);`)
+
 	})
 }
 
