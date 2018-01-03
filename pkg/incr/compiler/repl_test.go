@@ -16,10 +16,10 @@ func Test001JavascriptTranslation(t *testing.T) {
 		pp("GOOD: past 1st")
 
 		cv.So(string(inc.Tr([]byte("func adder(a, b int) int { return a + b};  sum1 := adder(5,5)"))), cv.ShouldMatchModuloWhiteSpace,
-			`adder = function(a, b) {
-				         var a, b;
-				         return a + b >> 0;
-			         }; sum1 = adder(5,5);`)
+			`adder = function(a, b) 
+				         return a + b;
+                     end;
+			         sum1 = adder(5,5);`)
 
 		pp("GOOD: past 2nd")
 
