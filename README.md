@@ -44,6 +44,26 @@ and luajit by multiplying in 6 msec, but
 is too immature and too large to be
 a viable embedded target.
 
+# installation
+
+~~~
+$ go get -t -u -v github.com/go-interpreter/gi/...
+$ cd $GOPATH/src/github.com/go-interpreter/gi/cmd/gi
+$
+$    # first time only, to install the latest luajit.
+$    # it will sudo to install luajit symlink in /usr/local/bin/luajit,
+$    # so you may need to provide the root password if you
+$    # want that installation, or ctrl-c out if you don't.
+$    make onetime
+$
+$ make install
+$
+$ gi  # start me up
+
+~~~
+
+# origin
+
 Author: Jason E. Aten, Ph.D.
 
 License: 3-clause BSD.
