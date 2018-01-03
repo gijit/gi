@@ -59,7 +59,7 @@ $
 $ make install
 $
 $ gi  # start me up, try typing this simple example:
-$ 
+
 gi> a := 10
 10
 gi> b := 12
