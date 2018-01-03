@@ -51,7 +51,7 @@ $ go get -t -u -v github.com/go-interpreter/gi/...
 $ cd $GOPATH/src/github.com/go-interpreter/gi/cmd/gi
 $
 $    # first time only, to install the latest luajit.
-$    # it will sudo to install luajit symlink in /usr/local/bin/luajit,
+$    # it will sudo to install a luajit symlink in /usr/local/bin/luajit,
 $    # so you may need to provide the root password if you
 $    # want that installation, or ctrl-c out if you don't.
 $    make onetime
