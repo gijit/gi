@@ -21,7 +21,7 @@ func LuajitMain() {
 	//	DumpLuaStack(L)
 
 	inc := compiler.NewIncrState()
-
+	_ = inc
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
@@ -35,13 +35,17 @@ func LuajitMain() {
 		if isPrefix {
 			panic("line too long")
 		}
+		/*
+			translation := inc.Tr([]byte(src))
+			fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
 
-		translation := inc.Tr([]byte(src))
-		fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
-
-		//v, err := vm.Eval(string(translation))
-		//panicOn(err)
-		//fmt.Printf("v back = '%#v'\n", v)
+			err = vm.Loadstring(string(translation))
+		*/
+		err = vm.Loadstring(string(src))
+		panicOn(err)
+		err = vm.Pcall(0, 0, 0)
+		panicOn(err)
+		DumpLuaStack(vm)
 	}
 }
 
