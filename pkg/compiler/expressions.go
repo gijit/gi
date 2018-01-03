@@ -70,6 +70,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
 		case isString(basic):
+			pp("jea, in translateExpr(), value = '%v'", value)
 			return c.formatExpr("%s", encodeString(constant.StringVal(value)))
 		default:
 			panic("Unhandled constant type: " + basic.String())

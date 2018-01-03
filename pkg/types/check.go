@@ -337,6 +337,7 @@ func (check *Checker) recordCommaOkTypes(x ast.Expr, a [2]Type) {
 func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, node ast.Node) {
 	assert(id != nil)
 	check.recordDef(id, obj)
+	pp("adding NewCode for id='%#v'", id)
 	check.NewCode = append(check.NewCode, &NewStuff{Obj: obj, Scope: scope, Node: node})
 }
 

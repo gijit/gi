@@ -884,7 +884,8 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "/* */" + suffix + "\n"
 	}
 	if len(c.localVars) != 0 {
-		// jea
+		// jea, these are javascript only: at the top of a
+		// function body, have vars a,b,c for the formal parameters f(a,b,c).
 		//bodyOutput = fmt.Sprintf("%svar %s;\n", strings.Repeat("\t", c.p.indentation+1), strings.Join(c.localVars, ", ")) + bodyOutput
 	}
 

@@ -89,8 +89,18 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 func Test005BacktickStringsToLua(t *testing.T) {
 	inc := NewIncrState()
 
-	cv.Convey("In order for Lua to parse Go's literal backtick strings containing ]=] correctly, Go's backtick strings `like ]=] this one` need to be translated from Go into Lua as three concatenated by .. strings: [=[\\nlike ]=] .. ']=]' .. [=[\\n this one]=]. Then Go `backtick` strings without ']=]' can translate to lua: [=[\\nbacktick]=]", t, func() {
-		cv.So(string(inc.Tr([]byte("s:=`like ]=] this one`"))), cv.ShouldEqual, "s = [=[\nlike ]=] .. ']=]' .. [=[\n this one]=];")
-		cv.So(string(inc.Tr([]byte("s:=`and this one`"))), cv.ShouldEqual, "s = [=[\nand this one]=];")
+	cv.Convey("Go backtick delimited strings should translate to Lua", t, func() {
+		cv.So(string(inc.Tr([]byte("s:=`\n\n\"hello\"\n\n`"))), cv.ShouldMatchModuloWhiteSpace, `s = "\n\n\"hello\"\n\n";`)
+		cv.So(string(inc.Tr([]byte("r:=`\n\n]]\"hello\"\n\n`"))), cv.ShouldMatchModuloWhiteSpace, `r = "\n\n]]\"hello\"\n\n";`)
+	})
+}
+
+func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("At the repl, `a:=1; a:=2;` is allowed. We disable the traditional Go re-definition checks at the REPL", t, func() {
+		cv.So(string(inc.Tr([]byte("r:=`\n\n]]\"hello\"\n\n`"))), cv.ShouldMatchModuloWhiteSpace, `r = "\n\n]]\"hello\"\n\n";`)
+		// and redefinition of r should work:
+		cv.So(string(inc.Tr([]byte("r:=`a new definition`"))), cv.ShouldMatchModuloWhiteSpace, `r = "a new definition";`)
 	})
 }

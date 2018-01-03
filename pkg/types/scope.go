@@ -111,6 +111,21 @@ func (s *Scope) Insert(obj Object) Object {
 	return nil
 }
 
+// Replace always stores obs in s. It
+// will overwrite any existing object
+// of the same naem.
+func (s *Scope) Replace(obj Object) Object {
+	name := obj.Name()
+	if s.elems == nil {
+		s.elems = make(map[string]Object)
+	}
+	s.elems[name] = obj
+	if obj.Parent() == nil {
+		obj.setParent(s)
+	}
+	return nil
+}
+
 // Pos and End describe the scope's source code extent [pos, end).
 // The results are guaranteed to be valid only if the type-checked
 // AST has complete position information. The extent is undefined

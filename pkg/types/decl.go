@@ -20,6 +20,7 @@ func (check *Checker) reportAltDecl(obj Object) {
 }
 
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
+	pp("declare called for obj.Name()='%s', id='%#v'", obj.Name(), id)
 	// spec: "The blank identifier, represented by the underscore
 	// character _, may be used in a declaration like any other
 	// identifier but the declaration does not introduce a new
@@ -27,18 +28,23 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 	if obj.Name() != "_" {
 		var alt Object
 		if scope != nil {
-			alt = scope.Insert(obj)
+			//jea: alt = scope.Insert(obj)
+			alt = scope.Replace(obj)
 		} else {
 			// at top level package scope
-			alt = check.pkg.scope.Insert(obj)
+			//jea: alt = check.pkg.scope.Insert(obj)
+			alt = check.pkg.scope.Replace(obj)
 		}
 		if alt != nil {
+			// re-declaration of variables, such as `a:=1;a:=1` errors out here.
+			pp("re-declaration error should never happen at the repl!")
 			check.errorf(obj.Pos(), "%s redeclared in this block", obj.Name())
 			check.reportAltDecl(alt)
 			return
 		}
 		obj.setScopePos(pos)
 	}
+	pp("declare: just before id != nil check. id='%#v'", id)
 	if id != nil {
 		//check.recordDef(id, obj)
 		check.recordDefAtScope(id, obj, scope, nil)

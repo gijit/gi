@@ -497,6 +497,7 @@ func isWrapped(ty types.Type) bool {
 }
 
 func encodeString(s string) string {
+	pp("jea debug: encodeString called with s='%s'", s)
 	buffer := bytes.NewBuffer(nil)
 	for _, r := range []byte(s) {
 		switch r {

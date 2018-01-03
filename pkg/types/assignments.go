@@ -290,12 +290,16 @@ func (check *Checker) shortVarDecl(pos token.Pos, lhs, rhs []ast.Expr, stmt ast.
 			// (via check.declare) later.
 			name := ident.Name
 			var alt Object
+			// jea, at the repl, we re-define vars constantly.
+			// So we always treat them as new.
+			/* jea, turn off this check at repl
 			if scope != nil {
 				alt = scope.Lookup(name)
 			} else {
 				// check at top level package scope
 				alt = check.pkg.scope.Lookup(name)
 			}
+			*/
 			if alt != nil {
 				// redeclared object must be a variable
 				if alt, _ := alt.(*Var); alt != nil {
@@ -306,7 +310,7 @@ func (check *Checker) shortVarDecl(pos token.Pos, lhs, rhs []ast.Expr, stmt ast.
 				check.recordUse(ident, alt)
 			} else {
 				// declare new variable, possibly a blank (_) variable
-				//pp("shortVarDecl: declaring new variable name='%s', obj='%#v'/%T", name, obj, obj)
+				pp("shortVarDecl: declaring new variable name='%s', obj='%#v'/%T", name, obj, obj)
 				obj = NewVar(ident.Pos(), check.pkg, name, nil)
 				if name != "_" {
 					newVars = append(newVars, obj)
@@ -337,4 +341,5 @@ func (check *Checker) shortVarDecl(pos token.Pos, lhs, rhs []ast.Expr, stmt ast.
 	} else {
 		check.softErrorf(pos, "no new variables on left side of :=")
 	}
+
 }
