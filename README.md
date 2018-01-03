@@ -16,11 +16,11 @@ and excellent multicore support.
 
 # the aim
 
-`gofront` aims to provide a library for many
+`gi` aims to provide a library for many
 interactive backends to be written against.
-`gofront` will provide the REPL and do the
+`gi` will provide the REPL and do the
 initial lexical scanning, parsing, and type
-checking. `gofront` will then pass the
+checking. `gi` will then pass the
 AST to a backend for codegen and/or immediate
 interpretation.
 
