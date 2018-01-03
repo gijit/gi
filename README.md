@@ -70,5 +70,5 @@ License: 3-clause BSD.
 
 Credits: some code here is dervied from the Go gc compiler
 and from Richard Musiol's excellent Gopherjs project.
-All three projects share the same 3-clause BSD license
+This project and those are licensed under the 3-clause BSD license
 found in the LICENSE file.
