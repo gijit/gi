@@ -16,10 +16,6 @@ func LuajitMain() {
 
 	vm.Openlibs()
 
-	//	L.Loadfile("matmul_v1.lua")
-	//	L.Pcall(0, 0, 0)
-	//	DumpLuaStack(L)
-
 	inc := compiler.NewIncrState()
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
@@ -35,13 +31,11 @@ func LuajitMain() {
 		if isPrefix {
 			panic("line too long")
 		}
-		/*
-			translation := inc.Tr([]byte(src))
-			fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
+		translation := inc.Tr([]byte(src))
+		fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
 
-			err = vm.Loadstring(string(translation))
-		*/
-		err = vm.Loadstring(string(src))
+		err = vm.Loadstring(string(translation))
+		//err = vm.Loadstring(string(src))
 		panicOn(err)
 		err = vm.Pcall(0, 0, 0)
 		panicOn(err)
