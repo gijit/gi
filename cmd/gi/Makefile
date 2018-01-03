@@ -26,9 +26,16 @@ GO_VERSION=`go version`
 # Setup the -ldflags option for go build here, interpolate the variable values
 LDFLAGS=-ldflags "-w -s -X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.GoVersion=${GO_VERSION} -X main.NearestGitTag=${NEAREST_GIT_TAG}"
 
+
+SRCS=$(wildcard *.go)
+OBJS=$(SRCS:.go=.o)
+
+# %.o : %.go
+
+
 # Builds the project
 build:
-	go build ${LDFLAGS} -o ${BINARY}_f1
+	go build ${LDFLAGS} ${SRCS}
 
 # Installs our project: copies binaries
 install:
