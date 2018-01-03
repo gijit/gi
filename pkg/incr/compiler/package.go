@@ -873,10 +873,11 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "/* */" + suffix + "\n"
 	}
 	if len(c.localVars) != 0 {
-		bodyOutput = fmt.Sprintf("%svar %s;\n", strings.Repeat("\t", c.p.indentation+1), strings.Join(c.localVars, ", ")) + bodyOutput
+		// jea
+		//bodyOutput = fmt.Sprintf("%svar %s;\n", strings.Repeat("\t", c.p.indentation+1), strings.Join(c.localVars, ", ")) + bodyOutput
 	}
 
 	c.p.escapingVars = prevEV
 
-	return params, fmt.Sprintf("function%s(%s) {\n%s%s}", functionName, strings.Join(params, ", "), bodyOutput, strings.Repeat("\t", c.p.indentation))
+	return params, fmt.Sprintf("function%s(%s) \n%s%s end", functionName, strings.Join(params, ", "), bodyOutput, strings.Repeat("\t", c.p.indentation))
 }
