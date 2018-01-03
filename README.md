@@ -58,7 +58,16 @@ $    make onetime
 $
 $ make install
 $
-$ gi  # start me up
+$ gi  # start me up, try typing this simple example:
+$ 
+gi> a := 10
+10
+gi> b := 12
+12
+gi> func addem(x, y int) int { return x + y }
+gi> addem(a, b)
+22
+gi>
 
 ~~~
 

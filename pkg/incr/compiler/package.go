@@ -593,7 +593,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 				newCodeText = append(newCodeText, []byte("print("))
 				n := len(c.output)
 				if bytes.HasSuffix(c.output, []byte(";\n")) {
-					newCodeText = append(newCodeText, c.output[:n-2])
+					newCodeText = append(newCodeText, bytes.TrimLeft(c.output[:n-2], " \t"))
 				} else {
 					newCodeText = append(newCodeText, c.output)
 				}

@@ -7,6 +7,7 @@ import (
 	"github.com/go-interpreter/gi/pkg/incr/compiler"
 	"io"
 	"os"
+	"strings"
 )
 
 func LuajitMain() {
@@ -21,7 +22,7 @@ func LuajitMain() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Printf("> ")
+		fmt.Printf("gi> ")
 		src, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
 			fmt.Printf("[EOF]\n")
@@ -37,7 +38,7 @@ func LuajitMain() {
 			translation = "\n"
 			// still write, so we get another prompt
 		} else {
-			fmt.Printf("got translation of line from Go into lua: '%s'\n", string(translation))
+			fmt.Printf("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
 		}
 
 		err = vm.Loadstring(string(translation))

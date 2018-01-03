@@ -128,7 +128,7 @@ func StartRepl(writerHalt *idem.Halter, readerHalt *idem.Halter, readAvail chan 
 			select {
 			case s := <-readAvail:
 				fmt.Printf("%s", s)
-				if strings.HasSuffix(s, "> ") {
+				if strings.HasSuffix(s, "gi> ") {
 					//fmt.Printf("we see the prompt, writer exiting wait-for-prompt top loop\n")
 					break syncLoop
 				}

@@ -19,7 +19,7 @@ func OttoReplMain() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Printf("> ")
+		fmt.Printf("gi> ")
 		src, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
 			fmt.Printf("[EOF]\n")
