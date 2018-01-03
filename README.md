@@ -24,7 +24,7 @@ gopher-lua, and luajit.
 Luajit in particular is an amazing
 backend to target. In our quick and
 dirty 500x500 matrix multiplication
-benchmark, luajit beat statically compiled go
+benchmark, luajit *beat even statically compiled go*
 code by a factor 3x.
 
 Luajit (for speed) or gopher-lua (for
