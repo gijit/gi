@@ -77,7 +77,7 @@ Author: Jason E. Aten, Ph.D.
 
 License: 3-clause BSD.
 
-Credits: some code here is dervied from the Go gc compiler
-and from Richard Musiol's excellent Gopherjs project.
+Credits: some code here is dervied from the Go standard
+libraries, the Go gc compiler,  and from Richard Musiol's excellent Gopherjs project.
 This project and those are licensed under the 3-clause BSD license
 found in the LICENSE file.
