@@ -16,11 +16,10 @@ checking. `gofront` will then pass the
 AST to a backend for codegen and/or immediate
 interpretation.
 
-In a nano enchmark of possible backends,
+Considering possible backends for a
+reference implementation,
 I compared node.js, chez scheme, otto,
-gopher-lua, and luajit. Of these, luajit
-or gopher-lua will probably be the
-reference implementation back end.
+gopher-lua, and luajit.
 
 Luajit in particular is an amazing
 backend to target. In our quick and
@@ -28,4 +27,15 @@ dirty 500x500 matrix multiplication
 benchmark, luajit beat statically compiled go
 code by a factor 3x.
 
+Luajit (for speed) or gopher-lua (for
+ease of embedding) will probably be the
+choice(s) for reference backend
+implementation.
+
+
 Author: Jason E. Aten, Ph.D.
+
+License: 3-clause BSD. See LICENSE.
+
+Credits: some code here is dervied from the Go gc compiler
+and from Richard Musiol's excellent Gopherjs project.
