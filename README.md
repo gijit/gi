@@ -5,7 +5,7 @@ Go, if it only had a decent REPL, could be a great
 language for interactive, exploratory data analysis.
 
 Go's big advantages over python, R, and Matlab is that
-it has good type checking, good compiled performance,
+it has good type checking, reasonable compiled performance,
 and excellent multicore and distributed support.
 
 `gofront` aims to provide a library for many
