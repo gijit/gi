@@ -7,9 +7,9 @@ package gcimporter
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/constant"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"sort"
 	"strconv"
 	"strings"

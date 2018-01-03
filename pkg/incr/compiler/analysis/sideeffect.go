@@ -1,9 +1,9 @@
 package analysis
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 )
 
 func HasSideEffect(n ast.Node, info *types.Info) bool {

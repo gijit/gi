@@ -6,12 +6,12 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"io"
 	"strings"
 
-	"github.com/glycerine/gofront/pkg/incr/compiler/prelude"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/prelude"
 	gcimporter "golang.org/x/tools/go/gcimporter15"
 )
 

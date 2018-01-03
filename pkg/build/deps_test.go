@@ -186,7 +186,7 @@ var pkgDeps = map[string][]string{
 	"testing":                                          {"L2", "flag", "fmt", "internal/race", "os", "runtime/debug", "runtime/pprof", "runtime/trace", "time"},
 	"testing/iotest":                                   {"L2", "log"},
 	"testing/quick":                                    {"L2", "flag", "fmt", "reflect", "time"},
-	"github.com/glycerine/gofront/pkg/priv/testenv": {"L2", "OS", "flag", "testing", "syscall"},
+	"github.com/go-interpreter/gi/pkg/priv/testenv": {"L2", "OS", "flag", "testing", "syscall"},
 
 	// L4 is defined as L3+fmt+log+time, because in general once
 	// you're using L3 packages, use of fmt, log, or time is not a big deal.
@@ -198,32 +198,32 @@ var pkgDeps = map[string][]string{
 	},
 
 	// Go parser.
-	"github.com/glycerine/gofront/pkg/ast":     {"L4", "OS", "github.com/glycerine/gofront/pkg/scanner", "github.com/glycerine/gofront/pkg/token"},
-	"github.com/glycerine/gofront/pkg/doc":     {"L4", "github.com/glycerine/gofront/pkg/ast", "github.com/glycerine/gofront/pkg/token", "regexp", "text/template"},
-	"github.com/glycerine/gofront/pkg/parser":  {"L4", "OS", "github.com/glycerine/gofront/pkg/ast", "github.com/glycerine/gofront/pkg/scanner", "github.com/glycerine/gofront/pkg/token"},
-	"github.com/glycerine/gofront/pkg/printer": {"L4", "OS", "github.com/glycerine/gofront/pkg/ast", "github.com/glycerine/gofront/pkg/scanner", "github.com/glycerine/gofront/pkg/token", "text/tabwriter"},
-	"github.com/glycerine/gofront/pkg/scanner": {"L4", "OS", "github.com/glycerine/gofront/pkg/token"},
-	"github.com/glycerine/gofront/pkg/token":   {"L4"},
+	"github.com/go-interpreter/gi/pkg/ast":     {"L4", "OS", "github.com/go-interpreter/gi/pkg/scanner", "github.com/go-interpreter/gi/pkg/token"},
+	"github.com/go-interpreter/gi/pkg/doc":     {"L4", "github.com/go-interpreter/gi/pkg/ast", "github.com/go-interpreter/gi/pkg/token", "regexp", "text/template"},
+	"github.com/go-interpreter/gi/pkg/parser":  {"L4", "OS", "github.com/go-interpreter/gi/pkg/ast", "github.com/go-interpreter/gi/pkg/scanner", "github.com/go-interpreter/gi/pkg/token"},
+	"github.com/go-interpreter/gi/pkg/printer": {"L4", "OS", "github.com/go-interpreter/gi/pkg/ast", "github.com/go-interpreter/gi/pkg/scanner", "github.com/go-interpreter/gi/pkg/token", "text/tabwriter"},
+	"github.com/go-interpreter/gi/pkg/scanner": {"L4", "OS", "github.com/go-interpreter/gi/pkg/token"},
+	"github.com/go-interpreter/gi/pkg/token":   {"L4"},
 
 	"GOPARSER": {
-		"github.com/glycerine/gofront/pkg/ast",
-		"github.com/glycerine/gofront/pkg/doc",
-		"github.com/glycerine/gofront/pkg/parser",
-		"github.com/glycerine/gofront/pkg/printer",
-		"github.com/glycerine/gofront/pkg/scanner",
-		"github.com/glycerine/gofront/pkg/token",
+		"github.com/go-interpreter/gi/pkg/ast",
+		"github.com/go-interpreter/gi/pkg/doc",
+		"github.com/go-interpreter/gi/pkg/parser",
+		"github.com/go-interpreter/gi/pkg/printer",
+		"github.com/go-interpreter/gi/pkg/scanner",
+		"github.com/go-interpreter/gi/pkg/token",
 	},
 
-	"github.com/glycerine/gofront/pkg/format": {"L4", "GOPARSER", "internal/format"},
+	"github.com/go-interpreter/gi/pkg/format": {"L4", "GOPARSER", "internal/format"},
 	"internal/format":                       {"L4", "GOPARSER"},
 
 	// Go type checking.
-	"github.com/glycerine/gofront/pkg/constant":                {"L4", "github.com/glycerine/gofront/pkg/token", "math/big"},
-	"github.com/glycerine/gofront/pkg/importer":                {"L4", "github.com/glycerine/gofront/pkg/build", "github.com/glycerine/gofront/pkg/priv/gccgoimporter", "github.com/glycerine/gofront/pkg/priv/gcimporter", "github.com/glycerine/gofront/pkg/priv/srcimporter", "github.com/glycerine/gofront/pkg/token", "github.com/glycerine/gofront/pkg/types"},
-	"github.com/glycerine/gofront/pkg/priv/gcimporter":    {"L4", "OS", "github.com/glycerine/gofront/pkg/build", "github.com/glycerine/gofront/pkg/constant", "github.com/glycerine/gofront/pkg/token", "github.com/glycerine/gofront/pkg/types", "text/scanner"},
-	"github.com/glycerine/gofront/pkg/priv/gccgoimporter": {"L4", "OS", "debug/elf", "github.com/glycerine/gofront/pkg/constant", "github.com/glycerine/gofront/pkg/token", "github.com/glycerine/gofront/pkg/types", "text/scanner"},
-	"github.com/glycerine/gofront/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/glycerine/gofront/pkg/ast", "github.com/glycerine/gofront/pkg/build", "github.com/glycerine/gofront/pkg/parser", "github.com/glycerine/gofront/pkg/token", "github.com/glycerine/gofront/pkg/types", "path/filepath"},
-	"github.com/glycerine/gofront/pkg/types":                   {"L4", "GOPARSER", "container/heap", "github.com/glycerine/gofront/pkg/constant"},
+	"github.com/go-interpreter/gi/pkg/constant":                {"L4", "github.com/go-interpreter/gi/pkg/token", "math/big"},
+	"github.com/go-interpreter/gi/pkg/importer":                {"L4", "github.com/go-interpreter/gi/pkg/build", "github.com/go-interpreter/gi/pkg/priv/gccgoimporter", "github.com/go-interpreter/gi/pkg/priv/gcimporter", "github.com/go-interpreter/gi/pkg/priv/srcimporter", "github.com/go-interpreter/gi/pkg/token", "github.com/go-interpreter/gi/pkg/types"},
+	"github.com/go-interpreter/gi/pkg/priv/gcimporter":    {"L4", "OS", "github.com/go-interpreter/gi/pkg/build", "github.com/go-interpreter/gi/pkg/constant", "github.com/go-interpreter/gi/pkg/token", "github.com/go-interpreter/gi/pkg/types", "text/scanner"},
+	"github.com/go-interpreter/gi/pkg/priv/gccgoimporter": {"L4", "OS", "debug/elf", "github.com/go-interpreter/gi/pkg/constant", "github.com/go-interpreter/gi/pkg/token", "github.com/go-interpreter/gi/pkg/types", "text/scanner"},
+	"github.com/go-interpreter/gi/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/go-interpreter/gi/pkg/ast", "github.com/go-interpreter/gi/pkg/build", "github.com/go-interpreter/gi/pkg/parser", "github.com/go-interpreter/gi/pkg/token", "github.com/go-interpreter/gi/pkg/types", "path/filepath"},
+	"github.com/go-interpreter/gi/pkg/types":                   {"L4", "GOPARSER", "container/heap", "github.com/go-interpreter/gi/pkg/constant"},
 
 	// One of a kind.
 	"archive/tar":         {"L4", "OS", "syscall", "os/user"},
@@ -253,7 +253,7 @@ var pkgDeps = map[string][]string{
 	"encoding/pem":        {"L4"},
 	"encoding/xml":        {"L4", "encoding"},
 	"flag":                {"L4", "OS"},
-	"github.com/glycerine/gofront/pkg/build": {"L4", "OS", "GOPARSER"},
+	"github.com/go-interpreter/gi/pkg/build": {"L4", "OS", "GOPARSER"},
 	"html":                     {"L4"},
 	"image/draw":               {"L4", "image/internal/imageutil"},
 	"image/gif":                {"L4", "compress/lzw", "image/color/palette", "image/draw"},

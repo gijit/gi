@@ -3,7 +3,7 @@
 package natives
 
 import (
-	"github.com/glycerine/gofront/pkg/build"
+	"github.com/go-interpreter/gi/pkg/build"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +22,7 @@ func importPathToDir(importPath string) string {
 
 // FS is a virtual filesystem that contains native packages.
 var FS = filter.Keep(
-	http.Dir(importPathToDir("github.com/glycerine/gofront/pkg/gopherjs/compiler/natives")),
+	http.Dir(importPathToDir("github.com/go-interpreter/gi/pkg/gopherjs/compiler/natives")),
 	func(path string, fi os.FileInfo) bool {
 		return path == "/" || path == "/src" || strings.HasPrefix(path, "/src/")
 	},

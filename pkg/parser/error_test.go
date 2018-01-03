@@ -23,8 +23,8 @@
 package parser
 
 import (
-	"github.com/glycerine/gofront/pkg/scanner"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/scanner"
+	"github.com/go-interpreter/gi/pkg/token"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"

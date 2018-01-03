@@ -7,7 +7,7 @@
 package types
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/ast"
 	"sort"
 )
 

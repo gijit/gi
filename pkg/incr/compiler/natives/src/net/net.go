@@ -6,7 +6,7 @@ import (
 	"errors"
 	"syscall"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 func Listen(net, laddr string) (Listener, error) {

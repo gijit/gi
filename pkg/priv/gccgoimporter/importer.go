@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"debug/elf"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"io"
 	"os"
 	"os/exec"

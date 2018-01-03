@@ -2,16 +2,16 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/constant"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"strings"
 
-	"github.com/glycerine/gofront/pkg/incr/compiler/analysis"
-	"github.com/glycerine/gofront/pkg/incr/compiler/astutil"
-	"github.com/glycerine/gofront/pkg/incr/compiler/filter"
-	"github.com/glycerine/gofront/pkg/incr/compiler/typesutil"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/analysis"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/astutil"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/filter"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/typesutil"
 )
 
 func (c *funcContext) translateStmtList(stmts []ast.Stmt) {

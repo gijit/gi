@@ -2,7 +2,7 @@ package buildutil
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/build"
+	"github.com/go-interpreter/gi/pkg/build"
 	"io"
 	"io/ioutil"
 	"os"

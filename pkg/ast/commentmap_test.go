@@ -9,9 +9,9 @@ package ast_test
 import (
 	"bytes"
 	"fmt"
-	. "github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	. "github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"sort"
 	"testing"
 )
@@ -26,8 +26,8 @@ package p /* the name is p */
 import (
 	"bytes"     // bytes
 	"fmt"       // fmt
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/parser"
 )
 
 // T

@@ -3,17 +3,17 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/constant"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/glycerine/gofront/pkg/incr/compiler/analysis"
-	"github.com/glycerine/gofront/pkg/incr/compiler/astutil"
-	"github.com/glycerine/gofront/pkg/incr/compiler/typesutil"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/analysis"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/astutil"
+	"github.com/go-interpreter/gi/pkg/incr/compiler/typesutil"
 )
 
 type expression struct {
@@ -913,7 +913,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		}
 		return c.formatExpr("$copySlice(%e, %e)", args[0], args[1])
 	case "print", "println":
-		return c.formatExpr("console.log(%s)", strings.Join(c.translateExprSlice(args, nil), ", "))
+		return c.formatExpr("print(%s)", strings.Join(c.translateExprSlice(args, nil), ", "))
 	case "complex":
 		argStr := c.translateArgs(sig, args, ellipsis)
 		return c.formatExpr("new %s(%s, %s)", c.typeName(sig.Results().At(0).Type()), argStr[0], argStr[1])

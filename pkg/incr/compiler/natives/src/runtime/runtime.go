@@ -5,7 +5,7 @@ package runtime
 import (
 	"runtime/internal/sys"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 const GOOS = sys.GOOS
@@ -24,7 +24,7 @@ func (t *_type) string() string {
 }
 
 func init() {
-	jsPkg := js.Global.Get("$packages").Get("github.com/glycerine/gofront/pkg/gopherjs/js")
+	jsPkg := js.Global.Get("$packages").Get("github.com/go-interpreter/gi/pkg/gopherjs/js")
 	js.Global.Set("$jsObjectPtr", jsPkg.Get("Object").Get("ptr"))
 	js.Global.Set("$jsErrorPtr", jsPkg.Get("Error").Get("ptr"))
 	js.Global.Set("$throwRuntimeError", js.InternalObject(throw))

@@ -6,7 +6,7 @@ package gccgoimporter
 
 import (
 	"bufio"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"os"
 	"os/exec"
 	"path/filepath"

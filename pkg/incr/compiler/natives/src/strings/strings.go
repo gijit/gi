@@ -5,7 +5,7 @@ package strings
 import (
 	"unicode/utf8"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 func IndexByte(s string, c byte) int {

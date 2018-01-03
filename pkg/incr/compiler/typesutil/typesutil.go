@@ -1,12 +1,12 @@
 package typesutil
 
 import (
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"strings"
 )
 
 func IsJsPackage(pkg *types.Package) bool {
-	return pkg != nil && (pkg.Path() == "github.com/glycerine/gofront/pkg/gopherjs/js" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/glycerine/gofront/gopherjs/js"))
+	return pkg != nil && (pkg.Path() == "github.com/go-interpreter/gi/pkg/gopherjs/js" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/glycerine/gofront/gopherjs/js"))
 }
 
 func IsJsObject(t types.Type) bool {

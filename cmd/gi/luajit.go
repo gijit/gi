@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/incr/compiler"
+	"github.com/go-interpreter/gi/pkg/incr/compiler"
 	"github.com/glycerine/luajit"
 	"io"
 	"os"

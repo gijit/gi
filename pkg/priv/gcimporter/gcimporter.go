@@ -8,9 +8,9 @@ package gcimporter
 import (
 	"bufio"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/build"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"io"
 	"io/ioutil"
 	"os"

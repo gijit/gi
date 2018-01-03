@@ -6,10 +6,10 @@ package astutil
 
 import (
 	"bytes"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/format"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/format"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"reflect"
 	"strconv"
 	"testing"
@@ -926,7 +926,7 @@ import (
 	"os"
 	"utf8"
 
-	"github.com/glycerine/gofront/pkg/format"
+	"github.com/go-interpreter/gi/pkg/format"
 )
 `,
 		out: `package main
@@ -937,7 +937,7 @@ import (
 	"os"
 	"utf8"
 
-	"github.com/glycerine/gofront/pkg/format"
+	"github.com/go-interpreter/gi/pkg/format"
 )
 `,
 	},
@@ -953,7 +953,7 @@ import (
 	"os"   // c
 	"utf8" // d
 
-	"github.com/glycerine/gofront/pkg/format" // e
+	"github.com/go-interpreter/gi/pkg/format" // e
 )
 `,
 		out: `package main
@@ -965,7 +965,7 @@ import (
 	"os"   // c
 	"utf8" // d
 
-	"github.com/glycerine/gofront/pkg/format" // e
+	"github.com/go-interpreter/gi/pkg/format" // e
 )
 `,
 	},

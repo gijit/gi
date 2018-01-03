@@ -5,7 +5,7 @@
 package gccgoimporter
 
 import (
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"runtime"
 	"testing"
 )
@@ -67,14 +67,14 @@ var importablePackages = [...]string{
 	"expvar",
 	"flag",
 	"fmt",
-	"github.com/glycerine/gofront/pkg/ast",
-	"github.com/glycerine/gofront/pkg/build",
-	"github.com/glycerine/gofront/pkg/doc",
-	"github.com/glycerine/gofront/pkg/format",
-	"github.com/glycerine/gofront/pkg/parser",
-	"github.com/glycerine/gofront/pkg/printer",
-	"github.com/glycerine/gofront/pkg/scanner",
-	"github.com/glycerine/gofront/pkg/token",
+	"github.com/go-interpreter/gi/pkg/ast",
+	"github.com/go-interpreter/gi/pkg/build",
+	"github.com/go-interpreter/gi/pkg/doc",
+	"github.com/go-interpreter/gi/pkg/format",
+	"github.com/go-interpreter/gi/pkg/parser",
+	"github.com/go-interpreter/gi/pkg/printer",
+	"github.com/go-interpreter/gi/pkg/scanner",
+	"github.com/go-interpreter/gi/pkg/token",
 	"hash/adler32",
 	"hash/crc32",
 	"hash/crc64",

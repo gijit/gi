@@ -10,7 +10,7 @@ package gcimporter
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -153,7 +153,7 @@ func TestImportTestdata(t *testing.T) {
 		// For now, we just test the presence of a few packages
 		// that we know are there for sure.
 		got := fmt.Sprint(pkg.Imports())
-		for _, want := range []string{"github.com/glycerine/gofront/pkg/ast", "github.com/glycerine/gofront/pkg/token"} {
+		for _, want := range []string{"github.com/go-interpreter/gi/pkg/ast", "github.com/go-interpreter/gi/pkg/token"} {
 			if !strings.Contains(got, want) {
 				t.Errorf(`Package("exports").Imports() = %s, does not contain %s`, got, want)
 			}
@@ -383,7 +383,7 @@ func TestIssue13898(t *testing.T) {
 
 	// import go/internal/gcimporter which imports go/types partially
 	imports := make(map[string]*types.Package)
-	_, err := Import(imports, "github.com/glycerine/gofront/pkg/internal/gcimporter", ".")
+	_, err := Import(imports, "github.com/go-interpreter/gi/pkg/internal/gcimporter", ".")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -391,30 +391,30 @@ func TestIssue13898(t *testing.T) {
 	// look for go/types package
 	var goTypesPkg *types.Package
 	for path, pkg := range imports {
-		if path == "github.com/glycerine/gofront/pkg/types" {
+		if path == "github.com/go-interpreter/gi/pkg/types" {
 			goTypesPkg = pkg
 			break
 		}
 	}
 	if goTypesPkg == nil {
-		t.Fatal("github.com/glycerine/gofront/pkg/types not found")
+		t.Fatal("github.com/go-interpreter/gi/pkg/types not found")
 	}
 
 	// look for go/types.Object type
 	obj := lookupObj(t, goTypesPkg.Scope(), "Object")
 	typ, ok := obj.Type().(*types.Named)
 	if !ok {
-		t.Fatalf("github.com/glycerine/gofront/pkg/types.Object type is %v; wanted named type", typ)
+		t.Fatalf("github.com/go-interpreter/gi/pkg/types.Object type is %v; wanted named type", typ)
 	}
 
 	// lookup go/types.Object.Pkg method
 	m, index, indirect := types.LookupFieldOrMethod(typ, false, nil, "Pkg")
 	if m == nil {
-		t.Fatalf("github.com/glycerine/gofront/pkg/types.Object.Pkg not found (index = %v, indirect = %v)", index, indirect)
+		t.Fatalf("github.com/go-interpreter/gi/pkg/types.Object.Pkg not found (index = %v, indirect = %v)", index, indirect)
 	}
 
 	// the method must belong to go/types
-	if m.Pkg().Path() != "github.com/glycerine/gofront/pkg/types" {
+	if m.Pkg().Path() != "github.com/go-interpreter/gi/pkg/types" {
 		t.Fatalf("found %v; want go/types", m.Pkg())
 	}
 }

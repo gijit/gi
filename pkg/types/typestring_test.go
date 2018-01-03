@@ -5,14 +5,14 @@
 package types_test
 
 import (
-	"github.com/glycerine/gofront/pkg/priv/testenv"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/importer"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/priv/testenv"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"testing"
 
-	. "github.com/glycerine/gofront/pkg/types"
+	. "github.com/go-interpreter/gi/pkg/types"
 )
 
 const filename = "<src>"

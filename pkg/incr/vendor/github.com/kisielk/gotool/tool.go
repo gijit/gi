@@ -3,7 +3,7 @@
 // tools with similar semantics.
 package gotool
 
-import "github.com/glycerine/gofront/pkg/build"
+import "github.com/go-interpreter/gi/pkg/build"
 
 // Export functions here to make it easier to keep the implementations up to date with upstream.
 

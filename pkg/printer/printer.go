@@ -7,8 +7,8 @@ package printer
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/token"
 	"io"
 	"os"
 	"strconv"
@@ -105,7 +105,7 @@ func (p *printer) internalError(msg ...interface{}) {
 	if debug {
 		fmt.Print(p.pos.String() + ": ")
 		fmt.Println(msg...)
-		panic("github.com/glycerine/gofront/pkg/printer")
+		panic("github.com/go-interpreter/gi/pkg/printer")
 	}
 }
 
@@ -969,7 +969,7 @@ func (p *printer) print(args ...interface{}) {
 
 		default:
 			fmt.Fprintf(os.Stderr, "print: unsupported argument %v (%T)\n", arg, arg)
-			panic("github.com/glycerine/gofront/pkg/printer type")
+			panic("github.com/go-interpreter/gi/pkg/printer type")
 		}
 		// data != ""
 
@@ -1152,7 +1152,7 @@ func (p *printer) printNode(node interface{}) error {
 	return nil
 
 unsupported:
-	return fmt.Errorf("github.com/glycerine/gofront/pkg/printer: unsupported node type %T", node)
+	return fmt.Errorf("github.com/go-interpreter/gi/pkg/printer: unsupported node type %T", node)
 }
 
 // ----------------------------------------------------------------------------

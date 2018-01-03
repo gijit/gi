@@ -9,7 +9,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/token"
 )
 
 // A Scope maintains the set of named language entities declared

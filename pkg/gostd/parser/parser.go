@@ -18,9 +18,9 @@ package parser
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/scanner"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/scanner"
+	"github.com/go-interpreter/gi/pkg/token"
 	"strconv"
 	"strings"
 	"unicode"
@@ -441,7 +441,7 @@ func (p *parser) atComma(context string, follow token.Token) bool {
 
 func assert(cond bool, msg string) {
 	if !cond {
-		panic("github.com/glycerine/gofront/pkg/parser internal error: " + msg)
+		panic("github.com/go-interpreter/gi/pkg/parser internal error: " + msg)
 	}
 }
 

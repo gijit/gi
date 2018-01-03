@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"unsafe"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 func runtime_envs() []string {

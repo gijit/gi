@@ -6,10 +6,10 @@ package astutil_test
 
 import (
 	"bytes"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/format"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/format"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"testing"
 
 	"golang.org/x/tools/go/ast/astutil"

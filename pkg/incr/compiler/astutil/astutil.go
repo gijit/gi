@@ -1,8 +1,8 @@
 package astutil
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/types"
 )
 
 func RemoveParens(e ast.Expr) ast.Expr {

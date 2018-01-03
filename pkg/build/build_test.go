@@ -5,7 +5,7 @@
 package build
 
 import (
-	"github.com/glycerine/gofront/pkg/priv/testenv"
+	"github.com/go-interpreter/gi/pkg/priv/testenv"
 	"io"
 	"os"
 	"path/filepath"
@@ -126,8 +126,8 @@ func TestLocalDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.ImportPath != "github.com/glycerine/gofront/pkg/build" {
-		t.Fatalf("ImportPath=%q, want %q", p.ImportPath, "github.com/glycerine/gofront/pkg/build")
+	if p.ImportPath != "github.com/go-interpreter/gi/pkg/build" {
+		t.Fatalf("ImportPath=%q, want %q", p.ImportPath, "github.com/go-interpreter/gi/pkg/build")
 	}
 }
 
@@ -314,9 +314,9 @@ func TestImportDirNotExist(t *testing.T) {
 		path, srcDir string
 		mode         ImportMode
 	}{
-		{"Import(full, 0)", "github.com/glycerine/gofront/pkg/build/doesnotexist", "", 0},
+		{"Import(full, 0)", "github.com/go-interpreter/gi/pkg/build/doesnotexist", "", 0},
 		{"Import(local, 0)", "./doesnotexist", filepath.Join(ctxt.GOROOT, "src/go/build"), 0},
-		{"Import(full, FindOnly)", "github.com/glycerine/gofront/pkg/build/doesnotexist", "", FindOnly},
+		{"Import(full, FindOnly)", "github.com/go-interpreter/gi/pkg/build/doesnotexist", "", FindOnly},
 		{"Import(local, FindOnly)", "./doesnotexist", filepath.Join(ctxt.GOROOT, "src/go/build"), FindOnly},
 	}
 	for _, test := range tests {
@@ -330,8 +330,8 @@ func TestImportDirNotExist(t *testing.T) {
 			t.Fatalf(`%s got nil p, want non-nil *Package`, test.label)
 		}
 		// Verify partial information in p.
-		if p.ImportPath != "github.com/glycerine/gofront/pkg/build/doesnotexist" {
-			t.Errorf(`%s got p.ImportPath: %q, want "github.com/glycerine/gofront/pkg/build/doesnotexist"`, test.label, p.ImportPath)
+		if p.ImportPath != "github.com/go-interpreter/gi/pkg/build/doesnotexist" {
+			t.Errorf(`%s got p.ImportPath: %q, want "github.com/go-interpreter/gi/pkg/build/doesnotexist"`, test.label, p.ImportPath)
 		}
 	}
 }

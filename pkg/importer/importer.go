@@ -6,12 +6,12 @@
 package importer
 
 import (
-	"github.com/glycerine/gofront/pkg/priv/gccgoimporter"
-	"github.com/glycerine/gofront/pkg/priv/gcimporter"
-	"github.com/glycerine/gofront/pkg/priv/srcimporter"
-	"github.com/glycerine/gofront/pkg/build"
-	"github.com/glycerine/gofront/pkg/token"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/priv/gccgoimporter"
+	"github.com/go-interpreter/gi/pkg/priv/gcimporter"
+	"github.com/go-interpreter/gi/pkg/priv/srcimporter"
+	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/types"
 	"io"
 	"runtime"
 )

@@ -7,8 +7,8 @@
 package types
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/token"
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {

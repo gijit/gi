@@ -2,7 +2,7 @@
 package importgraphutil
 
 import (
-	"github.com/glycerine/gofront/pkg/build"
+	"github.com/go-interpreter/gi/pkg/build"
 	"sync"
 
 	"golang.org/x/tools/go/buildutil"

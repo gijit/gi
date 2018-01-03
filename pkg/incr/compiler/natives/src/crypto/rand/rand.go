@@ -5,7 +5,7 @@ package rand
 import (
 	"errors"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 func init() {

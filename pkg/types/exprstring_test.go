@@ -5,10 +5,10 @@
 package types_test
 
 import (
-	"github.com/glycerine/gofront/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/parser"
 	"testing"
 
-	. "github.com/glycerine/gofront/pkg/types"
+	. "github.com/go-interpreter/gi/pkg/types"
 )
 
 var testExprs = []testEntry{

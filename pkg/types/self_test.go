@@ -7,15 +7,15 @@ package types_test
 import (
 	"flag"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/importer"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"path/filepath"
 	"testing"
 	"time"
 
-	. "github.com/glycerine/gofront/pkg/types"
+	. "github.com/go-interpreter/gi/pkg/types"
 )
 
 var benchmark = flag.Bool("b", false, "run benchmarks")
@@ -28,7 +28,7 @@ func TestSelf(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	_, _, err = conf.Check(nil, nil, "github.com/glycerine/gofront/pkg/types", fset, files, nil)
+	_, _, err = conf.Check(nil, nil, "github.com/go-interpreter/gi/pkg/types", fset, files, nil)
 	if err != nil {
 		// Importing go/constant doesn't work in the
 		// build dashboard environment. Don't report an error

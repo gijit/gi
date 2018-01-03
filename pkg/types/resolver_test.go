@@ -6,15 +6,15 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/priv/testenv"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/importer"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/priv/testenv"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"sort"
 	"testing"
 
-	. "github.com/glycerine/gofront/pkg/types"
+	. "github.com/go-interpreter/gi/pkg/types"
 )
 
 type resolveTestImporter struct {
@@ -68,7 +68,7 @@ func TestResolveIdents(t *testing.T) {
 		`,
 		`
 		package p
-		import . "github.com/glycerine/gofront/pkg/parser"
+		import . "github.com/go-interpreter/gi/pkg/parser"
 		import "sync"
 		func h() Mode { return ImportsOnly }
 		var _, x int = 1, 2

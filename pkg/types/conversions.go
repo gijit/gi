@@ -6,7 +6,7 @@
 
 package types
 
-import "github.com/glycerine/gofront/pkg/constant"
+import "github.com/go-interpreter/gi/pkg/constant"
 
 // Conversion type-checks the conversion T(x).
 // The result is in x.

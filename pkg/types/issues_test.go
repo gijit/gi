@@ -8,15 +8,15 @@ package types_test
 
 import (
 	"fmt"
-	//"github.com/glycerine/gofront/pkg/priv/testenv"
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/importer"
-	"github.com/glycerine/gofront/pkg/parser"
+	//"github.com/go-interpreter/gi/pkg/priv/testenv"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/parser"
 	"sort"
 	"strings"
 	"testing"
 
-	. "github.com/glycerine/gofront/pkg/types"
+	. "github.com/go-interpreter/gi/pkg/types"
 )
 
 func TestIssue5770(t *testing.T) {
@@ -219,7 +219,7 @@ func TestIssue13898(t *testing.T) {
 	const src0 = `
 package main
 
-import "github.com/glycerine/gofront/pkg/types"
+import "github.com/go-interpreter/gi/pkg/types"
 
 func main() {
 	var info types.Info
@@ -233,8 +233,8 @@ func main() {
 package main
 
 import (
-	"github.com/glycerine/gofront/pkg/types"
-	_ "github.com/glycerine/gofront/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/types"
+	_ "github.com/go-interpreter/gi/pkg/importer"
 )
 
 func main() {
@@ -250,8 +250,8 @@ func main() {
 package main
 
 import (
-	_ "github.com/glycerine/gofront/pkg/importer"
-	"github.com/glycerine/gofront/pkg/types"
+	_ "github.com/go-interpreter/gi/pkg/importer"
+	"github.com/go-interpreter/gi/pkg/types"
 )
 
 func main() {

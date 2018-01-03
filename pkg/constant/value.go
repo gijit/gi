@@ -14,7 +14,7 @@ package constant
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/token"
 	"math"
 	"math/big"
 	"strconv"

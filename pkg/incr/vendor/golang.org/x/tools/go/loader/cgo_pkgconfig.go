@@ -7,7 +7,7 @@ package loader
 import (
 	"errors"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/build"
+	"github.com/go-interpreter/gi/pkg/build"
 	"os/exec"
 	"strings"
 )

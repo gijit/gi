@@ -6,10 +6,10 @@ package doc_test
 
 import (
 	"bytes"
-	"github.com/glycerine/gofront/pkg/doc"
-	"github.com/glycerine/gofront/pkg/format"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/doc"
+	"github.com/go-interpreter/gi/pkg/format"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"strings"
 	"testing"
 )

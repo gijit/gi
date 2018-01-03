@@ -5,9 +5,9 @@
 package types
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/constant"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/token"
 )
 
 func (check *Checker) reportAltDecl(obj Object) {

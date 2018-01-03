@@ -5,7 +5,7 @@ package os
 import (
 	"errors"
 
-	"github.com/glycerine/gofront/pkg/gopherjs/js"
+	"github.com/go-interpreter/gi/pkg/gopherjs/js"
 )
 
 func runtime_args() []string { // not called on Windows

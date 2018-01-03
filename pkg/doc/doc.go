@@ -6,8 +6,8 @@
 package doc
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/token"
 )
 
 // Package is the documentation for an entire package.

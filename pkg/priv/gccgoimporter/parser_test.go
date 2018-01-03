@@ -6,7 +6,7 @@ package gccgoimporter
 
 import (
 	"bytes"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"strings"
 	"testing"
 	"text/scanner"

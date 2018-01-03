@@ -7,8 +7,8 @@ package format
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/parser"
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/go-interpreter/gi/pkg/token"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -77,7 +77,7 @@ func TestSource(t *testing.T) {
 // The formatted result must look the same as the input for successful tests.
 var tests = []string{
 	// declaration lists
-	`import "github.com/glycerine/gofront/pkg/format"`,
+	`import "github.com/go-interpreter/gi/pkg/format"`,
 	"var x int",
 	"var x int\n\ntype T struct{}",
 

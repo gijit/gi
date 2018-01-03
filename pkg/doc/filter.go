@@ -4,7 +4,7 @@
 
 package doc
 
-import "github.com/glycerine/gofront/pkg/ast"
+import "github.com/go-interpreter/gi/pkg/ast"
 
 type Filter func(string) bool
 

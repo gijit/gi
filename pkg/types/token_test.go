@@ -8,7 +8,7 @@
 package types
 
 import (
-	"github.com/glycerine/gofront/pkg/token"
+	"github.com/go-interpreter/gi/pkg/token"
 	"testing"
 )
 

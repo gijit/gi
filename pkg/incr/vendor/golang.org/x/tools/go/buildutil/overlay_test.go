@@ -1,7 +1,7 @@
 package buildutil_test
 
 import (
-	"github.com/glycerine/gofront/pkg/build"
+	"github.com/go-interpreter/gi/pkg/build"
 	"io/ioutil"
 	"reflect"
 	"strings"

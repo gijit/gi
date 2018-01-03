@@ -10,9 +10,9 @@ package loader_test
 
 import (
 	"fmt"
-	"github.com/glycerine/gofront/pkg/build"
-	"github.com/glycerine/gofront/pkg/constant"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/types"
 	"path/filepath"
 	"reflect"
 	"sort"

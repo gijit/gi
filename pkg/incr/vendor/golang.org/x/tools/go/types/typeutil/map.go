@@ -9,7 +9,7 @@ package typeutil // import "golang.org/x/tools/go/types/typeutil"
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gofront/pkg/types"
+	"github.com/go-interpreter/gi/pkg/types"
 	"reflect"
 )
 

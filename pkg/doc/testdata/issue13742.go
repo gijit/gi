@@ -5,8 +5,8 @@
 package issue13742
 
 import (
-	"github.com/glycerine/gofront/pkg/ast"
-	. "github.com/glycerine/gofront/pkg/ast"
+	"github.com/go-interpreter/gi/pkg/ast"
+	. "github.com/go-interpreter/gi/pkg/ast"
 )
 
 // Both F0 and G0 should appear as functions.

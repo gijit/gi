@@ -4,7 +4,7 @@
 
 package typeutil
 
-import "github.com/glycerine/gofront/pkg/types"
+import "github.com/go-interpreter/gi/pkg/types"
 
 // Dependencies returns all dependencies of the specified packages.
 //
