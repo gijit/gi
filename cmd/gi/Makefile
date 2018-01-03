@@ -1,9 +1,9 @@
 
 
 all:
-	echo "type 'make luajit' to install luajit (only necessary once)."
+	echo "type 'make onetime' to install luajit (only necessary once)."
 	echo "You can skip 'make luajit' if you already have luajit-2.1.0-beta3 installed from source."
-	go install
+	make install
 
 
 onetime: gitversion
@@ -16,30 +16,27 @@ onetime: gitversion
 # This how we want to name the binary output
 BINARY=gi
 
-BUILD_TIMESTAMP=`date +%FT%T%z`
-LAST_GIT_COMMIT_HASH=`git rev-parse HEAD`
-NEAREST_GIT_TAG=`git describe --abbrev=0 --tags`
-GIT_BRANCH=`git rev-parse --abbrev-ref  HEAD`
-GO_VERSION=`go version`
+BUILD_TIMESTAMP=$(shell date +%FT%T%z)
+LAST_GIT_COMMIT_HASH=$(shell git rev-parse HEAD)
+NEAREST_GIT_TAG=$(shell git describe --abbrev=0 --tags)
+GIT_BRANCH=$(shell git rev-parse --abbrev-ref  HEAD)
+GOVER=$(shell go version | sed 's/\ /_/g')
+LUAJIT_VER=$(shell luajit -v | sed 's/\ /_/g')
 
-
-# Setup the -ldflags option for go build here, interpolate the variable values
-LDFLAGS=-ldflags "-w -s -X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.GoVersion=${GO_VERSION} -X main.NearestGitTag=${NEAREST_GIT_TAG}"
+LDFLAGS=-ldflags "-X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.NearestGitTag=${NEAREST_GIT_TAG}  -X main.GoVersion=${GOVER}  -X main.LuajitVersion=${LUAJIT_VER}"
 
 
 SRCS=$(wildcard *.go)
 OBJS=$(SRCS:.go=.o)
 
-# %.o : %.go
 
-
-# Builds the project
 build:
-	go build ${LDFLAGS} ${SRCS}
+	go build ${LDFLAGS} -o gi
 
-# Installs our project: copies binaries
+
 install:
-	go install ${LDFLAGS}
+	make build
+	cp -p gi ${GOPATH}/bin/
 
 # Cleans our project: deletes binaries
 clean:
