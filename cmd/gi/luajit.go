@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/incr/compiler"
 	"github.com/glycerine/luajit"
+	"github.com/go-interpreter/gi/pkg/incr/compiler"
 	"io"
 	"os"
 )
@@ -32,7 +32,7 @@ func LuajitMain() {
 			panic("line too long")
 		}
 		translation := inc.Tr([]byte(src))
-		fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
+		fmt.Printf("go:'%s'  -->  '%s' in lua\n", src, translation)
 
 		err = vm.Loadstring(string(translation))
 		//err = vm.Loadstring(string(src))
