@@ -6,7 +6,7 @@ language for interactive, exploratory data analysis.
 
 Go's big advantages over python, R, and Matlab is that
 it has good type checking, reasonable compiled performance,
-and excellent multicore and distributed support.
+and excellent multicore support.
 
 `gofront` aims to provide a library for many
 interactive backends to be written against.
