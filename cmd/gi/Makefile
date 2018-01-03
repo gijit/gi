@@ -23,7 +23,7 @@ GIT_BRANCH=$(shell git rev-parse --abbrev-ref  HEAD)
 GOVER=$(shell go version | sed 's/\ /_/g')
 LUAJIT_VER=$(shell luajit -v | sed 's/\ /_/g')
 
-LDFLAGS=-ldflags "-X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.NearestGitTag=${NEAREST_GIT_TAG}  -X main.GoVersion=${GOVER}  -X main.LuajitVersion=${LUAJIT_VER}"
+LDFLAGS_gi=-ldflags "-X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.NearestGitTag=${NEAREST_GIT_TAG}  -X main.GoVersion=${GOVER}  -X main.LuajitVersion=${LUAJIT_VER}"
 
 
 SRCS=$(wildcard *.go)
@@ -31,7 +31,7 @@ OBJS=$(SRCS:.go=.o)
 
 
 build:
-	go build ${LDFLAGS} -o gi
+	go build ${LDFLAGS_gi} -o gi
 
 
 install:
