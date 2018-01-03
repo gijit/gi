@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/glycerine/idem"
-	"github.com/go-interpreter/gi/pkg/incr/compiler"
+	"github.com/go-interpreter/gi/pkg/compiler"
 )
 
 func NodeChildMain() {

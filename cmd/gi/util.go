@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler"
+	"github.com/go-interpreter/gi/pkg/compiler"
 )
 
 func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {

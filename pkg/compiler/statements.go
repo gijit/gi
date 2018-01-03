@@ -8,10 +8,10 @@ import (
 	"github.com/go-interpreter/gi/pkg/types"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler/analysis"
-	"github.com/go-interpreter/gi/pkg/incr/compiler/astutil"
-	"github.com/go-interpreter/gi/pkg/incr/compiler/filter"
-	"github.com/go-interpreter/gi/pkg/incr/compiler/typesutil"
+	"github.com/go-interpreter/gi/pkg/compiler/analysis"
+	"github.com/go-interpreter/gi/pkg/compiler/astutil"
+	"github.com/go-interpreter/gi/pkg/compiler/filter"
+	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
 )
 
 func (c *funcContext) translateStmtList(stmts []ast.Stmt) {

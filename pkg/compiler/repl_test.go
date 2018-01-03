@@ -89,7 +89,8 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 func Test005BacktickStringsToLua(t *testing.T) {
 	inc := NewIncrState()
 
-	cv.Convey("In order for Lua to parse Go's literal backtick strings containing ]=] correctly, Go's backtick strings `like ]=] this one` need to be translated from Go into Lua as: [=[\\nlike ]=] .. ']=]' .. [=[\\n this one]=]", t, func() {
+	cv.Convey("In order for Lua to parse Go's literal backtick strings containing ]=] correctly, Go's backtick strings `like ]=] this one` need to be translated from Go into Lua as three concatenated by .. strings: [=[\\nlike ]=] .. ']=]' .. [=[\\n this one]=]. Then Go `backtick` strings without ']=]' can translate to lua: [=[\\nbacktick]=]", t, func() {
 		cv.So(string(inc.Tr([]byte("s:=`like ]=] this one`"))), cv.ShouldEqual, "s = [=[\nlike ]=] .. ']=]' .. [=[\n this one]=];")
+		cv.So(string(inc.Tr([]byte("s:=`and this one`"))), cv.ShouldEqual, "s = [=[\nand this one]=];")
 	})
 }

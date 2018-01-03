@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler/analysis"
-	"github.com/go-interpreter/gi/pkg/incr/compiler/astutil"
-	"github.com/go-interpreter/gi/pkg/incr/compiler/typesutil"
+	"github.com/go-interpreter/gi/pkg/compiler/analysis"
+	"github.com/go-interpreter/gi/pkg/compiler/astutil"
+	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
 )
 
 type expression struct {

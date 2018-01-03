@@ -5,7 +5,7 @@ import (
 	"github.com/go-interpreter/gi/pkg/token"
 	"github.com/go-interpreter/gi/pkg/types"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler/astutil"
+	"github.com/go-interpreter/gi/pkg/compiler/astutil"
 )
 
 func Assign(stmt ast.Stmt, info *types.Info, pkg *types.Package) ast.Stmt {

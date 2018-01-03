@@ -11,7 +11,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler/prelude"
+	"github.com/go-interpreter/gi/pkg/compiler/prelude"
 	gcimporter "golang.org/x/tools/go/gcimporter15"
 )
 

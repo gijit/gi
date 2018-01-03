@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/glycerine/luajit"
-	"github.com/go-interpreter/gi/pkg/incr/compiler"
+	"github.com/go-interpreter/gi/pkg/compiler"
 	"io"
 	"os"
 	"strings"

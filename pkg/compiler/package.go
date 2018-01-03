@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/incr/compiler/analysis"
+	"github.com/go-interpreter/gi/pkg/compiler/analysis"
 	"github.com/neelance/astrewrite"
 	"golang.org/x/tools/go/gcimporter15"
 	"golang.org/x/tools/go/types/typeutil"
