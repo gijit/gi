@@ -1,0 +1,16 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = https://github.com/LuaJIT/LuaJIT
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[branch "v2.1"]
+	remote = origin
+	merge = refs/heads/v2.1

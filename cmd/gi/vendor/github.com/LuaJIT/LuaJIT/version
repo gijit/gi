@@ -1,0 +1,28 @@
+luajit 2.1 as of 2018 January 3, the v2.1 branch
+of https://github.com/LuaJIT/LuaJIT
+ea7071d3c30b6432bfe6f8a9d263e0285cec25e3
+
+commit ea7071d3c30b6432bfe6f8a9d263e0285cec25e3
+Author: Mike Pall <mike>
+Date:   Sat Nov 18 12:25:35 2017 +0100
+
+    MIPS64: Fix xpcall() error case.
+    
+    Thanks to François Perrad and Stefan Pejic.
+
+commit d417ded17945b4211608d497d50b509e0274f5e0
+Author: Mike Pall <mike>
+Date:   Sat Nov 18 12:23:57 2017 +0100
+
+    ARM64: Fix xpcall() error case (really).
+    
+    Thanks to François Perrad and Stefan Pejic.
+
+commit 734a3fa32c12c031d501df055c88601810f6c666
+Merge: 33082a6 7dbf0b0
+Author: Mike Pall <mike>
+Date:   Thu Nov 16 13:00:09 2017 +0100
+
+    Merge branch 'master' into v2.1
+
+commit 7dbf0b05f1228c1c719866db5e5f3d58f87f74c8
