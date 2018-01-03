@@ -35,7 +35,9 @@ implementation.
 
 Author: Jason E. Aten, Ph.D.
 
-License: 3-clause BSD. See LICENSE.
+License: 3-clause BSD.
 
 Credits: some code here is dervied from the Go gc compiler
 and from Richard Musiol's excellent Gopherjs project.
+All three projects share the same 3-clause BSD license
+found in the LICENSE file.
