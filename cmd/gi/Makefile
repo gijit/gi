@@ -1,8 +1,8 @@
 
 
 all:
-	echo "type 'make onetime' to install luajit (only necessary once)."
-	echo "You can skip 'make luajit' if you already have luajit-2.1.0-beta3 installed from source."
+	@echo "type 'make onetime' to install luajit (only necessary once)."
+	@echo "You can skip 'make luajit' if you already have luajit-2.1.0-beta3 installed from source."
 	make install
 
 
