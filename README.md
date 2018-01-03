@@ -23,11 +23,11 @@ gopher-lua, and luajit.
 
 Luajit in particular is an amazing
 backend to target. In our quick and
-dirty 500x500 matrix multiplication
+dirty 500x500 random matrix multiplication
 benchmark, luajit *beat even statically compiled go*
 code by a factor of 3x. Go's time was 360 msec.
-Luajit's time was 135 msec. Julia uses optimized
-BLAS for this task and beats both Go
+Luajit's time was 135 msec. Julia uses an optimized
+BLAS library for this task and beats both Go
 and luajit by multiplying in 6 msec, but
 is too immature and too large to be
 a viable embedded target.
