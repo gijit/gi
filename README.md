@@ -1,4 +1,4 @@
-gofront: an interpreter-front end for Golang
+gofront: an interpreter front-end for Golang
 =======
 
 Go, if it only had a decent REPL, could be a great
