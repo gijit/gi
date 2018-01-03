@@ -1,8 +1,16 @@
 package main
 
+import "fmt"
+
 func main() {
-	//NodeChildMain()
-	//OttoReplMain()
+	fmt.Printf(`
+gi: go interactive
+==================
+%s
+==================
+`, Version())
 
 	LuajitMain()
+	//NodeChildMain()
+	//OttoReplMain()
 }

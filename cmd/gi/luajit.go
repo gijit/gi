@@ -31,11 +31,16 @@ func LuajitMain() {
 		if isPrefix {
 			panic("line too long")
 		}
-		translation := inc.Tr([]byte(src))
-		fmt.Printf("go:'%s'  -->  '%s' in lua\n", src, translation)
+		translation, err := translateAndCatchPanic(inc, src)
+		if err != nil {
+			fmt.Printf("oops: '%v' on input '%s'\n", err, string(src))
+			translation = "\n"
+			// still write, so we get another prompt
+		} else {
+			fmt.Printf("got translation of line from Go into lua: '%s'\n", string(translation))
+		}
 
 		err = vm.Loadstring(string(translation))
-		//err = vm.Loadstring(string(src))
 		panicOn(err)
 		err = vm.Pcall(0, 0, 0)
 		panicOn(err)
