@@ -1,15 +1,20 @@
-gofront: an interpreter front-end for Golang
+gi: go interactive : a front-end for Go REPLs written in Golang
 =======
 
 Status: early stages, work in progress. More
 ambition than reality at present.
 
+# the dream
+
 Go, if it only had a decent REPL, could be a great
 language for exploratory data analysis.
 
+# the rationale
 Go has big advantages over python, R, and Matlab.
 It has good type checking, reasonable compiled performance,
 and excellent multicore support.
+
+# the aim
 
 `gofront` aims to provide a library for many
 interactive backends to be written against.
@@ -19,10 +24,14 @@ checking. `gofront` will then pass the
 AST to a backend for codegen and/or immediate
 interpretation.
 
+# of course we need a backend to develop against
+
 Considering possible backends for a
 reference implementation,
 I compared node.js, chez scheme, otto,
 gopher-lua, and luajit.
+
+# luajit did what?
 
 Luajit in particular is an amazing
 backend to target. In our quick and
