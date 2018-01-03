@@ -1,11 +1,14 @@
 gofront: an interpreter front-end for Golang
 =======
 
-Go, if it only had a decent REPL, could be a great
-language for interactive, exploratory data analysis.
+Status: early stages, work in progress. More
+ambition than reality at present.
 
-Go's big advantages over python, R, and Matlab is that
-it has good type checking, reasonable compiled performance,
+Go, if it only had a decent REPL, could be a great
+language for exploratory data analysis.
+
+Go has big advantages over python, R, and Matlab.
+It has good type checking, reasonable compiled performance,
 and excellent multicore support.
 
 `gofront` aims to provide a library for many
@@ -31,12 +34,6 @@ BLAS library for this task and beats both Go
 and luajit by multiplying in 6 msec, but
 is too immature and too large to be
 a viable embedded target.
-
-Luajit (for speed) or gopher-lua (for
-ease of embedding) will probably be the
-choice(s) for reference backend
-implementation.
-
 
 Author: Jason E. Aten, Ph.D.
 
