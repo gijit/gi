@@ -996,7 +996,9 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 				}
 				return c.fixNumber(c.formatExpr("%s.$low", c.translateExpr(expr)), t)
 			case isFloat(basicExprType):
-				return c.formatParenExpr("%e >> 0", expr)
+				// jea
+				//return c.formatParenExpr("%e >> 0", expr)
+				return c.formatParenExpr("%e", expr)
 			case types.Identical(exprType, types.Typ[types.UnsafePointer]):
 				return c.translateExpr(expr)
 			default:
@@ -1200,7 +1202,9 @@ func (c *funcContext) fixNumber(value *expression, basic *types.Basic) *expressi
 	case types.Uint16:
 		return c.formatParenExpr("%s << 16 >>> 16", value)
 	case types.Int32, types.Int, types.UntypedInt:
-		return c.formatParenExpr("%s >> 0", value)
+		// jea
+		//return c.formatParenExpr("%s >> 0", value)
+		return c.formatParenExpr("%s", value)
 	case types.Uint32, types.Uint, types.Uintptr:
 		return c.formatParenExpr("%s >>> 0", value)
 	case types.Float32:

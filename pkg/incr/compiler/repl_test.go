@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
-	"github.com/robertkrimen/otto"
+	"github.com/glycerine/luajit"
 )
 
 func Test001JavascriptTranslation(t *testing.T) {
@@ -29,10 +29,13 @@ func Test001JavascriptTranslation(t *testing.T) {
 	})
 }
 
-func Test002OttoEvalIncremental(t *testing.T) {
+func Test002LuaEvalIncremental(t *testing.T) {
 
 	// and then eval!
-	vm := otto.New()
+	vm := luajit.Newstate()
+	defer vm.Close()
+	vm.Openlibs()
+
 	inc := NewIncrState()
 
 	srcs := []string{"a := 10;", "func adder(a, b int) int { return a + b}; ", "sum := adder(a,a);"}
@@ -41,21 +44,17 @@ func Test002OttoEvalIncremental(t *testing.T) {
 		fmt.Printf("go:'%s'  -->  '%s' in js\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in js\n", src, translation)
 
-		v, err := vm.Eval(string(translation))
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("v back = '%#v'\n", v)
-	}
-	value, err := vm.Get("sum")
-	if err != nil {
-		panic(err)
-	}
+		err := vm.Loadstring(string(translation))
+		panicOn(err)
+		err = vm.Pcall(0, 0, 0)
+		panicOn(err)
+		DumpLuaStack(vm)
 
-	value_int, err := value.ToInteger()
-	if err != nil {
-		panic(err)
+		//fmt.Printf("v back = '%#v'\n", v)
 	}
+	vm.Getglobal("sum")
+	top := vm.Gettop()
+	value_int := vm.Tointeger(top)
 
 	fmt.Printf("value_int=%v", value_int)
 	if value_int != 20 {
