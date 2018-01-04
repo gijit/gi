@@ -148,7 +148,8 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.formatExpr(`$toNativeArray(%s, [%s])`, typeKind(t.Elem()), strings.Join(elements, ", "))
 		case *types.Slice:
-			return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
+			return c.formatExpr("{%s}", strings.Join(collectIndexedElements(t.Elem()), ", "))
+			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))
 			for i, element := range e.Elts {

@@ -152,17 +152,15 @@ func Test009NumericalForLoop(t *testing.T) {
 	})
 }
 
-/*
-func Test010RangeForLoop(t *testing.T) {
+func Test010Slice(t *testing.T) {
 	inc := NewIncrState()
 
-	cv.Convey("range for loops should compile into lua", t, func() {
+	cv.Convey("slice literal should compile into lua", t, func() {
 
-		code := `a:=[]int{1,2,3}; func hmm() { for _, v := range a { println(v) } }`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, ``)
+		code := `a:=[]int{1,2,3}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a={1,2,3};`)
 	})
 }
-*/
 
 func Test011MapAndRangeForLoop(t *testing.T) {
 	inc := NewIncrState()
