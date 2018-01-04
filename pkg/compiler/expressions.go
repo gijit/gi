@@ -475,7 +475,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.formatExpr(pattern, e.X, e.Index)
 		case *types.Slice:
-			// jea:
+			// jea: TODO: bring back these runtime range checks!! b/c lua will
+			//   just give us nils back silently instead of complaining about
+			//   out of bounds access.
 			//return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
 			return c.formatExpr("%1e[%2f]", e.X, e.Index)
 		case *types.Map:
