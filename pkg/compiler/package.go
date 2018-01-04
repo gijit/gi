@@ -120,16 +120,16 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 	return pi.importContext.Packages[a.ImportPath], nil
 }
 
-// Compile is great for all-at-once compilation, but at the
+// Compile is great for all-at-once compilation. However at the
 // REPL, for correct closure creation, we need execution exactly-in-the-order things
 // were entered. So we use the modified version
 // IncrementalCompile() in incr.go instead for most
 // REPL operation. Leave this intact
 // for reference and for compiling whole modules at once.
+// No top-level raw assignments or expressions should
+// need to be processed by Compile(), it should return
+// to its traditional duties.
 func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
-
-	// JEA TODO: we need to preserve the order in which
-	//  definitions are entered. Currently this is lost.
 
 	var newCodeText [][]byte
 
@@ -592,42 +592,6 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 		d.InitCode = removeWhitespace(d.InitCode, minify)
 		allDecls = append(allDecls, d)
 	}
-
-	// raw top level statements!
-	//
-	// Essential implementation of short form assignment at the
-	//  top level, but does cause problems with import currently.
-	//
-	pp("package.go, at the end, any raw top level statements? we have len(c.p.NewCode) == %v", len(c.p.NewCode))
-	if len(c.p.NewCode) > 0 {
-		for _, newStuff := range c.p.NewCode {
-			c.output = nil
-			switch s := newStuff.Node.(type) {
-			case ast.Stmt:
-				c.translateStmt(s, nil)
-				pp("in codegen, %T/val='%#v'", s, s)
-			default:
-				pp("in codegen, unknown type %T", s)
-				continue
-			}
-			if newStuff.IsExpr {
-				newCodeText = append(newCodeText, []byte("print("))
-				n := len(c.output)
-				if bytes.HasSuffix(c.output, []byte(";\n")) {
-					newCodeText = append(newCodeText, bytes.TrimLeft(c.output[:n-2], " \t"))
-				} else {
-					newCodeText = append(newCodeText, c.output)
-				}
-				newCodeText = append(newCodeText, []byte(");"))
-			} else {
-				newCodeText = append(newCodeText, c.output)
-			}
-			pp("place4, appending to newCodeText: c.output='%s'", string(c.output))
-		}
-	}
-
-	// clear the c.p.NewCode so we don't repeat it again
-	c.p.NewCode = nil
 
 	if len(c.p.errList) != 0 {
 		return nil, c.p.errList
