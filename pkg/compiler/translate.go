@@ -63,7 +63,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 		Name: "/repl",
 	}
 
-	tr.archive, err = Compile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)
+	tr.archive, err = IncrementallyCompile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)
 	panicOn(err)
 	//pp("archive = '%#v'", tr.archive)
 	//pp("len(tr.archive.Declarations)= '%v'", len(tr.archive.Declarations))
