@@ -164,10 +164,10 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 
 	case *ast.RangeStmt:
 		refVar := c.newVariable("_ref")
-		c.Printf("%s = %s;", refVar, c.translateExpr(s.X))
 
 		switch t := c.p.TypeOf(s.X).Underlying().(type) {
 		case *types.Basic:
+			c.Printf("%s = %s;", refVar, c.translateExpr(s.X))
 			iVar := c.newVariable("_i")
 			c.Printf("%s = 0;", iVar)
 			runeVar := c.newVariable("_rune")
@@ -184,28 +184,36 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			}, label, c.Flattened[s])
 
 		case *types.Map:
-			iVar := c.newVariable("_i")
-			c.Printf("%s = 0;", iVar)
-			keysVar := c.newVariable("_keys")
-			c.Printf("%s = $keys(%s);", keysVar, refVar)
-			c.translateLoopingStmt(func() string { return iVar + " < " + keysVar + ".length" }, s.Body, func() {
-				entryVar := c.newVariable("_entry")
-				c.Printf("%s = %s[%s[%s]];", entryVar, refVar, keysVar, iVar)
-				c.translateStmt(&ast.IfStmt{
-					Cond: c.newIdent(entryVar+" === undefined", types.Typ[types.Bool]),
-					Body: &ast.BlockStmt{List: []ast.Stmt{&ast.BranchStmt{Tok: token.CONTINUE}}},
-				}, nil)
-				if !isBlank(s.Key) {
-					c.Printf("%s", c.translateAssign(s.Key, c.newIdent(entryVar+".k", t.Key()), s.Tok == token.DEFINE))
-				}
-				if !isBlank(s.Value) {
-					c.Printf("%s", c.translateAssign(s.Value, c.newIdent(entryVar+".v", t.Elem()), s.Tok == token.DEFINE))
-				}
-			}, func() {
-				c.Printf("%s++;", iVar)
-			}, label, c.Flattened[s])
+			// jea, lua:
+			//c.Printf("for %s, %s in pairs(%s) do %s; end", s.Key, s.Value, c.translateExpr(s.X), s.Body)
+
+			/*
+				iVar := c.newVariable("_i")
+				c.Printf("%s = 0;", iVar)
+				keysVar := c.newVariable("_keys")
+				c.Printf("%s = $keys(%s);", keysVar, refVar)
+			*/
+			c.translateForRangeStmt(s, s.Body, nil, nil, /*func() {
+					entryVar := c.newVariable("_entry")
+					c.Printf("%s = %s[%s[%s]];", entryVar, refVar, keysVar, iVar)
+					c.translateStmt(&ast.IfStmt{
+						Cond: c.newIdent(entryVar+" === undefined", types.Typ[types.Bool]),
+						Body: &ast.BlockStmt{List: []ast.Stmt{&ast.BranchStmt{Tok: token.CONTINUE}}},
+					}, nil)
+					if !isBlank(s.Key) {
+						c.Printf("%s", c.translateAssign(s.Key, c.newIdent(entryVar+".k", t.Key()), s.Tok == token.DEFINE))
+					}
+					if !isBlank(s.Value) {
+						c.Printf("%s", c.translateAssign(s.Value, c.newIdent(entryVar+".v", t.Elem()), s.Tok == token.DEFINE))
+					}
+				}  , func() {
+					c.Printf("%s++;", iVar)
+				} */
+				label, c.Flattened[s])
 
 		case *types.Array, *types.Pointer, *types.Slice:
+			c.Printf("%s = %s;", refVar, c.translateExpr(s.X))
+
 			var length string
 			var elemType types.Type
 			switch t2 := t.(type) {
@@ -236,6 +244,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			}, label, c.Flattened[s])
 
 		case *types.Chan:
+			c.Printf("%s = %s;", refVar, c.translateExpr(s.X))
+
 			okVar := c.newIdent(c.newVariable("_ok"), types.Typ[types.Bool])
 			key := s.Key
 			tok := s.Tok
@@ -609,6 +619,104 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 }
 
 func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
+	prevFlowData := c.flowDatas[nil]
+	data := &flowData{
+		postStmt: post,
+	}
+	if flatten {
+		data.beginCase = c.caseCounter
+		data.endCase = c.caseCounter + 1
+		c.caseCounter += 2
+	}
+	c.flowDatas[nil] = data
+	c.flowDatas[label] = data
+	defer func() {
+		delete(c.flowDatas, label)
+		c.flowDatas[nil] = prevFlowData
+	}()
+
+	if !flatten && label != nil {
+		c.Printf("%s:", label.Name())
+	}
+	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
+	c.Indent(func() {
+		condStr := cond()
+		if condStr != "true" {
+			c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then $s = %d; continue; end ", condStr, data.endCase))
+		}
+
+		prevEV := c.p.escapingVars
+		c.handleEscapingVars(body)
+
+		if bodyPrefix != nil {
+			bodyPrefix()
+		}
+		c.translateStmtList(body.List)
+		isTerminated := false
+		if len(body.List) != 0 {
+			switch body.List[len(body.List)-1].(type) {
+			case *ast.ReturnStmt, *ast.BranchStmt:
+				isTerminated = true
+			}
+		}
+		if !isTerminated {
+			post()
+		}
+
+		c.p.escapingVars = prevEV
+	})
+	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
+}
+
+// jea: TODO. currently just a copy of the above translateLoopingStmt
+func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
+
+	prevFlowData := c.flowDatas[nil]
+	data := &flowData{
+		postStmt: post,
+	}
+	if flatten {
+		data.beginCase = c.caseCounter
+		data.endCase = c.caseCounter + 1
+		c.caseCounter += 2
+	}
+	c.flowDatas[nil] = data
+	c.flowDatas[label] = data
+	defer func() {
+		delete(c.flowDatas, label)
+		c.flowDatas[nil] = prevFlowData
+	}()
+
+	if !flatten && label != nil {
+		c.Printf("%s:", label.Name())
+	}
+	c.Printf("for %s, %s in pairs(%s) do ", s.Key, s.Value, c.translateExpr(s.X))
+
+	prevEV := c.p.escapingVars
+	c.handleEscapingVars(body)
+
+	if bodyPrefix != nil {
+		bodyPrefix()
+	}
+	c.translateStmtList(body.List)
+	isTerminated := false
+	if len(body.List) != 0 {
+		switch body.List[len(body.List)-1].(type) {
+		case *ast.ReturnStmt, *ast.BranchStmt:
+			isTerminated = true
+		}
+	}
+	if !isTerminated && post != nil {
+		post()
+	}
+
+	c.p.escapingVars = prevEV
+	c.Printf(" end ")
+	//c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
+}
+
+// body helper
+func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
 	prevFlowData := c.flowDatas[nil]
 	data := &flowData{
 		postStmt: post,
