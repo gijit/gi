@@ -32,6 +32,8 @@ func Simplify(file *ast.File, info *types.Info, simplifyCalls bool) *ast.File {
 				Type: decl.Type,
 				Body: c.simplifyBlock(decl.Body),
 			}
+		default:
+			nodes[i] = decl
 		}
 	}
 

@@ -123,7 +123,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 // Compile is great for all-at-once compilation, but at the
 // REPL, for correct closure creation, we need execution exactly-in-the-order things
 // were entered. So we use the modified version
-// IncrementallyCompile() in incr.go instead for most
+// IncrementalCompile() in incr.go instead for most
 // REPL operation. Leave this intact
 // for reference and for compiling whole modules at once.
 func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {

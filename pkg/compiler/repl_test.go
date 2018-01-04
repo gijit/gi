@@ -127,8 +127,8 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 
 	cv.Convey("if then else within a closure/function should compile into lua", t, func() {
 
-		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under 30")} }`
+		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under or at 30")} }`
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; hmm = function() if (a > 30) then print("over 30"); else print("under 30"); end end;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; hmm = function() if (a > 30) then print("over 30"); else print("under or at 30"); end end;`)
 	})
 }

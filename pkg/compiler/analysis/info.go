@@ -72,12 +72,16 @@ func AnalyzePkg(files []*ast.File, fileSet *token.FileSet, typesInfo *types.Info
 		done := true
 		for _, funcInfo := range info.allInfos {
 			for obj, calls := range funcInfo.LocalCalls {
-				if len(info.FuncDeclInfos[obj].Blocking) != 0 {
-					for _, call := range calls {
-						funcInfo.markBlocking(call)
+				pp("obj='%#v'. info='%#v'", obj, info)
+				pp("info.FuncDeclInfos[obj] = '%#v'", info.FuncDeclInfos[obj])
+				if info.FuncDeclInfos[obj] != nil {
+					if len(info.FuncDeclInfos[obj].Blocking) != 0 {
+						for _, call := range calls {
+							funcInfo.markBlocking(call)
+						}
+						delete(funcInfo.LocalCalls, obj)
+						done = false
 					}
-					delete(funcInfo.LocalCalls, obj)
-					done = false
 				}
 			}
 		}

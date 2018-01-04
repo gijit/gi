@@ -18,6 +18,15 @@ import (
 
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 
+	pp("jea debug, top of incrementallyCompile(): here is what files has:")
+	j := 0
+	for _, file := range files {
+		for _, decl := range file.Nodes {
+			pp("decl[%v] = '%#v'", j, decl)
+		}
+		j++
+	}
+
 	var newCodeText [][]byte
 
 	var typesInfo *types.Info
@@ -142,6 +151,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 	pp("got past AnalyzePkg")
 
+	// ==============================
+	// actual incrmental compilation
+	// modifications start here
+	// ==============================
+
 	// imports
 	var importDecls []*Decl
 	var importedPaths []string
@@ -167,54 +181,6 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		})
 	}
 
-	var functions []*ast.FuncDecl
-	var vars []*types.Var
-	for _, file := range simplifiedFiles {
-		for _, decl := range file.Nodes {
-
-			// fill out vars and functions
-
-			switch d := decl.(type) {
-			case *ast.FuncDecl:
-				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)
-				var recvType types.Type
-				if sig.Recv() != nil {
-					recvType = sig.Recv().Type()
-					if ptr, isPtr := recvType.(*types.Pointer); isPtr {
-						recvType = ptr.Elem()
-					}
-				}
-				if sig.Recv() == nil {
-					c.objectName(c.p.Defs[d.Name].(*types.Func)) // register toplevel name
-				}
-				if !isBlank(d.Name) {
-					functions = append(functions, d)
-				}
-			case *ast.GenDecl:
-				switch d.Tok {
-				case token.TYPE:
-					for _, spec := range d.Specs {
-						o := c.p.Defs[spec.(*ast.TypeSpec).Name].(*types.TypeName)
-						c.p.typeNames = append(c.p.typeNames, o)
-						c.objectName(o) // register toplevel name
-					}
-				case token.VAR:
-					for _, spec := range d.Specs {
-						for _, name := range spec.(*ast.ValueSpec).Names {
-							if !isBlank(name) {
-								o := c.p.Defs[name].(*types.Var)
-								vars = append(vars, o)
-								c.objectName(o) // register toplevel name
-							}
-						}
-					}
-				case token.CONST:
-					// skip, constants are inlined
-				}
-			}
-		}
-	}
-
 	collectDependencies := func(f func()) []string {
 		c.p.dependencies = make(map[types.Object]bool)
 		f()
@@ -231,36 +197,175 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		return deps
 	}
 
-	// ===========================
-	// variables
-	// ===========================
-
-	pp("jea, at variables, in package.go:336. vars='%#v'", vars)
-	var varDecls []*Decl
 	varsWithInit := make(map[*types.Var]bool)
 	for _, init := range c.p.InitOrder {
 		for _, o := range init.Lhs {
 			varsWithInit[o] = true
 		}
 	}
-	for _, o := range vars {
-		var d Decl
-		if !o.Exported() {
-			d.Vars = []string{c.objectName(o)}
+
+	var functions []*ast.FuncDecl
+	var vars []*types.Var
+	var varDecls []*Decl
+	var funcDecls []*Decl
+	var mainFunc *types.Func
+
+	for _, file := range simplifiedFiles {
+		pp("file.Nodes has %v elements", len(file.Nodes))
+		for _, decl := range file.Nodes {
+
+			// fill out vars and functions
+
+			switch d := decl.(type) {
+			case *ast.FuncDecl:
+				pp("next decl from file.Nodes is a funcDecl: '%#v'", d)
+				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)
+				var recvType types.Type
+				if sig.Recv() != nil {
+					recvType = sig.Recv().Type()
+					if ptr, isPtr := recvType.(*types.Pointer); isPtr {
+						recvType = ptr.Elem()
+					}
+				}
+				if sig.Recv() == nil {
+					c.objectName(c.p.Defs[d.Name].(*types.Func)) // register toplevel name
+				}
+				if !isBlank(d.Name) {
+					fun := d
+					functions = append(functions, fun)
+
+					// jea: codegen here and now, in order.
+					o := c.p.Defs[fun.Name].(*types.Func)
+					funcInfo := c.p.FuncDeclInfos[o]
+					de := Decl{
+						FullName: o.FullName(),
+						Blocking: len(funcInfo.Blocking) != 0,
+					}
+					if fun.Recv == nil {
+						de.Vars = []string{c.objectName(o)}
+						de.DceObjectFilter = o.Name()
+						switch o.Name() {
+						case "main":
+							mainFunc = o
+							de.DceObjectFilter = ""
+						case "init":
+							de.InitCode = c.CatchOutput(1, func() {
+								id := c.newIdent("", types.NewSignature(nil, nil, nil, false))
+								c.p.Uses[id] = o
+								call := &ast.CallExpr{Fun: id}
+								if len(c.p.FuncDeclInfos[o].Blocking) != 0 {
+									c.Blocking[call] = true
+								}
+								c.translateStmt(&ast.ExprStmt{X: call}, nil)
+							})
+							de.DceObjectFilter = ""
+						}
+					}
+					if fun.Recv != nil {
+						recvType := o.Type().(*types.Signature).Recv().Type()
+						ptr, isPointer := recvType.(*types.Pointer)
+						namedRecvType, _ := recvType.(*types.Named)
+						if isPointer {
+							namedRecvType = ptr.Elem().(*types.Named)
+						}
+						de.DceObjectFilter = namedRecvType.Obj().Name()
+						if !fun.Name.IsExported() {
+							de.DceMethodFilter = o.Name() + "~"
+						}
+					}
+
+					de.DceDeps = collectDependencies(func() {
+						de.DeclCode = c.translateToplevelFunction(fun, funcInfo)
+					})
+					funcDecls = append(funcDecls, &de)
+					pp("place3, appending to newCodeText: de.DeclCode='%s'", string(de.DeclCode))
+					newCodeText = append(newCodeText, de.DeclCode)
+
+					// end of function codegen now
+				}
+			case *ast.GenDecl:
+				pp("next decl from file.Nodes is a GenDecl: '%#v'", d.Specs[0].(*ast.ValueSpec).Names[0])
+				switch d.Tok {
+				case token.TYPE:
+					for _, spec := range d.Specs {
+						o := c.p.Defs[spec.(*ast.TypeSpec).Name].(*types.TypeName)
+						c.p.typeNames = append(c.p.typeNames, o)
+						c.objectName(o) // register toplevel name
+					}
+				case token.VAR:
+					for _, spec := range d.Specs {
+						for _, name := range spec.(*ast.ValueSpec).Names {
+							if !isBlank(name) {
+								o := c.p.Defs[name].(*types.Var)
+								vars = append(vars, o)
+								c.objectName(o) // register toplevel name
+
+								// jea: codegen here and now, in order.
+
+								var de Decl
+								if !o.Exported() {
+									de.Vars = []string{c.objectName(o)}
+								}
+								if c.p.HasPointer[o] && !o.Exported() {
+									de.Vars = append(de.Vars, c.varPtrName(o))
+								}
+								if _, ok := varsWithInit[o]; !ok {
+									de.DceDeps = collectDependencies(func() {
+										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+									})
+								}
+								de.DceObjectFilter = o.Name()
+								varDecls = append(varDecls, &de)
+								pp("place 1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
+								newCodeText = append(newCodeText, de.InitCode)
+
+								// end codegen here and now for vars
+							}
+						}
+					}
+				case token.CONST:
+					// skip, constants are inlined
+				}
+			default:
+				pp("next decl from file.Nodes is an unknown/default type: '%#v'", decl)
+				c.output = nil
+				switch s := decl.(type) {
+				case ast.Stmt:
+					c.translateStmt(s, nil)
+					pp("in codegen, %T/val='%#v'", s, s)
+				default:
+					pp("in codegen, unknown type %T", s)
+					continue
+				}
+
+				_, isExprStmt := decl.(*ast.ExprStmt)
+				if !isExprStmt {
+					newCodeText = append(newCodeText, c.output)
+				} else {
+					newCodeText = append(newCodeText, []byte("print("))
+					n := len(c.output)
+					if bytes.HasSuffix(c.output, []byte(";\n")) {
+						newCodeText = append(newCodeText, bytes.TrimLeft(c.output[:n-2], " \t"))
+					} else {
+						newCodeText = append(newCodeText, c.output)
+					}
+					newCodeText = append(newCodeText, []byte(");"))
+				}
+				pp("place5, appending to newCodeText: c.output='%s'", string(c.output))
+				c.output = nil
+			}
 		}
-		if c.p.HasPointer[o] && !o.Exported() {
-			d.Vars = append(d.Vars, c.varPtrName(o))
-		}
-		if _, ok := varsWithInit[o]; !ok {
-			d.DceDeps = collectDependencies(func() {
-				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
-			})
-		}
-		d.DceObjectFilter = o.Name()
-		varDecls = append(varDecls, &d)
-		pp("place 1, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-		newCodeText = append(newCodeText, d.InitCode)
 	}
+
+	// ===========================
+	// variables
+	// ===========================
+
+	pp("jea, at variables, in package.go:336. vars='%#v'", vars)
+	//var varDecls []*Decl
+	// moved up above, to stay in sequence entered order.
+	//	for _, o := range vars {
+	//	}
 	pp("jea, package.go:362. c.p.InitOrder='%#v'", c.p.InitOrder)
 	for _, init := range c.p.InitOrder {
 		lhs := make([]ast.Expr, len(init.Lhs))
@@ -297,55 +402,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// ===========================
 	// functions
 	// ===========================
-	var funcDecls []*Decl
-	var mainFunc *types.Func
-	for _, fun := range functions {
-		o := c.p.Defs[fun.Name].(*types.Func)
-		funcInfo := c.p.FuncDeclInfos[o]
-		d := Decl{
-			FullName: o.FullName(),
-			Blocking: len(funcInfo.Blocking) != 0,
-		}
-		if fun.Recv == nil {
-			d.Vars = []string{c.objectName(o)}
-			d.DceObjectFilter = o.Name()
-			switch o.Name() {
-			case "main":
-				mainFunc = o
-				d.DceObjectFilter = ""
-			case "init":
-				d.InitCode = c.CatchOutput(1, func() {
-					id := c.newIdent("", types.NewSignature(nil, nil, nil, false))
-					c.p.Uses[id] = o
-					call := &ast.CallExpr{Fun: id}
-					if len(c.p.FuncDeclInfos[o].Blocking) != 0 {
-						c.Blocking[call] = true
-					}
-					c.translateStmt(&ast.ExprStmt{X: call}, nil)
-				})
-				d.DceObjectFilter = ""
-			}
-		}
-		if fun.Recv != nil {
-			recvType := o.Type().(*types.Signature).Recv().Type()
-			ptr, isPointer := recvType.(*types.Pointer)
-			namedRecvType, _ := recvType.(*types.Named)
-			if isPointer {
-				namedRecvType = ptr.Elem().(*types.Named)
-			}
-			d.DceObjectFilter = namedRecvType.Obj().Name()
-			if !fun.Name.IsExported() {
-				d.DceMethodFilter = o.Name() + "~"
-			}
-		}
-
-		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = c.translateToplevelFunction(fun, funcInfo)
-		})
-		funcDecls = append(funcDecls, &d)
-		pp("place3, appending to newCodeText: d.DeclCode='%s'", string(d.DeclCode))
-		newCodeText = append(newCodeText, d.DeclCode)
-	}
+	// moved up to stay in order.
+	//	for _, fun := range functions {
+	//	}
 	if pkg.Name() == "main" {
 		if mainFunc == nil {
 			return nil, fmt.Errorf("missing main function")
@@ -480,41 +539,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		allDecls = append(allDecls, d)
 	}
 
-	// raw top level statements!
-	//
-	// Essential implementation of short form assignment at the
-	//  top level, but does cause problems with import currently.
-	//
-	pp("package.go, at the end, any raw top level statements? we have len(c.p.NewCode) == %v", len(c.p.NewCode))
-	if len(c.p.NewCode) > 0 {
-		for _, newStuff := range c.p.NewCode {
-			c.output = nil
-			switch s := newStuff.Node.(type) {
-			case ast.Stmt:
-				c.translateStmt(s, nil)
-				pp("in codegen, %T/val='%#v'", s, s)
-			default:
-				pp("in codegen, unknown type %T", s)
-				continue
-			}
-			if newStuff.IsExpr {
-				newCodeText = append(newCodeText, []byte("print("))
-				n := len(c.output)
-				if bytes.HasSuffix(c.output, []byte(";\n")) {
-					newCodeText = append(newCodeText, bytes.TrimLeft(c.output[:n-2], " \t"))
-				} else {
-					newCodeText = append(newCodeText, c.output)
-				}
-				newCodeText = append(newCodeText, []byte(");"))
-			} else {
-				newCodeText = append(newCodeText, c.output)
-			}
-			pp("place4, appending to newCodeText: c.output='%s'", string(c.output))
-		}
-	}
-
-	// clear the c.p.NewCode so we don't repeat it again
-	c.p.NewCode = nil
+	// raw top level statements! now integrated above in order
 
 	if len(c.p.errList) != 0 {
 		return nil, c.p.errList
