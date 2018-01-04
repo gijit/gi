@@ -432,7 +432,7 @@ func (check *Checker) collectObjects() {
 
 				// jea: allow assignments at the top level!
 			case *ast.AssignStmt:
-				//pp("we see an AssignStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
+				pp("we see an AssignStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
 				check.simpleStmt(d)
 
 				// jea: allow evaluation of expressions at the top level!

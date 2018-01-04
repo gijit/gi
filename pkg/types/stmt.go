@@ -294,6 +294,7 @@ L:
 
 // stmt typechecks statement s.
 func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
+	pp("jea Checker.stmt() started. s='%#v'", s)
 	// statements cannot use iota in general
 	// (constant declarations set it explicitly)
 	assert(check.iota == nil)
@@ -311,7 +312,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 
 	inner := ctxt &^ (fallthroughOk | finalSwitchCase)
 
-	//pp("Checker.stmt: s has type %T/val='%v'", s, s)
+	pp("Checker.stmt: s has type %T/val='%v'", s, s)
 	switch s := s.(type) {
 	case *ast.BadStmt, *ast.EmptyStmt:
 		// ignore
@@ -404,7 +405,7 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 				check.shortVarDecl(s.TokPos, s.Lhs, s.Rhs, s)
 			} else {
 				// regular assignment
-				check.assignVars(s.Lhs, s.Rhs)
+				check.assignVars(s.Lhs, s.Rhs, s)
 			}
 
 		default:

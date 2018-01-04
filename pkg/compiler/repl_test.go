@@ -115,6 +115,7 @@ func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 
 		// and in separate calls, where the second call sets the earlier variable.
 		cv.So(string(inc.Tr([]byte("a:=1"))), cv.ShouldMatchModuloWhiteSpace, `a=1;`)
+		cv.So(string(inc.Tr([]byte("b:=2"))), cv.ShouldMatchModuloWhiteSpace, `b=2;`)
 		// and redefinition of a should work:
 		pp("starting on a=2;")
 		cv.So(string(inc.Tr([]byte("a=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=2;`)

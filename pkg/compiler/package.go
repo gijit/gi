@@ -162,7 +162,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 			},
 		}
 	}
-	//pp("about to call config.Check")
+	pp("about to call config.Check")
 	var pkg *types.Package
 	var check *types.Checker
 	if a != nil {
@@ -244,7 +244,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	for name := range reservedKeywords {
 		c.allVars[name] = 1
 	}
-	//pp("got past AnalyzePkg")
+	pp("got past AnalyzePkg")
 
 	// imports
 	var importDecls []*Decl
@@ -333,6 +333,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	}
 
 	// variables
+	pp("jea, at variables, in package.go:336. vars='%#v'", vars)
 	var varDecls []*Decl
 	varsWithInit := make(map[*types.Var]bool)
 	for _, init := range c.p.InitOrder {
@@ -358,6 +359,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 		pp("place 1, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
 		newCodeText = append(newCodeText, d.InitCode)
 	}
+	pp("jea, package.go:362. c.p.InitOrder='%#v'", c.p.InitOrder)
 	for _, init := range c.p.InitOrder {
 		lhs := make([]ast.Expr, len(init.Lhs))
 		for i, o := range init.Lhs {
@@ -388,6 +390,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 		newCodeText = append(newCodeText, d.InitCode)
 	}
 
+	pp("jea, functions in package.go:393")
 	// functions
 	var funcDecls []*Decl
 	var mainFunc *types.Func
@@ -577,7 +580,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	// Essential implementation of short form assignment at the
 	//  top level, but does cause problems with import currently.
 	//
-	//pp("package.go, at the end, any raw top level statements? we have len(c.p.NewCode) == %v", len(c.p.NewCode))
+	pp("package.go, at the end, any raw top level statements? we have len(c.p.NewCode) == %v", len(c.p.NewCode))
 	if len(c.p.NewCode) > 0 {
 		for _, newStuff := range c.p.NewCode {
 			c.output = nil

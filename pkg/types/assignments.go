@@ -130,6 +130,7 @@ func (check *Checker) initVar(lhs *Var, x *operand, context string) Type {
 }
 
 func (check *Checker) assignVar(lhs ast.Expr, x *operand) Type {
+	pp("jea debug: Checker.assignVar() singular: lhs='%#v', x='%#v'", lhs, x)
 	if x.mode == invalid || x.typ == Typ[Invalid] {
 		return nil
 	}
@@ -245,7 +246,16 @@ func (check *Checker) initVars(lhs []*Var, rhs []ast.Expr, returnPos token.Pos) 
 	}
 }
 
-func (check *Checker) assignVars(lhs, rhs []ast.Expr) {
+func (check *Checker) assignVars(lhs, rhs []ast.Expr, s *ast.AssignStmt) (ok bool) {
+	pp("jea: assignVars() starting regular assignment, lhs='%#v', rhs='%#v'", lhs, rhs)
+	scope := check.scope
+	defer func() {
+		pp("jea: assignment ok, scope='%#v', check.pkg.scope='%#v'", scope, check.pkg.scope)
+		if ok && (scope == nil || scope == check.pkg.scope) {
+			pp("jea: assignment at package scope, making NewCode")
+			check.NewCode = append(check.NewCode, &NewStuff{Scope: scope, Node: s})
+		}
+	}()
 	l := len(lhs)
 	get, r, commaOk := unpack(func(x *operand, i int) { check.multiExpr(x, rhs[i]) }, len(rhs), l == 2)
 	if get == nil {
@@ -254,7 +264,7 @@ func (check *Checker) assignVars(lhs, rhs []ast.Expr) {
 	if l != r {
 		check.useGetter(get, r)
 		check.errorf(rhs[0].Pos(), "cannot assign %d values to %d variables", r, l)
-		return
+		return check.firstErr == nil
 	}
 
 	var x operand
@@ -265,13 +275,14 @@ func (check *Checker) assignVars(lhs, rhs []ast.Expr) {
 			a[i] = check.assignVar(lhs[i], &x)
 		}
 		check.recordCommaOkTypes(rhs[0], a)
-		return
+		return check.firstErr == nil
 	}
 
 	for i, lhs := range lhs {
 		get(&x, i)
 		check.assignVar(lhs, &x)
 	}
+	return check.firstErr == nil
 }
 
 func (check *Checker) shortVarDecl(pos token.Pos, lhs, rhs []ast.Expr, stmt ast.Stmt) {

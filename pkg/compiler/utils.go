@@ -245,7 +245,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 			varName = fmt.Sprintf("%s$%d", name, n)
 		}
 	}
-
+	pp("in newVariableWithLevel(), varName = '%s'", varName)
 	if pkgLevel {
 		for c2 := c.parent; c2 != nil; c2 = c2.parent {
 			c2.allVars[name] = n + 1
