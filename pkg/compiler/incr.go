@@ -350,7 +350,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					} else {
 						ele = string(c.output)
 					}
-					tmp := fmt.Sprintf(`if "table" == type(%[1]s) then print("key", "value"); `+
+					tmp := fmt.Sprintf(`if "table" == type(%[1]s) then print(%[1]s); print("key", "value"); `+
 						`for i, v in pairs(%[1]s) do print(i, v); end else print(%[1]s) end `,
 						ele)
 					newCodeText = append(newCodeText, []byte(tmp))
