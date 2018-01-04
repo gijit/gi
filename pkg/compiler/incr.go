@@ -342,14 +342,18 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				if !isExprStmt {
 					newCodeText = append(newCodeText, c.output)
 				} else {
-					newCodeText = append(newCodeText, []byte("print("))
+
 					n := len(c.output)
+					var ele string
 					if bytes.HasSuffix(c.output, []byte(";\n")) {
-						newCodeText = append(newCodeText, bytes.TrimLeft(c.output[:n-2], " \t"))
+						ele = string(bytes.TrimLeft(c.output[:n-2], " \t"))
 					} else {
-						newCodeText = append(newCodeText, c.output)
+						ele = string(c.output)
 					}
-					newCodeText = append(newCodeText, []byte(");"))
+					tmp := fmt.Sprintf(`if "table" == type(%[1]s) then print("key", "value"); `+
+						`for i, v in pairs(%[1]s) do print(i, v); end else print(%[1]s) end `,
+						ele)
+					newCodeText = append(newCodeText, []byte(tmp))
 				}
 				pp("place5, appending to newCodeText: c.output='%s'", string(c.output))
 				c.output = nil
