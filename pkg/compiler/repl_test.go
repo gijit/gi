@@ -163,3 +163,17 @@ func Test010RangeForLoop(t *testing.T) {
 	})
 }
 */
+
+func Test011MapAndRangeForLoop(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("maps and range for loops should compile into lua", t, func() {
+
+		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+a = {};
+a[1] = 10;
+a[2] = 20;
+hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
+	})
+}
