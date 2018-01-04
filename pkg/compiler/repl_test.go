@@ -175,3 +175,15 @@ a[2] = 20;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
+
+func Test012SliceRangeForLoop(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("range over a slice should compile into lua", t, func() {
+
+		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+a={1,2,3};
+hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
+	})
+}

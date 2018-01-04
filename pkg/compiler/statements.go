@@ -211,7 +211,11 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				} */
 				label, c.Flattened[s])
 
-		case *types.Array, *types.Pointer, *types.Slice:
+		case *types.Slice:
+			c.translateForRangeStmt(s, s.Body, nil, nil, label, c.Flattened[s])
+
+		//case *types.Array, *types.Pointer, *types.Slice:
+		case *types.Array, *types.Pointer:
 			c.Printf("%s = %s;", refVar, c.translateExpr(s.X))
 
 			var length string
