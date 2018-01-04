@@ -348,6 +348,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		c.Printf("$deferred.push([%s, [%s]]);", c.translateExpr(s.Call.Fun), strings.Join(args, ", "))
 
 	case *ast.AssignStmt:
+		pp("translateStmt(): case *ast.AssignStmt in statements.go:351")
 		if s.Tok != token.ASSIGN && s.Tok != token.DEFINE {
 			panic(s.Tok)
 		}

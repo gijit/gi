@@ -107,3 +107,16 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 		cv.So(string(inc.Tr([]byte("r:=`a new definition`"))), cv.ShouldMatchModuloWhiteSpace, `r = "a new definition";`)
 	})
 }
+
+func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("At the repl, in separate commands`a:=1; a=2;` sets a to 2", t, func() {
+
+		// and in separate calls, where the second call sets the earlier variable.
+		cv.So(string(inc.Tr([]byte("a:=1"))), cv.ShouldMatchModuloWhiteSpace, `a=1;`)
+		// and redefinition of a should work:
+		pp("starting on a=2;")
+		cv.So(string(inc.Tr([]byte("a=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=2;`)
+	})
+}
