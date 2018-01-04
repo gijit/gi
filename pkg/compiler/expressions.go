@@ -276,14 +276,14 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.fixNumber(c.formatExpr("~%e", e.X), basic)
 		case token.NOT:
-			return c.formatExpr("!%e", e.X)
+			return c.formatExpr(" not %e", e.X)
 		default:
 			panic(e.Op)
 		}
 
 	case *ast.BinaryExpr:
 		if e.Op == token.NEQ {
-			return c.formatExpr("!(%s)", c.translateExpr(&ast.BinaryExpr{
+			return c.formatExpr(" not (%s)", c.translateExpr(&ast.BinaryExpr{
 				X:  e.X,
 				Op: token.EQL,
 				Y:  e.Y,
@@ -417,11 +417,11 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				skipCase := c.caseCounter
 				c.caseCounter++
 				resultVar := c.newVariable("_v")
-				c.Printf("if (!(%s)) { %s = false; $s = %d; continue s; }", c.translateExpr(e.X), resultVar, skipCase)
+				c.Printf("if (not (%s)) then %s = false; $s = %d; continue s; end", c.translateExpr(e.X), resultVar, skipCase)
 				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
-			return c.formatExpr("%e && %e", e.X, e.Y)
+			return c.formatExpr("%e and %e", e.X, e.Y)
 		case token.LOR:
 			if c.Blocking[e.Y] {
 				skipCase := c.caseCounter
@@ -431,7 +431,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
-			return c.formatExpr("%e || %e", e.X, e.Y)
+			return c.formatExpr("%e or %e", e.X, e.Y)
 		case token.EQL:
 			switch u := t.Underlying().(type) {
 			case *types.Array, *types.Struct:

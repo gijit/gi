@@ -632,7 +632,7 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 	c.Indent(func() {
 		condStr := cond()
 		if condStr != "true" {
-			c.PrintCond(!flatten, fmt.Sprintf("if (!(%s)) then break; end", condStr), fmt.Sprintf("if(!(%s)) then $s = %d; continue; end ", condStr, data.endCase))
+			c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then $s = %d; continue; end ", condStr, data.endCase))
 		}
 
 		prevEV := c.p.escapingVars

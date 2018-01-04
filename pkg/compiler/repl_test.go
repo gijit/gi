@@ -132,3 +132,34 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; hmm = function() if (a > 30) then print("over 30"); else print("under or at 30"); end end;`)
 	})
 }
+
+func Test009NumericalForLoop(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("numerical for loops should compile into lua", t, func() {
+
+		code := `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=5;
+  	hmm = function() 
+  		i = 0;
+  		while (true) do
+  			if (not (i < a)) then break; end
+  			print(i);
+  			i = i + (1);
+  		 end
+ 	 end;
+`)
+	})
+}
+
+/*
+func Test010RangeForLoop(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("range for loops should compile into lua", t, func() {
+
+		code := `a:=[]int{1,2,3}; func hmm() { for _, v := range a { println(v) } }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, ``)
+	})
+}
+*/
