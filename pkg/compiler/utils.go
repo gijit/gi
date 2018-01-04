@@ -237,8 +237,13 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	n := c.allVars[name]
 	c.allVars[name] = n + 1
 	varName := name
-	if n > 0 {
-		varName = fmt.Sprintf("%s$%d", name, n)
+	// jea... what purpose does this serve? we
+	// want to re-use the same variable name when
+	// we re-declare vars.
+	if false { // jea add
+		if n > 0 {
+			varName = fmt.Sprintf("%s$%d", name, n)
+		}
 	}
 
 	if pkgLevel {
@@ -290,7 +295,11 @@ func isPkgLevel(o types.Object) bool {
 	return o.Parent() != nil && o.Parent().Parent() == types.Universe
 }
 
-func (c *funcContext) objectName(o types.Object) string {
+func (c *funcContext) objectName(o types.Object) (nam string) {
+	defer func() {
+		pp("objectName called for o='%#v', returning '%s'", o, nam)
+	}()
+
 	if isPkgLevel(o) {
 		c.p.dependencies[o] = true
 
@@ -300,8 +309,10 @@ func (c *funcContext) objectName(o types.Object) string {
 	}
 
 	name, ok := c.p.objectNames[o]
+	pp("utils.go:307, name='%v', ok='%v'", name, ok)
 	if !ok {
 		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o))
+		pp("name='%#v', o.Name()='%v'", name, o.Name())
 		c.p.objectNames[o] = name
 	}
 

@@ -355,7 +355,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 		}
 		d.DceObjectFilter = o.Name()
 		varDecls = append(varDecls, &d)
-		//pp("place 1, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+		pp("place 1, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
 		newCodeText = append(newCodeText, d.InitCode)
 	}
 	for _, init := range c.p.InitOrder {
@@ -384,7 +384,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 			}
 		}
 		varDecls = append(varDecls, &d)
-		//pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
 		newCodeText = append(newCodeText, d.InitCode)
 	}
 
@@ -435,7 +435,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 			d.DeclCode = c.translateToplevelFunction(fun, funcInfo)
 		})
 		funcDecls = append(funcDecls, &d)
-		//pp("place3, appending to newCodeText: d.DeclCode='%s'", string(d.DeclCode))
+		pp("place3, appending to newCodeText: d.DeclCode='%s'", string(d.DeclCode))
 		newCodeText = append(newCodeText, d.DeclCode)
 	}
 	if pkg.Name() == "main" {
@@ -584,7 +584,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 			switch s := newStuff.Node.(type) {
 			case ast.Stmt:
 				c.translateStmt(s, nil)
-				//pp("in codegen, %T/val='%#v'", s, s)
+				pp("in codegen, %T/val='%#v'", s, s)
 			default:
 				pp("in codegen, unknown type %T", s)
 				continue
@@ -601,7 +601,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 			} else {
 				newCodeText = append(newCodeText, c.output)
 			}
-			//pp("place4, appending to newCodeText: c.output='%s'", string(c.output))
+			pp("place4, appending to newCodeText: c.output='%s'", string(c.output))
 		}
 	}
 

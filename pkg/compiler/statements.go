@@ -661,7 +661,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	if isBlank(lhs) {
 		panic("translateAssign with blank lhs")
 	}
-
+	pp("jea: in translateAssign for lhs='%#v', rhs='%#v', define=%v", lhs, rhs, define)
 	if l, ok := lhs.(*ast.IndexExpr); ok {
 		if t, ok := c.p.TypeOf(l.X).Underlying().(*types.Map); ok {
 			if typesutil.IsJsObject(c.p.TypeOf(l.Index)) {
@@ -673,7 +673,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	}
 
 	lhsType := c.p.TypeOf(lhs)
-	//pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v", lhsType, lhs, lhs, define)
+	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v", lhsType, lhs, lhs, define)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
 		return fmt.Sprintf("%s = %s;", c.translateExpr(lhs), rhsExpr) // skip $copy
@@ -685,10 +685,13 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			}
 			panic("what goes here?")
 		} else {
-			return fmt.Sprintf("%s = %s;", c.translateExpr(lhs), rhsExpr) // skip $copy
+			pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
+			tlhs := c.translateExpr(lhs)
+			pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
+			return fmt.Sprintf("%s = %s;", tlhs, rhsExpr) // skip $copy
 		}
 	}
-	//pp("rhsExpr = '%#v'", rhsExpr)
+	pp("rhsExpr = '%#v'", rhsExpr)
 
 	isReflectValue := false
 	if named, ok := lhsType.(*types.Named); ok && named.Obj().Pkg() != nil && named.Obj().Pkg().Path() == "reflect" && named.Obj().Name() == "Value" {

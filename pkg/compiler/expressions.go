@@ -34,13 +34,16 @@ func (e *expression) StringWithParens() string {
 
 func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	exprType := c.p.TypeOf(expr)
+	pp("jea debug expressions.go, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
 		case isBoolean(basic):
 			return c.formatExpr("%s", strconv.FormatBool(constant.BoolVal(value)))
 		case isInteger(basic):
+			pp("jea, in isInteger")
 			if is64Bit(basic) {
+				pp("jea, in64Bit")
 				if basic.Kind() == types.Int64 {
 					d, ok := constant.Int64Val(constant.ToInt(value))
 					if !ok {
@@ -58,7 +61,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			if !ok {
 				panic("could not get exact int")
 			}
-			return c.formatExpr("%s", strconv.FormatInt(d, 10))
+			x := c.formatExpr("%s", strconv.FormatInt(d, 10))
+			pp("jea, debug, at formatExpr() line 64. x='%#v'", x)
+			return x
 		case isFloat(basic):
 			f, _ := constant.Float64Val(value)
 			return c.formatExpr("%s", strconv.FormatFloat(f, 'g', -1, 64))
@@ -77,16 +82,19 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 	}
 
+	pp("expr is type %T", expr)
 	var obj types.Object
 	switch e := expr.(type) {
 	case *ast.SelectorExpr:
 		obj = c.p.Uses[e.Sel]
 	case *ast.Ident:
+		pp("e is '%#v'", e)
 		obj = c.p.Defs[e]
 		if obj == nil {
 			obj = c.p.Uses[e]
 		}
 	}
+	pp("obj is '%#v'", obj)
 
 	if obj != nil && typesutil.IsJsPackage(obj.Pkg()) {
 		switch obj.Name() {
@@ -99,6 +107,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 	}
 
+	pp("expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		if ptrType, isPointer := exprType.(*types.Pointer); isPointer {
@@ -725,8 +734,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		if e.Name == "_" {
 			panic("Tried to translate underscore identifier.")
 		}
+		pp("under *ast.Ident, obj='%#v'/%T", obj, obj)
 		switch o := obj.(type) {
 		case *types.Var, *types.Const:
+			pp("jea debug, line 740 expressions.go")
 			return c.formatExpr("%s", c.objectName(o))
 		case *types.Func:
 			return c.formatExpr("%s", c.objectName(o))
@@ -1246,6 +1257,7 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 }
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) *expression {
+	pp("expressions.go:1260, format='%s', a='%#v'", format, a)
 	processFormat := func(f func(uint8, uint8, int)) {
 		n := 0
 		for i := 0; i < len(format); i++ {
