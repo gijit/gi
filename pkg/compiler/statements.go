@@ -669,8 +669,11 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			if typesutil.IsJsObject(c.p.TypeOf(l.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: l.Index.Pos(), Msg: "cannot use js.Object as map key"})
 			}
-			keyVar := c.newVariable("_key")
-			return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			// jea: map assignmetn in lua:
+			return fmt.Sprintf(`%s[%s] = %s;`, c.translateExpr(l.X), c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			// jea replace next 2 lines with the above
+			//keyVar := c.newVariable("_key")
+			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 		}
 	}
 
