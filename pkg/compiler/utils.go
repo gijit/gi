@@ -649,15 +649,11 @@ func rangeCheck(pattern string, constantIndex, array bool) string {
 	if constantIndex && array {
 		return pattern
 	}
-	lengthProp := "$length"
-	if array {
-		lengthProp = "length"
-	}
-	check := "%2f >= %1e." + lengthProp
+	check := "%2f >= %1e.len"
 	if !constantIndex {
-		check = "(%2f < 0 || " + check + ")"
+		check = "(%2f == nil or %2f < 0 or " + check + ")"
 	}
-	return "(" + check + ` ? ($throwRuntimeError("index out of range"), undefined) : ` + pattern + ")"
+	return "(" + check + ` and error("index out of range") or ` + pattern + ")"
 }
 
 func endsWithReturn(stmts []ast.Stmt) bool {

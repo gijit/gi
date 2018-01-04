@@ -17,6 +17,8 @@ func LuajitMain() {
 
 	vm.Openlibs()
 
+	setupPrelude(vm)
+
 	inc := compiler.NewIncrState()
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
@@ -67,4 +69,11 @@ func DumpLuaStack(L *luajit.State) {
 		}
 	}
 	print("\n")
+}
+
+func setupPrelude(vm *luajit.State) {
+	err := vm.Loadstring(compiler.GiLuaSliceMap)
+	panicOn(err)
+	err = vm.Pcall(0, 0, 0)
+	panicOn(err)
 }

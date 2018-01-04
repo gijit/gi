@@ -475,11 +475,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.formatExpr(pattern, e.X, e.Index)
 		case *types.Slice:
-			// jea: TODO: bring back these runtime range checks!! b/c lua will
+			// jea: we really do need these runtime range checks. Lua will
 			//   just give us nils back silently instead of complaining about
 			//   out of bounds access.
-			//return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
-			return c.formatExpr("%1e[%2f]", e.X, e.Index)
+			return c.formatExpr(rangeCheck("%1e[%2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
 		case *types.Map:
 			if typesutil.IsJsObject(c.p.TypeOf(e.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: e.Index.Pos(), Msg: "cannot use js.Object as map key"})

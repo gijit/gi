@@ -195,7 +195,8 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a={[0]=1,2,3};
-hmm = function() for i, _ in pairs(a) do print(i, a[i]);  end end;`)
+a=_giSlice{[0]=1,2,3};
+a_n = 3
+hmm = function() for i, _ in pairs(a) do print(i, ((i == nil or i < 0 or i >= a_n) and error("index out of range") or a[i]));  end end;`)
 	})
 }
