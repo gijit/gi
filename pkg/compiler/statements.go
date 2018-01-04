@@ -570,7 +570,7 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 		}
 		condStrs[i] = strings.Join(conds, " || ")
 		if flatten {
-			c.Printf("/* */ if (%s) { $s = %d; continue; }", condStrs[i], caseOffset+i)
+			c.Printf("/* */ if (%s) then $s = %d; continue; end", condStrs[i], caseOffset+i)
 		}
 	}
 
@@ -587,24 +587,24 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 
 	for i, clause := range caseClauses {
 		c.SetPos(clause.Pos())
-		c.PrintCond(!flatten, fmt.Sprintf("%sif (%s) {", prefix, condStrs[i]), fmt.Sprintf("case %d:", caseOffset+i))
+		c.PrintCond(!flatten, fmt.Sprintf("%sif (%s) then ", prefix, condStrs[i]), fmt.Sprintf("case %d:", caseOffset+i))
 		c.Indent(func() {
 			c.translateStmtList(clause.Body)
 			if flatten && (i < len(caseClauses)-1 || defaultClause != nil) && !endsWithReturn(clause.Body) {
 				c.Printf("$s = %d; continue;", endCase)
 			}
 		})
-		prefix = "} else "
+		prefix = " else "
 	}
 
 	if defaultClause != nil {
-		c.PrintCond(!flatten, prefix+"{", fmt.Sprintf("case %d:", caseOffset+len(caseClauses)))
+		c.PrintCond(!flatten, prefix+" ", fmt.Sprintf("case %d:", caseOffset+len(caseClauses)))
 		c.Indent(func() {
 			c.translateStmtList(defaultClause.Body)
 		})
 	}
 
-	c.PrintCond(!flatten, "}"+suffix, fmt.Sprintf("case %d:", endCase))
+	c.PrintCond(!flatten, " end "+suffix, fmt.Sprintf("case %d:", endCase))
 }
 
 func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
@@ -627,11 +627,11 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 	if !flatten && label != nil {
 		c.Printf("%s:", label.Name())
 	}
-	c.PrintCond(!flatten, "while (true) {", fmt.Sprintf("case %d:", data.beginCase))
+	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
 	c.Indent(func() {
 		condStr := cond()
 		if condStr != "true" {
-			c.PrintCond(!flatten, fmt.Sprintf("if (!(%s)) { break; }", condStr), fmt.Sprintf("if(!(%s)) { $s = %d; continue; }", condStr, data.endCase))
+			c.PrintCond(!flatten, fmt.Sprintf("if (!(%s)) then break; end", condStr), fmt.Sprintf("if(!(%s)) then $s = %d; continue; end ", condStr, data.endCase))
 		}
 
 		prevEV := c.p.escapingVars
@@ -654,7 +654,7 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 
 		c.p.escapingVars = prevEV
 	})
-	c.PrintCond(!flatten, "}", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
+	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
 }
 
 func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
