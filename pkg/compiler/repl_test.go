@@ -158,7 +158,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a={[0]=1,2,3};`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_giSlice{[0]=1,2,3};`)
 	})
 }
 
@@ -183,7 +183,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a={[0]=1,2,3};
+a=_giSlice{[0]=1,2,3};
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -196,7 +196,6 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 a=_giSlice{[0]=1,2,3};
-a_n = 3
-hmm = function() for i, _ in pairs(a) do print(i, ((i == nil or i < 0 or i >= a_n) and error("index out of range") or a[i]));  end end;`)
+hmm = function() for i, _ in pairs(a) do print(i, ((i == nil or i < 0 or i >= a.len) and error("index out of range") or a[i]));  end end;`)
 	})
 }
