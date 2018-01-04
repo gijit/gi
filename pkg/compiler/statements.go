@@ -594,6 +594,7 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 				c.Printf("$s = %d; continue;", endCase)
 			}
 		})
+		pp("jea: prefix else assigned!")
 		prefix = " else "
 	}
 

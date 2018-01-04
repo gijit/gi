@@ -129,6 +129,6 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 
 		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under 30")} }`
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; function hmm() { if (a > 30) do print("over 30") else print("under 30") end;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; hmm = function() if (a > 30) then print("over 30"); else print("under 30"); end end;`)
 	})
 }
