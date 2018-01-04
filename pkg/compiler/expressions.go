@@ -475,7 +475,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			return c.formatExpr(pattern, e.X, e.Index)
 		case *types.Slice:
-			return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
+			// jea:
+			//return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
+			return c.formatExpr("%1e[%2f]", e.X, e.Index)
 		case *types.Map:
 			if typesutil.IsJsObject(c.p.TypeOf(e.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: e.Index.Pos(), Msg: "cannot use js.Object as map key"})

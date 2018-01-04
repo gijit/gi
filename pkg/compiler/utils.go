@@ -494,6 +494,16 @@ func isBlank(expr ast.Expr) bool {
 	return false
 }
 
+func nameHelper(expr ast.Expr) string {
+	if expr == nil {
+		return "_"
+	}
+	if id, isIdent := expr.(*ast.Ident); isIdent {
+		return id.Name
+	}
+	return "_"
+}
+
 func isWrapped(ty types.Type) bool {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:

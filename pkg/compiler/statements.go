@@ -694,7 +694,9 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	if !flatten && label != nil {
 		c.Printf("%s:", label.Name())
 	}
-	c.Printf("for %s, %s in pairs(%s) do ", s.Key, s.Value, c.translateExpr(s.X))
+	key := nameHelper(s.Key)
+	value := nameHelper(s.Value)
+	c.Printf("for %s, %s in pairs(%s) do ", key, value, c.translateExpr(s.X))
 
 	prevEV := c.p.escapingVars
 	c.handleEscapingVars(body)

@@ -193,9 +193,9 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
-		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(a[i]) } }`
+		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 a={[0]=1,2,3};
-hmm = function() for i, _ in pairs(a) do print(a[i]);  end end;`)
+hmm = function() for i, _ in pairs(a) do print(i, a[i]);  end end;`)
 	})
 }
