@@ -58,12 +58,37 @@ _giPrivateSliceRaw = {}
     end,
 
     __tostring = function(t)
-       local s = "table of length" .. tostring(t.len) .. "{"
+       local s = "table of length " .. tostring(t.len) .. " is _giSlice{"
        local r = t[_giPrivateSliceRaw]
        -- we want to skip both the _giPrivateSliceRaw and the len
-       -- when iterating.
+       -- when iterating, which happens automatically if we
+       -- iterate on r, the inside private data, and not on the proxy.
        for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
        return s .. "}"
+    end,
+
+    __len = function(t)
+       -- this does get called by the # operation(!)
+       -- print("len called")
+       return t.len
+    end,
+
+    __pairs = function(t)
+       -- print("__pairs called!")
+       -- this makes a _giSlice work in a for k,v in pairs() do loop.
+
+       -- Iterator function takes the table and an index and returns the next index and associated value
+       -- or nil to end iteration
+
+       local function stateless_iter(t, k)
+           local v
+           --  Implement your own key,value selection logic in place of next
+           k, v = next(t[_giPrivateSliceRaw], k)
+           if v then return k,v end
+       end
+
+       -- Return an iterator function, the table, starting point
+       return stateless_iter, t, nil
     end
  }
 
