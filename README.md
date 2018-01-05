@@ -164,7 +164,7 @@ a) Pick an issue from here, https://github.com/go-interpreter/gi/issues, and add
 you are starting work on that feature.
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
-moving on to implimementation. Tests are quite short. There are many examples are here,
+moving on to implementation. Tests are quite short. There are many examples are here,
 which show the currently implemented features:
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/repl_test.go
