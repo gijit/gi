@@ -43,8 +43,9 @@ _giPrivateMapProps = {}
     end,
 
     __tostring = function(t)
-       local len = t[_giPrivateMapProps]["len"]
-       local s = "map of length " .. tostring(len) .. " is _giMap{"
+       local props = t[_giPrivateMapProps]
+       local len = props["len"]
+       local s = "map["..props["keyType"].. "]"..props["valType"].." of length " .. tostring(len) .. " is _giMap{"
        local r = t[_giPrivateMapRaw]
        -- we want to skip both the _giPrivateMapRaw and the len
        -- when iterating, which happens automatically if we

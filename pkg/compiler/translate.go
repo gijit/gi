@@ -49,6 +49,9 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	// classic
 	file, err := parser.ParseFile(tr.fileSet, "", src, 0)
+	if err != nil {
+		pp("we got an error on the ParseFile: '%v'", err)
+	}
 	panicOn(err)
 	pp("we got past the ParseFile !")
 

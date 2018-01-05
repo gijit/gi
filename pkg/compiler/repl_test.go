@@ -138,7 +138,19 @@ func Test009NumericalForLoop(t *testing.T) {
 
 	cv.Convey("numerical for loops should compile into lua", t, func() {
 
-		code := `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
+		// at top-level
+		code := `for i:=0; i < 10; i++ { i=i+2 }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+  		i = 0;
+  		while (true) do
+  			if (not (i < 10)) then break; end
+            i = i + 2;
+  			i = i + (1);
+  		 end
+`)
+
+		// inside a func
+		code = `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=5;
   	hmm = function() 
   		i = 0;
@@ -149,6 +161,7 @@ func Test009NumericalForLoop(t *testing.T) {
   		 end
  	 end;
 `)
+
 	})
 }
 

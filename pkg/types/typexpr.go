@@ -22,7 +22,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	x.mode = invalid
 	x.expr = e
 
-	//pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
+	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
 	var scope *Scope
 	var obj Object
 	if check.scope == nil {
@@ -34,6 +34,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 		if e.Name == "_" {
 			check.errorf(e.Pos(), "cannot use _ as value or type")
 		} else {
+			// jea: top level 'var j int' failing here. hmm...
 			check.errorf(e.Pos(), "undeclared name: %s", e.Name)
 		}
 		return

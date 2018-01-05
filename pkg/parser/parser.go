@@ -393,6 +393,8 @@ func (p *parser) error(pos token.Pos, msg string) {
 }
 
 func (p *parser) errorExpected(pos token.Pos, msg string) {
+	panic("jea: errorExpected where??")
+
 	msg = "expected " + msg
 	if pos == p.pos {
 		// the error happened at the current position;
@@ -2441,10 +2443,10 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 }
 
 func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
-	//fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
+	fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
-	case token.IDENT:
+	case token.IDENT, token.FOR:
 		return p.parseStmt()
 	}
 	return p.parseDecl(sync)
@@ -2468,6 +2470,7 @@ func (p *parser) parseDecl(sync func(*parser)) ast.Decl {
 
 	default:
 		pos := p.pos
+		// jea: top-level for loops were erroring out here.
 		p.errorExpected(pos, "declaration")
 		sync(p)
 		return &ast.BadDecl{From: pos, To: p.pos}
