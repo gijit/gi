@@ -158,7 +158,7 @@ step through any file that is in `gi-golang` mode.
 
 Other editors: please contribute!
 
-# how to get started
+# how to contribute: getting started
 
 a) Pick an issue from here, https://github.com/go-interpreter/gi/issues, and add a comment that
 you are starting work on that feature.
