@@ -645,15 +645,32 @@ func removeWhitespace(b []byte, minify bool) []byte {
 	return out
 }
 
+func setRangeCheck(constantIndex, array bool) string {
+	if constantIndex && array {
+		return "%1e[%2f] = %3s"
+	}
+
+	return "_setRangeCheck(%1e, %2f, %3s)"
+}
+
 func rangeCheck(pattern string, constantIndex, array bool) string {
+
 	if constantIndex && array {
 		return pattern
 	}
-	check := "%2f >= %1e.len"
-	if !constantIndex {
-		check = "(%2f == nil or %2f < 0 or " + check + ")"
-	}
-	return "(" + check + ` and error("index out of range") or ` + pattern + ")"
+
+	return "_getRangeCheck(%1e, %2f)"
+	/*
+		lengthProp := "$length"
+		if array {
+			lengthProp = "length"
+		}
+		check := "%2f >= %1e." + lengthProp
+		if !constantIndex {
+			check = "(%2f < 0 || " + check + ")"
+		}
+		return "(" + check + ` ? ($throwRuntimeError("index out of range"), undefined) : ` + pattern + ")"
+	*/
 }
 
 func endsWithReturn(stmts []ast.Stmt) bool {

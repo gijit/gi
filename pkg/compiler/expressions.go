@@ -481,7 +481,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			// jea: we really do need these runtime range checks. Lua will
 			//   just give us nils back silently instead of complaining about
 			//   out of bounds access.
+			pp("expressions.go:484 slice, e.X='%#v', e.Index='%#v'", e.X, e.Index)
 			return c.formatExpr(rangeCheck("%1e[%2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
+			// return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f]", c.p.Types[e.Index].Value != nil, false), e.X, e.Index)
 		case *types.Map:
 			if typesutil.IsJsObject(c.p.TypeOf(e.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: e.Index.Pos(), Msg: "cannot use js.Object as map key"})
@@ -900,7 +902,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		case *types.Basic:
 			return c.formatExpr("%e.length", args[0])
 		case *types.Slice:
-			return c.formatExpr("%e.$length", args[0])
+			return c.formatExpr(" #%e", args[0])
 		case *types.Pointer:
 			return c.formatExpr("(%e, %d)", args[0], argType.Elem().(*types.Array).Len())
 		case *types.Map:
@@ -1269,7 +1271,7 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 }
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) *expression {
-	pp("expressions.go:1260, format='%s', a='%#v'", format, a)
+	pp("expressions.go:1274, format='%s', a='%#v', parens='%v'", format, a, parens)
 	processFormat := func(f func(uint8, uint8, int)) {
 		n := 0
 		for i := 0; i < len(format); i++ {

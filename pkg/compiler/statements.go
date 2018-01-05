@@ -228,7 +228,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				length = fmt.Sprintf("%d", t2.Elem().Underlying().(*types.Array).Len())
 				elemType = t2.Elem().Underlying().(*types.Array).Elem()
 			case *types.Slice:
-				length = refVar + ".$length"
+				length = " #" + refVar
 				elemType = t2.Elem()
 			}
 			iVar := c.newVariable("_i")
@@ -851,7 +851,8 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			}
 			return c.formatExpr(pattern, l.X, l.Index, rhsExpr).String() + ";"
 		case *types.Slice:
-			return c.formatExpr(rangeCheck("%1e[%2f] = %3s", c.p.Types[l.Index].Value != nil, false), l.X, l.Index, rhsExpr).String() + ";"
+			pp("in assignment to slice, statements.go:854, ")
+			return c.formatExpr(setRangeCheck(c.p.Types[l.Index].Value != nil, false), l.X, l.Index, rhsExpr).String() + ";"
 			//return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f] = %3s", c.p.Types[l.Index].Value != nil, false), l.X, l.Index, rhsExpr).String() + ";"
 		default:
 			panic(fmt.Sprintf("Unhandled lhs type: %T\n", t))

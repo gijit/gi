@@ -104,7 +104,22 @@ function _giSlice(x)
    proxy[_giPrivateSliceRaw] = x
    setmetatable(proxy, _giPrivateSliceMt)
    return proxy
-end
+end;
+
+function _getRangeCheck(x, i)
+  if x == nil or i < 0 or i >= x.len then
+     error("index out of range")
+  end
+  return x[i]
+end;
+
+function _setRrangeCheck(x, i, val)
+  if x == nil or i < 0 or i >= x.len then
+     error("index out of range")
+  end
+  x[i] = val
+  return val
+end;
 `
 
 const sampleUse = `

@@ -196,7 +196,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 a=_giSlice{[0]=1,2,3};
-hmm = function() for i, _ in pairs(a) do print(i, ((i == nil or i < 0 or i >= a.len) and error("index out of range") or a[i]));  end end;`)
+hmm = function() for i, _ in pairs(a) do print(i, _getRangeCheck(a, i)); end end;`)
 	})
 }
 
@@ -206,6 +206,20 @@ func Test014SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_giSlice{[0]="hi","gophers!"}; b[0]=""`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_giSlice{[0]="hi","gophers!"}; _setRangeCheck(b, 0, "");`)
 	})
 }
+
+func Test015LenOfSlice(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
+
+		code := `x := []string{"hi","gophers!"}; bb := len(x)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_giSlice{[0]="hi","gophers!"}; bb = #x;`)
+	})
+}
+
+// big L variable name
+
+// print(len(x))
