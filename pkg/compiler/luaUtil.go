@@ -58,7 +58,7 @@ _giPrivateSliceRaw = {}
     end,
 
     __tostring = function(t)
-       local s = "table of length " .. tostring(t.len) .. " is _giSlice{"
+       local s = "table of length " .. tostring(t.len) .. " is _gi_Slice{"
        local r = t[_giPrivateSliceRaw]
        -- we want to skip both the _giPrivateSliceRaw and the len
        -- when iterating, which happens automatically if we
@@ -75,7 +75,7 @@ _giPrivateSliceRaw = {}
 
     __pairs = function(t)
        -- print("__pairs called!")
-       -- this makes a _giSlice work in a for k,v in pairs() do loop.
+       -- this makes a _gi_Slice work in a for k,v in pairs() do loop.
 
        -- Iterator function takes the table and an index and returns the next index and associated value
        -- or nil to end iteration
@@ -92,7 +92,7 @@ _giPrivateSliceRaw = {}
     end
  }
 
-function _giSlice(x)
+function _gi_NewSlice(x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
    local length = 0

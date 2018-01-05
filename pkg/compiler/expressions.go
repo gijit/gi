@@ -156,7 +156,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				// jea: do 0-based indexing of slices, not 1-based.
 				ele = "[0]=" + ele
 			}
-			return c.formatExpr("_giSlice{%s}", ele)
+			return c.formatExpr("_gi_NewSlice{%s}", ele)
 			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))
