@@ -169,7 +169,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a = {};
+a = _gi_NewMap("Int", "Int", {});
 a[1] = 10;
 a[2] = 20;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
@@ -248,8 +248,14 @@ func Test016MapCreation(t *testing.T) {
 
 	cv.Convey(`creating maps via x := map[int]string{3:"hello", 4:"gophers"} should compile`, t, func() {
 
-		code := `x := map[int]string{3:"hello", 4:"gophers"}`
+		// create using make
+		code := `y := make(map[int]string)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("Int", "String", {});`)
+
+		// create with literal
+		code = `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
+
 	})
 }
 
