@@ -75,17 +75,67 @@ $    make onetime
 $
 $ make install
 $
-$ gi  # start me up, try typing this simple example:
+$ gi # start me up
 
-gi> a := 10
-10
-gi> b := 12
-12
-gi> func addem(x, y int) int { return x + y }
-gi> addem(a, b)
-22
-gi>
+==================
+gi: a go interpreter
+https://github.com/go-interpreter/gi
+==================
+  [gi is an interactive Golang environment,
+   also known as a REPL or Read-Eval-Print-Loop.]
+  [type ctrl-d to exit]
+  [type :help for help]
+  [gi -h for flag help]
+  [gi -q to start quietly]
+==================
+built: '2018-01-04T21:39:00-0600'
+last-git-commit-hash: '7a42b284a7303bd5d7b44b097070027f62eca213'
+nearest-git-tag: 'v0.0.7'
+git-branch: 'master'
+go-version: 'go_version_go1.9_darwin/amd64'
+luajit-version: 'LuaJIT_2.1.0-beta3_--_Copyright_(C)_2005-2017_Mike_Pall._http://luajit.org/'
+==================
+gi> a := []string{"howdy", "gophers!"}
 
+gi> a
+table of length 2 is _giSlice{[0]= howdy, [1]= gophers!, }
+
+gi> a[0] = "you rock"
+
+gi> a
+table of length 2 is _giSlice{[0]= you rock, [1]= gophers!, }
+
+gi> a[-1] = "out-of-bounds-access"
+oops: 'problem detected during Go static type checking: 'where error? err = '1:3: invalid argument: index -1 (constant of type int) must not be negative''' on input 'a[-1] = "out-of-bounds-access"'
+
+gi> a[100] = "out-of-bounds-access"
+error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_setRangeCheck(a, 100, "out-of-bounds-access");'
+lua stack:
+String : 	 [string "..."]:91: index out of range
+
+gi> func myFirstGiFunc(a []string) int {
+oops: 'problem detected during Go static type checking: '1:37: expected '}', found 'EOF''' on input 'func myFirstGiFunc(a []string) int {'
+
+gi> // multiline not yet done! :)
+
+gi> func myFirstGiFunc(a []string) int { for i := range a { println("our input is a[",i,"] = ", a[i]) }; return 43 }
+
+gi> myFirstGiFunc(a)
+our input is a[	0	] = 	you rock
+our input is a[	1	] = 	gophers!
+43
+
+gi> // demo type checking
+
+gi> b = []int{1,1}
+oops: 'problem detected during Go static type checking: 'where error? err = '1:1: undeclared name: b''' on input 'b = []int{1,1}'
+
+gi> b := []int{1,1}
+
+gi> myFirstGiFunc(b)
+oops: 'problem detected during Go static type checking: 'where error? err = '1:15: cannot use b (variable of type []int) as []string value in argument to myFirstGiFunc''' on input 'myFirstGiFunc(b)'
+
+gi> 
 ~~~
 
 # editor support
