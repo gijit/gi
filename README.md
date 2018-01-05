@@ -185,8 +185,11 @@ The files above derive from GopherJS which compiles Go into Javascript; whereas 
 Lua. This makes implementation usually very fast, since mostly it is just
 above figuring out how to re-write javascript into Lua. You are typically just
 checking the syntax of the source-to-source translation. Sometimes some
-Lua support functions will be needed. Add them to compile/luaUtil.go if
-they are short. Longer Lua code can go in its own file.
+Lua support functions will be needed. Add them to a new .lua file in `compile/`
+directory.
+
+By default, `gi` looks in `compile/` for all of its prelude files, and all
+.lua files found there will be sourced during startup.
 
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
 Run `go fmt` on your code.
