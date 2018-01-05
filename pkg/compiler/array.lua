@@ -6,22 +6,26 @@ _giPrivateArrayProps = {}
 
 _giPrivateArrayMt = {
 
-   __newindex = function(t, k, v)
-      --print("newindex called for key", k)
+    __newindex = function(t, k, v)
       local len = t[_giPrivateArrayProps]["len"]
-      if t[_giPrivateArrayRaw][k] ~= nil then
-         -- replace or delete
-         if v == nil then 
-            len = len - 1 -- delete
-         else
-            -- replace, no count change              
+      --print("newindex called for key", k, " len at start is ", len)
+      if t[_giPrivateArrayRaw][k] == nil then
+         if  v ~= nil then
+         -- new value
+            len = len +1
          end
-      else 
-         len = len + 1
+      else
+         -- key already present, are we replacing or deleting?
+          if v == nil then 
+              len = len - 1 -- delete
+          else
+              -- replace, no count change              
+          end
       end
       t[_giPrivateArrayRaw][k] = v
       t[_giPrivateArrayProps]["len"] = len
-   end,
+      --print("len at end of newidnex is ", len)
+    end,
 
    -- __index allows us to have fields to access the count.
    --
@@ -75,16 +79,6 @@ _giPrivateArrayMt = {
       local oper, key = ...
       print("oper is", oper)
       print("key is ", key)
-      if oper == "delete" then
-         -- the hash table delete operation
-         if key == nil then
-            error("delete error: key to delete cannot be nil")
-         end
-         -- forward the actual delete
-         t[key]=nil
-      elseif oper == "slice" then
-
-      end
    end
 }
 
