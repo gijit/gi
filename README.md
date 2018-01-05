@@ -10,11 +10,16 @@ Early stages, work in progress. More
 ambition than reality at present.
 
 Currently incremental type checking is applied
-to all code. Slices are bounds checked at runtime.
+to all code. Slices are bounds-checked at runtime.
 Functions, closures and slices, as well as
-basic expressions, and for loops compile and work.
+basic expressions compile and run. For-loops
+include for-range loops compile and run.
 
-Much is left to do: maps, structs, switch.
+Much is left to do: maps, structs, switch,
+interfaces, imports. If this is exciting to
+you, contribute! Existing TODOs/open issues and polite improvement
+suggestions can be found here
+https://github.com/go-interpreter/gi/issues
 
 However, because we are bulding on the fantastic
 front end provided by (Gopherjs)[https://github.com/gopherjs/gopherjs], and the fantastic
