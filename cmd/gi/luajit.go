@@ -18,7 +18,8 @@ func (cfg *GIConfig) LuajitMain() {
 
 	vm.Openlibs()
 
-	setupPrelude(vm)
+	err := cfg.setupPrelude(vm)
+	panicOn(err)
 
 	inc := compiler.NewIncrState()
 	_ = inc
@@ -136,9 +137,40 @@ func DumpLuaStack(L *luajit.State) {
 	print("\n")
 }
 
-func setupPrelude(vm *luajit.State) {
-	err := vm.Loadstring(compiler.GiLuaSliceMap)
-	panicOn(err)
-	err = vm.Pcall(0, 0, 0)
-	panicOn(err)
+func DumpLuaStackAsString(L *luajit.State) string {
+	var top int
+	s := ""
+	top = L.Gettop()
+	for i := 1; i <= top; i++ {
+		t := L.Type(i)
+		switch t {
+		case luajit.Tstring:
+			s += fmt.Sprintf("String : \t%v", L.Tostring(i))
+		case luajit.Tboolean:
+			s += fmt.Sprintf("Bool : \t\t%v", L.Toboolean(i))
+		case luajit.Tnumber:
+			s += fmt.Sprintf("Number : \t%v", L.Tonumber(i))
+		default:
+			s += fmt.Sprintf("Type : \t\t%v", L.Typename(i))
+		}
+	}
+	return s
+}
+
+func (cfg *GIConfig) setupPrelude(vm *luajit.State) error {
+	for _, f := range cfg.preludeFiles {
+		err := vm.Loadstring(fmt.Sprintf(`dofile("%s")`, f))
+		if err != nil {
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': '%v'. Details: '%s'", f, err, msg)
+		}
+		err = vm.Pcall(0, 0, 0)
+		if err != nil {
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			return fmt.Errorf("error in setupPrelude during Pcall on file '%s': '%v'. Details: '%s'", f, err, msg)
+		}
+	}
+	return nil
 }

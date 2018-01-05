@@ -16,6 +16,8 @@ type GIConfig struct {
 	VerboseVerbose bool
 	RawLua         bool
 	PreludePath    string
+
+	preludeFiles []string
 }
 
 // call DefineFlags before myflags.Parse()
@@ -32,12 +34,13 @@ func (c *GIConfig) ValidateConfig() error {
 	if !DirExists(c.PreludePath) {
 		return fmt.Errorf("-prelude dir does not exist: '%s'", c.PreludePath)
 	}
-	files, err := filepath.Glob("*.lua")
+	files, err := filepath.Glob(fmt.Sprintf("%s/*.lua", c.PreludePath))
 	if err != nil {
 		return fmt.Errorf("-prelude dir '%s' open problem: '%v'", c.PreludePath, err)
 	}
 	if len(files) < 1 {
 		return fmt.Errorf("-prelude dir '%s' had no lua files in it.", c.PreludePath)
 	}
+	c.preludeFiles = files
 	return nil
 }

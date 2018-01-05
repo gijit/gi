@@ -49,6 +49,9 @@ https://github.com/go-interpreter/gi/blob/master/LICENSE
 `, Version())
 	}
 
+	fmt.Printf("using this prelude directory: '%s'\n", cfg.PreludePath)
+	fmt.Printf("using these files as prelude: '%#v'\n", cfg.preludeFiles)
+
 	cfg.LuajitMain()
 	//NodeChildMain()
 	//OttoReplMain()

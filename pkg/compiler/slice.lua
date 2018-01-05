@@ -72,7 +72,7 @@ _giPrivateSliceRaw = {}
         local oper, key = ...
         print("oper is", oper)
         print("key is ", key)
-        elseif oper == "slice" then
+        if oper == "slice" then
            print("slice oper called!")
         end
     end
