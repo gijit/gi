@@ -170,3 +170,5 @@ This project and those are licensed under the 3-clause BSD license
 found in the LICENSE file. The LuaJIT vm and compiler are statically linked
 using CGO, and their MIT license can be found in their sub-directories
 and online at http://luajit.org/ and https://github.com/LuaJIT/LuaJIT/blob/master/COPYRIGHT
+See the subdirectories of vendored and utilized libraries for their
+license details.
