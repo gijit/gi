@@ -79,12 +79,12 @@ function _gi_NewStruct(x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
    -- get initial count
-   local length = 0
+   local len = 0
    for k, v in pairs(x) do
-      length = length + 1
+      len = len + 1
    end
 
-   local proxy = {len=length}
+   local proxy = {len=len}
    proxy[_giPrivateStructRaw] = x
    setmetatable(proxy, _giPrivateStructMt)
    return proxy

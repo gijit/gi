@@ -165,9 +165,13 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			entries := make([]string, len(e.Elts))
 			for i, element := range e.Elts {
 				kve := element.(*ast.KeyValueExpr)
-				entries[i] = fmt.Sprintf("{ k: %s, v: %s }", c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
+				entries[i] = fmt.Sprintf("[%s]=%s", c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
 			}
-			return c.formatExpr("$makeMap(%s.keyFor, [%s])", c.typeName(t.Key()), strings.Join(entries, ", "))
+			joined := strings.Join(entries, ", ")
+			pp("joined = '%#v'", joined)
+			return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
+
+			// return c.formatExpr("$makeMap(%s.keyFor, [%s])", c.typeName(t.Key()), strings.Join(entries, ", "))
 		case *types.Struct:
 			elements := make([]string, t.NumFields())
 			isKeyValue := true

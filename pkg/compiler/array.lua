@@ -2,22 +2,25 @@
 
 -- create private index
 _giPrivateArrayRaw = {}
+_giPrivateArrayProps = {}
 
 _giPrivateArrayMt = {
 
    __newindex = function(t, k, v)
-      print("newindex called for key", k)
+      --print("newindex called for key", k)
+      local len = t[_giPrivateArrayProps]["len"]
       if t[_giPrivateArrayRaw][k] ~= nil then
          -- replace or delete
          if v == nil then 
-            t.len = t.len - 1 -- delete
+            len = len - 1 -- delete
          else
             -- replace, no count change              
          end
       else 
-         t.len = t.len + 1
+         len = len + 1
       end
       t[_giPrivateArrayRaw][k] = v
+      t[_giPrivateArrayProps]["len"] = len
    end,
 
    -- __index allows us to have fields to access the count.
@@ -32,7 +35,9 @@ _giPrivateArrayMt = {
    end,
 
    __tostring = function(t)
-      local s = "array of length " .. tostring(t.len) .. " is _gi_Array{"
+      local len =  t[_giPrivateArrayProps]["len"]
+      local s = "array of length " .. tostring(len) .. " is _gi_Array{"
+      --print("t.len is", len)
       local r = t[_giPrivateArrayRaw]
       -- we want to skip both the _giPrivateArrayRaw and the len
       -- when iterating, which happens automatically if we
@@ -42,9 +47,9 @@ _giPrivateArrayMt = {
    end,
 
    __len = function(t)
-      -- this does get called by the # operation(!)
-      print("len called")
-      return t.len
+      -- this does get called by the # operation, for slices.
+      --print("len called")
+      return t[_giPrivateArrayProps]["len"]
    end,
 
    __pairs = function(t)
@@ -84,7 +89,7 @@ _giPrivateArrayMt = {
 }
 
 function _gi_NewArray(x, typeKind, len)
-
+   --print("_gi_NewArray constructor called with x=",x," and typeKind=", typeKind," len=", len)
    if typeKind == nil or typeKind == "" then
       error("must provide typeKind to _gi_NewArray")
    end
@@ -92,9 +97,15 @@ function _gi_NewArray(x, typeKind, len)
    if len == nil then
       error("must provide len to _gi_NewArray")
    end
-   
-   local proxy = {len=length, typeKind=typeKind}
+
+   local proxy = {}
    proxy[_giPrivateArrayRaw] = x
+
+   local props = {len=len, typeKind=typeKind}
+   proxy[_giPrivateArrayProps] = props
+
+   --print("upon init, len is ",proxy[_giPrivateArrayProps]["len"])
+   
    setmetatable(proxy, _giPrivateArrayMt)
    return proxy
 end;

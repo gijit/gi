@@ -45,6 +45,10 @@ func (cfg *GIConfig) LuajitMain() {
 		use := string(src)
 		cmd := strings.TrimSpace(use)
 		switch cmd {
+		case ":q":
+			verb.Verbose = false
+			verb.VerboseVerbose = false
+			continue
 		case ":v":
 			verb.Verbose = true
 			verb.VerboseVerbose = false
@@ -75,6 +79,7 @@ these special commands:
 ======================
  :v  turns on verbose debug prints
  :vv turns on very verbose prints
+ :q  quiets the debug prints (default)
  :raw changes to raw-luajit entry mode
  :go  change back from raw mode to Go mode
  ctrl-d to exit

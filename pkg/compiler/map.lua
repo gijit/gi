@@ -10,37 +10,37 @@
 
 -- create private index
 _giPrivateMapRaw = {}
+_giPrivateMapProps = {}
 
  _giPrivateMapMt = {
 
     __newindex = function(t, k, v)
       print("newindex called for key", k)
+      local len = t[_giPrivateMapProps]["len"]
       if t[_giPrivateMapRaw][k] ~= nil then
           -- replace or delete
           if v == nil then 
-              t.len = t.len - 1 -- delete
+              len = len - 1 -- delete
           else
               -- replace, no count change              
           end
       else 
-          t.len = t.len + 1
+          len = len + 1
       end
       t[_giPrivateMapRaw][k] = v
+      t[_giPrivateMapProps]["len"] = len
     end,
 
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
       --print("index called for key", k)
-      -- I don't think we need raw any more, now that
-      -- __pairs works. It would be a problem for hash
-      -- tables that want to store the key 'raw'.
-      -- if k == 'raw' then return t[_giPrivateMapRaw] end
       return t[_giPrivateMapRaw][k]
     end,
 
     __tostring = function(t)
-       local s = "slice of length " .. tostring(t.len) .. " is _giMap{"
+       local len = t[_giPrivateMapProps]["len"]
+       local s = "slice of length " .. tostring(len) .. " is _giMap{"
        local r = t[_giPrivateMapRaw]
        -- we want to skip both the _giPrivateMapRaw and the len
        -- when iterating, which happens automatically if we
@@ -52,7 +52,7 @@ _giPrivateMapRaw = {}
     __len = function(t)
        -- this does get called by the # operation(!)
        -- print("len called")
-       return t.len
+       return t[_giPrivateMapProps]["len"]
     end,
 
     __pairs = function(t)
@@ -81,27 +81,29 @@ _giPrivateMapRaw = {}
         if oper == "delete" then
            -- the hash table delete operation
            if key == nil then
-               error("delete error: key to delete cannot be nil")
+              return -- this is a no-op in Go.
            end
            -- forward the actual delete
            t[key]=nil
-        elseif oper == "slice" then
-
         end
     end
  }
 
-function _gi_NewMap(x)
+function _gi_NewMap(keyType, valType, x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
+   local proxy = {}
+   proxy[_giPrivateMapRaw] = x
+
    -- get initial count
-   local length = 0
+   local len = 0
    for k, v in pairs(x) do
-      length = length + 1
+      len = len + 1
    end
 
-   local proxy = {len=length}
-   proxy[_giPrivateMapRaw] = x
+   local props = {len=len, keyType=keyType, valType=valType}
+   proxy[_giPrivateMapProps] = props
+
    setmetatable(proxy, _giPrivateMapMt)
    return proxy
 end;

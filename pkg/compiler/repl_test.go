@@ -243,4 +243,12 @@ func Test015ArrayCreation(t *testing.T) {
 	})
 }
 
-// print(len(x))
+func Test016MapCreation(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey(`creating maps via x := map[int]string{3:"hello", 4:"gophers"} should compile`, t, func() {
+
+		code := `x := map[int]string{3:"hello", 4:"gophers"}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
+	})
+}
