@@ -191,7 +191,7 @@ they are short. Longer Lua code can go in its own file.
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
 Run `go fmt` on your code.
 
-d) submit your pull request!
+d) submit your pull request! (Rebase against master first, please).
 
 # origin
 
