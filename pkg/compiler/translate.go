@@ -58,12 +58,12 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	// Print the AST.
 	//ast.Print(fileSet, files)
 
-	importPath := "/repl"
+	importPath := "" // was "/repl" but scope issues?
 	files := []*ast.File{file}
 	pp("file='%#v'", file)
 	pp("file.Name='%#v'", file.Name)
 	file.Name = &ast.Ident{
-		Name: "/repl",
+		Name: "", // jea: was "/repl", but that seemed to cause scope issues.
 	}
 
 	tr.archive, err = IncrementallyCompile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)

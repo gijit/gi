@@ -23,12 +23,17 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	x.expr = e
 
 	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
+	pp("chk.pkg.scope = '%s'", check.pkg.scope)
 	var scope *Scope
 	var obj Object
 	if check.scope == nil {
 		scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
 	} else {
 		scope, obj = check.scope.LookupParent(e.Name, check.pos)
+		// jea add, try at the top level
+		if obj == nil {
+			scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
+		}
 	}
 	if obj == nil {
 		if e.Name == "_" {

@@ -378,3 +378,23 @@ func Test018ReadFromSlice(t *testing.T) {
 
 	})
 }
+
+func Test019TopLevelScope(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("top level numerical for loops should be able to refer to other top level variables", t, func() {
+
+		// at top-level
+		code := `j:=5; for i:=0; i < 3; i++ { j++ }`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+        j = 5;
+  		i = 0;
+  		while (true) do
+  			if (not (i < 3)) then break; end
+            j = j + (1);
+  			i = i + (1);
+  		 end
+`)
+
+	})
+}
