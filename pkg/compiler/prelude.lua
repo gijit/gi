@@ -2,14 +2,15 @@
 -- be available before any user code is run.
 
 function _gi_GetRangeCheck(x, i)
-  if x == nil or i < 0 or i >= x.len then
+  if x == nil or i < 0 or i >= #x then
      error("index out of range")
   end
   return x[i]
 end;
 
 function _gi_SetRangeCheck(x, i, val)
-  if x == nil or i < 0 or i >= x.len then
+  print("SetRangeCheck. x=", x, " i=", i, " val=", val)
+  if x == nil or i < 0 or i >= #x then
      error("index out of range")
   end
   x[i] = val

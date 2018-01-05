@@ -158,7 +158,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice{[0]=1,2,3};`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("Int",{[0]=1,2,3});`)
 	})
 }
 
@@ -183,7 +183,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice{[0]=1,2,3};
+a=_gi_NewSlice("Int",{[0]=1,2,3});
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -195,8 +195,8 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice{[0]=1,2,3};
-hmm = function() for i, _ in pairs(a) do print(i, _getRangeCheck(a, i)); end end;`)
+a=_gi_NewSlice("Int",{[0]=1,2,3});
+hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
 
@@ -206,7 +206,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice{[0]="hi","gophers!"}; _setRangeCheck(b, 0, "");`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("String",{[0]="hi","gophers!"}); _setRangeCheck(b, 0, "");`)
 	})
 }
 
@@ -216,7 +216,7 @@ func Test014LenOfSlice(t *testing.T) {
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice{[0]="hi","gophers!"}; bb = #x;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("String",{[0]="hi","gophers!"}); bb = #x;`)
 	})
 }
 
@@ -265,7 +265,7 @@ func Test017DeleteFromMap(t *testing.T) {
 	})
 }
 
-func Test018FromMap(t *testing.T) {
+func Test018ReadFromMap(t *testing.T) {
 
 	cv.Convey(`read a map, x := map[int]string{3:"hello", 4:"gophers"}. reading key 3 should provide the value "hello"`, t, func() {
 
@@ -313,27 +313,49 @@ func Test018FromMap(t *testing.T) {
 	})
 }
 
-/*
-gi> x := map[int]string{3:"hello", 4:"gophers"}
+func Test018ReadFromSlice(t *testing.T) {
 
-gi> x
-slice of length 2 is _giMap{[4]= gophers, [3]= hello, }
+	cv.Convey(`read a slice, x := []int{3, 4}; reading pos/index 0 should provide the value 3`, t, func() {
 
-gi> delete(x, 4)
-newindex called for key	4
+		vm := luajit.Newstate()
+		defer vm.Close()
+		vm.Openlibs()
 
-gi> x
-slice of length 1 is _giMap{[3]= hello, }
-gi> delete(x, 4)
-newindex called for key	4
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		SetupPrelude(vm, files)
 
-gi> x
-slice of length 2 is _giMap{[3]= hello, }
+		inc := NewIncrState()
 
-gi> delete(x, 3)
-newindex called for key	3
+		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
+		expect := []string{`x=_gi_NewSlice("Int", {[0]=3, 4});`, `x3 = _gi_GetRangeCheck(x,0);`}
+		for i, src := range srcs {
+			translation := inc.Tr([]byte(src))
+			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
+			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, expect[i])
 
-gi> x
-slice of length 1 is _giMap{}
-// wrong! should be zero
-*/
+			err := vm.Loadstring(string(translation))
+			panicOn(err)
+			err = vm.Pcall(0, 0, 0)
+			if err != nil {
+				fmt.Printf("error: '%v'\n", err)
+				DumpLuaStack(vm)
+				vm.Pop(1)
+				t.Fatal(err)
+			} else {
+				DumpLuaStack(vm)
+			}
+			//fmt.Printf("v back = '%#v'\n", v)
+		}
+		vm.Getglobal("x3")
+		top := vm.Gettop()
+		value_int := vm.Tointeger(top)
+
+		pp("value_int=%v", value_int)
+		if value_int != 3 {
+			panic(fmt.Sprintf("expected `3`, got %v", value_int))
+		}
+
+	})
+}

@@ -4,37 +4,42 @@
 
 -- create private index
 _giPrivateSliceRaw = {}
+_giPrivateSliceProps = {}
 
  _giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
-      print("newindex called for key", k)
-      if t[_giPrivateSliceRaw][k] ~= nil then
-          -- replace or delete
+      print("newindex called for key", k, " val=", v)
+      local len = t[_giPrivateSliceProps]["len"]
+      --print("newindex called for key", k, " len at start is ", len)
+      if t[_giPrivateSliceRaw][k] == nil then
+         if  v ~= nil then
+         -- new value
+            len = len +1
+         end
+      else
+         -- key already present, are we replacing or deleting?
           if v == nil then 
-              t.len = t.len - 1 -- delete
+              len = len - 1 -- delete
           else
               -- replace, no count change              
           end
-      else 
-          t.len = t.len + 1
       end
       t[_giPrivateSliceRaw][k] = v
+      t[_giPrivateSliceProps]["len"] = len
+      print("len at end of newidnex is ", len)
     end,
 
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
       --print("index called for key", k)
-      -- I don't think we need raw any more, now that
-      -- __pairs works. It would be a problem for hash
-      -- tables that want to store the key 'raw'.
-      -- if k == 'raw' then return t[_giPrivateSliceRaw] end
       return t[_giPrivateSliceRaw][k]
     end,
 
     __tostring = function(t)
-       local s = "slice of length " .. tostring(t.len) .. " is _giSlice{"
+       local len = t[_giPrivateSliceProps]["len"]
+       local s = "slice of length " .. tostring(len) .. " is _giSlice{"
        local r = t[_giPrivateSliceRaw]
        -- we want to skip both the _giPrivateSliceRaw and the len
        -- when iterating, which happens automatically if we
@@ -46,7 +51,7 @@ _giPrivateSliceRaw = {}
     __len = function(t)
        -- this does get called by the # operation(!)
        -- print("len called")
-       return t.len
+       return t[_giPrivateSliceProps]["len"]
     end,
 
     __pairs = function(t)
@@ -78,7 +83,7 @@ _giPrivateSliceRaw = {}
     end
  }
 
-function _gi_NewSlice(x)
+function _gi_NewSlice(typeKind, x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
    -- get initial count
@@ -87,8 +92,12 @@ function _gi_NewSlice(x)
       len = len + 1
    end
 
-   local proxy = {len=len}
+   local proxy = {}
    proxy[_giPrivateSliceRaw] = x
+
+   local props = {len=len, typeKind=typeKind}
+   proxy[_giPrivateSliceProps] = props
+
    setmetatable(proxy, _giPrivateSliceMt)
    return proxy
 end;
