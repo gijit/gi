@@ -1,4 +1,5 @@
 ;;; gi-golang-3.92
+;;;
 ;;; (Setq *gi-golang-version-string* "3.92") ; update this below when changing.
 ;;;
 ;;; gi-golang.el     - is a pair of modes for sending lines from a 
@@ -897,7 +898,5 @@ output is passed to the filter `inferior-gi-golang-output-digest'."
 )
 
 ;;; provide ourself
-
-
 (provide 'gi-golang-mode)
 
