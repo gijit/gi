@@ -165,11 +165,11 @@ you are starting work on that feature.
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
 moving on to implimementation. Tests are quite short. There are many examples are here,
-which show the currently implimented features:
+which show the currently implemented features:
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/repl_test.go
 
-Then simply impliment your feature. These are the main files
+Then simply implement your feature. These are the main files
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/package.go
 
@@ -182,7 +182,7 @@ https://github.com/go-interpreter/gi/blob/master/pkg/compiler/expressions.go
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/luaUtil.go
 
 The files above derive from GopherJS which compiles Go into Javascript; whereas `gi` translates Go into
-Lua). This makes implimentation usually very fast, since mostly it is just
+Lua). This makes implementation usually very fast, since mostly it is just
 above figuring out how to re-write javascript into Lua.
 
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
