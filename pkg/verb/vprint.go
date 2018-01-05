@@ -1,4 +1,4 @@
-package compiler
+package verb
 
 import (
 	"fmt"
@@ -7,20 +7,23 @@ import (
 	"time"
 )
 
-// for tons of debug output (see also WorkerVerbose)
+// for tons of debug output
 var Verbose bool = true
+var VerboseVerbose bool = true
 
-func p(format string, a ...interface{}) {
+func P(format string, a ...interface{}) {
 	if Verbose {
 		TSPrintf(format, a...)
 	}
 }
 
-func pp(format string, a ...interface{}) {
-	TSPrintf(format, a...)
+func PP(format string, a ...interface{}) {
+	if VerboseVerbose {
+		TSPrintf(format, a...)
+	}
 }
 
-func pb(w io.Writer, format string, a ...interface{}) {
+func PB(w io.Writer, format string, a ...interface{}) {
 	if Verbose {
 		fmt.Fprintf(w, "\n"+format+"\n", a...)
 	}

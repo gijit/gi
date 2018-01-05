@@ -9,7 +9,10 @@ package types
 import (
 	"github.com/go-interpreter/gi/pkg/ast"
 	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/go-interpreter/gi/pkg/verb"
 )
+
+var pp = verb.PP
 
 // assignment reports whether x can be assigned to a variable of type T,
 // if necessary by attempting to convert untyped values to the appropriate

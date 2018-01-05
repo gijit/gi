@@ -23,6 +23,6 @@ func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation st
 			t2 = t2[:nt2-1]
 		}
 	}
-	fmt.Printf("go:'%s'  -->  '%s'\n", src, t2)
+	p("go:'%s'  -->  '%s'\n", src, t2)
 	return
 }

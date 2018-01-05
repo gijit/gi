@@ -40,7 +40,7 @@ func LuajitMain() {
 			translation = "\n"
 			// still write, so we get another prompt
 		} else {
-			fmt.Printf("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
+			p("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
 		}
 
 		err = vm.Loadstring(string(translation))

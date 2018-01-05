@@ -48,7 +48,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 	srcs := []string{"a := 10;", "func adder(a, b int) int { return a + b}; ", "sum := adder(a,a);"}
 	for _, src := range srcs {
 		translation := inc.Tr([]byte(src))
-		fmt.Printf("go:'%s'  -->  '%s' in lua\n", src, translation)
+		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		err := vm.Loadstring(string(translation))
@@ -63,7 +63,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 	top := vm.Gettop()
 	value_int := vm.Tointeger(top)
 
-	fmt.Printf("value_int=%v", value_int)
+	pp("value_int=%v", value_int)
 	if value_int != 20 {
 		panic(fmt.Sprintf("expected 20, got %v", value_int))
 	}

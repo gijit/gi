@@ -50,7 +50,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	// classic
 	file, err := parser.ParseFile(tr.fileSet, "", src, 0)
 	panicOn(err)
-	fmt.Printf("\n we got past the ParseFile !\n")
+	pp("we got past the ParseFile !")
 
 	// Print the AST.
 	//ast.Print(fileSet, files)

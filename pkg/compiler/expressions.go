@@ -14,7 +14,10 @@ import (
 	"github.com/go-interpreter/gi/pkg/compiler/analysis"
 	"github.com/go-interpreter/gi/pkg/compiler/astutil"
 	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
+	"github.com/go-interpreter/gi/pkg/verb"
 )
+
+var pp = verb.PP
 
 type expression struct {
 	str    string

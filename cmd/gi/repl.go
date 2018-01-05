@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/go-interpreter/gi/pkg/verb"
 )
+
+var p = verb.P
+var pp = verb.PP
 
 func main() {
 
@@ -18,6 +23,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s command line flag error: '%s'", ProgramName, err)
 	}
+
+	verb.Verbose = cfg.Verbose || cfg.VerboseVerbose
+	verb.VerboseVerbose = cfg.VerboseVerbose
 
 	if !cfg.Quiet {
 		fmt.Printf(
