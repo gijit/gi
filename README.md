@@ -188,8 +188,8 @@ checking the syntax of the source-to-source translation. Sometimes some
 Lua support functions will be needed. Add them to a new .lua file in `compile/`
 directory.
 
-By default, `gi` looks in `./prelude/` relative to its current directory, and this is symlinked to `cmd/gi/prelude/` if you are running in `cmd/gi`. Otherwise use the `-prelude` flag to `gi` to tell it where to find its prelude files. All
-.lua files found the prelude directory will be sourced during `gi` startup.
+By default, `gi` looks in `./prelude/` relative to its current directory, and this is symlinked to `pkg/compile/` if you are running in `cmd/gi`. Otherwise use the `-prelude` flag to `gi` to tell it where to find its prelude files. All
+.lua files found the prelude directory will be sourced during `gi` startup. The default prelude is the `pkg/compile` directory. These files are required for `gi` to work.
 
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
 Run `go fmt` on your code.
