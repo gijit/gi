@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/go-interpreter/gi/pkg/compiler"
 	"os"
 	"path"
-	"path/filepath"
 )
 
 var ProgramName string = path.Base(os.Args[0])
@@ -31,15 +30,10 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 
 // call c.ValidateConfig() after myflags.Parse()
 func (c *GIConfig) ValidateConfig() error {
-	if !DirExists(c.PreludePath) {
-		return fmt.Errorf("-prelude dir does not exist: '%s'", c.PreludePath)
-	}
-	files, err := filepath.Glob(fmt.Sprintf("%s/*.lua", c.PreludePath))
+
+	files, err := compiler.FetchPrelude(c.PreludePath)
 	if err != nil {
-		return fmt.Errorf("-prelude dir '%s' open problem: '%v'", c.PreludePath, err)
-	}
-	if len(files) < 1 {
-		return fmt.Errorf("-prelude dir '%s' had no lua files in it.", c.PreludePath)
+		return err
 	}
 	c.preludeFiles = files
 	return nil

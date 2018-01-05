@@ -18,7 +18,7 @@ func (cfg *GIConfig) LuajitMain() {
 
 	vm.Openlibs()
 
-	err := cfg.setupPrelude(vm)
+	err := compiler.SetupPrelude(vm, cfg.preludeFiles)
 	panicOn(err)
 
 	inc := compiler.NewIncrState()
@@ -160,22 +160,4 @@ func DumpLuaStackAsString(L *luajit.State) string {
 		}
 	}
 	return s
-}
-
-func (cfg *GIConfig) setupPrelude(vm *luajit.State) error {
-	for _, f := range cfg.preludeFiles {
-		err := vm.Loadstring(fmt.Sprintf(`dofile("%s")`, f))
-		if err != nil {
-			msg := DumpLuaStackAsString(vm)
-			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': '%v'. Details: '%s'", f, err, msg)
-		}
-		err = vm.Pcall(0, 0, 0)
-		if err != nil {
-			msg := DumpLuaStackAsString(vm)
-			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during Pcall on file '%s': '%v'. Details: '%s'", f, err, msg)
-		}
-	}
-	return nil
 }

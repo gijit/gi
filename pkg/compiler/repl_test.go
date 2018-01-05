@@ -265,6 +265,54 @@ func Test017DeleteFromMap(t *testing.T) {
 	})
 }
 
+func Test018FromMap(t *testing.T) {
+
+	cv.Convey(`read a map, x := map[int]string{3:"hello", 4:"gophers"}. reading key 3 should provide the value "hello"`, t, func() {
+
+		// and then eval!
+		vm := luajit.Newstate()
+		defer vm.Close()
+		vm.Openlibs()
+
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		SetupPrelude(vm, files)
+
+		inc := NewIncrState()
+
+		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
+		expect := []string{`x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x[3];`}
+		for i, src := range srcs {
+			translation := inc.Tr([]byte(src))
+			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
+			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, expect[i])
+
+			err := vm.Loadstring(string(translation))
+			panicOn(err)
+			err = vm.Pcall(0, 0, 0)
+			if err != nil {
+				fmt.Printf("error: '%v'\n", err)
+				DumpLuaStack(vm)
+				vm.Pop(1)
+				t.Fatal(err)
+			} else {
+				DumpLuaStack(vm)
+			}
+			//fmt.Printf("v back = '%#v'\n", v)
+		}
+		vm.Getglobal("x3")
+		top := vm.Gettop()
+		value_str := vm.Tostring(top)
+
+		pp("value_str=%v", value_str)
+		if value_str != "hello" {
+			panic(fmt.Sprintf("expected `hello`, got %v", value_str))
+		}
+
+	})
+}
+
 /*
 gi> x := map[int]string{3:"hello", 4:"gophers"}
 
