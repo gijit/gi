@@ -15,7 +15,7 @@ Currently incremental type checking is applied
 to all code. Slices are bounds-checked at runtime.
 Functions, closures and slices, as well as
 basic expressions compile and run. For-loops
-include for-range loops compile and run.
+including for-range loops compile and run.
 
 Much is left to do: maps, structs, switch,
 interfaces, imports. If this is exciting to
