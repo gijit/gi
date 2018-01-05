@@ -149,7 +149,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
-			return c.formatExpr(`$toNativeArray(%s, [%s])`, typeKind(t.Elem()), strings.Join(elements, ", "))
+			return c.formatExpr(`_gi_NewArray{typeKind="%s", [0]=%s}`, typeKind(t.Elem()), strings.Join(elements, ", "))
 		case *types.Slice:
 			ele := strings.Join(collectIndexedElements(t.Elem()), ", ")
 			if len(ele) > 0 {

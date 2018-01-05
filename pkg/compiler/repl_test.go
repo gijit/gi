@@ -200,7 +200,7 @@ hmm = function() for i, _ in pairs(a) do print(i, _getRangeCheck(a, i)); end end
 	})
 }
 
-func Test014SetAStringSliceToEmptyString(t *testing.T) {
+func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	inc := NewIncrState()
 
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
@@ -210,13 +210,23 @@ func Test014SetAStringSliceToEmptyString(t *testing.T) {
 	})
 }
 
-func Test015LenOfSlice(t *testing.T) {
+func Test014LenOfSlice(t *testing.T) {
 	inc := NewIncrState()
 
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice{[0]="hi","gophers!"}; bb = #x;`)
+	})
+}
+
+func Test015ArrayCreation(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
+
+		code := `x := [3]int{1,2,3}; bb := len(x)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray{typeKind="kindInt", [0]=1,2,3}; bb = 3;`)
 	})
 }
 

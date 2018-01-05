@@ -96,11 +96,17 @@ function _gi_NewArray(x)
 
    -- get initial count
    local length = 0
+   local kind = ""
    for k, v in pairs(x) do
-      length = length + 1
+      if k == "typeKind" then
+          kind = v
+          x["typeKind"] = nil -- delete from the backing data table
+      else 
+         length = length + 1
+      end
    end
 
-   local proxy = {len=length}
+   local proxy = {len=length, typeKind=kind}
    proxy[_giPrivateArrayRaw] = x
    setmetatable(proxy, _giPrivateArrayMt)
    return proxy
