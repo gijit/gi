@@ -284,7 +284,15 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					// end of function codegen now
 				}
 			case *ast.GenDecl:
-				pp("next decl from file.Nodes is a GenDecl: '%#v'", d.Specs[0].(*ast.ValueSpec).Names[0])
+				// jea: could also e *ast.TypeSpec here when declaring a struct!
+				switch ds := d.Specs[0].(type) {
+				case *ast.TypeSpec:
+					pp("next decl from file.Nodes is a *ast.TypeSpec: '%#v'", ds)
+				case *ast.ValueSpec:
+					pp("next decl from file.Nodes is a *ast.VaueSpec: '%#v'", ds.Names[0])
+				default:
+					pp("next decl from file.Nodes is an unrecognized *ast.GenDecl: '%#v'", ds)
+				}
 				switch d.Tok {
 				case token.TYPE:
 					for _, spec := range d.Specs {
