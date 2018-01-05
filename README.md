@@ -1,8 +1,25 @@
-gi: go interactive : a front-end for Go REPLs written in Golang
+gi: a go interpreter
 =======
+`gi` aims at being a front-end for Go REPLs written in Golang.
+Currently it is backed by LuaJIT, a tracing Just-in-time
+compiler for Lua.
 
-Status: early stages, work in progress. More
+status
+------
+Early stages, work in progress. More
 ambition than reality at present.
+
+Currently incremental type checking is applied
+to all code. Slices are bounds checked at runtime.
+Functions, closures and slices, as well as
+basic expressions, and for loops compile and work.
+
+Much is left to do: maps, structs, switch.
+
+However, because we are bulding on the fantastic
+front end provided by (Gopherjs)[https://github.com/gopherjs/gopherjs], and the fantastic
+backend provided by (LuaJIT)[http://luajit.org/], progress has been
+quite rapid.
 
 # the dream
 
