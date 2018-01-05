@@ -20,23 +20,23 @@
 ;;;               R. As such it falls under the GNU General Public
 ;;;               License version 3 or later.
 ;;;
-;;; Copyright (C) 2018, Author: Jason E. Aten
+;;; Copyright (C) 2018, Author: Jason E. Aten, Ph.D.
 ;;;
 ;;; how to install:
 ;;;
 ;;; (1) If you are changing which interpreter you want to use, examine
 ;;;     and adjust the "commonly-adjusted parameters" section just below.
 ;;;
-;;; (2) Copy gi-golang-mode.el into your ~/.emacs.d/  directory.
+;;; (2) Copy gigo.el into your ~/.emacs.d/  directory.
 ;;;
 ;;; (3) Then put this in your .emacs:
 ;;;
-;;;    (load "/home/jaten/.emacs.d/gi-golang.el") ; adjust path to fit your home directory.
+;;;    (load "/home/yourHomeDirectory/.emacs.d/gigo.el") ; adjust path to fit your home directory.
 ;;;    (require 'gi-golang-mode)
 ;;;    (global-set-key "\C-n" 'gi-golang-send-line)
 ;;;
 ;;; (4) Optionally for speed, M-x byte-compile-file <enter> 
-;;;                           ~/.emacs.d/gi-golang.el <enter>
+;;;                           ~/.emacs.d/gigo.el <enter>
 ;;;
 ;;; (5) To use, do 'M-x run-gi-golang' to start the interpreter. Open
 ;;;     your script and in the script buffer do 'M-x gi-golang-mode'.
@@ -143,11 +143,6 @@ Non-nil means always go to the next Gi-Golang code line after sending.")
 (defvar gi-golang-send-echo-input t
   "*Non-nil means echo input sent to the inferior Gi-Golang process.")
 (setq gi-golang-send-echo-input t)
-
-(defvar *gi-golang-known-lisps*) 
-(setq *gi-golang-known-lisps* '((:sysname "ccl" :syspath "/home/jaten/uns/bin/ccl64" :syspromptregex "[^[?]]*[?] ")
-			    (:sysname "sbcl" :syspath "/usr/bin/sbcl" :syspromptregex "[^>]*> ")
-			    (:sysname "cmucl" :syspath "/usr/local/bin/lisp" :syspromptregex "[^>]*> ")))
 
 
 ;; try to hide the ctrl-M carriage returns that ipython generates.
