@@ -22,9 +22,13 @@ func (cfg *GIConfig) LuajitMain() {
 	inc := compiler.NewIncrState()
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
+	prompt := "gi> "
+	if cfg.RawLua {
+		prompt = "raw luajit> "
+	}
 
 	for {
-		fmt.Printf("gi> ")
+		fmt.Printf(prompt)
 		src, isPrefix, err := reader.ReadLine()
 		if err == io.EOF {
 			fmt.Printf("[EOF]\n")
