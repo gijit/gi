@@ -55,7 +55,7 @@ func (cfg *GIConfig) LuajitMain() {
 			use = string(src) + "\n"
 		}
 
-		//fmt.Printf("sending use='%v'\n", use)
+		p("sending use='%v'\n", use)
 		err = vm.Loadstring(use)
 		if err != nil {
 			fmt.Printf("error from Lua vm.LoadString(): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
@@ -64,7 +64,12 @@ func (cfg *GIConfig) LuajitMain() {
 			continue
 		}
 		err = vm.Pcall(0, 0, 0)
-		panicOn(err)
+		if err != nil {
+			fmt.Printf("error from Lua vm.Pcall(0,0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
+			DumpLuaStack(vm)
+			vm.Pop(1)
+			continue
+		}
 		DumpLuaStack(vm)
 		reader.Reset(os.Stdin)
 	}

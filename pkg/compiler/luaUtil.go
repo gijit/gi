@@ -113,7 +113,7 @@ function _getRangeCheck(x, i)
   return x[i]
 end;
 
-function _setRrangeCheck(x, i, val)
+function _setRangeCheck(x, i, val)
   if x == nil or i < 0 or i >= x.len then
      error("index out of range")
   end
