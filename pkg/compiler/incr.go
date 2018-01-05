@@ -343,6 +343,18 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					newCodeText = append(newCodeText, c.output)
 				} else {
 
+					// *ast.ExprStmt
+					wrapWithPrint := true
+					switch y := d.(type) {
+					case *ast.ExprStmt:
+						switch y.X.(type) {
+						case *ast.CallExpr:
+							wrapWithPrint = false
+						default:
+
+						}
+					default:
+					}
 					n := len(c.output)
 					var ele string
 					if bytes.HasSuffix(c.output, []byte(";\n")) {
@@ -351,9 +363,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						ele = string(c.output)
 					}
 					var tmp string
-					if strings.HasPrefix(ele, "print") {
+					if !wrapWithPrint || strings.HasPrefix(ele, "print") {
 						tmp = ele + ";"
 					} else {
+						pp("wrapping '%s' in print at the repl", ele)
 						tmp = fmt.Sprintf(`print(%[1]s);`, ele)
 					}
 					newCodeText = append(newCodeText, []byte(tmp))

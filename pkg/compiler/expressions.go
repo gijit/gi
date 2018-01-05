@@ -913,7 +913,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		case *types.Pointer:
 			return c.formatExpr("(%e, %d)", args[0], argType.Elem().(*types.Array).Len())
 		case *types.Map:
-			return c.formatExpr("$keys(%e).length", args[0])
+			return c.formatExpr("#%e", args[0])
 		case *types.Chan:
 			return c.formatExpr("%e.$buffer.length", args[0])
 		// length of array is constant
@@ -941,7 +941,8 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("$append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))
 	case "delete":
 		keyType := c.p.TypeOf(args[0]).Underlying().(*types.Map).Key()
-		return c.formatExpr(`delete %e[%s.keyFor(%s)]`, args[0], c.typeName(keyType), c.translateImplicitConversion(args[1], keyType))
+		return c.formatExpr(`%e[%s]= nil`, args[0], c.translateImplicitConversion(args[1], keyType))
+		//return c.formatExpr(`%e("delete", %s)`, args[0], c.translateImplicitConversion(args[1], keyType))
 	case "copy":
 		if basic, isBasic := c.p.TypeOf(args[1]).Underlying().(*types.Basic); isBasic && isString(basic) {
 			return c.formatExpr("$copyString(%e, %e)", args[0], args[1])

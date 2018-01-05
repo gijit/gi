@@ -252,3 +252,40 @@ func Test016MapCreation(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
 	})
 }
+
+func Test017DeleteFromMap(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
+
+		code := `x := map[int]string{3:"hello", 4:"gophers"}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
+		code = `delete(x, 3)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x[3]= nil;`)
+	})
+}
+
+/*
+gi> x := map[int]string{3:"hello", 4:"gophers"}
+
+gi> x
+slice of length 2 is _giMap{[4]= gophers, [3]= hello, }
+
+gi> delete(x, 4)
+newindex called for key	4
+
+gi> x
+slice of length 1 is _giMap{[3]= hello, }
+gi> delete(x, 4)
+newindex called for key	4
+
+gi> x
+slice of length 2 is _giMap{[3]= hello, }
+
+gi> delete(x, 3)
+newindex called for key	3
+
+gi> x
+slice of length 1 is _giMap{}
+// wrong! should be zero
+*/

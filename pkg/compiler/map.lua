@@ -15,20 +15,24 @@ _giPrivateMapProps = {}
  _giPrivateMapMt = {
 
     __newindex = function(t, k, v)
-      print("newindex called for key", k)
       local len = t[_giPrivateMapProps]["len"]
-      if t[_giPrivateMapRaw][k] ~= nil then
-          -- replace or delete
+      print("newindex called for key", k, " len at start is ", len)
+      if t[_giPrivateMapRaw][k] == nil then
+         if  v ~= nil then
+         -- new value
+            len = len +1
+         end
+      else
+         -- key already present, are we replacing or deleting?
           if v == nil then 
               len = len - 1 -- delete
           else
               -- replace, no count change              
           end
-      else 
-          len = len + 1
       end
       t[_giPrivateMapRaw][k] = v
       t[_giPrivateMapProps]["len"] = len
+      print("len at end of newidnex is ", len)
     end,
 
   -- __index allows us to have fields to access the count.
@@ -40,7 +44,7 @@ _giPrivateMapProps = {}
 
     __tostring = function(t)
        local len = t[_giPrivateMapProps]["len"]
-       local s = "slice of length " .. tostring(len) .. " is _giMap{"
+       local s = "map of length " .. tostring(len) .. " is _giMap{"
        local r = t[_giPrivateMapRaw]
        -- we want to skip both the _giPrivateMapRaw and the len
        -- when iterating, which happens automatically if we
