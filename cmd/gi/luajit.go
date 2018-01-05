@@ -24,7 +24,7 @@ func (cfg *GIConfig) LuajitMain() {
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
 	goPrompt := "gi> "
-	luaPrompt := "raw luajit> "
+	luaPrompt := "raw luajit gi> "
 	prompt := goPrompt
 	if cfg.RawLua {
 		prompt = luaPrompt
