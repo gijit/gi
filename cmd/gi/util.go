@@ -6,13 +6,18 @@ import (
 	"strings"
 
 	"github.com/go-interpreter/gi/pkg/compiler"
+	"github.com/go-interpreter/gi/pkg/verb"
 )
 
 func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {
 	defer func() {
 		recov := recover()
 		if recov != nil {
-			err = fmt.Errorf("caught panic: '%v'\n%s\n", recov, string(debug.Stack()))
+			msg := fmt.Sprintf("problem detected during Go static type checking: '%v'", recov)
+			if verb.Verbose {
+				msg += fmt.Sprintf("\n%s\n", string(debug.Stack()))
+			}
+			err = fmt.Errorf(msg)
 		}
 	}()
 	translation = string(inc.Tr([]byte(src)))
