@@ -398,3 +398,16 @@ func Test019TopLevelScope(t *testing.T) {
 
 	})
 }
+
+func Test020StructTypeDeclarations(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("declaring a struct with `type A struct{}` should compile and pass type checking, but produce no lua code (all retained in the type checker, no instantiated value is produced here.", t, func() {
+
+		code := `type A struct{}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+
+`)
+
+	})
+}
