@@ -160,4 +160,6 @@ License: 3-clause BSD.
 Credits: some code here is dervied from the Go standard
 libraries, the Go gc compiler,  and from Richard Musiol's excellent Gopherjs project.
 This project and those are licensed under the 3-clause BSD license
-found in the LICENSE file.
+found in the LICENSE file. The LuaJIT vm and compiler are statically linked
+using CGO, and their MIT license can be found in their sub-directories
+and online at http://luajit.org/ and https://github.com/LuaJIT/LuaJIT/blob/master/COPYRIGHT
