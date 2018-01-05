@@ -30,7 +30,8 @@ func main() {
 	if !cfg.Quiet {
 		fmt.Printf(
 			`==================
-gi: go interactive (https://github.com/go-interpreter/gi)
+gi: a go interpreter
+https://github.com/go-interpreter/gi
 ==================
   [gi is an interactive Golang environment,
    also known as a REPL or Read-Eval-Print-Loop.]

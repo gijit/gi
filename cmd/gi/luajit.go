@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/glycerine/luajit"
 	"github.com/go-interpreter/gi/pkg/compiler"
+	"github.com/go-interpreter/gi/pkg/verb"
 	"io"
 	"os"
 	"strings"
@@ -22,9 +23,11 @@ func (cfg *GIConfig) LuajitMain() {
 	inc := compiler.NewIncrState()
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
-	prompt := "gi> "
+	goPrompt := "gi> "
+	luaPrompt := "raw luajit> "
+	prompt := goPrompt
 	if cfg.RawLua {
-		prompt = "raw luajit> "
+		prompt = luaPrompt
 	}
 
 	for {
@@ -38,7 +41,45 @@ func (cfg *GIConfig) LuajitMain() {
 		if isPrefix {
 			panic("line too long")
 		}
-		var use string
+		use := string(src)
+		cmd := strings.TrimSpace(use)
+		switch cmd {
+		case ":v":
+			verb.Verbose = true
+			verb.VerboseVerbose = false
+			continue
+		case ":vv":
+			verb.Verbose = true
+			verb.VerboseVerbose = true
+			continue
+		case ":raw":
+			cfg.RawLua = true
+			prompt = luaPrompt
+			fmt.Printf("Raw LuaJIT language mode.\n")
+			continue
+		case ":go":
+			cfg.RawLua = false
+			prompt = goPrompt
+			fmt.Printf("Go language mode.\n")
+			continue
+		case ":help":
+			fmt.Printf(`
+======================
+gi: a go interpreter
+https://github.com/go-interpreter/gi
+command prompt help: 
+simply type Go expressions or statements
+directly at the prompt, or use one of 
+these special commands:
+======================
+ :v  turns on verbose debug prints
+ :vv turns on very verbose prints
+ :raw changes to raw-luajit entry mode
+ :go  change back from raw mode to Go mode
+ ctrl-d to exit
+`)
+			continue
+		}
 
 		if !cfg.RawLua {
 			translation, err := translateAndCatchPanic(inc, src)
@@ -52,7 +93,7 @@ func (cfg *GIConfig) LuajitMain() {
 			use = translation
 
 		} else {
-			use = string(src) + "\n"
+			use += "\n"
 		}
 
 		p("sending use='%v'\n", use)
