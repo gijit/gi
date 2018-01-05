@@ -1,13 +1,15 @@
 gi: a go interpreter
 =======
-`gi` aims at being a front-end for Go REPLs written in Golang.
+`gi` aims at being a scalable Go REPL
+for doing interactive coding and data analysis.
 Currently it is backed by LuaJIT, a tracing Just-in-time
-compiler for Lua.
+compiler for Lua that provides quite
+nice performance, sometimes even beating
+ahead-of-time compiled Go code.
 
 status
 ------
-Early stages, work in progress. More
-ambition than reality at present.
+Early stages, work in progress. Contribute!
 
 Currently incremental type checking is applied
 to all code. Slices are bounds-checked at runtime.
