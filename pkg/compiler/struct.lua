@@ -85,7 +85,7 @@ _giPrivateStructProps = {}
     end
  }
 
-function _gi_NewStruct(keyValTypeMap, x)
+function _gi_NewStruct(structName, keyValTypeMap, x)
    assert(type(keyValTypeMap) == 'table', 'bad parameter #1: must be table')
    assert(type(x) == 'table', 'bad parameter #2: must be table')
 
@@ -98,7 +98,7 @@ function _gi_NewStruct(keyValTypeMap, x)
       len = len + 1
    end
 
-   local props = {len=len, keyValTypeMap=keyValTypeMap}
+   local props = {len=len, keyValTypeMap=keyValTypeMap, structName=structName}
    proxy[_giPrivateStructProps] = props
 
    setmetatable(proxy, _giPrivateStructMt)

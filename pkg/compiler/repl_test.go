@@ -411,3 +411,19 @@ func Test020StructTypeDeclarations(t *testing.T) {
 
 	})
 }
+
+func Test021StructTypeValues(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("Given `type A struct{}`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
+
+		code := `type A struct{}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+`)
+		code = `var a A`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+a=_gi_NewStruct("A",{},{});
+`)
+
+	})
+}
