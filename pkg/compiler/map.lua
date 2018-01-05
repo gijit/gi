@@ -16,7 +16,7 @@ _giPrivateMapProps = {}
 
     __newindex = function(t, k, v)
       local len = t[_giPrivateMapProps]["len"]
-      print("newindex called for key", k, " len at start is ", len)
+      --print("newindex called for key", k, " len at start is ", len)
       if t[_giPrivateMapRaw][k] == nil then
          if  v ~= nil then
          -- new value
@@ -32,7 +32,7 @@ _giPrivateMapProps = {}
       end
       t[_giPrivateMapRaw][k] = v
       t[_giPrivateMapProps]["len"] = len
-      print("len at end of newidnex is ", len)
+      --print("len at end of newidnex is ", len)
     end,
 
   -- __index allows us to have fields to access the count.
