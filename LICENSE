@@ -1,11 +1,14 @@
-Portions Copyright (c) 2018 Jason E. Aten, Ph.D. All rights reserved.
+Copyright (c) 2018 Jason E. Aten, Ph.D. All rights reserved.
+This project licensed under the 3-clause BSD style license below.
 
-Code dervied from the Google Go gc compiler:
-Portions Copyright (c) 2017 The Go Authors. All rights reserved.
+Code dervied from the Google Go gc compiler is
+"Copyright (c) 2017 The Go Authors. All rights reserved."
+and used under the 3-clause BSD style license below.
 
-Code dervied from the Gopherjs project:
-Portions Copyright (c) 2017 Richard Musiol and Gopherjs contributers.
-All rights reserved.
+Code dervied from the Gopherjs project is
+"Copyright (c) 2017 Richard Musiol and the Gopherjs contributors.
+All rights reserved."
+and used under the 3-clause BSD style license below.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are

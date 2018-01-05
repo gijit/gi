@@ -29,17 +29,21 @@ func main() {
 
 	if !cfg.Quiet {
 		fmt.Printf(
-			`==================
+			`====================
 gi: a go interpreter
+====================
 https://github.com/go-interpreter/gi
-==================
+Copyright (c) 2018, Jason E. Aten, Ph.D.
+License: 3-clause BSD. See the LICENSE file at
+https://github.com/go-interpreter/gi/blob/master/LICENSE
+====================
   [gi is an interactive Golang environment,
    also known as a REPL or Read-Eval-Print-Loop.]
   [type ctrl-d to exit]
   [type :help for help]
   [gi -h for flag help]
   [gi -q to start quietly]
-==================
+====================
 %s
 ==================
 `, Version())
