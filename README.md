@@ -105,11 +105,11 @@ gi> a[0] = "you rock"
 gi> a
 table of length 2 is _giSlice{[0]= you rock, [1]= gophers!, }
 
-gi> a[-1] = "out-of-bounds-access"
-oops: 'problem detected during Go static type checking: 'where error? err = '1:3: invalid argument: index -1 (constant of type int) must not be negative''' on input 'a[-1] = "out-of-bounds-access"'
+gi> a[-1] = "compile-time-out-of-bounds-access"
+oops: 'problem detected during Go static type checking: 'where error? err = '1:3: invalid argument: index -1 (constant of type int) must not be negative''' on input 'a[-1] = "compile-time-out-of-bounds-access"'
 
-gi> a[100] = "out-of-bounds-access"
-error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_setRangeCheck(a, 100, "out-of-bounds-access");'
+gi> a[100] = "runtime-out-of-bounds-access"
+error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_setRangeCheck(a, 100, "runtime-out-of-bounds-access");'
 lua stack:
 String : 	 [string "..."]:91: index out of range
 
