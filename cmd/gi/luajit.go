@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func LuajitMain() {
+func (cfg *GIConfig) LuajitMain() {
 
 	vm := luajit.Newstate()
 	defer vm.Close()
@@ -34,20 +34,35 @@ func LuajitMain() {
 		if isPrefix {
 			panic("line too long")
 		}
-		translation, err := translateAndCatchPanic(inc, src)
-		if err != nil {
-			fmt.Printf("oops: '%v' on input '%s'\n", err, string(src))
-			translation = "\n"
-			// still write, so we get another prompt
+		var use string
+
+		if !cfg.RawLua {
+			translation, err := translateAndCatchPanic(inc, src)
+			if err != nil {
+				fmt.Printf("oops: '%v' on input '%s'\n", err, string(src))
+				translation = "\n"
+				// still write, so we get another prompt
+			} else {
+				p("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
+			}
+			use = translation
+
 		} else {
-			p("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
+			use = string(src) + "\n"
 		}
 
-		err = vm.Loadstring(string(translation))
-		panicOn(err)
+		//fmt.Printf("sending use='%v'\n", use)
+		err = vm.Loadstring(use)
+		if err != nil {
+			fmt.Printf("error from Lua vm.LoadString(): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
+			DumpLuaStack(vm)
+			vm.Pop(1)
+			continue
+		}
 		err = vm.Pcall(0, 0, 0)
 		panicOn(err)
 		DumpLuaStack(vm)
+		reader.Reset(os.Stdin)
 	}
 }
 

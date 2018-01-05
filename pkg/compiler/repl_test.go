@@ -199,3 +199,13 @@ a=_giSlice{[0]=1,2,3};
 hmm = function() for i, _ in pairs(a) do print(i, ((i == nil or i < 0 or i >= a.len) and error("index out of range") or a[i]));  end end;`)
 	})
 }
+
+func Test014SetAStringSliceToEmptyString(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("setting a string slice element should compile into lua", t, func() {
+
+		code := `b := []string{"hi","gophers!"}; b[0]=""`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_giSlice{[0]="hi","gophers!"}; b[0]=""`)
+	})
+}

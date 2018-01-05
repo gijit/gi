@@ -44,7 +44,7 @@ gi: go interactive (https://github.com/go-interpreter/gi)
 `, Version())
 	}
 
-	LuajitMain()
+	cfg.LuajitMain()
 	//NodeChildMain()
 	//OttoReplMain()
 }
