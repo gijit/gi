@@ -40,13 +40,12 @@ and excellent multicore support.
 
 # the aim
 
-`gi` aims to provide a library for many
-interactive backends to be written against.
-`gi` will provide the REPL and do the
-initial lexical scanning, parsing, and type
-checking. `gi` will then pass the
-AST to a backend for codegen and/or immediate
-interpretation.
+We want to provide one excellent integrated REPL for Go.
+Exploratory data analysis should not be hampered
+by weak type-checking or hard-to-refactor code,
+and performance should not suffer just because
+you require interaction with your data.
+
 
 # of course we need a backend to develop against
 
