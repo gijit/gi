@@ -43,7 +43,7 @@ _giPrivateArrayMt = {
 
    __len = function(t)
       -- this does get called by the # operation(!)
-      -- print("len called")
+      print("len called")
       return t.len
    end,
 
@@ -83,21 +83,19 @@ _giPrivateArrayMt = {
    end
 }
 
-function _gi_NewArray(len)
-   x={}
+function _gi_NewArray(x, typeKind, len)
 
-   if len == nil then
-      error("must provide size to _gi_NewArray")
+   if typeKind == nil or typeKind == "" then
+      error("must provide typeKind to _gi_NewArray")
    end
    
-   local proxy = {len=length, typeKind=kind}
+   if len == nil then
+      error("must provide len to _gi_NewArray")
+   end
+   
+   local proxy = {len=length, typeKind=typeKind}
    proxy[_giPrivateArrayRaw] = x
    setmetatable(proxy, _giPrivateArrayMt)
    return proxy
 end;
 
-arrayType = {
-   zero = function()
-      return _gi_NewArray(0)
-   end
-}

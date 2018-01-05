@@ -146,13 +146,13 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)
 				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", tn, t)
-				return c.formatExpr("%s.zero()", tn)
+				return c.formatExpr(fmt.Sprintf(`_gi_NewArray({}, "%s", %v)`, typeKind(t.Elem()), t.Len()))
 			}
 			zero := c.translateExpr(c.zeroValue(t.Elem())).String()
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
-			return c.formatExpr(`_gi_NewArray{typeKind="%s", [0]=%s}`, typeKind(t.Elem()), strings.Join(elements, ", "))
+			return c.formatExpr(fmt.Sprintf(`_gi_NewArray({[0]=%s}, "%s", %v)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len()))
 		case *types.Slice:
 			ele := strings.Join(collectIndexedElements(t.Elem()), ", ")
 			if len(ele) > 0 {

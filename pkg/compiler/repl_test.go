@@ -223,13 +223,24 @@ func Test014LenOfSlice(t *testing.T) {
 func Test015ArrayCreation(t *testing.T) {
 	inc := NewIncrState()
 
-	cv.Convey("x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
+	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray{typeKind="_kindInt", [0]=1,2,3}; bb = 3;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1,2,3}, "_kindInt", 3); bb = 3;`)
+
+		// and empty array with size 3
+
+		code = `var x [3]int`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({}, "_kindInt", 3);`)
+
+		// upper case names too
+		code = `LX := len(x)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `LX = 3;`)
+
+		// printing length
+		code = `println(len(x))`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `print(3);`)
 	})
 }
-
-// big L variable name
 
 // print(len(x))

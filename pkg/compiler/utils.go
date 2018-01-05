@@ -277,7 +277,8 @@ func (c *funcContext) setType(e ast.Expr, t types.Type) ast.Expr {
 
 func (c *funcContext) pkgVar(pkg *types.Package) string {
 	if pkg == c.p.Pkg {
-		return "$pkg"
+		return ""
+		//return "$pkg"
 	}
 
 	pkgVar, found := c.p.pkgVars[pkg.Path()]
@@ -308,7 +309,10 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 		c.p.dependencies[o] = true
 
 		if o.Pkg() != c.p.Pkg || (isVarOrConst(o) && o.Exported()) {
-			return c.pkgVar(o.Pkg()) + "." + o.Name()
+			// jea, foregoing pkg vars with the $Pkg. prefix, for now.
+			return o.Name()
+			//return c.pkgVar(o.Pkg()) + "." + o.Name()
+
 		}
 	}
 

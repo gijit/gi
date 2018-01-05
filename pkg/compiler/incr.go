@@ -350,7 +350,12 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					} else {
 						ele = string(c.output)
 					}
-					tmp := fmt.Sprintf(`print(%[1]s);`, ele)
+					var tmp string
+					if strings.HasPrefix(ele, "print") {
+						tmp = ele + ";"
+					} else {
+						tmp = fmt.Sprintf(`print(%[1]s);`, ele)
+					}
 					newCodeText = append(newCodeText, []byte(tmp))
 				}
 				pp("place5, appending to newCodeText: c.output='%s'", string(c.output))
@@ -454,7 +459,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				typeName := c.objectName(o)
 				lhs := typeName
 				if isPkgLevel(o) {
-					lhs += " = $pkg." + encodeIdent(o.Name())
+					//lhs += " = $pkg." + encodeIdent(o.Name())
+					lhs += " = " + encodeIdent(o.Name())
 				}
 				size := int64(0)
 				constructor := "null"

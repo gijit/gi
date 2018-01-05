@@ -506,7 +506,8 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 				typeName := c.objectName(o)
 				lhs := typeName
 				if isPkgLevel(o) {
-					lhs += " = $pkg." + encodeIdent(o.Name())
+					//lhs += " = $pkg." + encodeIdent(o.Name())
+					lhs += " = " + encodeIdent(o.Name())
 				}
 				size := int64(0)
 				constructor := "null"
@@ -694,7 +695,8 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		funcRef := c.objectName(o)
 		code.Write(primaryFunction(funcRef))
 		if fun.Name.IsExported() {
-			fmt.Fprintf(code, "\t$pkg.%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
+			fmt.Fprintf(code, "\t%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
+			//fmt.Fprintf(code, "\t$pkg.%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
 		}
 		return code.Bytes()
 	}
