@@ -186,7 +186,7 @@ Lua. This makes implementation usually very fast, since mostly it is just
 above figuring out how to re-write javascript into Lua. You are typically just
 checking the syntax of the source-to-source translation. Sometimes some
 Lua support functions will be needed. Add them to compile/luaUtil.go if
-they are short. Longer lua code can go in its own file.
+they are short. Longer Lua code can go in its own file.
 
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
 Run `go fmt` on your code.
