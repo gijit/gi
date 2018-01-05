@@ -161,7 +161,7 @@ Other editors: please contribute!
 # how to contribute: getting started
 
 a) Pick an issue from here, https://github.com/go-interpreter/gi/issues, and add a comment that
-you are starting work on that feature.
+you are starting work on that feature. Make a branch for your feature, using `git checkout -b yourFeatureName`.
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
 moving on to implementation. Tests are quite short. There are many examples are here,
