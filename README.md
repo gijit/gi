@@ -196,6 +196,25 @@ Run `go fmt` on your code.
 
 d) submit your pull request! (Rebase against master first, please).
 
+# Lua resources
+
+LuaJIT targets Lua 5.1 with some 5.2 extensions.
+
+a) main web site
+
+https://www.lua.org/
+
+b) Programming in Lua by by Roberto Ierusalimschy, the chief architect of Lua.
+
+1st edition. html format (Lua 5.0) https://www.lua.org/pil/contents.html
+
+2nd edition. pdf format (Lua 5.1) https://doc.lagout.org/programmation/Lua/Programming%20in%20Lua%20Second%20Edition.pdf
+
+c) Lua 5.1 Reference Manual, by R. Ierusalimschy, L. H. de Figueiredo, W. Celes
+Lua.org, August 2006 
+
+Lua 5.1 https://www.lua.org/manual/5.1/ 
+
 # origin
 
 Author: Jason E. Aten, Ph.D.
