@@ -182,8 +182,9 @@ https://github.com/go-interpreter/gi/blob/master/pkg/compiler/expressions.go
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/luaUtil.go
 
 The files above derive from GopherJS which compiles Go into Javascript; whereas `gi` translates Go into
-Lua). This makes implementation usually very fast, since mostly it is just
-above figuring out how to re-write javascript into Lua.
+Lua. This makes implementation usually very fast, since mostly it is just
+above figuring out how to re-write javascript into Lua. You are typically just
+checking the syntax of the source-to-source translation.
 
 c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
 Run `go fmt` on your code.
