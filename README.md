@@ -164,7 +164,7 @@ you are starting work on that feature. Make a branch for your feature, using `gi
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
 moving on to implementation. Tests are quite short. There are many examples are here,
-which show the currently implemented features. Add you test at the end of
+which show the currently implemented features. Add your test at the end of
 the compiler/repl_test.go file.
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/repl_test.go
