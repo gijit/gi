@@ -71,6 +71,16 @@ gi>
 
 ~~~
 
+# editor support
+
+An emacs mode `gigo.el` can be found in the `emacs/` subdirectory
+here https://github.com/go-interpreter/gi/tree/master/emacs/gigo.el
+
+M-x `run-gi-golang` to start the interpreter. Pressing ctrl-n will
+step through any file that is in `gi-golang` mode. 
+
+Other editors: please contribute!
+
 # origin
 
 Author: Jason E. Aten, Ph.D.
