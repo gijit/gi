@@ -143,7 +143,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		case *types.Array:
 			elements := collectIndexedElements(t.Elem())
 			if len(elements) == 0 {
-				return c.formatExpr("%s.zero()", c.typeName(t))
+				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
+				tn := c.typeName(t)
+				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", tn, t)
+				return c.formatExpr("%s.zero()", tn)
 			}
 			zero := c.translateExpr(c.zeroValue(t.Elem())).String()
 			for len(elements) < int(t.Len()) {

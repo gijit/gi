@@ -226,7 +226,7 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray{typeKind="kindInt", [0]=1,2,3}; bb = 3;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray{typeKind="_kindInt", [0]=1,2,3}; bb = 3;`)
 	})
 }
 

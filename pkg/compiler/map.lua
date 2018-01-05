@@ -106,18 +106,3 @@ function _gi_NewMap(x)
    return proxy
 end;
 
-function _getRangeCheck(x, i)
-  if x == nil or i < 0 or i >= x.len then
-     error("index out of range")
-  end
-  return x[i]
-end;
-
-function _setRangeCheck(x, i, val)
-  if x == nil or i < 0 or i >= x.len then
-     error("index out of range")
-  end
-  x[i] = val
-  return val
-end;
-

@@ -208,10 +208,13 @@ func (c *funcContext) newVariable(name string) string {
 }
 
 func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
+	pp("newVariableWithLevel begins, with name='%s'", name)
 	if name == "" {
 		panic("newVariable: empty name")
 	}
 	name = encodeIdent(name)
+	pp("newVariableWithLevel begins, after encodeIdent, name='%s'", name)
+
 	if c.p.minify {
 		i := 0
 		for {
@@ -239,10 +242,11 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	varName := name
 	// jea... what purpose does this serve? we
 	// want to re-use the same variable name when
-	// we re-declare vars.
+	// we re-declare vars, not add another variable with _1 tacked
+	// on at the end.
 	if false { // jea add
 		if n > 0 {
-			varName = fmt.Sprintf("%s$%d", name, n)
+			varName = fmt.Sprintf("%s_%d", name, n)
 		}
 	}
 	pp("in newVariableWithLevel(), varName = '%s'", varName)
@@ -335,25 +339,33 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 	return name
 }
 
-func (c *funcContext) typeName(ty types.Type) string {
+func (c *funcContext) typeName(ty types.Type) (res string) {
+	pp("in typeName, ty='%#v'", ty)
+	defer func() {
+		pp("funcContext.typeName returning with res = '%s'", res)
+	}()
 	switch t := ty.(type) {
 	case *types.Basic:
-		return "$" + toJavaScriptType(t)
+		jst := toJavaScriptType(t)
+		pp("in typeName, basic, calling toJavaScriptType t='%#v', got jst='%s'", t, jst)
+		return jst
 	case *types.Named:
 		if t.Obj().Name() == "error" {
-			return "$error"
+			return "error"
 		}
 		return c.objectName(t.Obj())
 	case *types.Interface:
 		if t.Empty() {
-			return "$emptyInterface"
+			return "emptyInterface"
 		}
 	}
 
 	anonType, ok := c.p.anonTypeMap.At(ty).(*types.TypeName)
 	if !ok {
-		c.initArgs(ty) // cause all embedded types to be registered
-		varName := c.newVariableWithLevel(strings.ToLower(typeKind(ty)[5:])+"Type", true)
+		c.initArgs(ty)                                    // cause all embeddeed types to be registered
+		low := strings.ToLower(typeKind(ty)[5:]) + "Type" // 5: takes the word _kind off.
+		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
+		varName := c.newVariableWithLevel(low, true)
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
 		c.p.anonTypeMap.Set(ty, anonType)
@@ -414,23 +426,23 @@ func fieldName(t *types.Struct, i int) string {
 func typeKind(ty types.Type) string {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
-		return "kind" + toJavaScriptType(t)
+		return "_kind" + toJavaScriptType(t)
 	case *types.Array:
-		return "kindArray"
+		return "_kindArray"
 	case *types.Chan:
-		return "kindChan"
+		return "_kindChan"
 	case *types.Interface:
-		return "kindInterface"
+		return "_kindInterface"
 	case *types.Map:
-		return "kindMap"
+		return "_kindMap"
 	case *types.Signature:
-		return "kindFunc"
+		return "_kindFunc"
 	case *types.Slice:
-		return "kindSlice"
+		return "_kindSlice"
 	case *types.Struct:
-		return "kindStruct"
+		return "_kindStruct"
 	case *types.Pointer:
-		return "kindPtr"
+		return "_kindPtr"
 	default:
 		panic(fmt.Sprintf("Unhandled type: %T\n", t))
 	}
