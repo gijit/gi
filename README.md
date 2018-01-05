@@ -76,21 +76,24 @@ $
 $ make install
 $
 $ gi # start me up
-
-==================
+====================
 gi: a go interpreter
+====================
 https://github.com/go-interpreter/gi
-==================
+Copyright (c) 2018, Jason E. Aten, Ph.D.
+License: 3-clause BSD. See the LICENSE file at
+https://github.com/go-interpreter/gi/blob/master/LICENSE
+====================
   [gi is an interactive Golang environment,
    also known as a REPL or Read-Eval-Print-Loop.]
   [type ctrl-d to exit]
   [type :help for help]
   [gi -h for flag help]
   [gi -q to start quietly]
-==================
-built: '2018-01-04T21:39:00-0600'
-last-git-commit-hash: '7a42b284a7303bd5d7b44b097070027f62eca213'
-nearest-git-tag: 'v0.0.7'
+====================
+built: '2018-01-04T22:30:28-0600'
+last-git-commit-hash: '6f105a4b7a74509c6117105c908e9a6c38459119'
+nearest-git-tag: 'v0.0.8'
 git-branch: 'master'
 go-version: 'go_version_go1.9_darwin/amd64'
 luajit-version: 'LuaJIT_2.1.0-beta3_--_Copyright_(C)_2005-2017_Mike_Pall._http://luajit.org/'
