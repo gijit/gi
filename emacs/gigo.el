@@ -1,5 +1,4 @@
 ;;; gi-golang-3.92
-;;; tuned back to python without ipython
 ;;; (Setq *gi-golang-version-string* "3.92") ; update this below when changing.
 ;;;
 ;;; gi-golang.el     - is a pair of modes for sending lines from a 
@@ -11,7 +10,7 @@
 ;;;                  shell, Python, and so forth. Functions for
 ;;;                  stepping through s-expressions for Lisp and 
 ;;;                  Scheme work are also available. This file is
-;;;                  by default setup for ipython.
+;;;                  by default setup for gi, a go interpreter.
 ;;;
 ;;; License:      This minimal pair of (major and inferior) modes
 ;;;               was derived from the Emacs Octave Support modes in 
@@ -61,7 +60,6 @@
 
 (defvar *inferior-gi-golang-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]"
   "Regexp to match prompts for the inferior Gi-Golang process.")
-;; ipython: "[^\]]*: "
 (setq *inferior-gi-golang-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]")
 
 (defvar *gi-golang-keypress-to-sendline* (kbd "C-n")
