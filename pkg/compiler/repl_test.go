@@ -481,3 +481,29 @@ func Test025ComplexNumbers(t *testing.T) {
 	a = 0+6.67428e-11i;`)
 	})
 }
+
+func Test026LenOfString(t *testing.T) {
+
+	cv.Convey(`a := "hi"; b := len(a); should return b of 2, so the len() on a string works.`, t, func() {
+
+		code := `a := "hi"; b :=len(a);`
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+	a = "hi"; b = #a;`)
+
+		// and verify that it happens correctly.
+		vm := luajit.Newstate()
+		defer vm.Close()
+		vm.Openlibs()
+
+		err := vm.Loadstring(string(translation))
+		panicOn(err)
+		err = vm.Pcall(0, 0, 0)
+		panicOn(err)
+		DumpLuaStack(vm)
+
+		mustLuaInt(vm, "b", 2)
+	})
+}

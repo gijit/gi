@@ -49,7 +49,10 @@ _giPrivateSliceProps = {}
     end,
 
     __len = function(t)
-       -- this does get called by the # operation(!)
+       -- __len does get called by the '#' operator, but IFF
+       -- the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used
+       -- in the LuaJIT build. So use it!
+       --
        -- print("len called")
        return t[_giPrivateSliceProps]["len"]
     end,

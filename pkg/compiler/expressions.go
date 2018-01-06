@@ -914,13 +914,14 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 	case "len":
 		switch argType := c.p.TypeOf(args[0]).Underlying().(type) {
 		case *types.Basic:
-			return c.formatExpr("%e.length", args[0])
+			//return c.formatExpr("%e.length", args[0])
+			return c.formatExpr(" #%e", args[0])
 		case *types.Slice:
 			return c.formatExpr(" #%e", args[0])
 		case *types.Pointer:
 			return c.formatExpr("(%e, %d)", args[0], argType.Elem().(*types.Array).Len())
 		case *types.Map:
-			return c.formatExpr("#%e", args[0])
+			return c.formatExpr(" #%e", args[0])
 		case *types.Chan:
 			return c.formatExpr("%e.$buffer.length", args[0])
 		// length of array is constant
