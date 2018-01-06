@@ -443,3 +443,19 @@ a=_gi_NewStruct("A",{["B"]="int"},{["B"]=43});
 
 	})
 }
+
+func Test023CopyingStructValues(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey("Given `type A struct{ B int }`, when `var a =A{B:23}` and then `cp := a; cp.B = 78` then a.B should still be 23 because a full copy/clone should have been made of a during the `cp := a` operation.", t, func() {
+
+		code := `type A struct{ B int}; var a = A{B:23}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+a=_gi_NewStruct("A",{["B"]="int"},{["B"]=23});
+`)
+		code = `cp := a`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+cp=_gi_Clone(a);
+`)
+	})
+}
