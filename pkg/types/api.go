@@ -218,7 +218,8 @@ type Info struct {
 	// initialization dependency appear in topological order, the others appear
 	// in source order. Variables without an initialization expression do not
 	// appear in this list.
-	InitOrder []*Initializer
+	// jea: hurtful to reorder assignments at the repl, don't do it.
+	// InitOrder []*Initializer
 
 	// standalone statements/expressions, in order
 	//NewCode []ast.Node

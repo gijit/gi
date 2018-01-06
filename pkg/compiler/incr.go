@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"github.com/go-interpreter/gi/pkg/ast"
 	"github.com/go-interpreter/gi/pkg/constant"
+	"github.com/go-interpreter/gi/pkg/printer"
 	"github.com/go-interpreter/gi/pkg/token"
 	"github.com/go-interpreter/gi/pkg/types"
+	"os"
 	"sort"
 	"strings"
 
@@ -197,13 +199,19 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		return deps
 	}
 
-	varsWithInit := make(map[*types.Var]bool)
-	for _, init := range c.p.InitOrder {
-		for _, o := range init.Lhs {
-			varsWithInit[o] = true
+	// jea
+	// at the repl, we need to just
+	// ignore all re-ordering and take
+	// everything in order as the user gives it to us.
+	/*
+		varsWithInit := make(map[*types.Var]bool)
+		for _, init := range c.p.InitOrder {
+			for _, o := range init.Lhs {
+				varsWithInit[o] = true
+			}
 		}
-	}
-
+	*/
+	var typeDecls []*Decl
 	var functions []*ast.FuncDecl
 	var vars []*types.Var
 	var varDecls []*Decl
@@ -219,6 +227,14 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			switch d := decl.(type) {
 			case *ast.FuncDecl:
 				pp("next decl from file.Nodes is a funcDecl: '%#v'", d)
+
+				pp("next is an *ast.FuncDecl...:'%#v'. with source:", d)
+				err := printer.Fprint(os.Stdout, fileSet, d)
+				panicOn(err)
+				pp("with AST:")
+				ast.Print(fileSet, d)
+				pp("done showing AST for *ast.FuncDecl...:'%#v'", d)
+
 				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)
 				var recvType types.Type
 				if sig.Recv() != nil {
@@ -284,7 +300,14 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					// end of function codegen now
 				}
 			case *ast.GenDecl:
-				// jea: could also e *ast.TypeSpec here when declaring a struct!
+				// jea: could also be *ast.TypeSpec here when declaring a struct!
+				pp("next is an *ast.GenDecl...:'%#v'. with source:", d)
+				err := printer.Fprint(os.Stdout, fileSet, d)
+				panicOn(err)
+				pp("with AST:")
+				ast.Print(fileSet, d)
+				pp("done showing AST for *ast.GenDecl...:'%#v'", d)
+
 				switch ds := d.Specs[0].(type) {
 				case *ast.TypeSpec:
 					pp("next decl from file.Nodes is a *ast.TypeSpec: '%#v'", ds)
@@ -295,10 +318,17 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				}
 				switch d.Tok {
 				case token.TYPE:
+					pp("we're in the token.TYPE!")
 					for _, spec := range d.Specs {
 						o := c.p.Defs[spec.(*ast.TypeSpec).Name].(*types.TypeName)
 						c.p.typeNames = append(c.p.typeNames, o)
 						c.objectName(o) // register toplevel name
+
+						// jea: codegen here and now, in order.
+						decl, by := c.oneNamedType(collectDependencies, o)
+						newCodeText = append(newCodeText, by)
+						typeDecls = append(typeDecls, decl)
+						pp("named type codegen for '%s' generated: '%s'", o, string(by))
 					}
 				case token.VAR:
 					for _, spec := range d.Specs {
@@ -317,14 +347,15 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 								if c.p.HasPointer[o] && !o.Exported() {
 									de.Vars = append(de.Vars, c.varPtrName(o))
 								}
-								if _, ok := varsWithInit[o]; !ok {
-									de.DceDeps = collectDependencies(func() {
-										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
-									})
-								}
+
+								//jea: if _, ok := varsWithInit[o]; !ok {
+								de.DceDeps = collectDependencies(func() {
+									de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+								})
+								//jea: }
 								de.DceObjectFilter = o.Name()
 								varDecls = append(varDecls, &de)
-								pp("place 1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
+								pp("place1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
 								newCodeText = append(newCodeText, de.InitCode)
 
 								// end codegen here and now for vars
@@ -389,42 +420,41 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// variables
 	// ===========================
 
-	pp("jea, at variables, in package.go:336. vars='%#v'", vars)
-	//var varDecls []*Decl
-	// moved up above, to stay in sequence entered order.
-	//	for _, o := range vars {
-	//	}
-	pp("jea, package.go:362. c.p.InitOrder='%#v'", c.p.InitOrder)
-	for _, init := range c.p.InitOrder {
-		lhs := make([]ast.Expr, len(init.Lhs))
-		for i, o := range init.Lhs {
-			ident := ast.NewIdent(o.Name())
-			c.p.Defs[ident] = o
-			lhs[i] = c.setType(ident, o.Type())
-			varsWithInit[o] = true
-		}
-		var d Decl
-		d.DceDeps = collectDependencies(func() {
-			c.localVars = nil
-			d.InitCode = c.CatchOutput(1, func() {
-				c.translateStmt(&ast.AssignStmt{
-					Lhs: lhs,
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{init.Rhs},
-				}, nil)
-			})
-			d.Vars = append(d.Vars, c.localVars...)
-		})
-		if len(init.Lhs) == 1 {
-			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-				d.DceObjectFilter = init.Lhs[0].Name()
+	// jea: we don't do c.p.InitOrder, that would confuse the repl
+	// experience.
+	/*
+		pp("jea, at variables, in package.go:392. vars='%#v'", vars)
+		//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
+		for _, init := range c.p.InitOrder {
+			lhs := make([]ast.Expr, len(init.Lhs))
+			for i, o := range init.Lhs {
+				ident := ast.NewIdent(o.Name())
+				c.p.Defs[ident] = o
+				lhs[i] = c.setType(ident, o.Type())
+				varsWithInit[o] = true
 			}
+			var d Decl
+			d.DceDeps = collectDependencies(func() {
+				c.localVars = nil
+				d.InitCode = c.CatchOutput(1, func() {
+					c.translateStmt(&ast.AssignStmt{
+						Lhs: lhs,
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{init.Rhs},
+					}, nil)
+				})
+				d.Vars = append(d.Vars, c.localVars...)
+			})
+			if len(init.Lhs) == 1 {
+				if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+					d.DceObjectFilter = init.Lhs[0].Name()
+				}
+			}
+			varDecls = append(varDecls, &d)
+			pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+			newCodeText = append(newCodeText, d.InitCode)
 		}
-		varDecls = append(varDecls, &d)
-		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-		newCodeText = append(newCodeText, d.InitCode)
-	}
-
+	*/
 	pp("jea, functions in package.go:393")
 
 	// ===========================
@@ -464,105 +494,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		})
 	}
 
-	// named types
-	var typeDecls []*Decl
-	for _, o := range c.p.typeNames {
-		if o.IsAlias() {
-			continue
-		}
-		typeName := c.objectName(o)
-		d := Decl{
-			Vars:            []string{typeName},
-			DceObjectFilter: o.Name(),
-		}
-		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = c.CatchOutput(0, func() {
-				typeName := c.objectName(o)
-				lhs := typeName
-				if isPkgLevel(o) {
-					//lhs += " = $pkg." + encodeIdent(o.Name())
-					lhs += " = " + encodeIdent(o.Name())
-				}
-				size := int64(0)
-				constructor := "null"
-				switch t := o.Type().Underlying().(type) {
-				case *types.Struct:
-					params := make([]string, t.NumFields())
-					for i := 0; i < t.NumFields(); i++ {
-						params[i] = fieldName(t, i) + "_"
-					}
-					constructor = fmt.Sprintf("function(%s) {\n\t\tthis.$val = this;\n\t\tif (arguments.length === 0) {\n", strings.Join(params, ", "))
-					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type())).String())
-					}
-					constructor += "\t\t\treturn;\n\t\t}\n"
-					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\tthis.%[1]s = %[1]s_;\n", fieldName(t, i))
-					}
-					constructor += "\t}"
-				case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
-					size = sizes32.Sizeof(t)
-					_ = size
-				}
-				// jea
-				c.Printf(`%s = __reg:RegisterStruct("%s")`, lhs, o.Name())
-
-				//c.Printf(`%s = _gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
-				//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
-			})
-			d.MethodListCode = c.CatchOutput(0, func() {
-				named := o.Type().(*types.Named)
-				if _, ok := named.Underlying().(*types.Interface); ok {
-					return
-				}
-				var methods []string
-				var ptrMethods []string
-				for i := 0; i < named.NumMethods(); i++ {
-					method := named.Method(i)
-					name := method.Name()
-					if reservedKeywords[name] {
-						name += "$"
-					}
-					pkgPath := ""
-					if !method.Exported() {
-						pkgPath = method.Pkg().Path()
-					}
-					t := method.Type().(*types.Signature)
-					entry := fmt.Sprintf(`{prop: "%s", name: "%s", pkg: "%s", typ: $funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
-					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
-						ptrMethods = append(ptrMethods, entry)
-						continue
-					}
-					methods = append(methods, entry)
-				}
-				if len(methods) > 0 {
-					c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
-				}
-				if len(ptrMethods) > 0 {
-					c.Printf("%s.methods = [%s];", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
-				}
-			})
-			switch t := o.Type().Underlying().(type) {
-			case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
-				d.TypeInitCode = c.CatchOutput(0, func() {
-					c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
-				})
-			}
-		})
-		typeDecls = append(typeDecls, &d)
-	}
-
-	// anonymous types
-	for _, t := range c.p.anonTypes {
-		d := Decl{
-			Vars:            []string{t.Name()},
-			DceObjectFilter: t.Name(),
-		}
-		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = []byte(fmt.Sprintf("\t%s = $%sType(%s);\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
-		})
-		typeDecls = append(typeDecls, &d)
-	}
+	// moved up above to preserve sequence of entry.
+	// 	var typeDecls []*Decl
+	//typeDecls, _ = c.namedTypes(typeDecls, collectDependencies)
+	typeDecls, _ = c.anonymousTypes(typeDecls, collectDependencies)
 
 	var allDecls []*Decl
 	for _, d := range append(append(append(importDecls, typeDecls...), varDecls...), funcDecls...) {
@@ -572,8 +507,6 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		d.InitCode = removeWhitespace(d.InitCode, minify)
 		allDecls = append(allDecls, d)
 	}
-
-	// raw top level statements! now integrated above in order
 
 	if len(c.p.errList) != 0 {
 		return nil, c.p.errList
@@ -600,4 +533,146 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		a.NewCodeText = newCodeText
 	}
 	return a, nil
+}
+
+// range over c.p.typeNames
+func (c *funcContext) namedTypes(typeDecls []*Decl, collectDependencies func(f func()) []string) ([]*Decl, []byte) {
+	var allby []byte
+	for _, o := range c.p.typeNames {
+		if o.IsAlias() {
+			continue
+		}
+		one, by := c.oneNamedType(collectDependencies, o)
+		typeDecls = append(typeDecls, one)
+		allby = append(allby, by...)
+	}
+	return typeDecls, allby
+}
+
+func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, o *types.TypeName) (*Decl, []byte) {
+
+	var allby []byte
+
+	typeName := c.objectName(o)
+	pp("on namedTypes, typeName='%s'", typeName)
+	d := Decl{
+		Vars:            []string{typeName},
+		DceObjectFilter: o.Name(),
+	}
+	d.DceDeps = collectDependencies(func() {
+		d.DeclCode = c.CatchOutput(0, func() {
+			typeName := c.objectName(o)
+			lhs := typeName
+			if isPkgLevel(o) {
+				// jea: might need to attend to package names
+				//  eventually, or not.
+				//lhs += " = $pkg." + encodeIdent(o.Name())
+			}
+			size := int64(0)
+			constructor := "null"
+			switch t := o.Type().Underlying().(type) {
+			case *types.Struct:
+				params := make([]string, t.NumFields())
+				for i := 0; i < t.NumFields(); i++ {
+					params[i] = fieldName(t, i) + "_"
+				}
+				constructor = fmt.Sprintf("function(%s) {\n\t\tthis.$val = this;\n\t\tif (arguments.length === 0) {\n", strings.Join(params, ", "))
+				for i := 0; i < t.NumFields(); i++ {
+					constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type())).String())
+				}
+				constructor += "\t\t\treturn;\n\t\t}\n"
+				for i := 0; i < t.NumFields(); i++ {
+					constructor += fmt.Sprintf("\t\tthis.%[1]s = %[1]s_;\n", fieldName(t, i))
+				}
+				constructor += "\t}"
+			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
+				size = sizes32.Sizeof(t)
+				_ = size
+			}
+			// jea
+			c.Printf(`%s = __reg:RegisterStruct("%s")`, lhs, o.Name())
+
+			//c.Printf(`%s = _gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+		})
+		allby = append(allby, d.DeclCode...)
+		d.MethodListCode = c.CatchOutput(0, func() {
+			named := o.Type().(*types.Named)
+			if _, ok := named.Underlying().(*types.Interface); ok {
+				return
+			}
+			var methods []string
+			var ptrMethods []string
+			for i := 0; i < named.NumMethods(); i++ {
+				method := named.Method(i)
+				name := method.Name()
+				if reservedKeywords[name] {
+					name += "$"
+				}
+				pkgPath := ""
+				if !method.Exported() {
+					pkgPath = method.Pkg().Path()
+				}
+				t := method.Type().(*types.Signature)
+				// jea: this generates, for example,
+				entry := fmt.Sprintf(`{prop: "%s", name: "%s", pkg: "%s", typ: $funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
+					ptrMethods = append(ptrMethods, entry)
+					continue
+				}
+				methods = append(methods, entry)
+			}
+			if len(methods) > 0 {
+				// jea: the call to c.typeName() will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
+
+				c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
+			}
+			if len(ptrMethods) > 0 {
+				// example:
+				// ptrType.methods = [{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}];
+				c.Printf("%s.methods = [%s];", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+			}
+		})
+		// jea: leave these off for now. might bring back later.
+		// allby = append(allby, d.MethodListCode...)
+
+		switch t := o.Type().Underlying().(type) {
+		case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
+			d.TypeInitCode = c.CatchOutput(0, func() {
+				c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
+			})
+			// jea: for now we'll leave off the separate type init calls; we might need to bring them back later.
+			// example of what is generated:
+			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}]);
+
+			//allby = append(allby, d.TypeInitCode...)
+		}
+	})
+	return &d, allby
+}
+
+// range over c.p.anonTypes
+func (c *funcContext) anonymousTypes(typeDecls []*Decl, collectDependencies func(f func()) []string) ([]*Decl, []byte) {
+
+	// anonymous types
+	var allby []byte
+	for _, t := range c.p.anonTypes {
+		one, by := c.oneAnonType(t, collectDependencies)
+		typeDecls = append(typeDecls, one)
+		allby = append(allby, by...)
+	}
+	return typeDecls, allby
+}
+
+func (c *funcContext) oneAnonType(t *types.TypeName, collectDependencies func(f func()) []string) (*Decl, []byte) {
+
+	d := Decl{
+		Vars:            []string{t.Name()},
+		DceObjectFilter: t.Name(),
+	}
+	d.DceDeps = collectDependencies(func() {
+		d.DeclCode = []byte(fmt.Sprintf("\t%s = $%sType(%s);\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
+	})
+
+	return &d, d.DeclCode
 }

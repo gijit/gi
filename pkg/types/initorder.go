@@ -4,6 +4,11 @@
 
 package types
 
+// jea: at the repl we never want to
+//  reorder the sequence of statements that
+//  the user has provided.
+/*
+
 import (
 	"container/heap"
 	"fmt"
@@ -295,3 +300,4 @@ func (a *nodeQueue) Pop() interface{} {
 	*a = (*a)[:n-1]
 	return x
 }
+*/

@@ -2,18 +2,18 @@ package compiler
 
 import (
 	"bytes"
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
+	//"github.com/go-interpreter/gi/pkg/constant"
 	"github.com/go-interpreter/gi/pkg/token"
 	"github.com/go-interpreter/gi/pkg/types"
 	"sort"
 	"strings"
 
 	"github.com/go-interpreter/gi/pkg/compiler/analysis"
-	"github.com/neelance/astrewrite"
-	"golang.org/x/tools/go/gcimporter15"
+	//"github.com/neelance/astrewrite"
+	//"golang.org/x/tools/go/gcimporter15"
 	"golang.org/x/tools/go/types/typeutil"
 )
 
@@ -131,6 +131,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 // No top-level raw assignments or expressions should
 // need to be processed by Compile(), it should return
 // to its traditional duties.
+/*
 func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 
 	var newCodeText [][]byte
@@ -350,14 +351,14 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	// variables
 	// ===========================
 
-	pp("jea, at variables, in package.go:336. vars='%#v'", vars)
-	var varDecls []*Decl
-	varsWithInit := make(map[*types.Var]bool)
-	for _, init := range c.p.InitOrder {
-		for _, o := range init.Lhs {
-			varsWithInit[o] = true
-		}
-	}
+		// pp("jea, at variables, in package.go:336. vars='%#v'", vars)
+		// var varDecls []*Decl
+		// varsWithInit := make(map[*types.Var]bool)
+		// for _, init := range c.p.InitOrder {
+		// 	for _, o := range init.Lhs {
+		// 		varsWithInit[o] = true
+		// 	}
+		// }
 	for _, o := range vars {
 		var d Decl
 		if !o.Exported() {
@@ -366,47 +367,48 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 		if c.p.HasPointer[o] && !o.Exported() {
 			d.Vars = append(d.Vars, c.varPtrName(o))
 		}
-		if _, ok := varsWithInit[o]; !ok {
-			d.DceDeps = collectDependencies(func() {
-				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
-			})
-		}
+		//jea: if _, ok := varsWithInit[o]; !ok {
+		d.DceDeps = collectDependencies(func() {
+			d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+		})
+		//jea: }
 		d.DceObjectFilter = o.Name()
-		varDecls = append(varDecls, &d)
+		//jea:
+		// varDecls = append(varDecls, &d)
 		pp("place 1, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
 		newCodeText = append(newCodeText, d.InitCode)
 	}
-	pp("jea, package.go:362. c.p.InitOrder='%#v'", c.p.InitOrder)
-	for _, init := range c.p.InitOrder {
-		lhs := make([]ast.Expr, len(init.Lhs))
-		for i, o := range init.Lhs {
-			ident := ast.NewIdent(o.Name())
-			c.p.Defs[ident] = o
-			lhs[i] = c.setType(ident, o.Type())
-			varsWithInit[o] = true
-		}
-		var d Decl
-		d.DceDeps = collectDependencies(func() {
-			c.localVars = nil
-			d.InitCode = c.CatchOutput(1, func() {
-				c.translateStmt(&ast.AssignStmt{
-					Lhs: lhs,
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{init.Rhs},
-				}, nil)
-			})
-			d.Vars = append(d.Vars, c.localVars...)
-		})
-		if len(init.Lhs) == 1 {
-			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-				d.DceObjectFilter = init.Lhs[0].Name()
-			}
-		}
-		varDecls = append(varDecls, &d)
-		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-		newCodeText = append(newCodeText, d.InitCode)
-	}
-
+	// jea
+		// pp("jea, package.go:362. c.p.InitOrder='%#v'", c.p.InitOrder)
+		// for _, init := range c.p.InitOrder {
+		// 	lhs := make([]ast.Expr, len(init.Lhs))
+		// 	for i, o := range init.Lhs {
+		// 		ident := ast.NewIdent(o.Name())
+		// 		c.p.Defs[ident] = o
+		// 		lhs[i] = c.setType(ident, o.Type())
+		// 		varsWithInit[o] = true
+		// 	}
+		// 	var d Decl
+		// 	d.DceDeps = collectDependencies(func() {
+		// 		c.localVars = nil
+		// 		d.InitCode = c.CatchOutput(1, func() {
+		// 			c.translateStmt(&ast.AssignStmt{
+		// 				Lhs: lhs,
+		// 				Tok: token.DEFINE,
+		// 				Rhs: []ast.Expr{init.Rhs},
+		// 			}, nil)
+		// 		})
+		// 		d.Vars = append(d.Vars, c.localVars...)
+		// 	})
+		// 	if len(init.Lhs) == 1 {
+		// 		if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+		// 			d.DceObjectFilter = init.Lhs[0].Name()
+		// 		}
+		// 	}
+		// 	varDecls = append(varDecls, &d)
+		// 	pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+		// 	newCodeText = append(newCodeText, d.InitCode)
+		// }
 	pp("jea, functions in package.go:393")
 
 	// ===========================
@@ -588,7 +590,9 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	}
 
 	var allDecls []*Decl
-	for _, d := range append(append(append(importDecls, typeDecls...), varDecls...), funcDecls...) {
+	// jea
+	//for _, d := range append(append(append(importDecls, typeDecls...), varDecls...), funcDecls...) {
+	for _, d := range append(append(importDecls, typeDecls...), funcDecls...) {
 		d.DeclCode = removeWhitespace(d.DeclCode, minify)
 		d.MethodListCode = removeWhitespace(d.MethodListCode, minify)
 		d.TypeInitCode = removeWhitespace(d.TypeInitCode, minify)
@@ -622,6 +626,7 @@ func Compile(a *Archive, importPath string, files []*ast.File, fileSet *token.Fi
 	}
 	return a, nil
 }
+*/
 
 func (c *funcContext) initArgs(ty types.Type) string {
 	switch t := ty.(type) {

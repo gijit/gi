@@ -37,7 +37,7 @@ func (e *expression) StringWithParens() string {
 
 func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	exprType := c.p.TypeOf(expr)
-	pp("jea debug expressions.go, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
+	pp("jea debug expressions.go:40, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
@@ -115,6 +115,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	pp("expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
+		pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
 		if ptrType, isPointer := exprType.(*types.Pointer); isPointer {
 			exprType = ptrType.Elem()
 		}
@@ -209,6 +210,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 
 	case *ast.FuncLit:
+		pp("expressions.go:213 we have a *ast.FuncLit: '%#v'", e)
 		_, fun := translateFunction(e.Type, nil, e.Body, c, exprType.(*types.Signature), c.p.FuncLitInfos[e], "", false)
 		if len(c.p.escapingVars) != 0 {
 			names := make([]string, 0, len(c.p.escapingVars))
@@ -524,6 +526,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 
 	case *ast.SliceExpr:
+		pp("expressions.go:529 we have an *ast.SliceExpr: '%#v'", e)
 		if b, isBasic := c.p.TypeOf(e.X).Underlying().(*types.Basic); isBasic && isString(b) {
 			switch {
 			case e.Low == nil && e.High == nil:
@@ -812,6 +815,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	case nil:
 		return c.formatExpr("")
 	case *ast.BasicLit:
+		pp("expressions.go:818 we have an *ast.BasicLit: '%#v'", e)
 		// JEA DEBUG: we added this case. what to do here?
 
 		return &expression{
@@ -1300,7 +1304,7 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 }
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) *expression {
-	pp("expressions.go:1274, format='%s', a='%#v', parens='%v'", format, a, parens)
+	pp("expressions.go:1307, format='%s', a='%#v', parens='%v'", format, a, parens)
 	processFormat := func(f func(uint8, uint8, int)) {
 		n := 0
 		for i := 0; i < len(format); i++ {

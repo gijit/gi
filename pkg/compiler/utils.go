@@ -381,6 +381,7 @@ func (c *funcContext) typeName(ty types.Type) (res string) {
 		varName := c.newVariableWithLevel(low, true)
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
+		pp("just added anonType='%s'", anonType.Name())
 		c.p.anonTypeMap.Set(ty, anonType)
 	}
 	c.p.dependencies[anonType] = true

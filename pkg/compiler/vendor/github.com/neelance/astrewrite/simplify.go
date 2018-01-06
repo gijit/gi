@@ -73,11 +73,14 @@ func (c *simplifyContext) simplifyGenDecl(stmts *[]ast.Stmt, decl *ast.GenDecl) 
 				values = make([]ast.Expr, len(spec.Values))
 				for i, v := range spec.Values {
 					v2 := c.simplifyExpr(stmts, v)
-					for _, initializer := range c.info.InitOrder {
-						if initializer.Rhs == v {
-							initializer.Rhs = v2
+					// jea:
+					/*
+						for _, initializer := range c.info.InitOrder {
+							if initializer.Rhs == v {
+								initializer.Rhs = v2
+							}
 						}
-					}
+					*/
 					values[i] = v2
 				}
 			}
