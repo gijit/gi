@@ -513,20 +513,20 @@ func Test027StructMethods(t *testing.T) {
 
 		code := `
 type Dog interface { 
-    Write() string 
+    Write(with string) string 
 }
 
 type Beagle struct{ 
     word string 
 } 
 
-func (b *Beagle) Write() string { 
-    return b.word + ":it was a dark and stormy night"
+func (b *Beagle) Write(with string) string { 
+    return b.word + ":it was a dark and stormy night, " + with
 }
 
 var snoopy Dog = &Beagle{word:"hiya"}
 
-book := snoopy.Write()`
+book := snoopy.Write("with a pen")`
 
 		inc := NewIncrState()
 		translation := inc.Tr([]byte(code))
@@ -535,13 +535,13 @@ book := snoopy.Write()`
 			`
         Beagle = __reg:RegisterStruct("Beagle");
 
-	    function Beagle:Write() 
+	    function Beagle:Write(with) 
             b = self;
-  		    return b.word .. ":it was a dark and stormy night";
+  		    return b.word .. ":it was a dark and stormy night" .. with;
      	end;
 
         snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
-	    book = snoopy:Write();
+	    book = snoopy:Write("with a pen");
 `)
 
 		// and verify that it happens correctly.
@@ -555,6 +555,6 @@ book := snoopy.Write()`
 		panicOn(err)
 		DumpLuaStack(vm)
 
-		mustLuaString(vm, "book", "it was a dark and stormy night")
+		mustLuaString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
 }

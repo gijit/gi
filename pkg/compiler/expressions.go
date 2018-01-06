@@ -209,7 +209,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 
 	case *ast.FuncLit:
-		_, fun := translateFunction(e.Type, nil, e.Body, c, exprType.(*types.Signature), c.p.FuncLitInfos[e], "")
+		_, fun := translateFunction(e.Type, nil, e.Body, c, exprType.(*types.Signature), c.p.FuncLitInfos[e], "", false)
 		if len(c.p.escapingVars) != 0 {
 			names := make([]string, 0, len(c.p.escapingVars))
 			for obj := range c.p.escapingVars {

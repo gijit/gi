@@ -684,21 +684,26 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	}
 
 	var joinedParams string
-	primaryFunction := func(funcRef string) []byte {
+	primaryFunction := func(isMethod bool, funcRef string) []byte {
 		if fun.Body == nil {
 			return []byte(fmt.Sprintf("\t%s = function() \n\t\t$throwRuntimeError(\"native function not implemented: %s\");\n\t end ;\n", funcRef, o.FullName()))
 		}
 
-		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef)
+		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
 		joinedParams = strings.Join(params, ", ")
-		return []byte(fmt.Sprintf("\t%s = %s;\n", funcRef, fun))
+		if isMethod {
+			return []byte(fmt.Sprintf("\tfunction %s%s;\n",
+				funcRef, fun))
+		} else {
+			return []byte(fmt.Sprintf("\t%s = %s;\n", funcRef, fun))
+		}
 	}
 
 	code := bytes.NewBuffer(nil)
 
 	if fun.Recv == nil {
 		funcRef := c.objectName(o)
-		code.Write(primaryFunction(funcRef))
+		code.Write(primaryFunction(false, funcRef))
 		if fun.Name.IsExported() {
 			fmt.Fprintf(code, "\t%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
 			//fmt.Fprintf(code, "\t$pkg.%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
@@ -720,11 +725,11 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
 		// jea
-		code.Write(primaryFunction(fmt.Sprintf("%s:%s", typeName, funName)))
+		code.Write(primaryFunction(true, fmt.Sprintf("%s:%s", typeName, funName)))
 
 		pp("WHOPPER! code is now '%s'", code.String())
 
-		//code.Write(primaryFunction(typeName + ".ptr.prototype." + funName))
+		//code.Write(primaryFunction(false, typeName + ".ptr.prototype." + funName))
 
 		//fmt.Fprintf(code, "\t%s.prototype.%s = function(%s) { return this.$val.%s(%s); };\n", typeName, funName, joinedParams, funName, joinedParams)
 		return code.Bytes()
@@ -732,23 +737,23 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if isPointer {
 		if _, isArray := ptr.Elem().Underlying().(*types.Array); isArray {
-			code.Write(primaryFunction(typeName + ".prototype." + funName))
+			code.Write(primaryFunction(false, typeName+".prototype."+funName))
 			fmt.Fprintf(code, "\t$ptrType(%s).prototype.%s = function(%s) { return (new %s(this.$get())).%s(%s); };\n", typeName, funName, joinedParams, typeName, funName, joinedParams)
 			return code.Bytes()
 		}
-		return primaryFunction(fmt.Sprintf("$ptrType(%s).prototype.%s", typeName, funName))
+		return primaryFunction(false, fmt.Sprintf("$ptrType(%s).prototype.%s", typeName, funName))
 	}
 
 	value := "this.$get()"
 	if isWrapped(recvType) {
 		value = fmt.Sprintf("new %s(%s)", typeName, value)
 	}
-	code.Write(primaryFunction(typeName + ".prototype." + funName))
+	code.Write(primaryFunction(false, typeName+".prototype."+funName))
 	fmt.Fprintf(code, "\t$ptrType(%s).prototype.%s = function(%s) { return %s.%s(%s); };\n", typeName, funName, joinedParams, value, funName, joinedParams)
 	return code.Bytes()
 }
 
-func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, outerContext *funcContext, sig *types.Signature, info *analysis.FuncInfo, funcRef string) ([]string, string) {
+func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, outerContext *funcContext, sig *types.Signature, info *analysis.FuncInfo, funcRef string, isMethod bool) ([]string, string) {
 	if info == nil {
 		panic("nil info")
 	}
@@ -889,5 +894,9 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 
 	c.p.escapingVars = prevEV
 
-	return params, fmt.Sprintf("function%s(%s) \n%s%s end", functionName, strings.Join(params, ", "), bodyOutput, strings.Repeat("\t", c.p.indentation))
+	functionWord := "function"
+	if isMethod {
+		functionWord = ""
+	}
+	return params, fmt.Sprintf("%s%s(%s) \n%s%s end", functionWord, functionName, strings.Join(params, ", "), bodyOutput, strings.Repeat("\t", c.p.indentation))
 }
