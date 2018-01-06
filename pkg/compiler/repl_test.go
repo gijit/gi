@@ -320,15 +320,7 @@ func Test018ReadFromMap(t *testing.T) {
 			}
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
-		vm.Getglobal("x3")
-		top := vm.Gettop()
-		value_str := vm.Tostring(top)
-
-		pp("value_str=%v", value_str)
-		if value_str != "hello" {
-			panic(fmt.Sprintf("expected `hello`, got %v", value_str))
-		}
-
+		mustLuaString(vm, "x3", "hello")
 	})
 }
 
@@ -444,6 +436,7 @@ a=_gi_NewStruct("A",{["B"]="int"},{["B"]=43});
 	})
 }
 
+/*
 func Test023CopyingStructValues(t *testing.T) {
 	inc := NewIncrState()
 
@@ -458,4 +451,60 @@ a=_gi_NewStruct("A",{["B"]="int"},{["B"]=23});
 cp=_gi_Clone(a);
 `)
 	})
+}
+*/
+
+// a, b, c := 1,2,3
+func Test024MultipleAssignment(t *testing.T) {
+
+	cv.Convey("Multiple assignment, a, b, c := 1,2,3 should work", t, func() {
+
+		src := `a, b, c := 1,2,3`
+		//cv.So(string(inc.Tr([]byte(src))), cv.ShouldMatchModuloWhiteSpace, `a, b, c = 1, 2, 3;`)
+
+		// verify that it happens correctly.
+		vm := luajit.Newstate()
+		defer vm.Close()
+		vm.Openlibs()
+
+		inc := NewIncrState()
+
+		translation := inc.Tr([]byte(src))
+		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
+		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+
+		err := vm.Loadstring(string(translation))
+		panicOn(err)
+		err = vm.Pcall(0, 0, 0)
+		panicOn(err)
+		DumpLuaStack(vm)
+
+		mustLuaInt(vm, "a", 1)
+		mustLuaInt(vm, "b", 2)
+		mustLuaInt(vm, "c", 3)
+	})
+}
+
+func mustLuaInt(vm *luajit.State, varname string, expect int) {
+
+	vm.Getglobal(varname)
+	top := vm.Gettop()
+	value_int := vm.Tointeger(top)
+
+	pp("value_int=%v", value_int)
+	if value_int != expect {
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
+	}
+}
+
+func mustLuaString(vm *luajit.State, varname string, expect string) {
+
+	vm.Getglobal(varname)
+	top := vm.Gettop()
+	value_string := vm.Tostring(top)
+
+	pp("value_string=%v", value_string)
+	if value_string != expect {
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_string, varname))
+	}
 }

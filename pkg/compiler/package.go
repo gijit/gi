@@ -82,6 +82,8 @@ type funcContext struct {
 	delayedOutput []byte
 	posAvailable  bool
 	pos           token.Pos
+
+	genSymCounter int64
 }
 
 type flowData struct {

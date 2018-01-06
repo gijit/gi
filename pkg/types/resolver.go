@@ -238,6 +238,15 @@ func (check *Checker) collectObjects() {
 
 		for _, decl := range file.Nodes {
 			switch d := decl.(type) {
+			case *ast.ExprStmt:
+			// jea: check the ExprStmt below, handle other Stmt here.
+			case ast.Stmt:
+				// jea: allow all statements at top level.
+				check.simpleStmt(d)
+				continue
+			}
+
+			switch d := decl.(type) {
 			case *ast.BadDecl:
 				// ignore
 

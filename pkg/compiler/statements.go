@@ -389,7 +389,9 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		case len(s.Lhs) == len(s.Rhs):
 			tmpVars := make([]string, len(s.Rhs))
 			for i, rhs := range s.Rhs {
-				tmpVars[i] = c.newVariable("_tmp")
+				// jea
+				tmpVars[i] = c.gensym("_tmp") // newVariable("_tmp")
+				//tmpVars[i] = c.newVariable("_tmp")
 				if isBlank(astutil.RemoveParens(s.Lhs[i])) {
 					c.Printf("$unused(%s);", c.translateExpr(rhs))
 					continue

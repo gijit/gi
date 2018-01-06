@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"github.com/go-interpreter/gi/pkg/compiler/analysis"
 	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
@@ -207,6 +208,11 @@ func (c *funcContext) newVariable(name string) string {
 	return c.newVariableWithLevel(name, false)
 }
 
+func (c *funcContext) gensym(name string) string {
+	next := atomic.AddInt64(&c.genSymCounter, 1)
+	return fmt.Sprintf("__gensym_%v_%s", next, name)
+}
+
 func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	pp("newVariableWithLevel begins, with name='%s'", name)
 	if name == "" {
@@ -244,6 +250,9 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// want to re-use the same variable name when
 	// we re-declare vars, not add another variable with _1 tacked
 	// on at the end.
+	// Answer, this generates different tmp variables with different
+	// names.
+
 	if false { // jea add
 		if n > 0 {
 			varName = fmt.Sprintf("%s_%d", name, n)
