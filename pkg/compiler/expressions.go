@@ -197,7 +197,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
-			return c.formatExpr(`_gi_NewStruct("%s",{},{%s})`, c.typeName(exprType), strings.Join(elements, ", "))
+			flds := structFieldTypes(t)
+			vals := structFieldNameValuesForLua(t, elements)
+			return c.formatExpr(`_gi_NewStruct("%s",{%s},{%s})`, c.typeName(exprType), strings.Join(flds, ", "), strings.Join(vals, ", "))
 			//return c.formatExpr("new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
@@ -1420,4 +1422,25 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 		out.WriteByte(')')
 	}
 	return &expression{str: out.String(), parens: parens}
+}
+
+func structFieldTypes(t *types.Struct) (r []string) {
+	n := t.NumFields()
+	for i := 0; i < n; i++ {
+		fld := t.Field(i)
+		r = append(r, fmt.Sprintf(`["%s"]="%s"`, fld.Name(), fld.Type()))
+	}
+	return
+}
+
+func structFieldNameValuesForLua(t *types.Struct, ele []string) (r []string) {
+	n := t.NumFields()
+	if len(ele) != n {
+		panic(fmt.Sprintf("internal error, field count n != len(ele)", n, len(ele)))
+	}
+	for i := 0; i < n; i++ {
+		fld := t.Field(i)
+		r = append(r, fmt.Sprintf(`["%s"]=%s`, fld.Name(), ele[i]))
+	}
+	return
 }
