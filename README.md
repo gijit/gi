@@ -73,26 +73,35 @@ a viable embedded target.
 $ go get -t -u -v github.com/go-interpreter/gi/...
 $ cd $GOPATH/src/github.com/go-interpreter/gi/cmd/gi
 $
-$    # first time only, to install the latest
-$    # LuaJIT_2.1.0-beta3 and it *MUST* have been
+$    # Q: why is 'make onetime` necessary at first install?
+$    #
+$    # 'make onetime' needs to be run once, the
+$    # first time you install `gi`. This
+$    # is required the first time you build
+$    # `gi`. What this does is install the version
+$    # of LuaJIT that we depend on, namely the
+$    # LuaJIT_2.1.0-beta3 source that has been
 $    # built with XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
-$    # in the github.com/go-interpreter/gi/cmd/gi/vendor/github.com/LuaJIT/LuaJIT/src
-$    # file.
+$    # You can see this any other build adjustements
+$    # that we have made in the LuaJIT Makefile:
+$    # github.com/go-interpreter/gi/cmd/gi/vendor/github.com/LuaJIT/LuaJIT/src
 $    #
-$    # Shortcut to sanity: So use our build instead of your old one!
+$    # Shortcut to sanity: So use the `gi` build of LuaJIT.
+$    # Don't guess/depend on
+$    # an old or differently configured LuaJIT that you
+$    # may have already on your computer.
 $    #
-$    # This will sudo to install a luajit symlink in /usr/local/bin/luajit,
-$    # so you may need to provide the root password if you
+$    # Why is it sudoing and asking for my password?
+$    #
+$    # This part is optional, but recommended.
+$    # The last step in the installation of our build
+$    # of LuaJIT does a sudo to install a luajit
+$    # symlink in /usr/local/bin/luajit.
+$    # You may need to provide the root password if you
 $    # want that installation, or ctrl-c out if you don't.
-$    # Either way, make sure you are using the LuaJIT_2.1.0-beta3
-$    # build (our build) with the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
-$    # flags set!
 $    #
-$    # If you see strange out-of-bounds errors, go back
-$    # follow this advice, better yet, save yourself time
-$    # and just install from this build now. We use the
-$    # __len metatable method for slices, maps, structs, and
-$    # arrays and the only way this will be operational is
+$    # We use the __len metatable method for slices,
+$    # maps, and arrays. The only way this will be operational is
 $    # if XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used on
 $    # the build.
 $
