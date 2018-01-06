@@ -435,6 +435,10 @@ func (check *Checker) collectObjects() {
 				pp("we see an AssignStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
 				check.simpleStmt(d)
 
+				// jea: allow ++ and -- at toplevel
+			case *ast.IncDecStmt:
+				check.simpleStmt(d)
+
 				// jea: allow for loops at the top level!
 			case *ast.ForStmt:
 				pp("we see an *ast.ForStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
