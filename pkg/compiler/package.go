@@ -716,8 +716,11 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	}
 
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
-		code.Write(primaryFunction(typeName + ".ptr.prototype." + funName))
-		fmt.Fprintf(code, "\t%s.prototype.%s = function(%s) { return this.$val.%s(%s); };\n", typeName, funName, joinedParams, funName, joinedParams)
+		// jea
+		code.Write(primaryFunction(fmt.Sprintf("%s:%s", typeName, funName)))
+		//code.Write(primaryFunction(typeName + ".ptr.prototype." + funName))
+
+		//fmt.Fprintf(code, "\t%s.prototype.%s = function(%s) { return this.$val.%s(%s); };\n", typeName, funName, joinedParams, funName, joinedParams)
 		return code.Bytes()
 	}
 

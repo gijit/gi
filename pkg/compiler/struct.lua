@@ -1,5 +1,58 @@
 -- structs
 
+-- __reg is a struct registry that associates
+-- names to an  __index metatable
+-- that holds the methods for the structs.
+--
+-- reference: https://www.lua.org/pil/16.html
+-- reference: https://www.lua.org/pil/16.1.html
+
+__reg={
+   -- track the registered structs here
+   structs = {},
+}
+
+-- create a new struct instance by
+-- attaching the appropriate methodset
+-- to data and returning it.
+function __reg:NewInstance(name, data)
+   
+      local methodset = self.structs[name]
+      if methodset == nil then
+         error("error in _struct_registry.NewInstance:"..
+                  "unknown struct '"..name.."'")
+      end
+      -- this is the essense. The
+      -- methodset acts as the
+      -- metatable for the struct.
+      -- Thus unknown direct keys like method
+      -- names are forwarded
+      -- to the methodset.
+      setmetatable(data,{__index = methodset})
+      return data
+end
+   
+function __reg:RegisterStruct(name)
+      local methodset = {}
+      self.structs[name] = methodset
+      return methodset
+end
+
+function __reg:AddMethod(structName, methodName, method)
+
+      -- instantiate a methodset if need be
+      local methodset = self.structs[structName]
+      if methodset == nil then
+         error("unregistered struct name '"..structName.."'")
+      end
+      
+      -- add the method
+      methodset[methodName] = method
+end
+
+
+-- older stuff, do we need it at all any more?
+
 -- create private index
 
 _showStruct = function(props)
@@ -80,18 +133,20 @@ _giPrivateStructProps = {}
     end,
 
     __call = function(t, ...)
-        print("__call() invoked, with ... = ", ...)
-        local oper, key = ...
-        print("oper is", oper)
-        print("key is ", key)
-        if oper == "delete" then
-           -- the hash table delete operation
-           if key == nil then
-              return -- this is a no-op in Go.
-           end
+       print("__call() invoked, with ... = ", ...)
+       args = (...)
+       local method, key = ...
+       print("method is", method)
+       -- look up the method in the vtable
+       -- list of methods available
+       if oper == "delete" then
+          -- the hash table delete operation
+          if key == nil then
+             return -- this is a no-op in Go.
+          end
            -- forward the actual delete
-           t[key]=nil
-        end
+          t[key]=nil
+       end
     end
  }
 
@@ -108,10 +163,21 @@ function _gi_NewStruct(structName, keyValTypeMap, x)
       len = len + 1
    end
 
-   local props = {len=len, keyValTypeMap=keyValTypeMap, structName=structName}
+   local props = {len=len, keyValTypeMap=keyValTypeMap, structName=structName,methods={}}
    proxy[_giPrivateStructProps] = props
 
    setmetatable(proxy, _giPrivateStructMt)
    return proxy
 end;
+
+-- some types are just a container
+-- for methods that will subsequently
+-- defined
+function _gi_NewType(size, kind, name)
+   assert(type(size) == 'int', 'bad parameter #1: must be int')
+   assert(type(kind) == 'string', 'bad parameter #2: must be string')
+   assert(type(name) == 'string', 'bad parameter #3: must be string')
+
+   
+end
 

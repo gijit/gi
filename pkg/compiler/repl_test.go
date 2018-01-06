@@ -446,14 +446,13 @@ func Test024MultipleAssignment(t *testing.T) {
 	cv.Convey("Multiple assignment, a, b, c := 1,2,3 should work", t, func() {
 
 		src := `a, b, c := 1,2,3`
+		inc := NewIncrState()
 		//cv.So(string(inc.Tr([]byte(src))), cv.ShouldMatchModuloWhiteSpace, `a, b, c = 1, 2, 3;`)
 
 		// verify that it happens correctly.
 		vm := luajit.Newstate()
 		defer vm.Close()
 		vm.Openlibs()
-
-		inc := NewIncrState()
 
 		translation := inc.Tr([]byte(src))
 		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -505,5 +504,40 @@ func Test026LenOfString(t *testing.T) {
 		DumpLuaStack(vm)
 
 		mustLuaInt(vm, "b", 2)
+	})
+}
+
+func Test027Interface(t *testing.T) {
+
+	cv.Convey(`a simple interface should translate`, t, func() {
+
+		code := `type Dog interface { Write() string } ; type Beagle struct{ word string }; func (b *Beagle) Write() string { return b.word + ":it was a dark and stormy night" }; var snoopy Dog = &Beagle{}; book := snoopy.Write();`
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+        Beagle = __reg:RegisterStruct("Beagle")
+
+	    function Beagle:Write() 
+            b = self;
+  		    return b.word .. ":it was a dark and stormy night";
+     	end;
+
+        snoopy = __reg:NewInstance("Beagle",{});
+	    book = snoopy.Write();
+`)
+
+		// and verify that it happens correctly.
+		vm := luajit.Newstate()
+		defer vm.Close()
+		vm.Openlibs()
+
+		err := vm.Loadstring(string(translation))
+		panicOn(err)
+		err = vm.Pcall(0, 0, 0)
+		panicOn(err)
+		DumpLuaStack(vm)
+
+		mustLuaString(vm, "book", "it was a dark and stormy night")
 	})
 }
