@@ -112,7 +112,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 	}
 
-	pp("expr is '%#v'/Type=%T", expr, expr)
+	pp("expressions.go:115, expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
@@ -142,6 +142,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			return elements
 		}
 
+		pp("in expressions.go:145 at underlying switch, exprType='%T'/'%#v'", exprType, exprType)
 		switch t := exprType.Underlying().(type) {
 		case *types.Array:
 			elements := collectIndexedElements(t.Elem())
@@ -176,6 +177,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			// return c.formatExpr("$makeMap(%s.keyFor, [%s])", c.typeName(t.Key()), strings.Join(entries, ", "))
 		case *types.Struct:
+			pp("in expressions.go:179 for *types.Struct")
 			elements := make([]string, t.NumFields())
 			isKeyValue := true
 			if len(e.Elts) != 0 {
@@ -801,6 +803,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case *types.Map:
 				return c.formatExpr("false")
 			case *types.Interface:
+				//panic("where?")
 				return c.formatExpr("$ifaceNil")
 			case *types.Signature:
 				return c.formatExpr("$throwNilPointerError")

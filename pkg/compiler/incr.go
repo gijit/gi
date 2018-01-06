@@ -350,6 +350,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 								//jea: if _, ok := varsWithInit[o]; !ok {
 								de.DceDeps = collectDependencies(func() {
+									// this is producing the $ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
+									// the var snoopy Dog = &Beagle{word:"hiya"}
 									de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
 								})
 								//jea: }
