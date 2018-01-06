@@ -73,11 +73,30 @@ a viable embedded target.
 $ go get -t -u -v github.com/go-interpreter/gi/...
 $ cd $GOPATH/src/github.com/go-interpreter/gi/cmd/gi
 $
-$    # first time only, to install the latest luajit.
-$    # it will sudo to install a luajit symlink in /usr/local/bin/luajit,
+$    # first time only, to install the latest
+$    # LuaJIT_2.1.0-beta3 and it *MUST* have been
+$    # built with XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
+$    # in the github.com/go-interpreter/gi/cmd/gi/vendor/github.com/LuaJIT/LuaJIT/src
+$    # file.
+$    #
+$    # Shortcut to sanity: So use our build instead of your old one!
+$    #
+$    # This will sudo to install a luajit symlink in /usr/local/bin/luajit,
 $    # so you may need to provide the root password if you
 $    # want that installation, or ctrl-c out if you don't.
-$    make onetime
+$    # Either way, make sure you are using the LuaJIT_2.1.0-beta3
+$    # build (our build) with the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
+$    # flags set!
+$    #
+$    # If you see strange out-of-bounds errors, go back
+$    # follow this advice, better yet, save yourself time
+$    # and just install from this build now. We use the
+$    # __len metatable method for slices, maps, structs, and
+$    # arrays and the only way this will be operational is
+$    # if XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used on
+$    # the build.
+$
+$ make onetime
 $
 $ make install
 $
