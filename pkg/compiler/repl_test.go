@@ -59,14 +59,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 
 		//fmt.Printf("v back = '%#v'\n", v)
 	}
-	vm.Getglobal("sum")
-	top := vm.Gettop()
-	value_int := vm.Tointeger(top)
-
-	pp("value_int=%v", value_int)
-	if value_int != 20 {
-		panic(fmt.Sprintf("expected 20, got %v", value_int))
-	}
+	mustLuaInt(vm, "sum", 20)
 }
 
 // func Test003ImportsAtRepl(t *testing.T) {
@@ -359,15 +352,7 @@ func Test018ReadFromSlice(t *testing.T) {
 			}
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
-		vm.Getglobal("x3")
-		top := vm.Gettop()
-		value_int := vm.Tointeger(top)
-
-		pp("value_int=%v", value_int)
-		if value_int != 3 {
-			panic(fmt.Sprintf("expected `3`, got %v", value_int))
-		}
-
+		mustLuaInt(vm, "x3", 3)
 	})
 }
 
@@ -436,6 +421,7 @@ a=_gi_NewStruct("A",{["B"]="int"},{["B"]=43});
 	})
 }
 
+// come back to this.
 /*
 func Test023CopyingStructValues(t *testing.T) {
 	inc := NewIncrState()
