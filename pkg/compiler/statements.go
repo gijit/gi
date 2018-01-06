@@ -171,7 +171,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			iVar := c.newVariable("_i")
 			c.Printf("%s = 0;", iVar)
 			runeVar := c.newVariable("_rune")
-			c.translateLoopingStmt(func() string { return iVar + " < " + refVar + ".length" }, s.Body, func() {
+			c.translateLoopingStmt(func() string { return iVar + " < #" + refVar }, s.Body, func() {
 				c.Printf("%s = $decodeRune(%s, %s);", runeVar, refVar, iVar)
 				if !isBlank(s.Key) {
 					c.Printf("%s", c.translateAssign(s.Key, c.newIdent(iVar, types.Typ[types.Int]), s.Tok == token.DEFINE))

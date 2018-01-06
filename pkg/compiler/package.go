@@ -673,6 +673,9 @@ func (c *funcContext) initArgs(ty types.Type) string {
 }
 
 func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysis.FuncInfo) []byte {
+	defer func() {
+		pp("WHOPPER func done")
+	}()
 	o := c.p.Defs[fun.Name].(*types.Func)
 	sig := o.Type().(*types.Signature)
 	var recv *ast.Ident
@@ -718,6 +721,9 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
 		// jea
 		code.Write(primaryFunction(fmt.Sprintf("%s:%s", typeName, funName)))
+
+		pp("WHOPPER! code is now '%s'", code.String())
+
 		//code.Write(primaryFunction(typeName + ".ptr.prototype." + funName))
 
 		//fmt.Fprintf(code, "\t%s.prototype.%s = function(%s) { return this.$val.%s(%s); };\n", typeName, funName, joinedParams, funName, joinedParams)

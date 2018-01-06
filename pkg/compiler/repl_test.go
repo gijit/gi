@@ -399,7 +399,7 @@ func Test021StructTypeValues(t *testing.T) {
 `)
 		code = `var a A`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewStruct("A",{},{});
+a=__reg:NewInstance("A",{});
 `)
 
 	})
@@ -415,7 +415,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewStruct("A",{["B"]="int"},{["B"]=43});
+a=__reg:NewInstance("A",{["B"]=43});
 `)
 
 	})
@@ -430,7 +430,7 @@ func Test023CopyingStructValues(t *testing.T) {
 
 		code := `type A struct{ B int}; var a = A{B:23}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewStruct("A",{["B"]="int"},{["B"]=23});
+a=__reg:NewInstance("A",{["B"]=23});
 `)
 		code = `cp := a`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
@@ -507,24 +507,41 @@ func Test026LenOfString(t *testing.T) {
 	})
 }
 
-func Test027Interface(t *testing.T) {
+func Test027StructMethods(t *testing.T) {
 
-	cv.Convey(`a simple interface should translate`, t, func() {
+	cv.Convey(`a simple method call through an interface to a struct method should translate`, t, func() {
 
-		code := `type Dog interface { Write() string } ; type Beagle struct{ word string }; func (b *Beagle) Write() string { return b.word + ":it was a dark and stormy night" }; var snoopy Dog = &Beagle{}; book := snoopy.Write();`
+		code := `
+type Dog interface { 
+    Write() string 
+}
+
+type Beagle struct{ 
+    word string 
+} 
+
+func (b *Beagle) Write() string { 
+    return b.word + ":it was a dark and stormy night"
+}
+
+var snoopy Dog = &Beagle{word:"hiya"}
+
+book := snoopy.Write()`
+
 		inc := NewIncrState()
 		translation := inc.Tr([]byte(code))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-        Beagle = __reg:RegisterStruct("Beagle")
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+        Beagle = __reg:RegisterStruct("Beagle");
 
 	    function Beagle:Write() 
             b = self;
   		    return b.word .. ":it was a dark and stormy night";
      	end;
 
-        snoopy = __reg:NewInstance("Beagle",{});
-	    book = snoopy.Write();
+        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
+	    book = snoopy:Write();
 `)
 
 		// and verify that it happens correctly.

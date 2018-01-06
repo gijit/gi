@@ -199,9 +199,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
-			flds := structFieldTypes(t)
+			//flds := structFieldTypes(t)
 			vals := structFieldNameValuesForLua(t, elements)
-			return c.formatExpr(`_gi_NewStruct("%s",{%s},{%s})`, c.typeName(exprType), strings.Join(flds, ", "), strings.Join(vals, ", "))
+			return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
+			//return c.formatExpr(`_gi_NewStruct("%s",{%s},{%s})`, c.typeName(exprType), strings.Join(flds, ", "), strings.Join(vals, ", "))
 			//return c.formatExpr("new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
@@ -279,7 +280,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		basic := t.Underlying().(*types.Basic)
 		switch e.Op {
 		case token.ADD:
-			return c.translateExpr(e.X)
+			tx := c.translateExpr(e.X)
+			pp("e.Op is token.ADD at expressions.go:283, tx='%s'", tx)
+			return tx
 		case token.SUB:
 			switch {
 			case is64Bit(basic):
@@ -432,6 +435,13 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 		switch e.Op {
 		case token.ADD, token.LSS, token.LEQ, token.GTR, token.GEQ:
+			// jea:
+			if e.Op == token.ADD {
+				if b, isBasic := c.p.TypeOf(e.X).Underlying().(*types.Basic); isBasic && isString(b) {
+					// string concat is ".." in Lua, rather than + as in Go.
+					return c.formatExpr("%e .. %e", e.X, e.Y)
+				}
+			}
 			return c.formatExpr("%e %t %e", e.X, e.Op, e.Y)
 		case token.LAND:
 			if c.Blocking[e.Y] {
@@ -816,13 +826,16 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *expression) *expression {
 	args := c.translateArgs(sig, e.Args, e.Ellipsis.IsValid())
 	if c.Blocking[e] {
-		resumeCase := c.caseCounter
+		// jea
+		//resumeCase := c.caseCounter
 		c.caseCounter++
 		returnVar := "$r"
 		if sig.Results().Len() != 0 {
 			returnVar = c.newVariable("_r")
 		}
-		c.Printf("%[1]s = %[2]s(%[3]s); /* */ $s = %[4]d; case %[4]d: if($c) { $c = false; %[1]s = %[1]s.$blk(); } if (%[1]s && %[1]s.$blk !== undefined) { break s; }", returnVar, fun, strings.Join(args, ", "), resumeCase)
+		// jea
+		c.Printf("%[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+		//c.Printf("%[1]s = %[2]s(%[3]s); /* */ $s = %[4]d; case %[4]d: if($c) { $c = false; %[1]s = %[1]s.$blk(); } if (%[1]s && %[1]s.$blk !== undefined) { break s; }", returnVar, fun, strings.Join(args, ", "), resumeCase)
 		if sig.Results().Len() != 0 {
 			return c.formatExpr("%s", returnVar)
 		}

@@ -46,6 +46,12 @@ func (cfg *GIConfig) LuajitMain() {
 		cmd := strings.TrimSpace(use)
 		low := strings.ToLower(cmd)
 		switch low {
+		case ":ast":
+			inc.PrintAST = true
+			continue
+		case ":noast":
+			inc.PrintAST = false
+			continue
 		case ":q":
 			verb.Verbose = false
 			verb.VerboseVerbose = false
@@ -85,11 +91,13 @@ simply type Go expressions or statements
 directly at the prompt, or use one of 
 these special commands:
 ======================
- :v  turns on verbose debug prints
- :vv turns on very verbose prints
- :q  quiets the debug prints (default)
- :raw changes to raw-luajit entry mode
- :go  change back from raw mode to Go mode
+ :v     turns on verbose debug prints
+ :vv    turns on very verbose prints
+ :q     quiets the debug prints (default)
+ :raw   changes to raw-luajit entry mode
+ :go    change back from raw mode to Go mode
+ :ast   print the Go AST prior to translation
+ :noast stop printing the Go AST
  ctrl-d to exit
 `)
 			continue

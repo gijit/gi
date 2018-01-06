@@ -41,6 +41,8 @@ type IncrState struct {
 	archive       *Archive
 	importContext *ImportContext
 	minify        bool
+
+	PrintAST bool
 }
 
 // Tr: translate from go to javascript, statement by statement or
@@ -56,7 +58,9 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	pp("we got past the ParseFile !")
 
 	// Print the AST.
-	//ast.Print(fileSet, files)
+	if tr.PrintAST {
+		ast.Print(tr.fileSet, file)
+	}
 
 	importPath := "" // was "/repl" but scope issues?
 	files := []*ast.File{file}

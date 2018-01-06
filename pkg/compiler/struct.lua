@@ -22,7 +22,7 @@ function __reg:NewInstance(name, data)
          error("error in _struct_registry.NewInstance:"..
                   "unknown struct '"..name.."'")
       end
-      -- this is the essense. The
+      -- this is the essence. The
       -- methodset acts as the
       -- metatable for the struct.
       -- Thus unknown direct keys like method
@@ -55,6 +55,7 @@ end
 
 -- create private index
 
+-- helper
 _showStruct = function(props)
    r = props.structName .. " {\n"
    for k,v in pairs(props.keyValTypeMap) do
@@ -68,34 +69,6 @@ _giPrivateStructProps = {}
 
  _giPrivateStructMt = {
 
-    __newindex = function(t, k, v)
-      local len = t[_giPrivateStructProps]["len"]
-      --print("newindex called for key", k, " len at start is ", len)
-      if t[_giPrivateStructRaw][k] == nil then
-         if  v ~= nil then
-         -- new value
-            len = len +1
-         end
-      else
-         -- key already present, are we replacing or deleting?
-          if v == nil then 
-              len = len - 1 -- delete
-          else
-              -- replace, no count change              
-          end
-      end
-      t[_giPrivateStructRaw][k] = v
-      t[_giPrivateStructProps]["len"] = len
-      --print("len at end of newidnex is ", len)
-    end,
-
-  -- __index allows us to have fields to access the count.
-  --
-    __index = function(t, k)
-      --print("index called for key", k)
-      return t[_giPrivateStructRaw][k]
-    end,
-    
     __tostring = function(t)
        local props = t[_giPrivateStructProps]
        local len = props["len"]
@@ -106,12 +79,6 @@ _giPrivateStructProps = {}
        -- iterate on r, the inside private data, and not on the proxy.
        for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
        return s .. "}"
-    end,
-
-    __len = function(t)
-       -- this does get called by the # operation(!)
-       -- print("len called")
-       return t[_giPrivateStructProps]["len"]
     end,
 
     __pairs = function(t)
@@ -157,27 +124,9 @@ function _gi_NewStruct(structName, keyValTypeMap, x)
    local proxy = {}
    proxy[_giPrivateStructRaw] = x
 
-   -- get initial count
-   local len = 0
-   for k, v in pairs(x) do
-      len = len + 1
-   end
-
-   local props = {len=len, keyValTypeMap=keyValTypeMap, structName=structName,methods={}}
+   local props = {keyValTypeMap=keyValTypeMap, structName=structName,methods={}}
    proxy[_giPrivateStructProps] = props
 
    setmetatable(proxy, _giPrivateStructMt)
    return proxy
 end;
-
--- some types are just a container
--- for methods that will subsequently
--- defined
-function _gi_NewType(size, kind, name)
-   assert(type(size) == 'int', 'bad parameter #1: must be int')
-   assert(type(kind) == 'string', 'bad parameter #2: must be string')
-   assert(type(name) == 'string', 'bad parameter #3: must be string')
-
-   
-end
-
