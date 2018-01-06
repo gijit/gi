@@ -37,7 +37,7 @@ func (e *expression) StringWithParens() string {
 
 func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	exprType := c.p.TypeOf(expr)
-	pp("jea debug expressions.go:40, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
+	pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:40, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
@@ -202,11 +202,12 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
+			// Boogle here xxx 0
 			//flds := structFieldTypes(t)
 			vals := structFieldNameValuesForLua(t, elements)
 			return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
 			//return c.formatExpr(`_gi_NewStruct("%s",{%s},{%s})`, c.typeName(exprType), strings.Join(flds, ", "), strings.Join(vals, ", "))
-			//return c.formatExpr("new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
+			//return c.formatExpr("BOBOBOBOBO new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
 		}
@@ -236,6 +237,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch t.Underlying().(type) {
 			case *types.Struct, *types.Array:
+				// Boogle here xxx 1
 				return c.translateExpr(e.X)
 			}
 
@@ -1211,7 +1213,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			return c.formatExpr("new %1e.constructor.elem(%1e)", expr)
 		}
 	}
-
+	// Boogle here xxx 2
 	return c.translateExpr(expr)
 }
 
