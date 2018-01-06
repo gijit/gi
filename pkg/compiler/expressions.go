@@ -76,7 +76,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			if basic.Kind() == types.UntypedComplex {
 				exprType = types.Typ[types.Complex128]
 			}
-			return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
+			// jea, luajit has native complex number syntax
+			return c.formatExpr("%s+%si", strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
+			//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
 		case isString(basic):
 			pp("jea, in translateExpr(), value = '%v'", value)
 			return c.formatExpr("%s", encodeString(constant.StringVal(value)))

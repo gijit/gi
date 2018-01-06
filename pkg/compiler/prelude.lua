@@ -17,3 +17,23 @@ function _gi_SetRangeCheck(x, i, val)
   return val
 end;
 
+-- complex numbers
+-- "complex[?]" ?
+
+ffi = require('ffi')
+point = ffi.metatype("struct { double re, im; }", {
+    __add = function(a, b)
+     return point(a.re + b.re, a.im + b.im)
+ end
+})
+
+-- 1+2i
+point = ffi.metatype("complex", {
+    __add = function(a, b)
+     return point(a.re + b.re, a.im + b.im)
+ end
+})
+
+function _gi_NewComplex128(real, imag)
+
+end

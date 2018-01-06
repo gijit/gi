@@ -77,3 +77,27 @@ func FetchPrelude(path string) ([]string, error) {
 	}
 	return files, nil
 }
+
+func mustLuaInt(vm *luajit.State, varname string, expect int) {
+
+	vm.Getglobal(varname)
+	top := vm.Gettop()
+	value_int := vm.Tointeger(top)
+
+	pp("value_int=%v", value_int)
+	if value_int != expect {
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
+	}
+}
+
+func mustLuaString(vm *luajit.State, varname string, expect string) {
+
+	vm.Getglobal(varname)
+	top := vm.Gettop()
+	value_string := vm.Tostring(top)
+
+	pp("value_string=%v", value_string)
+	if value_string != expect {
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_string, varname))
+	}
+}

@@ -471,26 +471,13 @@ func Test024MultipleAssignment(t *testing.T) {
 	})
 }
 
-func mustLuaInt(vm *luajit.State, varname string, expect int) {
+func Test025ComplexNumbers(t *testing.T) {
+	inc := NewIncrState()
 
-	vm.Getglobal(varname)
-	top := vm.Gettop()
-	value_int := vm.Tointeger(top)
+	cv.Convey("a := 6.67428e-11i should compile, since luajit has builtin support for complex number syntax", t, func() {
 
-	pp("value_int=%v", value_int)
-	if value_int != expect {
-		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
-	}
-}
-
-func mustLuaString(vm *luajit.State, varname string, expect string) {
-
-	vm.Getglobal(varname)
-	top := vm.Gettop()
-	value_string := vm.Tostring(top)
-
-	pp("value_string=%v", value_string)
-	if value_string != expect {
-		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_string, varname))
-	}
+		code := `a := 6.67428e-11i`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+	a = 0+6.67428e-11i;`)
+	})
 }
