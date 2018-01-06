@@ -438,7 +438,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewStruct("A",{["B"]="Int"},{["B"]=43});
+a=_gi_NewStruct("A",{["B"]="int"},{["B"]=43});
 `)
 
 	})
