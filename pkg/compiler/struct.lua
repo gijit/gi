@@ -1,6 +1,15 @@
 -- structs
 
 -- create private index
+
+_showStruct = function(props)
+   r = props.structName .. " {\n"
+   for k,v in pairs(props.keyValTypeMap) do
+      r = r .. "   ".. k .. " ".. v .. "\n"
+   end
+   return r .. "}\n"
+end
+
 _giPrivateStructRaw = {}
 _giPrivateStructProps = {}
 
@@ -33,10 +42,11 @@ _giPrivateStructProps = {}
       --print("index called for key", k)
       return t[_giPrivateStructRaw][k]
     end,
-
+    
     __tostring = function(t)
-       local len = t[_giPrivateStructProps]["len"]
-       local s = "struct of length " .. tostring(len) .. " is _giStruct{"
+       local props = t[_giPrivateStructProps]
+       local len = props["len"]
+       local s = "struct ".. _showStruct(props) .." of length " .. tostring(len) .. " is _giStruct{"
        local r = t[_giPrivateStructRaw]
        -- we want to skip both the _giPrivateStructRaw and the len
        -- when iterating, which happens automatically if we

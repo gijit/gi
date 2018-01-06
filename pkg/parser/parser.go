@@ -393,7 +393,7 @@ func (p *parser) error(pos token.Pos, msg string) {
 }
 
 func (p *parser) errorExpected(pos token.Pos, msg string) {
-	panic("jea: errorExpected where??")
+	//panic("jea: errorExpected where??")
 
 	msg = "expected " + msg
 	if pos == p.pos {

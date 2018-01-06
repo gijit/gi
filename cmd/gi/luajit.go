@@ -44,7 +44,8 @@ func (cfg *GIConfig) LuajitMain() {
 		}
 		use := string(src)
 		cmd := strings.TrimSpace(use)
-		switch cmd {
+		low := strings.ToLower(cmd)
+		switch low {
 		case ":q":
 			verb.Verbose = false
 			verb.VerboseVerbose = false
@@ -66,6 +67,13 @@ func (cfg *GIConfig) LuajitMain() {
 			cfg.RawLua = false
 			prompt = goPrompt
 			fmt.Printf("Go language mode.\n")
+			continue
+		case ":prelude":
+			fmt.Printf("Reloading prelude...\n")
+			err := compiler.SetupPrelude(vm, cfg.preludeFiles)
+			if err != nil {
+				fmt.Printf("error during prelude reload: '%v'", err)
+			}
 			continue
 		case ":help":
 			fmt.Printf(`
