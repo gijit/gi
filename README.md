@@ -181,6 +181,8 @@ https://github.com/go-interpreter/gi/blob/master/pkg/compiler/expressions.go
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/luaUtil.go
 
+You wil find it necessary and useful to add print statements to the code. Do this using the `pp()` function, and feel free to leave those prints in during commit. It's a small matter later to take them out, and while you are adding functionality, the debug prints help immensely. You will see them scattered through the code as I've worked. Just leave them there; the verb.Verbose flag and VerboseVerbose can be used to mute them.
+
 The files above derive from GopherJS which compiles Go into Javascript; whereas `gi` translates Go into
 Lua. This makes implementation usually very fast, since mostly it is just
 above figuring out how to re-write javascript into Lua. You are typically just
