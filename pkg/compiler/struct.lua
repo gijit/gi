@@ -10,6 +10,7 @@
 __reg={
    -- track the registered structs here
    structs = {},
+   interfaces={}
 }
 
 -- create a new struct instance by
@@ -35,6 +36,12 @@ end
 function __reg:RegisterStruct(name)
       local methodset = {}
       self.structs[name] = methodset
+      return methodset
+end
+
+function __reg:RegisterInterface(name)
+      local methodset = {}
+      self.interfaces[name] = methodset
       return methodset
 end
 

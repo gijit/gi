@@ -775,6 +775,7 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 }
 
 func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
+
 	lhs = astutil.RemoveParens(lhs)
 	if isBlank(lhs) {
 		panic("translateAssign with blank lhs")

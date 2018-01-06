@@ -325,6 +325,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						c.objectName(o) // register toplevel name
 
 						// jea: codegen here and now, in order.
+
+						// interface Dog codegen here
 						decl, by := c.oneNamedType(collectDependencies, o)
 						newCodeText = append(newCodeText, by)
 						typeDecls = append(typeDecls, decl)
@@ -562,6 +564,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		DceObjectFilter: o.Name(),
 	}
 	d.DceDeps = collectDependencies(func() {
+		// interface Dog getting codegen here
 		d.DeclCode = c.CatchOutput(0, func() {
 			typeName := c.objectName(o)
 			lhs := typeName
@@ -574,6 +577,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			constructor := "null"
 			switch t := o.Type().Underlying().(type) {
 			case *types.Struct:
+				pp("incr.go:580, in a Struct")
 				params := make([]string, t.NumFields())
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
@@ -592,8 +596,15 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				_ = size
 			}
 			// jea
-			c.Printf(`%s = __reg:RegisterStruct("%s")`, lhs, o.Name())
-
+			switch o.Type().Underlying().(type) {
+			case *types.Struct:
+				c.Printf(`%s = __reg:RegisterStruct("%s")`, lhs, o.Name())
+				if lhs == "Dog" {
+					//panic("where")
+				}
+			case *types.Interface:
+				c.Printf(`%s = __reg:RegisterInterface("%s")`, lhs, o.Name())
+			}
 			//c.Printf(`%s = _gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 		})

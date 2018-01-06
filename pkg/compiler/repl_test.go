@@ -533,6 +533,7 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
+        Dog    = __reg:RegisterInterface("Dog")
         Beagle = __reg:RegisterStruct("Beagle");
 
 	    function Beagle:Write(with) 
@@ -541,7 +542,9 @@ book := snoopy.Write("with a pen")`
      	end;
 
         snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
-	    book = snoopy:Write("with a pen");
+
+  	    _r = snoopy:Write("with a pen");
+  	    book = _r;
 `)
 
 		// and verify that it happens correctly.

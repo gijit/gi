@@ -695,6 +695,10 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		}
 
 		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
+		pp("funcRef in translateFunction, package.go:698 is '%s'; isMethod='%v'", funcRef, isMethod)
+		if funcRef == "Write" {
+			panic("where Write?")
+		}
 		joinedParams = strings.Join(params, ", ")
 		if isMethod {
 			return []byte(fmt.Sprintf("\tfunction %s%s;\n",

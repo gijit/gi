@@ -226,6 +226,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		return c.formatExpr("(%s)", fun)
 
 	case *ast.UnaryExpr:
+		pp("expressions.go:229 we have a *ast.UnaryExpr: '%#v'", e)
 		t := c.p.TypeOf(e.X)
 		switch e.Op {
 		case token.AND:
@@ -719,7 +720,8 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				if reservedKeywords[methodName] {
 					methodName += "$"
 				}
-				return c.translateCall(e, sig, c.formatExpr("%s.%s", recv, methodName))
+				// jea: change to object:method call for Lua.
+				return c.translateCall(e, sig, c.formatExpr("%s:%s", recv, methodName))
 
 			case types.FieldVal:
 				fields, jsTag := c.translateSelection(sel, f.Pos())
@@ -1308,6 +1310,15 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) *expression {
 	pp("expressions.go:1307, format='%s', a='%#v', parens='%v'", format, a, parens)
+	for i := range a {
+		str, isStr := a[i].(string)
+		if isStr {
+			pp("a[i=%v] = '%v'", i, str)
+			if i == 1 && a[1] == "Write" {
+				//panic("where?")
+			}
+		}
+	}
 	processFormat := func(f func(uint8, uint8, int)) {
 		n := 0
 		for i := 0; i < len(format); i++ {
