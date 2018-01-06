@@ -190,6 +190,8 @@ https://github.com/go-interpreter/gi/blob/master/pkg/compiler/repl_test.go
 
 Then simply implement your feature. These are the main files
 
+https://github.com/go-interpreter/gi/blob/master/pkg/compiler/incr.go
+
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/package.go
 
 https://github.com/go-interpreter/gi/blob/master/pkg/compiler/translate.go
