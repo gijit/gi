@@ -619,6 +619,10 @@ book := snoopy.Write("with a pen")`
 		vm := luajit.Newstate()
 		defer vm.Close()
 		vm.Openlibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
 		LuaRunAndReport(vm, string(translation))
 		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
