@@ -679,16 +679,18 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			// jea
 			switch o.Type().Underlying().(type) {
 			case *types.Struct:
-				// jea: don't assign to a name in the variable namespace,
+				// jea TODO: eventually! don't assign to a name in the variable namespace,
 				// since the namespaces
 				// for types and variables are distinct, and Gophers are
-				// used to that.
-				c.Printf(`__reg:RegisterStruct("%s");`, o.Name())
+				// used to that. Don't sweat it for now, as
+				// the Luar object system will probably override the
+				// choices here anyway!
+				c.Printf(`%s = __reg:RegisterStruct("%s");`, lhs, o.Name())
 				if lhs == "Dog" {
 					//panic("where")
 				}
 			case *types.Interface:
-				c.Printf(`__reg:RegisterInterface("%s");`, o.Name())
+				c.Printf(`%s = __reg:RegisterInterface("%s");`, lhs, o.Name())
 			}
 			//c.Printf(`%s = _gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)

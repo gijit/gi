@@ -534,8 +534,8 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        __reg:RegisterInterface("Dog");
-        __reg:RegisterStruct("Beagle");
+        Dog = __reg:RegisterInterface("Dog");
+        Beagle = __reg:RegisterStruct("Beagle");
 
 	    function Beagle:Write(with)
             b = self;
@@ -601,8 +601,8 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        __reg:RegisterInterface("Dog");
-        __reg:RegisterStruct("Beagle");
+        Dog = __reg:RegisterInterface("Dog");
+        Beagle = __reg:RegisterStruct("Beagle");
 
 	    function Beagle:Write(with)
             b = self;
