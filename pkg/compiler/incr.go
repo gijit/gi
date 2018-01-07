@@ -377,49 +377,71 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 								} else {
 
-									// jea: copy in from place2
+									// jea: move in from place2 to sequential order.
 									nm := c.objectName(o)
 									pp("looking up var with init: '%s'", nm)
-									declInfo, ok := c.p.ObjMap[nm]
+
+									info, ok := check.ObjMap[o]
 									if !ok {
 										panic(fmt.Sprintf("huh? where is the variable '%s'?", nm))
 									}
-									lhs := make([]ast.Expr, len(init.Lhs))
-										for i, o := range init.Lhs {
-											ident := ast.NewIdent(o.Name())
-											c.p.Defs[ident] = o
-											lhs[i] = c.setType(ident, o.Type())
-											varsWithInit[o] = true
-										}
-										var d Decl
-										d.DceDeps = collectDependencies(func() {
-											c.localVars = nil
-											d.InitCode = c.CatchOutput(1, func() {
-												c.translateStmt(&ast.AssignStmt{
-													Lhs: lhs,
-													Tok: token.DEFINE,
-													Rhs: []ast.Expr{init.Rhs},
-												}, nil)
-											})
-											d.Vars = append(d.Vars, c.localVars...)
-										})
-										if len(init.Lhs) == 1 {
-											if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-												d.DceObjectFilter = init.Lhs[0].Name()
-											}
-										}
-										varDecls = append(varDecls, &d)
-										pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-										newCodeText = append(newCodeText, d.InitCode)
+
+									// from types/initorder, so we re-create the proper structure.
+									// BEGIN INITORDER COPY
+
+									// n:1 variable declarations such as: a, b = f()
+									// introduce a node for each lhs variable (here: a, b);
+									// but they all have the same initializer - emit only
+									// one, for the first variable seen
+
+									infoLhs := info.Lhs // possibly nil (see declInfo.lhs field comment)
+									if infoLhs == nil {
+										infoLhs = []*types.Var{o}
 									}
+									init := &types.Initializer{infoLhs, info.Init}
+									// END INITORDER COPY
 
+									// from place2, variables below, moved here
+									// for proper sequencing of user's orders..
+									lhs := make([]ast.Expr, len(init.Lhs))
+									for i, o := range init.Lhs {
+										ident := ast.NewIdent(o.Name())
+										c.p.Defs[ident] = o
+										lhs[i] = c.setType(ident, o.Type())
+										varsWithInit[o] = true
+									}
+									var d Decl
+									d.DceDeps = collectDependencies(func() {
+										c.localVars = nil
+										d.InitCode = c.CatchOutput(1, func() {
+											c.translateStmt(&ast.AssignStmt{
+												Lhs: lhs,
+												Tok: token.DEFINE,
+												Rhs: []ast.Expr{init.Rhs},
+											}, nil)
+										})
+										d.Vars = append(d.Vars, c.localVars...)
+									})
+									if len(init.Lhs) == 1 {
+										if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+											d.DceObjectFilter = init.Lhs[0].Name()
+										}
+									}
+									varDecls = append(varDecls, &d)
+									pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+									newCodeText = append(newCodeText, d.InitCode)
+
+									///////////////
+
+									// jea, my incomplete code, attempting to do the above:
+									/*
+										de.DceObjectFilter = o.Name()
+										varDecls = append(varDecls, &de)
+										pp("place1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
+										newCodeText = append(newCodeText, de.InitCode)
+									*/
+									// end codegen here and now for vars
 								}
-								de.DceObjectFilter = o.Name()
-								varDecls = append(varDecls, &de)
-								pp("place1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
-								newCodeText = append(newCodeText, de.InitCode)
-
-								// end codegen here and now for vars
 							}
 						}
 					}
@@ -484,39 +506,39 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// jea: we don't do c.p.InitOrder, that would confuse the repl
 	// experience.
 	// was comment start
-	/*
-		pp("jea, at variables, in package.go:392. vars='%#v'", vars)
-		//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
-		for _, init := range c.p.InitOrder {
-			lhs := make([]ast.Expr, len(init.Lhs))
-			for i, o := range init.Lhs {
-				ident := ast.NewIdent(o.Name())
-				c.p.Defs[ident] = o
-				lhs[i] = c.setType(ident, o.Type())
-				varsWithInit[o] = true
-			}
-			var d Decl
-			d.DceDeps = collectDependencies(func() {
-				c.localVars = nil
-				d.InitCode = c.CatchOutput(1, func() {
-					c.translateStmt(&ast.AssignStmt{
-						Lhs: lhs,
-						Tok: token.DEFINE,
-						Rhs: []ast.Expr{init.Rhs},
-					}, nil)
-				})
-				d.Vars = append(d.Vars, c.localVars...)
-			})
-			if len(init.Lhs) == 1 {
-				if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-					d.DceObjectFilter = init.Lhs[0].Name()
-				}
-			}
-			varDecls = append(varDecls, &d)
-			pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-			newCodeText = append(newCodeText, d.InitCode)
+
+	pp("jea, at variables, in package.go:392. vars='%#v'", vars)
+	//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
+	for _, init := range c.p.InitOrder {
+		lhs := make([]ast.Expr, len(init.Lhs))
+		for i, o := range init.Lhs {
+			ident := ast.NewIdent(o.Name())
+			c.p.Defs[ident] = o
+			lhs[i] = c.setType(ident, o.Type())
+			varsWithInit[o] = true
 		}
-	*/
+		var d Decl
+		d.DceDeps = collectDependencies(func() {
+			c.localVars = nil
+			d.InitCode = c.CatchOutput(1, func() {
+				c.translateStmt(&ast.AssignStmt{
+					Lhs: lhs,
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{init.Rhs},
+				}, nil)
+			})
+			d.Vars = append(d.Vars, c.localVars...)
+		})
+		if len(init.Lhs) == 1 {
+			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+				d.DceObjectFilter = init.Lhs[0].Name()
+			}
+		}
+		varDecls = append(varDecls, &d)
+		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+		newCodeText = append(newCodeText, d.InitCode)
+	}
+
 	//jea: was comment end
 	pp("jea, functions in package.go:393")
 
