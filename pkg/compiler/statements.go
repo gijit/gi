@@ -16,7 +16,7 @@ import (
 
 func (c *funcContext) translateStmtList(stmts []ast.Stmt) {
 	for _, stmt := range stmts {
-		// Boogle here xxx 6
+		pp("Boogle here xxx 6")
 		c.translateStmt(stmt, nil)
 	}
 	c.SetPos(token.NoPos)
@@ -375,7 +375,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				c.Printf("$unused(%s);", c.translateExpr(s.Rhs[0]))
 				return
 			}
-			// Boogle here xxx 4
+			pp("Boogle here xxx 4")
 			c.Printf("%s", c.translateAssign(lhs, s.Rhs[0], s.Tok == token.DEFINE))
 
 		case len(s.Lhs) > 1 && len(s.Rhs) == 1:
@@ -799,9 +799,10 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
 	lhsType := c.p.TypeOf(lhs)
 	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v", lhsType, lhs, lhs, define)
-	// Boogle here xxx 3
+	pp("Boogle here xxx 3") // last Boogle before we diverge!
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
+		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
 		return fmt.Sprintf("%s = %s;", c.translateExpr(lhs), rhsExpr) // skip $copy
 	}
 	if _, ok := rhs.(*ast.BasicLit); ok && define {

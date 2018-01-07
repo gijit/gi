@@ -185,7 +185,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 	collectDependencies := func(f func()) []string {
 		c.p.dependencies = make(map[types.Object]bool)
-		// Boogle here xxx 13
+		pp("Boogle here xxx 13")
 		f()
 		var deps []string
 		for o := range c.p.dependencies {
@@ -290,9 +290,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 							de.DceMethodFilter = o.Name() + "~"
 						}
 					}
-					// Boogle here xxx 14
+					pp("Boogle here xxx 14")
 					de.DceDeps = collectDependencies(func() {
-						// Boogle here xxx 12
+						pp("Boogle here xxx 12")
 						de.DeclCode = c.translateToplevelFunction(fun, funcInfo)
 					})
 					funcDecls = append(funcDecls, &de)

@@ -36,8 +36,33 @@ func (e *expression) StringWithParens() string {
 }
 
 func (c *funcContext) translateExpr(expr ast.Expr) *expression {
+	exitPrint := false
+	anyExit := false
+	if cl, isCl := expr.(*ast.CompositeLit); isCl {
+		pp("CompositeLit in translateExpr: cl='%#v'", cl)
+		if cl != nil && cl.Type != nil {
+			if id, isId := cl.Type.(*ast.Ident); isId {
+				pp("CompositeLit in translateExpr: cl.Type='%#v'", cl.Type)
+				if id.Name == "Beagle" {
+					pp("AAAAAAAHHHHAAAA we found the Beagle!")
+					anyExit = true
+				}
+			}
+		} else {
+			pp("CompositeLit in translateExpr: cl=nil or cl.Type=nil")
+		}
+	}
+	defer func() {
+		if exitPrint {
+			pp("translateExpr exitPrint=true, expr='%#v'", expr)
+		}
+		if anyExit {
+			pp("translateExpr we started with the Beagle already! anyExit=true, expr='%#v'", expr)
+		}
+	}()
+
 	exprType := c.p.TypeOf(expr)
-	pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:40, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
+	pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:65, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
@@ -202,7 +227,11 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
-			// Boogle here xxx 0
+			pp("Boogle here xxx 0")
+			if c.typeName(exprType) == "Beagle" {
+				pp("YYY 0 at the new ptr! with elements '%#v'", elements)
+				exitPrint = true
+			}
 			//flds := structFieldTypes(t)
 			vals := structFieldNameValuesForLua(t, elements)
 			return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
@@ -237,7 +266,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch t.Underlying().(type) {
 			case *types.Struct, *types.Array:
-				// Boogle here xxx 1
+				pp("Boogle here xxx 1")
 				return c.translateExpr(e.X)
 			}
 
@@ -1182,38 +1211,46 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 	return c.translateImplicitConversion(expr, desiredType)
 }
 
+// this is getting missed in the Beagel / Boogle processing
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
 	if desiredType == nil {
+		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
 		return c.translateExpr(expr)
 	}
 
 	exprType := c.p.TypeOf(expr)
 	if types.Identical(exprType, desiredType) {
+		pp("YYY 2 translateImplicitConversion exiting early, b/c types are identical, exprType='%#v' and desiredType='%#v'. expr ='%#v'", exprType, desiredType, expr)
 		return c.translateExpr(expr)
 	}
 
 	basicExprType, isBasicExpr := exprType.Underlying().(*types.Basic)
 	if isBasicExpr && basicExprType.Kind() == types.UntypedNil {
+		pp("YYY 3 translateImplicitConversion exiting early")
 		return c.formatExpr("%e", c.zeroValue(desiredType))
 	}
 
 	switch desiredType.Underlying().(type) {
 	case *types.Slice:
+		pp("YYY 4 translateImplicitConversion exiting early")
 		return c.formatExpr("$subslice(new %1s(%2e.$array), %2e.$offset, %2e.$offset + %2e.$length)", c.typeName(desiredType), expr)
 
 	case *types.Interface:
 		if typesutil.IsJsObject(exprType) {
+			pp("YYY 5 translateImplicitConversion exiting early")
 			// wrap JS object into js.Object struct when converting to interface
 			return c.formatExpr("new $jsObjectPtr(%e)", expr)
 		}
 		if isWrapped(exprType) {
+			pp("YYY 6 translateImplicitConversion exiting early")
 			return c.formatExpr("new %s(%e)", c.typeName(exprType), expr)
 		}
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {
+			pp("YYY 7 translateImplicitConversion exiting early")
 			return c.formatExpr("new %1e.constructor.elem(%1e)", expr)
 		}
 	}
-	// Boogle here xxx 2
+	pp("Boogle here xxx 2")
 	return c.translateExpr(expr)
 }
 
