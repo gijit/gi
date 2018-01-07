@@ -78,7 +78,7 @@ func FetchPrelude(path string) ([]string, error) {
 	return files, nil
 }
 
-func mustLuaInt(vm *luajit.State, varname string, expect int) {
+func LuaMustInt(vm *luajit.State, varname string, expect int) {
 
 	vm.Getglobal(varname)
 	top := vm.Gettop()
@@ -90,7 +90,7 @@ func mustLuaInt(vm *luajit.State, varname string, expect int) {
 	}
 }
 
-func mustLuaString(vm *luajit.State, varname string, expect string) {
+func LuaMustString(vm *luajit.State, varname string, expect string) {
 
 	vm.Getglobal(varname)
 	top := vm.Gettop()
@@ -98,6 +98,22 @@ func mustLuaString(vm *luajit.State, varname string, expect string) {
 
 	pp("value_string=%v", value_string)
 	if value_string != expect {
-		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_string, varname))
+		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_string))
+	}
+}
+
+func LuaRunAndReport(vm *luajit.State, s string) {
+	err := vm.Loadstring(s)
+	if err != nil {
+		fmt.Printf("error from Lua vm.LoadString(): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+		DumpLuaStack(vm)
+		vm.Pop(1)
+	} else {
+		err = vm.Pcall(0, 0, 0)
+		if err != nil {
+			fmt.Printf("error from Lua vm.Pcall(0,0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+			DumpLuaStack(vm)
+			vm.Pop(1)
+		}
 	}
 }

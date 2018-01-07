@@ -59,7 +59,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 
 		//fmt.Printf("v back = '%#v'\n", v)
 	}
-	mustLuaInt(vm, "sum", 20)
+	LuaMustInt(vm, "sum", 20)
 }
 
 // func Test003ImportsAtRepl(t *testing.T) {
@@ -313,7 +313,7 @@ func Test018ReadFromMap(t *testing.T) {
 			}
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
-		mustLuaString(vm, "x3", "hello")
+		LuaMustString(vm, "x3", "hello")
 	})
 }
 
@@ -352,7 +352,7 @@ func Test018ReadFromSlice(t *testing.T) {
 			}
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
-		mustLuaInt(vm, "x3", 3)
+		LuaMustInt(vm, "x3", 3)
 	})
 }
 
@@ -464,9 +464,9 @@ func Test024MultipleAssignment(t *testing.T) {
 		panicOn(err)
 		DumpLuaStack(vm)
 
-		mustLuaInt(vm, "a", 1)
-		mustLuaInt(vm, "b", 2)
-		mustLuaInt(vm, "c", 3)
+		LuaMustInt(vm, "a", 1)
+		LuaMustInt(vm, "b", 2)
+		LuaMustInt(vm, "c", 3)
 	})
 }
 
@@ -503,7 +503,7 @@ func Test026LenOfString(t *testing.T) {
 		panicOn(err)
 		DumpLuaStack(vm)
 
-		mustLuaInt(vm, "b", 2)
+		LuaMustInt(vm, "b", 2)
 	})
 }
 
@@ -619,13 +619,7 @@ book := snoopy.Write("with a pen")`
 		vm := luajit.Newstate()
 		defer vm.Close()
 		vm.Openlibs()
-
-		err := vm.Loadstring(string(translation))
-		panicOn(err)
-		err = vm.Pcall(0, 0, 0)
-		panicOn(err)
-		DumpLuaStack(vm)
-
-		mustLuaString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+		LuaRunAndReport(vm, string(translation))
+		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
 }
