@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func SetupPrelude(vm *luajit.State, files []string) error {
+func LuaDoFiles(vm *luajit.State, files []string) error {
 	for _, f := range files {
 		err := vm.Loadstring(fmt.Sprintf(`dofile("%s")`, f))
 		if err != nil {

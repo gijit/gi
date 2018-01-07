@@ -8,6 +8,7 @@ import (
 	"github.com/go-interpreter/gi/pkg/verb"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ func (cfg *GIConfig) LuajitMain() {
 
 	vm.Openlibs()
 
-	err := compiler.SetupPrelude(vm, cfg.preludeFiles)
+	err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
 	panicOn(err)
 
 	inc := compiler.NewIncrState()
@@ -53,14 +54,17 @@ func (cfg *GIConfig) LuajitMain() {
 			inc.PrintAST = false
 			continue
 		case ":q":
+			fmt.Printf("quiet mode\n")
 			verb.Verbose = false
 			verb.VerboseVerbose = false
 			continue
 		case ":v":
+			fmt.Printf("verbose mode.\n")
 			verb.Verbose = true
 			verb.VerboseVerbose = false
 			continue
 		case ":vv":
+			fmt.Printf("very verbose mode.\n")
 			verb.Verbose = true
 			verb.VerboseVerbose = true
 			continue
@@ -76,12 +80,12 @@ func (cfg *GIConfig) LuajitMain() {
 			continue
 		case ":prelude":
 			fmt.Printf("Reloading prelude...\n")
-			err := compiler.SetupPrelude(vm, cfg.preludeFiles)
+			err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
 			if err != nil {
 				fmt.Printf("error during prelude reload: '%v'", err)
 			}
 			continue
-		case ":help":
+		case ":help", ":h":
 			fmt.Printf(`
 ======================
 gi: a go interpreter
@@ -91,15 +95,44 @@ simply type Go expressions or statements
 directly at the prompt, or use one of 
 these special commands:
 ======================
- :v     turns on verbose debug prints
- :vv    turns on very verbose prints
- :q     quiets the debug prints (default)
- :raw   changes to raw-luajit entry mode
- :go    change back from raw mode to Go mode
- :ast   print the Go AST prior to translation
- :noast stop printing the Go AST
+ :v          turns on verbose debug printing
+ :vv         turns on very verbose printing
+ :q          quiets the debug prints (default)
+ :raw        changes to raw-luajit entry mode
+ :go         change back from raw mode to Go mode
+ :ast        print the Go AST prior to translation
+ :noast      stop printing the Go AST
+ :do <path>  run dofile(path) on a .lua file
+ :h          show this help (same as :help)
  ctrl-d to exit
 `)
+			continue
+		}
+
+		if strings.HasPrefix(low, ":do") {
+			files := strings.TrimSpace(low[3:])
+			splt := strings.Split(files, ",")
+			var final, show []string
+			for i := range splt {
+				tmp := strings.TrimSpace(splt[i])
+				home := os.Getenv("HOME")
+				if home != "" {
+					tmp = strings.Replace(tmp, "~/", home+"/", 1)
+				}
+				if len(tmp) > 0 {
+					final = append(final, tmp)
+					show = append(show, strconv.Quote(tmp))
+				}
+			}
+			if len(final) > 0 {
+				fmt.Printf("running dofile(%s)\n", strings.Join(show, ","))
+				err := compiler.LuaDoFiles(vm, final)
+				if err != nil {
+					fmt.Printf("error during dofile(): '%v'\n", err)
+				}
+			} else {
+				fmt.Printf("nothing to do.\n")
+			}
 			continue
 		}
 

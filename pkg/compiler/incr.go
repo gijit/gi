@@ -9,6 +9,7 @@ import (
 	"github.com/go-interpreter/gi/pkg/printer"
 	"github.com/go-interpreter/gi/pkg/token"
 	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/go-interpreter/gi/pkg/verb"
 	"os"
 	"sort"
 	"strings"
@@ -307,7 +308,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				err := printer.Fprint(os.Stdout, fileSet, d)
 				panicOn(err)
 				pp("with AST:")
-				ast.Print(fileSet, d)
+				if verb.Verbose {
+					ast.Print(fileSet, d)
+				}
 				pp("done showing AST for *ast.GenDecl...:'%#v'", d)
 
 				switch ds := d.Specs[0].(type) {
