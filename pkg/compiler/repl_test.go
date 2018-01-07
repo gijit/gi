@@ -580,7 +580,7 @@ _ = snoopy
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
         __reg:RegisterStruct("Beagle");
-        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
+        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
 `)
 
 	})

@@ -372,7 +372,9 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		case len(s.Lhs) == 1 && len(s.Rhs) == 1:
 			lhs := astutil.RemoveParens(s.Lhs[0])
 			if isBlank(lhs) {
-				c.Printf("$unused(%s);", c.translateExpr(s.Rhs[0]))
+				// jea, not sure what this is doing, but don't
+				// think we need it at the repl.
+				//c.Printf("$unused(%s);", c.translateExpr(s.Rhs[0]))
 				return
 			}
 			pp("Boogle here xxx 4")
@@ -395,7 +397,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				tmpVars[i] = c.gensym("_tmp") // newVariable("_tmp")
 				//tmpVars[i] = c.newVariable("_tmp")
 				if isBlank(astutil.RemoveParens(s.Lhs[i])) {
-					c.Printf("$unused(%s);", c.translateExpr(rhs))
+					c.Printf("FUNKY $unused(%s);", c.translateExpr(rhs))
 					continue
 				}
 				c.Printf("%s", c.translateAssign(c.newIdent(tmpVars[i], c.p.TypeOf(s.Lhs[i])), rhs, true))

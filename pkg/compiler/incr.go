@@ -610,12 +610,12 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				// since the namespaces
 				// for types and variables are distinct, and Gophers are
 				// used to that.
-				c.Printf(`__reg:RegisterStruct("%s")`, o.Name())
+				c.Printf(`__reg:RegisterStruct("%s");`, o.Name())
 				if lhs == "Dog" {
 					//panic("where")
 				}
 			case *types.Interface:
-				c.Printf(`__reg:RegisterInterface("%s")`, o.Name())
+				c.Printf(`__reg:RegisterInterface("%s");`, o.Name())
 			}
 			//c.Printf(`%s = _gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
@@ -664,7 +664,9 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		switch t := o.Type().Underlying().(type) {
 		case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 			d.TypeInitCode = c.CatchOutput(0, func() {
-				c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
+				// jea: we currently don't use this struct init code, so comment it for now.
+				//c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
+				_ = t // jea add
 			})
 			// jea: for now we'll leave off the separate type init calls; we might need to bring them back later.
 			// example of what is generated:
