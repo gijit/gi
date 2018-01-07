@@ -274,7 +274,6 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch x := astutil.RemoveParens(e.X).(type) {
 			case *ast.CompositeLit:
-				panic("where?")
 				return c.formatExpr("$newDataPointer(%e, %s)", x, c.typeName(c.p.TypeOf(e)))
 			case *ast.Ident:
 				obj := c.p.Uses[x].(*types.Var)
@@ -839,7 +838,6 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case *types.Map:
 				return c.formatExpr("false")
 			case *types.Interface:
-				//panic("where?")
 				return c.formatExpr("$ifaceNil")
 			case *types.Signature:
 				return c.formatExpr("$throwNilPointerError")
@@ -1205,7 +1203,6 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 	case *types.Struct, *types.Array:
 		switch expr.(type) {
 		case nil, *ast.CompositeLit:
-			panic("where?")
 			// nothing
 		default:
 			return c.formatExpr("$clone(%e, %s)", expr, c.typeName(desiredType))
