@@ -655,7 +655,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			if len(ptrMethods) > 0 {
 				// example:
 				// ptrType.methods = [{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}];
-				c.Printf("%s.methods = [%s];", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+				// TODO: revisit. once we get the Luar compatible
+				//  struct generation, this will probably be
+				// fully obsolete.
+				//
+				// jea, might need to bring these back, but for
+				//  now we won't define the methods for a type.
+				//c.Printf("%s.methods = [%s];", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
 			}
 		})
 		// jea: leave these off for now. might bring back later.
