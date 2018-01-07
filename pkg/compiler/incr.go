@@ -242,7 +242,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				err := printer.Fprint(os.Stdout, fileSet, d)
 				panicOn(err)
 				pp("with AST:")
-				ast.Print(fileSet, d)
+				if verb.Verbose {
+					ast.Print(fileSet, d)
+				}
 				pp("done showing AST for *ast.FuncDecl...:'%#v'", d)
 
 				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)

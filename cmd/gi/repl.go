@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
+	"strings"
 
 	"github.com/go-interpreter/gi/pkg/verb"
 )
@@ -37,12 +39,12 @@ Copyright (c) 2018, Jason E. Aten, Ph.D.
 License: 3-clause BSD. See the LICENSE file at
 https://github.com/go-interpreter/gi/blob/master/LICENSE
 ====================
-  [gi is an interactive Golang environment,
-   also known as a REPL or Read-Eval-Print-Loop.]
-  [type ctrl-d to exit]
-  [type :help for help]
-  [gi -h for flag help]
-  [gi -q to start quietly]
+  [ gi is an interactive Golang environment,
+    also known as a REPL or Read-Eval-Print-Loop ]
+  [ type ctrl-d to exit ]
+  [ type :help for help ]
+  [ gi -h for flag help ]
+  [ gi -q to start quietly ]
 ====================
 %s
 ==================
@@ -50,7 +52,11 @@ https://github.com/go-interpreter/gi/blob/master/LICENSE
 	}
 
 	fmt.Printf("using this prelude directory: '%s'\n", cfg.PreludePath)
-	fmt.Printf("using these files as prelude: '%#v'\n", cfg.preludeFiles)
+	shortFn := make([]string, len(cfg.preludeFiles))
+	for i, fn := range cfg.preludeFiles {
+		shortFn[i] = path.Base(fn)
+	}
+	fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
 
 	cfg.LuajitMain()
 	//NodeChildMain()

@@ -1,0 +1,2 @@
+#!/bin/bash
+perl -pi -e 's$"github.com/go-interpreter/gi/pkg/$"github.com/go-interpreter/gi/pkg/more/$g' *.go

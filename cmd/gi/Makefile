@@ -7,11 +7,7 @@ all:
 
 
 onetime: gitversion
-	cd vendor/github.com/LuaJIT/LuaJIT && make install
-	echo "installing this symlink may ask you for your password: "
-	echo
-	sudo ln -sf luajit-2.1.0-beta3 /usr/local/bin/luajit
-	make all
+	cd vendor/github.com/LuaJIT/LuaJIT && make clean && make
 
 # This how we want to name the binary output
 BINARY=gi

@@ -1,0 +1,31 @@
+2018-01-08 06:46:46.258 -0600 CST expect EOF: `a,b := 3,`
+enter   replStuff, LT(1)=a
+enter   replEntry, LT(1)=a
+enter   assignment, LT(1)=a
+enter   identifierList, LT(1)=a
+consume [@0,0:0='a',<53>,1:0] rule identifierList
+consume [@1,1:1=',',<11>,1:1] rule identifierList
+consume [@2,2:2='b',<53>,1:2] rule identifierList
+exit    identifierList, LT(1)=:=
+consume [@4,4:5=':=',<3>,1:4] rule assignment
+enter   expressionList, LT(1)=3
+enter   expression, LT(1)=3
+enter   basicLit, LT(1)=3
+consume [@5,6:6='3',<56>,1:6] rule basicLit
+exit    basicLit, LT(1)=,
+exit    expression, LT(1)=,
+exit    expressionList, LT(1)=,
+exit    assignment, LT(1)=,
+QuibbleErrorStrategy.RecoverInline called!
+exit    replEntry, LT(1)=,
+exit    replStuff, LT(1)=,
+✘
+
+
+Failures:
+
+  * /Users/jaten/go/src/github.com/go-interpreter/gi/pkg/antlr/squaw/calc_test.go 
+  Line 108:
+  Expected: false
+  Actual:   true
+

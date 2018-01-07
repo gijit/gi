@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/glycerine/luajit"
 	"github.com/go-interpreter/gi/pkg/compiler"
+	"github.com/go-interpreter/gi/pkg/front"
 	"github.com/go-interpreter/gi/pkg/verb"
 	"io"
 	"os"
@@ -26,26 +28,33 @@ func (cfg *GIConfig) LuajitMain() {
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
 	goPrompt := "gi> "
+	goMorePrompt := ">>>    "
 	luaPrompt := "raw luajit gi> "
 	prompt := goPrompt
 	if cfg.RawLua {
 		prompt = luaPrompt
 	}
+	prevSrc := ""
+	var by []byte
 
 	for {
 		fmt.Printf(prompt)
-		src, isPrefix, err := reader.ReadLine()
+		by, err = reader.ReadBytes('\n')
 		if err == io.EOF {
-			fmt.Printf("[EOF]\n")
-			return
+			if len(by) > 0 {
+				// process bytes first,
+				// return next time.
+				err = nil
+			} else {
+				fmt.Printf("[EOF]\n")
+				return
+			}
 		}
 		panicOn(err)
-		if isPrefix {
-			panic("line too long")
-		}
-		use := string(src)
-		cmd := strings.TrimSpace(use)
-		low := strings.ToLower(cmd)
+		use := string(by)
+		src := use
+		cmd := bytes.TrimSpace(by)
+		low := string(bytes.ToLower(cmd))
 		switch low {
 		case ":ast":
 			inc.PrintAST = true
@@ -136,8 +145,30 @@ these special commands:
 			continue
 		}
 
+		isContinuation := len(prevSrc) > 0
 		if !cfg.RawLua {
-			translation, err := translateAndCatchPanic(inc, src)
+			if isContinuation {
+				src = prevSrc + "\n" + src
+			}
+			//fmt.Printf("src = '%s'\n", src)
+			//fmt.Printf("prevSrc = '%s'\n", prevSrc)
+
+			eof, syntaxErr, empty := front.TopLevelParseGoSource([]byte(src))
+			if empty {
+				prevSrc = ""
+				continue
+			}
+			//fmt.Printf("eof = %v, syntaxErr = %v\n", eof, syntaxErr)
+			if eof && !syntaxErr {
+				prompt = goMorePrompt
+				// get another line of input
+				prevSrc = src
+				continue
+			}
+			prevSrc = ""
+
+			prompt = goPrompt
+			translation, err := translateAndCatchPanic(inc, []byte(src))
 			if err != nil {
 				fmt.Printf("oops: '%v' on input '%s'\n", err, string(src))
 				translation = "\n"

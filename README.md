@@ -96,24 +96,10 @@ $
 $    # Q: why is 'make onetime` necessary at first install?
 $    #
 $    # 'make onetime' needs to be run once, the
-$    # first time you install `gi`. This
-$    # is required the first time you build
-$    # `gi`. What this does is compile the version
-$    # of LuaJIT that we depend on, namely the
-$    # LuaJIT_2.1.0-beta3 source that has been
-$    # built with XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
-$    # You can see this any other build adjustements
-$    # that we have made in the LuaJIT Makefile:
-$    # github.com/go-interpreter/gi/cmd/gi/vendor/github.com/LuaJIT/LuaJIT/src
-$    #
-$    # Why is it sudoing and asking for my password?
-$    #
-$    # This part is optional, but recommended.
-$    # The last step in the installation of our build
-$    # of LuaJIT does a sudo to install a luajit
-$    # symlink in /usr/local/bin/luajit.
-$    # You may need to provide the root password if you
-$    # want that installation, or ctrl-c out if you don't.
+$    # first time you install `gi`.
+$    # What this does is compile the version
+$    # of LuaJIT that we depend on, for embedding in
+$    # the gi binary.
 $
 $ make onetime
 $
