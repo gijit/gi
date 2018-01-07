@@ -100,7 +100,7 @@ func validatedImportPath(path string) (string, error) {
 }
 
 // declarePkgObj declares obj in the package scope, records its ident -> obj mapping,
-// and updates check.objMap. The object must not be a function or method.
+// and updates check.ObjMap. The object must not be a function or method.
 func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *declInfo) {
 	assert(ident.Name == obj.Name())
 
@@ -119,8 +119,8 @@ func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *declInfo) {
 	}
 
 	check.declare(check.pkg.scope, ident, obj, token.NoPos)
-	check.objMap[obj] = d
-	obj.setOrder(uint32(len(check.objMap)))
+	check.ObjMap[obj] = d
+	obj.setOrder(uint32(len(check.ObjMap)))
 }
 
 // filename returns a filename suitable for debugging output.
@@ -436,8 +436,8 @@ func (check *Checker) collectObjects() {
 					}
 				}
 				info := &declInfo{file: fileScope, fdecl: d}
-				check.objMap[obj] = info
-				obj.setOrder(uint32(len(check.objMap)))
+				check.ObjMap[obj] = info
+				obj.setOrder(uint32(len(check.ObjMap)))
 
 				// jea: allow assignments at the top level!
 			case *ast.AssignStmt:

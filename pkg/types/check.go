@@ -76,7 +76,7 @@ type Checker struct {
 	fset *token.FileSet
 	pkg  *Package
 	*Info
-	objMap map[Object]*declInfo   // maps package-level object to declaration info
+	ObjMap map[Object]*declInfo   // maps package-level object to declaration info
 	impMap map[importKey]*Package // maps (import path, source directory) to (complete or fake) package
 
 	// information collected during type-checking of a set of package files
@@ -122,7 +122,7 @@ func (check *Checker) addDeclDep(to Object) {
 	if from == nil {
 		return // not in a package-level init expression
 	}
-	if _, found := check.objMap[to]; !found {
+	if _, found := check.ObjMap[to]; !found {
 		return // to is not a package-level object
 	}
 	from.addDep(to)
@@ -172,7 +172,7 @@ func NewChecker(conf *Config, fset *token.FileSet, pkg *Package, info *Info) *Ch
 		fset:   fset,
 		pkg:    pkg,
 		Info:   info,
-		objMap: make(map[Object]*declInfo),
+		ObjMap: make(map[Object]*declInfo),
 		impMap: make(map[importKey]*Package),
 	}
 }

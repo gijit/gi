@@ -21,14 +21,14 @@ func (check *Checker) initOrder() {
 
 	// Compute the object dependency graph and initialize
 	// a priority queue with the list of graph nodes.
-	pq := nodeQueue(dependencyGraph(check.objMap))
+	pq := nodeQueue(dependencyGraph(check.ObjMap))
 	heap.Init(&pq)
 
 	const debug = false
 	if debug {
 		fmt.Printf("Computing initialization order for %s\n\n", check.pkg)
 		fmt.Println("Object dependency graph:")
-		for obj, d := range check.objMap {
+		for obj, d := range check.ObjMap {
 			// only print objects that may appear in the dependency graph
 			if obj, _ := obj.(dependency); obj != nil {
 				if len(d.deps) > 0 {
@@ -73,7 +73,7 @@ func (check *Checker) initOrder() {
 
 		// if n still depends on other nodes, we have a cycle
 		if n.ndeps > 0 {
-			cycle := findPath(check.objMap, n.obj, n.obj, make(objSet))
+			cycle := findPath(check.ObjMap, n.obj, n.obj, make(objSet))
 			// If n.obj is not part of the cycle (e.g., n.obj->b->c->d->c),
 			// cycle will be nil. Don't report anything in that case since
 			// the cycle is reported when the algorithm gets to an object
@@ -99,7 +99,7 @@ func (check *Checker) initOrder() {
 
 		// record the init order for variables with initializers only
 		v, _ := n.obj.(*Var)
-		info := check.objMap[v]
+		info := check.ObjMap[v]
 		if v == nil || !info.hasInitializer() {
 			continue
 		}
@@ -134,17 +134,17 @@ func (check *Checker) initOrder() {
 // findPath returns the (reversed) list of objects []Object{to, ... from}
 // such that there is a path of object dependencies from 'from' to 'to'.
 // If there is no such path, the result is nil.
-func findPath(objMap map[Object]*declInfo, from, to Object, visited objSet) []Object {
+func findPath(ObjMap map[Object]*declInfo, from, to Object, visited objSet) []Object {
 	if visited[from] {
 		return nil // node already seen
 	}
 	visited[from] = true
 
-	for d := range objMap[from].deps {
+	for d := range ObjMap[from].deps {
 		if d == to {
 			return []Object{d}
 		}
-		if P := findPath(objMap, d, to, visited); P != nil {
+		if P := findPath(ObjMap, d, to, visited); P != nil {
 			return append(P, d)
 		}
 	}
@@ -197,13 +197,13 @@ func (s *nodeSet) add(p *graphNode) {
 	(*s)[p] = true
 }
 
-// dependencyGraph computes the object dependency graph from the given objMap,
+// dependencyGraph computes the object dependency graph from the given ObjMap,
 // with any function nodes removed. The resulting graph contains only constants
 // and variables.
-func dependencyGraph(objMap map[Object]*declInfo) []*graphNode {
+func dependencyGraph(ObjMap map[Object]*declInfo) []*graphNode {
 	// M is the dependency (Object) -> graphNode mapping
 	M := make(map[dependency]*graphNode)
-	for obj := range objMap {
+	for obj := range ObjMap {
 		// only consider nodes that may be an initialization dependency
 		if obj, _ := obj.(dependency); obj != nil {
 			M[obj] = &graphNode{obj: obj}
@@ -215,7 +215,7 @@ func dependencyGraph(objMap map[Object]*declInfo) []*graphNode {
 	// to be scheduled for initialization in correct order relative to other nodes.)
 	for obj, n := range M {
 		// for each dependency obj -> d (= deps[i]), create graph edges n->s and s->n
-		for d := range objMap[obj].deps {
+		for d := range ObjMap[obj].deps {
 			// only consider nodes that may be an initialization dependency
 			if d, _ := d.(dependency); d != nil {
 				d := M[d]

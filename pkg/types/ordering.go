@@ -27,7 +27,7 @@ func (check *Checker) resolveOrder() []Object {
 	var ifaces, others []Object
 
 	// collect interface types with their dependencies, and all other objects
-	for obj := range check.objMap {
+	for obj := range check.ObjMap {
 		if ityp := check.interfaceFor(obj); ityp != nil {
 			ifaces = append(ifaces, obj)
 			// determine dependencies on embedded interfaces
@@ -40,7 +40,7 @@ func (check *Checker) resolveOrder() []Object {
 					if ident, _ := f.Type.(*ast.Ident); ident != nil {
 						embedded := check.pkg.scope.Lookup(ident.Name)
 						if check.interfaceFor(embedded) != nil {
-							check.objMap[obj].addDep(embedded)
+							check.ObjMap[obj].addDep(embedded)
 						}
 					}
 				}
@@ -73,7 +73,7 @@ func (check *Checker) interfaceFor(obj Object) *ast.InterfaceType {
 	if tname == nil {
 		return nil // not a type
 	}
-	d := check.objMap[obj]
+	d := check.ObjMap[obj]
 	if d == nil {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
 		unreachable()
@@ -95,7 +95,7 @@ func (check *Checker) appendInPostOrder(order *[]Object, obj Object, visited obj
 	}
 	visited[obj] = true
 
-	d := check.objMap[obj]
+	d := check.ObjMap[obj]
 	for _, obj := range orderedSetObjects(d.deps) {
 		check.appendInPostOrder(order, obj, visited)
 	}
