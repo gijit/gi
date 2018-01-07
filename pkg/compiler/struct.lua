@@ -32,9 +32,22 @@ function __reg:NewInstance(name, data)
       setmetatable(data,{__index = methodset})
       return data
 end
-   
+
+function __reg:StructPrinter()
+     local props = self[_giPrivateStructProps]
+     local len = props["len"]
+     local s = "struct ".. _showStruct(props) .." of length " .. tostring(len) .. " is _giStruct{"
+     local r = t[_giPrivateStructRaw]
+     for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
+     return s .. "}"
+end
+
+
 function __reg:RegisterStruct(name)
       local methodset = {}
+      methodset.__tostring = __reg.StructPrinter
+      methodset._giPrivateStructProps = {len=0}
+
       self.structs[name] = methodset
       return methodset
 end

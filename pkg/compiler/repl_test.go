@@ -288,7 +288,7 @@ func Test018ReadFromMap(t *testing.T) {
 
 		files, err := FetchPrelude(".")
 		panicOn(err)
-		SetupPrelude(vm, files)
+		LuaDoFiles(vm, files)
 
 		inc := NewIncrState()
 
@@ -327,7 +327,7 @@ func Test018ReadFromSlice(t *testing.T) {
 
 		files, err := FetchPrelude(".")
 		panicOn(err)
-		SetupPrelude(vm, files)
+		LuaDoFiles(vm, files)
 
 		inc := NewIncrState()
 
@@ -507,20 +507,21 @@ func Test026LenOfString(t *testing.T) {
 	})
 }
 
+/* simplify in 028 and come back once that's working
 func Test027StructMethods(t *testing.T) {
 
 	cv.Convey(`a simple method call through an interface to a struct method should translate`, t, func() {
 
 		code := `
-type Dog interface { 
-    Write(with string) string 
+type Dog interface {
+    Write(with string) string
 }
 
-type Beagle struct{ 
-    word string 
-} 
+type Beagle struct{
+    word string
+}
 
-func (b *Beagle) Write(with string) string { 
+func (b *Beagle) Write(with string) string {
     return b.word + ":it was a dark and stormy night, " + with
 }
 
@@ -533,10 +534,10 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        Dog    = __reg:RegisterInterface("Dog")
-        Beagle = __reg:RegisterStruct("Beagle");
+        __reg:RegisterInterface("Dog")
+        __reg:RegisterStruct("Beagle");
 
-	    function Beagle:Write(with) 
+	    function Beagle:Write(with)
             b = self;
   		    return b.word .. ":it was a dark and stormy night" .. with;
      	end;
@@ -559,5 +560,29 @@ book := snoopy.Write("with a pen")`
 		DumpLuaStack(vm)
 
 		mustLuaString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+	})
+}
+*/
+
+func Test028StructMethods(t *testing.T) {
+
+	cv.Convey(`a simple allocation of a struct should translate`, t, func() {
+
+		code := `
+type Beagle struct{ 
+    word string 
+} 
+var snoopy = &Beagle{word:"hiya"}
+_ = snoopy
+`
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+        __reg:RegisterStruct("Beagle");
+        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
+`)
+
 	})
 }
