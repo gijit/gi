@@ -9,6 +9,26 @@ ahead-of-time compiled Go code.
 
 status
 ------
+
+2018 Jan 7: latest update
+------
+Today we acheived passing (light) tests for method definition and invocation!
+
+Also a significant discovery for the object system: Steve Donovan's Luar
+provides object exchange both ways between Go -> Lua and Lua -> Go.
+
+That should influence our design of our Go source -> Lua source mapping. If we
+map in a way that matches what Luar does when it translates from
+Go binary -> Lua binary, then our objects will translate cleanly
+into binary Go calls made by reflection.
+
+Even more: Luar provides access to the full Go runtime and channels
+via reflection. Nice! We don't have to reinvent the wheel, and we
+get to use the high-performance multicore Go scheduler.
+
+
+earlier summary
+-----
 Early stages, work in progress. Contribute!
 
 Currently incremental type checking is applied
@@ -78,18 +98,13 @@ $    #
 $    # 'make onetime' needs to be run once, the
 $    # first time you install `gi`. This
 $    # is required the first time you build
-$    # `gi`. What this does is install the version
+$    # `gi`. What this does is compile the version
 $    # of LuaJIT that we depend on, namely the
 $    # LuaJIT_2.1.0-beta3 source that has been
 $    # built with XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
 $    # You can see this any other build adjustements
 $    # that we have made in the LuaJIT Makefile:
 $    # github.com/go-interpreter/gi/cmd/gi/vendor/github.com/LuaJIT/LuaJIT/src
-$    #
-$    # Shortcut to sanity: So use the `gi` build of LuaJIT.
-$    # Don't guess/depend on
-$    # an old or differently configured LuaJIT that you
-$    # may have already on your computer.
 $    #
 $    # Why is it sudoing and asking for my password?
 $    #
@@ -99,11 +114,6 @@ $    # of LuaJIT does a sudo to install a luajit
 $    # symlink in /usr/local/bin/luajit.
 $    # You may need to provide the root password if you
 $    # want that installation, or ctrl-c out if you don't.
-$    #
-$    # We use the __len metatable method for slices,
-$    # maps, and arrays. The only way this will be operational is
-$    # if XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used on
-$    # the build.
 $
 $ make onetime
 $
