@@ -42,14 +42,14 @@ type exprInfo struct {
 // funcInfo stores the information required for type-checking a function.
 type funcInfo struct {
 	name string    // for debugging/tracing only
-	decl *declInfo // for cycle detection
+	decl *DeclInfo // for cycle detection
 	sig  *Signature
 	body *ast.BlockStmt
 }
 
 // A context represents the context within which an object is type-checked.
 type context struct {
-	decl          *declInfo      // package-level declaration whose init expression/function body is checked
+	decl          *DeclInfo      // package-level declaration whose init expression/function body is checked
 	scope         *Scope         // top-most scope for lookups
 	iota          constant.Value // value of iota in a constant declaration; nil otherwise
 	sig           *Signature     // function signature if inside a function; nil otherwise
@@ -76,7 +76,7 @@ type Checker struct {
 	fset *token.FileSet
 	pkg  *Package
 	*Info
-	ObjMap map[Object]*declInfo   // maps package-level object to declaration info
+	ObjMap map[Object]*DeclInfo   // maps package-level object to declaration info
 	impMap map[importKey]*Package // maps (import path, source directory) to (complete or fake) package
 
 	// information collected during type-checking of a set of package files
@@ -146,7 +146,7 @@ func (check *Checker) rememberUntyped(e ast.Expr, lhs bool, mode operandMode, ty
 	m[e] = exprInfo{lhs, mode, typ, val}
 }
 
-func (check *Checker) later(name string, decl *declInfo, sig *Signature, body *ast.BlockStmt) {
+func (check *Checker) later(name string, decl *DeclInfo, sig *Signature, body *ast.BlockStmt) {
 	check.funcs = append(check.funcs, funcInfo{name, decl, sig, body})
 }
 
@@ -172,7 +172,7 @@ func NewChecker(conf *Config, fset *token.FileSet, pkg *Package, info *Info) *Ch
 		fset:   fset,
 		pkg:    pkg,
 		Info:   info,
-		ObjMap: make(map[Object]*declInfo),
+		ObjMap: make(map[Object]*DeclInfo),
 		impMap: make(map[importKey]*Package),
 	}
 }

@@ -61,7 +61,7 @@ func (check *Checker) initOrder() {
 	// In a valid Go program, those nodes always have zero dependencies (after
 	// removing all incoming dependencies), otherwise there are initialization
 	// cycles.
-	emitted := make(map[*declInfo]bool)
+	emitted := make(map[*DeclInfo]bool)
 	for len(pq) > 0 {
 		// get the next node
 		n := heap.Pop(&pq).(*graphNode)
@@ -113,11 +113,11 @@ func (check *Checker) initOrder() {
 		}
 		emitted[info] = true
 
-		infoLhs := info.lhs // possibly nil (see declInfo.lhs field comment)
+		infoLhs := info.Lhs // possibly nil (see declInfo.lhs field comment)
 		if infoLhs == nil {
 			infoLhs = []*Var{v}
 		}
-		init := &Initializer{infoLhs, info.init}
+		init := &Initializer{infoLhs, info.Init}
 		check.Info.InitOrder = append(check.Info.InitOrder, init)
 	}
 
@@ -134,7 +134,7 @@ func (check *Checker) initOrder() {
 // findPath returns the (reversed) list of objects []Object{to, ... from}
 // such that there is a path of object dependencies from 'from' to 'to'.
 // If there is no such path, the result is nil.
-func findPath(ObjMap map[Object]*declInfo, from, to Object, visited objSet) []Object {
+func findPath(ObjMap map[Object]*DeclInfo, from, to Object, visited objSet) []Object {
 	if visited[from] {
 		return nil // node already seen
 	}
@@ -200,7 +200,7 @@ func (s *nodeSet) add(p *graphNode) {
 // dependencyGraph computes the object dependency graph from the given ObjMap,
 // with any function nodes removed. The resulting graph contains only constants
 // and variables.
-func dependencyGraph(ObjMap map[Object]*declInfo) []*graphNode {
+func dependencyGraph(ObjMap map[Object]*DeclInfo) []*graphNode {
 	// M is the dependency (Object) -> graphNode mapping
 	M := make(map[dependency]*graphNode)
 	for obj := range ObjMap {

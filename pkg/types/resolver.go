@@ -14,14 +14,14 @@ import (
 	"unicode"
 )
 
-// A declInfo describes a package-level const, type, var, or func declaration.
-type declInfo struct {
-	file  *Scope        // scope of file containing this declaration
-	lhs   []*Var        // lhs of n:1 variable declarations, or nil
-	typ   ast.Expr      // type, or nil
-	init  ast.Expr      // init/orig expression, or nil
-	fdecl *ast.FuncDecl // func declaration, or nil
-	alias bool          // type alias declaration
+// A DeclInfo describes a package-level const, type, var, or func declaration.
+type DeclInfo struct {
+	File  *Scope        // scope of file containing this declaration
+	Lhs   []*Var        // lhs of n:1 variable declarations, or nil
+	Typ   ast.Expr      // type, or nil
+	Init  ast.Expr      // init/orig expression, or nil
+	Fdecl *ast.FuncDecl // func declaration, or nil
+	Alias bool          // type alias declaration
 
 	// The deps field tracks initialization expression dependencies.
 	// As a special (overloaded) case, it also tracks dependencies of
@@ -34,12 +34,12 @@ type objSet map[Object]bool
 
 // hasInitializer reports whether the declared object has an initialization
 // expression or function body.
-func (d *declInfo) hasInitializer() bool {
-	return d.init != nil || d.fdecl != nil && d.fdecl.Body != nil
+func (d *DeclInfo) hasInitializer() bool {
+	return d.Init != nil || d.Fdecl != nil && d.Fdecl.Body != nil
 }
 
 // addDep adds obj to the set of objects d's init expression depends on.
-func (d *declInfo) addDep(obj Object) {
+func (d *DeclInfo) addDep(obj Object) {
 	m := d.deps
 	if m == nil {
 		m = make(objSet)
@@ -101,7 +101,7 @@ func validatedImportPath(path string) (string, error) {
 
 // declarePkgObj declares obj in the package scope, records its ident -> obj mapping,
 // and updates check.ObjMap. The object must not be a function or method.
-func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *declInfo) {
+func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *DeclInfo) {
 	assert(ident.Name == obj.Name())
 
 	// spec: "A package-scope or file-scope identifier with name init
@@ -349,7 +349,7 @@ func (check *Checker) collectObjects() {
 									init = last.Values[i]
 								}
 
-								d := &declInfo{file: fileScope, typ: last.Type, init: init}
+								d := &DeclInfo{File: fileScope, Typ: last.Type, Init: init}
 								check.declarePkgObj(name, obj, d)
 							}
 
@@ -358,15 +358,15 @@ func (check *Checker) collectObjects() {
 						case token.VAR:
 							lhs := make([]*Var, len(s.Names))
 							// If there's exactly one rhs initializer, use
-							// the same declInfo d1 for all lhs variables
+							// the same DeclInfo d1 for all lhs variables
 							// so that each lhs variable depends on the same
 							// rhs initializer (n:1 var declaration).
-							var d1 *declInfo
+							var d1 *DeclInfo
 							if len(s.Values) == 1 {
 								// The lhs elements are only set up after the for loop below,
-								// but that's ok because declareVar only collects the declInfo
+								// but that's ok because declareVar only collects the DeclInfo
 								// for a later phase.
-								d1 = &declInfo{file: fileScope, lhs: lhs, typ: s.Type, init: s.Values[0]}
+								d1 = &DeclInfo{File: fileScope, Lhs: lhs, Typ: s.Type, Init: s.Values[0]}
 							}
 
 							// declare all variables
@@ -381,7 +381,7 @@ func (check *Checker) collectObjects() {
 									if i < len(s.Values) {
 										init = s.Values[i]
 									}
-									d = &declInfo{file: fileScope, typ: s.Type, init: init}
+									d = &DeclInfo{File: fileScope, Typ: s.Type, Init: init}
 								}
 
 								check.declarePkgObj(name, obj, d)
@@ -395,7 +395,7 @@ func (check *Checker) collectObjects() {
 
 					case *ast.TypeSpec:
 						obj := NewTypeName(s.Name.Pos(), pkg, s.Name.Name, nil)
-						check.declarePkgObj(s.Name, obj, &declInfo{file: fileScope, typ: s.Type, alias: s.Assign.IsValid()})
+						check.declarePkgObj(s.Name, obj, &DeclInfo{File: fileScope, Typ: s.Type, Alias: s.Assign.IsValid()})
 
 					default:
 						check.invalidAST(s.Pos(), "unknown ast.Spec node %T", s)
@@ -435,7 +435,7 @@ func (check *Checker) collectObjects() {
 						}
 					}
 				}
-				info := &declInfo{file: fileScope, fdecl: d}
+				info := &DeclInfo{File: fileScope, Fdecl: d}
 				check.ObjMap[obj] = info
 				obj.setOrder(uint32(len(check.ObjMap)))
 

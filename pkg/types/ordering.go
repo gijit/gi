@@ -78,10 +78,10 @@ func (check *Checker) interfaceFor(obj Object) *ast.InterfaceType {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
 		unreachable()
 	}
-	if d.typ == nil {
+	if d.Typ == nil {
 		return nil // invalid AST - ignore (will be handled later)
 	}
-	ityp, _ := d.typ.(*ast.InterfaceType)
+	ityp, _ := d.Typ.(*ast.InterfaceType)
 	return ityp
 }
 

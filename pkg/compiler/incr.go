@@ -205,14 +205,21 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// at the repl, we need to just
 	// ignore all re-ordering and take
 	// everything in order as the user gives it to us.
-
+	// so eventually we'd rather eliminate this,
+	// but can't for now.
 	varsWithInit := make(map[*types.Var]bool)
 	for _, init := range c.p.InitOrder {
 		for _, o := range init.Lhs {
 			varsWithInit[o] = true
 		}
 	}
-	// jea: I had commented the above
+	// jea: I had commented the above. then reverted, which
+	// seemed to fix the missing struct initializing value
+	// in repl_test.go tests 027 and 028. But
+	// now statements are in the wrong order. Mrrrrummph!
+	//    Minor rant:
+	// We need to treat the top level like in a repl like its a
+	// function where sequence of statements matters!
 
 	var typeDecls []*Decl
 	var functions []*ast.FuncDecl
@@ -356,14 +363,56 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 									de.Vars = append(de.Vars, c.varPtrName(o))
 								}
 
-								//jea: begin  comment
+								//jea: can't filter here if we want the
+								// correct order!
 								if _, ok := varsWithInit[o]; !ok {
+
 									de.DceDeps = collectDependencies(func() {
 										// this is producing the $ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
 										// the var snoopy Dog = &Beagle{word:"hiya"}
+										// versus at place2, the Beagle does get printed!
+										//
 										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
 									})
-									//jea: end comment
+
+								} else {
+
+									// jea: copy in from place2
+									nm := c.objectName(o)
+									pp("looking up var with init: '%s'", nm)
+									declInfo, ok := c.p.ObjMap[nm]
+									if !ok {
+										panic(fmt.Sprintf("huh? where is the variable '%s'?", nm))
+									}
+									lhs := make([]ast.Expr, len(init.Lhs))
+										for i, o := range init.Lhs {
+											ident := ast.NewIdent(o.Name())
+											c.p.Defs[ident] = o
+											lhs[i] = c.setType(ident, o.Type())
+											varsWithInit[o] = true
+										}
+										var d Decl
+										d.DceDeps = collectDependencies(func() {
+											c.localVars = nil
+											d.InitCode = c.CatchOutput(1, func() {
+												c.translateStmt(&ast.AssignStmt{
+													Lhs: lhs,
+													Tok: token.DEFINE,
+													Rhs: []ast.Expr{init.Rhs},
+												}, nil)
+											})
+											d.Vars = append(d.Vars, c.localVars...)
+										})
+										if len(init.Lhs) == 1 {
+											if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+												d.DceObjectFilter = init.Lhs[0].Name()
+											}
+										}
+										varDecls = append(varDecls, &d)
+										pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+										newCodeText = append(newCodeText, d.InitCode)
+									}
+
 								}
 								de.DceObjectFilter = o.Name()
 								varDecls = append(varDecls, &de)
@@ -435,38 +484,40 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// jea: we don't do c.p.InitOrder, that would confuse the repl
 	// experience.
 	// was comment start
-	pp("jea, at variables, in package.go:392. vars='%#v'", vars)
-	//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
-	for _, init := range c.p.InitOrder {
-		lhs := make([]ast.Expr, len(init.Lhs))
-		for i, o := range init.Lhs {
-			ident := ast.NewIdent(o.Name())
-			c.p.Defs[ident] = o
-			lhs[i] = c.setType(ident, o.Type())
-			varsWithInit[o] = true
-		}
-		var d Decl
-		d.DceDeps = collectDependencies(func() {
-			c.localVars = nil
-			d.InitCode = c.CatchOutput(1, func() {
-				c.translateStmt(&ast.AssignStmt{
-					Lhs: lhs,
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{init.Rhs},
-				}, nil)
-			})
-			d.Vars = append(d.Vars, c.localVars...)
-		})
-		if len(init.Lhs) == 1 {
-			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-				d.DceObjectFilter = init.Lhs[0].Name()
+	/*
+		pp("jea, at variables, in package.go:392. vars='%#v'", vars)
+		//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
+		for _, init := range c.p.InitOrder {
+			lhs := make([]ast.Expr, len(init.Lhs))
+			for i, o := range init.Lhs {
+				ident := ast.NewIdent(o.Name())
+				c.p.Defs[ident] = o
+				lhs[i] = c.setType(ident, o.Type())
+				varsWithInit[o] = true
 			}
+			var d Decl
+			d.DceDeps = collectDependencies(func() {
+				c.localVars = nil
+				d.InitCode = c.CatchOutput(1, func() {
+					c.translateStmt(&ast.AssignStmt{
+						Lhs: lhs,
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{init.Rhs},
+					}, nil)
+				})
+				d.Vars = append(d.Vars, c.localVars...)
+			})
+			if len(init.Lhs) == 1 {
+				if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+					d.DceObjectFilter = init.Lhs[0].Name()
+				}
+			}
+			varDecls = append(varDecls, &d)
+			pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+			newCodeText = append(newCodeText, d.InitCode)
 		}
-		varDecls = append(varDecls, &d)
-		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-		newCodeText = append(newCodeText, d.InitCode)
-	}
-	// jea: was comment end
+	*/
+	//jea: was comment end
 	pp("jea, functions in package.go:393")
 
 	// ===========================

@@ -78,7 +78,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.context = ctxt
 	}(check.context)
 	check.context = context{
-		scope: d.file,
+		scope: d.File,
 	}
 
 	// Const and var declarations must not have initialization
@@ -89,13 +89,13 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	switch obj := obj.(type) {
 	case *Const:
 		check.decl = d // new package-level const decl
-		check.constDecl(obj, d.typ, d.init)
+		check.constDecl(obj, d.Typ, d.Init)
 	case *Var:
 		check.decl = d // new package-level var decl
-		check.varDecl(obj, d.lhs, d.typ, d.init)
+		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
-		check.typeDecl(obj, d.typ, def, path, d.alias)
+		check.typeDecl(obj, d.Typ, def, path, d.Alias)
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		check.funcDecl(obj, d)
@@ -335,7 +335,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 	}
 }
 
-func (check *Checker) funcDecl(obj *Func, decl *declInfo) {
+func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
 	assert(obj.typ == nil)
 
 	// func declarations cannot use iota
@@ -343,7 +343,7 @@ func (check *Checker) funcDecl(obj *Func, decl *declInfo) {
 
 	sig := new(Signature)
 	obj.typ = sig // guard against cycles
-	fdecl := decl.fdecl
+	fdecl := decl.Fdecl
 	check.funcType(sig, fdecl.Recv, fdecl.Type)
 	if sig.recv == nil && obj.name == "init" && (sig.params.Len() > 0 || sig.results.Len() > 0) {
 		check.errorf(fdecl.Pos(), "func init must have no arguments and no return values")

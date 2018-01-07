@@ -14,7 +14,7 @@ import (
 	"sort"
 )
 
-func (check *Checker) funcBody(decl *declInfo, name string, sig *Signature, body *ast.BlockStmt) {
+func (check *Checker) funcBody(decl *DeclInfo, name string, sig *Signature, body *ast.BlockStmt) {
 	if trace {
 		if name == "" {
 			name = "<function literal>"
