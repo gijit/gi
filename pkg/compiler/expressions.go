@@ -176,7 +176,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			if len(elements) == 0 {
 				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)
-				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", tn, t)
+				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				return c.formatExpr(fmt.Sprintf(`_gi_NewArray({}, "%s", %v)`, typeKind(t.Elem()), t.Len()))
 			}
 			zero := c.translateExpr(c.zeroValue(t.Elem())).String()

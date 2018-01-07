@@ -431,15 +431,6 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 									pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
 									newCodeText = append(newCodeText, d.InitCode)
 
-									///////////////
-
-									// jea, my incomplete code, attempting to do the above:
-									/*
-										de.DceObjectFilter = o.Name()
-										varDecls = append(varDecls, &de)
-										pp("place1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
-										newCodeText = append(newCodeText, de.InitCode)
-									*/
 									// end codegen here and now for vars
 								}
 							}
