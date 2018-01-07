@@ -507,7 +507,7 @@ func Test026LenOfString(t *testing.T) {
 	})
 }
 
-/* simplify in 028 and come back once that's working
+// simplify in 028 and come back once that's working
 func Test027StructMethods(t *testing.T) {
 
 	cv.Convey(`a simple method call through an interface to a struct method should translate`, t, func() {
@@ -562,7 +562,6 @@ book := snoopy.Write("with a pen")`
 		mustLuaString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
 }
-*/
 
 func Test028StructMethods(t *testing.T) {
 

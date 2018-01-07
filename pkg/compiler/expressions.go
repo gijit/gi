@@ -39,6 +39,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	exitPrint := false
 	anyExit := false
 	if cl, isCl := expr.(*ast.CompositeLit); isCl {
+		// jea: this depends on the initializers. arg!
 		pp("CompositeLit in translateExpr: cl='%#v'", cl)
 		if cl != nil && cl.Type != nil {
 			if id, isId := cl.Type.(*ast.Ident); isId {
@@ -140,6 +141,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 	pp("expressions.go:115, expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
+		// jea: this depends on the initializers!
 		pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
 		if ptrType, isPointer := exprType.(*types.Pointer); isPointer {
 			exprType = ptrType.Elem()
@@ -272,6 +274,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch x := astutil.RemoveParens(e.X).(type) {
 			case *ast.CompositeLit:
+				panic("where?")
 				return c.formatExpr("$newDataPointer(%e, %s)", x, c.typeName(c.p.TypeOf(e)))
 			case *ast.Ident:
 				obj := c.p.Uses[x].(*types.Var)
@@ -1202,6 +1205,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 	case *types.Struct, *types.Array:
 		switch expr.(type) {
 		case nil, *ast.CompositeLit:
+			panic("where?")
 			// nothing
 		default:
 			return c.formatExpr("$clone(%e, %s)", expr, c.typeName(desiredType))

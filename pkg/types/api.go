@@ -219,7 +219,7 @@ type Info struct {
 	// in source order. Variables without an initialization expression do not
 	// appear in this list.
 	// jea: hurtful to reorder assignments at the repl, don't do it.
-	// InitOrder []*Initializer
+	InitOrder []*Initializer
 
 	// standalone statements/expressions, in order
 	//NewCode []ast.Node

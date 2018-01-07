@@ -188,6 +188,7 @@ func (c *funcContext) zeroValue(ty types.Type) ast.Expr {
 			panic(fmt.Sprintf("Unhandled basic type: %v\n", t))
 		}
 	case *types.Array, *types.Struct:
+		panic("where?")
 		return c.setType(&ast.CompositeLit{}, ty)
 	case *types.Chan, *types.Interface, *types.Map, *types.Signature, *types.Slice, *types.Pointer:
 		// fall through to "nil"

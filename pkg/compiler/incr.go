@@ -205,14 +205,15 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// at the repl, we need to just
 	// ignore all re-ordering and take
 	// everything in order as the user gives it to us.
-	/*
-		varsWithInit := make(map[*types.Var]bool)
-		for _, init := range c.p.InitOrder {
-			for _, o := range init.Lhs {
-				varsWithInit[o] = true
-			}
+
+	varsWithInit := make(map[*types.Var]bool)
+	for _, init := range c.p.InitOrder {
+		for _, o := range init.Lhs {
+			varsWithInit[o] = true
 		}
-	*/
+	}
+	// jea: I had commented the above
+
 	var typeDecls []*Decl
 	var functions []*ast.FuncDecl
 	var vars []*types.Var
@@ -355,13 +356,15 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 									de.Vars = append(de.Vars, c.varPtrName(o))
 								}
 
-								//jea: if _, ok := varsWithInit[o]; !ok {
-								de.DceDeps = collectDependencies(func() {
-									// this is producing the $ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
-									// the var snoopy Dog = &Beagle{word:"hiya"}
-									de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
-								})
-								//jea: }
+								//jea: begin  comment
+								if _, ok := varsWithInit[o]; !ok {
+									de.DceDeps = collectDependencies(func() {
+										// this is producing the $ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
+										// the var snoopy Dog = &Beagle{word:"hiya"}
+										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+									})
+									//jea: end comment
+								}
 								de.DceObjectFilter = o.Name()
 								varDecls = append(varDecls, &de)
 								pp("place1, appending to newCodeText: de.InitCode='%s'", string(de.InitCode))
@@ -431,39 +434,39 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 	// jea: we don't do c.p.InitOrder, that would confuse the repl
 	// experience.
-	/*
-		pp("jea, at variables, in package.go:392. vars='%#v'", vars)
-		//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
-		for _, init := range c.p.InitOrder {
-			lhs := make([]ast.Expr, len(init.Lhs))
-			for i, o := range init.Lhs {
-				ident := ast.NewIdent(o.Name())
-				c.p.Defs[ident] = o
-				lhs[i] = c.setType(ident, o.Type())
-				varsWithInit[o] = true
-			}
-			var d Decl
-			d.DceDeps = collectDependencies(func() {
-				c.localVars = nil
-				d.InitCode = c.CatchOutput(1, func() {
-					c.translateStmt(&ast.AssignStmt{
-						Lhs: lhs,
-						Tok: token.DEFINE,
-						Rhs: []ast.Expr{init.Rhs},
-					}, nil)
-				})
-				d.Vars = append(d.Vars, c.localVars...)
-			})
-			if len(init.Lhs) == 1 {
-				if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-					d.DceObjectFilter = init.Lhs[0].Name()
-				}
-			}
-			varDecls = append(varDecls, &d)
-			pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-			newCodeText = append(newCodeText, d.InitCode)
+	// was comment start
+	pp("jea, at variables, in package.go:392. vars='%#v'", vars)
+	//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
+	for _, init := range c.p.InitOrder {
+		lhs := make([]ast.Expr, len(init.Lhs))
+		for i, o := range init.Lhs {
+			ident := ast.NewIdent(o.Name())
+			c.p.Defs[ident] = o
+			lhs[i] = c.setType(ident, o.Type())
+			varsWithInit[o] = true
 		}
-	*/
+		var d Decl
+		d.DceDeps = collectDependencies(func() {
+			c.localVars = nil
+			d.InitCode = c.CatchOutput(1, func() {
+				c.translateStmt(&ast.AssignStmt{
+					Lhs: lhs,
+					Tok: token.DEFINE,
+					Rhs: []ast.Expr{init.Rhs},
+				}, nil)
+			})
+			d.Vars = append(d.Vars, c.localVars...)
+		})
+		if len(init.Lhs) == 1 {
+			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+				d.DceObjectFilter = init.Lhs[0].Name()
+			}
+		}
+		varDecls = append(varDecls, &d)
+		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+		newCodeText = append(newCodeText, d.InitCode)
+	}
+	// jea: was comment end
 	pp("jea, functions in package.go:393")
 
 	// ===========================
@@ -656,7 +659,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 		})
 		// jea: leave these off for now. might bring back later.
-		// allby = append(allby, d.MethodListCode...)
+		allby = append(allby, d.MethodListCode...)
 
 		switch t := o.Type().Underlying().(type) {
 		case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
@@ -667,7 +670,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			// example of what is generated:
 			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}]);
 
-			//allby = append(allby, d.TypeInitCode...)
+			allby = append(allby, d.TypeInitCode...)
 		}
 	})
 	return &d, allby

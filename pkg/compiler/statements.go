@@ -802,6 +802,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	pp("Boogle here xxx 3") // last Boogle before we diverge!
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
+		panic("where?")
 		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
 		return fmt.Sprintf("%s = %s;", c.translateExpr(lhs), rhsExpr) // skip $copy
 	}

@@ -244,7 +244,7 @@ func (check *Checker) checkFiles(files []*ast.File) (err error) {
 	check.functionBodies()
 	pp("past check.functionBodies")
 	// jea:
-	//check.initOrder()
+	check.initOrder()
 
 	if !check.conf.DisableUnusedImportCheck {
 		check.unusedImports()
