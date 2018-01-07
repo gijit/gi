@@ -506,39 +506,39 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// jea: we don't do c.p.InitOrder, that would confuse the repl
 	// experience.
 	// was comment start
-
-	pp("jea, at variables, in package.go:392. vars='%#v'", vars)
-	//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
-	for _, init := range c.p.InitOrder {
-		lhs := make([]ast.Expr, len(init.Lhs))
-		for i, o := range init.Lhs {
-			ident := ast.NewIdent(o.Name())
-			c.p.Defs[ident] = o
-			lhs[i] = c.setType(ident, o.Type())
-			varsWithInit[o] = true
-		}
-		var d Decl
-		d.DceDeps = collectDependencies(func() {
-			c.localVars = nil
-			d.InitCode = c.CatchOutput(1, func() {
-				c.translateStmt(&ast.AssignStmt{
-					Lhs: lhs,
-					Tok: token.DEFINE,
-					Rhs: []ast.Expr{init.Rhs},
-				}, nil)
-			})
-			d.Vars = append(d.Vars, c.localVars...)
-		})
-		if len(init.Lhs) == 1 {
-			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
-				d.DceObjectFilter = init.Lhs[0].Name()
+	/*
+		pp("jea, at variables, in package.go:392. vars='%#v'", vars)
+		//pp("jea, package.go:393. c.p.InitOrder='%#v'", c.p.InitOrder)
+		for _, init := range c.p.InitOrder {
+			lhs := make([]ast.Expr, len(init.Lhs))
+			for i, o := range init.Lhs {
+				ident := ast.NewIdent(o.Name())
+				c.p.Defs[ident] = o
+				lhs[i] = c.setType(ident, o.Type())
+				varsWithInit[o] = true
 			}
+			var d Decl
+			d.DceDeps = collectDependencies(func() {
+				c.localVars = nil
+				d.InitCode = c.CatchOutput(1, func() {
+					c.translateStmt(&ast.AssignStmt{
+						Lhs: lhs,
+						Tok: token.DEFINE,
+						Rhs: []ast.Expr{init.Rhs},
+					}, nil)
+				})
+				d.Vars = append(d.Vars, c.localVars...)
+			})
+			if len(init.Lhs) == 1 {
+				if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
+					d.DceObjectFilter = init.Lhs[0].Name()
+				}
+			}
+			varDecls = append(varDecls, &d)
+			pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
+			newCodeText = append(newCodeText, d.InitCode)
 		}
-		varDecls = append(varDecls, &d)
-		pp("place2, appending to newCodeText: d.InitCode='%s'", string(d.InitCode))
-		newCodeText = append(newCodeText, d.InitCode)
-	}
-
+	*/
 	//jea: was comment end
 	pp("jea, functions in package.go:393")
 

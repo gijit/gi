@@ -819,7 +819,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		}
 
 		if recv != nil && !isBlank(recv) {
-			this := "this"
+			this := "self"
 			if isWrapped(c.p.TypeOf(recv)) {
 				this = "this.$val"
 			}

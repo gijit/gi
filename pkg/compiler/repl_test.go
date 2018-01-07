@@ -539,10 +539,10 @@ book := snoopy.Write("with a pen")`
 
 	    function Beagle:Write(with)
             b = self;
-  		    return b.word .. ":it was a dark and stormy night" .. with;
+  		    return b.word .. ":it was a dark and stormy night, " .. with;
      	end;
 
-        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"}});
+        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
 
   	    _r = snoopy:Write("with a pen");
   	    book = _r;
