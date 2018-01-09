@@ -12,11 +12,24 @@ status
 
 2018 Jan 8 update
 ------
-Today we landed multiline support. We accurately evalutate
-Go expressions as they are entered, even with newlines.
+Today we landed multiline support. We evalutate
+Go expressions as they are entered, and these
+can now span multiple lines. This lifts the
+prior limitation that meant that functions
+and types needed to be defined all on one line.
+
 This was fun to put together. I used the actual gc front end that
-parses regular go code. The advantage is that we know
-start with correct parsing of the whole language.
+parses regular go code. Since gc is written in Go,
+why not leverage it! The advantage is that we know we
+are building on correct parsing of the whole language.
+
+Of course minor tweaks had to be made to allow statements and
+expressions at global scope. Happily, from our experience
+adding the same provisions to gopherJS, we knew these
+were relatively minor changes. See the updated
+demo transcript below in this readme for a multi-line
+function definition taking effect.
+
 
 
 2018 Jan 7: latest update
