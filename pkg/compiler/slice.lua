@@ -9,7 +9,7 @@ _giPrivateSliceProps = {}
  _giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
-      print("newindex called for key", k, " val=", v)
+      --print("newindex called for key", k, " val=", v)
       local len = t[_giPrivateSliceProps]["len"]
       --print("newindex called for key", k, " len at start is ", len)
       if t[_giPrivateSliceRaw][k] == nil then
@@ -27,7 +27,7 @@ _giPrivateSliceProps = {}
       end
       t[_giPrivateSliceRaw][k] = v
       t[_giPrivateSliceProps]["len"] = len
-      print("len at end of newidnex is ", len)
+      --print("len at end of newidnex is ", len)
     end,
 
   -- __index allows us to have fields to access the count.

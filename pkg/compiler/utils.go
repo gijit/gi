@@ -677,7 +677,7 @@ func setRangeCheck(constantIndex, array bool) string {
 		return "%1e[%2f] = %3s"
 	}
 
-	return "_setRangeCheck(%1e, %2f, %3s)"
+	return "_gi_SetRangeCheck(%1e, %2f, %3s)"
 }
 
 func rangeCheck(pattern string, constantIndex, array bool) string {

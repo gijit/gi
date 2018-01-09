@@ -10,6 +10,15 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 8 update
+------
+Today we landed multiline support. We accurately evalutate
+Go expressions as they are entered, even with newlines.
+This fun to work up, as I used the actual gc front end that
+parses regular go code. The advantage is that we know
+start with correct parsing of the whole language.
+
+
 2018 Jan 7: latest update
 ------
 Today we acheived passing (light) tests for method definition and invocation!
