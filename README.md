@@ -14,7 +14,7 @@ status
 ------
 Today we landed multiline support. We accurately evalutate
 Go expressions as they are entered, even with newlines.
-This fun to work up, as I used the actual gc front end that
+This was fun to put together. I used the actual gc front end that
 parses regular go code. The advantage is that we know
 start with correct parsing of the whole language.
 
@@ -100,21 +100,13 @@ a viable embedded target.
 
 ~~~
 $ go get -t -u -v github.com/go-interpreter/gi/...
-$ cd $GOPATH/src/github.com/go-interpreter/gi/cmd/gi
+$ cd $GOPATH/src/github.com/go-interpreter/gi && make
 $
-$    # Q: why is 'make onetime` necessary at first install?
-$    #
-$    # 'make onetime' needs to be run once, the
-$    # first time you install `gi`.
-$    # What this does is compile the version
-$    # of LuaJIT that we depend on, for embedding in
-$    # the gi binary.
+$ ... wait for gi build to finish, it builds luajit
+$     using C, so it takes ~ 20 seconds to install `gi`.
 $
-$ make onetime
-$
-$ make install
-$
-$ gi # start me up
+$ gi # start me up (will be in $GOPATH/bin/gi now).
+
 ====================
 gi: a go interpreter
 ====================
@@ -123,61 +115,80 @@ Copyright (c) 2018, Jason E. Aten, Ph.D.
 License: 3-clause BSD. See the LICENSE file at
 https://github.com/go-interpreter/gi/blob/master/LICENSE
 ====================
-  [gi is an interactive Golang environment,
-   also known as a REPL or Read-Eval-Print-Loop.]
-  [type ctrl-d to exit]
-  [type :help for help]
-  [gi -h for flag help]
-  [gi -q to start quietly]
+  [ gi is an interactive Golang environment,
+    also known as a REPL or Read-Eval-Print-Loop ]
+  [ type ctrl-d to exit ]
+  [ type :help for help ]
+  [ gi -h for flag help ]
+  [ gi -q to start quietly ]
 ====================
-built: '2018-01-04T22:30:28-0600'
-last-git-commit-hash: '6f105a4b7a74509c6117105c908e9a6c38459119'
-nearest-git-tag: 'v0.0.8'
+built: '2018-01-08T23:46:07-0600'
+last-git-commit-hash: 'db302d2acb37d3c2ba2a0d376b6f233045928730'
+nearest-git-tag: 'v0.3.3'
 git-branch: 'master'
 go-version: 'go_version_go1.9_darwin/amd64'
 luajit-version: 'LuaJIT_2.1.0-beta3_--_Copyright_(C)_2005-2017_Mike_Pall._http://luajit.org/'
 ==================
+using this prelude directory: '/Users/jaten/go/src/github.com/go-interpreter/gi/pkg/compiler'
+using these files as prelude: array.lua, map.lua, prelude.lua, slice.lua, struct.lua
+gi>
+
 gi> a := []string{"howdy", "gophers!"}
 
+gi> a   // ^^ make data using Go's literals. inspect it by typing the variables name.
+slice of length 2 is _giSlice{[0]= howdy, [1]= gophers!, }
+
+gi> a[0]  = "you rock" // data can be changed
+
 gi> a
-table of length 2 is _giSlice{[0]= howdy, [1]= gophers!, }
+slice of length 2 is _giSlice{[0]= you rock, [1]= gophers!, }
 
-gi> a[0] = "you rock"
+gi> // the Go type checker helps you quickly catch blunders, at compile time.
 
-gi> a
-table of length 2 is _giSlice{[0]= you rock, [1]= gophers!, }
+gi> a[-1] = "compile-time-out-of-bounds-access" 
+oops: 'problem detected during Go static type checking: 'where error? err = '1:3: invalid argument: index -1 (constant of type int) must not be negative''' on input 'a[-1] = "compile-time-out-of-bounds-access" 
+'
 
-gi> a[-1] = "compile-time-out-of-bounds-access"
-oops: 'problem detected during Go static type checking: 'where error? err = '1:3: invalid argument: index -1 (constant of type int) must not be negative''' on input 'a[-1] = "compile-time-out-of-bounds-access"'
+gi> // runtime bounds checks are compiled in too:
 
 gi> a[100] = "runtime-out-of-bounds-access"
-error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_setRangeCheck(a, 100, "runtime-out-of-bounds-access");'
+error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_gi_SetRangeCheck(a, 100, "runtime-out-of-bounds-access");'
 lua stack:
-String : 	 [string "..."]:91: index out of range
+String : 	 ...rc/github.com/go-interpreter/gi/pkg/compiler/prelude.lua:14: index out of range
+
+gi> // We can define functions:
 
 gi> func myFirstGiFunc(a []string) int {
-oops: 'problem detected during Go static type checking: '1:37: expected '}', found 'EOF''' on input 'func myFirstGiFunc(a []string) int {'
+>>>    for i := range a {
+>>>      println("our input is a[",i,"] = ", a[i]) 
+>>>    };
+>>>    return 43
+>>> }
+func myFirstGiFunc(a []string) int {
 
-gi> // multiline not yet done! :)
+	for i := range a {
 
-gi> func myFirstGiFunc(a []string) int { for i := range a { println("our input is a[",i,"] = ", a[i]) }; return 43 }
+		println("our input is a[", i, "] = ", a[i])
 
+	}
+
+	return 43
+
+}
 gi> myFirstGiFunc(a)
 our input is a[	0	] = 	you rock
 our input is a[	1	] = 	gophers!
-43
 
-gi> // demo type checking
+gi> // ^^ and call them. They are tracing-JIT compiled on the LuaJIT vm.
 
-gi> b = []int{1,1}
-oops: 'problem detected during Go static type checking: 'where error? err = '1:1: undeclared name: b''' on input 'b = []int{1,1}'
+gi> // more compile time type checking, because it rocks:
 
 gi> b := []int{1,1}
 
 gi> myFirstGiFunc(b)
-oops: 'problem detected during Go static type checking: 'where error? err = '1:15: cannot use b (variable of type []int) as []string value in argument to myFirstGiFunc''' on input 'myFirstGiFunc(b)'
-
-gi> 
+oops: 'problem detected during Go static type checking: 'where error? err = '1:15: cannot use b (variable of type []int) as []string value in argument to myFirstGiFunc''' on input 'myFirstGiFunc(b)
+'
+gi>
 ~~~
 
 # editor support
