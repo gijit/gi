@@ -1,0 +1,20 @@
+commit c3a95afb9403909b44a3180b975342a1c4798088 (HEAD -> master, origin/master, origin/HEAD)
+Author: Jason E. Aten <j.e.aten@gmail.com>
+Date:   Sat Jan 6 21:35:11 2018 -0600
+
+    statically link against LuaJIT 2.1-beta3
+
+commit 24fe5b510806231d29be66de88ab2ce608311d33 (aa/master)
+Author: aarzilli <alessandro.arzilli@gmail.com>
+Date:   Mon Sep 4 17:11:39 2017 +0200
+
+    Changed golua unicode link.
+    
+    Fixes #61
+
+commit 24dee68d5b73dfa9f3bf7634a75af35d93cc18ea
+Author: Flier Lu <flier.lu@gmail.com>
+Date:   Wed Aug 16 11:12:19 2017 +0800
+
+    fix new state crash
+

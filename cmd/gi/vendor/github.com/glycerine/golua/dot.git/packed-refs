@@ -1,0 +1,5 @@
+# pack-refs with: peeled fully-peeled sorted 
+5b0d7c2ec1145993bc2ca2cab453d2360a03874b refs/remotes/origin/afitz-dev
+449a7ea611fc3b54c2c5285295ebbe9b8695367b refs/remotes/origin/lua5.2
+baea951c38c89e5bf7c2a101e56315a3afcfce9e refs/remotes/origin/master
+5afa783d1b14f3334d8670e1a0e77a5228b95b1c refs/remotes/origin/tests

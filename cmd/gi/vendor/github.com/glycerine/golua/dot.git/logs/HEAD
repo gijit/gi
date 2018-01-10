@@ -1,0 +1,4 @@
+0000000000000000000000000000000000000000 baea951c38c89e5bf7c2a101e56315a3afcfce9e Jason E. Aten <j.e.aten@gmail.com> 1514942505 -0600	clone: from https://github.com/glycerine/golua
+baea951c38c89e5bf7c2a101e56315a3afcfce9e 24fe5b510806231d29be66de88ab2ce608311d33 Jason E. Aten <j.e.aten@gmail.com> 1514942538 -0600	pull aa master: Fast-forward
+24fe5b510806231d29be66de88ab2ce608311d33 24fe5b510806231d29be66de88ab2ce608311d33 Jason E. Aten <j.e.aten@gmail.com> 1515296072 -0600	reset: moving to HEAD
+24fe5b510806231d29be66de88ab2ce608311d33 c3a95afb9403909b44a3180b975342a1c4798088 Jason E. Aten <j.e.aten@gmail.com> 1515296111 -0600	commit: statically link against LuaJIT 2.1-beta3

@@ -1,0 +1,6 @@
+- find all calls to lua api that can result in lua_error calls and rework them (for example checkarg stuff)
+- lua.go: Dump implementing lua_dump
+- lua.go: Load implementing lua_load
+- AtPanic slightly broken when nil is passed, if we think passing nil has value to extract the current atpanic function we should also make sure it doesn't break everything
+- threads implementation is probably fucked completely should look into it
+- lauxlib.go:CheckOption is not implemented

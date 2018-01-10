@@ -1,0 +1,13 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[branch "master"]
+[branch "v2"]
+[remote "sd"]
+	url = https://github.com/stevedonovan/luar
+	fetch = +refs/heads/*:refs/remotes/sd/*
+[remote "origin"]
+	url = git@github.com:glcyerine/luar
+	fetch = +refs/heads/*:refs/remotes/origin/*

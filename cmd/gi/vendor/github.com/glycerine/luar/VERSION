@@ -1,0 +1,18 @@
+commit a258c7031e7e375de10ba9442e0dd5d474404249 (HEAD -> v2)
+Author: Pierre Neidhardt <ambrevar@gmail.com>
+Date:   Wed Dec 14 22:27:41 2016 +0530
+
+    Update READE me with v2 changes (LuaObjects, metamethods)
+
+commit aa4a958fc768e78bb46784063645b0cd9742ceed
+Author: Pierre Neidhardt <ambrevar@gmail.com>
+Date:   Wed Dec 14 21:42:14 2016 +0530
+
+    Return 0 instead of calling PushNil() in metamethods
+
+commit c8f16e17d13053c42c5075ceef799e286745d36a
+Author: Pierre Neidhardt <ambrevar@gmail.com>
+Date:   Wed Dec 14 21:22:29 2016 +0530
+
+    Unexport LuaObject struct fields
+
