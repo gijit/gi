@@ -10,6 +10,15 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2019 Jan 9 update
+------
+Functions and methods can now be re-defined at the REPL. The
+type checker was relaxed to allow this.
+
+We changed over from one luajit C binding to anther. The
+new binding is the same one that LuaR uses, so this
+enables LuaR exploration.
+
 2018 Jan 8 update
 ------
 Today we landed multiline support. We evalutate
