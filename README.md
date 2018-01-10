@@ -10,7 +10,17 @@ ahead-of-time compiled Go code.
 status
 ------
 
-2019 Jan 9 update
+2018 Jan 10 update
+------
+With release v0.4.1 we have much improved map support.
+In `gi`, maps now work as in Go. Multiple-valued queries
+properly return the zero-value for the value-type
+when the key is missing, and return the 2nd
+value correctly. Nil keys and values are
+handled properly. `delete` on a map works as
+expected, and maintains the `len` property.
+
+2018 Jan 9 update
 ------
 Functions and methods can now be re-defined at the REPL. The
 type checker was relaxed to allow this.
