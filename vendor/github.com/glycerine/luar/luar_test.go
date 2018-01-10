@@ -67,7 +67,7 @@ function deep_equal(table1, table2)
 end
 `
 
-// We could use luaDUmp as a deepEqual but it is not as precise.
+// We could use luaDump as a deepEqual but it is not as precise.
 const luaDump = `
 function dump(t, name)
 	local visited = {}

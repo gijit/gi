@@ -644,3 +644,65 @@ book := snoopy.Write("with a pen")
 		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
 }
+
+func Test031ValueOkDoubleReturnFromMapQuery(t *testing.T) {
+
+	cv.Convey(`given m := map[int]int{1:1}; then a, ok := m[0] should provide ok false and a = 0, while a, ok := m[1]; should provide ok true and a = 1.`, t, func() {
+
+		code := `
+m := map[int]int{1:1}
+a, ok := m[0]
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+	m = _gi_NewMap("Int", "Int", {[1]=1});
+    a, ok = m[0]
+`)
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+	})
+}
+
+func Test032DeleteOnMapsAndMapsCanStoreNil(t *testing.T) {
+
+	cv.Convey(`delete on maps should work. maps should allow nil as both key and value, and len should still be correct`, t, func() {
+
+		code := `
+m := map[int]int{1:1, 2:2}
+len1 := len(m)
+delete(m, 1)
+len2 := len(m)
+delete(m, 2)
+len3 := len(m)
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt(vm, "len1", 2)
+		LuaMustInt(vm, "len2", 1)
+		LuaMustInt(vm, "len3", 0)
+	})
+}

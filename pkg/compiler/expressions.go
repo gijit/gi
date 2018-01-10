@@ -1003,8 +1003,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("$append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))
 	case "delete":
 		keyType := c.p.TypeOf(args[0]).Underlying().(*types.Map).Key()
-		return c.formatExpr(`%e[%s]= nil`, args[0], c.translateImplicitConversion(args[1], keyType))
-		//return c.formatExpr(`%e("delete", %s)`, args[0], c.translateImplicitConversion(args[1], keyType))
+		return c.formatExpr(`%e("delete",%s)`, args[0], c.translateImplicitConversion(args[1], keyType))
 	case "copy":
 		if basic, isBasic := c.p.TypeOf(args[1]).Underlying().(*types.Basic); isBasic && isString(basic) {
 			return c.formatExpr("$copyString(%e, %e)", args[0], args[1])

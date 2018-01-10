@@ -12,34 +12,72 @@
 _giPrivateMapRaw = {}
 _giPrivateMapProps = {}
 
+-- stored as map value in place of nil, so
+-- we can recognized stored nil values in maps.
+_intentionalNilValue = {}
+
  _giPrivateMapMt = {
 
     __newindex = function(t, k, v)
-      local len = t[_giPrivateMapProps]["len"]
-      --print("newindex called for key", k, " len at start is ", len)
-      if t[_giPrivateMapRaw][k] == nil then
-         if  v ~= nil then
-         -- new value
-            len = len +1
-         end
-      else
-         -- key already present, are we replacing or deleting?
-          if v == nil then 
-              len = len - 1 -- delete
+       --print("newindex called for key", k, " len at start is ", len)
+
+       local props = t[_giPrivateMapProps]
+       local len = props.len
+
+       if k == nil then
+          if props.nilKeyStored then
+             -- replacement, no change in len.
           else
-              -- replace, no count change              
+             -- new key
+             props.len = len + 1
+             props.nilKeyStored = true
           end
+          props.nilValue = v
+          return
+       end
+
+       -- invar: k is not nil
+
+       if v ~= nil then
+          if t[_giPrivateMapRaw][k] == nil then
+             -- new key
+             props.len = len + 1
+          end
+          t[_giPrivateMapRaw][k] = v
+          return
+
+       else
+          -- invar: k is not nil. v is nil.
+
+          if t[_giPrivateMapRaw][k] == nil then
+             -- new key
+             props.len = len + 1
+          end
+          t[_giPrivateMapRaw][k] = _intentionalNilValue
+          return
       end
-      t[_giPrivateMapRaw][k] = v
-      t[_giPrivateMapProps]["len"] = len
       --print("len at end of newidnex is ", len)
     end,
 
-  -- __index allows us to have fields to access the count.
-  --
     __index = function(t, k)
-      --print("index called for key", k)
-      return t[_giPrivateMapRaw][k]
+       --print("index called for key", k)
+       if k == nil then
+          local props = t[_giPrivateMapProps]
+          if props.nilKeyStored then
+             return props.nilValue, true
+          else
+             -- TODO: replace nil with zero-value for the value type.
+             return nil, false
+          end
+       end
+       -- TODO this is't quite right, because the key
+       --  could intentionally have a nil value stored in the map.
+       --
+       local val = t[_giPrivateMapRaw][k]
+       if val == _intentionalNilValue then
+          return nil, true
+       end
+       return val, val ~= nil
     end,
 
     __tostring = function(t)
@@ -80,20 +118,43 @@ _giPrivateMapProps = {}
 
     __call = function(t, ...)
         print("__call() invoked, with ... = ", ...)
-        local oper, key = ...
+        local oper, k = ...
         print("oper is", oper)
-        print("key is ", key)
+        print("key is ", k)
         if oper == "delete" then
+
            -- the hash table delete operation
-           if key == nil then
-              return -- this is a no-op in Go.
+
+           local props = t[_giPrivateMapProps]              
+           local len = props.len
+           print("delete called for key", k, " len at start is ", len)
+                      
+           if k == nil then
+
+              if props.nilKeyStored then
+                 props.nilKeyStored = false
+                 props.nilVaue = nil
+                 props.len = len -1
+              end
+
+              print("len at end of delete is ", props.len)              
+              return
            end
-           -- forward the actual delete
-           t[key]=nil
+
+           if t[_giPrivateMapRaw][k] == nil then
+              -- key not present
+              return
+           end
+           
+           -- key present and key is not nil
+           t[_giPrivateMapRaw][k] = nil
+           props.len = len - 1
+           
+           print("len at end of delete is ", props.len)
         end
     end
  }
-
+ 
 function _gi_NewMap(keyType, valType, x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
@@ -106,7 +167,7 @@ function _gi_NewMap(keyType, valType, x)
       len = len + 1
    end
 
-   local props = {len=len, keyType=keyType, valType=valType}
+   local props = {len=len, keyType=keyType, valType=valType, nilKeyStored=false}
    proxy[_giPrivateMapProps] = props
 
    setmetatable(proxy, _giPrivateMapMt)
