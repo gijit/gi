@@ -60,18 +60,20 @@ _intentionalNilValue = {}
     end,
 
     __index = function(t, k)
-       -- apparently only the 1st value comes back, so
-       -- we return a closure with the two values that
-       -- must be called to get them both out.
-       
-       print("index called for key", k)
+       -- Instead of __index,
+       -- use __call('get', ...) for two valued return and
+       --  proper zero-value return upon not present.
+       -- __index only ever returns one value[1].
+       -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
+              
+       print("__index called for key", k)
        if k == nil then
           local props = t[_giPrivateMapProps]
           if props.nilKeyStored then
-             return function() return props.nilValue, true; end
+             return props.nilValue
           else
              -- TODO: replace nil with zero-value for the value type.
-             return function() return nil, false; end
+             return nil
           end
        end
 
@@ -79,10 +81,9 @@ _intentionalNilValue = {}
        
        local val = t[_giPrivateMapRaw][k]
        if val == _intentionalNilValue then
-          return function() return nil, true; end
+          return nil
        end
-       print("index returning 2nd value of ", val ~= nil)
-       return function() return val, val ~= nil; end
+       return val
     end,
 
     __tostring = function(t)
@@ -123,10 +124,41 @@ _intentionalNilValue = {}
 
     __call = function(t, ...)
         print("__call() invoked, with ... = ", ...)
-        local oper, k = ...
+        local oper, k, zeroVal = ...
         print("oper is", oper)
         print("key is ", k)
-        if oper == "delete" then
+
+        -- we use __call('get', k, zeroVal) instead of __index
+        -- so that we can return multiple values
+        -- to match Go's `a, ok := mymap[k]` call.
+        
+        if oper == "get" then
+
+           print("get called for key", k)
+           if k == nil then
+              local props = t[_giPrivateMapProps]
+              if props.nilKeyStored then
+                 return props.nilValue, true;
+              else
+                 -- key not present returns the zero value for the value.
+                 return zeroVal, false;
+              end
+           end
+           
+           -- k is not nil.
+           
+           local val = t[_giPrivateMapRaw][k]
+           if val == _intentionalNilValue then
+              return nil, true;
+
+           elseif val == nil then
+              -- key not present
+              return zeroVal, false;
+           end
+           
+           return val, true
+           
+        elseif oper == "delete" then
 
            -- the hash table delete operation
 

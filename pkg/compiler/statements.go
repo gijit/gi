@@ -381,13 +381,17 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Printf("%s", c.translateAssign(lhs, s.Rhs[0], s.Tok == token.DEFINE))
 
 		case len(s.Lhs) > 1 && len(s.Rhs) == 1:
+			/*	_tuple = <output of c.translateExpr(s.Rhs[0])>
+				a = _tuple[1];
+				ok = _tuple[2];
+			*/
 			tupleVar := c.newVariable("_tuple")
 			c.Printf("%s = %s;", tupleVar, c.translateExpr(s.Rhs[0]))
 			tuple := c.p.TypeOf(s.Rhs[0]).(*types.Tuple)
 			for i, lhs := range s.Lhs {
 				lhs = astutil.RemoveParens(lhs)
 				if !isBlank(lhs) {
-					c.Printf("%s", c.translateAssign(lhs, c.newIdent(fmt.Sprintf("%s[%d]", tupleVar, i), tuple.At(i).Type()), s.Tok == token.DEFINE))
+					c.Printf("%s", c.translateAssign(lhs, c.newIdent(fmt.Sprintf("%s[%d]", tupleVar, i+1), tuple.At(i).Type()), s.Tok == token.DEFINE))
 				}
 			}
 		case len(s.Lhs) == len(s.Rhs):
