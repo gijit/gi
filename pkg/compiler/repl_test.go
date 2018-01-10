@@ -1,12 +1,27 @@
 package compiler
 
 import (
-	"fmt"
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
-	"github.com/glycerine/luajit"
+	luajit "github.com/glycerine/golua/lua"
 )
+
+func LoadAndRunTestHelper(t *testing.T, vm *luajit.State, translation []byte) {
+	trans := string(translation)
+	interr := vm.LoadString(trans)
+	if interr != 0 {
+		DumpLuaStack(vm)
+		t.Fatalf(`could not LoadString("%s")`, trans)
+	}
+	err := vm.Call(0, 0)
+	if err != nil {
+		//	fmt.Printf("error: '%v'\n", err)
+		DumpLuaStack(vm)
+		vm.Pop(1)
+		t.Fatal(err)
+	}
+}
 
 func Test001LuaTranslation(t *testing.T) {
 	inc := NewIncrState()
@@ -39,9 +54,9 @@ func Test001LuaTranslation(t *testing.T) {
 func Test002LuaEvalIncremental(t *testing.T) {
 
 	// and then eval!
-	vm := luajit.Newstate()
+	vm := luajit.NewState()
 	defer vm.Close()
-	vm.Openlibs()
+	vm.OpenLibs()
 
 	inc := NewIncrState()
 
@@ -51,12 +66,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		err := vm.Loadstring(string(translation))
-		panicOn(err)
-		err = vm.Pcall(0, 0, 0)
-		panicOn(err)
-		DumpLuaStack(vm)
-
+		LoadAndRunTestHelper(t, vm, translation)
 		//fmt.Printf("v back = '%#v'\n", v)
 	}
 	LuaMustInt(vm, "sum", 20)
@@ -283,9 +293,9 @@ func Test018ReadFromMap(t *testing.T) {
 	cv.Convey(`read a map, x := map[int]string{3:"hello", 4:"gophers"}. reading key 3 should provide the value "hello"`, t, func() {
 
 		// and then eval!
-		vm := luajit.Newstate()
+		vm := luajit.NewState()
 		defer vm.Close()
-		vm.Openlibs()
+		vm.OpenLibs()
 
 		files, err := FetchPrelude(".")
 		panicOn(err)
@@ -301,17 +311,7 @@ func Test018ReadFromMap(t *testing.T) {
 			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, expect[i])
 
-			err := vm.Loadstring(string(translation))
-			panicOn(err)
-			err = vm.Pcall(0, 0, 0)
-			if err != nil {
-				fmt.Printf("error: '%v'\n", err)
-				DumpLuaStack(vm)
-				vm.Pop(1)
-				t.Fatal(err)
-			} else {
-				DumpLuaStack(vm)
-			}
+			LoadAndRunTestHelper(t, vm, translation)
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
 		LuaMustString(vm, "x3", "hello")
@@ -322,9 +322,9 @@ func Test018ReadFromSlice(t *testing.T) {
 
 	cv.Convey(`read a slice, x := []int{3, 4}; reading pos/index 0 should provide the value 3`, t, func() {
 
-		vm := luajit.Newstate()
+		vm := luajit.NewState()
 		defer vm.Close()
-		vm.Openlibs()
+		vm.OpenLibs()
 
 		files, err := FetchPrelude(".")
 		panicOn(err)
@@ -340,17 +340,7 @@ func Test018ReadFromSlice(t *testing.T) {
 			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, expect[i])
 
-			err := vm.Loadstring(string(translation))
-			panicOn(err)
-			err = vm.Pcall(0, 0, 0)
-			if err != nil {
-				fmt.Printf("error: '%v'\n", err)
-				DumpLuaStack(vm)
-				vm.Pop(1)
-				t.Fatal(err)
-			} else {
-				DumpLuaStack(vm)
-			}
+			LoadAndRunTestHelper(t, vm, translation)
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
 		LuaMustInt(vm, "x3", 3)
@@ -452,19 +442,15 @@ func Test024MultipleAssignment(t *testing.T) {
 		//cv.So(string(inc.Tr([]byte(src))), cv.ShouldMatchModuloWhiteSpace, `a, b, c = 1, 2, 3;`)
 
 		// verify that it happens correctly.
-		vm := luajit.Newstate()
+		vm := luajit.NewState()
 		defer vm.Close()
-		vm.Openlibs()
+		vm.OpenLibs()
 
 		translation := inc.Tr([]byte(src))
 		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		err := vm.Loadstring(string(translation))
-		panicOn(err)
-		err = vm.Pcall(0, 0, 0)
-		panicOn(err)
-		DumpLuaStack(vm)
+		LoadAndRunTestHelper(t, vm, translation)
 
 		LuaMustInt(vm, "a", 1)
 		LuaMustInt(vm, "b", 2)
@@ -495,16 +481,11 @@ func Test026LenOfString(t *testing.T) {
 	a = "hi"; b = #a;`)
 
 		// and verify that it happens correctly.
-		vm := luajit.Newstate()
+		vm := luajit.NewState()
 		defer vm.Close()
-		vm.Openlibs()
+		vm.OpenLibs()
 
-		err := vm.Loadstring(string(translation))
-		panicOn(err)
-		err = vm.Pcall(0, 0, 0)
-		panicOn(err)
-		DumpLuaStack(vm)
-
+		LoadAndRunTestHelper(t, vm, translation)
 		LuaMustInt(vm, "b", 2)
 	})
 }
@@ -618,9 +599,9 @@ book := snoopy.Write("with a pen")`
 `)
 
 		// and verify that it happens correctly
-		vm := luajit.Newstate()
+		vm := luajit.NewState()
 		defer vm.Close()
-		vm.Openlibs()
+		vm.OpenLibs()
 		files, err := FetchPrelude(".")
 		panicOn(err)
 		LuaDoFiles(vm, files)
