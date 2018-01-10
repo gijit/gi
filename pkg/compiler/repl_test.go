@@ -657,12 +657,6 @@ a, ok := m[0]
 		inc := NewIncrState()
 		translation := inc.Tr([]byte(code))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`
-	m = _gi_NewMap("Int", "Int", {[1]=1});
-    a, ok = m[0]
-`)
-
 		// and verify that it happens correctly
 		vm := luajit.NewState()
 		defer vm.Close()
@@ -672,7 +666,8 @@ a, ok := m[0]
 		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+		LuaMustBool(vm, "ok", true)
+		LuaMustInt(vm, "a", 1)
 	})
 }
 

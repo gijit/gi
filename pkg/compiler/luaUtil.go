@@ -107,6 +107,18 @@ func LuaMustString(vm *luajit.State, varname string, expect string) {
 	}
 }
 
+func LuaMustBool(vm *luajit.State, varname string, expect bool) {
+
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value_bool := vm.ToBoolean(top)
+
+	pp("value_bool=%v", value_bool)
+	if value_bool != expect {
+		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_bool))
+	}
+}
+
 func LuaRunAndReport(vm *luajit.State, s string) {
 	interr := vm.LoadString(s)
 	if interr != 0 {
