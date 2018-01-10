@@ -651,7 +651,8 @@ func Test031ValueOkDoubleReturnFromMapQuery(t *testing.T) {
 
 		code := `
 m := map[int]int{1:1}
-a, ok := m[0]
+a1, ok1 := m[1]
+a0, ok0 := m[0]
 `
 
 		inc := NewIncrState()
@@ -666,8 +667,10 @@ a, ok := m[0]
 		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustBool(vm, "ok", true)
-		LuaMustInt(vm, "a", 1)
+		LuaMustBool(vm, "ok1", true)
+		LuaMustInt(vm, "a1", 1)
+		LuaMustBool(vm, "ok0", false)
+		LuaMustInt(vm, "a0", 0)
 	})
 }
 
