@@ -564,7 +564,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				// produced by (well, just the 1st line starting with _entry):
 				// return c.formatExpr(`(%1s = %2e[%3s], %1s !== undefined ? [%1s.v, true] : [%4e, false])`, c.newVariable("_entry"), e.X, key, c.zeroValue(t.Elem()))
 			}
-			return c.formatExpr(fmt.Sprintf(`%s[%s]`, e.X, key))
+			return c.formatExpr(fmt.Sprintf(`%s('get', %s)`, e.X, key))
 			//return c.formatExpr(`(%1s = %2e[%3s], %1s !== undefined ? %1s.v : %4e)`, c.newVariable("_entry"), e.X, key, c.zeroValue(t.Elem()))
 		case *types.Basic:
 			return c.formatExpr("%e.charCodeAt(%f)", e.X, e.Index)

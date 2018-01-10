@@ -304,7 +304,7 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState()
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x[3];`}
+		expect := []string{`x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -651,8 +651,10 @@ func Test031ValueOkDoubleReturnFromMapQuery(t *testing.T) {
 
 		code := `
 m := map[int]int{1:1}
-a1, ok1 := m[1]
 a0, ok0 := m[0]
+a1, ok1 := m[1]
+alone0 := m[0]
+alone1 := m[1]
 `
 
 		inc := NewIncrState()
@@ -671,6 +673,9 @@ a0, ok0 := m[0]
 		LuaMustInt(vm, "a1", 1)
 		LuaMustBool(vm, "ok0", false)
 		LuaMustInt(vm, "a0", 0)
+
+		LuaMustInt(vm, "alone0", 0)
+		LuaMustInt(vm, "alone1", 1)
 	})
 }
 
