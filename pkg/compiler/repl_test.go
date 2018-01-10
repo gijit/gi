@@ -284,7 +284,7 @@ func Test017DeleteFromMap(t *testing.T) {
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
 		code = `delete(x, 3)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x[3]= nil;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3);`)
 	})
 }
 
