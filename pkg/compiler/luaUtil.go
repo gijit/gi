@@ -2,19 +2,19 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/glycerine/luajit"
+	luajit "github.com/glycerine/golua/lua"
 	"path/filepath"
 )
 
 func LuaDoFiles(vm *luajit.State, files []string) error {
 	for _, f := range files {
-		err := vm.Loadstring(fmt.Sprintf(`dofile("%s")`, f))
-		if err != nil {
+		interr := vm.LoadString(fmt.Sprintf(`dofile("%s")`, f))
+		if interr != 0 {
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': '%v'. Details: '%s'", f, err, msg)
+			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': Details: '%s'", f, msg)
 		}
-		err = vm.Pcall(0, 0, 0)
+		err := vm.Call(1, 0)
 		if err != nil {
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
@@ -27,16 +27,16 @@ func LuaDoFiles(vm *luajit.State, files []string) error {
 func DumpLuaStack(L *luajit.State) {
 	var top int
 
-	top = L.Gettop()
+	top = L.GetTop()
 	for i := 1; i <= top; i++ {
 		t := L.Type(i)
 		switch t {
-		case luajit.Tstring:
-			fmt.Println("String : \t", L.Tostring(i))
-		case luajit.Tboolean:
-			fmt.Println("Bool : \t\t", L.Toboolean(i))
-		case luajit.Tnumber:
-			fmt.Println("Number : \t", L.Tonumber(i))
+		case luajit.LUA_TSTRING:
+			fmt.Println("String : \t", L.ToString(i))
+		case luajit.LUA_TBOOLEAN:
+			fmt.Println("Bool : \t\t", L.ToBoolean(i))
+		case luajit.LUA_TNUMBER:
+			fmt.Println("Number : \t", L.ToNumber(i))
 		default:
 			fmt.Println("Type : \t\t", L.Typename(i))
 		}
@@ -47,16 +47,16 @@ func DumpLuaStack(L *luajit.State) {
 func DumpLuaStackAsString(L *luajit.State) string {
 	var top int
 	s := ""
-	top = L.Gettop()
+	top = L.GetTop()
 	for i := 1; i <= top; i++ {
 		t := L.Type(i)
 		switch t {
-		case luajit.Tstring:
-			s += fmt.Sprintf("String : \t%v", L.Tostring(i))
-		case luajit.Tboolean:
-			s += fmt.Sprintf("Bool : \t\t%v", L.Toboolean(i))
-		case luajit.Tnumber:
-			s += fmt.Sprintf("Number : \t%v", L.Tonumber(i))
+		case luajit.LUA_TSTRING:
+			s += fmt.Sprintf("String : \t%v", L.ToString(i))
+		case luajit.LUA_TBOOLEAN:
+			s += fmt.Sprintf("Bool : \t\t%v", L.ToBoolean(i))
+		case luajit.LUA_TNUMBER:
+			s += fmt.Sprintf("Number : \t%v", L.ToNumber(i))
 		default:
 			s += fmt.Sprintf("Type : \t\t%v", L.Typename(i))
 		}
@@ -80,9 +80,9 @@ func FetchPrelude(path string) ([]string, error) {
 
 func LuaMustInt(vm *luajit.State, varname string, expect int) {
 
-	vm.Getglobal(varname)
-	top := vm.Gettop()
-	value_int := vm.Tointeger(top)
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value_int := vm.ToInteger(top)
 
 	pp("value_int=%v", value_int)
 	if value_int != expect {
@@ -92,9 +92,9 @@ func LuaMustInt(vm *luajit.State, varname string, expect int) {
 
 func LuaMustString(vm *luajit.State, varname string, expect string) {
 
-	vm.Getglobal(varname)
-	top := vm.Gettop()
-	value_string := vm.Tostring(top)
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value_string := vm.ToString(top)
 
 	pp("value_string=%v", value_string)
 	if value_string != expect {
@@ -103,15 +103,15 @@ func LuaMustString(vm *luajit.State, varname string, expect string) {
 }
 
 func LuaRunAndReport(vm *luajit.State, s string) {
-	err := vm.Loadstring(s)
-	if err != nil {
-		fmt.Printf("error from Lua vm.LoadString(): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+	interr := vm.LoadString(s)
+	if interr != 0 {
+		fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
 		DumpLuaStack(vm)
 		vm.Pop(1)
 	} else {
-		err = vm.Pcall(0, 0, 0)
+		err := vm.Call(1, 0)
 		if err != nil {
-			fmt.Printf("error from Lua vm.Pcall(0,0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+			fmt.Printf("error from Lua vm.Call(1,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
 			DumpLuaStack(vm)
 			vm.Pop(1)
 		}

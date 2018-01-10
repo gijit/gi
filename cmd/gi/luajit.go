@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/glycerine/luajit"
+	luajit "github.com/glycerine/golua/lua"
 	"github.com/go-interpreter/gi/pkg/compiler"
 	"github.com/go-interpreter/gi/pkg/front"
 	"github.com/go-interpreter/gi/pkg/verb"
@@ -16,10 +16,10 @@ import (
 
 func (cfg *GIConfig) LuajitMain() {
 
-	vm := luajit.Newstate()
+	vm := luajit.NewState()
 	defer vm.Close()
 
-	vm.Openlibs()
+	vm.OpenLibs()
 
 	err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
 	panicOn(err)
@@ -183,29 +183,31 @@ these special commands:
 		}
 
 		p("sending use='%v'\n", use)
-		err = vm.Loadstring(use)
-		if err != nil {
-			fmt.Printf("error from Lua vm.LoadString(): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
-			DumpLuaStack(vm)
+		// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
+		interr := vm.LoadString(use)
+		if interr != 0 {
+			fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", use[:len(use)-1])
+			compiler.DumpLuaStack(vm)
 			vm.Pop(1)
 			continue
 		}
-		err = vm.Pcall(0, 0, 0)
+		err = vm.Call(1, 0)
 		if err != nil {
 			fmt.Printf("error from Lua vm.Pcall(0,0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
-			DumpLuaStack(vm)
+			compiler.DumpLuaStack(vm)
 			vm.Pop(1)
 			continue
 		}
-		DumpLuaStack(vm)
+		compiler.DumpLuaStack(vm)
 		reader.Reset(os.Stdin)
 	}
 }
 
+/*
 func DumpLuaStack(L *luajit.State) {
 	var top int
 
-	top = L.Gettop()
+	top = L.GetTop()
 	for i := 1; i <= top; i++ {
 		t := L.Type(i)
 		switch t {
@@ -241,3 +243,4 @@ func DumpLuaStackAsString(L *luajit.State) string {
 	}
 	return s
 }
+*/
