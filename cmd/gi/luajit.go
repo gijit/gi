@@ -191,9 +191,9 @@ these special commands:
 			vm.Pop(1)
 			continue
 		}
-		err = vm.Call(1, 0)
+		err = vm.Call(0, 0)
 		if err != nil {
-			fmt.Printf("error from Lua vm.Pcall(0,0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
+			fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
 			compiler.DumpLuaStack(vm)
 			vm.Pop(1)
 			continue

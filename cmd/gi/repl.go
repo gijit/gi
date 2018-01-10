@@ -29,6 +29,10 @@ func main() {
 	verb.Verbose = cfg.Verbose || cfg.VerboseVerbose
 	verb.VerboseVerbose = cfg.VerboseVerbose
 
+	// jea debug on
+	verb.Verbose = true
+	verb.VerboseVerbose = true
+
 	if !cfg.Quiet {
 		fmt.Printf(
 			`====================

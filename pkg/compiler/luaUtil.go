@@ -8,17 +8,19 @@ import (
 
 func LuaDoFiles(vm *luajit.State, files []string) error {
 	for _, f := range files {
+		pp("LuaDoFiles, f = '%s'", f)
 		interr := vm.LoadString(fmt.Sprintf(`dofile("%s")`, f))
 		if interr != 0 {
+			pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
 			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': Details: '%s'", f, msg)
 		}
-		err := vm.Call(1, 0)
+		err := vm.Call(0, 0)
 		if err != nil {
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during Pcall on file '%s': '%v'. Details: '%s'", f, err, msg)
+			return fmt.Errorf("error in setupPrelude during Call on file '%s': '%v'. Details: '%s'", f, err, msg)
 		}
 	}
 	return nil
@@ -28,6 +30,7 @@ func DumpLuaStack(L *luajit.State) {
 	var top int
 
 	top = L.GetTop()
+	pp("DumpLuaStack: top = %v", top)
 	for i := 1; i <= top; i++ {
 		t := L.Type(i)
 		switch t {
@@ -48,7 +51,9 @@ func DumpLuaStackAsString(L *luajit.State) string {
 	var top int
 	s := ""
 	top = L.GetTop()
+	pp("DumpLuaStackAsString: top = %v", top)
 	for i := 1; i <= top; i++ {
+		pp("i=%v out of top = %v", i, top)
 		t := L.Type(i)
 		switch t {
 		case luajit.LUA_TSTRING:
@@ -109,9 +114,9 @@ func LuaRunAndReport(vm *luajit.State, s string) {
 		DumpLuaStack(vm)
 		vm.Pop(1)
 	} else {
-		err := vm.Call(1, 0)
+		err := vm.Call(0, 0)
 		if err != nil {
-			fmt.Printf("error from Lua vm.Call(1,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+			fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
 			DumpLuaStack(vm)
 			vm.Pop(1)
 		}
