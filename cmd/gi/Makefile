@@ -7,7 +7,7 @@ all:
 
 
 onetime: gitversion
-	cd vendor/github.com/LuaJIT/LuaJIT && make clean && make
+	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
 
 # This how we want to name the binary output
 BINARY=gi
