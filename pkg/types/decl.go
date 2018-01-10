@@ -316,7 +316,9 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 				case *Var:
 					check.errorf(m.pos, "field and method with the same name %s", m.name)
 				case *Func:
-					check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
+					// jea: allow function re-definition at the repl.
+					goto proceede
+					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
 				default:
 					unreachable()
 				}
@@ -325,6 +327,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 			}
 		}
 
+	proceede:
 		// type-check
 		check.objDecl(m, nil, nil)
 

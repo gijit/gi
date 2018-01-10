@@ -610,3 +610,37 @@ book := snoopy.Write("with a pen")`
 		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
 	})
 }
+
+func Test030MethodRedefinitionAllowed(t *testing.T) {
+
+	cv.Convey(`methods can be re-defined at the repl`, t, func() {
+
+		code := `
+type Beagle struct{
+    word string
+}
+func (b *Beagle) Write(with string) string {
+    return b.word + ":it was a sunny day at the beach, " + with
+}
+func (b *Beagle) Write(with string) string {
+    return b.word + ":it was a dark and stormy night, " + with
+}
+var snoopy = &Beagle{word:"hiya"}
+book := snoopy.Write("with a pen")
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+	})
+}
