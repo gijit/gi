@@ -60,24 +60,29 @@ _intentionalNilValue = {}
     end,
 
     __index = function(t, k)
-       --print("index called for key", k)
+       -- apparently only the 1st value comes back, so
+       -- we return a closure with the two values that
+       -- must be called to get them both out.
+       
+       print("index called for key", k)
        if k == nil then
           local props = t[_giPrivateMapProps]
           if props.nilKeyStored then
-             return props.nilValue, true
+             return function() return props.nilValue, true; end
           else
              -- TODO: replace nil with zero-value for the value type.
-             return nil, false
+             return function() return nil, false; end
           end
        end
-       -- TODO this is't quite right, because the key
-       --  could intentionally have a nil value stored in the map.
-       --
+
+       -- k is not nil.
+       
        local val = t[_giPrivateMapRaw][k]
        if val == _intentionalNilValue then
-          return nil, true
+          return function() return nil, true; end
        end
-       return val, val ~= nil
+       print("index returning 2nd value of ", val ~= nil)
+       return function() return val, val ~= nil; end
     end,
 
     __tostring = function(t)
