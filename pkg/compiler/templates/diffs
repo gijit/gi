@@ -1,0 +1,44 @@
+diff --git a/pkg/compiler/templates/flow1.lua b/pkg/compiler/templates/flow1.lua
+index bf716ee..835c7f4 100644
+--- a/pkg/compiler/templates/flow1.lua
++++ b/pkg/compiler/templates/flow1.lua
+@@ -19,10 +19,10 @@ function f(...)
+   end
+ 
+   local panic = function(err)
+-     __recoverVal = err
+-     error(err)
++     -- must wrap err in table to prevent stringification by error()
++     __recoverVal = {err}
++     error(__recoverVal)
+   end
+-
+   
+   -- end boilerplate, begin custom:
+   
+@@ -63,14 +63,14 @@ function f(...)
+   
+   -- prepare to handle panic/defer/recover
+   local __handler2 = function(err)
+-     print("__handler2 running with err =", err)
++     print("__handler2 running with err=",err," and err[1] =", err[1])     
+      __recoverVal = err
+      return err
+   end
+   
+   local __panicHandler = function(err)
+      __recoverVal = err
+-     print("panicHandler running with err =", err, " and #defer = ", #__defers)
++     print("panicHandler running with err[1] =", err[1], " and #defer = ", #__defers)
+      for __i = #__defers, 1, -1 do
+         local dcall = {xpcall(__defers[__i], __handler2)}
+         for i,v in pairs(dcall) do print("panic path defer call result: i=",i, "  v=",v) end
+@@ -105,7 +105,7 @@ function f(...)
+      -- is there an un-recovered panic that we need to rethrow?
+      if __recoverVal ~= nil then
+         print("un recovered error still exists, rethrowing ", __recoverVal)
+-        error(__recoverVal)
++        error({__recoverVal})
+      end
+   end
+ 

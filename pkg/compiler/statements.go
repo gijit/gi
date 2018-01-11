@@ -326,6 +326,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Printf("$s = -1; return%s;", rVal)
 			return
 		}
+		pp("DEBUG rVal='%s'", rVal)
 		c.Printf("return%s;", rVal)
 
 	case *ast.DeferStmt:
@@ -357,10 +358,30 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				Args:     callArgs,
 				Ellipsis: s.Call.Ellipsis,
 			})
-			c.Printf("$deferred.push([function(%s) { %s; }, [%s]]);", strings.Join(vars, ", "), call, strings.Join(args, ", "))
+
+			c.Printf("blah-blah-what-here?? = function(%s) { %s; }, [%s]]);", strings.Join(vars, ", "), call, strings.Join(args, ", "))
 			return
 		}
-		c.Printf("$deferred.push([%s, [%s]]);", c.translateExpr(s.Call.Fun), strings.Join(args, ", "))
+		joinedArgs := strings.Join(args, ", ")
+		localArgStash := ""
+		for _, a := range args {
+			localArgStash += fmt.Sprintf("local %s = %s\n", a, a)
+		}
+
+		funBod := stripOuterParen(fmt.Sprintf("%s", c.translateExpr(s.Call.Fun)))
+		head, body := stripFirstFunctionAndArg(funBod)
+		pp("head = '%s'", head)
+		pp("body = '%s'", body)
+
+		c.Printf(`
+local __defer_func = %s
+    %s
+    __defers[1+#__defers] = function()
+    %s
+end
+__defer_func(%s)
+`, head, localArgStash,
+			body, joinedArgs)
 
 	case *ast.AssignStmt:
 		pp("translateStmt(): case *ast.AssignStmt in statements.go:351")
@@ -921,7 +942,8 @@ func (c *funcContext) translateResults(results []ast.Expr) string {
 			values[i] = c.translateImplicitConversion(result, tuple.At(i).Type()).String()
 		}
 		c.delayedOutput = nil
-		return " [" + strings.Join(values, ", ") + "]"
+		//return " [" + strings.Join(values, ", ") + "]"
+		return "  " + strings.Join(values, ", ") + " "
 	}
 }
 

@@ -889,8 +889,33 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		suffix = " } return; }" + suffix
 	}
 
+	formals := strings.Join(params, ", ")
+	functionWord := "function"
+	if isMethod {
+		functionWord = ""
+	}
+
+	c.p.escapingVars = prevEV
+
 	if c.HasDefer {
-		prefix = prefix + " $deferred = []; $deferred.index = $curGoroutine.deferStack.length; $curGoroutine.deferStack.push($deferred);"
+		pp("jea TODO: prefix is '%s'... should we not discard?", prefix)
+		//		prefix = prefix + ...
+		return params, fmt.Sprintf(`
+%s%s(...) 
+   orig = {...}
+   local __defers={}
+   local __zeroret = {}
+   local __namedNames = {}
+   local __actual=function(%s)
+      %s
+   end
+   return __actuallyCall("%s", __actual, __namedNames, __zeroret, __defers)
+end
+`,
+			functionWord, functionName, formals,
+			bodyOutput, functionName)
+
+		//prefix = prefix + " $deferred = []; $deferred.index = $curGoroutine.deferStack.length; $curGoroutine.deferStack.push($deferred);"
 	}
 
 	if prefix != "" {
@@ -905,11 +930,6 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		//bodyOutput = fmt.Sprintf("%svar %s;\n", strings.Repeat("\t", c.p.indentation+1), strings.Join(c.localVars, ", ")) + bodyOutput
 	}
 
-	c.p.escapingVars = prevEV
-
-	functionWord := "function"
-	if isMethod {
-		functionWord = ""
-	}
-	return params, fmt.Sprintf("%s%s(%s) \n%s%s end", functionWord, functionName, strings.Join(params, ", "), bodyOutput, strings.Repeat("\t", c.p.indentation))
+	return params, fmt.Sprintf("%s%s(%s) \n%s%s end",
+		functionWord, functionName, formals, bodyOutput, strings.Repeat("\t", c.p.indentation))
 }

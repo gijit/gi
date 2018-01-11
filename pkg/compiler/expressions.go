@@ -506,7 +506,14 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case *types.Array, *types.Struct:
 				return c.formatExpr("$equal(%e, %e, %s)", e.X, e.Y, c.typeName(t))
 			case *types.Interface:
-				return c.formatExpr("$interfaceIsEqual(%s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
+				pp("e.Y='%#v'", e.Y)
+				switch id := e.Y.(type) {
+				case *ast.Ident:
+					if id.Name == "nil" {
+						return c.formatExpr("%s == nil", c.translateImplicitConversion(e.X, t))
+					}
+				}
+				return c.formatExpr("__interfaceIsEqual(%s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
 			case *types.Pointer:
 				if _, ok := u.Elem().Underlying().(*types.Array); ok {
 					return c.formatExpr("$equal(%s, %s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t), c.typeName(u.Elem()))
@@ -849,7 +856,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case *types.Map:
 				return c.formatExpr("false")
 			case *types.Interface:
-				return c.formatExpr("$ifaceNil")
+				return c.formatExpr("nil")
 			case *types.Signature:
 				return c.formatExpr("$throwNilPointerError")
 			default:
@@ -1004,7 +1011,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			panic(fmt.Sprintf("Unhandled cap type: %T\n", argType))
 		}
 	case "panic":
-		return c.formatExpr("$panic(%s)", c.translateImplicitConversion(args[0], types.NewInterface(nil, nil)))
+		return c.formatExpr("panic(%s)", c.translateImplicitConversion(args[0], types.NewInterface(nil, nil)))
 	case "append":
 		if ellipsis || len(args) == 1 {
 			argStr := c.translateArgs(sig, args, ellipsis)
@@ -1030,7 +1037,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 	case "imag":
 		return c.formatExpr("%e.$imag", args[0])
 	case "recover":
-		return c.formatExpr("$recover()")
+		return c.formatExpr("recover()")
 	case "close":
 		return c.formatExpr(`$close(%e)`, args[0])
 	default:
@@ -1254,6 +1261,8 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 		}
 		if isWrapped(exprType) {
 			pp("YYY 6 translateImplicitConversion exiting early")
+			// string literals are converting to new `new String("string")`
+			// which we don't need.
 			return c.formatExpr("new %s(%e)", c.typeName(exprType), expr)
 		}
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {

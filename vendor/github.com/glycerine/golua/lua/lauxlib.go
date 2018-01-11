@@ -181,7 +181,7 @@ func NewState() *State {
 // luaL_openlibs
 func (L *State) OpenLibs() {
 	C.luaL_openlibs(L.s)
-	C.clua_hide_pcall(L.s)
+	//C.clua_hide_pcall(L.s)
 }
 
 // luaL_optinteger

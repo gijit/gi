@@ -534,6 +534,9 @@ func nameHelper(expr ast.Expr) string {
 func isWrapped(ty types.Type) bool {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
+		if isString(t) {
+			return false
+		}
 		return !is64Bit(t) && !isComplex(t) && t.Kind() != types.UntypedNil
 	case *types.Array, *types.Chan, *types.Map, *types.Signature:
 		return true
@@ -711,4 +714,65 @@ func endsWithReturn(stmts []ast.Stmt) bool {
 
 func encodeIdent(name string) string {
 	return strings.Replace(url.QueryEscape(name), "%", "$", -1)
+}
+
+func stripOuterParen(s string) (r string) {
+	r = strings.TrimSpace(s)
+	n := len(r)
+	if n < 2 {
+		return r
+	}
+	if r[0] != '(' || r[len(r)-1] != ')' {
+		return r
+	}
+	if n == 2 {
+		return ""
+	}
+	return r[1 : n-1]
+}
+
+// function(a) blah -> blah
+func stripFirstFunctionAndArg(s string) (head, body string) {
+	st := strings.TrimSpace(s)
+	r := st
+	n := len(r)
+	if n < 10 {
+		return s, ""
+	}
+	if !strings.HasPrefix(r, "function") {
+		return s, ""
+	}
+	r = strings.TrimSpace(r[8:])
+	if len(r) < 2 {
+		return s, ""
+	}
+	if r[0] != '(' {
+		return s, ""
+	}
+	r = r[1:]
+	n = len(r)
+	// trim up to and include the first ')'
+	pos := -1
+	depth := 1
+posloop:
+	for i := 0; i < n; i++ {
+		switch r[i] {
+		case ')':
+			depth--
+			if depth == 0 {
+				pos = i
+				break posloop
+			}
+		case '(':
+			depth++
+		}
+	}
+	if pos == -1 {
+		return s, ""
+	}
+	body = r[pos+1:]
+	lenbod := len(body)
+	lenhead := len(st) - lenbod
+	head = st[:lenhead]
+	return
 }
