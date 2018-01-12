@@ -6,7 +6,10 @@ import (
 	"github.com/go-interpreter/gi/pkg/constant"
 	"github.com/go-interpreter/gi/pkg/token"
 	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/go-interpreter/gi/pkg/verb"
 )
+
+var pp = verb.PP
 
 type simplifyContext struct {
 	info          *types.Info
@@ -15,6 +18,7 @@ type simplifyContext struct {
 }
 
 func Simplify(file *ast.File, info *types.Info, simplifyCalls bool) *ast.File {
+	pp("jea debug top of Simplify")
 	c := &simplifyContext{info: info, simplifyCalls: simplifyCalls}
 
 	nodes := make([]ast.Node, len(file.Nodes))
@@ -32,7 +36,12 @@ func Simplify(file *ast.File, info *types.Info, simplifyCalls bool) *ast.File {
 				Type: decl.Type,
 				Body: c.simplifyBlock(decl.Body),
 			}
+		case *ast.SwitchStmt:
+			stmts := make([]ast.Stmt, 0)
+			c.simplifySwitch(&stmts, decl)
+			nodes[i] = stmts[0]
 		default:
+			pp("jea debug warning, node top not simplified at top level!")
 			nodes[i] = decl
 		}
 	}
@@ -460,6 +469,7 @@ func (c *simplifyContext) simplifyBlock(s *ast.BlockStmt) *ast.BlockStmt {
 }
 
 func (c *simplifyContext) simplifySwitch(stmts *[]ast.Stmt, s *ast.SwitchStmt) {
+	pp("jea DEBUG simplifySwitch top")
 	wrapClause := &ast.CaseClause{}
 	newS := &ast.SwitchStmt{
 		Switch: s.Switch,
