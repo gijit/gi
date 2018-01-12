@@ -50,7 +50,7 @@ are building on correct parsing of the whole language.
 
 Of course minor tweaks had to be made to allow statements and
 expressions at global scope. Happily, from our experience
-adding the same provisions to gopherJS, we knew these
+adding the same provisions to GopherJS, we knew these
 were relatively minor changes. See the updated
 demo transcript below in this readme for a multi-line
 function definition taking effect.
