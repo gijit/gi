@@ -30,9 +30,9 @@ mechanic -- to throw -- combined with the
 
 The only limitation I found here is on recursive `xpcall`: if
 you are in a panic stack unwind, and then in a defer function,
-and you cause an error than is not a panic call,
-then that error will be caught but won't return
-that error value to a caller of recover. This is due to a wierd
+and your code causes a second error that is *not* a deliberate panic,
+then that error will be caught but recover won't return
+that error value to the caller of recover. This is due to a wierd
 corner case in the implimentation of LuaJIT where
 it does not like recursive `xpcall` invocations, and
 reports "error in error handling".
