@@ -558,7 +558,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			key := fmt.Sprintf("%s", c.translateImplicitConversion(e.Index, t.Key()))
 			//key := fmt.Sprintf("%s.keyFor(%s)", c.typeName(t.Key()), c.translateImplicitConversion(e.Index, t.Key()))
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
-				return c.formatExpr(`{ %1e('get', %2s, %3e) }`, e.X, key, c.zeroValue(t.Elem()))
+				return c.formatExpr(` %1e('get', %2s, %3e) `, e.X, key, c.zeroValue(t.Elem()))
 
 				// gi example
 				// {m('get',0, zerovalue)}

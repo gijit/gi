@@ -669,7 +669,7 @@ alone1 := m[1]
 		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustBool(vm, "ok1", true)
+		LuaMustBool(vm, "ok1", true) // fail here
 		LuaMustInt(vm, "a1", 1)
 		LuaMustBool(vm, "ok0", false)
 		LuaMustInt(vm, "a0", 0)
