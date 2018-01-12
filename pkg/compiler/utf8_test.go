@@ -22,6 +22,7 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		`take on each of the three full runes in turn.`, t, func() {
 
 		// Resources:
+		//  run this test with: `go test -v -run 041`
 		//
 		// Rob Pike's blog: https://github.com/go-interpreter/gi/blob/master/pkg/utf8/utf8.go
 		//
