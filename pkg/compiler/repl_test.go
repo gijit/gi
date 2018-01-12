@@ -722,7 +722,7 @@ println("hello")
 		translation := inc.Tr([]byte(code))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`print("hello")`)
+			`print("hello");`)
 
 		/*
 			// and verify that it happens correctly
