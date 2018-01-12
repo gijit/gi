@@ -12,8 +12,35 @@ status
 
 2019 Jan 12 update
 ------
-With release v0.5.0 the inital test of the `defer`
-statement passes. Woot!
+With release v0.5.0 the inital test of the `defer`/
+`panic`/`recover` mechanism passes. Woot!  There's more
+to do here, but the design is solid so filling in
+should be quick.
+
+For a stack-unwinding `panic`, we use
+what Lua offers, the `error`
+mechanic -- to throw -- combined with the
+`xpcall` mechanic to catch.
+
+The only limitation I found here is on recursive `xpcall`: if
+you are in a panic stack unwind, and then in a defer function,
+and you cause an error than is not a panic call,
+then that error will be caught but won't return
+that error value to a caller of recover. This is due to a wierd
+corner case in the implimentation of LuaJIT where
+it does not like recursive `xpcall` invocations, and
+reports "error in error handling".
+
+I asked on the Lua and LuaJIT mailing lists about
+this, and posted on Stack Overflow. So far no
+replies. https://stackoverflow.com/questions/48202338/on-latest-luajit-2-1-0-beta3-is-recursive-xpcall-possible
+
+It's a fairly minor limitation, and easy to work
+around once you notice the bug: just call `panic`
+directly rather than causing the error. Or don't
+cause the error at all(!) One
+could also run on PUC Lua 5.1.5 as it doesn't
+have the limitation.
 
 
 2018 Jan 10 update
