@@ -778,3 +778,43 @@ x,y,z,s := f()
 
 	})
 }
+
+func Test038Switch(t *testing.T) {
+
+	cv.Convey(`switch with value at top or without should compile`, t, func() {
+
+		code := `
+a := 7;
+b := 2;
+c := 0
+switch b {
+case 1:
+  c = a*1
+case 2:
+  c = a*10
+case 3:
+  c = a*100
+default:
+  c = -1
+}
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			``)
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt(vm, "b", 70)
+
+	})
+}
