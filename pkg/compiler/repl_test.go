@@ -803,7 +803,21 @@ default:
 		translation := inc.Tr([]byte(code))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			``)
+			`
+	a = 7;
+  	b = 2;
+  	c = 0;
+  	_1 = b;
+  	if (_1 == (1)) then 
+  		c = (a * 1);
+  	 elseif (_1 == (2)) then 
+  		c = (a * 10);
+  	 elseif (_1 == (3)) then 
+  		c = (a * 100);
+  	 else  
+  		c = -1;
+  	 end 
+`)
 
 		// and verify that it happens correctly
 		vm := luajit.NewState()
@@ -814,7 +828,7 @@ default:
 		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "b", 70)
+		LuaMustInt(vm, "c", 70)
 
 	})
 }

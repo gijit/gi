@@ -373,15 +373,15 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				case token.SHR:
 					return c.formatExpr("$shiftRight%s(%e, %f)", toJavaScriptType(basic), e.X, e.Y)
 				case token.EQL:
-					return c.formatExpr("(%1h === %2h && %1l === %2l)", e.X, e.Y)
+					return c.formatExpr("(%1h == %2h && %1l == %2l)", e.X, e.Y)
 				case token.LSS:
-					return c.formatExpr("(%1h < %2h || (%1h === %2h && %1l < %2l))", e.X, e.Y)
+					return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l < %2l))", e.X, e.Y)
 				case token.LEQ:
-					return c.formatExpr("(%1h < %2h || (%1h === %2h && %1l <= %2l))", e.X, e.Y)
+					return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l <= %2l))", e.X, e.Y)
 				case token.GTR:
-					return c.formatExpr("(%1h > %2h || (%1h === %2h && %1l > %2l))", e.X, e.Y)
+					return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l > %2l))", e.X, e.Y)
 				case token.GEQ:
-					return c.formatExpr("(%1h > %2h || (%1h === %2h && %1l >= %2l))", e.X, e.Y)
+					return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l >= %2l))", e.X, e.Y)
 				case token.ADD, token.SUB:
 					return c.formatExpr("new %3s(%1h %4t %2h, %1l %4t %2l)", e.X, e.Y, c.typeName(t), e.Op)
 				case token.AND, token.OR, token.XOR:
@@ -396,7 +396,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			if isComplex(basic) {
 				switch e.Op {
 				case token.EQL:
-					return c.formatExpr("(%1r === %2r && %1i === %2i)", e.X, e.Y)
+					return c.formatExpr("(%1r == %2r && %1i == %2i)", e.X, e.Y)
 				case token.ADD, token.SUB:
 					return c.formatExpr("new %3s(%1r %4t %2r, %1i %4t %2i)", e.X, e.Y, c.typeName(t), e.Op)
 				case token.MUL:
@@ -410,7 +410,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch e.Op {
 			case token.EQL:
-				return c.formatParenExpr("%e === %e", e.X, e.Y)
+				return c.formatParenExpr("%e == %e", e.X, e.Y)
 			case token.LSS, token.LEQ, token.GTR, token.GEQ:
 				return c.formatExpr("%e %t %e", e.X, e.Op, e.Y)
 			case token.ADD, token.SUB:
@@ -432,14 +432,14 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					if isUnsigned(basic) {
 						shift = ">>>"
 					}
-					return c.formatExpr(`(%1s = %2e / %3e, (%1s === %1s && %1s !== 1/0 && %1s !== -1/0) ? %1s %4s 0 : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
+					return c.formatExpr(`(%1s = %2e / %3e, (%1s == %1s && %1s !== 1/0 && %1s !== -1/0) ? %1s %4s 0 : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
 				}
 				if basic.Kind() == types.Float32 {
 					return c.fixNumber(c.formatExpr("%e / %e", e.X, e.Y), basic)
 				}
 				return c.formatExpr("%e / %e", e.X, e.Y)
 			case token.REM:
-				return c.formatExpr(`(%1s = %2e %% %3e, %1s === %1s ? %1s : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_r"), e.X, e.Y)
+				return c.formatExpr(`(%1s = %2e %% %3e, %1s == %1s ? %1s : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_r"), e.X, e.Y)
 			case token.SHL, token.SHR:
 				op := e.Op.String()
 				if e.Op == token.SHR && isUnsigned(basic) {
@@ -528,7 +528,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
-			return c.formatExpr("%s === %s", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
+			return c.formatExpr("%s == %s", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
 		default:
 			panic(e.Op)
 		}
@@ -1100,7 +1100,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			case is64Bit(t):
 				if !is64Bit(basicExprType) {
 					if basicExprType.Kind() == types.Uintptr { // this might be an Object returned from reflect.Value.Pointer()
-						return c.formatExpr("new %1s(0, %2e.constructor === Number ? %2e : 1)", c.typeName(desiredType), expr)
+						return c.formatExpr("new %1s(0, %2e.constructor == Number ? %2e : 1)", c.typeName(desiredType), expr)
 					}
 					return c.formatExpr("new %s(0, %e)", c.typeName(desiredType), expr)
 				}

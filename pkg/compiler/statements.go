@@ -676,7 +676,7 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 			}
 		})
 		pp("jea: prefix else assigned!")
-		prefix = " else "
+		prefix = " else"
 	}
 
 	if defaultClause != nil {
