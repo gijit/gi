@@ -53,10 +53,14 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		c.translateBranchingStmt(caseClauses, defaultClause, false, c.translateExpr, nil, c.Flattened[s])
 
 	case *ast.SwitchStmt:
+		pp("s.Init = '%#v'", s.Init)                     // nil
+		pp("s.Tag = '%#v'", s.Tag)                       // s.Tag = '&ast.Ident{NamePos:32, Name:"b", Obj:(*ast.Object)(0xc420081720)}'
+		pp("len(s.Body.List) = '%#v'", len(s.Body.List)) // 4
 		if s.Init != nil || s.Tag != nil || len(s.Body.List) != 1 {
 			panic("simplification error")
 		}
 		clause := s.Body.List[0].(*ast.CaseClause)
+		pp("len(clause.list) = %v", len(clause.List)) // 1
 		if len(clause.List) != 0 {
 			panic("simplification error")
 		}

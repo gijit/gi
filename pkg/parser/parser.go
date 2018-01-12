@@ -2446,7 +2446,7 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
 	//fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
-	case token.IDENT, token.FOR, token.SWITCH:
+	case token.IDENT, token.FOR, token.SWITCH, token.IF:
 		return p.parseStmt()
 	}
 	return p.parseDecl(sync)
