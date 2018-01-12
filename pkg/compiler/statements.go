@@ -423,15 +423,29 @@ __defer_func(%s)
 				a = _tuple[1];
 				ok = _tuple[2];
 			*/
-			tupleVar := c.newVariable("_tuple")
-			c.Printf("%s = %s;", tupleVar, c.translateExpr(s.Rhs[0]))
-			tuple := c.p.TypeOf(s.Rhs[0]).(*types.Tuple)
-			for i, lhs := range s.Lhs {
+
+			/*
+				tupleVar := c.newVariable("_tuple")
+				c.Printf("%s = %s;", tupleVar, c.translateExpr(s.Rhs[0]))
+				tuple := c.p.TypeOf(s.Rhs[0]).(*types.Tuple)
+				for i, lhs := range s.Lhs {
+					lhs = astutil.RemoveParens(lhs)
+					if !isBlank(lhs) {
+						c.Printf("%s", c.translateAssign(lhs, c.newIdent(fmt.Sprintf("%s[%d]", tupleVar, i+1), tuple.At(i).Type()), s.Tok == token.DEFINE))
+					}
+				}
+			*/
+			prep := []string{} // strings.Join(vars, ", ")
+			for _, lhs := range s.Lhs {
 				lhs = astutil.RemoveParens(lhs)
-				if !isBlank(lhs) {
-					c.Printf("%s", c.translateAssign(lhs, c.newIdent(fmt.Sprintf("%s[%d]", tupleVar, i+1), tuple.At(i).Type()), s.Tok == token.DEFINE))
+				if isBlank(lhs) {
+					prep = append(prep, "_")
+				} else {
+					prep = append(prep, fmt.Sprintf("%s", c.translateExpr(lhs)))
 				}
 			}
+			c.Printf("%s = %s", strings.Join(prep, ", "), c.translateExpr(s.Rhs[0]))
+
 		case len(s.Lhs) == len(s.Rhs):
 			tmpVars := make([]string, len(s.Rhs))
 			for i, rhs := range s.Rhs {

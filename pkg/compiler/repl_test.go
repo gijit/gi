@@ -740,3 +740,41 @@ println("hello")
 		*/
 	})
 }
+
+func Test037Println(t *testing.T) {
+
+	cv.Convey(`named return values`, t, func() {
+
+		code := `
+func f() (a,b,c int, d string) {
+  a = 1
+  b = 2
+  c = 3
+  d = "hi"
+  return
+};
+x,y,z,s := f()
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		//			``)
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt(vm, "x", 1)
+		LuaMustInt(vm, "y", 2)
+		LuaMustInt(vm, "z", 3)
+		LuaMustString(vm, "s", "hi")
+
+	})
+}
