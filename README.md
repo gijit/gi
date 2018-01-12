@@ -10,6 +10,12 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2019 Jan 12 update
+------
+With release v0.5.0 the inital test of the `defer`
+statement passes. Woot!
+
+
 2018 Jan 10 update
 ------
 With release v0.4.1 we have much improved map support.
