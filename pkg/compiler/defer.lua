@@ -55,15 +55,15 @@ end
   
   -- prepare to handle panic/defer/recover
 __handler2 = function(err)
-     print(" __handler2 running with err =", err)
+     --print(" __handler2 running with err =", err)
      __recoverVal = err
      return err
 end
   
 __panicHandler = function(err, defers)
-       print("__panicHandler running with err =", err)
+       --print("__panicHandler running with err =", err)
        -- print(debug.traceback())
-       print("__panicHandler running with defers:", tostring(defers))
+       --print("__panicHandler running with defers:", tostring(defers))
 
      __recoverVal = err
      if defers ~= nil then
@@ -72,12 +72,12 @@ __panicHandler = function(err, defers)
          --print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
          for __i = #defers, 1, -1 do
              local dcall = {xpcall(defers[__i], __handler2)}
-             for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
+             --for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
          end
      else
-         print("debug: found no defers in __panicHandler")
+         --print("debug: found no defers in __panicHandler")
      end
-     print("__panicHandler: done with defer processing")
+     --print("__panicHandler: done with defer processing")
      if __recoverVal ~= nil then
         return __recoverVal
      end
@@ -94,44 +94,44 @@ __panicHandler = function(err, defers)
   --                 so we know how to update actEnv.
   --
 __processDefers = function(who, defers, __res, __namedNames, actEnv)
-  print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
-  print(who,": __processDefers top: __namedNames is: ", ts(__namedNames))
+  --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
+  --print(who,": __processDefers top: __namedNames is: ", ts(__namedNames))
 
   if __res[1] then
-      print(who,": __processDefers: call had no panic")
+      --print(who,": __processDefers: call had no panic")
       -- call had no panic. run defers with the nil recover
 
       if #__res > 1 then
-         for k,v in pairs(__res) do print(who, " __processDefers: __res k=", k, " val=", v) end
+         --for k,v in pairs(__res) do print(who, " __processDefers: __res k=", k, " val=", v) end
 
          -- explicit return, so fill the named vals before defers see them.
          local unp = {table.unpack(__res, 2)}
-         print("unp is: ", tostring(unp))
+         --print("unp is: ", tostring(unp))
          for i, k in pairs(__namedNames) do
              actEnv[k] = unp[i]
          end
 
-         print(who, " __processDefers: post fill: ret0 = ", ret0, " and ret1=", ret1)
+         --print(who, " __processDefers: post fill: ret0 = ", ret0, " and ret1=", ret1)
       end
 
       assert(recoverVal == nil)
       for __i = #defers, 1, -1 do
         local dcall = {xpcall(defers[__i], __handler2)}
         for i,v in pairs(dcall) do
-            print(who," __processDefers: normal path defer call result: i=",i, "  v=",v)
+            --print(who," __processDefers: normal path defer call result: i=",i, "  v=",v)
         end
       end
   else
-      print(who, " __processDefers: checking for panic still un-caught...", __recoverVal)
+      --print(who, " __processDefers: checking for panic still un-caught...", __recoverVal)
       -- is there an un-recovered panic that we need to rethrow?
       if __recoverVal ~= nil then
-         print(who, "__processDefers: un recovered error still exists, rethrowing ", __recoverVal)
+         --print(who, "__processDefers: un recovered error still exists, rethrowing ", __recoverVal)
          error(__recoverVal)
       end
   end
 
   if #__namedNames == 0 then
-     print("__processDefers: #__namedNames was 0, no returns")
+     --print("__processDefers: #__namedNames was 0, no returns")
      return nil
   end
   -- put the named return values in order
@@ -140,7 +140,7 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
      orderedReturns[i] = actEnv[k]
   end
   for i,v in pairs(orderedReturns) do
-       print(who," __processDefers: orderedReturns: i=",i, "  v=",v)
+       --print(who," __processDefers: orderedReturns: i=",i, "  v=",v)
   end 
   return unpack(orderedReturns)
 end
