@@ -268,3 +268,20 @@ func Test018MoreVsSyntaxErr(t *testing.T) {
 
 	})
 }
+
+func Test019MoreVsSyntaxErr(t *testing.T) {
+
+	cv.Convey("`switch {` parse:  'switch {'  needs more input", t, func() {
+
+		var eof, syntaxErr, empty bool
+
+		src := `switch {`
+
+		pp("expect need more: `%s`", src)
+		eof, syntaxErr, empty = TopLevelParseGoSource([]byte(src))
+		cv.So(syntaxErr, cv.ShouldBeFalse)
+		cv.So(eof, cv.ShouldBeTrue)
+		cv.So(empty, cv.ShouldBeFalse)
+
+	})
+}
