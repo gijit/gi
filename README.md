@@ -33,7 +33,7 @@ you are in a panic stack unwind, and then in a defer function,
 and your code causes a second error that is *not* a deliberate panic,
 then that error will be caught but recover won't return
 that error value to the caller of recover. This is due to a wierd
-corner case in the implimentation of LuaJIT where
+corner case in the implementation of LuaJIT where
 it does not like recursive `xpcall` invocations, and
 reports "error in error handling".
 
