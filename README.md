@@ -38,9 +38,11 @@ replies. https://stackoverflow.com/questions/48202338/on-latest-luajit-2-1-0-bet
 It's a fairly minor limitation, and easy to work
 around once you notice the bug: just call `panic`
 directly rather than causing the error. Or don't
-cause the error at all(!) One
-could also run on PUC Lua 5.1.5 as it doesn't
-have the limitation.
+cause the error at all(!) Or simply use a
+different side-band to pass around the value.
+Lots of work arounds. One
+could also run on the (generally slower) PUC
+Lua 5.1.5 as it doesn't have the limitation.
 
 
 2018 Jan 10 update
