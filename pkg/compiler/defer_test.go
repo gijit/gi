@@ -59,6 +59,30 @@ f()
 	})
 }
 
+func Test035DefersRunWithoutPanic(t *testing.T) {
+
+	cv.Convey(`defers run without panic`, t, func() {
+
+		code := `func f () { defer println("say hello, gracie"); }`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		pp("translation='%s'", string(translation))
+
+		// too comple and fragile to verify code. Just  verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+
+	})
+}
+
 /* old stuff, right??
 
 

@@ -346,8 +346,11 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		sig := c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature)
 		args := c.translateArgs(sig, s.Call.Args, s.Call.Ellipsis.IsValid())
 		if isBuiltin || isJs {
+			// println is a builtin, so we need this.
+
 			vars := make([]string, len(s.Call.Args))
-			callArgs := make([]ast.Expr, len(s.Call.Args))
+			narg := len(s.Call.Args)
+			callArgs := make([]ast.Expr, narg)
 			for i, arg := range s.Call.Args {
 				v := c.newVariable("_arg")
 				vars[i] = v
@@ -359,7 +362,21 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				Ellipsis: s.Call.Ellipsis,
 			})
 
-			c.Printf("blah-blah-what-here?? = function(%s) { %s; }, [%s]]);", strings.Join(vars, ", "), call, strings.Join(args, ", "))
+			localArgStash := ""
+			for i := range vars {
+				localArgStash += fmt.Sprintf("local %v = %v", vars[i], vars[i])
+			}
+
+			c.Printf(`
+local __defer_func = function(%s)
+   %s
+    __defers[1+#__defers] = function()
+        %s;
+    end
+end
+__defer_func(%s);
+`,
+				strings.Join(vars, ", "), localArgStash, call, strings.Join(args, ", "))
 			return
 		}
 		joinedArgs := strings.Join(args, ", ")

@@ -20,6 +20,7 @@ func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation st
 			err = fmt.Errorf(msg)
 		}
 	}()
+	pp("about to translate Go source '%s'", string(src))
 	translation = string(inc.Tr([]byte(src)))
 	t2 := strings.TrimSpace(translation)
 	nt2 := len(t2)

@@ -709,3 +709,34 @@ len3 := len(m)
 		LuaMustInt(vm, "len3", 0)
 	})
 }
+
+func Test036Println(t *testing.T) {
+
+	cv.Convey(`println should translate to print so basic reporting can be done without fmt`, t, func() {
+
+		code := `
+println("hello")
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`print("hello")`)
+
+		/*
+			// and verify that it happens correctly
+			vm := luajit.NewState()
+			defer vm.Close()
+			vm.OpenLibs()
+			files, err := FetchPrelude(".")
+			panicOn(err)
+			LuaDoFiles(vm, files)
+
+			LuaRunAndReport(vm, string(translation))
+			LuaMustInt(vm, "len1", 2)
+			LuaMustInt(vm, "len2", 1)
+			LuaMustInt(vm, "len3", 0)
+		*/
+	})
+}

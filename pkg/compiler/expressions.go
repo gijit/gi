@@ -863,7 +863,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				panic(fmt.Sprintf("unexpected type: %T", t))
 			}
 		default:
-			//pp("e = '%#v', o = '%#v'", e, o)
+			pp("e = '%#v', o = '%#v'", e, o)
 			panic(fmt.Sprintf("Unhandled object: %T\n", o))
 		}
 
