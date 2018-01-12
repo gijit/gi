@@ -136,6 +136,8 @@ a viable embedded target.
 
 # installation
 
+Works on Mac OSX and Linux. I have no idea about windows (theoretically it should work on windows, if one can work out the right compiler flags and have the necessary C compiler installed, etc.)
+
 ~~~
 $ go get -t -u -v github.com/go-interpreter/gi/...
 $ cd $GOPATH/src/github.com/go-interpreter/gi && make
