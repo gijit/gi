@@ -10,13 +10,13 @@ ahead-of-time compiled Go code.
 status
 ------
 
-2019 Jan 12 update
+2018 Jan 12 update
 ------
 Switch statements now work. They work at the top level
 and inside a function.
 
 
-2019 Jan 11 update
+2018 Jan 11 update
 ------
 With release v0.5.0 the inital test of the `defer`/
 `panic`/`recover` mechanism passes. Woot!  There's more
