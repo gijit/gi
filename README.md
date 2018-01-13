@@ -133,7 +133,7 @@ Much is left to do: maps, structs, switch,
 interfaces, imports. If this is exciting to
 you, contribute! Existing TODOs/open issues and polite improvement
 suggestions can be found here
-https://github.com/go-interpreter/gi/issues
+https://github.com/gijit/gi/issues
 
 However, because we are bulding on the fantastic
 front end provided by (Gopherjs)[https://github.com/gopherjs/gopherjs], and the fantastic
@@ -184,8 +184,8 @@ a viable embedded target.
 Works on Mac OSX and Linux. I have no idea about windows (theoretically it should work on windows, if one can work out the right compiler flags and have the necessary C compiler installed, etc.)
 
 ~~~
-$ go get -t -u -v github.com/go-interpreter/gi/...
-$ cd $GOPATH/src/github.com/go-interpreter/gi && make
+$ go get -t -u -v github.com/gijit/gi/...
+$ cd $GOPATH/src/github.com/gijit/gi && make
 $
 $ ... wait for gi build to finish, it builds luajit
 $     using C, so it takes ~ 20 seconds to install `gi`.
@@ -195,10 +195,10 @@ $ gi # start me up (will be in $GOPATH/bin/gi now).
 ====================
 gi: a go interpreter
 ====================
-https://github.com/go-interpreter/gi
+https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten, Ph.D.
 License: 3-clause BSD. See the LICENSE file at
-https://github.com/go-interpreter/gi/blob/master/LICENSE
+https://github.com/gijit/gi/blob/master/LICENSE
 ====================
   [ gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop ]
@@ -214,7 +214,7 @@ git-branch: 'master'
 go-version: 'go_version_go1.9_darwin/amd64'
 luajit-version: 'LuaJIT_2.1.0-beta3_--_Copyright_(C)_2005-2017_Mike_Pall._http://luajit.org/'
 ==================
-using this prelude directory: '/Users/jaten/go/src/github.com/go-interpreter/gi/pkg/compiler'
+using this prelude directory: '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler'
 using these files as prelude: array.lua, map.lua, prelude.lua, slice.lua, struct.lua
 gi>
 
@@ -239,7 +239,7 @@ gi> // runtime bounds checks are compiled in too:
 gi> a[100] = "runtime-out-of-bounds-access"
 error from Lua vm.Pcall(0,0,0): 'run time error'. supplied lua with: '	_gi_SetRangeCheck(a, 100, "runtime-out-of-bounds-access");'
 lua stack:
-String : 	 ...rc/github.com/go-interpreter/gi/pkg/compiler/prelude.lua:14: index out of range
+String : 	 ...rc/github.com/gijit/gi/pkg/compiler/prelude.lua:14: index out of range
 
 gi> // We can define functions:
 
@@ -279,7 +279,7 @@ gi>
 # editor support
 
 An emacs mode `gigo.el` can be found in the `emacs/` subdirectory
-here https://github.com/go-interpreter/gi/tree/master/emacs/gigo.el
+here https://github.com/gijit/gi/tree/master/emacs/gigo.el
 
 M-x `run-gi-golang` to start the interpreter. Pressing ctrl-n will
 step through any file that is in `gi-golang` mode. 
@@ -288,7 +288,7 @@ Other editors: please contribute!
 
 # how to contribute: getting started
 
-a) Pick an issue from here, https://github.com/go-interpreter/gi/issues, and add a comment that
+a) Pick an issue from here, https://github.com/gijit/gi/issues, and add a comment that
 you are starting work on that feature. Make a branch for your feature, using `git checkout -b yourFeatureName`.
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
@@ -296,21 +296,21 @@ moving on to implementation. Tests are quite short. There are many examples are 
 which show the currently implemented features. Add your test at the end of
 the compiler/repl_test.go file.
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/repl_test.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/repl_test.go
 
 Then simply implement your feature. These are the main files
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/incr.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/incr.go
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/package.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/package.go
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/translate.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/translate.go
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/statements.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/statements.go
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/expressions.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/expressions.go
 
-https://github.com/go-interpreter/gi/blob/master/pkg/compiler/luaUtil.go
+https://github.com/gijit/gi/blob/master/pkg/compiler/luaUtil.go
 
 You wil find it necessary and useful to add print statements to the code. Do this using the `pp()` function, and feel free to leave those prints in during commit. It's a small matter later to take them out, and while you are adding functionality, the debug prints help immensely. You will see them scattered through the code as I've worked. Just leave them there; the verb.Verbose flag and VerboseVerbose can be used to mute them.
 
