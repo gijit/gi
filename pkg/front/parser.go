@@ -332,7 +332,7 @@ func (p *parser) fileOrNil() *File {
 							}
 			*/
 			// jea add
-		case _Name, _Literal:
+		case _Name, _Literal, _Switch, _If, _Select, _For:
 			d := p.stmtOrNil()
 			if d != nil {
 				f.NodeList = append(f.NodeList, d)
