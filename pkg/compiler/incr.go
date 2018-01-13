@@ -464,11 +464,13 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					case *ast.ExprStmt:
 						switch z := y.X.(type) {
 						case *ast.CallExpr:
-							//fmt.Printf("y.X is a CallExpr!: %#v\n", z)
-							switch z.Fun.(type) {
+							switch id := z.Fun.(type) {
 							case *ast.Ident:
 								//fmt.Printf("z.Fun is Ident: %#v\n", id)
-								wrapWithPrint = true
+								if id.Name != "len" {
+									// so "delete" doesn't print
+									wrapWithPrint = false
+								}
 							default:
 								wrapWithPrint = false
 							}
