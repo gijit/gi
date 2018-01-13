@@ -384,7 +384,7 @@ to compute `c`. However that boxing-unboxing construct is
 helpful in some tight corners, and may be your
 fastest alternative.
 
-Compared to defining a new closure,
+Compared to defining and then calling a new closure,
 boxing and unboxing is 100x faster.
 
 # origin
