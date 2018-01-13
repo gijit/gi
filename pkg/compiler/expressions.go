@@ -428,19 +428,21 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case token.QUO:
 				if isInteger(basic) {
 					// cut off decimals
-					shift := ">>"
-					if isUnsigned(basic) {
-						shift = ">>>"
-					}
-					// lua ternary: x = (condition and {a} or {b})[1]
-					return c.formatExpr(`(%1s = %2e / %3e, (%1s == %1s && %1s ~= 1/0 && %1s ~= -1/0) ? %1s %4s 0 : error("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
+					// shift := ">>"
+					//if isUnsigned(basic) {
+					//	shift = ">>>"
+					//}
+
+					// jea:
+					return c.formatExpr(`__integerByZeroCheck(%1e / %2e)`, e.X, e.Y)
+					// return c.formatExpr(`(%1s = %2e / %3e, (%1s == %1s && %1s ~= 1/0 && %1s ~= -1/0) ? %1s %4s 0 : error("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
 				}
 				if basic.Kind() == types.Float32 {
 					return c.fixNumber(c.formatExpr("%e / %e", e.X, e.Y), basic)
 				}
 				return c.formatExpr("%e / %e", e.X, e.Y)
 			case token.REM:
-				return c.formatExpr(`(%1s = %2e %% %3e, %1s == %1s ? %1s : error("integer divide by zero"))`, c.newVariable("_r"), e.X, e.Y)
+				return c.formatExpr(`__integerByZeroCheck(%1e %% %2e)`, e.X, e.Y)
 			case token.SHL, token.SHR:
 				op := e.Op.String()
 				if e.Op == token.SHR && isUnsigned(basic) {

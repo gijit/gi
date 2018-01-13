@@ -934,3 +934,58 @@ func Test042LenAtRepl(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("Int",{[0]=3}); print(#a);`)
 	})
 }
+
+func Test043IntegerDivideByZero(t *testing.T) {
+
+	cv.Convey(`integers divided by zero or taken modulo zero should produce an error`, t, func() {
+
+		code := `
+a := 0;
+b := 1/a;
+m := 1%a
+`
+
+		inc := NewIncrState()
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+	a = 0;
+    b = __integerByZeroCheck(1 / a);
+    m = __integerByZeroCheck(1 % a);
+`)
+
+		codeWithCatch := `
+func f() {
+    c:=0
+    _ = c
+    defer func() {
+       // divide by zero should have fired a panic
+       if recover() != nil {
+           c = 1
+       }
+    }()
+	a := 0;
+    b := 1 / a
+    _ = b
+}
+f();
+`
+		inc = NewIncrState()
+		translation = inc.Tr([]byte(codeWithCatch))
+
+		// and verify that it happens correctly
+		vm := luajit.NewState()
+		defer vm.Close()
+		vm.OpenLibs()
+		files, err := FetchPrelude(".")
+		panicOn(err)
+		LuaDoFiles(vm, files)
+
+		LuaRunAndReport(vm, string(translation))
+
+		// check for exception
+		LuaMustInt(vm, "c", 1)
+
+	})
+}
