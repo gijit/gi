@@ -10,6 +10,11 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 13 update
+------
+len(a) now displays at the REPL. Fixes #22.
+
+
 2018 Jan 12 update
 ------
 Switch statements now work. They work at the top level
