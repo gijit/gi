@@ -66,7 +66,7 @@ _intentionalNilValue = {}
        -- __index only ever returns one value[1].
        -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
               
-       print("__index called for key", k)
+       --print("__index called for key", k)
        if k == nil then
           local props = t[_giPrivateMapProps]
           if props.nilKeyStored then
@@ -134,7 +134,7 @@ _intentionalNilValue = {}
         
         if oper == "get" then
 
-           print("get called for key", k)
+           --print("get called for key", k)
            if k == nil then
               local props = t[_giPrivateMapProps]
               if props.nilKeyStored then
@@ -164,7 +164,7 @@ _intentionalNilValue = {}
 
            local props = t[_giPrivateMapProps]              
            local len = props.len
-           print("delete called for key", k, " len at start is ", len)
+           --print("delete called for key", k, " len at start is ", len)
                       
            if k == nil then
 
@@ -174,7 +174,7 @@ _intentionalNilValue = {}
                  props.len = len -1
               end
 
-              print("len at end of delete is ", props.len)              
+              --print("len at end of delete is ", props.len)              
               return
            end
 
@@ -187,7 +187,7 @@ _intentionalNilValue = {}
            t[_giPrivateMapRaw][k] = nil
            props.len = len - 1
            
-           print("len at end of delete is ", props.len)
+           --print("len at end of delete is ", props.len)
         end
     end
  }
