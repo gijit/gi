@@ -29,7 +29,8 @@ point = ffi.metatype("struct { double re, im; }", {
 
 -- 1+2i
 -- if reloaded, we get this error, so comment out for now.
--- prelude.lua:33: cannot change a protected metatable
+-- prelude.lua:34: cannot change a protected metatable
+-- See also https://stackoverflow.com/questions/325323/is-there-anyway-to-avoid-this-security-issue-in-lua
 --[[
 point = ffi.metatype("complex", {
     __add = function(a, b)
