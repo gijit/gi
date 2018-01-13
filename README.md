@@ -353,6 +353,40 @@ Lua.org, August 2006
 
 Lua 5.1 https://www.lua.org/manual/5.1/ 
 
+d) specific javascript to Lua translation hints:
+
+d1) the ternary operator
+~~~
+x ? y : z
+~~~
+should be translated as
+~~~
+( x and {y} or {z})[1]
+~~~
+
+d) the comma operator
+~~~
+x = (a, b, c) // return value of c after executing `a` and `b`
+~~~
+doesn't have a direct equivalent in Lua. Try
+to see if you can't define a new function in
+the prelude to take care of the same processing
+that a,b,c does.
+
+If `b` doesn't refer to `c` directly, and `a` doesn't
+refer to `b` directly, then
+~~~
+x = {a, b, c}[3]
+~~~
+comes close. Rarely does such a construct arise,
+since `a` and `b` are typically helper computations
+to compute `c`. However that boxing-unboxing construct is
+helpful in some tight corners, and may be your
+fastest alternative.
+
+Compared to defining a new closure,
+boxing and unboxing is 100x faster.
+
 # origin
 
 Author: Jason E. Aten, Ph.D.
