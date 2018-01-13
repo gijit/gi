@@ -87,7 +87,7 @@ func (cfg *GIConfig) LuajitMain() {
 			prompt = goPrompt
 			fmt.Printf("Go language mode.\n")
 			continue
-		case ":prelude":
+		case ":prelude", ":reload":
 			fmt.Printf("Reloading prelude...\n")
 			err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
 			if err != nil {

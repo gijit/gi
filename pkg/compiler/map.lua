@@ -123,10 +123,10 @@ _intentionalNilValue = {}
     end,
 
     __call = function(t, ...)
-        print("__call() invoked, with ... = ", ...)
+        --print("__call() invoked, with ... = ", ...)
         local oper, k, zeroVal = ...
-        print("oper is", oper)
-        print("key is ", k)
+        --print("oper is", oper)
+        --print("key is ", k)
 
         -- we use __call('get', k, zeroVal) instead of __index
         -- so that we can return multiple values
