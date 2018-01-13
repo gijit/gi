@@ -19,8 +19,9 @@ This was a minor repl nit, but well worth addressing.
 
 We have a new contributor! Welcome to Malhar Vora.
 
-jea: I'll be offline for a day or two.
+As of v0.5.6, integer modulo and divide now check for divide by zero, and panic like Go when found.
 
+jea: I'll be offline for a day or two.
 
 2018 Jan 12 update
 ------
