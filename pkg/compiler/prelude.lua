@@ -28,11 +28,15 @@ point = ffi.metatype("struct { double re, im; }", {
 })
 
 -- 1+2i
+-- if reloaded, we get this error, so comment out for now.
+-- prelude.lua:33: cannot change a protected metatable
+--[[
 point = ffi.metatype("complex", {
     __add = function(a, b)
      return point(a.re + b.re, a.im + b.im)
  end
 })
+--]]
 
 function _gi_NewComplex128(real, imag)
 
