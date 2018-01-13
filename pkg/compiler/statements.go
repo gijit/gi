@@ -851,7 +851,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			if typesutil.IsJsObject(c.p.TypeOf(l.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: l.Index.Pos(), Msg: "cannot use js.Object as map key"})
 			}
-			// jea: map assignmetn in lua:
+			// jea: map assignment in lua:
 			return fmt.Sprintf(`%s[%s] = %s;`, c.translateExpr(l.X), c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 			// jea replace next 2 lines with the above
 			//keyVar := c.newVariable("_key")

@@ -432,14 +432,15 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					if isUnsigned(basic) {
 						shift = ">>>"
 					}
-					return c.formatExpr(`(%1s = %2e / %3e, (%1s == %1s && %1s !== 1/0 && %1s !== -1/0) ? %1s %4s 0 : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
+					// lua ternary: x = (condition and {a} or {b})[1]
+					return c.formatExpr(`(%1s = %2e / %3e, (%1s == %1s && %1s ~= 1/0 && %1s ~= -1/0) ? %1s %4s 0 : error("integer divide by zero"))`, c.newVariable("_q"), e.X, e.Y, shift)
 				}
 				if basic.Kind() == types.Float32 {
 					return c.fixNumber(c.formatExpr("%e / %e", e.X, e.Y), basic)
 				}
 				return c.formatExpr("%e / %e", e.X, e.Y)
 			case token.REM:
-				return c.formatExpr(`(%1s = %2e %% %3e, %1s == %1s ? %1s : $throwRuntimeError("integer divide by zero"))`, c.newVariable("_r"), e.X, e.Y)
+				return c.formatExpr(`(%1s = %2e %% %3e, %1s == %1s ? %1s : error("integer divide by zero"))`, c.newVariable("_r"), e.X, e.Y)
 			case token.SHL, token.SHR:
 				op := e.Op.String()
 				if e.Op == token.SHR && isUnsigned(basic) {
@@ -971,7 +972,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			return c.formatExpr("$makeSlice(%s, %f)", t, args[1])
 		case *types.Map:
 			if len(args) == 2 && c.p.Types[args[1]].Value == nil {
-				return c.formatExpr(`((%1f < 0 || %1f > 2147483647) ? $throwRuntimeError("makemap: size out of range") : {})`, args[1])
+				return c.formatExpr(`((%1f < 0 || %1f > 2147483647) ? error("makemap: size out of range") : {})`, args[1])
 			}
 			return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(argType.Key()), c.typeName(argType.Elem()))
 		case *types.Chan:
