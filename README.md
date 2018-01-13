@@ -308,7 +308,13 @@ the compiler/repl_test.go file.
 
 https://github.com/gijit/gi/blob/master/pkg/compiler/repl_test.go
 
-Then simply implement your feature. These are the main files
+Then simply implement your feature. (So simple! Yeah right!)
+
+So this is hard part. It's too situational to give general advice, but do see the hints
+https://github.com/gijit/gi#translation-hints below for some
+specific Lua tricks for translating javascript idioms.
+
+These are the main files you'll be adding to/updating:
 
 https://github.com/gijit/gi/blob/master/pkg/compiler/incr.go
 
