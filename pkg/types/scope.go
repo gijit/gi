@@ -9,7 +9,7 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"io"
 	"sort"
 	"strings"

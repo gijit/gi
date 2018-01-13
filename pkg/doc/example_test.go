@@ -6,10 +6,10 @@ package doc_test
 
 import (
 	"bytes"
-	"github.com/go-interpreter/gi/pkg/doc"
-	"github.com/go-interpreter/gi/pkg/format"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/doc"
+	"github.com/gijit/gi/pkg/format"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"testing"
 )

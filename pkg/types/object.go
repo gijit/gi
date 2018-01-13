@@ -7,9 +7,9 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // An Object describes a named language entity such as a package,

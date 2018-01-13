@@ -6,15 +6,15 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/priv/testenv"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/importer"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"sort"
 	"testing"
 
-	. "github.com/go-interpreter/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 type resolveTestImporter struct {
@@ -68,7 +68,7 @@ func TestResolveIdents(t *testing.T) {
 		`,
 		`
 		package p
-		import . "github.com/go-interpreter/gi/pkg/parser"
+		import . "github.com/gijit/gi/pkg/parser"
 		import "sync"
 		func h() Mode { return ImportsOnly }
 		var _, x int = 1, 2

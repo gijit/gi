@@ -12,9 +12,9 @@ package astutil_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"testing"
 

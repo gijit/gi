@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var p = verb.P
@@ -34,10 +34,10 @@ func main() {
 			`====================
 gi: a go interpreter
 ====================
-https://github.com/go-interpreter/gi
+https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten, Ph.D.
 License: 3-clause BSD. See the LICENSE file at
-https://github.com/go-interpreter/gi/blob/master/LICENSE
+https://github.com/gijit/gi/blob/master/LICENSE
 ====================
   [ gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop ]

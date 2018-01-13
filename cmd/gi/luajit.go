@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"fmt"
 	luajit "github.com/glycerine/golua/lua"
-	"github.com/go-interpreter/gi/pkg/compiler"
-	"github.com/go-interpreter/gi/pkg/front"
-	"github.com/go-interpreter/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/front"
+	"github.com/gijit/gi/pkg/verb"
 	"io"
 	"os"
 	"strconv"
@@ -98,7 +98,7 @@ func (cfg *GIConfig) LuajitMain() {
 			fmt.Printf(`
 ======================
 gi: a go interpreter
-https://github.com/go-interpreter/gi
+https://github.com/gijit/gi
 command prompt help: 
 simply type Go expressions or statements
 directly at the prompt, or use one of 

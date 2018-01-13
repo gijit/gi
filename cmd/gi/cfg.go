@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/compiler"
 	"os"
 	"path"
 	"path/filepath"
@@ -33,7 +33,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 var defaultPreludePathParts = []string{
 	"src",
 	"github.com",
-	"go-interpreter",
+	"gijit",
 	"gi",
 	"pkg",
 	"compiler"}
@@ -46,7 +46,7 @@ func (c *GIConfig) ValidateConfig() error {
 		if dir != "" {
 			c.PreludePath = dir
 		} else {
-			// try hard... try $GOPATH/src/github.com/go-interpreter/gi/pkg/compiler
+			// try hard... try $GOPATH/src/github.com/gijit/gi/pkg/compiler
 			// by default.
 			gopath := os.Getenv("GOPATH")
 			if gopath == "" {
@@ -71,5 +71,5 @@ func (c *GIConfig) ValidateConfig() error {
 }
 
 func preludeError() error {
-	return fmt.Errorf("setenv GOINTERP_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/go-interpreter/gi/pkg/compiler but GOINTERP_PRELUDE_DIR was not set and -prelude was not specified.")
+	return fmt.Errorf("setenv GOINTERP_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler but GOINTERP_PRELUDE_DIR was not set and -prelude was not specified.")
 }

@@ -7,8 +7,8 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/token"
 	"os"
 	"strings"
 	"testing"

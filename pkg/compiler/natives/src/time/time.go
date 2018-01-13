@@ -5,7 +5,7 @@ package time
 import (
 	"runtime"
 
-	"github.com/go-interpreter/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/gopherjs/js"
 )
 
 // Make sure time.Unix func and time.Time struct it returns are always included with this package (despite DCE),

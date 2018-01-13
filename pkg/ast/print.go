@@ -8,7 +8,7 @@ package ast
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"io"
 	"os"
 	"reflect"

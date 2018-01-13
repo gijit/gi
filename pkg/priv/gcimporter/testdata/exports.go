@@ -7,7 +7,7 @@
 
 package exports
 
-import "github.com/go-interpreter/gi/pkg/ast"
+import "github.com/gijit/gi/pkg/ast"
 
 // Issue 3682: Correctly read dotted identifiers from export data.
 const init1 = 0

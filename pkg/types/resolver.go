@@ -6,9 +6,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
 	"strconv"
 	"strings"
 	"unicode"

@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/compiler"
-	"github.com/go-interpreter/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {

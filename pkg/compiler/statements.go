@@ -2,16 +2,16 @@ package compiler
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/compiler/analysis"
-	"github.com/go-interpreter/gi/pkg/compiler/astutil"
-	"github.com/go-interpreter/gi/pkg/compiler/filter"
-	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
+	"github.com/gijit/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/compiler/astutil"
+	"github.com/gijit/gi/pkg/compiler/filter"
+	"github.com/gijit/gi/pkg/compiler/typesutil"
 )
 
 func (c *funcContext) translateStmtList(stmts []ast.Stmt) {

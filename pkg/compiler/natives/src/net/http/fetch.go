@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/go-interpreter/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/gopherjs/js"
 )
 
 // streamReader implements an io.ReadCloser wrapper for ReadableStream of https://fetch.spec.whatwg.org/.

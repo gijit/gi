@@ -7,7 +7,7 @@
 package typeutil
 
 import (
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 	"sync"
 )
 

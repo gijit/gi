@@ -9,13 +9,13 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/priv/testenv"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/build"
-	"github.com/go-interpreter/gi/pkg/importer"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/scanner"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/go-interpreter/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 var (

@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"debug/elf"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 	"io"
 	"os"
 	"os/exec"

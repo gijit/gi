@@ -2,7 +2,7 @@ package buildutil_test
 
 import (
 	"flag"
-	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/gijit/gi/pkg/build"
 	"reflect"
 	"testing"
 

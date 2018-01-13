@@ -1,11 +1,11 @@
 package filter
 
 import (
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 
-	"github.com/go-interpreter/gi/pkg/compiler/astutil"
+	"github.com/gijit/gi/pkg/compiler/astutil"
 )
 
 func Assign(stmt ast.Stmt, info *types.Info, pkg *types.Package) ast.Stmt {

@@ -5,10 +5,10 @@
 package types_test
 
 import (
-	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/parser"
 	"testing"
 
-	. "github.com/go-interpreter/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 var testExprs = []testEntry{

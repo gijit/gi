@@ -6,8 +6,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // Eval returns the type and, if constant, the value for the

@@ -6,7 +6,7 @@
 
 package types
 
-import "github.com/go-interpreter/gi/pkg/constant"
+import "github.com/gijit/gi/pkg/constant"
 
 // Conversion type-checks the conversion T(x).
 // The result is in x.

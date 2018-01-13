@@ -4,18 +4,18 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"sync/atomic"
 
-	"github.com/go-interpreter/gi/pkg/compiler/analysis"
-	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
+	"github.com/gijit/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/compiler/typesutil"
 )
 
 func (c *funcContext) Write(b []byte) (int, error) {

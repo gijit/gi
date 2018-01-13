@@ -2,7 +2,7 @@
 
 package sync
 
-import "github.com/go-interpreter/gi/pkg/gopherjs/js"
+import "github.com/gijit/gi/pkg/gopherjs/js"
 
 var semWaiters = make(map[*uint32][]chan bool)
 

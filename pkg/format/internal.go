@@ -11,10 +11,10 @@ package format
 
 import (
 	"bytes"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/printer"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/printer"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 )
 

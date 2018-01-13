@@ -11,9 +11,9 @@ package parser
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/scanner"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // The mode parameter to the Parse* functions is a set of flags (or 0).
@@ -376,7 +376,7 @@ func (p *parser) expectSemi() {
 
 func assert(cond bool, msg string) {
 	if !cond {
-		panic("github.com/go-interpreter/gi/pkg/parser internal error: " + msg)
+		panic("github.com/gijit/gi/pkg/parser internal error: " + msg)
 	}
 }
 

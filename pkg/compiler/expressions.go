@@ -3,18 +3,18 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/go-interpreter/gi/pkg/compiler/analysis"
-	"github.com/go-interpreter/gi/pkg/compiler/astutil"
-	"github.com/go-interpreter/gi/pkg/compiler/typesutil"
-	"github.com/go-interpreter/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/compiler/astutil"
+	"github.com/gijit/gi/pkg/compiler/typesutil"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var pp = verb.PP

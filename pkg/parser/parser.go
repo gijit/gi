@@ -22,9 +22,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/scanner"
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 )
 
 /*
@@ -465,7 +465,7 @@ func (p *parser) atComma(context string, follow token.Token) bool {
 
 func assert(cond bool, msg string) {
 	if !cond {
-		panic("github.com/go-interpreter/gi/pkg/parser internal error: " + msg)
+		panic("github.com/gijit/gi/pkg/parser internal error: " + msg)
 	}
 }
 

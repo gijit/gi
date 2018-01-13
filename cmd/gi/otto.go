@@ -6,7 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/go-interpreter/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/compiler"
 	"github.com/robertkrimen/otto"
 )
 

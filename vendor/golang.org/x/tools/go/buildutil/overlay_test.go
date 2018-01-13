@@ -1,7 +1,7 @@
 package buildutil_test
 
 import (
-	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/gijit/gi/pkg/build"
 	"io/ioutil"
 	"reflect"
 	"strings"

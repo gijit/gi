@@ -8,7 +8,7 @@ package types
 
 import (
 	"bytes"
-	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 )
 
 // ExprString returns the (possibly shortened) string representation for x.

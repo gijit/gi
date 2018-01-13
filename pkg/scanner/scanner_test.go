@@ -5,7 +5,7 @@
 package scanner
 
 import (
-	"github.com/go-interpreter/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"

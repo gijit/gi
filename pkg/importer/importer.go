@@ -6,12 +6,12 @@
 package importer
 
 import (
-	"github.com/go-interpreter/gi/pkg/priv/gccgoimporter"
-	"github.com/go-interpreter/gi/pkg/priv/gcimporter"
-	"github.com/go-interpreter/gi/pkg/priv/srcimporter"
-	"github.com/go-interpreter/gi/pkg/build"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/priv/gccgoimporter"
+	"github.com/gijit/gi/pkg/priv/gcimporter"
+	"github.com/gijit/gi/pkg/priv/srcimporter"
+	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"io"
 	"runtime"
 )

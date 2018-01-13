@@ -6,7 +6,7 @@ package buildutil_test
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/gijit/gi/pkg/build"
 	"path/filepath"
 	"runtime"
 	"strings"

@@ -10,9 +10,9 @@ package loader_test
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/build"
-	"github.com/go-interpreter/gi/pkg/constant"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/types"
 	"path/filepath"
 	"reflect"
 	"sort"

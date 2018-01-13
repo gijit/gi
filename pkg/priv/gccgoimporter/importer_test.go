@@ -5,8 +5,8 @@
 package gccgoimporter
 
 import (
-	"github.com/go-interpreter/gi/pkg/priv/testenv"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/types"
 	"io/ioutil"
 	"os"
 	"os/exec"

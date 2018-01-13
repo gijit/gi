@@ -1,9 +1,9 @@
 package analysis
 
 import (
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/token"
-	"github.com/go-interpreter/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 )
 
 func EscapingObjects(n ast.Node, info *types.Info) []*types.Var {

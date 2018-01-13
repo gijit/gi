@@ -2,7 +2,7 @@ package buildutil
 
 import (
 	"fmt"
-	"github.com/go-interpreter/gi/pkg/build"
+	"github.com/gijit/gi/pkg/build"
 	"io"
 	"io/ioutil"
 	"os"

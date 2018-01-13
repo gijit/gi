@@ -7,7 +7,7 @@
 package types
 
 import (
-	"github.com/go-interpreter/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 	"sort"
 )
 

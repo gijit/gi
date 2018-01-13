@@ -9,9 +9,9 @@ package ast_test
 import (
 	"bytes"
 	"fmt"
-	. "github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/parser"
-	"github.com/go-interpreter/gi/pkg/token"
+	. "github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"sort"
 	"testing"
 )
@@ -26,8 +26,8 @@ package p /* the name is p */
 import (
 	"bytes"     // bytes
 	"fmt"       // fmt
-	"github.com/go-interpreter/gi/pkg/ast"
-	"github.com/go-interpreter/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
 )
 
 // T
