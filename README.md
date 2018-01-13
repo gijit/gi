@@ -12,6 +12,8 @@ status
 
 2018 Jan 13 update
 ------
+We've moved within github; we are now at https://github.com/gijit/gi
+
 len(a) now displays at the REPL. Fixes #22.
 This was a minor repl nit, but well worth addressing.
 
