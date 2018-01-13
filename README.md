@@ -24,8 +24,9 @@ check for divide by zero, and panic like Go when found.
 The math.lua library is supplemented with
 math.isnan(), math.finite(), and __truncateToInt().
 
-There's a new section of this readme, #translation-hints, that
-gives specific hints for porting the javascript ternary
+There's a new section of this readme,
+https://github.com/gijit/gi#translation-hints
+that gives specific hints for porting the javascript ternary
 operator and other constructs.
 
 jea: I'll be offline for a day or two.
