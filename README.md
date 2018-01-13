@@ -13,6 +13,11 @@ status
 2018 Jan 13 update
 ------
 len(a) now displays at the REPL. Fixes #22.
+This was a minor repl nit, but well worth addressing.
+
+We have a new contributor! Welcome to Malhar Vora.
+
+jea: I'll be offline for a day or two.
 
 
 2018 Jan 12 update
