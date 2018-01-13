@@ -924,3 +924,13 @@ default:
 
 	})
 }
+
+func Test042LenAtRepl(t *testing.T) {
+	inc := NewIncrState()
+
+	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
+
+		code := `a := []int{3}; len(a)`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("Int",{[0]=3}); print(#a);`)
+	})
+}
