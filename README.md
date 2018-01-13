@@ -357,7 +357,7 @@ Lua.org, August 2006
 
 Lua 5.1 https://www.lua.org/manual/5.1/ 
 
-#translation hints
+# translation hints
 
 specific javascript to Lua translation hints:
 
