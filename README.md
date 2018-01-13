@@ -2,7 +2,7 @@ gi: a go interpreter
 =======
 `gi` aims at being a scalable Go REPL
 for doing interactive coding and data analysis.
-Currently it is backed by LuaJIT, a tracing Just-in-time
+It is backed by LuaJIT, a tracing Just-in-time
 compiler for Lua that provides quite
 nice performance, sometimes even beating
 ahead-of-time compiled Go code.
