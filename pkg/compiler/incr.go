@@ -462,14 +462,21 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					wrapWithPrint := true
 					switch y := d.(type) {
 					case *ast.ExprStmt:
-						switch y.X.(type) {
+						switch z := y.X.(type) {
 						case *ast.CallExpr:
-							wrapWithPrint = false
+							//fmt.Printf("y.X is a CallExpr!: %#v\n", z)
+							switch z.Fun.(type) {
+							case *ast.Ident:
+								//fmt.Printf("z.Fun is Ident: %#v\n", id)
+								wrapWithPrint = true
+							default:
+								wrapWithPrint = false
+							}
 						default:
-
 						}
 					default:
 					}
+
 					n := len(c.output)
 					var ele string
 					if bytes.HasSuffix(c.output, []byte(";\n")) {
