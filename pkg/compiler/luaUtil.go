@@ -3,8 +3,19 @@ package compiler
 import (
 	"fmt"
 	luajit "github.com/glycerine/golua/lua"
+	"github.com/glycerine/luar"
 	"path/filepath"
 )
+
+func NewLuaVmWithPrelude() *luajit.State {
+	vm := luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
+
+	// load prelude
+	files, err := FetchPrelude(".")
+	panicOn(err)
+	LuaDoFiles(vm, files)
+	return vm
+}
 
 func LuaDoFiles(vm *luajit.State, files []string) error {
 	for _, f := range files {
