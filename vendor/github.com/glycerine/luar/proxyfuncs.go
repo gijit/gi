@@ -5,7 +5,7 @@ package luar
 import (
 	"reflect"
 
-	"github.com/aarzilli/golua/lua"
+	"github.com/glycerine/golua/lua"
 )
 
 // Complex pushes a proxy to a Go complex on the stack.

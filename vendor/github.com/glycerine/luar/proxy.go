@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/aarzilli/golua/lua"
+	"github.com/glycerine/golua/lua"
 )
 
 // Lua proxy objects for Go slices, maps and structs
