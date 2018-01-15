@@ -1,4 +1,5 @@
 // Copyright (c) 2010-2016 Steve Donovan
+// Licensed under the MIT license found in the LICENSE file.
 
 package luar
 

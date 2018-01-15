@@ -17,7 +17,15 @@ import (
 	"github.com/gijit/gi/pkg/compiler/analysis"
 	"github.com/neelance/astrewrite"
 	"golang.org/x/tools/go/gcimporter15"
+
+	luajit "github.com/glycerine/golua/lua"
+	"github.com/glycerine/luar"
 )
+
+func NewLuaVM() *luajit.State {
+	vm := luar.Init()
+	return vm
+}
 
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 
@@ -99,10 +107,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		return nil, err
 		//pp("config.Check err = '%v'", err)
 	}
-	//	pp("got past config.Check")
-	//	obj := pkg.Scope().Lookup("Sprintf")
-	//	pp("Sprintf obj is:\n")
-	//	goon.Dump(obj)
+
+	pp("got past config.Check")
+	obj := pkg.Scope().Lookup("Sprintf")
+	pp("Sprintf obj is: '%#v'\n", obj)
+	//goon.Dump(obj)
 
 	importContext.Packages[importPath] = pkg
 

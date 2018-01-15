@@ -4,22 +4,24 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	luajit "github.com/glycerine/golua/lua"
-	"github.com/gijit/gi/pkg/compiler"
-	"github.com/gijit/gi/pkg/front"
-	"github.com/gijit/gi/pkg/verb"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/gijit/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/front"
+	"github.com/gijit/gi/pkg/verb"
+	//luajit "github.com/glycerine/golua/lua"
 )
 
 func (cfg *GIConfig) LuajitMain() {
 
-	vm := luajit.NewState()
+	vm := compiler.NewLuaVM()
+
 	defer vm.Close()
 
-	vm.OpenLibs()
+	//vm.OpenLibs() // luar.Init() does this for us.
 
 	err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
 	panicOn(err)

@@ -36,7 +36,7 @@ func NewIncrState() *IncrState {
 		},
 	}
 
-	ic.importContext.Import = ic.MakeGiImportFunc()
+	ic.importContext.Import = ic.GiImportFunc
 
 	return ic
 }
