@@ -1333,8 +1333,19 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 	return c.formatExprInternal(format, a, true)
 }
 
-func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) *expression {
-	pp("expressions.go:1307, format='%s', a='%#v', parens='%v'", format, a, parens)
+func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) (xprn *expression) {
+	pp("expressions.go:1337, format='%s', a='%#v', parens='%v'", format, a, parens)
+	defer func() {
+		if xprn != nil {
+			pp("expressions.go:1338, formatExprInternal('%s') returning '%s'", format, xprn.str)
+			if xprn.str == "Sprintf" {
+				panic("where Sprintf -- why not fmt too?")
+			}
+		} else {
+			pp("expressions.go:1342, formatExprInternal('%s') returning nil", format)
+		}
+	}()
+
 	for i := range a {
 		str, isStr := a[i].(string)
 		if isStr {
