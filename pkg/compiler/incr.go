@@ -133,6 +133,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 
 	isBlocking := func(f *types.Func) bool {
+		return false
 		pp("incr.go: isBlocking: f.Pkg().Path() = '%s'", f.Pkg().Path())
 		// hardcode "fmt" for now
 		if f.Pkg().Path() == "fmt" {
