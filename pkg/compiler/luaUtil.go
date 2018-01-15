@@ -7,14 +7,16 @@ import (
 	"path/filepath"
 )
 
-func NewLuaVmWithPrelude() *luajit.State {
+func NewLuaVmWithPrelude() (*luajit.State, error) {
 	vm := luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
 
 	// load prelude
 	files, err := FetchPrelude(".")
-	panicOn(err)
-	LuaDoFiles(vm, files)
-	return vm
+	if err != nil {
+		return nil, err
+	}
+	err = LuaDoFiles(vm, files)
+	return vm, err
 }
 
 func LuaDoFiles(vm *luajit.State, files []string) error {

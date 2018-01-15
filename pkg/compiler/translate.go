@@ -19,17 +19,19 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	luajit "github.com/glycerine/golua/lua"
 	"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
 )
 
 // the incremental translation state
-func NewIncrState() *IncrState {
+func NewIncrState(vm *luajit.State) *IncrState {
 
 	//	options := &gbuild.Options{CreateMapFile: true}
 	//	s := gbuild.NewSession(options)
 
 	ic := &IncrState{
+		vm: vm,
 		pack: &build.Package{
 			Name:       "main",
 			ImportPath: "main",
@@ -61,8 +63,12 @@ type IncrState struct {
 	fileSet       *token.FileSet
 	archive       *Archive
 	importContext *ImportContext
-	minify        bool
 
+	// the vm lets us add import bindings
+	// like `import "fmt"` on demand.
+	vm *luajit.State
+
+	minify   bool
 	PrintAST bool
 }
 

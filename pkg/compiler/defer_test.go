@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
-	luajit "github.com/glycerine/golua/lua"
 )
 
 func Test033DefersRunOnPanic(t *testing.T) {
@@ -38,18 +37,16 @@ f()
 // now b should be set to 3
 `
 
-		inc := NewIncrState()
+		vm, err := NewLuaVmWithPrelude()
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm)
 		translation := inc.Tr([]byte(code))
 
 		pp("translation='%s'", string(translation))
 
 		// too comple and fragile to verify code. Just  verify that it happens correctly
-		vm := luajit.NewState()
-		defer vm.Close()
-		vm.OpenLibs()
-		files, err := FetchPrelude(".")
-		panicOn(err)
-		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt(vm, "r1", 0)
@@ -65,18 +62,16 @@ func Test035DefersRunWithoutPanic(t *testing.T) {
 
 		code := `func f () { defer println("say hello, gracie"); }`
 
-		inc := NewIncrState()
+		vm, err := NewLuaVmWithPrelude()
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm)
 		translation := inc.Tr([]byte(code))
 
 		pp("translation='%s'", string(translation))
 
 		// too comple and fragile to verify code. Just  verify that it happens correctly
-		vm := luajit.NewState()
-		defer vm.Close()
-		vm.OpenLibs()
-		files, err := FetchPrelude(".")
-		panicOn(err)
-		LuaDoFiles(vm, files)
 
 		LuaRunAndReport(vm, string(translation))
 

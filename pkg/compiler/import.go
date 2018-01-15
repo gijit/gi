@@ -1,8 +1,11 @@
 package compiler
 
 import (
+	"fmt"
+
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/luar"
 )
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
@@ -24,6 +27,14 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	scope.Insert(fun)
 
 	ic.importContext.Packages[path] = pack
+
+	// implementation via luar-based reflection
+
+	// fmt
+	luar.Register(ic.vm, "fmt", luar.Map{
+		// Go functions may be registered directly.
+		"Sprintf": fmt.Sprintf,
+	})
 
 	return &Archive{
 		ImportPath: path,
