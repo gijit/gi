@@ -344,6 +344,9 @@ func (check *Checker) collectObjects() {
 							fmt.Printf("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
 							check.declare(fileScope, nil, obj, token.NoPos)
 
+							// jea add
+							check.scope = fileScope
+
 							// jea try addint to upper scope...
 							fmt.Printf("jea debug, fileScope after adding fmt: '%s'\n\n", fileScope)
 						}

@@ -115,7 +115,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 
 	pp("got past config.Check")
-	obj := pkg.Scope().Lookup("Sprintf")
+	obj := pkg.Scope().Lookup("fmt.Sprintf")
 	pp("Sprintf obj is: '%#v'\n", obj)
 	//goon.Dump(obj)
 
@@ -133,6 +133,12 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 
 	isBlocking := func(f *types.Func) bool {
+		pp("incr.go: isBlocking: f.Pkg().Path() = '%s'", f.Pkg().Path())
+		// hardcode "fmt" for now
+		if f.Pkg().Path() == "fmt" {
+			return false
+		}
+
 		archive, err := importContext.Import(f.Pkg().Path())
 		if err != nil {
 			panic(err)
