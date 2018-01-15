@@ -39,6 +39,12 @@ func NewScope(parent *Scope, pos, end token.Pos, comment string) *Scope {
 	if parent != nil && parent != Universe {
 		parent.children = append(parent.children, s)
 	}
+	pp("NewScope is returning %p with parent %p", s, parent)
+	if Universe != nil {
+		if parent == nil {
+			panic("where is nil scope parent coming from???? bad!")
+		}
+	}
 	return s
 }
 

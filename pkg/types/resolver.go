@@ -237,6 +237,15 @@ func (check *Checker) collectObjects() {
 		fileScope := NewScope(check.pkg.scope, pos, end, check.filename(fileNo))
 		check.recordScope(file, fileScope)
 
+		//pp("just declared fileScope:")
+		//fileScope.Dump()
+
+		// jea add, so that check.scope works (is not nil)
+		defer func(sco *Scope) {
+			check.scope = sco
+		}(check.scope)
+		check.scope = fileScope
+
 		// determine file directory, necessary to resolve imports
 		// FileName may be "" (typically for tests) in which case
 		// we get "." as the directory which is what we would want.
@@ -343,15 +352,6 @@ func (check *Checker) collectObjects() {
 							//  should be getting added to the scopes.
 							fmt.Printf("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
 							check.declare(fileScope, nil, obj, token.NoPos)
-
-							pp("just declared fileScope:")
-							fileScope.Dump()
-
-							// jea add, so that check.scope works (is not nil)
-							defer func(sco *Scope) {
-								check.scope = sco
-							}(check.scope)
-							check.scope = fileScope
 
 							// jea try addint to upper scope...
 							fmt.Printf("jea debug, fileScope after adding fmt: '%s'\n\n", fileScope)
