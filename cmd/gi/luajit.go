@@ -18,8 +18,9 @@ import (
 func (cfg *GIConfig) LuajitMain() {
 
 	vm := compiler.NewLuaVM()
-
 	defer vm.Close()
+
+	var history []string
 
 	//vm.OpenLibs() // luar.Init() does this for us.
 
@@ -57,6 +58,22 @@ func (cfg *GIConfig) LuajitMain() {
 		src := use
 		cmd := bytes.TrimSpace(by)
 		low := string(bytes.ToLower(cmd))
+		if len(low) > 1 && low[0] == ':' {
+			if low[1] >= '0' && low[1] <= '9' {
+				num, err := strconv.Atoi(low[1:])
+				if err != nil {
+					fmt.Printf("bad history request, must be digits only after ':'.\n")
+					continue
+				}
+				if num < 1 || num > len(history) {
+					fmt.Printf("bad history request, out of range.\n")
+					continue
+				}
+				fmt.Printf("replay history %03d:\n", num)
+				src = history[num-1]
+				fmt.Printf("%s", src)
+			}
+		}
 		switch low {
 		case ":ast":
 			inc.PrintAST = true
@@ -79,6 +96,23 @@ func (cfg *GIConfig) LuajitMain() {
 			verb.Verbose = true
 			verb.VerboseVerbose = true
 			continue
+		case ":h":
+			fmt.Printf("history:\n")
+			newline := "\n"
+			for i, h := range history {
+				lenh := len(h)
+				switch {
+				case lenh == 0:
+					newline = "\n"
+				case h[lenh-1] == '\n':
+					newline = ""
+				default:
+					newline = "\n"
+				}
+				fmt.Printf("%03d: %s%s", i+1, h, newline)
+			}
+			fmt.Printf("\n")
+			continue
 		case ":raw":
 			cfg.RawLua = true
 			prompt = luaPrompt
@@ -96,7 +130,7 @@ func (cfg *GIConfig) LuajitMain() {
 				fmt.Printf("error during prelude reload: '%v'", err)
 			}
 			continue
-		case ":help", ":h":
+		case ":help", ":?":
 			fmt.Printf(`
 ======================
 gi: a go interpreter
@@ -114,7 +148,9 @@ these special commands:
  :ast        print the Go AST prior to translation
  :noast      stop printing the Go AST
  :do <path>  run dofile(path) on a .lua file
- :h          show this help (same as :help)
+ :?          show this help (:help does too)
+ :h          show command history
+ :30         replay command number 30 from history
  ctrl-d to exit
 `)
 			continue
@@ -185,6 +221,7 @@ these special commands:
 		}
 
 		p("sending use='%v'\n", use)
+		history = append(history, use)
 		// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
 		interr := vm.LoadString(use)
 		if interr != 0 {
