@@ -344,6 +344,9 @@ func (check *Checker) collectObjects() {
 							fmt.Printf("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
 							check.declare(fileScope, nil, obj, token.NoPos)
 
+							pp("just declared fileScope:")
+							fileScope.Dump()
+
 							// jea add, so that check.scope works (is not nil)
 							defer func(sco *Scope) {
 								check.scope = sco

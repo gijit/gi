@@ -174,7 +174,7 @@ func (s *Scope) Innermost(pos token.Pos) *Scope {
 // If recurse is set, it also writes nested (children) scopes.
 func (s *Scope) WriteTo(w io.Writer, n int, recurse bool) {
 	const ind = ".  "
-	indn := strings.Repeat(ind, n)
+	indn := strings.Repeat(ind, n+1)
 
 	fmt.Fprintf(w, "%s%s scope %p {", indn, s.comment, s)
 	if len(s.elems) == 0 {
@@ -191,7 +191,7 @@ func (s *Scope) WriteTo(w io.Writer, n int, recurse bool) {
 	if recurse {
 		for _, s := range s.children {
 			fmt.Fprintln(w)
-			s.WriteTo(w, n+1, recurse)
+			s.WriteTo(w, n+2, recurse)
 		}
 	}
 
@@ -205,4 +205,26 @@ func (s *Scope) String() string {
 	//s.WriteTo(&buf, 0, false)
 	s.WriteTo(&buf, 0, true)
 	return buf.String()
+}
+
+func (s *Scope) Dump() {
+	if s == nil {
+		fmt.Printf("Dump of nil scope!\n")
+		return
+	}
+	top := s.Topmost()
+	comment := ""
+	if top.parent == Universe {
+		comment = "with Universe above it"
+	}
+	fmt.Printf("Dump (orig %p); topmost scope --%s-- is %p:\n%s\n", s, comment, top, top.String())
+	fmt.Printf("\nxxx done with Dump xxx; Universe is:\n%s\n", Universe)
+}
+
+func (s *Scope) Topmost() *Scope {
+	r := s
+	for r.parent != nil && r.parent != Universe {
+		r = r.parent
+	}
+	return r
 }
