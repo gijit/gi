@@ -37,6 +37,7 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 			// jea replace:
 			// alt = scope.Insert(obj)
 			alt = scope.Replace(obj)
+			pp("types/decl.go:40 we did scope.Replace obj for obs = '%#v'", obj)
 		} else {
 			// at top level package scope
 			//jea: alt = check.pkg.scope.Insert(obj)
@@ -61,6 +62,7 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 // objDecl type-checks the declaration of obj in its respective (file) context.
 // See check.typ for the details on def and path.
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
+	pp("jea debug: types/decl.go:65, check.objDecl running top.")
 	if obj.Type() != nil {
 		return // already checked - nothing to do
 	}

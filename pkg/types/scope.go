@@ -201,6 +201,8 @@ func (s *Scope) WriteTo(w io.Writer, n int, recurse bool) {
 // String returns a string representation of the scope, for debugging.
 func (s *Scope) String() string {
 	var buf bytes.Buffer
-	s.WriteTo(&buf, 0, false)
+	// jea change
+	//s.WriteTo(&buf, 0, false)
+	s.WriteTo(&buf, 0, true)
 	return buf.String()
 }

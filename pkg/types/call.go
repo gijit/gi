@@ -12,7 +12,7 @@ import (
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
-	//pp("Checker.call called with e = '%#v'", e)
+	pp("Checker.call called with e = '%s'", e)
 	check.exprOrType(x, e.Fun)
 
 	switch x.mode {
@@ -279,7 +279,9 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 	// selector expressions.
 	if ident, ok := e.X.(*ast.Ident); ok {
 		_, obj := check.scope.LookupParent(ident.Name, check.pos)
+		pp("jea debug: identifier refers to a package? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // fmt, Sprintf, nil
 		if pname, _ := obj.(*PkgName); pname != nil {
+			pp("inside the obj was *PkgName path...") // fmt.Sprintf not getting here, obj nil.
 			assert(pname.pkg == check.pkg)
 			check.recordUse(ident, pname)
 			pname.used = true
@@ -327,6 +329,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		}
 	}
 
+	// jea: fmt.without.Sprintf path, shouldn't get here; should be
+	// handled above.
 	check.exprOrType(x, e.X)
 	if x.mode == invalid {
 		goto Error

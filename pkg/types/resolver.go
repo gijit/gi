@@ -341,7 +341,11 @@ func (check *Checker) collectObjects() {
 
 							// jea: Ah HAH! this is where the imported package
 							//  should be getting added to the scopes.
+							fmt.Printf("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
 							check.declare(fileScope, nil, obj, token.NoPos)
+
+							// jea try addint to upper scope...
+							fmt.Printf("jea debug, fileScope after adding fmt: '%s'\n\n", fileScope)
 						}
 
 					case *ast.ValueSpec:

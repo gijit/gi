@@ -23,23 +23,49 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	x.expr = e
 
 	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
+	if e.Name == "fmt" {
+		panic("where fmt without the fmt.Sprintf ???")
+	}
 	pp("chk.pkg.scope = '%s'", check.pkg.scope)
 	var scope *Scope
 	var obj Object
 	if check.scope == nil {
 		scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
 	} else {
-		scope, obj = check.scope.LookupParent(e.Name, check.pos)
-		// jea add, try at the top level
-		if obj == nil {
-			scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
-		}
+		//		scope, obj = check.scope.LookupParent(e.Name, check.pos)
+		//		// jea add, try at the top level
+		//		if obj == nil {
+		//			scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
+		//		}
 	}
+
+	/*
+		// jea add, try at filescope
+		if obj == nil {
+			for _, ch := range check.pkg.scope.children {
+				scope, obj = ch.LookupParent(e.Name, check.pos)
+				if obj != nil {
+					break
+				}
+			}
+		}
+	*/
 	if obj == nil {
 		if e.Name == "_" {
 			check.errorf(e.Pos(), "cannot use _ as value or type")
 		} else {
 			// jea: top level import "fmt" is failing here. hmm...
+			pp("about to report undeclared name '%s', here are the scopes:", e.Name)
+			if check.scope != nil {
+				pp("check.scope = '%s' with %v child scopes", check.scope, len(check.scope.children))
+			}
+			if check.pkg != nil {
+				pp("check.pkg.scope = '%s' with %v child scopes", check.pkg.scope, len(check.pkg.scope.children))
+				for i, ch := range check.pkg.scope.children {
+					pp(" [%v] child scope: '%s'", i, ch)
+				}
+
+			}
 			check.errorf(e.Pos(), "undeclared name: %s", e.Name)
 		}
 		return

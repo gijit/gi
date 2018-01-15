@@ -967,6 +967,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 		}()
 	}
 
+	// jea: fmt.without.Sprintf path
 	kind := check.exprInternal(x, e, hint)
 
 	// convert x into a user-friendly set of values
@@ -1013,6 +1014,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		goto Error // error was reported before
 
 	case *ast.Ident:
+		// jea: fmt.without.Sprintf path
 		check.ident(x, e, nil, nil)
 
 	case *ast.Ellipsis:
@@ -1246,6 +1248,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		return kind
 
 	case *ast.SelectorExpr:
+		pp("jea debug, we have an *ast.SelectorExpr: operand x='%#v', Expr e.Sel='%#v'", x, e.Sel)
 		check.selector(x, e)
 
 	case *ast.IndexExpr:
@@ -1593,6 +1596,7 @@ func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 // If an error occurred, x.mode is set to invalid.
 //
 func (check *Checker) exprOrType(x *operand, e ast.Expr) {
+	// jea: fmt.without.Sprintf path
 	check.rawExpr(x, e, nil)
 	check.singleValue(x)
 	if x.mode == novalue {
