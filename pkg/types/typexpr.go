@@ -23,7 +23,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	x.expr = e
 
 	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
-	check.scope.Dump()
+	//check.scope.Dump()
 
 	pp("chk.pkg.scope = '%s'", check.pkg.scope)
 	var scope *Scope

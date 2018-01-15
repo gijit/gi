@@ -282,7 +282,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 	if check.scope == nil {
 		// yep, this is the problem!
 		pp("jea debug problem! check.scope is nil in call.go:283, check.selector()")
-		check.scope.Dump()
+		//check.scope.Dump()
 		panic("scope should not be nil!")
 	} else {
 		pp("call.go:282 we think fmt.Sprintf lookup is failing b/c check.scope isn't set right. check.scope = %p = '%s', with %v children", check.scope, check.scope, len(check.scope.children))

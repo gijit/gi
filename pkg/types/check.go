@@ -7,7 +7,7 @@
 package types
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
@@ -366,10 +366,10 @@ func (check *Checker) recordImplicit(node ast.Node, obj Object) {
 	assert(node != nil)
 	assert(obj != nil)
 	if m := check.Implicits; m != nil {
-		fmt.Printf("\n jea debug check.go:367 recordImplicit() writing m[node='%#v'] with obj='%#v' and node.Path='%#v'\n", node, obj)
+		//fmt.Printf("\n jea debug check.go:367 recordImplicit() writing m[node='%#v'] with obj='%#v'\n", node, obj)
 		m[node] = obj
 	} else {
-		fmt.Printf("\n jea debug check.go:370 recordImplicit() failing to record anything, since check.Implicits is nil")
+		//fmt.Printf("\n jea debug check.go:370 recordImplicit() failing to record anything, since check.Implicits is nil")
 	}
 }
 
