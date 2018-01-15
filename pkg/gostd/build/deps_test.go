@@ -219,10 +219,10 @@ var pkgDeps = map[string][]string{
 
 	// Go type checking.
 	"github.com/gijit/gi/pkg/constant":                {"L4", "github.com/gijit/gi/pkg/token", "math/big"},
-	"github.com/gijit/gi/pkg/importer":                {"L4", "github.com/gijit/gi/pkg/build", "github.com/gijit/gi/pkg/priv/gccgoimporter", "github.com/gijit/gi/pkg/priv/gcimporter", "github.com/gijit/gi/pkg/priv/srcimporter", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types"},
-	"github.com/gijit/gi/pkg/priv/gcimporter":    {"L4", "OS", "github.com/gijit/gi/pkg/build", "github.com/gijit/gi/pkg/constant", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "text/scanner"},
+	"github.com/gijit/gi/pkg/importer":                {"L4", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/priv/gccgoimporter", "github.com/gijit/gi/pkg/priv/gcimporter", "github.com/gijit/gi/pkg/priv/srcimporter", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types"},
+	"github.com/gijit/gi/pkg/priv/gcimporter":    {"L4", "OS", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/constant", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "text/scanner"},
 	"github.com/gijit/gi/pkg/priv/gccgoimporter": {"L4", "OS", "debug/elf", "github.com/gijit/gi/pkg/constant", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "text/scanner"},
-	"github.com/gijit/gi/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/build", "github.com/gijit/gi/pkg/parser", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "path/filepath"},
+	"github.com/gijit/gi/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/parser", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "path/filepath"},
 	"github.com/gijit/gi/pkg/types":                   {"L4", "GOPARSER", "container/heap", "github.com/gijit/gi/pkg/constant"},
 
 	// One of a kind.
@@ -253,7 +253,7 @@ var pkgDeps = map[string][]string{
 	"encoding/pem":        {"L4"},
 	"encoding/xml":        {"L4", "encoding"},
 	"flag":                {"L4", "OS"},
-	"github.com/gijit/gi/pkg/build": {"L4", "OS", "GOPARSER"},
+	"github.com/gijit/gi/pkg/gostd/build": {"L4", "OS", "GOPARSER"},
 	"html":                     {"L4"},
 	"image/draw":               {"L4", "image/internal/imageutil"},
 	"image/gif":                {"L4", "compress/lzw", "image/color/palette", "image/draw"},

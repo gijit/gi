@@ -20,7 +20,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/shurcooL/go-goon"
-	//gbuild "github.com/gijit/gi/pkg/build"
+	//gbuild "github.com/gijit/gi/pkg/gostd/build"
 )
 
 // the incremental translation state

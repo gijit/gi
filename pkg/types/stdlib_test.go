@@ -9,11 +9,11 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/scanner"
 	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"

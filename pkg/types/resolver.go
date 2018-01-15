@@ -271,7 +271,6 @@ func (check *Checker) collectObjects() {
 						imp := check.importPackage(s.Path.Pos(), path, fileDir)
 						if imp == nil {
 							fmt.Printf("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
-							// jea: repl's import "fmt" is exiting early here.
 							continue
 						}
 						fmt.Printf("\n jea debug types/resolver.go:277: good, check.importPackage(path='%s') was not nil. imp='%#v'.  our spec s = '%#v'\n", path, imp, s)
@@ -339,6 +338,9 @@ func (check *Checker) collectObjects() {
 							check.addUnusedDotImport(fileScope, imp, s.Pos())
 						} else {
 							// declare imported package object in file scope
+
+							// jea: Ah HAH! this is where the imported package
+							//  should be getting added to the scopes.
 							check.declare(fileScope, nil, obj, token.NoPos)
 						}
 

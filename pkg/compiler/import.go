@@ -17,6 +17,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	// jea: mvp hack?
 
 	pack := types.NewPackage("fmt", "fmt")
+	pack.MarkComplete()
+
 	//var parent *types.Scope = ic.archive.pkg.Scope()
 	pos := token.NoPos
 	//end := token.NoPos
@@ -35,7 +37,27 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	scope.Insert(fun)
 
-	pack.MarkComplete()
+	// try to get "fmt" to resolve
+
+	// ic.archive is nil on first use
+	/*
+		if ic.archive == nil {
+
+		} else {
+			imps := ic.archive.pkg.Imports()
+			uniq := make(map[string]*types.Package)
+			for _, im := range imps {
+				uniq[im.Path()] = im
+			}
+			uniq[pack.Path()] = pack // insert or update
+			imps = imps[:0]
+			for _, im := range uniq {
+				imps = append(imps, im)
+			}
+			ic.archive.pkg.SetImports(imps)
+		}
+	*/
+	//	ic.archive.pkg.Scope().Insert(scope)
 
 	ic.importContext.Packages[path] = pack
 

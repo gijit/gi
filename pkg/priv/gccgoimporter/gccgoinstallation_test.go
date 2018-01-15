@@ -68,7 +68,7 @@ var importablePackages = [...]string{
 	"flag",
 	"fmt",
 	"github.com/gijit/gi/pkg/ast",
-	"github.com/gijit/gi/pkg/build",
+	"github.com/gijit/gi/pkg/gostd/build",
 	"github.com/gijit/gi/pkg/doc",
 	"github.com/gijit/gi/pkg/format",
 	"github.com/gijit/gi/pkg/parser",

@@ -126,8 +126,8 @@ func TestLocalDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.ImportPath != "github.com/gijit/gi/pkg/build" {
-		t.Fatalf("ImportPath=%q, want %q", p.ImportPath, "github.com/gijit/gi/pkg/build")
+	if p.ImportPath != "github.com/gijit/gi/pkg/gostd/build" {
+		t.Fatalf("ImportPath=%q, want %q", p.ImportPath, "github.com/gijit/gi/pkg/gostd/build")
 	}
 }
 

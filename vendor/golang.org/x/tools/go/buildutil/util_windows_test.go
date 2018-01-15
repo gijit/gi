@@ -6,7 +6,7 @@ package buildutil_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"path/filepath"
 	"runtime"
 	"strings"

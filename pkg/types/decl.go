@@ -20,15 +20,22 @@ func (check *Checker) reportAltDecl(obj Object) {
 }
 
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
-	pp("declare called for obj.Name()='%s', id='%#v'", obj.Name(), id)
+	pp("declare called for obj.Name()='%s', id='%#v', scope='%#v'", obj.Name(), id, scope)
 	// spec: "The blank identifier, represented by the underscore
 	// character _, may be used in a declaration like any other
 	// identifier but the declaration does not introduce a new
 	// binding."
+
+	// jea debug
+	//	if obj.Name() == "fmt" {
+	//		panic("where declare")
+	//	}
+
 	if obj.Name() != "_" {
 		var alt Object
 		if scope != nil {
-			//jea: alt = scope.Insert(obj)
+			// jea replace:
+			// alt = scope.Insert(obj)
 			alt = scope.Replace(obj)
 		} else {
 			// at top level package scope

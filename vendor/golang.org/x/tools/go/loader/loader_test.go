@@ -10,7 +10,7 @@ package loader_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/types"
 	"path/filepath"
