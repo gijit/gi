@@ -27,7 +27,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.Verbose, "v", false, "show debug prints")
 	fs.BoolVar(&c.VerboseVerbose, "vv", false, "show even more verbose debug prints")
 	fs.BoolVar(&c.RawLua, "raw", false, "skip all translation, type raw Lua to LuaJIT with our prelude installed")
-	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GOINTERP_PRELUD_DIR' env var. -prelude overrides this.")
+	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GOINTERP_PRELUDE_DIR' env var. -prelude overrides this.")
 }
 
 var defaultPreludePathParts = []string{
