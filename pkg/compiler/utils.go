@@ -127,8 +127,22 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		args[i] = arg
 	}
 
+	pp("jea debug utils.go:130 argExprs = '%#v'", argExprs)
+
 	if varargType != nil {
-		return append(args[:paramsLen-1], fmt.Sprintf("new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
+		// the 'awesome new' in this expression
+		// fmt.Sprintf("hello %v", awesome new sliceType([new Int(3)]));
+		//return append(args[:paramsLen-1], fmt.Sprintf("awesome new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
+
+		// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
+		newOper := translateTypeNameToNewOper(c.typeName(varargType))
+
+		pp("jea debug, utils.go:140 paramsLen = %v", paramsLen)
+		for i := range args {
+			pp("jea debug, utils.go:142 args[i=%v]='%v'", i, args[i])
+		}
+
+		return append(args[:paramsLen-1], fmt.Sprintf(`%s(%s)`, newOper, strings.Join(args[paramsLen-1:], ", ")))
 	}
 	return args
 }
@@ -357,6 +371,7 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 func (c *funcContext) typeName(ty types.Type) (res string) {
 	pp("in typeName, ty='%#v'", ty)
 	defer func() {
+		// funcContext.typeName returning with res = 'sliceType'
 		pp("funcContext.typeName returning with res = '%s'", res)
 	}()
 	switch t := ty.(type) {
@@ -379,7 +394,10 @@ func (c *funcContext) typeName(ty types.Type) (res string) {
 	if !ok {
 		c.initArgs(ty)                                    // cause all embeddeed types to be registered
 		low := strings.ToLower(typeKind(ty)[5:]) + "Type" // 5: takes the word _kind off.
+
+		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
+
 		varName := c.newVariableWithLevel(low, true)
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
@@ -776,4 +794,12 @@ posloop:
 	lenhead := len(st) - lenbod
 	head = st[:lenhead]
 	return
+}
+
+func translateTypeNameToNewOper(typeName string) string {
+	switch typeName {
+	case "sliceType":
+		return "_gi_NewSlice"
+	}
+	panic(fmt.Sprintf("what here? for typeName = '%s'", typeName))
 }
