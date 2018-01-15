@@ -224,7 +224,7 @@ func (s *Scope) Dump() {
 		comment = "with Universe above it"
 	}
 	fmt.Printf("Dump (orig %p); topmost scope --%s-- is %p:\n%s\n", s, comment, top, top.String())
-	fmt.Printf("\nxxx done with Dump xxx; Universe is:\n%s\n", Universe)
+	fmt.Printf("\nxxx done with Dump xxx\n") // ; Universe is:\n%s\n", Universe)
 }
 
 func (s *Scope) Topmost() *Scope {

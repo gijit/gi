@@ -29,10 +29,10 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	var scope *Scope
 	var obj Object
 	if check.scope == nil {
-		scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
-	} else {
-		scope, obj = check.scope.LookupParent(e.Name, check.pos)
+		check.scope = check.pkg.scope
 	}
+	pp("Checker.ident is checking check.scope == %p", check.scope)
+	scope, obj = check.scope.LookupParent(e.Name, check.pos)
 
 	/*
 		// jea add, try at filescope

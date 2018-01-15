@@ -222,7 +222,8 @@ func (check *Checker) collectObjects() {
 		pkgImports[imp] = true
 	}
 
-	for fileNo, file := range check.files {
+	//for fileNo, file := range check.files {
+	for _, file := range check.files {
 		// The package identifier denotes the current package,
 		// but there is no corresponding package object.
 		check.recordDef(file.Name, nil)
@@ -234,17 +235,27 @@ func (check *Checker) collectObjects() {
 		if f := check.fset.File(file.Pos()); f != nil {
 			pos, end = token.Pos(f.Base()), token.Pos(f.Base()+f.Size())
 		}
-		fileScope := NewScope(check.pkg.scope, pos, end, check.filename(fileNo))
-		check.recordScope(file, fileScope)
+		_, _ = pos, end
+
+		// jea: because each line at the repl could be a
+		// separate "file", we don't actually want separate
+		// file scopes. rather just one package level scope to start with.
+
+		if check.scope == nil {
+			check.scope = check.pkg.scope
+		}
+
+		fileScope := check.scope
+		//fileScope := NewScope(check.pkg.scope, pos, end, check.filename(fileNo))
+		//check.recordScope(file, fileScope)
 
 		//pp("just declared fileScope:")
 		//fileScope.Dump()
 
-		// jea add, so that check.scope works (is not nil)
-		defer func(sco *Scope) {
-			check.scope = sco
-		}(check.scope)
-		check.scope = fileScope
+		//defer func(sco *Scope) {
+		//	check.scope = sco
+		//}(check.scope)
+		//check.scope = fileScope
 
 		// determine file directory, necessary to resolve imports
 		// FileName may be "" (typically for tests) in which case
@@ -339,12 +350,17 @@ func (check *Checker) collectObjects() {
 									// information because the same package - found
 									// via Config.Packages - may be dot-imported in
 									// another package!)
-									check.declare(fileScope, nil, obj, token.NoPos)
+
+									// jea: filescope not relevant at repl
+									//check.declare(fileScope, nil, obj, token.NoPos)
+									check.declare(check.scope, nil, obj, token.NoPos)
 								}
 							}
 							// add position to set of dot-import positions for this file
 							// (this is only needed for "imported but not used" errors)
-							check.addUnusedDotImport(fileScope, imp, s.Pos())
+							// jea: fileScope not relevant at repl
+							//check.addUnusedDotImport(fileScope, imp, s.Pos())
+							check.addUnusedDotImport(check.scope, imp, s.Pos())
 						} else {
 							// declare imported package object in file scope
 
@@ -509,21 +525,25 @@ func (check *Checker) collectObjects() {
 		}
 	}
 
-	// verify that objects in package and file scopes have different names
-	for _, scope := range check.pkg.scope.children /* file scopes */ {
-		for _, obj := range scope.elems {
-			if alt := pkg.scope.Lookup(obj.Name()); alt != nil {
-				if pkg, ok := obj.(*PkgName); ok {
-					check.errorf(alt.Pos(), "%s already declared through import of %s", alt.Name(), pkg.Imported())
-					check.reportAltDecl(pkg)
-				} else {
-					check.errorf(alt.Pos(), "%s already declared through dot-import of %s", alt.Name(), obj.Pkg())
-					// TODO(gri) dot-imported objects don't have a position; reportAltDecl won't print anything
-					check.reportAltDecl(obj)
+	// jea, don't think we want this at the repl
+	/*
+			// verify that objects in package and file scopes have different names
+			for _, scope := range check.pkg.scope.children {
+	            //  file scopes
+				for _, obj := range scope.elems {
+					if alt := pkg.scope.Lookup(obj.Name()); alt != nil {
+						if pkg, ok := obj.(*PkgName); ok {
+							check.errorf(alt.Pos(), "%s already declared through import of %s", alt.Name(), pkg.Imported())
+							check.reportAltDecl(pkg)
+						} else {
+							check.errorf(alt.Pos(), "'%s' already declared through dot-import of %s", alt.Name(), obj.Pkg())
+							// TODO(gri) dot-imported objects don't have a position; reportAltDecl won't print anything
+							check.reportAltDecl(obj)
+						}
+					}
 				}
 			}
-		}
-	}
+	*/
 }
 
 // packageObjects typechecks all package objects in objList, but not function bodies.
