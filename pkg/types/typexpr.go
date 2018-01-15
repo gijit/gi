@@ -32,11 +32,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	if check.scope == nil {
 		scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
 	} else {
-		//		scope, obj = check.scope.LookupParent(e.Name, check.pos)
-		//		// jea add, try at the top level
-		//		if obj == nil {
-		//			scope, obj = check.pkg.scope.LookupParent(e.Name, check.pos)
-		//		}
+		scope, obj = check.scope.LookupParent(e.Name, check.pos)
 	}
 
 	/*
@@ -60,6 +56,9 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 				pp("check.scope = '%s' with %v child scopes", check.scope, len(check.scope.children))
 			}
 			if check.pkg != nil {
+				pp("full dump of check.pkg.scope:")
+				check.pkg.scope.Dump()
+
 				pp("check.pkg.scope = '%s' with %v child scopes", check.pkg.scope, len(check.pkg.scope.children))
 				for i, ch := range check.pkg.scope.children {
 					pp(" [%v] child scope: '%s'", i, ch)
