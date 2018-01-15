@@ -11,10 +11,10 @@ import (
 
 func Test050CallFmtSprintf(t *testing.T) {
 
-	cv.Convey(`a := fmt.Sprintf("hello %v", 3)`, t, func() {
+	cv.Convey(`call to fmt.Sprintf should run, example: a := fmt.Sprintf("hello %v", 3)`, t, func() {
 
-		//		src := `a := fmt.Sprintf("hello %v", 3)`
-		//		inc := NewIncrState()
+		src := `import "fmt"; a := fmt.Sprintf("hello %v", 3)`
+		inc := NewIncrState()
 
 		type person struct {
 			Name string
@@ -42,16 +42,12 @@ func Test050CallFmtSprintf(t *testing.T) {
 			})
 		*/
 
-		//		translation := inc.Tr([]byte(src))
-		//		pp("go:'%s'  -->  '%s' in lua\n", src, translation)
-		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, translation)
+		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		const expectedTranslation = `
-    a = fmt.Sprintf("hello %v", 3)
-`
-		// TODO: remove this! restore actual translation above
-		// temp: impose to test execution mechanism
-		translation := []byte(expectedTranslation)
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`    a = fmt.Sprintf("hello %v", 3)`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 

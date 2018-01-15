@@ -18,11 +18,13 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+
+	"github.com/shurcooL/go-goon"
 )
 
 // the incremental translation state
 func NewIncrState() *IncrState {
-	return &IncrState{
+	ic := &IncrState{
 		pack: &build.Package{
 			Name:       "main",
 			ImportPath: "main",
@@ -33,6 +35,10 @@ func NewIncrState() *IncrState {
 			Packages: make(map[string]*types.Package),
 		},
 	}
+
+	ic.importContext.Import = ic.MakeGiImportFunc()
+
+	return ic
 }
 
 type IncrState struct {
@@ -75,6 +81,15 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	//pp("archive = '%#v'", tr.archive)
 	//pp("len(tr.archive.Declarations)= '%v'", len(tr.archive.Declarations))
 	//pp("len(tr.archive.NewCode)= '%v'", len(tr.archive.NewCodeText))
+
+	// debug/figure out signature of Sprintf
+
+	pp("got past config.Check")
+	obj := tr.archive.pkg.Scope().Lookup("Sprintf")
+	pp("Sprintf obj is:\n")
+	goon.Dump(obj)
+
+	// end debug/figure out Sprintf
 
 	var res bytes.Buffer
 	for i, d := range tr.archive.NewCodeText {

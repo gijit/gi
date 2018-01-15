@@ -99,7 +99,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		return nil, err
 		//pp("config.Check err = '%v'", err)
 	}
-	//pp("got past config.Check")
+	//	pp("got past config.Check")
+	//	obj := pkg.Scope().Lookup("Sprintf")
+	//	pp("Sprintf obj is:\n")
+	//	goon.Dump(obj)
 
 	importContext.Packages[importPath] = pkg
 

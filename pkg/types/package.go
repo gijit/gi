@@ -29,6 +29,10 @@ func NewPackage(path, name string) *Package {
 // Path returns the package path.
 func (pkg *Package) Path() string { return pkg.path }
 
+// jea add
+// SetPath sets the package path.
+func (pkg *Package) SetPath(path string) { pkg.path = path }
+
 // Name returns the package name.
 func (pkg *Package) Name() string { return pkg.name }
 
@@ -39,6 +43,11 @@ func (pkg *Package) SetName(name string) { pkg.name = name }
 // holding the objects declared at package level (TypeNames,
 // Consts, Vars, and Funcs).
 func (pkg *Package) Scope() *Scope { return pkg.scope }
+
+// jea add
+
+// SetScope sets the package scope
+func (pkg *Package) SetScope(scope *Scope) { pkg.scope = scope }
 
 // A package is complete if its scope contains (at least) all
 // exported objects; otherwise it is incomplete.
