@@ -159,14 +159,18 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 				err = fmt.Errorf("Config.Importer.ImportFrom(%s, %s, 0) returned nil but no error", path, dir)
 			}
 		} else {
+			// jea: our import "fmt" is calling here.
 			imp, err = importer.Import(path)
+			fmt.Printf("\n jea debug: types/resolver.go:164, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
 			if imp == nil && err == nil {
+				fmt.Printf("\n jea debug: imp was nil!?! err was nil\n")
 				err = fmt.Errorf("Config.Importer.Import(%s) returned nil but no error", path)
 			}
 		}
 		// make sure we have a valid package name
 		// (errors here can only happen through manipulation of packages after creation)
 		if err == nil && imp != nil && (imp.name == "_" || imp.name == "") {
+			fmt.Printf("\n jea debug: imp.name = '%s' so nilling out imp.\n", imp.name)
 			err = fmt.Errorf("invalid package name: %q", imp.name)
 			imp = nil // create fake package below
 		}
@@ -195,6 +199,8 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 		return imp
 	}
 
+	// jea: import "fmt" is getting here, returning nil.
+	fmt.Printf("\n jea debug: types/resolver.go:201: something went wrong, returning nil. imp.complete='%v', imp.fake='%v'\n", imp.complete, imp.fake)
 	// something went wrong (importer may have returned incomplete package without error)
 	return nil
 }
@@ -264,8 +270,11 @@ func (check *Checker) collectObjects() {
 
 						imp := check.importPackage(s.Path.Pos(), path, fileDir)
 						if imp == nil {
+							fmt.Printf("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
+							// jea: repl's import "fmt" is exiting early here.
 							continue
 						}
+						fmt.Printf("\n jea debug types/resolver.go:277: good, check.importPackage(path='%s') was not nil. imp='%#v'.  our spec s = '%#v'\n", path, imp, s)
 
 						// add package to list of explicit imports
 						// (this functionality is provided as a convenience
@@ -293,10 +302,14 @@ func (check *Checker) collectObjects() {
 						obj := NewPkgName(s.Pos(), pkg, name, imp)
 						if s.Name != nil {
 							// in a dot-import, the dot represents the package
+							fmt.Printf("\n 88888 jea debug: check.recordDef(s.Name='%s') \n", s.Name)
 							check.recordDef(s.Name, obj)
 						} else {
+							// jea: import "fmt" is going here!
+							fmt.Printf("\n 9999 jea debug: check.recordImplicit(s.Name='%s') \n", s.Name)
 							check.recordImplicit(s, obj)
 						}
+						fmt.Printf("\n 00000 jea debug: resolver.go:311 past the recordDef / recordImplicit \n")
 
 						if path == "C" {
 							// match cmd/compile (not prescribed by spec)

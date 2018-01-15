@@ -9,20 +9,18 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	pp("GiImportFunc called with path = '%s'", path)
 
+	//panic("where import?")
 	// gotta return a such that
 	// importContext.Packages[a.ImportPath]
 	// gives a *types.Package for path.
 
 	// jea: mvp hack?
 
-	pack := &types.Package{}
-	pack.SetName("fmt")
-	pack.SetPath("fmt")
-	comment := ""
-	var parent *types.Scope
+	pack := types.NewPackage("fmt", "fmt")
+	//var parent *types.Scope = ic.archive.pkg.Scope()
 	pos := token.NoPos
-	end := token.NoPos
-	scope := types.NewScope(parent, pos, end, comment)
+	//end := token.NoPos
+	scope := pack.Scope()
 
 	// func Sprintf(format string, a ...interface{}) string
 	var recv *types.Var
@@ -33,10 +31,17 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		types.NewVar(pos, pack, "a", types.NewSlice(T)))
 	variadic := true
 	sig := types.NewSignature(recv, params, results, variadic)
-
 	fun := types.NewFunc(pos, pack, "Sprintf", sig)
+
 	scope.Insert(fun)
+
+	pack.MarkComplete()
+
 	ic.importContext.Packages[path] = pack
 
-	return &Archive{ImportPath: path}, nil
+	return &Archive{
+		ImportPath: path,
+		pkg:        pack,
+		//Declarations: []*Decl{},
+	}, nil
 }

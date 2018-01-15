@@ -39,7 +39,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 		if e.Name == "_" {
 			check.errorf(e.Pos(), "cannot use _ as value or type")
 		} else {
-			// jea: top level 'var j int' failing here. hmm...
+			// jea: top level import "fmt" is failing here. hmm...
 			check.errorf(e.Pos(), "undeclared name: %s", e.Name)
 		}
 		return

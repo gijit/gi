@@ -20,10 +20,15 @@ import (
 	"github.com/fsnotify/fsnotify"
 
 	"github.com/shurcooL/go-goon"
+	//gbuild "github.com/gijit/gi/pkg/build"
 )
 
 // the incremental translation state
 func NewIncrState() *IncrState {
+
+	//	options := &gbuild.Options{CreateMapFile: true}
+	//	s := gbuild.NewSession(options)
+
 	ic := &IncrState{
 		pack: &build.Package{
 			Name:       "main",
@@ -33,6 +38,16 @@ func NewIncrState() *IncrState {
 		fileSet: token.NewFileSet(), // positions are relative to fileSet
 		importContext: &ImportContext{
 			Packages: make(map[string]*types.Package),
+
+			// from GopherJS:
+			/*
+				Import: func(path string) (*Archive, error) {
+					if path == pkg.ImportPath || path == pkg.ImportPath+"_test" {
+						return s.Archives[path], nil
+					}
+					return s.BuildImportPath(path)
+				},
+			*/
 		},
 	}
 

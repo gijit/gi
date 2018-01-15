@@ -52,7 +52,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			Types:      make(map[ast.Expr]types.TypeAndValue),
 			Defs:       make(map[*ast.Ident]types.Object),
 			Uses:       make(map[*ast.Ident]types.Object),
-			Implicits:  make(map[ast.Node]types.Object),
+			Implicits:  make(map[ast.Node]types.Object), // imports, but those without renames?
 			Selections: make(map[*ast.SelectorExpr]*types.Selection),
 			Scopes:     make(map[ast.Node]*types.Scope),
 		}
