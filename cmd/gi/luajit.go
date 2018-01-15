@@ -148,7 +148,7 @@ these special commands:
  :ast        print the Go AST prior to translation
  :noast      stop printing the Go AST
  :do <path>  run dofile(path) on a .lua file
- :?          show this help (:help does too)
+ :?          show this help (:help does the same)
  :h          show command history
  :30         replay command number 30 from history
  ctrl-d to exit
@@ -221,7 +221,7 @@ these special commands:
 		}
 
 		p("sending use='%v'\n", use)
-		history = append(history, use)
+		history = append(history, src)
 		// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
 		interr := vm.LoadString(use)
 		if interr != 0 {
