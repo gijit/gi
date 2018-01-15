@@ -24,6 +24,12 @@ import (
 
 func NewLuaVM() *luajit.State {
 	vm := luar.Init()
+
+	luar.Register(vm, "fmt", luar.Map{
+		// Go functions may be registered directly.
+		"Sprintf": fmt.Sprintf,
+	})
+
 	return vm
 }
 
