@@ -24,9 +24,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 
 	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
 	check.scope.Dump()
-	if e.Name == "fmt" {
-		panic("where fmt without the fmt.Sprintf ???")
-	}
+
 	pp("chk.pkg.scope = '%s'", check.pkg.scope)
 	var scope *Scope
 	var obj Object
