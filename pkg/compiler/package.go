@@ -920,10 +920,10 @@ end
 	}
 
 	if prefix != "" {
-		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "/* */" + prefix + "\n" + bodyOutput
+		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "/*jea package.go:923 */" + prefix + "\n" + bodyOutput
 	}
 	if suffix != "" {
-		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "/* */" + suffix + "\n"
+		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "/*jea package.go:926 */" + suffix + "\n"
 	}
 	if len(c.localVars) != 0 {
 		// jea, these are javascript only: at the top of a

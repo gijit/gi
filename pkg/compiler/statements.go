@@ -649,12 +649,12 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 		}
 		condStrs[i] = strings.Join(conds, " || ")
 		if flatten {
-			c.Printf("/* */ if (%s) then $s = %d; continue; end", condStrs[i], caseOffset+i)
+			c.Printf("/*jea statements.go:652 */ if (%s) then $s = %d; continue; end", condStrs[i], caseOffset+i)
 		}
 	}
 
 	if flatten {
-		c.Printf("/* */ $s = %d; continue;", defaultCase)
+		c.Printf("/*jea statements.go:657*/ $s = %d; continue;", defaultCase)
 	}
 
 	prefix := ""

@@ -15,18 +15,18 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	//panic("where import?")
 
-	pack := types.NewPackage("fmt", "fmt")
-	pack.MarkComplete()
-	scope := pack.Scope()
+	pkg := types.NewPackage("fmt", "fmt")
+	pkg.MarkComplete()
+	scope := pkg.Scope()
 
-	fun := getFunForSprintf(pack)
+	fun := getFunForSprintf(pkg)
 
 	// As it should, scope.Insert(fun)
 	// gets rid of 'Sprintf not declared by package fmt'
 	// from types/call.go:302.
 	scope.Insert(fun)
 
-	ic.importContext.Packages[path] = pack
+	ic.importContext.Packages[path] = pkg
 
 	// implementation via luar-based reflection
 
@@ -38,20 +38,20 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	return &Archive{
 		ImportPath: path,
-		pkg:        pack,
+		pkg:        pkg,
 	}, nil
 }
 
-func getFunForSprintf(pack *types.Package) *types.Func {
+func getFunForSprintf(pkg *types.Package) *types.Func {
 	// func Sprintf(format string, a ...interface{}) string
 	var recv *types.Var
 	var T types.Type = &types.Interface{}
 	str := types.Typ[types.String]
-	results := types.NewTuple(types.NewVar(token.NoPos, pack, "", str))
-	params := types.NewTuple(types.NewVar(token.NoPos, pack, "format", str),
-		types.NewVar(token.NoPos, pack, "a", types.NewSlice(T)))
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", str))
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "format", str),
+		types.NewVar(token.NoPos, pkg, "a", types.NewSlice(T)))
 	variadic := true
 	sig := types.NewSignature(recv, params, results, variadic)
-	fun := types.NewFunc(token.NoPos, pack, "Sprintf", sig)
+	fun := types.NewFunc(token.NoPos, pkg, "Sprintf", sig)
 	return fun
 }

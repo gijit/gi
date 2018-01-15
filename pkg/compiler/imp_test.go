@@ -39,7 +39,8 @@ func Test050CallFmtSprintf(t *testing.T) {
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`    a = fmt.Sprintf("hello %v", 3)`)
+			`a = fmt.Sprintf("hello %v", _gi_NewSlice("Int",{3});`)
+		// new sliceType([new Int(3)]));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
