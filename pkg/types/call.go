@@ -272,11 +272,19 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		indirect bool
 	)
 
+	//panic("jea debug: where selector that doesn't have check.scope set properly?")
+
 	sel := e.Sel.Name
 	// If the identifier refers to a package, handle everything here
 	// so we don't need a "package" mode for operands: package names
 	// can only appear in qualified identifiers which are mapped to
 	// selector expressions.
+	if check.scope == nil {
+		// yep, this is the problem!
+		pp("jea debug problem! check.scope is nil in call.go:283, check.selector()")
+	} else {
+		pp("call.go:282 we think fmt.Sprintf lookup is failing b/c check.scope isn't set right. check.scope = %p = '%s', with %v children", check.scope, check.scope, len(check.scope.children))
+	}
 	if ident, ok := e.X.(*ast.Ident); ok {
 		_, obj := check.scope.LookupParent(ident.Name, check.pos)
 		pp("jea debug: identifier refers to a package? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // fmt, Sprintf, nil
