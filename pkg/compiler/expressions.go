@@ -582,6 +582,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		sel, ok := c.p.SelectionOf(e)
 		if !ok {
 			// qualified identifier
+			// 99999 fmt-tracking from Sprintf alone.
+			pp("expressions.go:586, sel = '%#v', e='%#v'", sel, e) // sel is nil, e is not
+			pp("jea expressions.go:589, our ast.SelectorExpr.X='%#v', .Sel='%#v'", e.X, e.Sel)
+			// e.X.Name == "fmt", e.Sel.Name == "Sprintf"; both are *ast.Ident
 			return c.formatExpr("%s", c.objectName(obj))
 		}
 
@@ -642,6 +646,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 						return c.translateExpr(e.Args[0])
 					}
 				}
+				// 99999 fmt-tracking from Sprintf alone.
 				return c.translateCall(e, sig, c.translateExpr(f))
 			}
 
@@ -1206,6 +1211,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 	exprType := c.p.TypeOf(expr)
 	if types.Identical(exprType, desiredType) {
 		pp("YYY 2 translateImplicitConversion exiting early, b/c types are identical, exprType='%#v' and desiredType='%#v'. expr ='%#v'", exprType, desiredType, expr)
+		// 99999 fmt-tracking from Sprintf alone.
 		return c.translateExpr(expr)
 	}
 
@@ -1326,6 +1332,7 @@ func (c *funcContext) internalize(s *expression, t types.Type) *expression {
 }
 
 func (c *funcContext) formatExpr(format string, a ...interface{}) *expression {
+	// 99999 fmt-tracking from Sprintf alone.
 	return c.formatExprInternal(format, a, false)
 }
 
@@ -1491,6 +1498,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	if hasAssignments {
 		out.WriteByte(')')
 	}
+	// 99999 fmt-tracking from Sprintf alone.
 	return &expression{str: out.String(), parens: parens}
 }
 
