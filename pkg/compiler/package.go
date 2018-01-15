@@ -699,7 +699,6 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 			return []byte(fmt.Sprintf("\t%s = function() \n\t\t$throwRuntimeError(\"native function not implemented: %s\");\n\t end ;\n", funcRef, o.FullName()))
 		}
 
-		pp("Boogle here xxx 10+-")
 		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
 		pp("funcRef in translateFunction, package.go:698 is '%s'; isMethod='%v'", funcRef, isMethod)
 		if funcRef == "Write" {
@@ -718,7 +717,6 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if fun.Recv == nil {
 		funcRef := c.objectName(o)
-		pp("Boogle here xxx 10")
 		code.Write(primaryFunction(false, funcRef))
 		if fun.Name.IsExported() {
 			fmt.Fprintf(code, "\t%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
@@ -805,7 +803,6 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		}
 	}
 
-	pp("Boogle here xxx 9")
 	bodyOutput := string(c.CatchOutput(1, func() {
 		if len(c.Blocking) != 0 {
 			c.p.Scopes[body] = c.p.Scopes[typ]
@@ -831,7 +828,6 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			c.Printf("%s = %s;", c.translateExpr(recv), this)
 		}
 
-		pp("Boogle here xxx 7")
 		c.translateStmtList(body.List)
 		if len(c.Flattened) != 0 && !endsWithReturn(body.List) {
 			c.translateStmt(&ast.ReturnStmt{}, nil)

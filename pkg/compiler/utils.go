@@ -70,7 +70,6 @@ func (c *funcContext) CatchOutput(indent int, f func()) []byte {
 	origoutput := c.output
 	c.output = nil
 	c.p.indentation += indent
-	pp("Boogle here xxx 8")
 	f()
 	c.writePos()
 	catched := c.output

@@ -36,43 +36,16 @@ func (e *expression) StringWithParens() string {
 }
 
 func (c *funcContext) translateExpr(expr ast.Expr) *expression {
-	exitPrint := false
-	anyExit := false
-	if cl, isCl := expr.(*ast.CompositeLit); isCl {
-		// jea: this depends on the initializers. arg!
-		pp("CompositeLit in translateExpr: cl='%#v'", cl)
-		if cl != nil && cl.Type != nil {
-			if id, isId := cl.Type.(*ast.Ident); isId {
-				pp("CompositeLit in translateExpr: cl.Type='%#v'", cl.Type)
-				if id.Name == "Beagle" {
-					pp("AAAAAAAHHHHAAAA we found the Beagle!")
-					anyExit = true
-				}
-			}
-		} else {
-			pp("CompositeLit in translateExpr: cl=nil or cl.Type=nil")
-		}
-	}
-	defer func() {
-		if exitPrint {
-			pp("translateExpr exitPrint=true, expr='%#v'", expr)
-		}
-		if anyExit {
-			pp("translateExpr we started with the Beagle already! anyExit=true, expr='%#v'", expr)
-		}
-	}()
 
 	exprType := c.p.TypeOf(expr)
-	pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:65, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
+	//pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:65, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
 		case isBoolean(basic):
 			return c.formatExpr("%s", strconv.FormatBool(constant.BoolVal(value)))
 		case isInteger(basic):
-			pp("jea, in isInteger")
 			if is64Bit(basic) {
-				pp("jea, in64Bit")
 				if basic.Kind() == types.Int64 {
 					d, ok := constant.Int64Val(constant.ToInt(value))
 					if !ok {
@@ -91,7 +64,6 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				panic("could not get exact int")
 			}
 			x := c.formatExpr("%s", strconv.FormatInt(d, 10))
-			pp("jea, debug, at formatExpr() line 64. x='%#v'", x)
 			return x
 		case isFloat(basic):
 			f, _ := constant.Float64Val(value)
@@ -138,11 +110,11 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		}
 	}
 
-	pp("expressions.go:115, expr is '%#v'/Type=%T", expr, expr)
+	//pp("expressions.go:115, expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		// jea: this depends on the initializers!
-		pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
+		//pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
 		if ptrType, isPointer := exprType.(*types.Pointer); isPointer {
 			exprType = ptrType.Elem()
 		}
@@ -229,16 +201,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					}
 				}
 			}
-			pp("Boogle here xxx 0")
-			if c.typeName(exprType) == "Beagle" {
-				pp("YYY 0 at the new ptr! with elements '%#v'", elements)
-				exitPrint = true
-			}
 			//flds := structFieldTypes(t)
 			vals := structFieldNameValuesForLua(t, elements)
 			return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
-			//return c.formatExpr(`_gi_NewStruct("%s",{%s},{%s})`, c.typeName(exprType), strings.Join(flds, ", "), strings.Join(vals, ", "))
-			//return c.formatExpr("BOBOBOBOBO new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
 		}
@@ -268,7 +233,6 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch t.Underlying().(type) {
 			case *types.Struct, *types.Array:
-				pp("Boogle here xxx 1")
 				return c.translateExpr(e.X)
 			}
 
@@ -1273,7 +1237,6 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			return c.formatExpr("new %1e.constructor.elem(%1e)", expr)
 		}
 	}
-	pp("Boogle here xxx 2")
 	return c.translateExpr(expr)
 }
 
