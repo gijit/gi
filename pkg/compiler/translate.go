@@ -8,6 +8,7 @@ import (
 	"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	"github.com/gijit/gi/pkg/verb"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -18,7 +19,6 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-
 	"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
 )
@@ -93,7 +93,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	tr.archive, err = IncrementallyCompile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)
 	panicOn(err)
-	//pp("archive = '%#v'", tr.archive)
+	pp("archive = '%#v'", tr.archive)
 	//pp("len(tr.archive.Declarations)= '%v'", len(tr.archive.Declarations))
 	//pp("len(tr.archive.NewCode)= '%v'", len(tr.archive.NewCodeText))
 
@@ -101,8 +101,10 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	pp("got past config.Check")
 	obj := tr.archive.pkg.Scope().Lookup("Sprintf")
-	pp("Sprintf obj is:\n")
-	goon.Dump(obj)
+	if verb.VerboseVerbose {
+		pp("Sprintf obj is:\n")
+		goon.Dump(obj)
+	}
 
 	// end debug/figure out Sprintf
 
