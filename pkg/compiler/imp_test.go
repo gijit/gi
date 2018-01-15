@@ -43,8 +43,8 @@ func Test050CallFmtSprintf(t *testing.T) {
 		*/
 
 		translation := inc.Tr([]byte(src))
-		pp("go:'%s'  -->  '%s' in lua\n", src, translation)
-		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`    a = fmt.Sprintf("hello %v", 3)`)
