@@ -5,7 +5,7 @@
 package buildutil_test
 
 import (
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"io/ioutil"
 	"os"
 	"path/filepath"

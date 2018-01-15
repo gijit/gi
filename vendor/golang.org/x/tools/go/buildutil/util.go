@@ -7,7 +7,7 @@ package buildutil
 import (
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/token"
 	"io"

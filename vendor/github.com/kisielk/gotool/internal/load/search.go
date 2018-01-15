@@ -8,7 +8,7 @@ package load
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"log"
 	"os"
 	"path"

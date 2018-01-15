@@ -2,7 +2,7 @@
 package importgraphutil
 
 import (
-	"github.com/gijit/gi/pkg/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"sync"
 
 	"golang.org/x/tools/go/buildutil"
