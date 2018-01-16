@@ -10,7 +10,7 @@ func Test050CallFmtSprintf(t *testing.T) {
 
 	cv.Convey(`call to fmt.Sprintf should run, example: a := fmt.Sprintf("hello %v", 3)`, t, func() {
 
-		src := `import "fmt"; a := fmt.Sprintf("hello %v", 3)`
+		src := `import "fmt"; a := fmt.Sprintf("hello %v %v", 3, 4)`
 
 		type person struct {
 			Name string
@@ -39,11 +39,10 @@ func Test050CallFmtSprintf(t *testing.T) {
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("hello %v", _gi_NewSlice("Int",{3});`)
-		// new sliceType([new Int(3)]));`)
+			`a = fmt.Sprintf("hello %v %v", _gi_NewSlice("interface{}",{3, 4}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustString(vm, "a", "hello 3")
+		LuaMustString(vm, "a", "hello 3 4")
 	})
 }

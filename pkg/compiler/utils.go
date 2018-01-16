@@ -85,6 +85,8 @@ func (c *funcContext) Delayed(f func()) {
 func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, ellipsis bool) []string {
 	if len(argExprs) == 1 {
 		if tuple, isTuple := c.p.TypeOf(argExprs[0]).(*types.Tuple); isTuple {
+			pp("// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
+			c.Printf("\n// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs\n")
 			tupleVar := c.newVariable("_tuple")
 			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0]))
 			argExprs = make([]ast.Expr, tuple.Len())
@@ -99,12 +101,14 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	var varargType *types.Slice
 	if sig.Variadic() && !ellipsis {
 		varargType = sig.Params().At(paramsLen - 1).Type().(*types.Slice)
+		pp("utils.go:104 varargType: '%#v'/elem type='%T'", varargType, varargType.Elem())
 	}
 
 	preserveOrder := false
 	for i := 1; i < len(argExprs); i++ {
 		preserveOrder = preserveOrder || c.Blocking[argExprs[i]]
 	}
+	pp("utils.go:110: preserveOrder=%v", preserveOrder)
 
 	args := make([]string, len(argExprs))
 	for i, argExpr := range argExprs {
@@ -127,7 +131,15 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		args[i] = arg
 	}
 
-	pp("jea debug utils.go:130 argExprs = '%#v'", argExprs)
+	pp("jea debug utils.go:134 argExprs = '%#v'", argExprs)
+	for i := range argExprs {
+		pp("jea debug utils.go:136 argExprs[i=%v] = '%#v'", i, argExprs[i])
+	}
+
+	pp("jea debug utils.go:139 args = '%#v', which is after c.translateImplicitConversionWithCloning", args)
+	for i := range args {
+		pp("jea debug utils.go:141 args[i=%v] = '%#v'", i, args[i])
+	}
 
 	if varargType != nil {
 		// the 'awesome new' in this expression
@@ -137,12 +149,15 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
 		newOper := translateTypeNameToNewOper(c.typeName(varargType))
 
-		pp("jea debug, utils.go:140 paramsLen = %v", paramsLen)
+		pp("jea debug, utils.go:140 paramsLen = %v; newOper=%#v", paramsLen, newOper)
 		for i := range args {
 			pp("jea debug, utils.go:142 args[i=%v]='%v'", i, args[i])
 		}
 
-		return append(args[:paramsLen-1], fmt.Sprintf(`%s(%s)`, newOper, strings.Join(args[paramsLen-1:], ", ")))
+		// what is the
+
+		// the ones >= paramsLen-1 are those from the variadic last type.
+		return append(args[:paramsLen-1], fmt.Sprintf(`%s("interface{}",{%s})`, newOper, strings.Join(args[paramsLen-1:], ", ")))
 	}
 	return args
 }
@@ -553,10 +568,20 @@ func nameHelper(expr ast.Expr) string {
 func isWrapped(ty types.Type) bool {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
-		if isString(t) {
-			return false
-		}
-		return !is64Bit(t) && !isComplex(t) && t.Kind() != types.UntypedNil
+		// jea simplify, we aren't in 32-bit javascript land.
+		return false
+		/*
+						if isString(t) {
+							return false
+						}
+			            // jea add
+						kind := t.Kind()
+						if kind == types.Int || kind == types.Uint {
+							return false
+						}
+
+						return !is64Bit(t) && !isComplex(t) && t.Kind() != types.UntypedNil
+		*/
 	case *types.Array, *types.Chan, *types.Map, *types.Signature:
 		return true
 	case *types.Pointer:

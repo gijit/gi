@@ -1201,8 +1201,9 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 	return c.translateImplicitConversion(expr, desiredType)
 }
 
-// this is getting missed in the Beagel / Boogle processing
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
+	pp("translateImplicitConversion top: desiredType='%#v', expr='%#v'", desiredType, expr)
+
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
 		return c.translateExpr(expr)
@@ -1233,16 +1234,20 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			return c.formatExpr("new $jsObjectPtr(%e)", expr)
 		}
 		if isWrapped(exprType) {
+			pp("isWrapped is true for exprType='%#v'", exprType)
+
 			pp("YYY 6 translateImplicitConversion exiting early")
 			// string literals are converting to new `new String("string")`
 			// which we don't need.
 			return c.formatExpr("new %s(%e)", c.typeName(exprType), expr)
 		}
+		pp("!isWrapped for exprType='%#v'", exprType)
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {
 			pp("YYY 7 translateImplicitConversion exiting early")
 			return c.formatExpr("new %1e.constructor.elem(%1e)", expr)
 		}
 	}
+	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v'", expr)
 	return c.translateExpr(expr)
 }
 
