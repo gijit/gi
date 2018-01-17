@@ -25,6 +25,14 @@ func PP(format string, a ...interface{}) {
 	}
 }
 
+// without the file/line, otherwise the same as PP
+func PPP(format string, a ...interface{}) {
+	if VerboseVerbose {
+		Printf("\n%s ", ts())
+		Printf(format+"\n", a...)
+	}
+}
+
 func PB(w io.Writer, format string, a ...interface{}) {
 	if Verbose {
 		fmt.Fprintf(w, "\n"+format+"\n", a...)

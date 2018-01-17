@@ -896,10 +896,10 @@ func DumpLuaStack(L *lua.State) {
 	var top int
 
 	top = L.GetTop()
-	pp("DumpLuaStack: top = %v", top)
+	fmt.Printf("DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
 		t := L.Type(i)
-		pp("DumpLuaStack: i=%v, t= %v", i, t)
+		fmt.Printf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
 		case lua.LUA_TSTRING:
 			fmt.Printf("String : \t%v\n", L.ToString(i))
@@ -911,5 +911,5 @@ func DumpLuaStack(L *lua.State) {
 			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
 		}
 	}
-	print("\n")
+	fmt.Printf("\n")
 }

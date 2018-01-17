@@ -64,10 +64,10 @@ func DumpLuaStack(L *golua.State) {
 	var top int
 
 	top = L.GetTop()
-	pp("DumpLuaStack: top = %v", top)
+	fmt.Printf("========== begin DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
 		t := L.Type(i)
-		pp("DumpLuaStack: i=%v, t= %v", i, t)
+		fmt.Printf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
 		case golua.LUA_TSTRING:
 			fmt.Printf("String : \t%v\n", L.ToString(i))
@@ -79,7 +79,7 @@ func DumpLuaStack(L *golua.State) {
 			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
 		}
 	}
-	print("\n")
+	fmt.Printf("========= end of DumpLuaStack\n")
 }
 
 func DumpLuaStackAsString(L *golua.State) string {
