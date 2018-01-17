@@ -725,13 +725,16 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 
 	switch L.Type(idx) {
 	case lua.LUA_TNIL:
+		pp("luar.go, type of idx == LUA_TNIL")
 		v.Set(reflect.Zero(v.Type()))
 	case lua.LUA_TBOOLEAN:
+		pp("luar.go, type of idx == LUA_TBOOLEAN")
 		if kind != reflect.Bool && kind != reflect.Interface {
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		v.Set(reflect.ValueOf(L.ToBoolean(idx)))
 	case lua.LUA_TNUMBER:
+		pp("luar.go, type of idx == LUA_TNUMBER")
 		switch k := unsizedKind(v); k {
 		case reflect.Int64, reflect.Uint64, reflect.Float64, reflect.Interface:
 			// We do not use ToInteger as it may truncate the value. Let Go truncate
@@ -744,11 +747,13 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	case lua.LUA_TSTRING:
+		pp("luar.go, type of idx == LUA_TSTRING")
 		if kind != reflect.String && kind != reflect.Interface {
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		v.Set(reflect.ValueOf(L.ToString(idx)))
 	case lua.LUA_TUSERDATA:
+		pp("luar.go, type of idx == LUA_TUSERDATA")
 		if isValueProxy(L, idx) {
 			val, typ := valueOfProxy(L, idx)
 			if val.Interface() == Null {
@@ -774,6 +779,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
 	case lua.LUA_TTABLE:
+		pp("luar.go, type of idx == LUA_TTABLE")
+		pp("has type name \t%v\n", L.Typename(idx))
+
 		// TODO: Check what happens if visited is not of the right type.
 		ptr := L.ToPointer(idx)
 		if val, ok := visited[ptr]; ok {
@@ -902,8 +910,10 @@ func DumpLuaStack(L *lua.State) {
 			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
 		case lua.LUA_TNUMBER:
 			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
+		case lua.LUA_TTABLE:
+			fmt.Printf("Table : \tno auto-print for tables\n")
 		default:
-			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
+			fmt.Printf("Type(number %v) : no auto-print available.\n", t)
 		}
 	}
 	fmt.Printf("\n")

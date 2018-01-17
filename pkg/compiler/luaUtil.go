@@ -75,8 +75,10 @@ func DumpLuaStack(L *golua.State) {
 			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
 		case golua.LUA_TNUMBER:
 			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
+		case golua.LUA_TTABLE:
+			fmt.Printf("Table : \tno auto-print for tables\n")
 		default:
-			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
+			fmt.Printf("Type(number %v) : no auto-print available.\n", t)
 		}
 	}
 	fmt.Printf("========= end of DumpLuaStack\n")
