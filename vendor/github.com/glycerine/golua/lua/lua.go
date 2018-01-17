@@ -432,6 +432,10 @@ func (L *State) PushNil() {
 
 // lua_pushnumber
 func (L *State) PushNumber(n float64) {
+	C.lua_pushnumber(L.s, C.lua_Number(n)) // lua_Number is a cast
+}
+
+func (L *State) PushInt64(n int64) {
 	C.lua_pushnumber(L.s, C.lua_Number(n))
 }
 
