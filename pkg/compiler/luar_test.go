@@ -41,7 +41,7 @@ func Test054GoToLuarThenLuarToGo(t *testing.T) {
 		var six int64 = 6
 		vm := luar.Init()
 		a := []interface{}{six, "hello"}
-		luar.GoToLuaProxy(vm, &a)
+		luar.GoToLua(vm, &a)
 
 		DumpLuaStack(vm)
 		b := []interface{}{}
@@ -63,11 +63,13 @@ func Test054GoToLuarThenLuarToGo(t *testing.T) {
 	})
 }
 
-func Test055_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
+func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 
 	cv.Convey(`luar.GoToLua then LuarToGo should preserve int64 cdata values`, t, func() {
 
-		var a int64 = math.MinInt64
+		// +10000 so we catch the loss of precision
+		// from the conversion to double and back.
+		var a int64 = math.MinInt64 + 10000
 
 		vm := luar.Init()
 		luar.GoToLua(vm, &a)
