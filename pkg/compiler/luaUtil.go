@@ -67,15 +67,16 @@ func DumpLuaStack(L *luajit.State) {
 	pp("DumpLuaStack: top = %v", top)
 	for i := 1; i <= top; i++ {
 		t := L.Type(i)
+		pp("DumpLuaStack: i=%v, t= %v", i, t)
 		switch t {
 		case luajit.LUA_TSTRING:
-			fmt.Println("String : \t", L.ToString(i))
+			fmt.Printf("String : \t%v\n", L.ToString(i))
 		case luajit.LUA_TBOOLEAN:
-			fmt.Println("Bool : \t\t", L.ToBoolean(i))
+			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
 		case luajit.LUA_TNUMBER:
-			fmt.Println("Number : \t", L.ToNumber(i))
+			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
 		default:
-			fmt.Println("Type : \t\t", L.Typename(i))
+			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
 		}
 	}
 	print("\n")
