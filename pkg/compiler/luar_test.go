@@ -41,7 +41,7 @@ func Test054GoToLuarThenLuarToGo(t *testing.T) {
 		var six int64 = 6
 		vm := luar.Init()
 		a := []interface{}{six, "hello"}
-		luar.GoToLua(vm, &a)
+		luar.GoToLuaProxy(vm, &a)
 
 		DumpLuaStack(vm)
 		b := []interface{}{}
