@@ -356,11 +356,6 @@ func GoToLuaProxy(L *lua.State, a interface{}) {
 // TODO: Check if we really need multiple pointer levels since pointer methods
 // can be called on non-pointers.
 func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
-	//	pp("goToLua called on a = '%#v'. Here is DumpLuaStack: ===========", a)
-	//	if verb.Verbose || verb.VerboseVerbose {
-	//		DumpLuaStack(L)
-	//		pp("============ end of DumpLuaStack ================")
-	//	}
 
 	var v reflect.Value
 	v, ok := a.(reflect.Value)
