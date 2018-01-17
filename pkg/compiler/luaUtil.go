@@ -61,49 +61,32 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 }
 
 func DumpLuaStack(L *golua.State) {
-	var top int
-
-	top = L.GetTop()
-	fmt.Printf("========== begin DumpLuaStack: top = %v\n", top)
-	for i := top; i >= 1; i-- {
-		t := L.Type(i)
-		fmt.Printf("DumpLuaStack: i=%v, t= %v\n", i, t)
-		switch t {
-		case golua.LUA_TSTRING:
-			fmt.Printf("String : \t%v\n", L.ToString(i))
-		case golua.LUA_TBOOLEAN:
-			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
-		case golua.LUA_TNUMBER:
-			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
-		case golua.LUA_TTABLE:
-			fmt.Printf("Table : \tno auto-print for tables\n")
-		default:
-			fmt.Printf("Type(number %v) : no auto-print available.\n", t)
-		}
-	}
-	fmt.Printf("========= end of DumpLuaStack\n")
+	fmt.Printf("%s\n", DumpLuaStackAsString(L))
 }
 
-func DumpLuaStackAsString(L *golua.State) string {
+func DumpLuaStackAsString(L *golua.State) (s string) {
 	var top int
-	s := ""
+
 	top = L.GetTop()
-	pp("DumpLuaStackAsString: top = %v", top)
+	s += fmt.Sprintf("========== begin DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
-		pp("i=%v out of top = %v", i, top)
 		t := L.Type(i)
+		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
 		case golua.LUA_TSTRING:
-			s += fmt.Sprintf("String : \t%v", L.ToString(i))
+			s += fmt.Sprintf("String : \t%v\n", L.ToString(i))
 		case golua.LUA_TBOOLEAN:
-			s += fmt.Sprintf("Bool : \t\t%v", L.ToBoolean(i))
+			s += fmt.Sprintf("Bool : \t\t%v\n", L.ToBoolean(i))
 		case golua.LUA_TNUMBER:
-			s += fmt.Sprintf("Number : \t%v", L.ToNumber(i))
+			s += fmt.Sprintf("Number : \t%v\n", L.ToNumber(i))
+		case golua.LUA_TTABLE:
+			s += fmt.Sprintf("Table : \n%s\n", dumpTableString(L, i))
 		default:
-			s += fmt.Sprintf("Type : \t\t%v", L.Typename(i))
+			s += fmt.Sprintf("Type(number %v) : no auto-print available.\n", t)
 		}
 	}
-	return s
+	s += fmt.Sprintf("========= end of DumpLuaStack\n")
+	return
 }
 
 func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
@@ -183,4 +166,34 @@ func LuaRunAndReport(vm *golua.State, s string) {
 			vm.Pop(1)
 		}
 	}
+}
+
+func dumpTableString(L *golua.State, index int) (s string) {
+
+	// Push another reference to the table on top of the stack (so we know
+	// where it is, and this function can work for negative, positive and
+	// pseudo indices
+	L.PushValue(index)
+	// stack now contains: -1 => table
+	L.PushNil()
+	// stack now contains: -1 => nil; -2 => table
+	for L.Next(-2) != 0 {
+
+		// stack now contains: -1 => value; -2 => key; -3 => table
+		// copy the key so that lua_tostring does not modify the original
+		L.PushValue(-2)
+		// stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
+		key := L.ToString(-1)
+		value := L.ToString(-2)
+		s += fmt.Sprintf("'%s' => '%s'\n", key, value)
+		// pop value + copy of key, leaving original key
+		L.Pop(2)
+		// stack now contains: -1 => key; -2 => table
+	}
+	// stack now contains: -1 => table (when lua_next returns 0 it pops the key
+	// but does not push anything.)
+	// Pop table
+	L.Pop(1)
+	// Stack is now the same as it was on entry to this function
+	return
 }
