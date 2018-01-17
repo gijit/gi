@@ -17,7 +17,7 @@ func Test050CallFmtSprintf(t *testing.T) {
 			Age  int
 		}
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)

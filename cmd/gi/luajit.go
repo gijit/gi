@@ -17,7 +17,10 @@ import (
 
 func (cfg *GIConfig) LuajitMain() {
 
-	vm, err := compiler.NewLuaVmWithPrelude()
+	vmCfg := compiler.NewVmConfig()
+	vmCfg.PreludePath = cfg.PreludePath
+	vmCfg.Quiet = cfg.Quiet
+	vm, err := compiler.NewLuaVmWithPrelude(vmCfg)
 	panicOn(err)
 	defer vm.Close()
 	inc := compiler.NewIncrState(vm)
@@ -120,8 +123,14 @@ func (cfg *GIConfig) LuajitMain() {
 			fmt.Printf("Go language mode.\n")
 			continue
 		case ":prelude", ":reload":
-			fmt.Printf("Reloading prelude...\n")
-			err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
+			fmt.Printf("Reloading prelude...\n", cfg.PreludePath)
+
+			files, err := compiler.FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
+			if err != nil {
+				fmt.Printf("error during prelude reload: '%v'", err)
+				continue
+			}
+			err = compiler.LuaDoFiles(vm, files)
 			if err != nil {
 				fmt.Printf("error during prelude reload: '%v'", err)
 			}

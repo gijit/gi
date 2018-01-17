@@ -25,7 +25,7 @@ func LoadAndRunTestHelper(t *testing.T, vm *luajit.State, translation []byte) {
 
 func Test001LuaTranslation(t *testing.T) {
 
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -58,7 +58,7 @@ func Test001LuaTranslation(t *testing.T) {
 func Test002LuaEvalIncremental(t *testing.T) {
 
 	// and then eval!
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -85,7 +85,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 // }
 
 func Test004ExpressionsAtRepl(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -96,7 +96,7 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 }
 
 func Test005BacktickStringsToLua(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -108,7 +108,7 @@ func Test005BacktickStringsToLua(t *testing.T) {
 }
 
 func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -124,7 +124,7 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 }
 
 func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -141,7 +141,7 @@ func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 }
 
 func Test008IfThenElseInAFunction(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -155,7 +155,7 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 }
 
 func Test009NumericalForLoop(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -190,7 +190,7 @@ func Test009NumericalForLoop(t *testing.T) {
 }
 
 func Test010Slice(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -203,7 +203,7 @@ func Test010Slice(t *testing.T) {
 }
 
 func Test011MapAndRangeForLoop(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -220,7 +220,7 @@ hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 }
 
 func Test012SliceRangeForLoop(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -236,7 +236,7 @@ hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 
 func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -251,7 +251,7 @@ hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end 
 }
 
 func Test013SetAStringSliceToEmptyString(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -264,7 +264,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 }
 
 func Test014LenOfSlice(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -277,7 +277,7 @@ func Test014LenOfSlice(t *testing.T) {
 }
 
 func Test015ArrayCreation(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -304,7 +304,7 @@ func Test015ArrayCreation(t *testing.T) {
 }
 
 func Test016MapCreation(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -323,7 +323,7 @@ func Test016MapCreation(t *testing.T) {
 }
 
 func Test017DeleteFromMap(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -342,7 +342,7 @@ func Test018ReadFromMap(t *testing.T) {
 	cv.Convey(`read a map, x := map[int]string{3:"hello", 4:"gophers"}. reading key 3 should provide the value "hello"`, t, func() {
 
 		// and then eval!
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -366,7 +366,7 @@ func Test018ReadFromSlice(t *testing.T) {
 
 	cv.Convey(`read a slice, x := []int{3, 4}; reading pos/index 0 should provide the value 3`, t, func() {
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -387,7 +387,7 @@ func Test018ReadFromSlice(t *testing.T) {
 }
 
 func Test019TopLevelScope(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -410,7 +410,7 @@ func Test019TopLevelScope(t *testing.T) {
 }
 
 func Test020StructTypeDeclarations(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -426,7 +426,7 @@ func Test020StructTypeDeclarations(t *testing.T) {
 }
 
 func Test021StructTypeValues(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -445,7 +445,7 @@ func Test021StructTypeValues(t *testing.T) {
 }
 
 func Test022StructTypeValues(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -467,7 +467,7 @@ a=__reg:NewInstance("A",{["B"]=43});
 // come back to this.
 /*
 func Test023CopyingStructValues(t *testing.T) {
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -494,7 +494,7 @@ func Test024MultipleAssignment(t *testing.T) {
 
 		src := `a, b, c := 1,2,3`
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -515,7 +515,7 @@ func Test024MultipleAssignment(t *testing.T) {
 }
 
 func Test025ComplexNumbers(t *testing.T) {
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -534,7 +534,7 @@ func Test026LenOfString(t *testing.T) {
 
 		code := `a := "hi"; b :=len(a);`
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -573,7 +573,7 @@ var snoopy Dog = &Beagle{word:"hiya"}
 
 book := snoopy.Write("with a pen")`
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -612,7 +612,7 @@ var snoopy = &Beagle{word:"hiya"}
 _ = snoopy
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -649,7 +649,7 @@ var snoopy Dog = &Beagle{word:"hiya"}
 
 book := snoopy.Write("with a pen")`
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -697,7 +697,7 @@ var snoopy = &Beagle{word:"hiya"}
 book := snoopy.Write("with a pen")
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -722,7 +722,7 @@ alone0 := m[0]
 alone1 := m[1]
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -754,7 +754,7 @@ delete(m, 2)
 len3 := len(m)
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -777,7 +777,7 @@ func Test036Println(t *testing.T) {
 println("hello")
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -819,7 +819,7 @@ func f() (a,b,c int, d string) {
 x,y,z,s := f()
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -858,7 +858,7 @@ default:
   c = -1
 }
 `
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -911,7 +911,7 @@ return c}
 myc := f()
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -945,7 +945,7 @@ default:
 }
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)
@@ -976,7 +976,7 @@ default:
 
 func Test042LenAtRepl(t *testing.T) {
 
-	vm, err := NewLuaVmWithPrelude()
+	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
 	inc := NewIncrState(vm)
@@ -998,7 +998,7 @@ b := 1/a;
 m := 1%a
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm)

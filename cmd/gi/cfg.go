@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gijit/gi/pkg/compiler"
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 var ProgramName string = path.Base(os.Args[0])
@@ -17,8 +17,6 @@ type GIConfig struct {
 	VerboseVerbose bool
 	RawLua         bool
 	PreludePath    string
-
-	preludeFiles []string
 }
 
 // call DefineFlags before myflags.Parse()
@@ -30,13 +28,13 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GOINTERP_PRELUDE_DIR' env var. -prelude overrides this.")
 }
 
-var defaultPreludePathParts = []string{
-	"src",
-	"github.com",
-	"gijit",
-	"gi",
-	"pkg",
-	"compiler"}
+var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler"
+
+var defaultPreludePathParts []string
+
+func init() {
+	defaultPreludePathParts = strings.Split(defaultPreludePath, "/")
+}
 
 // call c.ValidateConfig() after myflags.Parse()
 func (c *GIConfig) ValidateConfig() error {
@@ -62,11 +60,6 @@ func (c *GIConfig) ValidateConfig() error {
 			c.PreludePath = filepath.Join(append([]string{gopath}, defaultPreludePathParts...)...)
 		}
 	}
-	files, err := compiler.FetchPrelude(c.PreludePath)
-	if err != nil {
-		return err
-	}
-	c.preludeFiles = files
 	return nil
 }
 

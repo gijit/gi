@@ -2,16 +2,34 @@ package compiler
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+
 	luajit "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
-	"path/filepath"
 )
 
-func NewLuaVmWithPrelude() (*luajit.State, error) {
+type VmConfig struct {
+	PreludePath string
+	Quiet       bool
+}
+
+func NewVmConfig() *VmConfig {
+	return &VmConfig{}
+}
+
+func NewLuaVmWithPrelude(cfg *VmConfig) (*luajit.State, error) {
 	vm := luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
 
+	if cfg == nil {
+		cfg = NewVmConfig()
+		cfg.PreludePath = "."
+	}
+
 	// load prelude
-	files, err := FetchPrelude(".")
+	files, err := FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 	if err != nil {
 		return nil, err
 	}
@@ -22,6 +40,9 @@ func NewLuaVmWithPrelude() (*luajit.State, error) {
 func LuaDoFiles(vm *luajit.State, files []string) error {
 	for _, f := range files {
 		pp("LuaDoFiles, f = '%s'", f)
+		if f == "lua.help.lua" {
+			panic("where lua.help.lua?")
+		}
 		interr := vm.LoadString(fmt.Sprintf(`dofile("%s")`, f))
 		if interr != 0 {
 			pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
@@ -82,16 +103,29 @@ func DumpLuaStackAsString(L *luajit.State) string {
 	return s
 }
 
-func FetchPrelude(path string) ([]string, error) {
-	if !DirExists(path) {
-		return nil, fmt.Errorf("-prelude dir does not exist: '%s'", path)
-	}
-	files, err := filepath.Glob(fmt.Sprintf("%s/*.lua", path))
+func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
+	cwd, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("-prelude dir '%s' open problem: '%v'", path, err)
+		return nil, err
+	}
+	pp("FetchPrelude called on path '%s', where cwd = '%s'", preludePath, cwd)
+	if !DirExists(preludePath) {
+		return nil, fmt.Errorf("-prelude dir does not exist: '%s'", preludePath)
+	}
+	files, err := filepath.Glob(fmt.Sprintf("%s/*.lua", preludePath))
+	if err != nil {
+		return nil, fmt.Errorf("-prelude dir '%s' open problem: '%v'", preludePath, err)
 	}
 	if len(files) < 1 {
-		return nil, fmt.Errorf("-prelude dir '%s' had no lua files in it.", path)
+		return nil, fmt.Errorf("-prelude dir '%s' had no lua files in it.", preludePath)
+	}
+	if !quiet {
+		fmt.Printf("using this prelude directory: '%s'\n", preludePath)
+		shortFn := make([]string, len(files))
+		for i, fn := range files {
+			shortFn[i] = path.Base(fn)
+		}
+		fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
 	}
 	return files, nil
 }

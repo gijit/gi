@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"strings"
 
 	"github.com/gijit/gi/pkg/verb"
 )
@@ -49,16 +47,7 @@ https://github.com/gijit/gi/blob/master/LICENSE
 %s
 ==================
 `, Version())
-
-		fmt.Printf("using this prelude directory: '%s'\n", cfg.PreludePath)
-		shortFn := make([]string, len(cfg.preludeFiles))
-		for i, fn := range cfg.preludeFiles {
-			shortFn[i] = path.Base(fn)
-		}
-		fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
 	}
 
 	cfg.LuajitMain()
-	//NodeChildMain()
-	//OttoReplMain()
 }

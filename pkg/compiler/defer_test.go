@@ -37,7 +37,7 @@ f()
 // now b should be set to 3
 `
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 
@@ -62,7 +62,7 @@ func Test035DefersRunWithoutPanic(t *testing.T) {
 
 		code := `func f () { defer println("say hello, gracie"); }`
 
-		vm, err := NewLuaVmWithPrelude()
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
 
