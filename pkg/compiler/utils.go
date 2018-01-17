@@ -141,25 +141,30 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		pp("jea debug utils.go:141 args[i=%v] = '%#v'", i, args[i])
 	}
 
-	if varargType != nil {
-		// the 'awesome new' in this expression
-		// fmt.Sprintf("hello %v", awesome new sliceType([new Int(3)]));
-		//return append(args[:paramsLen-1], fmt.Sprintf("awesome new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
-
-		// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
-		newOper := translateTypeNameToNewOper(c.typeName(varargType))
-
-		pp("jea debug, utils.go:140 paramsLen = %v; newOper=%#v", paramsLen, newOper)
-		for i := range args {
-			pp("jea debug, utils.go:142 args[i=%v]='%v'", i, args[i])
-		}
-
-		// what is the
-
-		// the ones >= paramsLen-1 are those from the variadic last type.
-		return append(args[:paramsLen-1], fmt.Sprintf(`%s("interface{}",{%s})`, newOper, strings.Join(args[paramsLen-1:], ", ")))
+	pp("jea debug utils.go:144 varargType = '%#v'", varargType)
+	if varargType == nil {
+		pp("jea debug utils.go:146 varargType is nil, returning args='%#v'", args)
+		return args
 	}
-	return args
+
+	// INVAR: varargType != nil
+
+	// the 'awesome new' in this expression
+	// fmt.Sprintf("hello %v", awesome new sliceType([new Int(3)]));
+	//return append(args[:paramsLen-1], fmt.Sprintf("awesome new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
+
+	// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
+	newOper := translateTypeNameToNewOper(c.typeName(varargType))
+
+	pp("jea debug, utils.go:159 paramsLen = %v; newOper=%#v", paramsLen, newOper)
+	for i := range args {
+		pp("jea debug, utils.go:161 args[i=%v]='%v'", i, args[i])
+	}
+
+	// what is the
+
+	// the ones >= paramsLen-1 are those from the variadic last type.
+	return append(args[:paramsLen-1], fmt.Sprintf(`%s("interface{}",{%s})`, newOper, strings.Join(args[paramsLen-1:], ", ")))
 }
 
 func (c *funcContext) translateSelection(sel selection, pos token.Pos) ([]string, string) {
