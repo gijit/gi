@@ -200,7 +200,7 @@ func copyMapToTable(L *lua.State, v reflect.Value, visited visitor) {
 
 // Also for arrays.
 func copySliceToTable(L *lua.State, v reflect.Value, visited visitor) {
-	pp("luar.go:200, top of copySliceToTable")
+	pp("top of copySliceToTable")
 
 	vp := v
 	for v.Kind() == reflect.Ptr {
@@ -356,11 +356,11 @@ func GoToLuaProxy(L *lua.State, a interface{}) {
 // TODO: Check if we really need multiple pointer levels since pointer methods
 // can be called on non-pointers.
 func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
-	pp("goToLua called on a = '%#v'. Here is DumpLuaStack: ===========", a)
-	if verb.Verbose || verb.VerboseVerbose {
-		DumpLuaStack(L)
-		pp("============ end of DumpLuaStack ================")
-	}
+	//	pp("goToLua called on a = '%#v'. Here is DumpLuaStack: ===========", a)
+	//	if verb.Verbose || verb.VerboseVerbose {
+	//		DumpLuaStack(L)
+	//		pp("============ end of DumpLuaStack ================")
+	//	}
 
 	var v reflect.Value
 	v, ok := a.(reflect.Value)
@@ -402,7 +402,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			L.PushNumber(v.Float())
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		pp("luar.go:399, reflect.Int ")
+		pp("luar.go reflect.Int ")
 		if proxify && isNewType(v.Type()) {
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
@@ -446,7 +446,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			if visited.push(v) {
 				return
 			}
-			pp("luar.go: reflect.Slice:437, about to call copySliceToTable")
+			pp("luar.go: reflect.Slice, about to call copySliceToTable")
 			copySliceToTable(L, v, visited)
 		}
 	case reflect.Map:

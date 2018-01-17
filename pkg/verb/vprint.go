@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"runtime"
 	"time"
 )
 
@@ -31,7 +33,7 @@ func PB(w io.Writer, format string, a ...interface{}) {
 
 // time-stamped printf
 func TSPrintf(format string, a ...interface{}) {
-	Printf("\n%s ", ts())
+	Printf("\n%s %s ", FileLine(3), ts())
 	Printf(format+"\n", a...)
 }
 
@@ -47,4 +49,15 @@ var OurStdout io.Writer = os.Stdout
 // It returns the number of bytes written and any write error encountered.
 func Printf(format string, a ...interface{}) (n int, err error) {
 	return fmt.Fprintf(OurStdout, format, a...)
+}
+
+func FileLine(depth int) string {
+	_, fileName, fileLine, ok := runtime.Caller(depth)
+	var s string
+	if ok {
+		s = fmt.Sprintf("%s:%d", path.Base(fileName), fileLine)
+	} else {
+		s = ""
+	}
+	return s
 }
