@@ -15,11 +15,11 @@ func Test053GoToLuarThenLuarToGo(t *testing.T) {
 		//panicOn(err)
 
 		vm := luar.Init()
-		top := vm.GetTop()
 		a := []int{6, 7, 8}
 		luar.GoToLua(vm, &a)
 		DumpLuaStack(vm)
 		b := []int{}
+		top := vm.GetTop()
 		luar.LuaToGo(vm, top, &b)
 		pp("a == '%#v'", a)
 		pp("b == '%#v'", b)
