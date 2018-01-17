@@ -11,8 +11,10 @@ func Test053GoToLuarThenLuarToGo(t *testing.T) {
 
 	cv.Convey(`luar.GoToLua followed by luar.LuaToGo should invert cleanly, giving us back a copy like the original`, t, func() {
 
-		vm, err := NewLuaVmWithPrelude(nil)
-		panicOn(err)
+		//vm, err := NewLuaVmWithPrelude(nil)
+		//panicOn(err)
+
+		vm := luar.Init()
 		top := vm.GetTop()
 		a := []int{6, 7, 8}
 		luar.GoToLua(vm, &a)

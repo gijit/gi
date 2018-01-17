@@ -8,8 +8,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/gijit/gi/pkg/verb"
 	"github.com/glycerine/golua/lua"
 )
+
+var pp = verb.PP
 
 // ConvError records a conversion error from value 'From' to value 'To'.
 type ConvError struct {
@@ -197,6 +200,8 @@ func copyMapToTable(L *lua.State, v reflect.Value, visited visitor) {
 
 // Also for arrays.
 func copySliceToTable(L *lua.State, v reflect.Value, visited visitor) {
+	pp("luar.go:200, top of copySliceToTable")
+
 	vp := v
 	for v.Kind() == reflect.Ptr {
 		// For arrays.
@@ -351,6 +356,12 @@ func GoToLuaProxy(L *lua.State, a interface{}) {
 // TODO: Check if we really need multiple pointer levels since pointer methods
 // can be called on non-pointers.
 func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
+	pp("goToLua called on a = '%#v'. Here is DumpLuaStack: ===========", a)
+	if verb.Verbose || verb.VerboseVerbose {
+		DumpLuaStack(L)
+		pp("============ end of DumpLuaStack ================")
+	}
+
 	var v reflect.Value
 	v, ok := a.(reflect.Value)
 	if !ok {
@@ -391,6 +402,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			L.PushNumber(v.Float())
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		pp("luar.go:399, reflect.Int ")
 		if proxify && isNewType(v.Type()) {
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
@@ -434,6 +446,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			if visited.push(v) {
 				return
 			}
+			pp("luar.go: reflect.Slice:437, about to call copySliceToTable")
 			copySliceToTable(L, v, visited)
 		}
 	case reflect.Map:
@@ -876,4 +889,27 @@ func Register(L *lua.State, table string, values Map) {
 // Closest we'll get to a typeof operator.
 func typeof(a interface{}) reflect.Type {
 	return reflect.TypeOf(a).Elem()
+}
+
+// jea
+func DumpLuaStack(L *lua.State) {
+	var top int
+
+	top = L.GetTop()
+	pp("DumpLuaStack: top = %v", top)
+	for i := top; i >= 1; i-- {
+		t := L.Type(i)
+		pp("DumpLuaStack: i=%v, t= %v", i, t)
+		switch t {
+		case lua.LUA_TSTRING:
+			fmt.Printf("String : \t%v\n", L.ToString(i))
+		case lua.LUA_TBOOLEAN:
+			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
+		case lua.LUA_TNUMBER:
+			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
+		default:
+			fmt.Printf("Type(number %v) : has type name \t%v\n", t, L.Typename(i))
+		}
+	}
+	print("\n")
 }
