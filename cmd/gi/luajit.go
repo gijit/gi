@@ -123,7 +123,7 @@ func (cfg *GIConfig) LuajitMain() {
 			fmt.Printf("Go language mode.\n")
 			continue
 		case ":prelude", ":reload":
-			fmt.Printf("Reloading prelude...\n", cfg.PreludePath)
+			fmt.Printf("Reloading prelude...\n")
 
 			files, err := compiler.FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 			if err != nil {
