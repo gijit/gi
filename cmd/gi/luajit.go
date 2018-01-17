@@ -17,17 +17,13 @@ import (
 
 func (cfg *GIConfig) LuajitMain() {
 
-	vm := compiler.NewLuaVM()
+	vm, err := compiler.NewLuaVmWithPrelude()
+	panicOn(err)
 	defer vm.Close()
+	inc := compiler.NewIncrState(vm)
 
 	var history []string
 
-	//vm.OpenLibs() // luar.Init() does this for us.
-
-	err := compiler.LuaDoFiles(vm, cfg.preludeFiles)
-	panicOn(err)
-
-	inc := compiler.NewIncrState()
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
 	goPrompt := "gi> "
