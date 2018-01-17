@@ -83,9 +83,10 @@ func (c *funcContext) Delayed(f func()) {
 }
 
 func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, ellipsis bool) []string {
+	pp("utils:go:86 top of translateArgs, len(argExprs)=%v", len(argExprs))
 	if len(argExprs) == 1 {
 		if tuple, isTuple := c.p.TypeOf(argExprs[0]).(*types.Tuple); isTuple {
-			pp("// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
+			pp("// utils.go:89 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
 			c.Printf("\n// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs\n")
 			tupleVar := c.newVariable("_tuple")
 			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0]))
@@ -98,17 +99,23 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 
 	paramsLen := sig.Params().Len()
 
+	pp("utils.go:101, sig.Variadic()=%v, ellipsis=%v, paramsLen=%v,  len(argExprs)=%v", sig.Variadic(), ellipsis, paramsLen, len(argExprs))
+
 	var varargType *types.Slice
+	numFixedArgs := paramsLen
 	if sig.Variadic() && !ellipsis {
+		// in the *signature*, not actuals.
 		varargType = sig.Params().At(paramsLen - 1).Type().(*types.Slice)
-		pp("utils.go:104 varargType: '%#v'/elem type='%T'", varargType, varargType.Elem())
+		pp("utils.go:108 varargType: '%#v'/elem type='%T'", varargType, varargType.Elem())
+		numFixedArgs--
 	}
 
 	preserveOrder := false
 	for i := 1; i < len(argExprs); i++ {
 		preserveOrder = preserveOrder || c.Blocking[argExprs[i]]
 	}
-	pp("utils.go:110: preserveOrder=%v", preserveOrder)
+	pp("utils.go:115: preserveOrder=%v", preserveOrder)
+	pp("utils.go:116: len(argExprs)=%v", len(argExprs))
 
 	args := make([]string, len(argExprs))
 	for i, argExpr := range argExprs {
@@ -131,19 +138,24 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		args[i] = arg
 	}
 
-	pp("jea debug utils.go:134 argExprs = '%#v'", argExprs)
+	pp("jea debug utils.go:141 argExprs = '%#v'", argExprs)
 	for i := range argExprs {
-		pp("jea debug utils.go:136 argExprs[i=%v] = '%#v'", i, argExprs[i])
+		pp("jea debug utils.go:143 argExprs[i=%v] = '%#v'", i, argExprs[i])
 	}
 
-	pp("jea debug utils.go:139 args = '%#v', which is after c.translateImplicitConversionWithCloning", args)
+	pp("jea debug utils.go:146 len(args)=%v, args = '%#v', which is after c.translateImplicitConversionWithCloning", len(args), args)
 	for i := range args {
-		pp("jea debug utils.go:141 args[i=%v] = '%#v'", i, args[i])
+		pp("jea debug utils.go:148 args[i=%v] = '%#v'", i, args[i])
 	}
 
-	pp("jea debug utils.go:144 varargType = '%#v'", varargType)
+	pp("jea debug utils.go:151 varargType = '%#v'", varargType)
 	if varargType == nil {
-		pp("jea debug utils.go:146 varargType is nil, returning args='%#v'", args)
+		pp("jea debug utils.go:153 varargType is nil, returning args='%#v'", args)
+		return args
+	}
+	// jea add:
+	if len(args) == numFixedArgs {
+		pp("jea debug utils.go:158 len(args)==numFixedArgs, returning args='%#v'", args)
 		return args
 	}
 
