@@ -11,6 +11,18 @@
 #include "lj_cdata.h"
 #include "lauxlib.h"
 
+LUA_API void
+luajit_push_cdata_int64(struct lua_State *L, int64_t n)
+{
+
+}
+
+LUA_API void
+luajit_push_cdata_uint64(struct lua_State *L, uint64_t n)
+{
+
+}
+
 LUA_API uint32_t
 luajit_ctypeid(struct lua_State *L)
 {

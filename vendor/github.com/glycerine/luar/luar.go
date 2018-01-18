@@ -400,13 +400,13 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 		if proxify && isNewType(v.Type()) {
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
-			L.PushNumber(float64(v.Int()))
+			L.PushInt64(v.Int())
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if proxify && isNewType(v.Type()) {
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
-			L.PushNumber(float64(v.Uint()))
+			L.PushUint64(v.Uint())
 		}
 	case reflect.String:
 		if proxify && isNewType(v.Type()) {

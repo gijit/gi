@@ -435,10 +435,6 @@ func (L *State) PushNumber(n float64) {
 	C.lua_pushnumber(L.s, C.lua_Number(n)) // lua_Number is a cast
 }
 
-func (L *State) PushInt64(n int64) {
-	C.lua_pushnumber(L.s, C.lua_Number(n))
-}
-
 // lua_pushthread
 func (L *State) PushThread() (isMain bool) {
 	return C.lua_pushthread(L.s) != 0
@@ -719,4 +715,12 @@ func (L *State) NewError(msg string) *LuaError {
 func (L *State) LuaJITctypeID() uint32 {
 	res := C.clua_luajit_ctypeid(L.s)
 	return uint32(res)
+}
+
+func (L *State) PushInt64(n int64) {
+	C.clua_luajit_push_cdata_int64(L.s, C.int64_t(n))
+}
+
+func (L *State) PushUint64(u uint64) {
+	C.clua_luajit_push_cdata_uint64(L.s, C.uint64_t(u))
 }
