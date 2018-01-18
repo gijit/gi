@@ -39,11 +39,14 @@ luajit_ctypeid(struct lua_State *L)
   /* Push the first argument to ffi.typeof */
   lua_pushvalue(L, idx);
   /* Call ffi.typeof() */
+ lua_call(L, 1, 1);  
+  /*
   err = lua_pcall(L, 1, 1, 0);
   if (err != 0) {
     lua_settop(L, idx);
-    return luaL_error(L, "lua call to ffi.typeof with duplicated top of stack failed.");
+  return luaL_error(L, "lua call to ffi.typeof with duplicated top of stack failed.");
   }
+  */
   
   /* Returned type should be LUA_TCDATA with CTID_CTYPEID */
   if (lua_type(L, -1) != LUA_TCDATA) {

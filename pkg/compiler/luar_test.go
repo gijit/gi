@@ -86,7 +86,7 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 
 		//putOnTopOfStack := fmt.Sprintf(`return %dLL`, a) // int64
 		//putOnTopOfStack := fmt.Sprintf(`return int32(%dLL)`, a)
-		putOnTopOfStack := fmt.Sprintf(`return uint64(%dLL)`, a)
+		putOnTopOfStack := fmt.Sprintf(`return %d`, a)
 		interr := vm.LoadString(putOnTopOfStack)
 		if interr != 0 {
 			pp("interr %v on vm.LoadString for dofile on '%s'", interr, putOnTopOfStack)
@@ -102,6 +102,10 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		}
 		ctype := vm.LuaJITctypeID()
 		pp("ctype = %v", ctype)
+		// ctype ==  5 for int8
+		// ctype ==  6 for uint8
+		// ctype ==  7 for int16
+		// ctype ==  8 for uint16
 		// ctype ==  9 for int32
 		// ctype == 10 for uint32
 		// ctype == 11 for int64
