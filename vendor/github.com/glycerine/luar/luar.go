@@ -397,11 +397,10 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			L.PushNumber(v.Float())
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		pp("luar.go signed reflect.Int ")
 		if proxify && isNewType(v.Type()) {
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
-			L.PushCdata(v.Int())
+			L.PushNumber(float64(v.Int()))
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if proxify && isNewType(v.Type()) {
