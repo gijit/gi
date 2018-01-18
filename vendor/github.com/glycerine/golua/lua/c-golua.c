@@ -1,6 +1,8 @@
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
+#define LJ_HASFFI 1
+#include "luajit-ffi-ctypeid.h"
 #include <stdint.h>
 #include  <stdio.h>
 #include "_cgo_export.h"
@@ -392,4 +394,8 @@ void clua_setexecutionlimit(lua_State* L, int n)
 	lua_sethook(L, &clua_hook_function, LUA_MASKCOUNT, n);
 }
 
-
+/*return the ctype of the cdata at the top of the stack*/
+uint32_t clua_luajit_ctypeid(lua_State *L)
+{
+   return luajit_ctypeid(L);
+}

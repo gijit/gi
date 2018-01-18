@@ -822,8 +822,11 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		default:
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
+	case 10: // LUA_TCDATA aka cdata
+		pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
+		return ConvError{From: luaDesc(L, idx), To: v.Type()}
+
 	default:
-		pp("luaToGo default case, L.Type(idx) = '%v'", L.Type(idx))
 		return ConvError{From: luaDesc(L, idx), To: v.Type()}
 	}
 
