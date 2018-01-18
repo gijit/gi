@@ -74,7 +74,11 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		// from the conversion to double and back.
 		var a int64 = math.MinInt64 + 10000
 
-		vm := luar.Init()
+		//vm := luar.Init()
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
 
 		// seems we should do this at all, but rather
 		// use luajit to inject the data
@@ -88,7 +92,7 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 			vm.Pop(1)
 			panic(fmt.Errorf("error in vm.LoadString of '%s': Details: '%s'", putOnTopOfStack, msg))
 		}
-		err := vm.Call(0, 1)
+		err = vm.Call(0, 1)
 		if err != nil {
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)

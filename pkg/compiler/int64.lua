@@ -1,6 +1,6 @@
 -- int64 uint64 helpers
 
-local ff = require("ffi")
+local ffi = require("ffi")
 
 -- assume 64-bit int and uint
 int = ffi.typeof(0LL)
