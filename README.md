@@ -31,6 +31,21 @@ come later. Standing on the shoulders of another giant,
 the `luar` package, lets
 us call pre-compiled Go packages from Lua through reflection.
 
+A quick demo:
+~~~
+gi> import "fmt"
+import "fmt"
+
+gi> a:=fmt.Sprintf("hello gi!")
+a:=fmt.Sprintf("hello gi!")
+
+gi> a
+a
+hello gi!
+
+gi>
+~~~
+
 `luar` (https://github.com/stevedonovan/luar) is a mature
 library that gives us the basis for imports.
 Since `LuaJIT` provides reasonable int64 handling, we've
