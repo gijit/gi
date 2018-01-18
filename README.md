@@ -31,7 +31,7 @@ actually useful beyond just the format
 string is missing, this should be done shortly.
 
 The red 051 and 052 tests in imp_test.go track the
-last big of functionality needed to make Sprintf work.
+last bits of functionality needed to make Sprintf work.
 
 API functions
 luajit_push_cdata_uint64(), luajit_push_cdata_int64(),
