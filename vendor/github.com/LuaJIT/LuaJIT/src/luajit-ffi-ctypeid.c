@@ -51,7 +51,7 @@ luajit_ctypeid(struct lua_State *L)
     return luaL_error(L, "lua call to ffi.typeof failed at lua_type(L,1) != LUA_TCDATA");
   }
   /*cd = cdataV(L->base);*/
-  cd = cdataV(L->top-1);
+  cd = cdataV(L->top);
   if (cd->ctypeid != CTID_CTYPEID) {
     lua_settop(L, idx);
     return luaL_error(L, "lua call to ffi.typeof failed at ctypeid != CTID_CTYPEID");
