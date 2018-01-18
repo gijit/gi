@@ -23,7 +23,7 @@ tricky. And so it's not quite done.
 Nonetheless, I'm releasing v0.6.0 because there were big
 refactorings that provide significant new functionality.
 
-The repl will now accept `import "fmt"` and will wire in
+The REPL will now accept `import "fmt"` and will wire in
 the `fmt.Sprintf` for you. It's hardwired for now. Auto
 loading of functions from already compiled packages will
 come later.
@@ -48,7 +48,7 @@ with casting to double (float64) and back.
 We've moved within github to make admin easier. We are now at https://github.com/gijit/gi
 
 len(a) now displays at the REPL. Fixes #22.
-This was a minor repl nit, but well worth addressing.
+This was a minor REPL nit, but well worth addressing.
 
 We have a new contributor! Welcome to Malhar Vora.
 
