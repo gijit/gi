@@ -25,6 +25,8 @@
 #include "lj_vm.h"
 #include "lj_strscan.h"
 #include "lj_strfmt.h"
+#include "lj_ctype.h"
+#include "lj_cdata.h"
 
 /* -- Common helper functions --------------------------------------------- */
 
@@ -342,16 +344,19 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
     return 0;
 }
 
+#define MY_MIN_INT64 -9223372036854775807
+
 LUA_API long lua_toint64(lua_State *L, int idx)
-{
+{ 
   cTValue *o = index2adr(L, idx);
-  TValue tmp;
-  if (LJ_LIKELY(tvisnumber(o)))
-    return numberVnum(o);
-  else if (tvisstr(o) && lj_strscan_num(strV(o), &tmp))
-    return numV(&tmp);
-  else
-    return 14;
+
+  if (! tviscdata(o)) {
+    return MY_MIN_INT64;
+  }
+  /*CTState *cts = ctype_cts(L);*/
+  GCcdata *cd = cdataV(o);
+  long* p = (long *)cdata_getptr(cd, 8);
+  return *p;
 }
 
 
