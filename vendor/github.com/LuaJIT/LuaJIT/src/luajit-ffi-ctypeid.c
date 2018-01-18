@@ -10,18 +10,53 @@
 #include "lj_cconv.h"
 #include "lj_cdata.h"
 #include "lauxlib.h"
+#include <strings.h> /*bzero*/
 
-LUA_API void
+LUA_API uint32_t
 luajit_push_cdata_int64(struct lua_State *L, int64_t n)
 {
+  int idx = lua_gettop(L);
+  /* load cdata int64 returning function onto stack */
+  char buf[128];
+  bzero(&buf[0], 128);
+  snprintf(&buf[0], 127, "return %lldLL", n);
+  
+  int err = luaL_loadstring(L, &buf[0]);
+  if (err != 0) {
+    return luaL_error(L, "luajit_push_cdata_int64 error: could not loadstring");
+  }
 
+  err = lua_pcall(L, 0, 1, 0);
+  if (err != 0) {
+    lua_settop(L, idx);
+    return luaL_error(L, "luajit_push_cdata_int64 error: pcall to load cdata onto stack failed.");
+  }
+  return 0;
 }
 
-LUA_API void
-luajit_push_cdata_uint64(struct lua_State *L, uint64_t n)
+
+LUA_API uint32_t
+luajit_push_cdata_uint64(struct lua_State *L, uint64_t u)
 {
+  int idx = lua_gettop(L);
+  /* load cdata int64 returning function onto stack */
+  char buf[128];
+  bzero(&buf[0], 128);
+  snprintf(&buf[0], 127, "return %lluULL", u);
+  
+  int err = luaL_loadstring(L, &buf[0]);
+  if (err != 0) {
+    return luaL_error(L, "luajit_push_cdata_uint64 error: could not loadstring");
+  }
 
+  err = lua_pcall(L, 0, 1, 0);
+  if (err != 0) {
+    lua_settop(L, idx);
+    return luaL_error(L, "luajit_push_cdata_uint64 error: pcall to load cdata onto stack failed.");
+  }
+  return 0;
 }
+
 
 LUA_API uint32_t
 luajit_ctypeid(struct lua_State *L)
