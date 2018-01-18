@@ -823,6 +823,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	default:
+		pp("luaToGo default case, L.Type(idx) = '%v'", L.Type(idx))
 		return ConvError{From: luaDesc(L, idx), To: v.Type()}
 	}
 

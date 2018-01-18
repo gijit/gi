@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"testing"
@@ -8,6 +9,8 @@ import (
 	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/luar"
 )
+
+var _ = math.MinInt64
 
 func Test053GoToLuarThenLuarToGo(t *testing.T) {
 
@@ -72,12 +75,30 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		var a int64 = math.MinInt64 + 10000
 
 		vm := luar.Init()
-		luar.GoToLua(vm, &a)
+
+		// seems we should do this at all, but rather
+		// use luajit to inject the data
+		//luar.GoToLua(vm, &a)
+
+		putOnTopOfStack := fmt.Sprintf(`return %dLL`, a)
+		interr := vm.LoadString(putOnTopOfStack)
+		if interr != 0 {
+			pp("interr %v on vm.LoadString for dofile on '%s'", interr, putOnTopOfStack)
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			panic(fmt.Errorf("error in vm.LoadString of '%s': Details: '%s'", putOnTopOfStack, msg))
+		}
+		err := vm.Call(0, 1)
+		if err != nil {
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
+		}
 
 		DumpLuaStack(vm)
 		var b int64
 		top := vm.GetTop()
-		luar.LuaToGo(vm, top, &b)
+		panicOn(luar.LuaToGo(vm, top, &b))
 		pp("a == '%#v'", a)
 		pp("b == '%#v'", b)
 

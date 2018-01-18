@@ -61,7 +61,7 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 }
 
 func DumpLuaStack(L *golua.State) {
-	fmt.Printf("%s\n", DumpLuaStackAsString(L))
+	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))
 }
 
 func DumpLuaStackAsString(L *golua.State) (s string) {
