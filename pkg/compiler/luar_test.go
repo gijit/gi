@@ -42,6 +42,7 @@ func Test054GoToLuarThenLuarToGo(t *testing.T) {
 		//panicOn(err)
 
 		var six int64 = 6
+
 		vm := luar.Init()
 		a := []interface{}{six, "hello"}
 		luar.GoToLua(vm, &a)
