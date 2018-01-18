@@ -146,7 +146,8 @@ LUA_API int            (lua_rawequal) (lua_State *L, int idx1, int idx2);
 LUA_API int            (lua_lessthan) (lua_State *L, int idx1, int idx2);
 
 LUA_API lua_Number      (lua_tonumber) (lua_State *L, int idx);
-LUA_API int64_t         (lua_cdata_toint64) (lua_State *L, int idx);
+LUA_API int64_t         (lua_cdata_to_int64) (lua_State *L, int idx);
+LUA_API uint64_t        (lua_cdata_to_uint64) (lua_State *L, int idx);
 LUA_API lua_Integer     (lua_tointeger) (lua_State *L, int idx);
 LUA_API int             (lua_toboolean) (lua_State *L, int idx);
 LUA_API const char     *(lua_tolstring) (lua_State *L, int idx, size_t *len);

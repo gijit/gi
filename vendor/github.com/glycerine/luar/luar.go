@@ -834,13 +834,19 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case 9: //  int32
 		case 10: //  uint32
 		case 11: //  int64
-			val := L.ToInt64(idx)
-			pp("luar.go calling L.ToInt64, got val='%#v'", val)
+			val := L.CdataToInt64(idx)
+			pp("luar.go calling L.CdataToInt64, got val='%#v'", val)
 			f := reflect.ValueOf(val)
 			//v.Set(f.Convert(v.Type()))
 			v.Set(f)
 			return nil
 		case 12: //  uint64
+			val := L.CdataToUint64(idx)
+			pp("luar.go calling L.CdataToUint64, got val='%#v'", val)
+			f := reflect.ValueOf(val)
+			//v.Set(f.Convert(v.Type()))
+			v.Set(f)
+			return nil
 		case 13: //  float32
 		case 14: //  float64
 

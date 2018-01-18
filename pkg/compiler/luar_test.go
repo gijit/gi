@@ -125,3 +125,60 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 
 	})
 }
+
+func Test056_cdata_Uint64_unsigned_int64_GoToLuar_Then_LuarToGo(t *testing.T) {
+
+	cv.Convey(`luar.GoToLua then LuarToGo should preserve uint64 cdata values`, t, func() {
+
+		var a uint64 = uint64(math.MaxInt64 + 10000)
+
+		//vm := luar.Init()
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		// seems we should do this at all, but rather
+		// use luajit to inject the data
+		//luar.GoToLua(vm, &a)
+
+		putOnTopOfStack := fmt.Sprintf(`return %dULL`, a) // uint64
+		interr := vm.LoadString(putOnTopOfStack)
+		if interr != 0 {
+			pp("interr %v on vm.LoadString for dofile on '%s'", interr, putOnTopOfStack)
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			panic(fmt.Errorf("error in vm.LoadString of '%s': Details: '%s'", putOnTopOfStack, msg))
+		}
+		err = vm.Call(0, 1)
+		if err != nil {
+			msg := DumpLuaStackAsString(vm)
+			vm.Pop(1)
+			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
+		}
+		ctype := vm.LuaJITctypeID()
+		pp("ctype = %v", ctype)
+
+		// ctype ==  0 means it wasn't a ctype
+		// ctype ==  5 for int8
+		// ctype ==  6 for uint8
+		// ctype ==  7 for int16
+		// ctype ==  8 for uint16
+		// ctype ==  9 for int32
+		// ctype == 10 for uint32
+		// ctype == 11 for int64
+		// ctype == 12 for uint64
+		// ctype == 13 for float32
+		// ctype == 14 for float64
+
+		DumpLuaStack(vm)
+		var b uint64
+		top := vm.GetTop()
+		panicOn(luar.LuaToGo(vm, top, &b))
+		pp("a == '%#v'", a)
+		pp("b == '%#v'", b)
+
+		cv.So(b, cv.ShouldResemble, a)
+
+	})
+}

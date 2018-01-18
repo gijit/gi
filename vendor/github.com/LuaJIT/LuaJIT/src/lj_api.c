@@ -345,7 +345,7 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
     return 0;
 }
 
-LUA_API int64_t lua_cdata_toint64(lua_State *L, int idx)
+LUA_API int64_t lua_cdata_to_int64(lua_State *L, int idx)
 {
   TValue *o = index2adr(L, idx);
   
@@ -355,6 +355,18 @@ LUA_API int64_t lua_cdata_toint64(lua_State *L, int idx)
   
   GCcdata *cd = cdataV(o);
   return *(int64_t*)(cdataptr(cd));
+}
+
+LUA_API uint64_t lua_cdata_to_uint64(lua_State *L, int idx)
+{
+  TValue *o = index2adr(L, idx);
+  
+  if (!tviscdata(o)) {
+    lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  
+  GCcdata *cd = cdataV(o);
+  return *(uint64_t*)(cdataptr(cd));
 }
 
 

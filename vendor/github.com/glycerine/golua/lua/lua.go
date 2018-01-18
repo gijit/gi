@@ -591,8 +591,12 @@ func (L *State) ToNumber(index int) float64 {
 	return float64(C.lua_tonumber(L.s, C.int(index)))
 }
 
-func (L *State) ToInt64(index int) int64 {
-	return int64(C.lua_cdata_toint64(L.s, C.int(index)))
+func (L *State) CdataToInt64(index int) int64 {
+	return int64(C.lua_cdata_to_int64(L.s, C.int(index)))
+}
+
+func (L *State) CdataToUint64(index int) uint64 {
+	return uint64(C.lua_cdata_to_uint64(L.s, C.int(index)))
 }
 
 // lua_topointer
