@@ -706,3 +706,9 @@ func (L *State) RaiseError(msg string) {
 func (L *State) NewError(msg string) *LuaError {
 	return &LuaError{0, msg, L.StackTrace()}
 }
+
+// LuaJIT only: return ctype of the cdata at the top of the stack.
+func (L *State) LuaJITctypeID() uint32 {
+	res := C.clua_luajit_ctypeid(L.s)
+	return uint32(res)
+}

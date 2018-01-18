@@ -28,6 +28,7 @@ void clua_openstring(lua_State* L);
 void clua_opentable(lua_State* L);
 void clua_openos(lua_State* L);
 void clua_setexecutionlimit(lua_State* L, int n);
+uint32_t clua_luajit_ctypeid(lua_State *L);
 
 int clua_isgofunction(lua_State *L, int n);
 int clua_isgostruct(lua_State *L, int n);
