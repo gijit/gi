@@ -354,12 +354,10 @@ LUA_API int64_t lua_cdata_to_int64(lua_State *L, int idx)
   }
   GCcdata *cd = cdataV(o);
 
-  // neither of these work:
-  //CTypeID ctypeid = *(CTypeID *)cdataptr(cd);  
-  //CTypeID ctypeid = *(CTypeID *)cdataptr(o);
   CTypeID ctypeid = cd->ctypeid;
   if (ctypeid != 11) {
-    lj_err_argt(L, 1, LUA_TCDATA);
+    lj_err_argtype(L, 1, "int64");
+    //lj_err_argt(L, 1, LUA_TCDATA);
   }
   return *(int64_t*)(cdataptr(cd));
 }
@@ -374,12 +372,10 @@ LUA_API uint64_t lua_cdata_to_uint64(lua_State *L, int idx)
   
   GCcdata *cd = cdataV(o);
 
-  // neither of these work:
-  //CTypeID ctypeid = *(CTypeID *)cdataptr(cd);  
-  //CTypeID ctypeid = *(CTypeID *)cdataptr(o);
   CTypeID ctypeid = cd->ctypeid;
   if (ctypeid != 12) {
-    lj_err_argt(L, 1, LUA_TCDATA);
+    lj_err_argtype(L, 1, "uint64");
+    //lj_err_argt(L, 1, LUA_TCDATA);
   }
   return *(uint64_t*)(cdataptr(cd));
 }
