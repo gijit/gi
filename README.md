@@ -14,8 +14,8 @@ status
 ------
 Release v0.6.0 was aimed at putting the infrastructure in place
 to support package imports. Specifically, we aimed at getting
-the first `import "fmt"` and the first use of fmt.Sprintf
-from the repl.
+the first `import "fmt"` and the first use of `fmt.Sprintf`
+from the REPL.
 
 The varargs and int64 nature of Sprintf made this extra
 tricky. And it's not quite done.
