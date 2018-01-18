@@ -24,7 +24,9 @@ Nonetheless, I'm releasing v0.6.0 because there were big
 refactorings that provide significant new functionality.
 
 The repl will now accept `import "fmt"` and will wire in
-fmt.Sprintf for you.
+the `fmt.Sprintf` for you. It's hardwired for now. Auto
+loading of functions from already compiled packages will
+come later.
 
 While the vararg handling to make Sprintf
 actually useful beyond just the format
