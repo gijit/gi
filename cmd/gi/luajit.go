@@ -242,7 +242,9 @@ these special commands:
 			vm.Pop(1)
 			continue
 		}
-		compiler.DumpLuaStack(vm)
+		// jea debug:
+		//compiler.DumpLuaStack(vm)
+		fmt.Printf("\n")
 		reader.Reset(os.Stdin)
 	}
 }

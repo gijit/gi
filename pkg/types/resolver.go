@@ -161,7 +161,7 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 		} else {
 			// jea: our import "fmt" is calling here.
 			imp, err = importer.Import(path)
-			fmt.Printf("\n jea debug: types/resolver.go:164, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
+			pp("\n jea debug: types/resolver.go:164, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
 			if imp == nil && err == nil {
 				fmt.Printf("\n jea debug: imp was nil!?! err was nil\n")
 				err = fmt.Errorf("Config.Importer.Import(%s) returned nil but no error", path)
@@ -290,10 +290,10 @@ func (check *Checker) collectObjects() {
 
 						imp := check.importPackage(s.Path.Pos(), path, fileDir)
 						if imp == nil {
-							fmt.Printf("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
+							pp("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
 							continue
 						}
-						fmt.Printf("\n jea debug types/resolver.go:277: good, check.importPackage(path='%s') was not nil. imp='%#v'.  our spec s = '%#v'\n", path, imp, s)
+						pp("\n jea debug types/resolver.go:277: good, check.importPackage(path='%s') was not nil. imp='%#v'.  our spec s = '%#v'\n", path, imp, s)
 
 						// add package to list of explicit imports
 						// (this functionality is provided as a convenience
@@ -321,14 +321,14 @@ func (check *Checker) collectObjects() {
 						obj := NewPkgName(s.Pos(), pkg, name, imp)
 						if s.Name != nil {
 							// in a dot-import, the dot represents the package
-							fmt.Printf("\n 88888 jea debug: check.recordDef(s.Name='%s') \n", s.Name)
+							pp("\n 88888 jea debug: check.recordDef(s.Name='%s') \n", s.Name)
 							check.recordDef(s.Name, obj)
 						} else {
 							// jea: import "fmt" is going here!
-							fmt.Printf("\n 9999 jea debug: check.recordImplicit(s.Name='%s') \n", s.Name)
+							pp("\n 9999 jea debug: check.recordImplicit(s.Name='%s') \n", s.Name)
 							check.recordImplicit(s, obj)
 						}
-						fmt.Printf("\n 00000 jea debug: resolver.go:311 past the recordDef / recordImplicit \n")
+						pp("\n 00000 jea debug: resolver.go:311 past the recordDef / recordImplicit \n")
 
 						if path == "C" {
 							// match cmd/compile (not prescribed by spec)
@@ -366,11 +366,11 @@ func (check *Checker) collectObjects() {
 
 							// jea: Ah HAH! this is where the imported package
 							//  should be getting added to the scopes.
-							fmt.Printf("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
+							pp("jea debug, fileScope before adding fmt: '%s'\n\n", fileScope)
 							check.declare(fileScope, nil, obj, token.NoPos)
 
 							// jea try addint to upper scope...
-							fmt.Printf("jea debug, fileScope after adding fmt: '%s'\n\n", fileScope)
+							pp("jea debug, fileScope after adding fmt: '%s'\n\n", fileScope)
 						}
 
 					case *ast.ValueSpec:
@@ -527,22 +527,22 @@ func (check *Checker) collectObjects() {
 
 	// jea, don't think we want this at the repl
 	/*
-			// verify that objects in package and file scopes have different names
-			for _, scope := range check.pkg.scope.children {
-	            //  file scopes
-				for _, obj := range scope.elems {
-					if alt := pkg.scope.Lookup(obj.Name()); alt != nil {
-						if pkg, ok := obj.(*PkgName); ok {
-							check.errorf(alt.Pos(), "%s already declared through import of %s", alt.Name(), pkg.Imported())
-							check.reportAltDecl(pkg)
-						} else {
-							check.errorf(alt.Pos(), "'%s' already declared through dot-import of %s", alt.Name(), obj.Pkg())
-							// TODO(gri) dot-imported objects don't have a position; reportAltDecl won't print anything
-							check.reportAltDecl(obj)
+				// verify that objects in package and file scopes have different names
+				for _, scope := range check.pkg.scope.children {
+		            //  file scopes
+					for _, obj := range scope.elems {
+						if alt := pkg.scope.Lookup(obj.Name()); alt != nil {
+							if pkg, ok := obj.(*PkgName); ok {
+								check.errorf(alt.Pos(), "%s already declared through import of %s", alt.Name(), pkg.Imported())
+								check.reportAltDecl(pkg)
+							} else {
+								check.errorf(alt.Pos(), "'%s' already declared through dot-import of %s", alt.Name(), obj.Pkg())
+								// TODO(gri) dot-imported objects don't have a position; reportAltDecl won't print anything
+								check.reportAltDecl(obj)
+							}
 						}
 					}
 				}
-			}
 	*/
 }
 
