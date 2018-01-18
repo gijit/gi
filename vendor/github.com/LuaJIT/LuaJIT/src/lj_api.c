@@ -351,17 +351,99 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
 */
 #define MY_PENULTIMATE_MIN_INT64 (-9223372036854775807)
 
+/* signal not cdata by returning minimum int64
+   signal not cdata and not int64 type, by returning minimum int64*/
 LUA_API int64_t lua_toint64(lua_State *L, int idx)
-{ 
-  cTValue *o = index2adr(L, idx);
-
-  if (1) { // (! tviscdata(o)) {
-    return MY_PENULTIMATE_MIN_INT64 -1;
+{
+  TValue *o = index2adr(L, idx);
+  
+  if (!tviscdata(o)) {
+    lj_err_argt(L, 1, LUA_TCDATA);
   }
-  /*  CTState *cts = ctype_cts(L);*/
+  
   GCcdata *cd = cdataV(o);
-  long* p = (long *)cdata_getptr(cd, 8);
-  return *p;
+  return *(int64_t*)(cdataptr(cd));
+  /*
+  CTState *cts = ctype_cts(L);
+  
+  CTypeID id = cd->ctypeid;
+  CType *ct = ctype_raw(cts, id);
+
+  CTState *cts = ctype_cts(L);
+  CTInfo qual = 0;
+  CType *ct;
+  uint8_t *p;
+  TValue *o = L->base;
+  if (!(o+1 < L->top && tviscdata(o)))  // Also checks for presence of key. 
+    lj_err_argt(L, 1, LUA_TCDATA);
+  ct = lj_cdata_index(cts, cdataV(o), o+1, &p, &qual);
+  if ((qual & 1))
+    return ffi_index_meta(L, cts, ct, MM_index);
+  if (lj_cdata_get(cts, ct, L->top-1, p))
+    lj_gc_check(L);
+  return 1;
+  
+
+// Convert C type to TValue. Caveat: expects to get the raw CType! 
+int lj_cconv_tv_ct(CTState *cts, CType *s, CTypeID sid,
+		   TValue *o, uint8_t *sp)
+{
+  CTInfo sinfo = s->info;
+  if (ctype_isnum(sinfo)) {
+    if (!ctype_isbool(sinfo)) {
+      if (ctype_isinteger(sinfo) && s->size > 4) goto copyval;
+      if (LJ_DUALNUM && ctype_isinteger(sinfo)) {
+	int32_t i;
+	lj_cconv_ct_ct(cts, ctype_get(cts, CTID_INT32), s,
+		       (uint8_t *)&i, sp, 0);
+	if ((sinfo & CTF_UNSIGNED) && i < 0)
+	  setnumV(o, (lua_Number)(uint32_t)i);
+	else
+	  setintV(o, i);
+      } else {
+	lj_cconv_ct_ct(cts, ctype_get(cts, CTID_DOUBLE), s,
+		       (uint8_t *)&o->n, sp, 0);
+	// Numbers are NOT canonicalized here! Beware of uninitialized data. 
+	lua_assert(tvisnum(o));
+      }
+    } else {
+      uint32_t b = s->size == 1 ? (*sp != 0) : (*(int *)sp != 0);
+      setboolV(o, b);
+      setboolV(&cts->g->tmptv2, b);  // Remember for trace recorder. 
+    }
+    return 0;
+  } else if (ctype_isrefarray(sinfo) || ctype_isstruct(sinfo)) {
+    // Create reference. 
+    setcdataV(cts->L, o, lj_cdata_newref(cts, sp, sid));
+    return 1;  // Need GC step. 
+  } else {
+    GCcdata *cd;
+    CTSize sz;
+  copyval:  // Copy value. 
+    sz = s->size;
+    lua_assert(sz != CTSIZE_INVALID);
+    // Attributes are stripped, qualifiers are kept (but mostly ignored). 
+    cd = lj_cdata_new(cts, ctype_typeid(cts, s), sz);
+    setcdataV(cts->L, o, cd);
+    memcpy(cdataptr(cd), sp, sz);
+    return 1;  // Need GC step. 
+
+  }
+  
+
+  uint8_t *p;
+  //TValue *o = L->base;
+  //  if (!(o+1 < L->top && tviscdata(o)))  // Also checks for presence of key. 
+  //  lj_err_argt(L, 1, LUA_TCDATA);
+  //  ct = lj_cdata_index(cts, cdataV(o), o+1, &p, &qual);
+  //  if ((qual & 1)) {
+  //    return *(int64_t*)(p);
+  //  }
+  if (lj_cdata_get(cts, ct, L->top-1, p)) {
+    return *(int64_t*)(p);
+  }
+  */
+  return MY_PENULTIMATE_MIN_INT64 -1;
 }
 
 
