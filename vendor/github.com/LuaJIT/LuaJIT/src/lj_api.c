@@ -27,6 +27,7 @@
 #include "lj_strfmt.h"
 #include "lj_ctype.h"
 #include "lj_cdata.h"
+#include <stdint.h>
 
 /* -- Common helper functions --------------------------------------------- */
 
@@ -344,16 +345,20 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
     return 0;
 }
 
-#define MY_MIN_INT64 -9223372036854775807
+/*stupid compiler has an off-by-one error
+  for checking the max negative int64 number,
+  so subtract 1 from this to get the actual min int64.
+*/
+#define MY_PENULTIMATE_MIN_INT64 (-9223372036854775807)
 
-LUA_API long lua_toint64(lua_State *L, int idx)
+LUA_API int64_t lua_toint64(lua_State *L, int idx)
 { 
   cTValue *o = index2adr(L, idx);
 
-  if (! tviscdata(o)) {
-    return MY_MIN_INT64;
+  if (1) { // (! tviscdata(o)) {
+    return MY_PENULTIMATE_MIN_INT64 -1;
   }
-  /*CTState *cts = ctype_cts(L);*/
+  /*  CTState *cts = ctype_cts(L);*/
   GCcdata *cd = cdataV(o);
   long* p = (long *)cdata_getptr(cd, 8);
   return *p;
