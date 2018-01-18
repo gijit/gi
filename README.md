@@ -10,6 +10,36 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 18 update
+------
+Release v0.6.0 was aimed at putting the infrastructure in place
+to support package imports. Specifically, we aimed at getting
+the first `import "fmt"` and the first use of fmt.Sprintf
+from the repl.
+
+The varargs and int64 nature of Sprintf made this extra
+tricky. And it's not quite done.
+
+Nonetheless, I'm releasing v0.6.0 because there were big
+refactorings that provide significant new functionality.
+
+The repl will now accept `import "fmt"` and will wire in
+fmt.Sprintf for you.
+
+While the vararg handling to make Sprintf
+actually useful beyond just the format
+string is missing, this should be done shortly.
+
+The red 051 and 052 tests in imp_test.go track the
+last big of functionality needed to make Sprintf work.
+
+There were big refactorings done, and API functions
+luajit_push_cdata_uint64(), luajit_push_cdata_int64(),
+and luajit_ctypeid() were added to the luajit API
+to support passing int64/uint64 values from Go to Lua and
+back to Go without loss of data.
+
+
 2018 Jan 13 update
 ------
 We've moved within github to make admin easier. We are now at https://github.com/gijit/gi
