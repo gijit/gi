@@ -27,7 +27,18 @@ functionality, and contributors will want to leverage these.
 The REPL will now accept `import "fmt"` and will wire in
 the `fmt.Sprintf` for you. It's hardwired for now. Auto
 loading of functions from already compiled packages will
-come later.
+come later. Standing on the shoulders of another giant,
+the `luar` package, lets
+us call pre-compiled Go packages from Lua through reflection.
+
+`luar` (https://github.com/stevedonovan/luar) is a mature
+library that gives us the basis for imports.
+Since `LuaJIT` provides reasonable int64 handling, we've
+extended the `luar` functionality to gracefully convey
+`int64` and `uint64` values. There's more extension to
+do for `int32`, `int16`, `int8`, `uint32`, etc but
+this should be straightforward extension of the new
+functionality.
 
 While the vararg handling to make Sprintf
 actually useful beyond just the format
