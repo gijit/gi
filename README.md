@@ -39,7 +39,8 @@ API functions
 luajit_push_cdata_uint64(), luajit_push_cdata_int64(),
 and luajit_ctypeid() were added to the luajit API
 to support passing int64/uint64 values from Go to Lua and
-back to Go without loss of data.
+back to Go without the loss of data formerly associated
+with casting to double (float64) and back.
 
 
 2018 Jan 13 update
