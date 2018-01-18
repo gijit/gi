@@ -84,9 +84,8 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		// use luajit to inject the data
 		//luar.GoToLua(vm, &a)
 
-		//putOnTopOfStack := fmt.Sprintf(`return %dLL`, a) // int64
-		//putOnTopOfStack := fmt.Sprintf(`return int32(%dLL)`, a)
-		putOnTopOfStack := fmt.Sprintf(`return float32(%d)`, a)
+		//putOnTopOfStack := fmt.Sprintf(`return int32(%dLL)`, a) // int32
+		putOnTopOfStack := fmt.Sprintf(`return %dLL`, a) // int64
 		interr := vm.LoadString(putOnTopOfStack)
 		if interr != 0 {
 			pp("interr %v on vm.LoadString for dofile on '%s'", interr, putOnTopOfStack)
@@ -103,6 +102,7 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		ctype := vm.LuaJITctypeID()
 		pp("ctype = %v", ctype)
 
+		// ctype ==  0 means it wasn't a ctype
 		// ctype ==  5 for int8
 		// ctype ==  6 for uint8
 		// ctype ==  7 for int16

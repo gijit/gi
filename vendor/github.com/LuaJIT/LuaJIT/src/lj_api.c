@@ -342,6 +342,19 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
     return 0;
 }
 
+LUA_API long lua_toint64(lua_State *L, int idx)
+{
+  cTValue *o = index2adr(L, idx);
+  TValue tmp;
+  if (LJ_LIKELY(tvisnumber(o)))
+    return numberVnum(o);
+  else if (tvisstr(o) && lj_strscan_num(strV(o), &tmp))
+    return numV(&tmp);
+  else
+    return 14;
+}
+
+
 LUA_API lua_Number lua_tonumberx(lua_State *L, int idx, int *ok)
 {
   cTValue *o = index2adr(L, idx);

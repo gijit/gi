@@ -824,6 +824,29 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		}
 	case 10: // LUA_TCDATA aka cdata
 		pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
+		ctype := L.LuaJITctypeID()
+		pp("luar.go sees ctype = %v", ctype)
+		switch ctype {
+		case 5: //  int8
+		case 6: //  uint8
+		case 7: //  int16
+		case 8: //  uint16
+		case 9: //  int32
+		case 10: //  uint32
+		case 11: //  int64
+			val := L.ToInt64(idx)
+			pp("luar.go calling L.ToInt64, got val='%#v'", val)
+			f := reflect.ValueOf(val)
+			//v.Set(f.Convert(v.Type()))
+			v.Set(f)
+			return nil
+		case 12: //  uint64
+		case 13: //  float32
+		case 14: //  float64
+
+		case 0: // means it wasn't a ctype
+		}
+
 		return ConvError{From: luaDesc(L, idx), To: v.Type()}
 
 	default:
