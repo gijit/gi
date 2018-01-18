@@ -94,7 +94,8 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 			vm.Pop(1)
 			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
 		}
-
+		ctype := vm.LuaJITctypeID()
+		pp("ctype = %v", ctype)
 		DumpLuaStack(vm)
 		var b int64
 		top := vm.GetTop()
