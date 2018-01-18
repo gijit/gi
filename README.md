@@ -17,8 +17,8 @@ to support package imports. Specifically, we aimed at getting
 the first `import "fmt"` and the first use of `fmt.Sprintf`
 from the REPL.
 
-The varargs and int64 nature of Sprintf made this extra
-tricky. And it's not quite done.
+The varargs and int64 handling required in `fmt.Sprintf` made this extra
+tricky. And so it's not quite done.
 
 Nonetheless, I'm releasing v0.6.0 because there were big
 refactorings that provide significant new functionality.
