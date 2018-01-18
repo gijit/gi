@@ -50,7 +50,7 @@ func Test051CallFmtSprintf(t *testing.T) {
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("hello one: %v", 1);`)
+			`a = fmt.Sprintf("hello one: %v", _gi_NewSlice("interface{}",{1}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
