@@ -592,7 +592,7 @@ func (L *State) ToNumber(index int) float64 {
 }
 
 func (L *State) ToInt64(index int) int64 {
-	return int64(C.lua_toint64(L.s, C.int(index)))
+	return int64(C.lua_cdata_toint64(L.s, C.int(index)))
 }
 
 // lua_topointer

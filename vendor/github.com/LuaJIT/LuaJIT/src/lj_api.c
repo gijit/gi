@@ -345,7 +345,7 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
     return 0;
 }
 
-LUA_API int64_t lua_toint64(lua_State *L, int idx)
+LUA_API int64_t lua_cdata_toint64(lua_State *L, int idx)
 {
   TValue *o = index2adr(L, idx);
   
