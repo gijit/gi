@@ -601,7 +601,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 
 		// since we increased the stack depth by 1, adjust idx.
 		adj := idx
-		if idx < 0 && idx > -1000 {
+		if idx < 0 && idx > -10000 {
 			adj--
 		}
 
@@ -1121,6 +1121,62 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 		panic("what? should be a `len` member of props for _gi_Slice")
 	}
 	n := int(L.ToNumber(-1))
+	L.Pop(2)
+	pp("copyGiTableToSlice after getting n=%v, stack is:", n)
+	DumpLuaStack(L)
+
+	/* sample
+	       luar.go:1125 copyGiTableToSlice after getting n=3, stack is:
+		   ========== begin DumpLuaStack: top = 4
+		   DumpLuaStack: i=4, t= 5
+		    Table :
+		   'len' => '3'
+		   'typeKind' => 'int'
+
+		   DumpLuaStack: i=3, t= 5
+		    Table :
+		   '' => ''
+		   '' => ''
+		   'Typeof' => '_gi_Slice'
+
+		   DumpLuaStack: i=2, t= 0
+		    Type(code 0) : no auto-print available.
+		   DumpLuaStack: i=1, t= 5
+		    Table :
+
+		   ========= end of DumpLuaStack
+	*/
+
+	// get the raw table
+	L.GetGlobal("_giPrivateSliceRaw") // stack++
+	if L.IsNil(-1) {
+		panic(`could not lookup "_giPrivateSliceRaw" in global table`)
+	}
+
+	// since we increased the stack depth by 1, adjust idx.
+	if idx < 0 && idx > -10000 {
+		idx--
+	}
+
+	pp("found the global string _giPrivateSliceRaw, here is stack, with adjusted idx=%v:", idx)
+	DumpLuaStack(L)
+
+	// get table[key]. replaces key with value,
+	// i.e. replace the key _giPrivateSliceRaw with
+	//  the actual table it represents.
+	L.GetTable(idx)
+	pp("under `gi`, after GetTable(idx=%v), top is %v, and Top is nil: %v", idx, L.GetTop(), L.IsNil(-1))
+	if L.IsNil(-1) {
+		panic("_giPrivateSliceRaw not found in _gi_Slice outer value!")
+	}
+	pp("in copyGiTableToSlice. after fetching raw table to the top of the stack, here is stack:")
+	DumpLuaStack(L)
+
+	// just leave the raw, remove the props table and the outer table.
+	L.Replace(-3)
+	L.Pop(1)
+	pp("after popping the props and outer and leaving just the raw:")
+	DumpLuaStack(L)
 
 	pp("in copyGiTableToSlice, n='%v', t='%v'", n, t)
 
@@ -1172,8 +1228,10 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 // getfield will
 // assume that table is on the stack top, and
 // returns with the value (that which corresponds to key) on
-// the top of the stack. The table remains just under the value.
+// the top of the stack. A duplicate of the table is alos
+// left just just under the value.
 // If value not present, then a nil is on top of the stack.
+// To clean the stack completely, Pop(2).
 func getfield(L *lua.State, tableIdx int, key string) {
 	L.PushValue(tableIdx)
 	L.PushString(key)

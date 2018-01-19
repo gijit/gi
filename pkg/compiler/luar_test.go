@@ -298,7 +298,7 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 
 		//pp("ObjLen should invoke the # operation")
 		//olen := vm.ObjLen(top)
-		//cv.So(olen, cv.ShouldEqual, 3) // failing here, apparently objlen does not invoke the metatable method.
+		//cv.So(olen, cv.ShouldEqual, 3) // failing here, apparently objlen does not invoke the metatable method!
 
 		// let's get props, the query it for len
 		vm.GetGlobal("_giPrivateSliceProps") // stack++
