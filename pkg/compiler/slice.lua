@@ -97,7 +97,7 @@ function _gi_NewSlice(typeKind, x)
 
    local proxy = {}
    proxy[_giPrivateSliceRaw] = x
-   proxy["type"]="_gi_Slice"
+   proxy["Typeof"]="_gi_Slice"
    
    local props = {len=len, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
