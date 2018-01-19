@@ -870,7 +870,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		}
 	case 10: // LUA_TCDATA aka cdata
 		pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
-		ctype := L.LuaJITctypeID(idx)
+		ctype := L.LuaJITctypeID(-1)
 		pp("luar.go sees ctype = %v", ctype)
 		switch ctype {
 		case 5: //  int8
