@@ -278,10 +278,13 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 
 		LoadAndRunTestHelper(t, vm, translation)
 
+		vm.GetGlobal("a")
 		DumpLuaStack(vm)
 		b := []int{}
 		top := vm.GetTop()
-		luar.LuaToGo(vm, top, &b)
+
+		// Line 286: - cannot convert Lua value 'function: %!p(uintptr=75307960)' (function) to []int
+		panicOn(luar.LuaToGo(vm, top, &b))
 		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
 	})
 }

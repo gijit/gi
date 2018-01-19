@@ -196,6 +196,7 @@ function _gi_NewMap(keyType, valType, x)
    assert(type(x) == 'table', 'bad parameter #1: must be table')
 
    local proxy = {}
+   proxy["type"]="_gi_Map"
    proxy[_giPrivateMapRaw] = x
 
    -- get initial count
