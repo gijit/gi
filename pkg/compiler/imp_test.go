@@ -109,6 +109,9 @@ func Test059CallFmtSummer(t *testing.T) {
 
 	cv.Convey(`Given a pre-compiled Go function fmt.SummerAny(a ...int), we should be able to call it from gi`, t, func() {
 
+		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
+		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
+
 		src := `import "fmt"; a := fmt.SummerAny(1, 2, 3);` // then a should be 6
 
 		vm, err := NewLuaVmWithPrelude(nil)
