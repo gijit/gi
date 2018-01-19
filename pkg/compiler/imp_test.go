@@ -81,3 +81,26 @@ func Test052CallFmtSprintf(t *testing.T) {
 		LuaMustString(vm, "a", "hello 3 4")
 	})
 }
+
+func Test058CallFmtIncr(t *testing.T) {
+
+	cv.Convey(`Given a pre-compiled Go function fmt.Incr, we should be able to call it from gi`, t, func() {
+
+		src := `import "fmt"; a := fmt.Incr(1);` // then a should be 2
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a = fmt.Incr(1);`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustInt(vm, "a", 2)
+	})
+}

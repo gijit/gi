@@ -709,6 +709,8 @@ func LuaToGo(L *lua.State, idx int, a interface{}) error {
 }
 
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
+	pp("-- top of luaToGo")
+
 	// Derefence 'v' until a non-pointer.
 	// This initializes the values, which will be useless effort if the conversion fails.
 	// This must be done here so that the copyTable* functions can also call luaToGo on pointers.
@@ -722,7 +724,11 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 	}
 	kind := v.Kind()
 
-	switch L.Type(idx) {
+	ltype := L.Type(idx)
+	ltypename := L.Typename(idx)
+	pp("ltype = '%v', and ltypename = '%v'", ltype, ltypename)
+
+	switch ltype {
 	case lua.LUA_TNIL:
 		pp("luar.go, type of idx == LUA_TNIL")
 		v.Set(reflect.Zero(v.Type()))
@@ -746,7 +752,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	case lua.LUA_TSTRING:
-		pp("luar.go, type of idx == LUA_TSTRING")
+		pp("luar.go, type of idx == LUA_TSTRING: '%s'", L.ToString(idx))
 		if kind != reflect.String && kind != reflect.Interface {
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
@@ -778,12 +784,12 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
 	case lua.LUA_TTABLE:
-		pp("luar.go, type of idx == LUA_TTABLE")
-		pp("has type name \t%v\n", L.Typename(idx))
+		pp("luar.go, Ltype of idx == LUA_TTABLE or ('%v'), and has Typename '%v'\n", ltype, ltypename)
 
 		// TODO: Check what happens if visited is not of the right type.
 		ptr := L.ToPointer(idx)
 		if val, ok := visited[ptr]; ok {
+			pp("visited[ptr] is true")
 			if v.Kind() == reflect.Struct {
 				vp.Set(val)
 			} else {
@@ -791,6 +797,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			}
 			return nil
 		}
+		pp("visited[ptr] was false")
 
 		switch kind {
 		case reflect.Array:

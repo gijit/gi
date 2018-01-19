@@ -138,14 +138,14 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		args[i] = arg
 	}
 
-	pp("jea debug utils.go:141 argExprs = '%#v'", argExprs)
+	pp("jea debug utils.go: argExprs = '%#v'", argExprs)
 	for i := range argExprs {
-		pp("jea debug utils.go:143 argExprs[i=%v] = '%#v'", i, argExprs[i])
+		pp("jea debug utils.go: argExprs[i=%v] = '%#v'", i, argExprs[i])
 	}
 
-	pp("jea debug utils.go:146 len(args)=%v, args = '%#v', which is after c.translateImplicitConversionWithCloning", len(args), args)
+	pp("jea debug utils.go: len(args)=%v, args = '%#v', which is after c.translateImplicitConversionWithCloning", len(args), args)
 	for i := range args {
-		pp("jea debug utils.go:148 args[i=%v] = '%#v'", i, args[i])
+		pp("jea debug  args[i=%v] = '%#v'", i, args[i])
 	}
 
 	pp("jea debug utils.go:151 varargType = '%#v'", varargType)
@@ -168,9 +168,9 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
 	newOper := translateTypeNameToNewOper(c.typeName(varargType))
 
-	pp("jea debug, utils.go:159 paramsLen = %v; newOper=%#v", paramsLen, newOper)
+	pp("jea debug, utils.go: paramsLen = %v; newOper=%#v", paramsLen, newOper)
 	for i := range args {
-		pp("jea debug, utils.go:161 args[i=%v]='%v'", i, args[i])
+		pp("jea debug, utils.go: args[i=%v]='%v'", i, args[i])
 	}
 
 	// what is the

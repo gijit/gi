@@ -26,6 +26,11 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	// from types/call.go:302.
 	scope.Insert(fun)
 
+	summer := getFunForSummer(pkg)
+	scope.Insert(summer)
+	incr := getFunForIncr(pkg)
+	scope.Insert(incr)
+
 	ic.importContext.Packages[path] = pkg
 
 	// implementation via luar-based reflection
@@ -34,6 +39,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	luar.Register(ic.vm, "fmt", luar.Map{
 		// Go functions may be registered directly.
 		"Sprintf": fmt.Sprintf,
+		"Summer":  Summer,
+		"Incr":    Incr,
 	})
 
 	return &Archive{
@@ -53,5 +60,38 @@ func getFunForSprintf(pkg *types.Package) *types.Func {
 	variadic := true
 	sig := types.NewSignature(recv, params, results, variadic)
 	fun := types.NewFunc(token.NoPos, pkg, "Sprintf", sig)
+	return fun
+}
+
+func Summer(a, b int) int {
+	return a + b
+}
+
+func getFunForSummer(pkg *types.Package) *types.Func {
+	// func Summer(a, b int) int
+	var recv *types.Var
+	nt := types.Typ[types.Int]
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", nt))
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", nt),
+		types.NewVar(token.NoPos, pkg, "b", nt))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "Summer", sig)
+	return fun
+}
+
+func Incr(a int) int {
+	return a + 1
+}
+
+func getFunForIncr(pkg *types.Package) *types.Func {
+	// func Incr(a int) int
+	var recv *types.Var
+	nt := types.Typ[types.Int]
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", nt))
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", nt))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "Incr", sig)
 	return fun
 }
