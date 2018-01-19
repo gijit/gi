@@ -233,6 +233,9 @@ func Test057_cdata_GoToLuar_Then_LuarToGo_Mistypes_are_flagged(t *testing.T) {
 		var b int64
 		top := vm.GetTop()
 		err = getPanicValue(func() { luar.LuaToGo(vm, top, &b) })
+		// this test is all about getting a type mis-match error back:
+		pp("b = %v, a = %v", b, a)
+		cv.So(err, cv.ShouldNotBeNil)
 		cv.So(err.Error(), cv.ShouldResemble, "reflect.Set: value of type uint64 is not assignable to type int64")
 	})
 }
