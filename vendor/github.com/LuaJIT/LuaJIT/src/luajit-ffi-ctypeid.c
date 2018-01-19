@@ -59,9 +59,8 @@ luajit_push_cdata_uint64(struct lua_State *L, uint64_t u)
 
 
 LUA_API uint32_t
-luajit_ctypeid(struct lua_State *L)
+luajit_ctypeid(struct lua_State *L, int idx)
 {
-  int idx = lua_gettop(L);
   CTypeID ctypeid;
   GCcdata *cd;
 

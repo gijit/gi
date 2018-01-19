@@ -712,8 +712,8 @@ func (L *State) NewError(msg string) *LuaError {
 }
 
 // LuaJIT only: return ctype of the cdata at the top of the stack.
-func (L *State) LuaJITctypeID() uint32 {
-	res := C.clua_luajit_ctypeid(L.s)
+func (L *State) LuaJITctypeID(idx int) uint32 {
+	res := C.clua_luajit_ctypeid(L.s, C.int(idx))
 	return uint32(res)
 }
 

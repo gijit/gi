@@ -395,9 +395,9 @@ void clua_setexecutionlimit(lua_State* L, int n)
 }
 
 /*return the ctype of the cdata at the top of the stack*/
-uint32_t clua_luajit_ctypeid(lua_State *L)
+uint32_t clua_luajit_ctypeid(lua_State *L, int idx)
 {
-   return luajit_ctypeid(L);
+  return luajit_ctypeid(L, idx);
 }
 
 void clua_luajit_push_cdata_int64(lua_State *L, int64_t n)

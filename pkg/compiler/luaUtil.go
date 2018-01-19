@@ -122,7 +122,7 @@ func LuaMustInt(vm *golua.State, varname string, expect int) {
 	top := vm.GetTop()
 	value_int := vm.ToInteger(top)
 
-	pp("value_int=%v", value_int)
+	pp("LuaMustInt, expect='%v'; observe value_int='%v'", expect, value_int)
 	if value_int != expect {
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
 	}

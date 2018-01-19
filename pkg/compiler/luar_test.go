@@ -100,7 +100,7 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 			vm.Pop(1)
 			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
 		}
-		ctype := vm.LuaJITctypeID()
+		ctype := vm.LuaJITctypeID(-1)
 		pp("ctype = %v", ctype)
 
 		// ctype ==  0 means it wasn't a ctype
@@ -157,7 +157,7 @@ func Test056_cdata_Uint64_unsigned_int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 			vm.Pop(1)
 			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
 		}
-		ctype := vm.LuaJITctypeID()
+		ctype := vm.LuaJITctypeID(-1)
 		pp("ctype = %v", ctype)
 
 		// ctype ==  0 means it wasn't a ctype
@@ -214,7 +214,7 @@ func Test057_cdata_GoToLuar_Then_LuarToGo_Mistypes_are_flagged(t *testing.T) {
 			vm.Pop(1)
 			panic(fmt.Errorf("error in Call after vm.LoadString of '%s': '%v'. Details: '%s'", putOnTopOfStack, err, msg))
 		}
-		ctype := vm.LuaJITctypeID()
+		ctype := vm.LuaJITctypeID(-1)
 		pp("ctype = %v", ctype)
 
 		// ctype ==  0 means it wasn't a ctype

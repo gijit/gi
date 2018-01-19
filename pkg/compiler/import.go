@@ -81,6 +81,7 @@ func getFunForSummer(pkg *types.Package) *types.Func {
 }
 
 func Incr(a int) int {
+	fmt.Printf("\nYAY Incr(a) called! with a = '%v'\n", a)
 	return a + 1
 }
 

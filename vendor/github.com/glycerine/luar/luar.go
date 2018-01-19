@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/gijit/gi/pkg/verb"
 	"github.com/glycerine/golua/lua"
@@ -257,7 +258,9 @@ func copyStructToTable(L *lua.State, v reflect.Value, visited visitor) {
 
 func callGoFunction(L *lua.State, v reflect.Value, args []reflect.Value) []reflect.Value {
 	defer func() {
+		// jea debug:
 		if x := recover(); x != nil {
+			pp("recovering panic in luar.go, raising error x='%v'", x)
 			L.RaiseError(fmt.Sprintf("error %s", x))
 		}
 	}()
@@ -356,6 +359,21 @@ func GoToLuaProxy(L *lua.State, a interface{}) {
 // TODO: Check if we really need multiple pointer levels since pointer methods
 // can be called on non-pointers.
 func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
+	pp("++ goToLua top. a='%#v'/type='%T', proxify='%v', visited='%#v'", a, a, proxify, visited)
+	switch x := a.(type) {
+	case reflect.Value:
+		ty := x.Type()
+		pp("ty = '%v', kind='%v'", ty.String(), ty.Kind())
+		switch ty.Kind() {
+		case reflect.Int, reflect.Int64:
+			y := x.Int()
+			pp("goToLua: we have an int, y = %v", y)
+			if y == 2 {
+				pp("in luar.go, where called from?")
+				fmt.Printf("%s\n", string(debug.Stack()))
+			}
+		}
+	}
 
 	var v reflect.Value
 	v, ok := a.(reflect.Value)
@@ -397,10 +415,15 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			L.PushNumber(v.Float())
 		}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		pp("in goToLua at switch v.Kind(), Int types")
 		if proxify && isNewType(v.Type()) {
+			pp("in goToLua at switch v.Kind(), Int types, calling makeValueProxy")
 			makeValueProxy(L, vp, cNumberMeta)
 		} else {
+			pp("in goToLua at switch v.Kind(), Int types, doing PushInt64")
 			L.PushInt64(v.Int())
+			pp("in goToLua at switch v.Kind(), Int types, *after* PushInt64")
+			DumpLuaStack(L)
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if proxify && isNewType(v.Type()) {
@@ -708,6 +731,22 @@ func LuaToGo(L *lua.State, idx int, a interface{}) error {
 	return luaToGo(L, idx, v, map[uintptr]reflect.Value{})
 }
 
+/*
+from lua.h
+** basic types
+
+define LUA_TNONE		(-1)
+define LUA_TNIL		        0
+define LUA_TBOOLEAN		    1
+define LUA_TLIGHTUSERDATA	2
+define LUA_TNUMBER		    3
+define LUA_TSTRING		4
+define LUA_TTABLE		5
+define LUA_TFUNCTION	6
+define LUA_TUSERDATA	7
+define LUA_TTHREAD		8
+*/
+
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
 	pp("-- top of luaToGo")
 
@@ -831,7 +870,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		}
 	case 10: // LUA_TCDATA aka cdata
 		pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
-		ctype := L.LuaJITctypeID()
+		ctype := L.LuaJITctypeID(idx)
 		pp("luar.go sees ctype = %v", ctype)
 		switch ctype {
 		case 5: //  int8
