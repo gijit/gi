@@ -107,9 +107,9 @@ func Test058CallFmtIncr(t *testing.T) {
 
 func Test059CallFmtSummer(t *testing.T) {
 
-	cv.Convey(`Given a pre-compiled Go function fmt.Summer(a, b int), we should be able to call it from gi`, t, func() {
+	cv.Convey(`Given a pre-compiled Go function fmt.SummerAny(a ...int), we should be able to call it from gi`, t, func() {
 
-		src := `import "fmt"; a := fmt.Summer(1, 2);` // then a should be 3
+		src := `import "fmt"; a := fmt.SummerAny(1, 2, 3);` // then a should be 6
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -120,10 +120,10 @@ func Test059CallFmtSummer(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Summer(1,2);`)
+			`a = fmt.SummerAny(_gi_NewSlice("interface{}",{1, 2, 3}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustInt64(vm, "a", 3)
+		LuaMustInt64(vm, "a", 6)
 	})
 }
