@@ -53,7 +53,7 @@ _giPrivateSliceProps = {}
        -- the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used
        -- in the LuaJIT build. So use it!
        --
-       -- print("len called")
+       print("len called for _gi_Slice")
        return t[_giPrivateSliceProps]["len"]
     end,
 

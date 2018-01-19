@@ -387,13 +387,23 @@ func (L *State) Next(index int) int {
 }
 
 // lua_objlen
+//
+// Returns the "length" of the value at the
+// given acceptable index: for strings, this
+// is the string length; for tables, this
+// is the result of the length operator ('#');
+// for userdata, this is the size of the block
+// of memory allocated for the userdata;
+// for other values, it is 0.
+//
 func (L *State) ObjLen(index int) uint {
 	return uint(C.lua_objlen(L.s, C.int(index)))
 }
 
 // lua_pop
 func (L *State) Pop(n int) {
-	//Why is this implemented this way? I don't get it...
+	//Why is this implemented this way? I don't get it... maybe it
+	// is just inlining manually the actual implementation.
 	//C.lua_pop(L.s, C.int(n));
 	C.lua_settop(L.s, C.int(-n-1))
 }

@@ -6,7 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
+	"github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 )
 
@@ -270,6 +272,17 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm)
 
+		vm.GetGlobal("_giPrivateSliceProps")
+		cv.So(vm.IsNil(-1), cv.ShouldBeFalse)
+		pp("good: we found _giPrivateSliceProps")
+
+		start := vm.GetTop()
+		vm.GetGlobal("_MIS_SPELLED")
+		cv.So(vm.IsNil(-1), cv.ShouldBeTrue)
+		pp("good: we got nil for _MIS_SPELLED")
+		cv.So(vm.GetTop(), cv.ShouldEqual, start+1)
+		pp(`good: we confirmed that GetGlobal("unknown") still pushes nil onto top of stack`)
+
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
@@ -283,8 +296,61 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		b := []int{}
 		top := vm.GetTop()
 
+		//pp("ObjLen should invoke the # operation")
+		//olen := vm.ObjLen(top)
+		//cv.So(olen, cv.ShouldEqual, 3) // failing here, apparently objlen does not invoke the metatable method.
+
+		// let's get props, the query it for len
+		vm.GetGlobal("_giPrivateSliceProps") // stack++
+		if vm.IsNil(-1) {
+			panic("_giPrivateSliceProps must have been created in prelude!")
+		}
+		pp("good, _giPrivateSliceProps key was found")
+		DumpLuaStack(vm)
+
+		// now lookup _giPrivateSliceProps in the original table.
+		vm.GetTable(-2) // get table[key]
+
+		// this really should get us 3 back
+		getfield(vm, -1, "len")
+		aLen := vm.ToNumber(-1)
+		cv.So(aLen, cv.ShouldEqual, 3)
+		vm.Pop(3)
+
+		pp("good: aLen was %v, stack is now:", aLen)
+		DumpLuaStack(vm)
+
 		// Line 286: - cannot convert Lua value 'function: %!p(uintptr=75307960)' (function) to []int
+		verb.Verbose = true
+		verb.Verbose = true
 		panicOn(luar.LuaToGo(vm, top, &b))
 		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
 	})
+}
+
+// getfield will
+// assume that table is on the stack top, and
+// returns with the value (that which corresponds to key) on
+// the top of the stack. The table remains just under the value.
+// If value not present, then a nil is on top of the stack.
+func getfield(L *lua.State, tableIdx int, key string) {
+	L.PushValue(tableIdx)
+	L.PushString(key)
+
+	// lua_gettable: It receives the
+	// position of the table in the stack,
+	// pops the key from the top stack, and
+	// pushes the corresponding value.
+	//
+	// void lua_gettable (lua_State *L, int index);
+	// Pushes onto the stack the value t[k],
+	// where t is the value at the given valid index
+	// and k is the value at the top of the stack.
+	//
+	// This function pops the key from the stack
+	// (putting the resulting value in its place).
+	// As in Lua, this function may trigger a
+	// metamethod for the "index" event (see §2.8).
+	//
+	L.GetTable(-2) // get table[key]
 }

@@ -586,8 +586,43 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 
 // Also for arrays. TODO: Create special function for arrays?
 func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+	pp("top of copyTableToSlice. here is stack:")
+	DumpLuaStack(L)
+
 	t := v.Type()
 	n := int(L.ObjLen(idx))
+	pp("in copyTableToSlice, n='%v', t='%v'. top=%v, idx=%v", n, t, L.GetTop(), idx)
+
+	// detect _gi_Slice and specialize for it.
+	L.GetGlobal("_giPrivateSliceProps") // stack++
+	if !L.IsNil(-1) {
+		// we are running under `gi`
+		// is this a _gi_Slice? it is if the _giPrivateSliceProps key is present.
+
+		// since we increased the stack depth by 1, adjust idx.
+		adj := idx
+		if idx < 0 && idx > -1000 {
+			adj--
+		}
+
+		pp("we are running under `gi`, _giPrivateSliceProps key was found in _G. top is now %v, idx=%v, adj=%v", L.GetTop(), idx, adj)
+
+		// get table[key]. replaces key with value,
+		// i.e. replace the key _giPrivateSliceProps with
+		//  the actual table it represents.
+		L.GetTable(adj)
+		pp("under `gi`, after GetTable(adj), top is %v, and Top is nil: %v", L.GetTop(), L.IsNil(-1))
+		if !L.IsNil(-1) {
+			// yes, is _gi_Slice
+			// leave the props on the top of the stack, we'll use
+			// them immediately.
+			return copyGiTableToSlice(L, adj, v, visited)
+		} else {
+			L.Pop(1)
+		}
+	} else {
+		L.Pop(1)
+	}
 
 	// Adjust the length of the array/slice.
 	if n > v.Len() {
@@ -764,8 +799,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 	kind := v.Kind()
 
 	ltype := L.Type(idx)
-	ltypename := L.Typename(idx)
-	pp("ltype = '%v', and ltypename = '%v'", ltype, ltypename)
+	// Typename() is useless and wrong.
+	//ltypename := L.Typename(idx)
+	pp("ltype = '%v'", ltype)
 
 	switch ltype {
 	case lua.LUA_TNIL:
@@ -823,7 +859,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
 	case lua.LUA_TTABLE:
-		pp("luar.go, Ltype of idx == LUA_TTABLE or ('%v'), and has Typename '%v'\n", ltype, ltypename)
+		pp("luar.go, Ltype of idx == LUA_TTABLE or ('%v')\n", ltype)
 
 		// TODO: Check what happens if visited is not of the right type.
 		ptr := L.ToPointer(idx)
@@ -836,7 +872,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			}
 			return nil
 		}
-		pp("visited[ptr] was false")
+		pp("visited[ptr] was false, kind='%#v'/'%v'", kind, kind)
 
 		switch kind {
 		case reflect.Array:
@@ -992,25 +1028,26 @@ func typeof(a interface{}) reflect.Type {
 
 // jea
 func DumpLuaStack(L *lua.State) {
+	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))
+}
+
+func DumpLuaStackAsString(L *lua.State) (s string) {
 	var top int
 
 	top = L.GetTop()
-	fmt.Printf("DumpLuaStack: top = %v\n", top)
+	s += fmt.Sprintf("========== begin DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
 		t := L.Type(i)
-		fmt.Printf("DumpLuaStack: i=%v, t= %v\n", i, t)
+		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
-		default:
-			fmt.Printf("Type(code %v) : no auto-print available.\n", t)
-
 		case lua.LUA_TSTRING:
-			fmt.Printf("String : \t%v\n", L.ToString(i))
+			s += fmt.Sprintf(" String : \t%v\n", L.ToString(i))
 		case lua.LUA_TBOOLEAN:
-			fmt.Printf("Bool : \t\t%v\n", L.ToBoolean(i))
+			s += fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
 		case lua.LUA_TNUMBER:
-			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
+			s += fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
 		case lua.LUA_TTABLE:
-			fmt.Printf("Table : \tno auto-print for tables\n")
+			s += fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
 
 		case 10: // LUA_TCDATA aka cdata
 			//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
@@ -1025,17 +1062,136 @@ func DumpLuaStack(L *lua.State) {
 			case 10: //  uint32
 			case 11: //  int64
 				val := L.CdataToInt64(i)
-				fmt.Printf(" int64: '%v'\n", val)
+				s += fmt.Sprintf(" int64: '%v'\n", val)
 			case 12: //  uint64
 				val := L.CdataToUint64(i)
-				fmt.Printf(" uint64: '%v'\n", val)
+				s += fmt.Sprintf(" uint64: '%v'\n", val)
 			case 13: //  float32
 			case 14: //  float64
 
 			case 0: // means it wasn't a ctype
 			}
 
+		default:
+			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 		}
 	}
-	fmt.Printf("\n")
+	s += fmt.Sprintf("========= end of DumpLuaStack\n")
+	return
+}
+
+func dumpTableString(L *lua.State, index int) (s string) {
+
+	// Push another reference to the table on top of the stack (so we know
+	// where it is, and this function can work for negative, positive and
+	// pseudo indices
+	L.PushValue(index)
+	// stack now contains: -1 => table
+	L.PushNil()
+	// stack now contains: -1 => nil; -2 => table
+	for L.Next(-2) != 0 {
+
+		// stack now contains: -1 => value; -2 => key; -3 => table
+		// copy the key so that lua_tostring does not modify the original
+		L.PushValue(-2)
+		// stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
+		key := L.ToString(-1)
+		value := L.ToString(-2)
+		s += fmt.Sprintf("'%s' => '%s'\n", key, value)
+		// pop value + copy of key, leaving original key
+		L.Pop(2)
+		// stack now contains: -1 => key; -2 => table
+	}
+	// stack now contains: -1 => table (when lua_next returns 0 it pops the key
+	// but does not push anything.)
+	// Pop table
+	L.Pop(1)
+	// Stack is now the same as it was on entry to this function
+	return
+}
+
+// props is on top of stack. The actual table at idx, which props describes.
+func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
+	DumpLuaStack(L)
+
+	t := v.Type()
+	getfield(L, -1, "len")
+	if L.IsNil(-1) {
+		panic("what? should be a `len` member of props for _gi_Slice")
+	}
+	n := int(L.ToNumber(-1))
+
+	pp("in copyGiTableToSlice, n='%v', t='%v'", n, t)
+
+	// Adjust the length of the array/slice.
+	if n > v.Len() {
+		if t.Kind() == reflect.Array {
+			n = v.Len()
+		} else {
+			// Slice
+			v.Set(reflect.MakeSlice(t, n, n))
+		}
+	} else if n < v.Len() {
+		if t.Kind() == reflect.Array {
+			// Nullify remaining elements.
+			for i := n; i < v.Len(); i++ {
+				v.Index(i).Set(reflect.Zero(t.Elem()))
+			}
+		} else {
+			// Slice
+			v.SetLen(n)
+		}
+	}
+
+	// Do not add empty slices to the list of visited elements.
+	// The empty Lua table is a single instance object and gets re-used across maps, slices and others.
+	// Arrays cannot be cyclic since the interface type will ask for slices.
+	if n > 0 && t.Kind() != reflect.Array {
+		ptr := L.ToPointer(idx)
+		visited[ptr] = v
+	}
+
+	te := t.Elem()
+	for i := 1; i <= n; i++ {
+		L.RawGeti(idx, i)
+		val := reflect.New(te).Elem()
+		err := luaToGo(L, -1, val, visited)
+		if err != nil {
+			status = ErrTableConv
+			L.Pop(1)
+			continue
+		}
+		v.Index(i - 1).Set(val)
+		L.Pop(1)
+	}
+
+	return
+}
+
+// getfield will
+// assume that table is on the stack top, and
+// returns with the value (that which corresponds to key) on
+// the top of the stack. The table remains just under the value.
+// If value not present, then a nil is on top of the stack.
+func getfield(L *lua.State, tableIdx int, key string) {
+	L.PushValue(tableIdx)
+	L.PushString(key)
+
+	// lua_gettable: It receives the
+	// position of the table in the stack,
+	// pops the key from the top stack, and
+	// pushes the corresponding value.
+	//
+	// void lua_gettable (lua_State *L, int index);
+	// Pushes onto the stack the value t[k],
+	// where t is the value at the given valid index
+	// and k is the value at the top of the stack.
+	//
+	// This function pops the key from the stack
+	// (putting the resulting value in its place).
+	// As in Lua, this function may trigger a
+	// metamethod for the "index" event (see §2.8).
+	//
+	L.GetTable(-2) // get table[key]
 }
