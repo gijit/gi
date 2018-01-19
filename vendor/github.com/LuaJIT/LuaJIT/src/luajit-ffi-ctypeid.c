@@ -65,9 +65,6 @@ luajit_ctypeid(struct lua_State *L, int idxNew)
   if (restoreAtEndIdx == 0) {
       return luaL_error(L, "luajit-ffi-ctypeid: empty stack.");
   }
-
-
-  printf("luajit_ctypid: idxNew from formals is %d, and restoreIdx from gettop is %d\n", idxNew, restoreAtEndIdx);
   
   /* convert from relative to absolute index,
      but try to avoid chaning any pseudo indexes,
@@ -76,10 +73,6 @@ luajit_ctypeid(struct lua_State *L, int idxNew)
   if (idxNew < 0 && (-idxNew) <= restoreAtEndIdx) {
     idxNew = (restoreAtEndIdx + 1) + idxNew;
   }
-
-  printf("luajit_ctypid: *after adjustment*, idxNew from formals is %d, and idx from gettop is %d\n", idxNew, restoreAtEndIdx);
-
-
   
   CTypeID ctypeid;
   GCcdata *cd;
