@@ -140,13 +140,27 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	return files, nil
 }
 
+// prefer below LuaMustInt64
 func LuaMustInt(vm *golua.State, varname string, expect int) {
 
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
-	value_int := vm.ToInteger(top)
+	value_int := vm.ToInteger(top) // lossy for 64-bits
 
 	pp("LuaMustInt, expect='%v'; observe value_int='%v'", expect, value_int)
+	if value_int != expect {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
+	}
+}
+
+func LuaMustInt64(vm *golua.State, varname string, expect int64) {
+
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value_int := vm.CdataToInt64(top)
+
+	pp("LuaMustInt64, expect='%v'; observe value_int='%v'", expect, value_int)
 	if value_int != expect {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))

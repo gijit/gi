@@ -101,6 +101,6 @@ func Test058CallFmtIncr(t *testing.T) {
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustInt(vm, "a", 2)
+		LuaMustInt64(vm, "a", 2)
 	})
 }
