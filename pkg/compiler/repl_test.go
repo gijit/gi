@@ -198,7 +198,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("Int",{[0]=1,2,3});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1,2,3});`)
 	})
 }
 
@@ -212,7 +212,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a = _gi_NewMap("Int", "Int", {});
+a = _gi_NewMap("int", "int", {});
 a[1] = 10;
 a[2] = 20;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
@@ -229,7 +229,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("Int",{[0]=1,2,3});
+a=_gi_NewSlice("int",{[0]=1,2,3});
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -245,7 +245,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("Int",{[0]=1,2,3});
+a=_gi_NewSlice("int",{[0]=1,2,3});
 hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
@@ -313,11 +313,11 @@ func Test016MapCreation(t *testing.T) {
 
 		// create using make
 		code := `y := make(map[int]string)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("Int", "String", {});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("int", "String", {});`)
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`)
 
 	})
 }
@@ -331,7 +331,7 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`)
 		code = `delete(x, 3)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3);`)
 	})
@@ -348,7 +348,7 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("Int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
+		expect := []string{`x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -372,7 +372,7 @@ func Test018ReadFromSlice(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
-		expect := []string{`x=_gi_NewSlice("Int", {[0]=3, 4});`, `x3 = _gi_GetRangeCheck(x,0);`}
+		expect := []string{`x=_gi_NewSlice("int", {[0]=3, 4});`, `x3 = _gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -984,7 +984,7 @@ func Test042LenAtRepl(t *testing.T) {
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
 		code := `a := []int{3}; len(a)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("Int",{[0]=3}); print(#a);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3}); print(#a);`)
 	})
 }
 

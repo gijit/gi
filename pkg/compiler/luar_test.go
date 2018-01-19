@@ -12,6 +12,25 @@ import (
 
 var _ = math.MinInt64
 
+func getPanicValue(f func()) (err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			switch x := r.(type) {
+			case error:
+				err = x
+				return
+			case string:
+				err = fmt.Errorf(x)
+				return
+			}
+			panic(fmt.Sprintf("unknown panic type: '%v'/type=%T", r, r))
+		}
+	}()
+	f()
+	return nil
+}
+
 func Test053GoToLuarThenLuarToGo(t *testing.T) {
 
 	cv.Convey(`luar.GoToLua followed by luar.LuaToGo should invert cleanly, giving us back a copy like the original`, t, func() {
@@ -240,21 +259,29 @@ func Test057_cdata_GoToLuar_Then_LuarToGo_Mistypes_are_flagged(t *testing.T) {
 	})
 }
 
-func getPanicValue(f func()) (err error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			switch x := r.(type) {
-			case error:
-				err = x
-				return
-			case string:
-				err = fmt.Errorf(x)
-				return
-			}
-			panic(fmt.Sprintf("unknown panic type: '%v'/type=%T", r, r))
-		}
-	}()
-	f()
-	return nil
+func Test060_LuaToGo_handles_slices(t *testing.T) {
+
+	cv.Convey(`if the compiled lua code creates a slice with _gi_NewSlice(), then passes it to a function in a compiled Go package, then LuaToGo should handle our custom slices-with-metables`, t, func() {
+
+		src := `a := []int{5,6,4};`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		DumpLuaStack(vm)
+		b := []int{}
+		top := vm.GetTop()
+		luar.LuaToGo(vm, top, &b)
+		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
+	})
 }

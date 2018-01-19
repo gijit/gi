@@ -517,16 +517,18 @@ func typeKind(ty types.Type) string {
 func toJavaScriptType(t *types.Basic) string {
 	switch t.Kind() {
 	case types.UntypedInt:
-		return "Int"
+		return "int"
 	case types.Byte:
-		return "Uint8"
+		return "uint8"
 	case types.Rune:
-		return "Int32"
+		return "int32"
 	case types.UnsafePointer:
 		return "UnsafePointer"
 	default:
 		name := t.String()
-		return strings.ToUpper(name[:1]) + name[1:]
+		//jea
+		//return strings.ToUpper(name[:1]) + name[1:]
+		return name
 	}
 }
 
