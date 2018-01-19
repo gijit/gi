@@ -295,17 +295,21 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 			val := reflect.New(t)
 			err := LuaToGo(L, i+1, val.Interface())
 			if err != nil {
+				pp("problem point 1")
 				L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
 			}
 			args[i] = val.Elem()
 		}
 
 		if isVariadic {
+			pp("we have a variadic function!")
 			n := L.GetTop()
 			for i := len(argsT) + 1; i <= n; i++ {
 				val := reflect.New(lastT)
+				pp("about to call LuaToGo with val '%#v'/%T", val.Interface(), val.Interface())
 				err := LuaToGo(L, i, val.Interface())
 				if err != nil {
+					pp("problem point 2")
 					L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
 				}
 				args = append(args, val.Elem())

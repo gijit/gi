@@ -19,11 +19,13 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	pkg.MarkComplete()
 	scope := pkg.Scope()
 
-	fun := getFunForSprintf(pkg)
+	// These scope.Insert() calls let us get
+	// past the Go type checker.
 
 	// As it should, scope.Insert(fun)
 	// gets rid of 'Sprintf not declared by package fmt'
 	// from types/call.go:302.
+	fun := getFunForSprintf(pkg)
 	scope.Insert(fun)
 
 	summer := getFunForSummer(pkg)
@@ -86,10 +88,12 @@ func getFunForSummer(pkg *types.Package) *types.Func {
 }
 
 func SummerAny(a ...int) int {
+	pp("top of SummaryAny, a is len %v", len(a))
 	tot := 0
 	for i := range a {
 		tot += a[i]
 	}
+	pp("end of SummaryAny, returning tot=%v", tot)
 	return tot
 }
 
