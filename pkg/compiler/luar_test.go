@@ -315,7 +315,7 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		getfield(vm, -1, "len")
 		aLen := vm.ToNumber(-1)
 		cv.So(aLen, cv.ShouldEqual, 3)
-		vm.Pop(3)
+		vm.Pop(2)
 
 		pp("good: aLen was %v, stack is now:", aLen)
 		DumpLuaStack(vm)
@@ -331,8 +331,8 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 // getfield will
 // assume that table is on the stack top, and
 // returns with the value (that which corresponds to key) on
-// the top of the stack. The table remains just under the value.
-// If value not present, then a nil is on top of the stack.
+// the top of the stack.
+// If value not present, then a nil is on top of the stack,
 func getfield(L *lua.State, tableIdx int, key string) {
 	L.PushValue(tableIdx)
 	L.PushString(key)
@@ -353,4 +353,7 @@ func getfield(L *lua.State, tableIdx int, key string) {
 	// metamethod for the "index" event (see §2.8).
 	//
 	L.GetTable(-2) // get table[key]
+
+	// remove the copy of the table we made up front.
+	L.Remove(-2)
 }

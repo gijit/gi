@@ -1120,7 +1120,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		panic("what? should be a `len` member of props for _gi_Slice")
 	}
 	n := int(L.ToNumber(-1))
-	L.Pop(2)
+	L.Pop(1)
 	pp("copyGiTableToSlice after getting n=%v, stack is:", n)
 	DumpLuaStack(L)
 
@@ -1238,12 +1238,15 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 // getfield will
 // assume that table is on the stack top, and
 // returns with the value (that which corresponds to key) on
-// the top of the stack. A duplicate of the table is alos
-// left just just under the value.
+// the top of the stack.
 // If value not present, then a nil is on top of the stack.
-// To clean the stack completely, Pop(2).
+// To clean the stack completely, Pop(1).
 func getfield(L *lua.State, tableIdx int, key string) {
+	// copy up front, so that we work for
+	// pseudo indexes, abs, and relative.
 	L.PushValue(tableIdx)
+
+	// setup to query.
 	L.PushString(key)
 
 	// lua_gettable: It receives the
@@ -1262,4 +1265,7 @@ func getfield(L *lua.State, tableIdx int, key string) {
 	// metamethod for the "index" event (see §2.8).
 	//
 	L.GetTable(-2) // get table[key]
+
+	// remove the copy of the table we made up front.
+	L.Remove(-2)
 }
