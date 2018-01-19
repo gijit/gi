@@ -881,12 +881,20 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case 10: //  uint32
 		case 11: //  int64
 			val := L.CdataToInt64(idx)
-			//pp("luar.go calling L.CdataToInt64, got val='%#v'", val)
 			f := reflect.ValueOf(val)
-			//v.Set(f.Convert(v.Type())) // don't do this, since it will coerce uints
+			vi := v.Interface()
+			pp("luar.go calling L.CdataToInt64, got val=%v/'%T', v=%v/'%T'", val, val, vi, vi)
+			//v.Set(f.Convert(v.Type())) // don't do this universally,
+			// since it will coerce uints
 			// and then we won't get the type mistmatch error that is important.
 			// Instead let v.Set(f) panic on wrong type.
-			v.Set(f)
+
+			// allow int64 to convert to int
+			if v.Kind() == reflect.Int {
+				v.Set(f.Convert(v.Type()))
+			} else {
+				v.Set(f)
+			}
 			return nil
 		case 12: //  uint64
 			val := L.CdataToUint64(idx)
@@ -895,7 +903,13 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			//v.Set(f.Convert(v.Type())) // don't do this, since it will
 			// coerce int64, and then we won't get the approprirate type
 			// mismatch error. Instead, let v.Set(f) panic on wrong type.
-			v.Set(f)
+
+			// allow uint64 to convert to uint
+			if v.Kind() == reflect.Uint {
+				v.Set(f.Convert(v.Type()))
+			} else {
+				v.Set(f)
+			}
 			return nil
 		case 13: //  float32
 		case 14: //  float64
