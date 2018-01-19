@@ -783,7 +783,8 @@ define LUA_TTHREAD		8
 */
 
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
-	pp("-- top of luaToGo")
+	pp("-- top of luaToGo, here is stack:")
+	DumpLuaStack(L)
 
 	// Derefence 'v' until a non-pointer.
 	// This initializes the values, which will be useless effort if the conversion fails.
@@ -902,6 +903,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			v.Set(reflect.MakeSlice(tslice, n, n))
 			return copyTableToSlice(L, idx, v.Elem(), visited)
 		default:
+			pp("luar.go ConvError: from '%v' to '%v'\n stack:\n%s\n",
+				luaDesc(L, idx), v.Type(),
+				string(debug.Stack()))
 			return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	case 10: // LUA_TCDATA aka cdata
