@@ -1110,9 +1110,8 @@ func dumpTableString(L *lua.State, index int) (s string) {
 	return
 }
 
-// props is on top of stack. The actual table at idx, which props describes.
-func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
-	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
+func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (int, reflect.Type) {
+	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
 	DumpLuaStack(L)
 
 	t := v.Type()
@@ -1177,6 +1176,17 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 	L.Pop(1)
 	pp("after popping the props and outer and leaving just the raw:")
 	DumpLuaStack(L)
+
+	return n, t
+}
+
+// props is on top of stack. The actual table at idx, which props describes.
+func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
+	DumpLuaStack(L)
+
+	// extract out the raw underlying table
+	n, t := giSliceGetRawHelper(L, idx, v, visited)
 
 	pp("in copyGiTableToSlice, n='%v', t='%v'", n, t)
 
