@@ -25,7 +25,7 @@ func Test053GoToLuarThenLuarToGo(t *testing.T) {
 		DumpLuaStack(vm)
 		b := []int{}
 		top := vm.GetTop()
-		luar.LuaToGo(vm, top, &b) // Line 28: - reflect.Set: value of type int64 is not assignable to type int
+		luar.LuaToGo(vm, top, &b)
 		pp("a == '%#v'", a)
 		pp("b == '%#v'", b)
 

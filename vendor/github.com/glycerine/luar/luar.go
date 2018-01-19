@@ -1000,6 +1000,9 @@ func DumpLuaStack(L *lua.State) {
 		t := L.Type(i)
 		fmt.Printf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
+		default:
+			fmt.Printf("Type(code %v) : no auto-print available.\n", t)
+
 		case lua.LUA_TSTRING:
 			fmt.Printf("String : \t%v\n", L.ToString(i))
 		case lua.LUA_TBOOLEAN:
@@ -1008,8 +1011,30 @@ func DumpLuaStack(L *lua.State) {
 			fmt.Printf("Number : \t%v\n", L.ToNumber(i))
 		case lua.LUA_TTABLE:
 			fmt.Printf("Table : \tno auto-print for tables\n")
-		default:
-			fmt.Printf("Type(number %v) : no auto-print available.\n", t)
+
+		case 10: // LUA_TCDATA aka cdata
+			//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
+			ctype := L.LuaJITctypeID(i)
+			//pp("luar.go Dump sees ctype = %v", ctype)
+			switch ctype {
+			case 5: //  int8
+			case 6: //  uint8
+			case 7: //  int16
+			case 8: //  uint16
+			case 9: //  int32
+			case 10: //  uint32
+			case 11: //  int64
+				val := L.CdataToInt64(i)
+				fmt.Printf(" int64: '%v'\n", val)
+			case 12: //  uint64
+				val := L.CdataToUint64(i)
+				fmt.Printf(" uint64: '%v'\n", val)
+			case 13: //  float32
+			case 14: //  float64
+
+			case 0: // means it wasn't a ctype
+			}
+
 		}
 	}
 	fmt.Printf("\n")

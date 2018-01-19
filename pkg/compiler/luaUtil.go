@@ -74,15 +74,39 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		switch t {
 		case golua.LUA_TSTRING:
-			s += fmt.Sprintf("String : \t%v\n", L.ToString(i))
+			s += fmt.Sprintf(" String : \t%v\n", L.ToString(i))
 		case golua.LUA_TBOOLEAN:
-			s += fmt.Sprintf("Bool : \t\t%v\n", L.ToBoolean(i))
+			s += fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
 		case golua.LUA_TNUMBER:
-			s += fmt.Sprintf("Number : \t%v\n", L.ToNumber(i))
+			s += fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
 		case golua.LUA_TTABLE:
-			s += fmt.Sprintf("Table : \n%s\n", dumpTableString(L, i))
+			s += fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
+
+		case 10: // LUA_TCDATA aka cdata
+			//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
+			ctype := L.LuaJITctypeID(i)
+			//pp("luar.go Dump sees ctype = %v", ctype)
+			switch ctype {
+			case 5: //  int8
+			case 6: //  uint8
+			case 7: //  int16
+			case 8: //  uint16
+			case 9: //  int32
+			case 10: //  uint32
+			case 11: //  int64
+				val := L.CdataToInt64(i)
+				s += fmt.Sprintf(" int64: '%v'\n", val)
+			case 12: //  uint64
+				val := L.CdataToUint64(i)
+				s += fmt.Sprintf(" uint64: '%v'\n", val)
+			case 13: //  float32
+			case 14: //  float64
+
+			case 0: // means it wasn't a ctype
+			}
+
 		default:
-			s += fmt.Sprintf("Type(number %v) : no auto-print available.\n", t)
+			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 		}
 	}
 	s += fmt.Sprintf("========= end of DumpLuaStack\n")
