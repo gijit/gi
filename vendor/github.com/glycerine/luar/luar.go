@@ -883,14 +883,18 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			val := L.CdataToInt64(idx)
 			//pp("luar.go calling L.CdataToInt64, got val='%#v'", val)
 			f := reflect.ValueOf(val)
-			//v.Set(f.Convert(v.Type()))
+			//v.Set(f.Convert(v.Type())) // don't do this, since it will coerce uints
+			// and then we won't get the type mistmatch error that is important.
+			// Instead let v.Set(f) panic on wrong type.
 			v.Set(f)
 			return nil
 		case 12: //  uint64
 			val := L.CdataToUint64(idx)
 			//pp("luar.go calling L.CdataToUint64, got val='%#v'", val)
 			f := reflect.ValueOf(val)
-			//v.Set(f.Convert(v.Type()))
+			//v.Set(f.Convert(v.Type())) // don't do this, since it will
+			// coerce int64, and then we won't get the approprirate type
+			// mismatch error. Instead, let v.Set(f) panic on wrong type.
 			v.Set(f)
 			return nil
 		case 13: //  float32
