@@ -1209,7 +1209,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 	}
 
 	te := t.Elem()
-	for i := 1; i <= n; i++ {
+	for i := 0; i < n; i++ {
 		L.RawGeti(idx, i)
 		val := reflect.New(te).Elem()
 		err := luaToGo(L, -1, val, visited)
@@ -1218,7 +1218,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 			L.Pop(1)
 			continue
 		}
-		v.Index(i - 1).Set(val)
+		v.Index(i).Set(val)
 		L.Pop(1)
 	}
 
