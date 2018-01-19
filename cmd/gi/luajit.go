@@ -112,7 +112,7 @@ func (cfg *GIConfig) LuajitMain() {
 			}
 			fmt.Printf("\n")
 			continue
-		case ":raw":
+		case ":raw", ":r":
 			cfg.RawLua = true
 			prompt = luaPrompt
 			fmt.Printf("Raw LuaJIT language mode.\n")
@@ -148,7 +148,7 @@ these special commands:
  :v          turns on verbose debug printing
  :vv         turns on very verbose printing
  :q          quiets the debug prints (default)
- :raw        changes to raw-luajit entry mode
+ :r or :raw  change to raw-luajit entry mode
  :go         change back from raw mode to Go mode
  :ast        print the Go AST prior to translation
  :noast      stop printing the Go AST

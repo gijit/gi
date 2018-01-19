@@ -101,6 +101,29 @@ func Test058CallFmtIncr(t *testing.T) {
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustInt64(vm, "a", 2)
+		LuaMustInt64(vm, "a", 2) // can't be LuaMustInt, since `a` is int64!!
+	})
+}
+
+func Test059CallFmtSummer(t *testing.T) {
+
+	cv.Convey(`Given a pre-compiled Go function fmt.Summer(a, b int), we should be able to call it from gi`, t, func() {
+
+		src := `import "fmt"; a := fmt.Summer(1, 2);` // then a should be 3
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a = fmt.Summer(1,2);`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustInt64(vm, "a", 3)
 	})
 }
