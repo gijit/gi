@@ -148,6 +148,7 @@ func LuaMustInt(vm *golua.State, varname string, expect int) {
 
 	pp("LuaMustInt, expect='%v'; observe value_int='%v'", expect, value_int)
 	if value_int != expect {
+		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
 	}
 }
@@ -160,6 +161,7 @@ func LuaMustString(vm *golua.State, varname string, expect string) {
 
 	pp("value_string=%v", value_string)
 	if value_string != expect {
+		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_string))
 	}
 }
@@ -172,6 +174,7 @@ func LuaMustBool(vm *golua.State, varname string, expect bool) {
 
 	pp("value_bool=%v", value_bool)
 	if value_bool != expect {
+		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_bool))
 	}
 }
