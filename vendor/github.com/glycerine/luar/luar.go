@@ -427,7 +427,9 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			pp("in goToLua at switch v.Kind(), Int types, doing PushInt64")
 			L.PushInt64(v.Int())
 			pp("in goToLua at switch v.Kind(), Int types, *after* PushInt64")
-			DumpLuaStack(L)
+			if verb.VerboseVerbose {
+				DumpLuaStack(L)
+			}
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if proxify && isNewType(v.Type()) {
@@ -591,7 +593,9 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 // Also for arrays. TODO: Create special function for arrays?
 func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
 	pp("top of copyTableToSlice. here is stack:")
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	t := v.Type()
 	n := int(L.ObjLen(idx))
@@ -788,7 +792,9 @@ define LUA_TTHREAD		8
 
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
 	pp("-- top of luaToGo, here is stack:")
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	// Derefence 'v' until a non-pointer.
 	// This initializes the values, which will be useless effort if the conversion fails.
@@ -1120,7 +1126,9 @@ func dumpTableString(L *lua.State, index int) (s string) {
 
 func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (int, reflect.Type) {
 	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	t := v.Type()
 	getfield(L, -1, "len")
@@ -1130,7 +1138,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	n := int(L.ToNumber(-1))
 	L.Pop(1)
 	pp("copyGiTableToSlice after getting n=%v, stack is:", n)
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	/* sample
 	       luar.go:1125 copyGiTableToSlice after getting n=3, stack is:
@@ -1166,7 +1176,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 
 	pp("found the global string _giPrivateSliceRaw, here is stack, with adjusted idx=%v:", idx)
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	// get table[key]. replaces key with value,
 	// i.e. replace the key _giPrivateSliceRaw with
@@ -1177,13 +1189,17 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		panic("_giPrivateSliceRaw not found in _gi_Slice outer value!")
 	}
 	pp("in copyGiTableToSlice. after fetching raw table to the top of the stack, here is stack:")
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	// just leave the raw, remove the props table and the outer table.
 	L.Replace(-3)
 	L.Pop(1)
 	pp("after popping the props and outer and leaving just the raw:")
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	return n, t
 }
@@ -1191,7 +1207,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 // props is on top of stack. The actual table at idx, which props describes.
 func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
 	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
-	DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	// extract out the raw underlying table
 	n, t := giSliceGetRawHelper(L, idx, v, visited)
