@@ -130,3 +130,29 @@ func Test059CallFmtSummer(t *testing.T) {
 		LuaMustInt64(vm, "a", 6)
 	})
 }
+
+func Test061CallFmtSummerWithDots(t *testing.T) {
+
+	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function fmt.SummerAny(a ...int), the call fmt.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
+
+		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
+		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
+
+		src := `import "fmt"; b := []int{8,9}; a := fmt.SummerAny(b...);` // then a = 17
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`b = _gi_NewSlice("int",{8,9}); a = fmt.SummerAny(unpack(b));`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustInt64(vm, "a", 17)
+	})
+}
