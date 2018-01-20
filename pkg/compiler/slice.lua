@@ -105,3 +105,27 @@ function _gi_NewSlice(typeKind, x)
    setmetatable(proxy, _giPrivateSliceMt)
    return proxy
 end;
+
+-- _gi_UnpackRaw is a helper, used in
+-- generated Lua code,
+-- for calling into vararg ... Go functions,
+-- this helper unpacks the raw _gi_giSlice
+-- arguments. It returns non tables unchanged,
+-- and non _giSlice tables unpacked.
+--
+function _gi_UnpackRaw(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   raw = t[_giPrivateSliceRaw]
+   
+   if raw == nil then
+      return unpack(t)
+   end
+
+   if #raw == 0 then
+      return nil
+   end
+   return raw[0], unpack(raw)
+end

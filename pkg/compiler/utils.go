@@ -153,7 +153,7 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	// jea add
 	if ellipsis {
 		pp("ellipsis true, paramsLen=%v, args='%#v'", paramsLen, args)
-		return append(args[:paramsLen-1], fmt.Sprintf(`unpack(%s)`, strings.Join(args[paramsLen-1:], ", ")))
+		return append(args[:paramsLen-1], fmt.Sprintf(`_gi_UnpackRaw(%s)`, strings.Join(args[paramsLen-1:], ", ")))
 	}
 
 	// jea debug experiment... what if we turn off variadic for a moment?
