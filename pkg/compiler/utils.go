@@ -378,7 +378,11 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 			// return o.Name() // jea was this, until we needed fmt.Sprintf
 			// jea debug here for fmt.Sprintf
 			pp("o.Pkg() = '%#v', o.Name()='%#v'", o.Pkg(), o.Name())
-			return c.pkgVar(o.Pkg()) + "." + o.Name()
+			pkgPrefix := c.pkgVar(o.Pkg())
+			if pkgPrefix == "" {
+				return o.Name()
+			}
+			return pkgPrefix + "." + o.Name()
 
 		}
 	}

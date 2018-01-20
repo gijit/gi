@@ -876,7 +876,10 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 		returnVar = c.newVariable("_r")
 	}
 	// jea
-	c.Printf("/*jea expressions.go:873*/ %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+	c.Printf(" %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+	// jea debug:
+	//c.Printf("/*jea expressions.go:873*/ %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+
 	//c.Printf("%[1]s = %[2]s(%[3]s); /* */ $s = %[4]d; case %[4]d: if($c) { $c = false; %[1]s = %[1]s.$blk(); } if (%[1]s && %[1]s.$blk !== undefined) { break s; }", returnVar, fun, strings.Join(args, ", "), resumeCase)
 	if sig.Results().Len() != 0 {
 		return c.formatExpr("%s", returnVar)

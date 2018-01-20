@@ -259,7 +259,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("String",{[0]="hi","gophers!"}); _gi_SetRangeCheck(b, 0, "");`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("string",{[0]="hi","gophers!"}); _gi_SetRangeCheck(b, 0, "");`)
 	})
 }
 
@@ -272,7 +272,7 @@ func Test014LenOfSlice(t *testing.T) {
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("String",{[0]="hi","gophers!"}); bb = #x;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("string",{[0]="hi","gophers!"}); bb = #x;`)
 	})
 }
 
@@ -285,7 +285,7 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1,2,3}, "_kindInt", 3); bb = 3;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1,2,3}, "_kindint", 3); bb = 3;`)
 
 		// and empty array with size 3
 
@@ -313,11 +313,11 @@ func Test016MapCreation(t *testing.T) {
 
 		// create using make
 		code := `y := make(map[int]string)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("int", "String", {});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("int", "string", {});`)
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`)
 
 	})
 }
@@ -331,7 +331,7 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`)
 		code = `delete(x, 3)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3);`)
 	})
@@ -348,7 +348,7 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("int", "String", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
+		expect := []string{`x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
