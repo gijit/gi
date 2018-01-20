@@ -108,8 +108,8 @@ end;
 
 -- _gi_UnpackRaw is a helper, used in
 -- generated Lua code,
--- for calling into vararg ... Go functions,
--- this helper unpacks the raw _gi_giSlice
+-- for calling into vararg ... Go functions.
+-- This helper unpacks the raw _gi_giSlice
 -- arguments. It returns non tables unchanged,
 -- and non _giSlice tables unpacked.
 --
@@ -121,7 +121,8 @@ function _gi_UnpackRaw(t)
    raw = t[_giPrivateSliceRaw]
    
    if raw == nil then
-      return unpack(t)
+      -- unpack of empty table is ok. returns nil.
+      return unpack(t) 
    end
 
    if #raw == 0 then
