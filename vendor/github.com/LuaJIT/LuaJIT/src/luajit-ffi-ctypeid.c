@@ -12,6 +12,15 @@
 #include "lauxlib.h"
 #include <strings.h> /*bzero*/
 
+/* compilers have different ideas about how to print 64-bit ints*/
+#if LJ_TARGET_OSX
+#define RETURN_INT64_FORMAT  "return %lldLL"
+#define RETURN_UINT64_FORMAT "return %lluLL"
+#else
+#define RETURN_INT64_FORMAT  "return %ldLL"
+#define RETURN_UINT64_FORMAT "return %luLL"
+#endif
+
 LUA_API uint32_t
 luajit_push_cdata_int64(struct lua_State *L, int64_t n)
 {
@@ -19,7 +28,7 @@ luajit_push_cdata_int64(struct lua_State *L, int64_t n)
   /* load cdata int64 returning function onto stack */
   char buf[128];
   bzero(&buf[0], 128);
-  snprintf(&buf[0], 127, "return %lldLL", n);
+  snprintf(&buf[0], 127, RETURN_INT64_FORMAT, n);
   
   int err = luaL_loadstring(L, &buf[0]);
   if (err != 0) {
@@ -42,7 +51,7 @@ luajit_push_cdata_uint64(struct lua_State *L, uint64_t u)
   /* load cdata int64 returning function onto stack */
   char buf[128];
   bzero(&buf[0], 128);
-  snprintf(&buf[0], 127, "return %lluULL", u);
+  snprintf(&buf[0], 127, RETURN_UINT64_FORMAT, u);
   
   int err = luaL_loadstring(L, &buf[0]);
   if (err != 0) {
