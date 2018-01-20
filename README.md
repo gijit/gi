@@ -10,6 +10,35 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 20 update
+------
+Release v0.6.2 has a working `fmt.Sprintf`.
+
+This needed handling vararg calls into
+compiled Go code, which is working now.
+
+A quick demo:
+
+~~~
+gi> import "fmt"
+import "fmt"
+gi> fmt.Sprintf("hi gi") // value not printed at the REPL (at present), so add println:
+
+gi> println(fmt.Sprintf("hi gi"))
+hi gi
+
+gi> println(fmt.Sprintf("hi gi %v", 1))
+hi gi 1
+
+gi> println(fmt.Sprintf("hi gi %v", "hello"))
+hi gi hello
+
+gi> println(fmt.Sprintf("hi gi %v %v", "hello", 1))
+hi gi hello 1
+
+gi> 
+~~~
+
 2018 Jan 18 update
 ------
 Release v0.6.0 was aimed at putting the infrastructure in place
