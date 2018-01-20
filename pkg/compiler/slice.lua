@@ -130,3 +130,11 @@ function _gi_UnpackRaw(t)
    end
    return raw[0], unpack(raw)
 end
+
+function _gi_Raw(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   return t[_giPrivateSliceRaw]
+end

@@ -572,6 +572,9 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 		key := reflect.New(tk).Elem()
 		err := luaToGo(L, -2, key, visited)
 		if err != nil {
+			// here is where fmt.Sprintf( table) is failing.
+			pp("ErrTableConv about to be status, since luaToGo failed for key at -2: '%v'. tk='%s', key='%s'. stack:\n%s\n", err, tk, key,
+				string(debug.Stack()))
 			status = ErrTableConv
 			L.Pop(1)
 			continue
@@ -579,6 +582,7 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 		val := reflect.New(te).Elem()
 		err = luaToGo(L, -1, val, visited)
 		if err != nil {
+			pp("ErrTableConv about to be status, since luaToGo failed for key '%s'", key.Interface())
 			status = ErrTableConv
 			L.Pop(1)
 			continue
@@ -666,6 +670,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 		val := reflect.New(te).Elem()
 		err := luaToGo(L, -1, val, visited)
 		if err != nil {
+			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 			status = ErrTableConv
 			L.Pop(1)
 			continue
@@ -713,6 +718,7 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 			val := reflect.New(f.Type()).Elem()
 			err := luaToGo(L, -1, val, visited)
 			if err != nil {
+				pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 				status = ErrTableConv
 				L.Pop(1)
 				continue
@@ -1250,6 +1256,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 		val := reflect.New(te).Elem()
 		err := luaToGo(L, -1, val, visited)
 		if err != nil {
+			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 			status = ErrTableConv
 			L.Pop(1)
 			continue
