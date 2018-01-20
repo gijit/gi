@@ -174,7 +174,7 @@ expected, and maintains the `len` property.
 Functions and methods can now be re-defined at the REPL. The
 type checker was relaxed to allow this.
 
-We changed over from one luajit C binding to anther. The
+We changed over from one LuaJIT C binding to anther. The
 new binding is the same one that LuaR uses, so this
 enables LuaR exploration.
 
@@ -262,18 +262,18 @@ you require interaction with your data.
 Considering possible backends for a
 reference implementation,
 I compared node.js, chez scheme, otto,
-gopher-lua, and luajit.
+gopher-lua, and LuaJIT.
 
-# luajit did what?
+# LuaJIT did what?
 
-Luajit in particular is an amazing
+LuaJIT in particular is an amazing
 backend to target. In our quick and
 dirty 500x500 random matrix multiplication
-benchmark, luajit *beat even statically compiled go*
+benchmark, LuaJIT *beat even statically compiled go*
 code by a factor of 3x. Go's time was 360 msec.
-Luajit's time was 135 msec. Julia uses an optimized
+LuaJIT's time was 135 msec. Julia uses an optimized
 BLAS library for this task and beats both Go
-and luajit by multiplying in 6 msec, but
+and LuaJIT by multiplying in 6 msec, but
 is too immature and too large to be
 a viable embedded target.
 
@@ -285,7 +285,7 @@ Works on Mac OSX and Linux. I have no idea about windows (theoretically it shoul
 $ go get -t -u -v github.com/gijit/gi/...
 $ cd $GOPATH/src/github.com/gijit/gi && make
 $
-$ ... wait for gi build to finish, it builds luajit
+$ ... wait for gi build to finish, it builds LuaJIT
 $     using C, so it takes ~ 20 seconds to install `gi`.
 $
 $ gi # start me up (will be in $GOPATH/bin/gi now).
