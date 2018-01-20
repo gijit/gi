@@ -158,11 +158,11 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 	})
 }
 
-func Test062CallFmtSummerWithDots(t *testing.T) {
+func Test062SprintfOneSlice(t *testing.T) {
 
-	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function fmt.SummerAny(a ...int), the call fmt.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
+	cv.Convey(`a := fmt.Sprintf("%#v\n", []int{4,5,6}); should make the string version of the int slice, as opposed to just the 4.`, t, func() {
 
-		src := `import "fmt"; a := fmt.Sprintf("%#v\n", []int{4,5,6});`
+		src := `import "fmt"; a := fmt.Sprintf("yip %#v eee\n", []int{4,5,6});`
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -174,10 +174,10 @@ func Test062CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-		//			`a = fmt.Sprintf("yip %#v eee\n", _gi_Raw(_gi_NewSlice("int",{[0]=4, 5, 6})));`)
+		//			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
 
 		// debug:
-		translation = []byte(`a = fmt.Sprintf("yip %#v eee\n", _gi_Raw(_gi_NewSlice("int",{[0]=4, 5, 6})));`)
+		translation = []byte(`a = fmt.Sprintf("yip %#v eee", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 

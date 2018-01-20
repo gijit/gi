@@ -302,11 +302,14 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 		}
 
 		if isVariadic {
-			pp("we have a variadic function!")
+			pp("we have a variadic function!. len(argsT)=%v", len(argsT))
 			n := L.GetTop()
 			for i := len(argsT) + 1; i <= n; i++ {
+				// jea: assumes any varargs in the actual call have been
+				// pushed onto the stack.
+
 				val := reflect.New(lastT)
-				pp("about to call LuaToGo with val '%#v'/%T", val.Interface(), val.Interface())
+				pp("about to call LuaToGo with val from lastT: '%#v'/%T", val.Interface(), val.Interface())
 				err := LuaToGo(L, i, val.Interface())
 				if err != nil {
 					pp("problem point 2")
@@ -901,7 +904,10 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case reflect.Struct:
 			return copyTableToStruct(L, idx, v, visited)
 		case reflect.Interface:
-			n := int(L.ObjLen(idx))
+			// jea: the original L.ObjLen reults was wrong b/c our _gi_Slice start indexing at 0 not 1.
+			//n := int(L.ObjLen(idx)) // does not call __len metamethod. Problem.
+			n := getLenByCallingMetamethod(L, idx)
+			pp("n back from getLenByCallingMetamethod = %v at idx=%v", n, idx)
 
 			switch v.Elem().Kind() {
 			case reflect.Map:
@@ -910,10 +916,16 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				// Need to make/resize the slice here since interface values are not adressable.
 				v.Set(reflect.MakeSlice(v.Elem().Type(), n, n))
 				return copyTableToSlice(L, idx, v.Elem(), visited)
+				// jea debug: add default: case
+			default:
+				pp("v.Elem().Kind() = '%#v', v='%#v'/type='%T'", v.Elem().Kind(), v, v) // 0x0, nil interface, reflect.Value
 			}
 
-			if luaMapLen(L, idx) != n {
+			mapLen := luaMapLen(L, idx)
+			pp("jea: mapLen = %v, n = %v", mapLen, n)
+			if mapLen != n {
 				v.Set(reflect.MakeMap(tmap))
+				// jea: why are we copying a vararg table to a map???
 				return copyTableToMap(L, idx, v.Elem(), visited)
 			}
 			v.Set(reflect.MakeSlice(tslice, n, n))
@@ -1301,4 +1313,59 @@ func getfield(L *lua.State, tableIdx int, key string) {
 
 	// remove the copy of the table we made up front.
 	L.Remove(-2)
+}
+
+// jea add
+func getLenByCallingMetamethod(L *lua.State, idx int) int {
+	pp("top of getLenByCallingMetamethod")
+	top := L.GetTop()
+	//
+	// lua_getmetatable: Pushes onto the stack the
+	// metatable of the value at the given acceptable
+	// index. If the index is not valid, or if the
+	// value does not have a metatable, the function
+	// returns 0 and pushes nothing on the stack.
+	//
+	found := L.GetMetaTable(idx)
+	if !found {
+		return int(L.ObjLen(idx))
+	}
+
+	L.PushString("__len")
+
+	// lua_gettable: It receives the
+	// position of the table in the stack,
+	// pops the key from the top stack, and
+	// pushes the corresponding value.
+	// lua_rawget: same but no metamethods.
+	L.RawGet(-2) // get table[key]
+	if L.IsNil(-1) {
+		// __len method not found in metatable
+		return int(L.ObjLen(idx))
+	}
+	defer L.SetTop(top)
+
+	// INVAR: __len method is on top of stack.
+
+	// stack: __len method, the metatable, _gi_Slice table
+
+	pp("we think __len method is top of stack, followed by metable.")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	// gotta get rid of the metable first, prior to the call
+	L.Remove(-2)
+
+	// Setup the call.
+	L.PushValue(-2)
+	// stack: the actual _gi_Slice table, __len method, the actual _gi_Slice table
+	err := L.Call(1, 1)
+	if err != nil {
+		panic(err)
+	}
+	fLen := L.ToNumber(-1)
+	// NOTE: won't work for tables of len > 2^52
+	pp("getLenByCallingMetamethod returning %v", fLen)
+	return int(fLen)
 }

@@ -395,6 +395,11 @@ func (L *State) Next(index int) int {
 // for userdata, this is the size of the block
 // of memory allocated for the userdata;
 // for other values, it is 0.
+// jea note: Despite the misleading description
+// above, in 5.1 or LuaJit, ObjLen does not call
+// the metamethod __len(). In 5.2 it was split
+// into len and rawlen, with len calling the __len
+// metamethod.
 //
 func (L *State) ObjLen(index int) uint {
 	return uint(C.lua_objlen(L.s, C.int(index)))
