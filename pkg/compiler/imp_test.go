@@ -173,14 +173,11 @@ func Test062SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-		//			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
-
-		// debug:
-		translation = []byte(`a = fmt.Sprintf("yip %#v eee", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustString(vm, "a", "yip []interface {}{4, 5, 6} eee")
+		LuaMustString(vm, "a", "yip []interface {}{4, 5, 6} eee\n")
 	})
 }
