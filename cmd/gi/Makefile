@@ -6,7 +6,7 @@ all:
 
 
 onetime: gitversion
-	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make install
+	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
 
 # This how we want to name the binary output
 BINARY=gi
@@ -16,9 +16,13 @@ LAST_GIT_COMMIT_HASH=$(shell git rev-parse HEAD)
 NEAREST_GIT_TAG=$(shell git describe --abbrev=0 --tags)
 GIT_BRANCH=$(shell git rev-parse --abbrev-ref  HEAD)
 GOVER=$(shell go version | sed 's/\ /_/g')
-LUAJIT_VER=$(shell luajit -v | sed 's/\ /_/g')
+##LUAJIT may be built only, and not installed. This avoids
+## overwriting any existing luajit installation.
+##LUAJIT_VER=$(shell luajit -v | sed 's/\ /_/g')
 
-LDFLAGS_gi=-ldflags "-X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.NearestGitTag=${NEAREST_GIT_TAG}  -X main.GoVersion=${GOVER}  -X main.LuajitVersion=${LUAJIT_VER}"
+LDFLAGS_gi=-ldflags "-X main.LastGitCommitHash=${LAST_GIT_COMMIT_HASH} -X main.BuildTimeStamp=${BUILD_TIMESTAMP} -X main.GitBranch=${GIT_BRANCH} -X main.NearestGitTag=${NEAREST_GIT_TAG}  -X main.GoVersion=${GOVER}"
+
+## -X main.LuajitVersion=${LUAJIT_VER}"
 
 
 SRCS=$(wildcard *.go)
