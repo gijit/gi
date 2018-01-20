@@ -855,17 +855,19 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 }
 
 func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *expression) *expression {
-	pp("top of translateCall, expressions.go:858, len(e.Args)='%v', e.Args='%#v'", len(e.Args), e.Args)
+	pp("top of translateCall, len(e.Args)='%v', e.Args='%#v'", len(e.Args), e.Args)
 	for i := range e.Args {
-		pp("top of translateCall, expressions.go:860, e.Args[i=%v]='%#v'", i, e.Args[i])
+		pp("top of translateCall, e.Args[i=%v]='%#v'", i, e.Args[i])
 	}
 	args := c.translateArgs(sig, e.Args, e.Ellipsis.IsValid())
 	if !c.Blocking[e] {
-		pp("c.Blocking[e] is false, expressions.go:864")
-		return c.formatExpr("%s(%s)", fun, strings.Join(args, ", "))
+		joined := strings.Join(args, ", ")
+		pp("c.Blocking[e] is false, joined = '%v'", joined)
+		// joined = '_gi_NewSlice("interface{}",{1, 2, 3})'
+		return c.formatExpr("%s(%s)", fun, joined)
 	}
 
-	pp("c.Blocking[e] is true, expressions.go:868")
+	pp("c.Blocking[e] is true")
 	// jea
 	//resumeCase := c.caseCounter
 	c.caseCounter++
@@ -1354,7 +1356,7 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 }
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) (xprn *expression) {
-	pp("expressions.go:1349, format='%s', parens='%v', len(a)=%v, a='%#v'.", format, parens, len(a), a)
+	pp("top of formatExprInternal(), format='%s', parens='%v', len(a)=%v, a='%#v'.", format, parens, len(a), a)
 	// jea debug
 	if len(a) == 2 {
 		//panic("where?")

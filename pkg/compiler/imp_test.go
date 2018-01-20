@@ -107,7 +107,7 @@ func Test058CallFmtIncr(t *testing.T) {
 
 func Test059CallFmtSummer(t *testing.T) {
 
-	cv.Convey(`Given a pre-compiled Go function fmt.SummerAny(a ...int), we should be able to call it from gi`, t, func() {
+	cv.Convey(`Given a pre-compiled Go function fmt.SummerAny(a ...int), we should be able to call it from gi using fmt.SummerAny(1, 2, 3);`, t, func() {
 
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
@@ -123,7 +123,8 @@ func Test059CallFmtSummer(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.SummerAny(_gi_NewSlice("interface{}",{1, 2, 3}));`)
+			`a = fmt.SummerAny(1, 2, 3);`)
+		// `a = fmt.SummerAny(_gi_NewSlice("int",{1, 2, 3}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 

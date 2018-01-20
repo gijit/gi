@@ -83,10 +83,10 @@ func (c *funcContext) Delayed(f func()) {
 }
 
 func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, ellipsis bool) []string {
-	pp("utils:go:86 top of translateArgs, len(argExprs)=%v", len(argExprs))
+	pp("top of translateArgs, len(argExprs)=%v, ellipsis='%v'", len(argExprs), ellipsis)
 	if len(argExprs) == 1 {
 		if tuple, isTuple := c.p.TypeOf(argExprs[0]).(*types.Tuple); isTuple {
-			pp("// utils.go:89 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
+			pp("translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
 			c.Printf("\n// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs\n")
 			tupleVar := c.newVariable("_tuple")
 			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0]))
@@ -99,14 +99,14 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 
 	paramsLen := sig.Params().Len()
 
-	pp("utils.go:101, sig.Variadic()=%v, ellipsis=%v, paramsLen=%v,  len(argExprs)=%v", sig.Variadic(), ellipsis, paramsLen, len(argExprs))
+	pp("sig.Variadic()=%v, ellipsis=%v, paramsLen=%v,  len(argExprs)=%v", sig.Variadic(), ellipsis, paramsLen, len(argExprs))
 
 	var varargType *types.Slice
 	numFixedArgs := paramsLen
 	if sig.Variadic() && !ellipsis {
 		// in the *signature*, not actuals.
 		varargType = sig.Params().At(paramsLen - 1).Type().(*types.Slice)
-		pp("utils.go:108 varargType: '%#v'/elem type='%T'", varargType, varargType.Elem())
+		pp("varargType: '%#v'/elem type='%T'", varargType, varargType.Elem())
 		numFixedArgs--
 	}
 
@@ -114,8 +114,8 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	for i := 1; i < len(argExprs); i++ {
 		preserveOrder = preserveOrder || c.Blocking[argExprs[i]]
 	}
-	pp("utils.go:115: preserveOrder=%v", preserveOrder)
-	pp("utils.go:116: len(argExprs)=%v", len(argExprs))
+	pp("preserveOrder=%v", preserveOrder)
+	pp("len(argExprs)=%v", len(argExprs))
 
 	args := make([]string, len(argExprs))
 	for i, argExpr := range argExprs {
@@ -149,7 +149,11 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	}
 
 	pp("jea debug utils.go:151 varargType = '%#v'", varargType)
-	if varargType == nil {
+
+	// jea debug experiment... what if we turn off variadic for a moment?
+	//if varargType == nil {
+	if true {
+
 		pp("jea debug utils.go:153 varargType is nil, returning args='%#v'", args)
 		return args
 	}

@@ -88,12 +88,12 @@ func getFunForSummer(pkg *types.Package) *types.Func {
 }
 
 func SummerAny(a ...int) int {
-	pp("top of SummaryAny, a is len %v", len(a))
+	fmt.Printf("top of SummaryAny, a is len %v\n", len(a))
 	tot := 0
 	for i := range a {
 		tot += a[i]
 	}
-	pp("end of SummaryAny, returning tot=%v", tot)
+	fmt.Printf("end of SummaryAny, returning tot=%v\n", tot)
 	return tot
 }
 
