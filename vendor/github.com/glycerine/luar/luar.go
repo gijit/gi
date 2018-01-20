@@ -1354,18 +1354,20 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 		DumpLuaStack(L)
 	}
 
-	// gotta get rid of the metable first, prior to the call
+	// gotta get rid of the metable first, prior to the call, since
+	// __len method expects the actual table to be its self parameter.
 	L.Remove(-2)
 
 	// Setup the call.
 	L.PushValue(-2)
-	// stack: the actual _gi_Slice table, __len method, the actual _gi_Slice table
+
 	err := L.Call(1, 1)
 	if err != nil {
 		panic(err)
 	}
 	fLen := L.ToNumber(-1)
-	// NOTE: won't work for tables of len > 2^52
+	// NOTE: won't work for tables of len > 2^52 or 4 peta items.
+	// Since that's way bigger than viable ram, we don't worry about it here.
 	pp("getLenByCallingMetamethod returning %v", fLen)
 	return int(fLen)
 }

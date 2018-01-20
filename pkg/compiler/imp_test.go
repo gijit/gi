@@ -181,3 +181,27 @@ func Test062SprintfOneSlice(t *testing.T) {
 		LuaMustString(vm, "a", "yip []interface {}{4, 5, 6} eee\n")
 	})
 }
+
+func Test063SprintfOneSlice(t *testing.T) {
+
+	cv.Convey(`a := fmt.Sprintf("%v %v %v\n", []interface{}{4,5,6}...); should unpack the slice into 3 different args`, t, func() {
+
+		src := `import "fmt"; a := fmt.Sprintf("yee %v %v %v haw\n", []interface{}{4,5,6}...);`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		// need the side effect of loading `import "fmt"` package.
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackRaw(_gi_NewSlice("emptyInterface",{[0]=4, 5, 6})));`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustString(vm, "a", "yee 4 5 6 haw\n")
+	})
+}
