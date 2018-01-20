@@ -205,3 +205,50 @@ func Test063SprintfOneSlice(t *testing.T) {
 		LuaMustString(vm, "a", "yee 4 5 6 haw\n")
 	})
 }
+
+func Test064SprintfOneSlice(t *testing.T) {
+
+	cv.Convey(`a := fmt.Sprintf("%v %v\n", "hello", []int{4,5,6}); should send the slice as the 3rd arg`, t, func() {
+
+		src := `import "fmt"; a := fmt.Sprintf("%v %v\n", "hello", []int{4,5,6});`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		// need the side effect of loading `import "fmt"` package.
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`a = fmt.Sprintf("%v %v\n", "hello", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustString(vm, "a", "hello [4 5 6]\n")
+	})
+}
+
+// fmt.Printf("heya %#v %v\n", "hello", []int{55,56})
+func Test065PrintfOneSlice(t *testing.T) {
+
+	cv.Convey(`fmt.Printf("heya %#v %v\n", "hello", []int{55,56}); should compile and run.`, t, func() {
+
+		src := `import "fmt"; fmt.Printf("heya %#v %v\n", "hello", []int{55,56})`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		// need the side effect of loading `import "fmt"` package.
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55, 56}));`)
+		LoadAndRunTestHelper(t, vm, translation)
+
+	})
+}

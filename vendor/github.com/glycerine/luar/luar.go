@@ -921,13 +921,17 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				pp("v.Elem().Kind() = '%#v', v='%#v'/type='%T'", v.Elem().Kind(), v, v) // 0x0, nil interface, reflect.Value
 			}
 
-			mapLen := luaMapLen(L, idx)
-			pp("jea: mapLen = %v, n = %v", mapLen, n)
-			if mapLen != n {
-				v.Set(reflect.MakeMap(tmap))
-				// jea: why are we copying a vararg table to a map???
-				return copyTableToMap(L, idx, v.Elem(), visited)
-			}
+			/* jea, not sure why this map conversion is here, but
+			               it messes up imp_test 065 as just one example
+
+						mapLen := luaMapLen(L, idx)
+						pp("jea: mapLen = %v, n = %v", mapLen, n)
+						if mapLen != n {
+							v.Set(reflect.MakeMap(tmap))
+							// jea: why are we copying a vararg table to a map???
+							return copyTableToMap(L, idx, v.Elem(), visited)
+						}
+			*/
 			v.Set(reflect.MakeSlice(tslice, n, n))
 			return copyTableToSlice(L, idx, v.Elem(), visited)
 		default:
