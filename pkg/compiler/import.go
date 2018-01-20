@@ -28,6 +28,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	fun := getFunForSprintf(pkg)
 	scope.Insert(fun)
 
+	scope.Insert(getFunForPrintf(pkg))
+
 	summer := getFunForSummer(pkg)
 	scope.Insert(summer)
 
@@ -45,6 +47,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	luar.Register(ic.vm, "fmt", luar.Map{
 		// Go functions may be registered directly.
 		"Sprintf":   fmt.Sprintf,
+		"Printf":    fmt.Printf,
 		"Summer":    Summer,
 		"SummerAny": SummerAny,
 		"Incr":      Incr,
@@ -67,6 +70,26 @@ func getFunForSprintf(pkg *types.Package) *types.Func {
 	variadic := true
 	sig := types.NewSignature(recv, params, results, variadic)
 	fun := types.NewFunc(token.NoPos, pkg, "Sprintf", sig)
+	return fun
+}
+
+func getFunForPrintf(pkg *types.Package) *types.Func {
+	// func Sprintf(format string, a ...interface{}) string
+	var recv *types.Var
+	var T types.Type = &types.Interface{}
+	str := types.Typ[types.String]
+	nt := types.Typ[types.Int]
+	errt := types.Universe.Lookup("error")
+	if errt == nil {
+		panic("could not locate error interface in types.Universe")
+	}
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", nt),
+		types.NewVar(token.NoPos, pkg, "", errt.Type()))
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "format", str),
+		types.NewVar(token.NoPos, pkg, "a", types.NewSlice(T)))
+	variadic := true
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "Printf", sig)
 	return fun
 }
 
