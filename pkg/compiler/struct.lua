@@ -1,14 +1,17 @@
 -- structs
 
-
+-- st or showtable, a helper.
 function st(t)
+   local k = 1
    for i,v in pairs(t) do
-      print(i,v)
+      print("num ",k, "key:",i,"val:",v)
+      k=k+1
    end
 end
 
-_giPrivateStructRaw = {}
-_giPrivateStructProps = {}
+-- don't think we're going to use these/the slice and map approach for structs.
+-- _giPrivateStructRaw = {}
+-- _giPrivateStructProps = {}
 
 -- __reg is a struct registry that associates
 -- names to an  __index metatable
@@ -23,6 +26,34 @@ __reg={
    interfaces={}
 }
 
+--
+-- RegisterStruct is the first step in making a new struct.
+-- It returns a methodset object.
+-- Typically:
+--
+--   Bus   = __reg:RegisterStruct("Bus")
+--   Train =  __reg:RegisterStruct("Train")
+--
+function __reg:RegisterStruct(name)
+      local methodset = {}
+      methodset.__tostring = __structPrinter
+      methodset.__index = methodset -- is its own metatable, saving a table. (p151 / Ch 16.1 Classes, PIL 2nd ed.)
+      methodset.__typename = name
+      
+      self.structs[name] = methodset
+      print("debug: new methodset is: ", methodset)
+      st(methodset)
+      return methodset
+end
+
+function __reg:RegisterInterface(name)
+   local methodset = {}
+   methodset.__index = methodset
+   self.interfaces[name] = methodset
+   return methodset
+end
+
+
 -- create a new struct instance by
 -- attaching the appropriate methodset
 -- to data and returning it.
@@ -34,43 +65,33 @@ function __reg:NewInstance(name, data)
                   "unknown struct '"..name.."'")
       end
       -- this is the essence. The
-      -- methodset acts as the
+      -- methodset is the
       -- metatable for the struct.
+      -- 
       -- Thus unknown direct keys like method
       -- names are forwarded
       -- to the methodset.
-      setmetatable(data,{__index = methodset})
+      setmetatable(data, methodset)
       return data
 end
 
-function __reg:StructPrinter()
-     local props = self[_giPrivateStructProps]
-     local len = props["len"]
-     local s = "struct ".. _showStruct(props) .." of length " .. tostring(len) .. " is _giStruct{"
-     local r = t[_giPrivateStructRaw]
-     for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
+function __structPrinter(self)
+     local s = "struct ".. self.__typename .." _giStruct {\n"
+     for i, v in pairs(self) do
+        if #i >=2 and i[1]=="_" and i[2]=="_" then
+           -- skip __ prefixed methods when printing
+           goto continue
+        end
+        s = s .. "    "..tostring(i).. ": " .. tostring(v) .. ",\n"
+        ::continue::
+     end
      return s .. "}"
 end
 
 
-function __reg:RegisterStruct(name)
-      local methodset = {}
-      methodset.__tostring = __reg.StructPrinter
-      methodset[_giPrivateStructProps] = {len=0}
-
-      self.structs[name] = methodset
-      return methodset
-end
-
-function __reg:RegisterInterface(name)
-      local methodset = {}
-      self.interfaces[name] = methodset
-      return methodset
-end
-
 function __reg:AddMethod(structName, methodName, method)
 
-      -- instantiate a methodset if need be
+      -- lookup the methodset
       local methodset = self.structs[structName]
       if methodset == nil then
          error("unregistered struct name '"..structName.."'")
