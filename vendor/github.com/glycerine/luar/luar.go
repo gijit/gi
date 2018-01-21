@@ -773,7 +773,7 @@ func setField(fld, val reflect.Value) {
 // is an interface or a LuaObject.
 func LuaToGo(L *lua.State, idx int, a interface{}) error {
 	// jea debug:
-	verb.VerboseVerbose = true
+	//verb.VerboseVerbose = true
 
 	// LuaToGo should not pop the Lua stack to be consistent with L.ToString(), etc.
 	// It is also easier in practice when we want to keep working with the value on stack.
