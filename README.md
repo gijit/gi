@@ -10,6 +10,18 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 21 update
+------
+Release v0.6.6 has working `fmt.Printf`.
+
+~~~
+gi> import "fmt"
+import "fmt"
+gi> fmt.Printf("Hello World from gi!")
+Hello World from gi!
+gi> 
+~~~
+
 2018 Jan 20 update
 ------
 Release v0.6.2 has a working `fmt.Sprintf`.
@@ -462,7 +474,7 @@ x ? y : z
 ~~~
 should be translated as
 ~~~
-( x and {y} or {z})[1]
+( x and {y} or {z} )[1]
 ~~~
 
 d) the comma operator

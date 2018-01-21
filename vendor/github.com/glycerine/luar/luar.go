@@ -855,6 +855,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 	case lua.LUA_TUSERDATA:
 		pp("luar.go, type of idx == LUA_TUSERDATA")
 		if isValueProxy(L, idx) {
+			pp("luar.go, type of idx == LUA_TUSERDATA, isValueProxy is true")
 			val, typ := valueOfProxy(L, idx)
 			if val.Interface() == Null {
 				// Special case for Null.
@@ -874,7 +875,10 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			v.Set(val.Convert(v.Type()))
 			return nil
 		} else if kind != reflect.Interface || v.Type() != reflect.TypeOf(LuaObject{}) {
-			return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			pp("luar.go, type of idx == LUA_TUSERDATA, ConvError happening!??, from: '%s', to: '%s'", luaDesc(L, idx), v.Type())
+			// jea try this, so that we wrap into a lua ref
+			v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
+			// return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
@@ -1108,6 +1112,10 @@ func DumpLuaStackAsString(L *lua.State) (s string) {
 			case 0: // means it wasn't a ctype
 			}
 
+		case lua.LUA_TUSERDATA:
+			s += fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
+		case lua.LUA_TFUNCTION:
+			s += fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
 		default:
 			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 		}
@@ -1321,7 +1329,12 @@ func getfield(L *lua.State, tableIdx int, key string) {
 
 // jea add
 func getLenByCallingMetamethod(L *lua.State, idx int) int {
-	pp("top of getLenByCallingMetamethod")
+	pp("top of getLenByCallingMetamethod for idx=%v, here is stack:", idx)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+	pp("trace:\n%s\n", string(debug.Stack()))
+
 	top := L.GetTop()
 	//
 	// lua_getmetatable: Pushes onto the stack the
@@ -1347,23 +1360,38 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 		// __len method not found in metatable
 		return int(L.ObjLen(idx))
 	}
+	pp("after RawGet was not nil, top =%v, stack is", top)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
 	defer L.SetTop(top)
 
 	// INVAR: __len method is on top of stack.
 
 	// stack: __len method, the metatable, _gi_Slice table
 
-	pp("we think __len method is top of stack, followed by metable.")
-	if verb.VerboseVerbose {
-		DumpLuaStack(L)
-	}
+	//	pp("we think __len method is top of stack, followed by metable.")
+	//	if verb.VerboseVerbose {
+	//		DumpLuaStack(L)
+	//	}
 
 	// gotta get rid of the metable first, prior to the call, since
 	// __len method expects the actual table to be its self parameter.
 	L.Remove(-2)
 
-	// Setup the call.
-	L.PushValue(-2)
+	pp("after Remove(-2), top =%v, stack is", top)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	// Setup the call with the table as the argument
+	L.PushValue(idx)
+
+	pp("about to call __len, stack is:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 
 	err := L.Call(1, 1)
 	if err != nil {

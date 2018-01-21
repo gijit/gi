@@ -233,9 +233,9 @@ func Test064SprintfOneSlice(t *testing.T) {
 // fmt.Printf("heya %#v %v\n", "hello", []int{55,56})
 func Test065PrintfOneSlice(t *testing.T) {
 
-	cv.Convey(`fmt.Printf("heya %#v %v\n", "hello", []int{55,56}); should compile and run.`, t, func() {
+	cv.Convey(`fmt.Printf("heya %#v %v %v\n", "hello", []int{55,56}, fmt.Printf); should compile and run.`, t, func() {
 
-		src := `import "fmt"; fmt.Printf("heya %#v %v\n", "hello", []int{55,56})`
+		src := `import "fmt"; fmt.Printf("heya %#v %v\n", "hello", []int{55,56}, fmt.Printf)`
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -247,7 +247,7 @@ func Test065PrintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55, 56}));`)
+			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55, 56}), fmt.Printf);`)
 		LoadAndRunTestHelper(t, vm, translation)
 
 	})

@@ -105,6 +105,10 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 			case 0: // means it wasn't a ctype
 			}
 
+		case golua.LUA_TUSERDATA:
+			s += fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
+		case golua.LUA_TFUNCTION:
+			s += fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
 		default:
 			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 		}

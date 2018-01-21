@@ -1250,9 +1250,15 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			pp("isWrapped is true for exprType='%#v'", exprType)
 
 			pp("YYY 6 translateImplicitConversion exiting early")
+			// jea
 			// string literals are converting to new `new String("string")`
 			// which we don't need.
-			return c.formatExpr("new %s(%e)", c.typeName(exprType), expr)
+			// likewise, function references have junk wrapped around them.
+			// Example: fmt.Printf -> new funcType(fmt.Printf)
+			//return c.formatExpr("new %s(%e)", c.typeName(exprType), expr)
+
+			// references to functions arrive here.
+			return c.formatExpr("%e", expr)
 		}
 		pp("!isWrapped for exprType='%#v'", exprType)
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {
