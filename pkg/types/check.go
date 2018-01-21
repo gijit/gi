@@ -16,8 +16,11 @@ import (
 
 // debugging/development support
 const (
-	debug = false // leave on during development
-	trace = false // turn on for detailed type resolution traces
+	// jea debug:
+	debug = true // leave on during development
+	trace = true // turn on for detailed type resolution traces
+	//debug = false // leave on during development
+	//trace = false // turn on for detailed type resolution traces
 )
 
 // If Strict is set, the type-checker enforces additional

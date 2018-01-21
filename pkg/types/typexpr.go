@@ -31,7 +31,9 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	if check.scope == nil {
 		check.scope = check.pkg.scope
 	}
-	pp("Checker.ident is checking check.scope == %p", check.scope)
+	pp("Checker.ident is checking check.scope == %p. dump:", check.scope)
+	check.scope.Dump() // jea add
+	pp("end of check.scope Dump")
 	scope, obj = check.scope.LookupParent(e.Name, check.pos)
 
 	/*
@@ -179,7 +181,8 @@ func (check *Checker) typ(e ast.Expr) Type {
 
 // funcType type-checks a function or method type.
 func (check *Checker) funcType(sig *Signature, recvPar *ast.FieldList, ftyp *ast.FuncType) {
-	pp("top of Checker.funcType, sig = '%#v'", sig)
+	pp("top of Checker.funcType, sig = '%s'", sig) // jea on re-decl: sig is fresh here
+	pp("ftyp = '%s'", ftyp)
 	scope := NewScope(check.scope, token.NoPos, token.NoPos, "function")
 	scope.isFunc = true
 	check.recordScope(ftyp, scope)

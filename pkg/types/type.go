@@ -209,6 +209,7 @@ type Signature struct {
 // is variadic, it must have at least one parameter, and the last parameter
 // must be of unnamed slice type.
 func NewSignature(recv *Var, params, results *Tuple, variadic bool) *Signature {
+	pp("jea: type.go NewSignature called! params = '%#v'", params)
 	if variadic {
 		n := params.Len()
 		if n == 0 {
@@ -218,6 +219,7 @@ func NewSignature(recv *Var, params, results *Tuple, variadic bool) *Signature {
 			panic("types.NewSignature: variadic parameter must be of unnamed slice type")
 		}
 	}
+	pp("jea debug: about to create new &Signature{}, params='%#v'\n", params)
 	return &Signature{nil, recv, params, results, variadic}
 }
 

@@ -957,7 +957,9 @@ const (
 // If hint != nil, it is the type of a composite literal element.
 //
 func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
-	//pp("Checker.rawExpr() called, with e='%#v'", e)
+	pp("Checker.rawExpr() called, with e='%#v', x='%#v", e, x)
+	pp("Checker.rawExpr() called, x.typ='%#v", x.typ)
+	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
 	if trace {
 		check.trace(e.Pos(), "%s", e)
 		check.indent++
@@ -968,6 +970,8 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 	}
 
 	// jea: fmt.without.Sprintf path
+	pp("x.typ.Underlying().(*Signature) not good yet!")
+	pp("about to call kind := check.exprInternal() with x='%s', and x.typ='%#v'", x, x.typ)
 	kind := check.exprInternal(x, e, hint)
 
 	// convert x into a user-friendly set of values
@@ -1002,7 +1006,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 // Must only be called by rawExpr.
 //
 func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
-	//pp("Checker.exprInternal() called with e='%#v'/%T", e, e)
+	//pp("Checker.exprInternal() called with e='%#v'/%T, sig='%s'", e, e, x.typ.Underlying().(*Signature))
 
 	// make sure x has a valid state in case of bailout
 	// (was issue 5770)
@@ -1446,6 +1450,11 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		x.typ = T
 
 	case *ast.CallExpr:
+		// types.Basic, not types.Signature
+		switch x.typ.Underlying().(type) {
+		case *Signature:
+			pp("jea debug in expr.go, about to check.call(x,e); x.typ.Underlying().(*Signature)='%s'", x.typ.Underlying().(*Signature))
+		}
 		return check.call(x, e)
 
 	case *ast.StarExpr:
@@ -1552,7 +1561,8 @@ func (check *Checker) expr(x *operand, e ast.Expr) {
 
 // multiExpr is like expr but the result may be a multi-value.
 func (check *Checker) multiExpr(x *operand, e ast.Expr) {
-	//pp("check.multiExpr called with e = '%#v'", e)
+	pp("check.multiExpr called with e = '%s', x='%#v'", e, x)
+	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
 	check.rawExpr(x, e, nil)
 	var msg string
 	switch x.mode {

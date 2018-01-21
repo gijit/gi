@@ -12,7 +12,10 @@ import (
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
-	pp("Checker.call called with e = '%s', x = '%#v'", e, x)
+	switch x.typ.Underlying().(type) {
+	case *Signature:
+		pp("Checker.call called with e = '%s', x = '%#v', sig='%s'", e, x, x.typ.Underlying().(*Signature))
+	}
 	check.exprOrType(x, e.Fun)
 
 	switch x.mode {
@@ -55,7 +58,9 @@ func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
 	default:
 		// function/method call
 		sig, _ := x.typ.Underlying().(*Signature)
-		pp("got sig = '%s'", sig)
+		pp("on redef, sig is wrong here. got sig = '%s'", sig)
+		pp("x.typ = '%#v'", x.typ.Underlying())
+		pp("x.typ.Underlying() = '%#v'", x.typ.Underlying())
 		if sig == nil {
 			check.invalidOp(x.pos(), "cannot call non-function %s", x)
 			x.mode = invalid
@@ -181,6 +186,7 @@ func unpack(get getter, n int, allowCommaOk bool) (getter, int, bool) {
 // arguments checks argument passing for the call with the given signature.
 // The arg function provides the operand for the i'th argument.
 func (check *Checker) arguments(x *operand, call *ast.CallExpr, sig *Signature, arg getter, n int) {
+	pp("top of Checker.arguments: sig = '%s'", sig)
 	if call.Ellipsis.IsValid() {
 		// last argument is of the form x...
 		if !sig.variadic {
@@ -384,6 +390,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 			params = sig.params.vars
 		}
 		x.mode = value
+		pp("jea debug: about to make new x.typ Signature!: params='%#v'\n", params)
 		x.typ = &Signature{
 			params:   NewTuple(append([]*Var{NewVar(token.NoPos, check.pkg, "", x.typ)}, params...)...),
 			results:  sig.results,

@@ -31,15 +31,27 @@ type Scope struct {
 	isFunc   bool              // set if this is a function scope (internal use only)
 }
 
+// jea debug
+var funcScopesMade int
+
 // NewScope returns a new, empty scope contained in the given parent
 // scope, if any. The comment is for debugging only.
-func NewScope(parent *Scope, pos, end token.Pos, comment string) *Scope {
+func NewScope(parent *Scope, pos, end token.Pos, comment string) (sc *Scope) {
+	// jea debug
+	if comment == "function" {
+		funcScopesMade++
+		pp("funcScopesMade=%v", funcScopesMade)
+		if funcScopesMade == 2 {
+			panic("where second?")
+		}
+	}
+
 	s := &Scope{parent, nil, nil, pos, end, comment, false}
 	// don't add children to Universe scope!
 	if parent != nil && parent != Universe {
 		parent.children = append(parent.children, s)
 	}
-	//pp("NewScope is returning %p with parent %p", s, parent)
+	pp("NewScope() is returning %p with parent %p. comment '%s'", s, parent, comment)
 	if Universe != nil {
 		if parent == nil {
 			panic("where is nil scope parent coming from???? bad!")
@@ -103,8 +115,9 @@ func (s *Scope) LookupParent(name string, pos token.Pos) (*Scope, Object) {
 // Otherwise it inserts obj, sets the object's parent scope
 // if not already set, and returns nil.
 func (s *Scope) Insert(obj Object) Object {
-	// jea: we want redefs/replacements at REPL!
-	return s.Replace(obj)
+	pp("Scope.Insert called with obj='%#v'", obj)
+	// jea: we want redefs/replacements at REPL! but this didn't help.
+	//return s.Replace(obj)
 
 	name := obj.Name()
 	if alt := s.elems[name]; alt != nil {
@@ -124,6 +137,8 @@ func (s *Scope) Insert(obj Object) Object {
 // will overwrite any existing object
 // of the same naem.
 func (s *Scope) Replace(obj Object) Object {
+	pp("Scope.Replace called with obj='%#v'", obj)
+
 	name := obj.Name()
 	if s.elems == nil {
 		s.elems = make(map[string]Object)

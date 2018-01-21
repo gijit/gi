@@ -629,6 +629,7 @@ func (check *Checker) builtin(x *operand, call *ast.CallExpr, id builtinId) (_ b
 // makeSig makes a signature for the given argument and result types.
 // Default types are used for untyped arguments, and res may be nil.
 func makeSig(res Type, args ...Type) *Signature {
+	pp("jea debug: makeSig called to make new Signature! args='%#v'\n", args)
 	list := make([]*Var, len(args))
 	for i, param := range args {
 		list[i] = NewVar(token.NoPos, nil, "", Default(param))

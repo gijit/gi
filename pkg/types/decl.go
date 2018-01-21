@@ -65,10 +65,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	pp("jea debug: types/decl.go:65, check.objDecl running top.")
 	if obj.Type() != nil {
 		pp("jea debug: objDec sees objType() != nil, so returning early for obj.Name()='%s'... but we want redefs!. obj.Type()='%v', as string, obj.Type().String()='%s'", obj.Name(), obj.Type(), obj.Type().String())
-		if obj.Type().String() != "func()" {
-			return // already checked - nothing to do
-		}
-		pp("allow func redef.")
+		return // already checked - nothing to do
 	}
 
 	if trace {
@@ -85,6 +82,8 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
 		unreachable()
 	}
+	pp("obj = '%#v'", obj)
+	pp("d = '%#v'", d)
 
 	// save/restore current context and setup object context
 	defer func(ctxt context) {
@@ -315,6 +314,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 		// so that we can detect redeclarations.
 
 		// jea update: we want to *allow* redeclarations at the repl. Comment out:
+		pp("jea: try to allow re-decl")
 		/*
 			for _, m := range base.methods {
 				assert(m.name != "_")
