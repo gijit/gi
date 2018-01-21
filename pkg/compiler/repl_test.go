@@ -1060,7 +1060,7 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
  type S struct { a int }
  func (s *S) inc(b int) int { return s.a + b}
 
- // new signature in addition to new body:
+ // new signature in addition to new body: so we recognize fresh/old
  func (s *S) inc(b, c int) int { s.a++; s.a += b + c; return s.a }
  var s S
  a := s.inc(3, 4)
