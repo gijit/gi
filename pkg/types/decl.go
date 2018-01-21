@@ -309,10 +309,14 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 		// Checker.Files may be called multiple times; additional package files
 		// may add methods to already type-checked types. Add pre-existing methods
 		// so that we can detect redeclarations.
-		for _, m := range base.methods {
-			assert(m.name != "_")
-			assert(mset.insert(m) == nil)
-		}
+
+		// jea update: we want to *allow* redeclarations at the repl. Comment out:
+		/*
+			for _, m := range base.methods {
+				assert(m.name != "_")
+				assert(mset.insert(m) == nil)
+			}
+		*/
 	}
 
 	// type-check methods
