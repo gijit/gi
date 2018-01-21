@@ -58,6 +58,10 @@ func (cfg *GIConfig) LuajitMain() {
 		cmd := bytes.TrimSpace(by)
 		low := string(bytes.ToLower(cmd))
 		if len(low) > 1 && low[0] == ':' {
+			if low[:2] == "::" {
+				// likely the start of a lua label for a goto, not a special : command.
+				goto notColonCmd
+			}
 			if low[1] >= '0' && low[1] <= '9' {
 				num, err := strconv.Atoi(low[1:])
 				if err != nil {
@@ -188,6 +192,7 @@ these special commands:
 			continue
 		}
 
+	notColonCmd:
 		isContinuation := len(prevSrc) > 0
 		if !cfg.RawLua {
 			if isContinuation {
