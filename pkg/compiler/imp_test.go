@@ -231,9 +231,9 @@ func Test064SprintfOneSlice(t *testing.T) {
 }
 
 // fmt.Printf("heya %#v %v\n", "hello", []int{55,56})
-func Test065PrintfOneSlice(t *testing.T) {
+func Test065PrintfItselfAndOneSlice(t *testing.T) {
 
-	cv.Convey(`fmt.Printf("heya %#v %v %v\n", "hello", []int{55,56}, fmt.Printf); should compile and run.`, t, func() {
+	cv.Convey(`fmt.Printf("heya %#v %v %v\n", "hello", []int{55,56}, fmt.Printf); should compile and run, printing a reference to itself`, t, func() {
 
 		src := `import "fmt"; fmt.Printf("heya %#v %v\n", "hello", []int{55,56}, fmt.Printf)`
 
