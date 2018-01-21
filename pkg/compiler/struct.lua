@@ -26,6 +26,22 @@ __reg={
    interfaces={}
 }
 
+-- helper for iterating over structs
+__structPairs = function(t)
+   -- print("__pairs called!")
+   -- Iterator function takes the table and an index and returns the next index and associated value
+   -- or nil to end iteration
+   local function stateless_iter(t, k)
+      local v
+      --  Implement your own key,value selection logic in place of next
+      k, v = next(t, k)
+      if v then return k,v end
+   end
+   
+   -- Return an iterator function, the table, starting point
+   return stateless_iter, t, nil
+end
+
 --
 -- RegisterStruct is the first step in making a new struct.
 -- It returns a methodset object.
@@ -39,6 +55,7 @@ function __reg:RegisterStruct(name)
       methodset.__tostring = __structPrinter
       methodset.__index = methodset -- is its own metatable, saving a table. (p151 / Ch 16.1 Classes, PIL 2nd ed.)
       methodset.__typename = name
+      methodset.__pairs = __structPairs
       
       self.structs[name] = methodset
       print("debug: new methodset is: ", methodset)
@@ -76,13 +93,20 @@ function __reg:NewInstance(name, data)
 end
 
 function __structPrinter(self)
-     local s = "struct ".. self.__typename .." _giStruct {\n"
+     local s = self.__typename .." {\n"
      for i, v in pairs(self) do
         if #i >=2 and i[1]=="_" and i[2]=="_" then
-           -- skip __ prefixed methods when printing
+           -- skip __ prefixed methods when printing; atypical
+           -- since most of these live in the metatable anyway.
            goto continue
         end
-        s = s .. "    "..tostring(i).. ": " .. tostring(v) .. ",\n"
+        sv = ""
+        if type(v) == "string" then
+           sv = string.format("%q", v)
+        else
+           sv = tostring(v)
+        end
+        s = s .. "    "..tostring(i).. ":\t" .. sv .. ",\n"
         ::continue::
      end
      return s .. "}"
@@ -102,80 +126,5 @@ function __reg:AddMethod(structName, methodName, method)
 end
 
 
--- older stuff, do we need it at all any more?
 
--- create private index
 
--- helper
-_showStruct = function(props)
-   r = props.structName .. " {\n"
-   for k,v in pairs(props.keyValTypeMap) do
-      r = r .. "   ".. k .. " ".. v .. "\n"
-   end
-   return r .. "}\n"
-end
-
- _giPrivateStructMt = {
-
-    __tostring = function(t)
-       print("__tostring in _giPrivateStructMt called.")
-       local props = t[_giPrivateStructProps]
-       local len = props["len"]
-       local s = "struct ".. _showStruct(props) .." of length " .. tostring(len) .. " is _giStruct{"
-       local r = t[_giPrivateStructRaw]
-       -- we want to skip both the _giPrivateStructRaw and the len
-       -- when iterating, which happens automatically if we
-       -- iterate on r, the inside private data, and not on the proxy.
-       for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
-       return s .. "}"
-    end,
-
-    __pairs = function(t)
-       -- print("__pairs called!")
-       -- this makes a _giStruct work in a for k,v in pairs() do loop.
-
-       -- Iterator function takes the table and an index and returns the next index and associated value
-       -- or nil to end iteration
-
-       local function stateless_iter(t, k)
-           local v
-           --  Implement your own key,value selection logic in place of next
-           k, v = next(t[_giPrivateStructRaw], k)
-           if v then return k,v end
-       end
-
-       -- Return an iterator function, the table, starting point
-       return stateless_iter, t, nil
-    end,
-
-    __call = function(t, ...)
-       print("__call() invoked, with ... = ", ...)
-       args = (...)
-       local method, key = ...
-       print("method is", method)
-       -- look up the method in the vtable
-       -- list of methods available
-       if oper == "delete" then
-          -- the hash table delete operation
-          if key == nil then
-             return -- this is a no-op in Go.
-          end
-           -- forward the actual delete
-          t[key]=nil
-       end
-    end
- }
-
-function _gi_NewStruct(structName, keyValTypeMap, x)
-   assert(type(keyValTypeMap) == 'table', 'bad parameter #1: must be table')
-   assert(type(x) == 'table', 'bad parameter #2: must be table')
-
-   local proxy = {}
-   proxy[_giPrivateStructRaw] = x
-
-   local props = {keyValTypeMap=keyValTypeMap, structName=structName,methods={}}
-   proxy[_giPrivateStructProps] = props
-
-   setmetatable(proxy, _giPrivateStructMt)
-   return proxy
-end;
