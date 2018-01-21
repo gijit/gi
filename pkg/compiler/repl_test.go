@@ -289,9 +289,8 @@ func Test015ArrayCreation(t *testing.T) {
 
 		// and empty array with size 3
 
-		// TODO: this is failing, fix!!!
 		code = `var x [3]int`
-		//		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({}, "_kindInt", 3);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({}, "_kindint", 3);`)
 
 		// upper case names too
 		code = `LX := len(x)`
@@ -300,6 +299,21 @@ func Test015ArrayCreation(t *testing.T) {
 		// printing length
 		code = `println(len(x))`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `print(3);`)
+	})
+}
+
+func Test015_5_ArrayCreation(t *testing.T) {
+	vm, err := NewLuaVmWithPrelude(nil)
+	panicOn(err)
+	defer vm.Close()
+	inc := NewIncrState(vm)
+
+	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
+
+		// and empty array with size 3
+
+		code := `var x [3]int`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({}, "_kindint", 3);`)
 	})
 }
 

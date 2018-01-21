@@ -398,7 +398,13 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 										// the var snoopy Dog = &Beagle{word:"hiya"}
 										// versus at place2, the Beagle does get printed!
 										//
+
+										// jea, this is getting our "var x [3]int" decl,
+										// which needs to end up in code.
 										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+
+										pp("placeN+1, appending to newCodeText: d.InitCode='%s'", string(de.InitCode))
+										newCodeText = append(newCodeText, de.InitCode)
 									})
 
 								} else {

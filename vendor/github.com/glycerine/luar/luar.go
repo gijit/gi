@@ -324,7 +324,7 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 			if val.Kind() == reflect.Struct {
 				// If the function returns a struct (and not a pointer to a struct),
 				// calling GoToLua directly will convert it to a table, making the
-				// mathods inaccessible. We work around that issue by forcibly passing a
+				// methods inaccessible. We work around that issue by forcibly passing a
 				// pointer to a struct.
 				valp := reflect.New(val.Type())
 				valp.Elem().Set(val)
