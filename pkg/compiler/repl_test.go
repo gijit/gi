@@ -1051,3 +1051,32 @@ f();
 
 	})
 }
+
+func Test069MethodRedefinitionAllowed(t *testing.T) {
+
+	cv.Convey(`methods can be re-defined, including changing their signature, at the repl`, t, func() {
+
+		code := `
+ type S struct { a int }
+ func (s *S) inc() int { return s.a }
+
+ // new signature in addition to new body:
+ func (s *S) inc(b int) int { s.a++; s.a += b; return s.a }
+ var s S
+ a := s.inc(3)
+`
+
+		//   Line 1074: - where error? err = '8:13: too many arguments'
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(code))
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt(vm, "a", 4)
+	})
+}
