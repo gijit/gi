@@ -451,9 +451,8 @@ func Test021StructTypeValues(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
     A = __reg:RegisterStruct("A");
 `)
-		// TODO: fix this test, it is red!
 		code = `var a A`
-		//cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
 
 	})
 }
