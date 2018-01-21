@@ -1,5 +1,15 @@
 -- structs
 
+
+function st(t)
+   for i,v in pairs(t) do
+      print(i,v)
+   end
+end
+
+_giPrivateStructRaw = {}
+_giPrivateStructProps = {}
+
 -- __reg is a struct registry that associates
 -- names to an  __index metatable
 -- that holds the methods for the structs.
@@ -46,7 +56,7 @@ end
 function __reg:RegisterStruct(name)
       local methodset = {}
       methodset.__tostring = __reg.StructPrinter
-      methodset._giPrivateStructProps = {len=0}
+      methodset[_giPrivateStructProps] = {len=0}
 
       self.structs[name] = methodset
       return methodset
@@ -84,12 +94,10 @@ _showStruct = function(props)
    return r .. "}\n"
 end
 
-_giPrivateStructRaw = {}
-_giPrivateStructProps = {}
-
  _giPrivateStructMt = {
 
     __tostring = function(t)
+       print("__tostring in _giPrivateStructMt called.")
        local props = t[_giPrivateStructProps]
        local len = props["len"]
        local s = "struct ".. _showStruct(props) .." of length " .. tostring(len) .. " is _giStruct{"

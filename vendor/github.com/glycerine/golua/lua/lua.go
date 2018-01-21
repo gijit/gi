@@ -127,7 +127,7 @@ func (L *State) SetMetaMethod(methodName string, f LuaGoFunction) {
 
 // Pushes a Go struct onto the stack as user data.
 //
-// The user data will be rigged so that lua code can access and change to public members of simple types directly
+// The user data will be rigged so that lua code can access and change the public members of simple types directly
 func (L *State) PushGoStruct(iface interface{}) {
 	iid := L.register(iface)
 	C.clua_pushgostruct(L.s, C.uint(iid))
