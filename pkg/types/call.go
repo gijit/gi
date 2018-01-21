@@ -12,7 +12,7 @@ import (
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
-	pp("Checker.call called with e = '%s'", e)
+	pp("Checker.call called with e = '%s', x = '%#v'", e, x)
 	check.exprOrType(x, e.Fun)
 
 	switch x.mode {
@@ -55,6 +55,7 @@ func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
 	default:
 		// function/method call
 		sig, _ := x.typ.Underlying().(*Signature)
+		pp("got sig = '%s'", sig)
 		if sig == nil {
 			check.invalidOp(x.pos(), "cannot call non-function %s", x)
 			x.mode = invalid
@@ -222,6 +223,7 @@ func (check *Checker) arguments(x *operand, call *ast.CallExpr, sig *Signature, 
 // argument checks passing of argument x to the i'th parameter of the given signature.
 // If ellipsis is valid, the argument is followed by ... at that position in the call.
 func (check *Checker) argument(fun ast.Expr, sig *Signature, i int, x *operand, ellipsis token.Pos) {
+	pp("check.Checker argument top: sig = '%s'", sig.String())
 	check.singleValue(x)
 	if x.mode == invalid {
 		return
@@ -242,6 +244,9 @@ func (check *Checker) argument(fun ast.Expr, sig *Signature, i int, x *operand, 
 			}
 		}
 	default:
+		// jea: after re-defining a method in 069 repl_test, and
+		// trying to call with the new method that has 1 more arg,
+		// we are failing here.
 		check.errorf(x.pos(), "too many arguments")
 		return
 	}
@@ -326,6 +331,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 			case *Func:
 				x.mode = value
 				x.typ = exp.typ
+				pp("wrote x.typ = exp.typ = '%#v'", exp.typ)
 			case *Builtin:
 				x.mode = builtin
 				x.typ = exp.typ

@@ -103,6 +103,9 @@ func (s *Scope) LookupParent(name string, pos token.Pos) (*Scope, Object) {
 // Otherwise it inserts obj, sets the object's parent scope
 // if not already set, and returns nil.
 func (s *Scope) Insert(obj Object) Object {
+	// jea: we want redefs/replacements at REPL!
+	return s.Replace(obj)
+
 	name := obj.Name()
 	if alt := s.elems[name]; alt != nil {
 		return alt

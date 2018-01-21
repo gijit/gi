@@ -64,7 +64,11 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	pp("jea debug: types/decl.go:65, check.objDecl running top.")
 	if obj.Type() != nil {
-		return // already checked - nothing to do
+		pp("jea debug: objDec sees objType() != nil, so returning early for obj.Name()='%s'... but we want redefs!. obj.Type()='%v', as string, obj.Type().String()='%s'", obj.Name(), obj.Type(), obj.Type().String())
+		if obj.Type().String() != "func()" {
+			return // already checked - nothing to do
+		}
+		pp("allow func redef.")
 	}
 
 	if trace {
@@ -352,6 +356,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 }
 
 func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
+	pp("top of Checker.funcDecl, obj='%#v'", obj)
 	assert(obj.typ == nil)
 
 	// func declarations cannot use iota
