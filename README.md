@@ -12,7 +12,7 @@ status
 
 2018 Jan 21 update
 ------
-Release v0.6.6 has working `fmt.Printf`.
+Release v0.6.7 has working `fmt.Printf`.
 
 ~~~
 gi> import "fmt"
