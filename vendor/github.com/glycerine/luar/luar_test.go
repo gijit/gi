@@ -184,7 +184,7 @@ func TestArray(t *testing.T) {
 	a := [2]int{17, 18}
 	Register(L, "", Map{"a": a})
 
-	runLuaTest(t, L, []luaTestData{{`a`, `{17, 18}`}})
+	runLuaTest(t, L, []luaTestData{{`a`, `{17LL, 18LL}`}})
 
 	// Conversion from sub-type should fail.
 	runGoTest(t, L, []goTestData{{`a`, new([2]string), ErrTableConv.Error()}})

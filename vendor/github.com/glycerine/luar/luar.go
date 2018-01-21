@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime/debug"
+	"unsafe"
 
 	"github.com/gijit/gi/pkg/verb"
 	"github.com/glycerine/golua/lua"
@@ -686,6 +687,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 }
 
 func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+	pp("top of copyTableToStruct")
 	t := v.Type()
 
 	// See copyTableToSlice.
@@ -705,7 +707,9 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 			continue
 		}
 		fields[field.Name] = field.Name
+		pp("added to fields, field.Name='%v'", field.Name)
 	}
+	pp("fields is now '%#v'", fields)
 
 	L.PushNil()
 	if idx < 0 {
@@ -717,21 +721,29 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 		key := L.ToString(-1)
 		L.Pop(1)
 		f := v.FieldByName(fields[key])
-		if f.CanSet() {
-			val := reflect.New(f.Type()).Elem()
-			err := luaToGo(L, -1, val, visited)
-			if err != nil {
-				pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
-				status = ErrTableConv
-				L.Pop(1)
-				continue
-			}
-			f.Set(val)
+		// jea: set private fields too.
+		//if f.CanSet() {
+		val := reflect.New(f.Type()).Elem()
+		err := luaToGo(L, -1, val, visited)
+		if err != nil {
+			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
+			status = ErrTableConv
+			L.Pop(1)
+			continue
 		}
+		//f.Set(val)
+		setField(f, val)
+		//} // jea
 		L.Pop(1)
 	}
 
 	return
+}
+
+// setField works on private and public fields
+func setField(fld, val reflect.Value) {
+	fieldPtr := reflect.NewAt(fld.Type(), unsafe.Pointer(fld.UnsafeAddr()))
+	fieldPtr.Elem().Set(val)
 }
 
 // LuaToGo converts the Lua value at index 'idx' to the Go value.
@@ -968,8 +980,13 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			// allow int64 to convert to int
 			if v.Kind() == reflect.Int {
 				v.Set(f.Convert(v.Type()))
+				//setField(f.Convert(v.Type()), v)
 			} else {
+				// huh?
+				// go test -v -run TestArray
+				// panic: reflect.Set: value of type int64 is not assignable to type string
 				v.Set(f)
+				//setField(f, v)
 			}
 			return nil
 		case 12: //  uint64

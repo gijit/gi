@@ -382,7 +382,9 @@ ts := &myGoTestStruct{
 	Pub:  5,
 }
 
-// stub definition
+// stub definition, to keep the type checker happy for now.
+// We actually want to test calling into compiled go, so
+// we'll redefine testOp later.
 func testOp(m *myGoTestStruct) string { return "" }
 `
 
