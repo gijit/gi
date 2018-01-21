@@ -58,8 +58,8 @@ function __reg:RegisterStruct(name)
       methodset.__pairs = __structPairs
       
       self.structs[name] = methodset
-      print("debug: new methodset is: ", methodset)
-      st(methodset)
+      --print("debug: new methodset is: ", methodset)
+      --st(methodset)
       return methodset
 end
 

@@ -357,3 +357,62 @@ func getfield(L *lua.State, tableIdx int, key string) {
 	// remove the copy of the table we made up front.
 	L.Remove(-2)
 }
+
+type myGoTestStruct struct {
+	priv int
+	Pub  int
+}
+
+func testOp(m *myGoTestStruct) string {
+	return fmt.Sprintf("priv:%v, Pub:%v", m.priv, m.Pub)
+}
+
+func Test068_LuaToGo_handles_structs(t *testing.T) {
+
+	cv.Convey(`we want to translate lua structs into go structs, private and public fields`, t, func() {
+
+		src := `
+type myGoTestStruct struct {
+	priv int
+	Pub  int
+}
+
+ts := &myGoTestStruct{
+	priv: 4,
+	Pub:  5,
+}
+
+// stub definition
+func testOp(m *myGoTestStruct) string { return "" }
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		// replace the stub definition of testOp with the real one.
+		luar.Register(vm, "", luar.Map{
+			"testOp": testOp,
+		})
+
+		src = `s := testOp(ts)`
+		translation = inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustString(vm, "s", "priv:4, Pub:5")
+	})
+}
