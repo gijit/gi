@@ -259,8 +259,8 @@ func copyStructToTable(L *lua.State, v reflect.Value, visited visitor) {
 
 func callGoFunction(L *lua.State, v reflect.Value, args []reflect.Value) []reflect.Value {
 	defer func() {
-		// jea debug:
 		if x := recover(); x != nil {
+			// jea debug:
 			pp("recovering panic in luar.go, raising error x='%v'", x)
 			L.RaiseError(fmt.Sprintf("error %s", x))
 		}
@@ -772,6 +772,9 @@ func setField(fld, val reflect.Value) {
 // Userdata that is not a proxy will be converted to a LuaObject if the Go value
 // is an interface or a LuaObject.
 func LuaToGo(L *lua.State, idx int, a interface{}) error {
+	// jea debug:
+	verb.VerboseVerbose = true
+
 	// LuaToGo should not pop the Lua stack to be consistent with L.ToString(), etc.
 	// It is also easier in practice when we want to keep working with the value on stack.
 
@@ -889,8 +892,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		} else if kind != reflect.Interface || v.Type() != reflect.TypeOf(LuaObject{}) {
 			pp("luar.go, type of idx == LUA_TUSERDATA, ConvError happening!??, from: '%s', to: '%s'", luaDesc(L, idx), v.Type())
 			// jea try this, so that we wrap into a lua ref
+			// This makes gi: fmt.Printf("%v", fmt.Printf) work.
 			v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
-			// return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			//return ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
@@ -982,10 +986,14 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				v.Set(f.Convert(v.Type()))
 				//setField(f.Convert(v.Type()), v)
 			} else {
+
+				if !canAndDidAssign(&f, &v) {
+					return ConvError{From: luaDesc(L, idx), To: v.Type()}
+				}
 				// huh?
 				// go test -v -run TestArray
 				// panic: reflect.Set: value of type int64 is not assignable to type string
-				v.Set(f)
+				//v.Set(f)
 				//setField(f, v)
 			}
 			return nil
@@ -1419,4 +1427,19 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 	// Since that's way bigger than viable ram, we don't worry about it here.
 	pp("getLenByCallingMetamethod returning %v", fLen)
 	return int(fLen)
+}
+
+func canAndDidAssign(f, v *reflect.Value) (res bool) {
+	pp("top of canAndDidAssign, f.Type='%v', v.Type='%T'", f.Interface(), v.Interface()) // 'string'
+
+	res = true
+	defer func() {
+		if r := recover(); r != nil {
+			pp("canAndDidAssign recover caught: '%v'", r)
+			res = false
+		}
+	}()
+	v.Set(*f)
+	//f.Convert(v.Type())
+	return
 }
