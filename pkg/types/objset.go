@@ -19,9 +19,25 @@ type objset map[string]Object // initialized lazily
 // the same name, insert leaves s unchanged and returns alt.
 // Otherwise it inserts obj and returns nil.
 func (s *objset) insert(obj Object) Object {
+	pp("objset.insert called with obj.Name()='%s', obj.Id()='%s'", obj.Name(), obj.Id())
 	id := obj.Id()
 	if alt := (*s)[id]; alt != nil {
 		return alt
+	}
+	if *s == nil {
+		*s = make(map[string]Object)
+	}
+	(*s)[id] = obj
+	return nil
+}
+
+func (s *objset) replace(obj Object) Object {
+	pp("objset.replace called with obj.Name()='%s', Id='%s'", obj.Name(), obj.Id())
+	id := obj.Id()
+	if alt := (*s)[id]; alt != nil {
+		// jea:
+		pp("objset.replace is replacing a prior '%s'", id)
+		//return alt // jea comment out
 	}
 	if *s == nil {
 		*s = make(map[string]Object)

@@ -119,6 +119,7 @@ func (check *Checker) declarePkgObj(ident *ast.Ident, obj Object, d *DeclInfo) {
 	}
 
 	check.declare(check.pkg.scope, ident, obj, token.NoPos)
+	pp("REDECLARE jea debug. check.ObjMap[obj] being assigned d. obj.Id()='%s', d='%#v'", obj.Id(), d)
 	check.ObjMap[obj] = d
 	obj.setOrder(uint32(len(check.ObjMap)))
 }
@@ -480,6 +481,7 @@ func (check *Checker) collectObjects() {
 					}
 				}
 				info := &DeclInfo{File: fileScope, Fdecl: d}
+				pp("REDECLARE jea debug: check.ObjMap[obj.Id()='%s'] being set to info with Fdecl:d='%#v'", obj.Id(), d)
 				check.ObjMap[obj] = info
 				obj.setOrder(uint32(len(check.ObjMap)))
 

@@ -82,8 +82,9 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
 		unreachable()
 	}
-	pp("obj = '%#v'", obj)
-	pp("d = '%#v'", d)
+	pp("obj = '%#v'/'%s'", obj, obj)
+	pp("obj.Name() = '%s'", obj.Name())
+	pp("d = '%#v'/'%s'", d, d)
 
 	// save/restore current context and setup object context
 	defer func(ctxt context) {
@@ -110,6 +111,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.typeDecl(obj, d.Typ, def, path, d.Alias)
 	case *Func:
 		// functions may be recursive - no need to track dependencies
+		// jea: new function declarations happen here.
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
@@ -334,6 +336,8 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 					check.errorf(m.pos, "field and method with the same name %s", m.name)
 				case *Func:
 					// jea: allow function re-definition at the repl.
+					mset.replace(m)
+					alt = nil
 					goto proceede
 					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
 				default:

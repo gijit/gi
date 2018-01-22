@@ -42,7 +42,7 @@ func NewScope(parent *Scope, pos, end token.Pos, comment string) (sc *Scope) {
 		funcScopesMade++
 		pp("funcScopesMade=%v", funcScopesMade)
 		if funcScopesMade == 2 {
-			panic("where second?")
+			//panic("where second?")
 		}
 	}
 

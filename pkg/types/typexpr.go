@@ -180,8 +180,10 @@ func (check *Checker) typ(e ast.Expr) Type {
 }
 
 // funcType type-checks a function or method type.
+// Creates a new scope for the function, storing that in check.scope
 func (check *Checker) funcType(sig *Signature, recvPar *ast.FieldList, ftyp *ast.FuncType) {
-	pp("top of Checker.funcType, sig = '%s'", sig) // jea on re-decl: sig is fresh here
+	// jea on re-decl: sig is fresh here, unfilled.
+	pp("top of Checker.funcType, sig = '%s'", sig)
 	pp("ftyp = '%s'", ftyp)
 	scope := NewScope(check.scope, token.NoPos, token.NoPos, "function")
 	scope.isFunc = true
