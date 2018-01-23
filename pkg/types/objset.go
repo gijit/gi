@@ -41,6 +41,15 @@ func (s *objset) del(obj Object) {
 	delete(*s, id)
 }
 
+func (s *objset) exists(obj Object) bool {
+	if *s == nil {
+		return false
+	}
+	id := obj.Id()
+	_, found := (*s)[id]
+	return found
+}
+
 func (s *objset) replace(obj Object) (alt Object) {
 	pp("objset.replace called with obj.Name()='%s', Id='%s'", obj.Name(), obj.Id())
 	id := obj.Id()

@@ -12,6 +12,8 @@ import (
 	"github.com/gijit/gi/pkg/token"
 )
 
+var DisallowMethodRedefinition = false
+
 func (check *Checker) reportAltDecl(obj Object) {
 	if pos := obj.Pos(); pos.IsValid() {
 		// We use "other" rather than "previous" here because
@@ -329,21 +331,15 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 		// so that we can detect redeclarations.
 
 		// jea update: we want to *allow* redeclarations at the repl
-		pp("jea: try to allow re-decl. len(base.methods)=%v", len(base.methods))
+		// but we still do this to catch element and method
+		// name collisions.
 		for _, m := range base.methods {
-			pp("base.method m = '%s'", m)
 			assert(m.name != "_")
-			// jea remove any prior definition during re-definition...
-			//assert(mset.insert(m) == nil)
-			prior := mset.replace(m)
-			if prior != nil {
-				pp("jea: updated method m='%s' in type '%s'", m, base.obj.Name())
-			}
+			assert(mset.insert(m) == nil)
 		}
 	}
 
 	// type-check methods
-	pp("len(methods)=%v", len(methods))
 	for _, m := range methods {
 		// spec: "For a base type, the non-blank names of methods bound
 		// to it must be unique."
@@ -353,35 +349,43 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 				case *Var:
 					check.errorf(m.pos, "field and method with the same name %s", m.name)
 				case *Func:
-					// jea: allow function re-definition at the repl.
-					pp("mset starting as: '%s'", mset.String())
+					if DisallowMethodRedefinition {
+						check.errorf(m.pos,
+							"method %s already declared for %s",
+							m.name, obj)
+					} else {
+						// jea: allow function re-definition at the repl.
+						pp("mset starting as: '%s'", mset.String())
 
-					pp("doing mset.replace with m = '%s', and alt= '%s'", m, alt)
-					prior := mset.replace(m)
+						pp("doing mset.replace with m = '%s', and alt= '%s'", m, alt)
+						prior := mset.replace(m)
 
-					// need to delete alt in the scope and check.ObjMap, check.Defs as well, eh?
-					delete(check.ObjMap, prior)
+						delete(check.ObjMap, prior)
 
-					pp("check.methods has len %v", len(check.methods))
-					for i, slc := range check.methods {
-						fmt.Printf("methods[%v] = \n", i)
-						for j, fn := range slc {
-							fmt.Printf("   [%v] = '%s'\n", j, fn.String())
+						// jea: do we need to delete prior in check.Defs as well?
+						// Hmm... we have an Object, not an *ast.Ident.
+						//delete(check.Defs, prior)
+
+						pp("check.methods has len %v", len(check.methods))
+						for i, slc := range check.methods {
+							fmt.Printf("methods[%v] = \n", i)
+							for j, fn := range slc {
+								fmt.Printf("   [%v] = '%s'\n", j, fn.String())
+							}
 						}
-					}
 
-					// need to delete the method from the type too.
-					for i, curm := range base.methods {
-						if curm == prior {
-							base.methods = append(base.methods[:i], base.methods[i+1:]...)
-							break
+						// need to delete the method from the type too.
+						for i, curm := range base.methods {
+							if curm == prior {
+								base.methods = append(base.methods[:i], base.methods[i+1:]...)
+								break
+							}
 						}
-					}
 
-					alt = nil
-					pp("mset is now, after replace(m): '%s'", mset.String())
-					goto proceed
-					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
+						alt = nil
+						pp("mset is now, after replace(m): '%s'", mset.String())
+						goto proceed
+					}
 				default:
 					unreachable()
 				}
@@ -399,7 +403,6 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 			base.methods = append(base.methods, m)
 		}
 	}
-	pp("len base.methods = %v", len(base.methods))
 }
 
 func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
