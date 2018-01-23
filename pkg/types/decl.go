@@ -107,11 +107,13 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
+		pp("555555 jea trace: both inc, 13")
 		check.typeDecl(obj, d.Typ, def, path, d.Alias)
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
 		pp("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
+		pp("555555 jea trace: both inc, 10")
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
@@ -239,6 +241,25 @@ func underlying(typ Type) Type {
 
 func (n *Named) setUnderlying(typ Type) {
 	pp("4444444 jea debug, decl.go: Named.setUnderlying for typ='%#v'/'%s'", typ, typ)
+	switch x := typ.(type) {
+	case *Named:
+		if x.methods != nil {
+			pp("len of x.methods is %v", len(x.methods))
+			for i, me := range x.methods {
+				pp("x.methods[i=%v] = '%#v'; me.name='%s', me.typ: '%s'", i, me, me.name, me.typ)
+			}
+			// ah hah! we have both 'inc(b int) int' and 'inc(b, c int) int' here!
+			// and we want the second to have replaced the first.
+			/*
+				decl.go:247 2018-01-23 09:56:08.749 +0700 ICT x.methods[i=0] = '&types.Func{object:types.object{parent:(*types.Scope)(nil), pos:40, pkg:(*types.Package)(0xc4200b8690), name:"inc", typ:(*types.Signature)(0xc420116630), order_:0x2, scopePos_:0}}'; me.name='inc', me.typ: 'func(b int) int'
+
+				decl.go:247 2018-01-23 09:56:08.749 +0700 ICT x.methods[i=1] = '&types.Func{object:types.object{parent:(*types.Scope)(nil), pos:156, pkg:(*types.Package)(0xc4200b8690), name:"inc", typ:(*types.Signature)(0xc420116cc0), order_:0x3, scopePos_:0}}'; me.name='inc', me.typ: 'func(b int, c int) int'
+
+			*/
+			pp("555555 jea trace: both inc, 0")
+			panic("where both inc() at once?")
+		}
+	}
 	if n != nil {
 		n.underlying = typ
 	}
@@ -262,6 +283,7 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 		obj.typ = named          // make sure recursive type declarations terminate
 
 		pp("4444444 jea debug, about to call check.typExpr to determine underlying")
+		pp("path='%s', obj='%s', named='%s', typ='%s'", path, obj, named, typ)
 		// determine underlying type of named
 		check.typExpr(typ, named, append(path, obj))
 
@@ -287,6 +309,7 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 	// current approach is incorrect: In general we need to know
 	// and add all methods _before_ type-checking the type.
 	// See https://play.golang.org/p/WMpE0q2wK8
+	pp("555555 jea trace: both inc, 12")
 	check.addMethodDecls(obj)
 }
 
@@ -353,6 +376,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 
 	proceede:
 		// type-check
+		pp("555555 jea trace: both inc, 11")
 		check.objDecl(m, nil, nil)
 
 		// methods with blank _ names cannot be found - don't keep them
@@ -399,6 +423,7 @@ func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
 
 	// jea this is the call that defines new function declaration signatures!
 	pp("check.funcDecl calling check.funcType()")
+	pp("555555 jea trace: both inc, 9")
 	check.funcType(sig, fdecl.Recv, fdecl.Type, methodName)
 
 	if sig.recv == nil && obj.name == "init" && (sig.params.Len() > 0 || sig.results.Len() > 0) {

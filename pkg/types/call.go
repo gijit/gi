@@ -358,8 +358,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 
 	// jea: fmt.without.Sprintf path, shouldn't get here; should be
 	// handled above.
-	pp("jea: at call.go just before check.exprOrType")
-	panic("pickup the trail here!!!")
+	pp("jea: at call.go just before check.exprOrType -- pickup the trail here")
+	//panic("pickup the trail here!!!")
 	check.exprOrType(x, e.X)
 	if x.mode == invalid {
 		goto Error

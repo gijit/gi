@@ -171,6 +171,7 @@ func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type)
 		}()
 	}
 
+	pp("555555 jea trace: both inc, 2nd time on recursive calltrace(!): 2 and 5")
 	T = check.typExprInternal(e, def, path)
 	assert(isTyped(T))
 	check.recordTypeAndValue(e, typexpr, T, nil)
@@ -179,6 +180,7 @@ func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type)
 }
 
 func (check *Checker) typ(e ast.Expr) Type {
+	pp("555555 jea trace: both inc, 3 and 6")
 	return check.typExpr(e, nil, nil)
 }
 
@@ -216,6 +218,7 @@ func (check *Checker) funcType(
 	}
 	check.recordScope(ftyp, scope, methodName)
 
+	pp("555555 jea trace: both inc, 8")
 	recvList, _ := check.collectParams(scope, recvPar, false)
 	params, variadic := check.collectParams(scope, ftyp.Params, true)
 	results, _ := check.collectParams(scope, ftyp.Results, false)
@@ -292,6 +295,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 		switch x.mode {
 		case typexpr:
 			typ := x.typ
+			pp("555555 jea trace: both inc, 1")
 			def.setUnderlying(typ)
 			return typ
 		case invalid:
@@ -346,6 +350,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 	case *ast.StarExpr:
 		typ := new(Pointer)
 		def.setUnderlying(typ)
+		pp("555555 jea trace: both inc, 4")
 		typ.base = check.typ(e.X)
 		return typ
 
@@ -478,6 +483,7 @@ func (check *Checker) collectParams(scope *Scope, list *ast.FieldList, variadicO
 				// ignore ... and continue
 			}
 		}
+		pp("555555 jea trace: both inc, 7")
 		typ := check.typ(ftype)
 		// The parser ensures that f.Tag is nil and we don't
 		// care if a constructed AST contains a non-nil tag.
