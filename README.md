@@ -23,7 +23,7 @@ Release v0.6.8 brought the ability to update a method
 definition at the REPL, replacing an old method
 definition with a new one.  Functions and variables
 could already be re-defined. Now all data types can
-be updated as you code.
+be updated as you work at the `gi` REPL.
 
 2018 Jan 21 update
 ------
