@@ -286,7 +286,7 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1LL,2LL,3LL}, "_kindint", 3LL); bb = 3LL;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1LL,2LL,3LL}, "_kindint", 3); bb = 3LL;`)
 
 		// and empty array with size 3
 
@@ -295,11 +295,11 @@ func Test015ArrayCreation(t *testing.T) {
 
 		// upper case names too
 		code = `LX := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `LX = 3;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `LX = 3LL;`)
 
 		// printing length
 		code = `println(len(x))`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `print(3);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `print(3LL);`)
 	})
 }
 
@@ -332,7 +332,7 @@ func Test016MapCreation(t *testing.T) {
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`)
 
 	})
 }
@@ -346,9 +346,9 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`)
 		code = `delete(x, 3)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3ULL);`)
 	})
 }
 
@@ -363,11 +363,11 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("int", "string", {[3]="hello", [4]="gophers"});`, `x3 = x('get',3);`}
+		expect := []string{`x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`, `x3 = x('get',3LL);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
-			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+			fmt.Printf("go:'%s'  -->  '%s' in lua\n", string(src), string(translation))
 			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, expect[i])
 
 			LoadAndRunTestHelper(t, vm, translation)
@@ -412,12 +412,12 @@ func Test019TopLevelScope(t *testing.T) {
 		// at top-level
 		code := `j:=5; for i:=0; i < 3; i++ { j++ }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-        j = 5;
-  		i = 0;
+        j = 5LL;
+  		i = 0LL;
   		while (true) do
-  			if (not (i < 3)) then break; end
-            j = j + (1);
-  			i = i + (1);
+  			if (not (i < 3LL)) then break; end
+            j = j + (1LL);
+  			i = i + (1LL);
   		 end
 `)
 
@@ -472,7 +472,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=__reg:NewInstance("A",{["B"]=43});
+a=__reg:NewInstance("A",{["B"]=43LL});
 `)
 
 	})
@@ -845,9 +845,9 @@ x,y,z,s := f()
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "x", 1)
-		LuaMustInt(vm, "y", 2)
-		LuaMustInt(vm, "z", 3)
+		LuaMustInt64(vm, "x", 1)
+		LuaMustInt64(vm, "y", 2)
+		LuaMustInt64(vm, "z", 3)
 		LuaMustString(vm, "s", "hi")
 
 	})
