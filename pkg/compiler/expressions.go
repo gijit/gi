@@ -45,26 +45,42 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		case isBoolean(basic):
 			return c.formatExpr("%s", strconv.FormatBool(constant.BoolVal(value)))
 		case isInteger(basic):
-			if is64Bit(basic) {
-				if basic.Kind() == types.Int64 {
-					d, ok := constant.Int64Val(constant.ToInt(value))
-					if !ok {
-						panic("could not get exact uint")
-					}
-					return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatInt(d>>32, 10), strconv.FormatUint(uint64(d)&(1<<32-1), 10))
-				}
-				d, ok := constant.Uint64Val(constant.ToInt(value))
+			// jea: for now, all int types are 64-bit
+			// jea: TODO: come back and handle int32, uint32, int16, uint16, int8, uint8
+			//if is64Bit(basic) {
+			k := basic.Kind()
+			if k == types.Int64 || k == types.Int || k == types.Int32 || k == types.Int16 || k == types.Int8 {
+
+				d, ok := constant.Int64Val(constant.ToInt(value))
 				if !ok {
-					panic("could not get exact uint")
+					panic("could not get exact int")
 				}
-				return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatUint(d>>32, 10), strconv.FormatUint(d&(1<<32-1), 10))
+				return c.formatExpr("%sLL", strconv.FormatInt(d, 10))
+				//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatInt(d>>32, 10), strconv.FormatUint(uint64(d)&(1<<32-1), 10))
 			}
-			d, ok := constant.Int64Val(constant.ToInt(value))
+
+			d, ok := constant.Uint64Val(constant.ToInt(value))
 			if !ok {
-				panic("could not get exact int")
+				panic("could not get exact uint")
 			}
-			x := c.formatExpr("%s", strconv.FormatInt(d, 10))
-			return x
+			return c.formatExpr("%sULL", strconv.FormatUint(d, 10))
+
+			//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatUint(d>>32, 10), strconv.FormatUint(d&(1<<32-1), 10))
+			//}
+			/*
+				d, ok := constant.Int64Val(constant.ToInt(value))
+				if !ok {
+					panic("could not get exact int")
+				}
+
+				kd := basic.Kind()
+				if kd == types.Int64 || kd == types.Int {
+					return c.formatExpr("%sLL", strconv.FormatInt(d, 10))
+				}
+				if kd == types.Uint64 || kd == types.Uint {
+					return c.formatExpr("%sULL", strconv.FormatUint(d, 10))
+				}
+			*/
 		case isFloat(basic):
 			f, _ := constant.Float64Val(value)
 			return c.formatExpr("%s", strconv.FormatFloat(f, 'g', -1, 64))
@@ -1201,6 +1217,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 }
 
 func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desiredType types.Type) *expression {
+	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s'", expr, desiredType)
 	switch desiredType.Underlying().(type) {
 	case *types.Struct, *types.Array:
 		switch expr.(type) {

@@ -92,7 +92,7 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 	inc := NewIncrState(vm)
 
 	cv.Convey("expressions alone at top level", t, func() {
-		cv.So(string(inc.Tr([]byte(`a:=10;`))), cv.ShouldMatchModuloWhiteSpace, `a=10;`)
+		cv.So(string(inc.Tr([]byte(`a:=10;`))), cv.ShouldMatchModuloWhiteSpace, `a=10LL;`)
 	})
 }
 

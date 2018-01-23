@@ -49,10 +49,8 @@ f()
 		// too comple and fragile to verify code. Just  verify that it happens correctly
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "r1", 0)
-		LuaMustInt(vm, "r2", 0)
-		LuaMustInt(vm, "b", 3)
-		LuaMustInt(vm, "d1a", -1)
+		LuaMustInt64(vm, "b", 3)
+		LuaMustInt64(vm, "d1a", -1)
 	})
 }
 
