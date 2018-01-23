@@ -342,7 +342,13 @@ func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, 
 	assert(id != nil)
 	check.recordDef(id, obj)
 	pp("adding NewCode for id='%#v', obj.Name()='%v'", id, obj.Name())
-	check.NewCode = append(check.NewCode, &NewStuff{Obj: obj, Scope: scope, Node: node})
+	check.NewCode = append(check.NewCode,
+		&NewStuff{
+			Obj:        obj,
+			Scope:      scope,
+			Node:       node,
+			IsPkgScope: scope == scope.Topmost(),
+		})
 }
 
 func (check *Checker) recordDef(id *ast.Ident, obj Object) {

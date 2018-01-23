@@ -233,6 +233,8 @@ type NewStuff struct {
 	Scope  *Scope
 	Node   ast.Node
 	IsExpr bool
+
+	IsPkgScope bool
 }
 
 // TypeOf returns the type of expression e, or nil if not found.

@@ -256,7 +256,12 @@ func (check *Checker) assignVars(lhs, rhs []ast.Expr, s *ast.AssignStmt) (ok boo
 		pp("jea: assignment ok, scope='%#v', check.pkg.scope='%#v'", scope, check.pkg.scope)
 		if ok && (scope == nil || scope == check.pkg.scope) {
 			pp("jea: assignment at package scope, making NewCode")
-			check.NewCode = append(check.NewCode, &NewStuff{Scope: scope, Node: s})
+			check.NewCode = append(check.NewCode,
+				&NewStuff{
+					Scope:      scope,
+					Node:       s,
+					IsPkgScope: true,
+				})
 		}
 	}()
 	l := len(lhs)
