@@ -10,6 +10,12 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 23 update
+------
+Release v0.6.8 brings the ability to update a method
+definition at the REPL, replacing an old method
+definition with a new one.
+
 2018 Jan 21 update
 ------
 Release v0.6.7 has working `fmt.Printf`.
