@@ -177,7 +177,7 @@ func Test009NumericalForLoop(t *testing.T) {
 		code = `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=5;
   	hmm = function() 
-  		i = 0;
+  		local i = 0;
   		while (true) do
   			if (not (i < a)) then break; end
   			print(i);

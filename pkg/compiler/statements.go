@@ -864,7 +864,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	}
 
 	lhsType := c.p.TypeOf(lhs)
-	fmt.Printf("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
+	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
 		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
