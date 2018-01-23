@@ -151,8 +151,8 @@ func (check *Checker) multipleDefaults(list []ast.Stmt) {
 }
 
 func (check *Checker) openScope(s ast.Stmt, comment string) {
-	scope := NewScope(check.scope, s.Pos(), s.End(), comment)
-	check.recordScope(s, scope)
+	scope := NewScope(check.scope, s.Pos(), s.End(), comment, "")
+	check.recordScope(s, scope, "")
 	check.scope = scope
 }
 

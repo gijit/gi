@@ -213,6 +213,9 @@ type Info struct {
 	//
 	Scopes map[ast.Node]*Scope
 
+	// jea add: map name to the Node, to support re-declaration.
+	Name2node map[string]*FtypeAndScope
+
 	// InitOrder is the list of package-level initializers in the order in which
 	// they must be executed. Initializers referring to variables related by an
 	// initialization dependency appear in topological order, the others appear
@@ -222,7 +225,6 @@ type Info struct {
 	InitOrder []*Initializer
 
 	// standalone statements/expressions, in order
-	//NewCode []ast.Node
 	NewCode []*NewStuff
 }
 
@@ -392,4 +394,9 @@ func ConvertibleTo(V, T Type) bool {
 func Implements(V Type, T *Interface) bool {
 	f, _ := MissingMethod(V, T, true)
 	return f == nil
+}
+
+type FtypeAndScope struct {
+	Ftype *ast.FuncType
+	Scope *Scope
 }

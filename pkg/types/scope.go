@@ -23,12 +23,13 @@ import (
 // and looked up by name. The zero value for Scope is a ready-to-use
 // empty scope.
 type Scope struct {
-	parent   *Scope
-	children []*Scope
-	elems    map[string]Object // lazily allocated
-	pos, end token.Pos         // scope extent; may be invalid
-	comment  string            // for debugging only
-	isFunc   bool              // set if this is a function scope (internal use only)
+	parent     *Scope
+	children   []*Scope
+	elems      map[string]Object // lazily allocated
+	pos, end   token.Pos         // scope extent; may be invalid
+	comment    string            // for debugging only
+	isFunc     bool              // set if this is a function scope (internal use only)
+	methodName string            // function name; or method name with struct type-name prefix
 }
 
 // jea debug
@@ -36,7 +37,7 @@ var funcScopesMade int
 
 // NewScope returns a new, empty scope contained in the given parent
 // scope, if any. The comment is for debugging only.
-func NewScope(parent *Scope, pos, end token.Pos, comment string) (sc *Scope) {
+func NewScope(parent *Scope, pos, end token.Pos, comment, methodName string) (sc *Scope) {
 	// jea debug
 	if comment == "function" {
 		funcScopesMade++
@@ -46,7 +47,7 @@ func NewScope(parent *Scope, pos, end token.Pos, comment string) (sc *Scope) {
 		}
 	}
 
-	s := &Scope{parent, nil, nil, pos, end, comment, false}
+	s := &Scope{parent, nil, nil, pos, end, comment, false, methodName}
 	// don't add children to Universe scope!
 	if parent != nil && parent != Universe {
 		parent.children = append(parent.children, s)
@@ -58,6 +59,20 @@ func NewScope(parent *Scope, pos, end token.Pos, comment string) (sc *Scope) {
 		}
 	}
 	return s
+}
+
+func (s *Scope) DeleteChild(target *Scope) {
+	nch := len(s.children)
+	for i, ch := range s.children {
+		if target == ch {
+			if i == nch-1 {
+				s.children = s.children[:i]
+			} else {
+				s.children = append(s.children[:i], s.children[i+1:]...)
+			}
+			return
+		}
+	}
 }
 
 // Parent returns the scope's containing (parent) scope.

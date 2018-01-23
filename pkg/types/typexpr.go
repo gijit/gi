@@ -159,6 +159,9 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 // referring to this type.
 //
 func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type) {
+	if def != nil && def.obj != nil {
+		pp("top of check.typExpr for e = '%s', def.obj.Name='%s'", e, def.obj.Name())
+	}
 	if trace {
 		check.trace(e.Pos(), "%s", e)
 		check.indent++
@@ -181,13 +184,37 @@ func (check *Checker) typ(e ast.Expr) Type {
 
 // funcType type-checks a function or method type.
 // Creates a new scope for the function, storing that in check.scope
-func (check *Checker) funcType(sig *Signature, recvPar *ast.FieldList, ftyp *ast.FuncType) {
+func (check *Checker) funcType(
+	sig *Signature,
+	recvPar *ast.FieldList,
+	ftyp *ast.FuncType,
+	methodName string,
+
+) {
+
 	// jea on re-decl: sig is fresh here, unfilled.
 	pp("top of Checker.funcType, sig = '%s'", sig)
 	pp("ftyp = '%s'", ftyp)
-	scope := NewScope(check.scope, token.NoPos, token.NoPos, "function")
+	scope := NewScope(check.scope, token.NoPos, token.NoPos, "function", methodName)
 	scope.isFunc = true
-	check.recordScope(ftyp, scope)
+	if methodName != "" {
+		if check.Name2node == nil {
+			check.Name2node = make(map[string]*FtypeAndScope)
+		}
+		prior := check.Name2node[methodName]
+		if prior != nil {
+			pp("re-declaration, deleting the earlier signature scope for '%s'", methodName)
+			delete(check.Scopes, prior.Ftype)
+			if check.scope != nil && check.scope != Universe {
+				check.scope.DeleteChild(prior.Scope)
+			}
+		}
+		check.Name2node[methodName] = &FtypeAndScope{
+			Ftype: ftyp,
+			Scope: scope,
+		}
+	}
+	check.recordScope(ftyp, scope, methodName)
 
 	recvList, _ := check.collectParams(scope, recvPar, false)
 	params, variadic := check.collectParams(scope, ftyp.Params, true)
@@ -246,7 +273,8 @@ func (check *Checker) funcType(sig *Signature, recvPar *ast.FieldList, ftyp *ast
 	sig.params = NewTuple(params...)
 	sig.results = NewTuple(results...)
 	sig.variadic = variadic
-	pp("end of Checker.funcType, sig = '%#v'", sig)
+	pp("end of Checker.funcType, sig = '%s'. Here is check.scope:", sig)
+	check.scope.Dump()
 }
 
 // typExprInternal drives type checking of types.
@@ -324,7 +352,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 	case *ast.FuncType:
 		typ := new(Signature)
 		def.setUnderlying(typ)
-		check.funcType(typ, nil, e)
+		check.funcType(typ, nil, e, "")
 		return typ
 
 	case *ast.InterfaceType:

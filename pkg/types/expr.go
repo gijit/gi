@@ -959,7 +959,15 @@ const (
 func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 	pp("Checker.rawExpr() called, with e='%#v', x='%#v", e, x)
 	pp("Checker.rawExpr() called, x.typ='%#v", x.typ)
-	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
+	if x.typ != nil {
+		u := x.typ.Underlying()
+		if u != nil {
+			switch u.(type) {
+			case *Signature:
+				pp("sig at Checker.rawExpr() called, x.typ.Underlying().(*Signature)='%s'", x.typ.Underlying().(*Signature)) /// func(b int) int, wrong here.
+			}
+		}
+	}
 	if trace {
 		check.trace(e.Pos(), "%s", e)
 		check.indent++
@@ -972,6 +980,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 	// jea: fmt.without.Sprintf path
 	pp("x.typ.Underlying().(*Signature) not good yet!")
 	pp("about to call kind := check.exprInternal() with x='%s', and x.typ='%#v'", x, x.typ)
+	// jea: this is where the out-of-date inc definition determination is made into x.typ
 	kind := check.exprInternal(x, e, hint)
 
 	// convert x into a user-friendly set of values
@@ -996,6 +1005,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 		// or until the end of type checking
 		check.rememberUntyped(x.expr, false, x.mode, typ.(*Basic), val)
 	} else {
+		pp("jea debug old inc defn: typ is wrong/out of date here.")
 		check.recordTypeAndValue(e, x.mode, typ, val)
 	}
 
@@ -1006,7 +1016,12 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 // Must only be called by rawExpr.
 //
 func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
-	//pp("Checker.exprInternal() called with e='%#v'/%T, sig='%s'", e, e, x.typ.Underlying().(*Signature))
+	if x.typ != nil {
+		switch y := x.typ.Underlying().(type) {
+		case *Signature:
+			pp("Checker.exprInternal() called with e='%#v'/%T, sig='%s'", e, e, y)
+		}
+	}
 
 	// make sure x has a valid state in case of bailout
 	// (was issue 5770)
@@ -1454,6 +1469,8 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		switch x.typ.Underlying().(type) {
 		case *Signature:
 			pp("jea debug in expr.go, about to check.call(x,e); x.typ.Underlying().(*Signature)='%s'", x.typ.Underlying().(*Signature))
+		default:
+			pp("x.type.Underlying()='%#v'", x.typ.Underlying())
 		}
 		return check.call(x, e)
 
@@ -1562,6 +1579,17 @@ func (check *Checker) expr(x *operand, e ast.Expr) {
 // multiExpr is like expr but the result may be a multi-value.
 func (check *Checker) multiExpr(x *operand, e ast.Expr) {
 	pp("check.multiExpr called with e = '%s', x='%#v'", e, x)
+	pp("check.multiExpr called with x.typ='%#v'", x.typ)
+	if x.typ != nil {
+		sig, ok := x.typ.Underlying().(*Signature)
+		if ok {
+			pp("check.multiExpr, sig = '%s'", sig)
+			if sig.String() == "func(b int) int" {
+				//panic("where?")
+			}
+			// call.go:232 2018-01-22 18:55:53.55 +0700 ICT check.Checker argument top: sig = 'func(b int) int'  so incorrect here.
+		}
+	}
 	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
 	check.rawExpr(x, e, nil)
 	var msg string

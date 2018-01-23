@@ -247,7 +247,7 @@ func (check *Checker) collectObjects() {
 		}
 
 		fileScope := check.scope
-		//fileScope := NewScope(check.pkg.scope, pos, end, check.filename(fileNo))
+		//fileScope := NewScope(check.pkg.scope, pos, end, check.filename(fileNo),"")
 		//check.recordScope(file, fileScope)
 
 		//pp("just declared fileScope:")

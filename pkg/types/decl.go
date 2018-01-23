@@ -64,7 +64,6 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	pp("jea debug: types/decl.go:65, check.objDecl running top.")
 	if obj.Type() != nil {
-		pp("jea debug: objDec sees objType() != nil, so returning early for obj.Name()='%s'... but we want redefs!. obj.Type()='%v', as string, obj.Type().String()='%s'", obj.Name(), obj.Type(), obj.Type().String())
 		return // already checked - nothing to do
 	}
 
@@ -112,6 +111,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
+		pp("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
@@ -238,6 +238,7 @@ func underlying(typ Type) Type {
 }
 
 func (n *Named) setUnderlying(typ Type) {
+	pp("4444444 jea debug, decl.go: Named.setUnderlying for typ='%#v'/'%s'", typ, typ)
 	if n != nil {
 		n.underlying = typ
 	}
@@ -257,9 +258,10 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 	} else {
 
 		named := &Named{obj: obj}
-		def.setUnderlying(named)
-		obj.typ = named // make sure recursive type declarations terminate
+		def.setUnderlying(named) // 444444 jea: stacktrace of setUnderlying here.
+		obj.typ = named          // make sure recursive type declarations terminate
 
+		pp("4444444 jea debug, about to call check.typExpr to determine underlying")
 		// determine underlying type of named
 		check.typExpr(typ, named, append(path, obj))
 
@@ -337,6 +339,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 				case *Func:
 					// jea: allow function re-definition at the repl.
 					mset.replace(m)
+					// need to delete alt in the scope and check.ObjMap, check.Defs as well, eh?
 					alt = nil
 					goto proceede
 					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
@@ -360,7 +363,25 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 }
 
 func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
-	pp("top of Checker.funcDecl, obj='%#v'", obj)
+	pp("top of Checker.funcDecl, obj.Name()='%s', Type='%s', recv type='%#v'", obj.Name(), obj.Type(), decl.Fdecl.Recv.List[0].Type)
+
+	receiverPrefix := ""
+	if decl.Fdecl.Recv != nil && len(decl.Fdecl.Recv.List) > 0 {
+		switch x := decl.Fdecl.Recv.List[0].Type.(type) {
+		case *ast.Ident:
+			//pp("receiver ident is '%s'", x.Name)
+			receiverPrefix = x.Name + "."
+		case *ast.StarExpr:
+			switch y := x.X.(type) {
+			case *ast.Ident:
+				//pp("receiver ident is pointer to '%s'", y.Name)
+				receiverPrefix = y.Name + "."
+			}
+		}
+	}
+	methodName := receiverPrefix + obj.Name() // for both methods and functions
+	pp("methodName='%s'", methodName)
+
 	assert(obj.typ == nil)
 
 	// func declarations cannot use iota
@@ -369,7 +390,17 @@ func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
 	sig := new(Signature)
 	obj.typ = sig // guard against cycles
 	fdecl := decl.Fdecl
-	check.funcType(sig, fdecl.Recv, fdecl.Type)
+
+	// jea is this a re-declaration?
+	prior := check.scope.Lookup(obj.Name())
+	if prior != nil {
+		pp("prior was not nil for obj='%s', prior='%#v'", obj.Name(), prior)
+	}
+
+	// jea this is the call that defines new function declaration signatures!
+	pp("check.funcDecl calling check.funcType()")
+	check.funcType(sig, fdecl.Recv, fdecl.Type, methodName)
+
 	if sig.recv == nil && obj.name == "init" && (sig.params.Len() > 0 || sig.results.Len() > 0) {
 		check.errorf(fdecl.Pos(), "func init must have no arguments and no return values")
 		// ok to continue

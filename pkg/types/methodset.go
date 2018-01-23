@@ -194,6 +194,7 @@ func NewMethodSet(T Type) *MethodSet {
 	sort.Slice(list, func(i, j int) bool {
 		return list[i].obj.Id() < list[j].obj.Id()
 	})
+	pp("returning new &MethodSet{list} with list: '%#v'", list)
 	return &MethodSet{list}
 }
 

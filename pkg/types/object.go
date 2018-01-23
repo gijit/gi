@@ -237,6 +237,7 @@ type Func struct {
 // NewFunc returns a new function with the given signature, representing
 // the function's type.
 func NewFunc(pos token.Pos, pkg *Package, name string, sig *Signature) *Func {
+	pp("NewFunc called with name = '%s'", name)
 	// don't store a nil signature
 	var typ Type
 	if sig != nil {

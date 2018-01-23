@@ -422,6 +422,7 @@ func (t *Named) Method(i int) *Func { return t.methods[i] }
 // SetUnderlying sets the underlying type and marks t as complete.
 // TODO(gri) determine if there's a better solution rather than providing this function
 func (t *Named) SetUnderlying(underlying Type) {
+	pp("4444444 jea debug: Named.SetUnderlying called with underlying='%#v'/'%s'", underlying, underlying)
 	if underlying == nil {
 		panic("types.Named.SetUnderlying: underlying type must not be nil")
 	}

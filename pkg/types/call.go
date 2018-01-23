@@ -70,6 +70,7 @@ func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
 
 		arg, n, _ := unpack(func(x *operand, i int) { check.multiExpr(x, e.Args[i]) }, len(e.Args), false)
 		if arg != nil {
+			pp("before check.aruments(), in call.go arg = '%#v'", arg)
 			check.arguments(x, e, sig, arg, n)
 		} else {
 			x.mode = invalid
@@ -283,9 +284,9 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		indirect bool
 	)
 
-	//panic("jea debug: where selector that doesn't have check.scope set properly?")
-
 	sel := e.Sel.Name
+	pp("jea debug: check.selector top. sel='%s'", sel)
+
 	// If the identifier refers to a package, handle everything here
 	// so we don't need a "package" mode for operands: package names
 	// can only appear in qualified identifiers which are mapped to
@@ -299,8 +300,12 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		pp("call.go:282 we think fmt.Sprintf lookup is failing b/c check.scope isn't set right. check.scope = %p = '%s', with %v children", check.scope, check.scope, len(check.scope.children))
 	}
 	if ident, ok := e.X.(*ast.Ident); ok {
+		pp("here!! jea: this is the lookup that is going wrong for out-of-date s.inc call")
+		check.scope.Dump()
 		_, obj := check.scope.LookupParent(ident.Name, check.pos)
-		pp("jea debug: identifier refers to a package? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // fmt, Sprintf, nil
+
+		pp("jea debug: identifier refers to a package or struct? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // ident.Name="s", sel="inc", obj='&types.Var{object:types.object{parent:(*types.Scope)(0xc4200608a0), pos:215, pkg:(*types.Package)(0xc4200b8690), name:"s", typ:types.Type(nil), order_:0x4, scopePos_:0}, anonymous:false, visited:false, isField:false, used:false}'
+
 		if pname, _ := obj.(*PkgName); pname != nil {
 			pp("inside the obj was *PkgName path...") // fmt.Sprintf not getting here, obj nil.
 			assert(pname.pkg == check.pkg)
@@ -353,6 +358,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 
 	// jea: fmt.without.Sprintf path, shouldn't get here; should be
 	// handled above.
+	pp("jea: at call.go just before check.exprOrType")
+	panic("pickup the trail here!!!")
 	check.exprOrType(x, e.X)
 	if x.mode == invalid {
 		goto Error
@@ -414,6 +421,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		case *Func:
 			// TODO(gri) If we needed to take into account the receiver's
 			// addressability, should we report the type &(x.typ) instead?
+			pp("prior to recordSelection, x.typ='%#v", x.typ)
 			check.recordSelection(e, MethodVal, x.typ, obj, index, indirect)
 
 			if debug {
@@ -439,11 +447,13 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 				// lookup.
 				mset := NewMethodSet(typ)
 				if m := mset.Lookup(check.pkg, sel); m == nil || m.obj != obj {
-					check.dump("%s: (%s).%v -> %s", e.Pos(), typ, obj.name, m)
-					check.dump("%s\n", mset)
+					pp("sel='%v'; m == nil? : %v", sel, m == nil) // true here
+					check.dump("e.Pos(): %s: (%s).%v -> %s", e.Pos(), typ, obj.name, m)
+					check.dump("mset: %s\n", mset)
+					// jea debug
 					panic("method sets and lookup don't agree")
 				}
-			}
+			} // end debug
 
 			x.mode = value
 

@@ -17,8 +17,8 @@ import (
 // debugging/development support
 const (
 	// jea debug:
-	debug = true // leave on during development
-	trace = true // turn on for detailed type resolution traces
+	debug = false // leave on during development
+	trace = true  // turn on for detailed type resolution traces
 	//debug = false // leave on during development
 	//trace = false // turn on for detailed type resolution traces
 )
@@ -281,6 +281,12 @@ func (check *Checker) recordUntyped() {
 }
 
 func (check *Checker) recordTypeAndValue(x ast.Expr, mode operandMode, typ Type, val constant.Value) {
+	pp("check.recordTypeAndValue recording x='%s', typ='%s'", x, typ)
+	// jea debug
+	if typ.String() == "func(b int) int" {
+		pp("at the old definition of inc")
+		panic("where is out-of-date inc defintion from??")
+	}
 	assert(x != nil)
 	assert(typ != nil)
 	if mode == invalid {
@@ -351,7 +357,18 @@ func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, 
 }
 
 func (check *Checker) recordDef(id *ast.Ident, obj Object) {
+	pp("check.recordDef for id='%s', obj='%#v'/'%s'", id.Name, obj, obj)
 	assert(id != nil)
+	check.scope.Dump()
+
+	// are we replacing an earlier definition?
+	if check.scope != nil {
+		prior := check.scope.Lookup(obj.Name())
+		if prior != nil {
+			pp("prior found for id='%s', prior='%#v'", id.Name, prior)
+		}
+	}
+
 	if m := check.Defs; m != nil {
 		m[id] = obj
 	}
@@ -384,10 +401,12 @@ func (check *Checker) recordSelection(x *ast.SelectorExpr, kind SelectionKind, r
 	}
 }
 
-func (check *Checker) recordScope(node ast.Node, scope *Scope) {
+func (check *Checker) recordScope(node ast.Node, scope *Scope, methodName string) {
 	assert(node != nil)
 	assert(scope != nil)
-	if m := check.Scopes; m != nil {
-		m[node] = scope
+	m := check.Scopes
+	if m == nil {
+		return
 	}
+	m[node] = scope
 }
