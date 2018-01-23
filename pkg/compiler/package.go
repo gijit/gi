@@ -733,9 +733,10 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	}
 	typeName := c.objectName(namedRecvType.Obj())
 	funName := fun.Name.Name
-	if reservedKeywords[funName] {
-		funName += "$"
-	}
+	// jea
+	//	if reservedKeywords[funName] {
+	//		funName += "$"
+	//	}
 
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
 		// jea
