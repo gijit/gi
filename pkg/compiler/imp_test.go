@@ -50,7 +50,7 @@ func Test051CallFmtSprintf(t *testing.T) {
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("hello one: %v", 1);`)
+			`a = fmt.Sprintf("hello one: %v", 1LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -74,7 +74,7 @@ func Test052CallFmtSprintf(t *testing.T) {
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("hello %v %v", 3, 4);`)
+			`a = fmt.Sprintf("hello %v %v", 3LL, 4LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -97,7 +97,7 @@ func Test058CallFmtIncr(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Incr(1);`)
+			`a = fmt.Incr(1LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -123,8 +123,7 @@ func Test059CallFmtSummer(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.SummerAny(1, 2, 3);`)
-		// `a = fmt.SummerAny(_gi_NewSlice("int",{1, 2, 3}));`)
+			`a = fmt.SummerAny(1LL, 2LL, 3LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -150,7 +149,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`b = _gi_NewSlice("int",{[0]=8,9}); a = fmt.SummerAny(_gi_UnpackRaw(b));`)
+			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = fmt.SummerAny(_gi_UnpackRaw(b));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -174,7 +173,7 @@ func Test062SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
+			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4LL, 5LL, 6LL}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -198,7 +197,7 @@ func Test063SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackRaw(_gi_NewSlice("emptyInterface",{[0]=4, 5, 6})));`)
+			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackRaw(_gi_NewSlice("emptyInterface",{[0]=4LL, 5LL, 6LL})));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -222,7 +221,7 @@ func Test064SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("%v %v\n", "hello", _gi_NewSlice("int",{[0]=4, 5, 6}));`)
+			`a = fmt.Sprintf("%v %v\n", "hello", _gi_NewSlice("int",{[0]=4LL, 5LL, 6LL}));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -247,7 +246,7 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55, 56}), fmt.Printf);`)
+			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55LL, 56LL}), fmt.Printf);`)
 		LoadAndRunTestHelper(t, vm, translation)
 
 	})

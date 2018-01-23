@@ -32,14 +32,14 @@ func Test001LuaTranslation(t *testing.T) {
 	inc := NewIncrState(vm)
 
 	cv.Convey("assignment", t, func() {
-		cv.So(string(inc.Tr([]byte("a := 10;"))), cv.ShouldMatchModuloWhiteSpace, "a = 10;")
+		cv.So(string(inc.Tr([]byte("a := 10;"))), cv.ShouldMatchModuloWhiteSpace, "a = 10LL;")
 		pp("GOOD: past 1st")
 
 		cv.So(string(inc.Tr([]byte("func adder(a, b int) int { return a + b};  sum1 := adder(5,5)"))), cv.ShouldMatchModuloWhiteSpace,
 			`adder = function(a, b) 
 				         return a + b;
                      end;
-			         sum1 = adder(5,5);`)
+			         sum1 = adder(5LL,5LL);`)
 
 		pp("GOOD: past 2nd")
 
@@ -51,7 +51,7 @@ func Test001LuaTranslation(t *testing.T) {
 			`multiplier = function(a, b) 
 				         return (a * b);
                      end;
-			         prod1 = multiplier(5,5);`)
+			         prod1 = multiplier(5LL,5LL);`)
 
 	})
 }
@@ -73,7 +73,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 		LoadAndRunTestHelper(t, vm, translation)
 		//fmt.Printf("v back = '%#v'\n", v)
 	}
-	LuaMustInt(vm, "sum", 20)
+	LuaMustInt64(vm, "sum", 20)
 }
 
 // func Test003ImportsAtRepl(t *testing.T) {
@@ -115,7 +115,7 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 	inc := NewIncrState(vm)
 
 	cv.Convey("At the repl, `a:=1; a:=2;` is allowed. We disable the traditional Go re-definition checks at the REPL", t, func() {
-		cv.So(string(inc.Tr([]byte("a:=1; a:=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=1; a=2;`)
+		cv.So(string(inc.Tr([]byte("a:=1; a:=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=1LL; a=2LL;`)
 
 		// and in separate calls:
 		cv.So(string(inc.Tr([]byte("r:=`\n\n]]\"hello\"\n\n`"))), cv.ShouldMatchModuloWhiteSpace, `r = "\n\n]]\"hello\"\n\n";`)
@@ -133,11 +133,11 @@ func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 	cv.Convey("At the repl, in separate commands`a:=1; a=2;` sets a to 2", t, func() {
 
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte("a:=1"))), cv.ShouldMatchModuloWhiteSpace, `a=1;`)
-		cv.So(string(inc.Tr([]byte("b:=2"))), cv.ShouldMatchModuloWhiteSpace, `b=2;`)
+		cv.So(string(inc.Tr([]byte("a:=1"))), cv.ShouldMatchModuloWhiteSpace, `a=1LL;`)
+		cv.So(string(inc.Tr([]byte("b:=2"))), cv.ShouldMatchModuloWhiteSpace, `b=2LL;`)
 		// and redefinition of a should work:
 		pp("starting on a=2;")
-		cv.So(string(inc.Tr([]byte("a=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=2;`)
+		cv.So(string(inc.Tr([]byte("a=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=2LL;`)
 	})
 }
 
@@ -151,7 +151,7 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 
 		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under or at 30")} }`
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20; hmm = function() if (a > 30) then print("over 30"); else print("under or at 30"); end end;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=20LL; hmm = function() if (a > 30LL) then print("over 30"); else print("under or at 30"); end end;`)
 	})
 }
 
@@ -166,23 +166,23 @@ func Test009NumericalForLoop(t *testing.T) {
 		// at top-level
 		code := `for i:=0; i < 10; i++ { i=i+2 }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-  		i = 0;
+  		i = 0LL;
   		while (true) do
-  			if (not (i < 10)) then break; end
-            i = i + 2;
-  			i = i + (1);
+  			if (not (i < 10LL)) then break; end
+            i = i + 2LL;
+  			i = i + (1LL);
   		 end
 `)
 
 		// inside a func
 		code = `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=5;
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=5LL;
   	hmm = function() 
-  		local i = 0;
+  		local i = 0LL;
   		while (true) do
   			if (not (i < a)) then break; end
   			print(i);
-  			i = i + (1);
+  			i = i + (1LL);
   		 end
  	 end;
 `)
@@ -199,7 +199,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1,2,3});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});`)
 	})
 }
 
@@ -214,8 +214,8 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 a = _gi_NewMap("int", "int", {});
-a[1] = 10;
-a[2] = 20;
+a[1LL] = 10LL;
+a[2LL] = 20LL;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -230,7 +230,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1,2,3});
+a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -246,7 +246,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1,2,3});
+a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});
 hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
@@ -286,7 +286,7 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1,2,3}, "_kindint", 3); bb = 3;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewArray({[0]=1LL,2LL,3LL}, "_kindint", 3LL); bb = 3LL;`)
 
 		// and empty array with size 3
 
@@ -522,9 +522,9 @@ func Test024MultipleAssignment(t *testing.T) {
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustInt(vm, "a", 1)
-		LuaMustInt(vm, "b", 2)
-		LuaMustInt(vm, "c", 3)
+		LuaMustInt64(vm, "a", 1)
+		LuaMustInt64(vm, "b", 2)
+		LuaMustInt64(vm, "c", 3)
 	})
 }
 
