@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
@@ -1026,9 +1027,8 @@ m := 1%a
 `)
 
 		codeWithCatch := `
+c:=0
 func f() {
-    c:=0
-    _ = c
     defer func() {
        // divide by zero should have fired a panic
        if recover() != nil {
@@ -1042,6 +1042,8 @@ func f() {
 f();
 `
 		translation = inc.Tr([]byte(codeWithCatch))
+
+		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))

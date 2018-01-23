@@ -146,12 +146,12 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
 end
 
 
-__actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers)
+__actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __orig)
   local actEnv = getfenv(__actual)
   for i,k in pairs(__namedNames) do
      actEnv[k] = __zeroret[i]
   end  
   local myPanic = function(err) __panicHandler(err, __defers) end
-  local __res = {xpcall(__actual, myPanic, unpack(orig))}
+  local __res = {xpcall(__actual, myPanic, unpack(__orig))}
   return __processDefers(who, __defers, __res,  __namedNames, actEnv)  
 end

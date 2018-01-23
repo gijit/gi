@@ -904,14 +904,14 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		//		prefix = prefix + ...
 		return params, fmt.Sprintf(`
 %s%s(...) 
-   orig = {...}
+   local __orig = {...}
    local __defers={}
    local __zeroret = {}
    local __namedNames = {}
    local __actual=function(%s)
       %s
    end
-   return __actuallyCall("%s", __actual, __namedNames, __zeroret, __defers)
+   return __actuallyCall("%s", __actual, __namedNames, __zeroret, __defers, __orig)
 end
 `,
 			functionWord, functionName, formals,
