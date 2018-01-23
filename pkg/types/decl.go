@@ -344,12 +344,16 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 
 		// jea update: we want to *allow* redeclarations at the repl. Comment out:
 		pp("jea: try to allow re-decl")
-		/*
-			for _, m := range base.methods {
-				assert(m.name != "_")
-				assert(mset.insert(m) == nil)
-			}
-		*/
+		for _, m := range base.methods {
+			assert(m.name != "_")
+			// jea remove any prior definition during re-definition...
+			//assert(mset.insert(m) == nil)
+			//prior := mset.replace(m)
+			//if prior != nil {
+			//	pp("jea prior was not nil in base.methods replace, what should we do with prior='%#v'", prior)
+			//	panic("base.methods replace... what to do with prior?")
+			//}
+		}
 	}
 
 	// type-check methods
@@ -363,9 +367,11 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 					check.errorf(m.pos, "field and method with the same name %s", m.name)
 				case *Func:
 					// jea: allow function re-definition at the repl.
+					pp("doing mset.replace with m = '%s', and alt= '%s'", m, alt)
 					mset.replace(m)
 					// need to delete alt in the scope and check.ObjMap, check.Defs as well, eh?
 					alt = nil
+					pp("mset is now: '%s'", mset.String())
 					goto proceede
 					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
 				default:

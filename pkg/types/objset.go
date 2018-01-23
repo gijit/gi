@@ -10,6 +10,8 @@
 
 package types
 
+import "fmt"
+
 // An objset is a set of objects identified by their unique id.
 // The zero value for objset is a ready-to-use empty objset.
 type objset map[string]Object // initialized lazily
@@ -31,17 +33,25 @@ func (s *objset) insert(obj Object) Object {
 	return nil
 }
 
-func (s *objset) replace(obj Object) Object {
+func (s *objset) replace(obj Object) (alt Object) {
 	pp("objset.replace called with obj.Name()='%s', Id='%s'", obj.Name(), obj.Id())
 	id := obj.Id()
-	if alt := (*s)[id]; alt != nil {
+	alt = (*s)[id]
+	if alt != nil {
 		// jea:
 		pp("objset.replace is replacing a prior '%s'", id)
-		//return alt // jea comment out
 	}
 	if *s == nil {
 		*s = make(map[string]Object)
 	}
 	(*s)[id] = obj
-	return nil
+	return
+}
+
+func (s *objset) String() string {
+	var r string
+	for i := range *s {
+		r += fmt.Sprintf("objset[%v] = '%s'\n", i, (*s)[i])
+	}
+	return r
 }
