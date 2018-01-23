@@ -981,6 +981,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 	pp("x.typ.Underlying().(*Signature) not good yet!")
 	pp("about to call kind := check.exprInternal() with x='%s', and x.typ='%#v'", x, x.typ)
 	// jea: this is where the out-of-date inc definition determination is made into x.typ
+	pp("555555 jea trace: both inc, 22 and 26 and 30")
 	kind := check.exprInternal(x, e, hint)
 
 	// convert x into a user-friendly set of values
@@ -1034,6 +1035,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 
 	case *ast.Ident:
 		// jea: fmt.without.Sprintf path
+		pp("555555 jea trace: both inc, 21")
 		check.ident(x, e, nil, nil)
 
 	case *ast.Ellipsis:
@@ -1268,6 +1270,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 
 	case *ast.SelectorExpr:
 		pp("jea debug, we have an *ast.SelectorExpr: operand x='%#v', Expr e.Sel='%#v'", x, e.Sel)
+		pp("555555 jea trace: both inc, 25")
 		check.selector(x, e)
 
 	case *ast.IndexExpr:
@@ -1472,6 +1475,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		default:
 			pp("x.type.Underlying()='%#v'", x.typ.Underlying())
 		}
+		pp("555555 jea trace: both inc, 29")
 		return check.call(x, e)
 
 	case *ast.StarExpr:
@@ -1591,6 +1595,7 @@ func (check *Checker) multiExpr(x *operand, e ast.Expr) {
 		}
 	}
 	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
+	pp("555555 jea trace: both inc, 31")
 	check.rawExpr(x, e, nil)
 	var msg string
 	switch x.mode {
@@ -1635,6 +1640,7 @@ func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 //
 func (check *Checker) exprOrType(x *operand, e ast.Expr) {
 	// jea: fmt.without.Sprintf path
+	pp("555555 jea trace: both inc, 23 and 27")
 	check.rawExpr(x, e, nil)
 	check.singleValue(x)
 	if x.mode == novalue {

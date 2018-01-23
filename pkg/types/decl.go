@@ -104,6 +104,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.constDecl(obj, d.Typ, d.Init)
 	case *Var:
 		check.decl = d // new package-level var decl
+		pp("555555 jea trace: both inc, 19")
 		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
@@ -170,6 +171,7 @@ func (check *Checker) varDecl(obj *Var, lhs []*Var, typ, init ast.Expr) {
 
 	// determine type, if any
 	if typ != nil {
+		pp("555555 jea trace: both inc, 13 and 18")
 		obj.typ = check.typ(typ)
 		// We cannot spread the type to all lhs variables if there
 		// are more than one since that would mark them as checked

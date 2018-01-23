@@ -72,6 +72,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	}
 	check.recordUse(e, obj)
 
+	pp("555555 jea trace: both inc, 14 and 20")
 	check.objDecl(obj, def, path)
 	typ := obj.Type()
 	assert(typ != nil)
@@ -171,7 +172,7 @@ func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type)
 		}()
 	}
 
-	pp("555555 jea trace: both inc, 2nd time on recursive calltrace(!): 2 and 5")
+	pp("555555 jea trace: both inc, 2nd time on recursive calltrace(!): 2 and 5 and 16")
 	T = check.typExprInternal(e, def, path)
 	assert(isTyped(T))
 	check.recordTypeAndValue(e, typexpr, T, nil)
@@ -180,7 +181,7 @@ func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type)
 }
 
 func (check *Checker) typ(e ast.Expr) Type {
-	pp("555555 jea trace: both inc, 3 and 6")
+	pp("555555 jea trace: both inc, 3 and 6 and 17")
 	return check.typExpr(e, nil, nil)
 }
 
@@ -290,6 +291,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 
 	case *ast.Ident:
 		var x operand
+		pp("555555 jea trace: both inc, 15")
 		check.ident(&x, e, def, path)
 
 		switch x.mode {
