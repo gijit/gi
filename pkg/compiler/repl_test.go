@@ -387,7 +387,7 @@ func Test018ReadFromSlice(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
-		expect := []string{`x=_gi_NewSlice("int", {[0]=3, 4});`, `x3 = _gi_GetRangeCheck(x,0);`}
+		expect := []string{`x=_gi_NewSlice("int", {[0]=3LL, 4LL});`, `x3 = _gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -397,7 +397,7 @@ func Test018ReadFromSlice(t *testing.T) {
 			LoadAndRunTestHelper(t, vm, translation)
 			//fmt.Printf("v back = '%#v'\n", v)
 		}
-		LuaMustInt(vm, "x3", 3)
+		LuaMustInt64(vm, "x3", 3)
 	})
 }
 
@@ -746,12 +746,12 @@ alone1 := m[1]
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 		LuaMustBool(vm, "ok1", true) // fail here
-		LuaMustInt(vm, "a1", 1)
+		LuaMustInt64(vm, "a1", 1)
 		LuaMustBool(vm, "ok0", false)
-		LuaMustInt(vm, "a0", 0)
+		LuaMustInt64(vm, "a0", 0)
 
-		LuaMustInt(vm, "alone0", 0)
-		LuaMustInt(vm, "alone1", 1)
+		LuaMustInt64(vm, "alone0", 0)
+		LuaMustInt64(vm, "alone1", 1)
 	})
 }
 
@@ -777,9 +777,9 @@ len3 := len(m)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "len1", 2)
-		LuaMustInt(vm, "len2", 1)
-		LuaMustInt(vm, "len3", 0)
+		LuaMustInt64(vm, "len1", 2)
+		LuaMustInt64(vm, "len2", 1)
+		LuaMustInt64(vm, "len3", 0)
 	})
 }
 
@@ -811,9 +811,9 @@ println("hello")
 			LuaDoFiles(vm, files)
 
 			LuaRunAndReport(vm, string(translation))
-			LuaMustInt(vm, "len1", 2)
-			LuaMustInt(vm, "len2", 1)
-			LuaMustInt(vm, "len3", 0)
+			LuaMustInt64(vm, "len1", 2)
+			LuaMustInt64(vm, "len2", 1)
+			LuaMustInt64(vm, "len3", 0)
 		*/
 	})
 }
@@ -881,24 +881,24 @@ default:
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-	a = 7;
-  	b = 2;
-  	c = 0;
+	a = 7LL;
+  	b = 2LL;
+  	c = 0LL;
   	_1 = b;
-  	if (_1 == (1)) then 
-  		c = (a * 1);
-  	 elseif (_1 == (2)) then 
-  		c = (a * 10);
-  	 elseif (_1 == (3)) then 
-  		c = (a * 100);
+  	if (_1 == (1LL)) then 
+  		c = (a * 1LL);
+  	 elseif (_1 == (2LL)) then 
+  		c = (a * 10LL);
+  	 elseif (_1 == (3LL)) then 
+  		c = (a * 100LL);
   	 else  
-  		c = -1;
+  		c = -1LL;
   	 end 
 `)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "c", 70)
+		LuaMustInt64(vm, "c", 70)
 
 	})
 }
@@ -934,7 +934,7 @@ myc := f()
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "myc", 70)
+		LuaMustInt64(vm, "myc", 70)
 
 	})
 }
@@ -968,22 +968,22 @@ default:
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-	a = 7;
-  	b = 2;
-  	c = 0;
-  	if ((b == 1)) then 
-  		c = (a * 1);
-  	 elseif ((b == 2)) then 
-  		c = (a * 10);
-  	 elseif ((b == 3)) then 
-  		c = (a * 100);
+	a = 7LL;
+  	b = 2LL;
+  	c = 0LL;
+  	if ((b == 1LL)) then 
+  		c = (a * 1LL);
+  	 elseif ((b == 2LL)) then 
+  		c = (a * 10LL);
+  	 elseif ((b == 3LL)) then 
+  		c = (a * 100LL);
   	 else 
-  		c = -1;
+  		c = -1LL;
   	 end 
 `)
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "c", 70)
+		LuaMustInt64(vm, "c", 70)
 
 	})
 }
@@ -998,7 +998,7 @@ func Test042LenAtRepl(t *testing.T) {
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
 		code := `a := []int{3}; len(a)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3}); print(#a);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3LL}); print(#a);`)
 	})
 }
 
@@ -1021,9 +1021,9 @@ m := 1%a
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-	a = 0;
-    b = __integerByZeroCheck(1 / a);
-    m = __integerByZeroCheck(1 % a);
+	a = 0LL;
+    b = __integerByZeroCheck(1LL / a);
+    m = __integerByZeroCheck(1LL % a);
 `)
 
 		codeWithCatch := `
@@ -1049,7 +1049,7 @@ f();
 		LuaRunAndReport(vm, string(translation))
 
 		// check for exception
-		LuaMustInt(vm, "c", 1)
+		LuaMustInt64(vm, "c", 1)
 
 	})
 }
@@ -1079,7 +1079,7 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "a", 8)
+		LuaMustInt64(vm, "a", 8)
 	})
 }
 
@@ -1111,6 +1111,6 @@ f();
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "a", 2)
+		LuaMustInt64(vm, "a", 2)
 	})
 }
