@@ -16,7 +16,7 @@ func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
 	case *Signature:
 		pp("Checker.call called with e = '%s', x = '%#v', sig='%s'", e, x, x.typ.Underlying().(*Signature))
 	}
-	pp("555555 jea trace: both inc, 28")
+	pp("555555 jea trace: both inc, 28, x.typ='%v'", x.typ.String())
 	check.exprOrType(x, e.Fun)
 
 	switch x.mode {
@@ -361,7 +361,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 	// handled above.
 	pp("jea: at call.go just before check.exprOrType -- pickup the trail here")
 	//panic("pickup the trail here!!!")
-	pp("555555 jea trace: both inc, 24")
+	pp("555555 jea trace: both inc, 24, x.typ='%v'", x.typ.String())
 	check.exprOrType(x, e.X)
 	if x.mode == invalid {
 		goto Error

@@ -958,7 +958,9 @@ const (
 //
 func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 	pp("Checker.rawExpr() called, with e='%#v', x='%#v", e, x)
-	pp("Checker.rawExpr() called, x.typ='%#v", x.typ)
+	if x != nil && x.typ != nil {
+		pp("Checker.rawExpr() called, x.typ='%v'", x.typ.String())
+	}
 	if x.typ != nil {
 		u := x.typ.Underlying()
 		if u != nil {
@@ -1017,7 +1019,7 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 // Must only be called by rawExpr.
 //
 func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
-	if x.typ != nil {
+	if x.typ != nil { // jea, never called.
 		switch y := x.typ.Underlying().(type) {
 		case *Signature:
 			pp("Checker.exprInternal() called with e='%#v'/%T, sig='%s'", e, e, y)
@@ -1035,7 +1037,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 
 	case *ast.Ident:
 		// jea: fmt.without.Sprintf path
-		pp("555555 jea trace: both inc, 21")
+		pp("555555 jea trace: both inc, 21, x.typ='%v'", x.typ.String())
 		check.ident(x, e, nil, nil)
 
 	case *ast.Ellipsis:
@@ -1270,7 +1272,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 
 	case *ast.SelectorExpr:
 		pp("jea debug, we have an *ast.SelectorExpr: operand x='%#v', Expr e.Sel='%#v'", x, e.Sel)
-		pp("555555 jea trace: both inc, 25")
+		pp("555555 jea trace: both inc, 25, x.typ='%v'", x.typ.String())
 		check.selector(x, e)
 
 	case *ast.IndexExpr:
@@ -1475,7 +1477,7 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		default:
 			pp("x.type.Underlying()='%#v'", x.typ.Underlying())
 		}
-		pp("555555 jea trace: both inc, 29")
+		pp("555555 jea trace: both inc, 29, x.typ='%v'", x.typ.String())
 		return check.call(x, e)
 
 	case *ast.StarExpr:
@@ -1595,7 +1597,11 @@ func (check *Checker) multiExpr(x *operand, e ast.Expr) {
 		}
 	}
 	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
-	pp("555555 jea trace: both inc, 31")
+	if x != nil && x.typ != nil {
+		pp("555555 jea trace: both inc, 31,	x.typ='%v'", x.typ.String())
+	} else {
+		pp("555555 jea trace: both inc, 31")
+	}
 	check.rawExpr(x, e, nil)
 	var msg string
 	switch x.mode {
@@ -1640,7 +1646,7 @@ func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 //
 func (check *Checker) exprOrType(x *operand, e ast.Expr) {
 	// jea: fmt.without.Sprintf path
-	pp("555555 jea trace: both inc, 23 and 27")
+	pp("555555 jea trace: both inc, 23 and 27, x.typ='%v'", x.typ.String())
 	check.rawExpr(x, e, nil)
 	check.singleValue(x)
 	if x.mode == novalue {

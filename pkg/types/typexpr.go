@@ -35,7 +35,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	check.scope.Dump() // jea add
 	pp("end of check.scope Dump")
 	scope, obj = check.scope.LookupParent(e.Name, check.pos)
-
+	pp("check.scope.LookupParent for e.Name='%s' got obj = '%s'", e.Name, obj.Name())
 	/*
 		// jea add, try at filescope
 		if obj == nil {
@@ -72,7 +72,11 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	}
 	check.recordUse(e, obj)
 
-	pp("555555 jea trace: both inc, 14 and 20")
+	if x != nil && x.typ != nil {
+		pp("555555 jea trace: both inc, 14 and 20, x.typ='%v'", x.typ.String())
+	} else {
+		pp("555555 jea trace: both inc, 14 and 20")
+	}
 	check.objDecl(obj, def, path)
 	typ := obj.Type()
 	assert(typ != nil)
@@ -175,13 +179,14 @@ func (check *Checker) typExpr(e ast.Expr, def *Named, path []*TypeName) (T Type)
 	pp("555555 jea trace: both inc, 2nd time on recursive calltrace(!): 2 and 5 and 16")
 	T = check.typExprInternal(e, def, path)
 	assert(isTyped(T))
+	pp("555555 jea trace: not regular trace, but T = '%s'", T.String())
 	check.recordTypeAndValue(e, typexpr, T, nil)
 
 	return
 }
 
 func (check *Checker) typ(e ast.Expr) Type {
-	pp("555555 jea trace: both inc, 3 and 6 and 17")
+	pp("555555 jea trace: both inc, 3 and 6 and 17, e='%#v'", e)
 	return check.typExpr(e, nil, nil)
 }
 
@@ -219,7 +224,7 @@ func (check *Checker) funcType(
 	}
 	check.recordScope(ftyp, scope, methodName)
 
-	pp("555555 jea trace: both inc, 8")
+	pp("555555 jea trace: both inc, 8, ftyp='%#v'", ftyp)
 	recvList, _ := check.collectParams(scope, recvPar, false)
 	params, variadic := check.collectParams(scope, ftyp.Params, true)
 	results, _ := check.collectParams(scope, ftyp.Results, false)
@@ -279,6 +284,8 @@ func (check *Checker) funcType(
 	sig.variadic = variadic
 	pp("end of Checker.funcType, sig = '%s'. Here is check.scope:", sig)
 	check.scope.Dump()
+	pp("here is check.scope again:")
+	check.scope.Dump()
 }
 
 // typExprInternal drives type checking of types.
@@ -297,7 +304,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 		switch x.mode {
 		case typexpr:
 			typ := x.typ
-			pp("555555 jea trace: both inc, 1")
+			pp("555555 jea trace: both inc, 1, x.typ='%v'", x.typ.String())
 			def.setUnderlying(typ)
 			return typ
 		case invalid:
@@ -352,7 +359,7 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 	case *ast.StarExpr:
 		typ := new(Pointer)
 		def.setUnderlying(typ)
-		pp("555555 jea trace: both inc, 4")
+		pp("555555 jea trace: both inc, 4, typ='%v'", typ.String())
 		typ.base = check.typ(e.X)
 		return typ
 
@@ -485,7 +492,7 @@ func (check *Checker) collectParams(scope *Scope, list *ast.FieldList, variadicO
 				// ignore ... and continue
 			}
 		}
-		pp("555555 jea trace: both inc, 7")
+		pp("555555 jea trace: both inc, 7, ftype='%#v'", ftype)
 		typ := check.typ(ftype)
 		// The parser ensures that f.Tag is nil and we don't
 		// care if a constructed AST contains a non-nil tag.

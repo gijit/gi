@@ -256,8 +256,8 @@ func (s *Scope) Dump() {
 	if top.parent == Universe {
 		comment = "with Universe above it"
 	}
-	fmt.Printf("Dump (orig %p); topmost scope --%s-- is %p:\n%s\n", s, comment, top, top.String())
-	fmt.Printf("\nxxx done with Dump xxx\n") // ; Universe is:\n%s\n", Universe)
+	fmt.Printf("Dump (orig %p); topmost scope --%s-- is %p:\n%s\nxxx done with Dump xxx\n", s, comment, top, top.String())
+
 }
 
 func (s *Scope) Topmost() *Scope {

@@ -33,6 +33,14 @@ func (s *objset) insert(obj Object) Object {
 	return nil
 }
 
+func (s *objset) del(obj Object) {
+	if s == nil || *s == nil {
+		return
+	}
+	id := obj.Id()
+	delete(*s, id)
+}
+
 func (s *objset) replace(obj Object) (alt Object) {
 	pp("objset.replace called with obj.Name()='%s', Id='%s'", obj.Name(), obj.Id())
 	id := obj.Id()
