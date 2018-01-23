@@ -839,6 +839,12 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 
 func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
+	local := "local "
+	if c.parent == nil {
+		// global vars won't be local
+		local = ""
+	}
+
 	lhs = astutil.RemoveParens(lhs)
 	if isBlank(lhs) {
 		panic("translateAssign with blank lhs")
@@ -858,23 +864,23 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	}
 
 	lhsType := c.p.TypeOf(lhs)
-	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v", lhsType, lhs, lhs, define)
+	fmt.Printf("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
 		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
-		return fmt.Sprintf("%s = %s;", c.translateExpr(lhs), rhsExpr) // skip $copy
+		return fmt.Sprintf("%s%s = %s;", local, c.translateExpr(lhs), rhsExpr) // skip $copy
 	}
 	if _, ok := rhs.(*ast.BasicLit); ok && define {
 		if lhsType == nil {
 			if ident, ok := lhs.(*ast.Ident); ok {
-				return fmt.Sprintf("%s = %s;", ident.Name, rhsExpr) // skip $copy
+				return fmt.Sprintf("%s%s = %s;", local, ident.Name, rhsExpr) // skip $copy
 			}
 			panic("what goes here?")
 		} else {
 			pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
 			tlhs := c.translateExpr(lhs)
 			pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
-			return fmt.Sprintf("%s = %s;", tlhs, rhsExpr) // skip $copy
+			return fmt.Sprintf("%s%s = %s;", local, tlhs, rhsExpr) // skip $copy
 		}
 	}
 	pp("rhsExpr = '%#v'", rhsExpr)
