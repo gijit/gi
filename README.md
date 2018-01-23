@@ -12,7 +12,14 @@ status
 
 2018 Jan 23 update
 ------
-Release v0.6.8 brings the ability to update a method
+Release v0.7.0 brings local variables inside
+funtions, by default. The global package name space is not
+changed by variables declared inside functions.
+Function code will be much faster. Global level/package
+level declarations are kept global, and are not
+prefixed with the 'local' keyword in the Lua translation.
+
+Release v0.6.8 brought the ability to update a method
 definition at the REPL, replacing an old method
 definition with a new one.
 
