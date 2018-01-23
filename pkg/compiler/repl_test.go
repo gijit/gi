@@ -1080,3 +1080,35 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 		LuaMustInt(vm, "a", 8)
 	})
 }
+
+func Test070VariablesInsideFunctionsAreLocal(t *testing.T) {
+
+	cv.Convey(`given func f() int { a := 1; return a}, the variable "a" should be local and should not introduce a global binding or overwrite a global variable named "a"`, t, func() {
+
+		code := `
+a := 2
+func f() int { a := 1; return a }
+f()
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(code))
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+a = 2;
+f = function()
+  local a = 1;
+  return a;
+end;
+f();
+`)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt(vm, "a", 2)
+	})
+}
