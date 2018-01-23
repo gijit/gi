@@ -106,17 +106,14 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.constDecl(obj, d.Typ, d.Init)
 	case *Var:
 		check.decl = d // new package-level var decl
-		pp("555555 jea trace: both inc, 19, d.typ='%#v'", d.Typ)
 		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
-		pp("555555 jea trace: both inc, 13, d.typ='%#v'", d.Typ)
 		check.typeDecl(obj, d.Typ, def, path, d.Alias)
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
 		pp("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
-		pp("555555 jea trace: both inc, 10, d.Typ='%#v'", d.Typ)
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
@@ -173,7 +170,6 @@ func (check *Checker) varDecl(obj *Var, lhs []*Var, typ, init ast.Expr) {
 
 	// determine type, if any
 	if typ != nil {
-		pp("555555 jea trace: both inc, 13 and 18, typ='%#v'", typ)
 		obj.typ = check.typ(typ)
 		// We cannot spread the type to all lhs variables if there
 		// are more than one since that would mark them as checked
@@ -252,16 +248,6 @@ func (n *Named) setUnderlying(typ Type) {
 			for i, me := range x.methods {
 				pp("x.methods[i=%v] = '%#v'; me.name='%s', me.typ: '%s'", i, me, me.name, me.typ)
 			}
-			// ah hah! we have both 'inc(b int) int' and 'inc(b, c int) int' here!
-			// and we want the second to have replaced the first.
-			/*
-				decl.go:247 2018-01-23 09:56:08.749 +0700 ICT x.methods[i=0] = '&types.Func{object:types.object{parent:(*types.Scope)(nil), pos:40, pkg:(*types.Package)(0xc4200b8690), name:"inc", typ:(*types.Signature)(0xc420116630), order_:0x2, scopePos_:0}}'; me.name='inc', me.typ: 'func(b int) int'
-
-				decl.go:247 2018-01-23 09:56:08.749 +0700 ICT x.methods[i=1] = '&types.Func{object:types.object{parent:(*types.Scope)(nil), pos:156, pkg:(*types.Package)(0xc4200b8690), name:"inc", typ:(*types.Signature)(0xc420116cc0), order_:0x3, scopePos_:0}}'; me.name='inc', me.typ: 'func(b int, c int) int'
-
-			*/
-			pp("555555 jea trace: both inc, 0, typ='%v'", typ.String())
-			//panic("where both inc() at once?")
 		}
 	}
 	if n != nil {
@@ -312,7 +298,6 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 	// current approach is incorrect: In general we need to know
 	// and add all methods _before_ type-checking the type.
 	// See https://play.golang.org/p/WMpE0q2wK8
-	pp("555555 jea trace: both inc, 12, typ='%#v'", typ)
 	check.addMethodDecls(obj)
 }
 
@@ -407,11 +392,6 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 
 	proceed:
 		// type-check
-		if m != nil && m.typ != nil {
-			pp("555555 jea trace: both inc, 11, m.typ='%v'", m.typ.String())
-		} else {
-			pp("555555 jea trace: both inc, 11")
-		}
 		check.objDecl(m, nil, nil)
 
 		// methods with blank _ names cannot be found - don't keep them
@@ -458,8 +438,6 @@ func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
 	}
 
 	// jea this is the call that defines new function declaration signatures!
-	pp("check.funcDecl calling check.funcType()")
-	pp("555555 jea trace: both inc, 9, fdecl.Type='%#v'", fdecl.Type)
 	check.funcType(sig, fdecl.Recv, fdecl.Type, methodName)
 
 	if sig.recv == nil && obj.name == "init" && (sig.params.Len() > 0 || sig.results.Len() > 0) {

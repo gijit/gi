@@ -16,7 +16,6 @@ func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
 	case *Signature:
 		pp("Checker.call called with e = '%s', x = '%#v', sig='%s'", e, x, x.typ.Underlying().(*Signature))
 	}
-	pp("555555 jea trace: both inc, 28, x.typ='%v'", x.typ.String())
 	check.exprOrType(x, e.Fun)
 
 	switch x.mode {
@@ -301,8 +300,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		pp("call.go:282 we think fmt.Sprintf lookup is failing b/c check.scope isn't set right. check.scope = %p = '%s', with %v children", check.scope, check.scope, len(check.scope.children))
 	}
 	if ident, ok := e.X.(*ast.Ident); ok {
-		pp("here!! jea: this is the lookup that is going wrong for out-of-date s.inc call")
-		check.scope.Dump()
+		//pp("here!! jea: this is the lookup that is going wrong for out-of-date s.inc call")
+		//check.scope.Dump()
 		_, obj := check.scope.LookupParent(ident.Name, check.pos)
 
 		pp("jea debug: identifier refers to a package or struct? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // ident.Name="s", sel="inc", obj='&types.Var{object:types.object{parent:(*types.Scope)(0xc4200608a0), pos:215, pkg:(*types.Package)(0xc4200b8690), name:"s", typ:types.Type(nil), order_:0x4, scopePos_:0}, anonymous:false, visited:false, isField:false, used:false}'
@@ -357,11 +356,6 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		}
 	}
 
-	// jea: fmt.without.Sprintf path, shouldn't get here; should be
-	// handled above.
-	pp("jea: at call.go just before check.exprOrType -- pickup the trail here")
-	//panic("pickup the trail here!!!")
-	pp("555555 jea trace: both inc, 24, x.typ='%v'", x.typ.String())
 	check.exprOrType(x, e.X)
 	if x.mode == invalid {
 		goto Error

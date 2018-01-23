@@ -16,11 +16,8 @@ import (
 
 // debugging/development support
 const (
-	// jea debug:
 	debug = false // leave on during development
-	trace = true  // turn on for detailed type resolution traces
-	//debug = false // leave on during development
-	//trace = false // turn on for detailed type resolution traces
+	trace = false // turn on for detailed type resolution traces
 )
 
 // If Strict is set, the type-checker enforces additional
@@ -282,11 +279,6 @@ func (check *Checker) recordUntyped() {
 
 func (check *Checker) recordTypeAndValue(x ast.Expr, mode operandMode, typ Type, val constant.Value) {
 	pp("check.recordTypeAndValue recording x='%s', typ='%s'", x, typ)
-	// jea debug
-	if typ.String() == "func(b int) int" {
-		pp("at the old definition of inc")
-		panic("where is out-of-date inc defintion from??")
-	}
 	assert(x != nil)
 	assert(typ != nil)
 	if mode == invalid {
@@ -350,16 +342,13 @@ func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, 
 	assert(id != nil)
 	check.recordDef(id, obj)
 	pp("adding NewCode for id='%#v', obj.Name()='%v'", id, obj.Name())
-	if id.NamePos == 7 {
-		//panic("where?")
-	}
 	check.NewCode = append(check.NewCode, &NewStuff{Obj: obj, Scope: scope, Node: node})
 }
 
 func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 	pp("check.recordDef for id='%s', obj='%#v'/'%s'", id.Name, obj, obj)
 	assert(id != nil)
-	check.scope.Dump()
+	//check.scope.Dump()
 
 	// are we replacing an earlier definition?
 	if check.scope != nil && obj != nil {

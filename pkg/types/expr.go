@@ -979,11 +979,6 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 		}()
 	}
 
-	// jea: fmt.without.Sprintf path
-	pp("x.typ.Underlying().(*Signature) not good yet!")
-	pp("about to call kind := check.exprInternal() with x='%s', and x.typ='%#v'", x, x.typ)
-	// jea: this is where the out-of-date inc definition determination is made into x.typ
-	pp("555555 jea trace: both inc, 22 and 26 and 30")
 	kind := check.exprInternal(x, e, hint)
 
 	// convert x into a user-friendly set of values
@@ -1008,7 +1003,6 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 		// or until the end of type checking
 		check.rememberUntyped(x.expr, false, x.mode, typ.(*Basic), val)
 	} else {
-		pp("jea debug old inc defn: typ is wrong/out of date here.")
 		check.recordTypeAndValue(e, x.mode, typ, val)
 	}
 
@@ -1019,12 +1013,6 @@ func (check *Checker) rawExpr(x *operand, e ast.Expr, hint Type) exprKind {
 // Must only be called by rawExpr.
 //
 func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
-	if x.typ != nil { // jea, never called.
-		switch y := x.typ.Underlying().(type) {
-		case *Signature:
-			pp("Checker.exprInternal() called with e='%#v'/%T, sig='%s'", e, e, y)
-		}
-	}
 
 	// make sure x has a valid state in case of bailout
 	// (was issue 5770)
@@ -1036,8 +1024,6 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		goto Error // error was reported before
 
 	case *ast.Ident:
-		// jea: fmt.without.Sprintf path
-		pp("555555 jea trace: both inc, 21, x.typ='%v'", x.typ.String())
 		check.ident(x, e, nil, nil)
 
 	case *ast.Ellipsis:
@@ -1271,8 +1257,6 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		return kind
 
 	case *ast.SelectorExpr:
-		pp("jea debug, we have an *ast.SelectorExpr: operand x='%#v', Expr e.Sel='%#v'", x, e.Sel)
-		pp("555555 jea trace: both inc, 25, x.typ='%v'", x.typ.String())
 		check.selector(x, e)
 
 	case *ast.IndexExpr:
@@ -1477,7 +1461,6 @@ func (check *Checker) exprInternal(x *operand, e ast.Expr, hint Type) exprKind {
 		default:
 			pp("x.type.Underlying()='%#v'", x.typ.Underlying())
 		}
-		pp("555555 jea trace: both inc, 29, x.typ='%v'", x.typ.String())
 		return check.call(x, e)
 
 	case *ast.StarExpr:
@@ -1584,24 +1567,6 @@ func (check *Checker) expr(x *operand, e ast.Expr) {
 
 // multiExpr is like expr but the result may be a multi-value.
 func (check *Checker) multiExpr(x *operand, e ast.Expr) {
-	pp("check.multiExpr called with e = '%s', x='%#v'", e, x)
-	pp("check.multiExpr called with x.typ='%#v'", x.typ)
-	if x.typ != nil {
-		sig, ok := x.typ.Underlying().(*Signature)
-		if ok {
-			pp("check.multiExpr, sig = '%s'", sig)
-			if sig.String() == "func(b int) int" {
-				//panic("where?")
-			}
-			// call.go:232 2018-01-22 18:55:53.55 +0700 ICT check.Checker argument top: sig = 'func(b int) int'  so incorrect here.
-		}
-	}
-	// x.typ.Underlying().(*Signature)='%s'", e, x.typ.Underlying().(*Signature))
-	if x != nil && x.typ != nil {
-		pp("555555 jea trace: both inc, 31,	x.typ='%v'", x.typ.String())
-	} else {
-		pp("555555 jea trace: both inc, 31")
-	}
 	check.rawExpr(x, e, nil)
 	var msg string
 	switch x.mode {
@@ -1645,8 +1610,6 @@ func (check *Checker) exprWithHint(x *operand, e ast.Expr, hint Type) {
 // If an error occurred, x.mode is set to invalid.
 //
 func (check *Checker) exprOrType(x *operand, e ast.Expr) {
-	// jea: fmt.without.Sprintf path
-	pp("555555 jea trace: both inc, 23 and 27, x.typ='%v'", x.typ.String())
 	check.rawExpr(x, e, nil)
 	check.singleValue(x)
 	if x.mode == novalue {
