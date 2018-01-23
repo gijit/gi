@@ -222,7 +222,7 @@ func (check *Checker) funcType(
 			Scope: scope,
 		}
 	}
-	check.recordScope(ftyp, scope, methodName)
+	check.recordScope(ftyp, scope)
 
 	pp("555555 jea trace: both inc, 8, ftyp='%#v'", ftyp)
 	recvList, _ := check.collectParams(scope, recvPar, false)
@@ -298,8 +298,11 @@ func (check *Checker) typExprInternal(e ast.Expr, def *Named, path []*TypeName) 
 
 	case *ast.Ident:
 		var x operand
-		pp("555555 jea trace: both inc, 15")
+		pp("555555 jea trace: both inc, 15, ident e= '%s'", e.Name) // 'S'
 		check.ident(&x, e, def, path)
+		if x.typ != nil {
+			pp("after check.ident for e as *ast.Ident = '%s', x.typ='%s'", e.Name, x.typ)
+		}
 
 		switch x.mode {
 		case typexpr:

@@ -401,7 +401,7 @@ func (check *Checker) recordSelection(x *ast.SelectorExpr, kind SelectionKind, r
 	}
 }
 
-func (check *Checker) recordScope(node ast.Node, scope *Scope, methodName string) {
+func (check *Checker) recordScope(node ast.Node, scope *Scope) {
 	assert(node != nil)
 	assert(scope != nil)
 	m := check.Scopes

@@ -1077,6 +1077,6 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "a", 4)
+		LuaMustInt(vm, "a", 8)
 	})
 }

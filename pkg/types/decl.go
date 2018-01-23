@@ -343,22 +343,22 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 		// may add methods to already type-checked types. Add pre-existing methods
 		// so that we can detect redeclarations.
 
-		// jea update: we want to *allow* redeclarations at the repl. Comment out:
-		pp("jea: try to allow re-decl")
+		// jea update: we want to *allow* redeclarations at the repl
+		pp("jea: try to allow re-decl. len(base.methods)=%v", len(base.methods))
 		for _, m := range base.methods {
 			pp("base.method m = '%s'", m)
 			assert(m.name != "_")
 			// jea remove any prior definition during re-definition...
 			//assert(mset.insert(m) == nil)
-			//prior := mset.replace(m)
-			//if prior != nil {
-			//	pp("jea prior was not nil in base.methods replace, what should we do with prior='%#v'", prior)
-			//	panic("base.methods replace... what to do with prior?")
-			//}
+			prior := mset.replace(m)
+			if prior != nil {
+				pp("jea: updated method m='%s' in type '%s'", m, base.obj.Name())
+			}
 		}
 	}
 
 	// type-check methods
+	pp("len(methods)=%v", len(methods))
 	for _, m := range methods {
 		// spec: "For a base type, the non-blank names of methods bound
 		// to it must be unique."
@@ -385,9 +385,17 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 						}
 					}
 
+					// need to delete the method from the type too.
+					for i, curm := range base.methods {
+						if curm == prior {
+							base.methods = append(base.methods[:i], base.methods[i+1:]...)
+							break
+						}
+					}
+
 					alt = nil
 					pp("mset is now, after replace(m): '%s'", mset.String())
-					goto proceede
+					goto proceed
 					// check.errorf(m.pos, "method %s already declared for %s", m.name, obj)
 				default:
 					unreachable()
@@ -397,7 +405,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 			}
 		}
 
-	proceede:
+	proceed:
 		// type-check
 		if m != nil && m.typ != nil {
 			pp("555555 jea trace: both inc, 11, m.typ='%v'", m.typ.String())
@@ -411,6 +419,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 			base.methods = append(base.methods, m)
 		}
 	}
+	pp("len base.methods = %v", len(base.methods))
 }
 
 func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
