@@ -362,7 +362,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 	check.scope.Dump()
 
 	// are we replacing an earlier definition?
-	if check.scope != nil {
+	if check.scope != nil && obj != nil {
 		prior := check.scope.Lookup(obj.Name())
 		if prior != nil {
 			pp("prior found for id='%s', prior='%#v'", id.Name, prior)

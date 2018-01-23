@@ -423,7 +423,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 }
 
 func (check *Checker) funcDecl(obj *Func, decl *DeclInfo) {
-	pp("top of Checker.funcDecl, obj.Name()='%s', Type='%s', recv type='%#v'", obj.Name(), obj.Type(), decl.Fdecl.Recv.List[0].Type)
+	//pp("top of Checker.funcDecl, obj.Name()='%s', Type='%s', recv type='%#v'", obj.Name(), obj.Type(), decl.Fdecl.Recv.List[0].Type)
 
 	receiverPrefix := ""
 	if decl.Fdecl.Recv != nil && len(decl.Fdecl.Recv.List) > 0 {
