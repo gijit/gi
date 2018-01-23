@@ -777,9 +777,9 @@ len3 := len(m)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt64(vm, "len1", 2)
-		LuaMustInt64(vm, "len2", 1)
-		LuaMustInt64(vm, "len3", 0)
+		LuaMustInt(vm, "len1", 2)
+		LuaMustInt(vm, "len2", 1)
+		LuaMustInt(vm, "len3", 0)
 	})
 }
 
@@ -811,9 +811,9 @@ println("hello")
 			LuaDoFiles(vm, files)
 
 			LuaRunAndReport(vm, string(translation))
-			LuaMustInt64(vm, "len1", 2)
-			LuaMustInt64(vm, "len2", 1)
-			LuaMustInt64(vm, "len3", 0)
+			LuaMustInt(vm, "len1", 2)
+			LuaMustInt(vm, "len2", 1)
+			LuaMustInt(vm, "len3", 0)
 		*/
 	})
 }
@@ -1101,9 +1101,9 @@ f()
 		translation := inc.Tr([]byte(code))
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-a = 2;
+a = 2LL;
 f = function()
-  local a = 1;
+  local a = 1LL;
   return a;
 end;
 f();
