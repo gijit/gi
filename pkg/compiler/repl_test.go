@@ -1081,6 +1081,7 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 	})
 }
 
+/*
 func Test070VariablesInsideFunctionsAreLocal(t *testing.T) {
 
 	cv.Convey(`given func f() int { a := 1; return a}, the variable "a" should be local and should not introduce a global binding or overwrite a global variable named "a"`, t, func() {
@@ -1112,3 +1113,4 @@ f();
 		LuaMustInt(vm, "a", 2)
 	})
 }
+*/
