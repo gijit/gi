@@ -17,21 +17,9 @@ import (
 	"github.com/gijit/gi/pkg/compiler/analysis"
 	"github.com/neelance/astrewrite"
 	"golang.org/x/tools/go/gcimporter15"
-
-	luajit "github.com/glycerine/golua/lua"
-	"github.com/glycerine/luar"
+	//luajit "github.com/glycerine/golua/lua"
+	//"github.com/glycerine/luar"
 )
-
-func NewLuaVM() *luajit.State {
-	vm := luar.Init()
-
-	luar.Register(vm, "fmt", luar.Map{
-		// Go functions may be registered directly.
-		"Sprintf": fmt.Sprintf,
-	})
-
-	return vm
-}
 
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 

@@ -368,21 +368,21 @@ func GoToLuaProxy(L *lua.State, a interface{}) {
 // can be called on non-pointers.
 func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 	pp("++ goToLua top. a='%#v'/type='%T', proxify='%v', visited='%#v'", a, a, proxify, visited)
-	/*
-		switch x := a.(type) {
-		case reflect.Value:
-			ty := x.Type()
-			pp("ty = '%v', kind='%v'", ty.String(), ty.Kind())
-			switch ty.Kind() {
-			case reflect.Int, reflect.Int64:
-				y := x.Int()
-				pp("goToLua: we have an int, y = %v", y)
-				if y == 2 {
-					pp("in luar.go, where called from?")
-					fmt.Printf("%s\n", string(debug.Stack()))
-				}
+	/* jea debug int64:
+	switch x := a.(type) {
+	case reflect.Value:
+		ty := x.Type()
+		pp("ty = '%v', kind='%v'", ty.String(), ty.Kind())
+		switch ty.Kind() {
+		case reflect.Int, reflect.Int64:
+			y := x.Int()
+			pp("goToLua: we have an int, y = %v", y)
+			if y == 2 {
+				pp("in luar.go, where called from?")
+				fmt.Printf("%s\n", string(debug.Stack()))
 			}
 		}
+	}
 	*/
 
 	var v reflect.Value

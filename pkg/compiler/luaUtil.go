@@ -34,6 +34,40 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		return nil, err
 	}
 	err = LuaDoFiles(vm, files)
+
+	lua2go := func(b interface{}) (a interface{}) {
+		return b
+	}
+
+	/*
+		// creating a proxy for a Go value, then calling a function with it.
+		b = __lua2go({10,5})
+		s = sumSlice(b)
+		print(s)
+		15LL
+	*/
+	sumSliceOfInts := func(a []interface{}) (tot int) {
+		for _, v := range a {
+			switch y := v.(type) {
+			case int:
+				tot += y
+			case int64:
+				tot += int(y)
+			case float64:
+				tot += int(y)
+			default:
+				panic(fmt.Sprintf("unknown type '%T'", v))
+			}
+		}
+		return
+	}
+
+	luar.Register(vm, "", luar.Map{
+		"__lua2go": lua2go,
+		"sumSlice": sumSliceOfInts,
+	})
+	fmt.Printf("registered __lua2go\n")
+
 	return vm, err
 }
 

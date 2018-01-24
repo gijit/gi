@@ -5,8 +5,9 @@
 -- create private index
 _giPrivateSliceRaw = {}
 _giPrivateSliceProps = {}
+_giGo = {}
 
- _giPrivateSliceMt = {
+_giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
       --print("newindex called for key", k, " val=", v)
@@ -98,6 +99,7 @@ function _gi_NewSlice(typeKind, x)
    local proxy = {}
    proxy[_giPrivateSliceRaw] = x
    proxy["Typeof"]="_gi_Slice"
+   proxy[_giGo] = __lua2go(x)
    
    local props = {len=len, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
