@@ -89,7 +89,7 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 			pp("translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
 			c.Printf("\n// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs\n")
 			tupleVar := c.newVariable("_tuple")
-			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0]))
+			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0], nil))
 			argExprs = make([]ast.Expr, tuple.Len())
 			for i := range argExprs {
 				argExprs[i] = c.newIdent(c.formatExpr("%s[%d]", tupleVar, i).String(), tuple.At(i).Type())

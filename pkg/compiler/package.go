@@ -84,6 +84,8 @@ type funcContext struct {
 	pos           token.Pos
 
 	genSymCounter int64
+
+	intType types.Type
 }
 
 type flowData struct {
@@ -814,7 +816,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			c.resultNames = make([]ast.Expr, c.sig.Results().Len())
 			for i := 0; i < c.sig.Results().Len(); i++ {
 				result := c.sig.Results().At(i)
-				c.Printf("%s = %s;", c.objectName(result), c.translateExpr(c.zeroValue(result.Type())).String())
+				c.Printf("%s = %s;", c.objectName(result), c.translateExpr(c.zeroValue(result.Type()), nil).String())
 				id := ast.NewIdent("")
 				c.p.Uses[id] = result
 				c.resultNames[i] = c.setType(id, result.Type())
@@ -826,7 +828,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			if isWrapped(c.p.TypeOf(recv)) {
 				this = "this.$val"
 			}
-			c.Printf("%s = %s;", c.translateExpr(recv), this)
+			c.Printf("%s = %s;", c.translateExpr(recv, nil), this)
 		}
 
 		c.translateStmtList(body.List)

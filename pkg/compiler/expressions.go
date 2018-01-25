@@ -36,20 +36,29 @@ func (e *expression) StringWithParens() string {
 	return e.str
 }
 
-func (c *funcContext) translateExpr(expr ast.Expr) *expression {
+func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) *expression {
 
 	exprType := c.p.TypeOf(expr)
-	//pp("TOP OF gi TRANSLATE EXPR: jea debug expressions.go:65, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v'", expr, exprType, c.p.Types[expr].Value)
+	pp("TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v', stack=\n%s\n", expr, exprType, c.p.Types[expr].Value, string(debug.Stack()))
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
 		case isBoolean(basic):
 			return c.formatExpr("%s", strconv.FormatBool(constant.BoolVal(value)))
 		case isInteger(basic):
+
 			// jea: for now, all int types are 64-bit
 			// jea: TODO: come back and handle int32, uint32, int16, uint16, int8, uint8
 			//if is64Bit(basic) {
 			k := basic.Kind()
+			if desiredType != nil {
+				switch bk := desiredType.(type) {
+				case *types.Basic:
+					k = bk.Kind()
+					pp("k = '%#v'/'%s'", k, k)
+				}
+			}
+			pp("isInteger and k = '%s'", k)
 			if k == types.Int64 || k == types.Int || k == types.Int32 || k == types.Int16 || k == types.Int8 {
 
 				d, ok := constant.Int64Val(constant.ToInt(value))
@@ -139,7 +148,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		collectIndexedElements := func(elementType types.Type) []string {
 			var elements []string
 			i := 0
-			zero := c.translateExpr(c.zeroValue(elementType)).String()
+			zero := c.translateExpr(c.zeroValue(elementType), nil).String()
 			for _, element := range e.Elts {
 				if kve, isKve := element.(*ast.KeyValueExpr); isKve {
 					key, ok := constant.Int64Val(constant.ToInt(c.p.Types[kve.Key].Value))
@@ -168,7 +177,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				return c.formatExpr(fmt.Sprintf(`_gi_NewArray({}, "%s", %v)`, typeKind(t.Elem()), t.Len()))
 			}
-			zero := c.translateExpr(c.zeroValue(t.Elem())).String()
+			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
@@ -206,7 +215,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			}
 			if isKeyValue {
 				for i := range elements {
-					elements[i] = c.translateExpr(c.zeroValue(t.Field(i).Type())).String()
+					elements[i] = c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String()
 				}
 				for _, element := range e.Elts {
 					kve := element.(*ast.KeyValueExpr)
@@ -250,7 +259,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 
 			switch t.Underlying().(type) {
 			case *types.Struct, *types.Array:
-				return c.translateExpr(e.X)
+				return c.translateExpr(e.X, nil)
 			}
 
 			switch x := astutil.RemoveParens(e.X).(type) {
@@ -279,7 +288,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				}
 				return c.formatExpr("$indexPtr(%e, %e, %s)", x.X, x.Index, c.typeName(exprType))
 			case *ast.StarExpr:
-				return c.translateExpr(x.X)
+				return c.translateExpr(x.X, nil)
 			default:
 				panic(fmt.Sprintf("Unhandled: %T\n", x))
 			}
@@ -299,7 +308,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		basic := t.Underlying().(*types.Basic)
 		switch e.Op {
 		case token.ADD:
-			tx := c.translateExpr(e.X)
+			tx := c.translateExpr(e.X, nil)
 			pp("e.Op is token.ADD at expressions.go:283, tx='%s'", tx)
 			return tx
 		case token.SUB:
@@ -330,7 +339,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				X:  e.X,
 				Op: token.EQL,
 				Y:  e.Y,
-			}))
+			}, nil))
 		}
 
 		t := c.p.TypeOf(e.X)
@@ -470,8 +479,8 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				skipCase := c.caseCounter
 				c.caseCounter++
 				resultVar := c.newVariable("_v")
-				c.Printf("if (not (%s)) then %s = false; $s = %d; continue s; end", c.translateExpr(e.X), resultVar, skipCase)
-				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y), skipCase)
+				c.Printf("if (not (%s)) then %s = false; $s = %d; continue s; end", c.translateExpr(e.X, nil), resultVar, skipCase)
+				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
 			return c.formatExpr("%e and %e", e.X, e.Y)
@@ -480,8 +489,8 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				skipCase := c.caseCounter
 				c.caseCounter++
 				resultVar := c.newVariable("_v")
-				c.Printf("if (%s) { %s = true; $s = %d; continue s; }", c.translateExpr(e.X), resultVar, skipCase)
-				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y), skipCase)
+				c.Printf("if (%s) { %s = true; $s = %d; continue s; }", c.translateExpr(e.X, nil), resultVar, skipCase)
+				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
 			return c.formatExpr("%e or %e", e.X, e.Y)
@@ -505,10 +514,10 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			case *types.Basic:
 				if isBoolean(u) {
 					if b, ok := analysis.BoolValue(e.X, c.p.Info.Info); ok && b {
-						return c.translateExpr(e.Y)
+						return c.translateExpr(e.Y, nil)
 					}
 					if b, ok := analysis.BoolValue(e.Y, c.p.Info.Info); ok && b {
-						return c.translateExpr(e.X)
+						return c.translateExpr(e.X, nil)
 					}
 				}
 			}
@@ -560,7 +569,8 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				// produced by (well, just the 1st line starting with _entry):
 				// return c.formatExpr(`(%1s = %2e[%3s], %1s !== undefined ? [%1s.v, true] : [%4e, false])`, c.newVariable("_entry"), e.X, key, c.zeroValue(t.Elem()))
 			}
-			return c.formatExpr(fmt.Sprintf(`%s('get', %s)`, e.X, key))
+			//return c.formatExpr(fmt.Sprintf(`%s('get', %s)`, e.X, key))
+			return c.formatExpr(` %1e('get', %2s, %3e) `, e.X, key, c.zeroValue(t.Elem()))
 			//return c.formatExpr(`(%1s = %2e[%3s], %1s !== undefined ? %1s.v : %4e)`, c.newVariable("_entry"), e.X, key, c.zeroValue(t.Elem()))
 		case *types.Basic:
 			return c.formatExpr("%e.charCodeAt(%f)", e.X, e.Index)
@@ -573,7 +583,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		if b, isBasic := c.p.TypeOf(e.X).Underlying().(*types.Basic); isBasic && isString(b) {
 			switch {
 			case e.Low == nil && e.High == nil:
-				return c.translateExpr(e.X)
+				return c.translateExpr(e.X, nil)
 			case e.Low == nil:
 				return c.formatExpr("$substring(%e, 0, %f)", e.X, e.High)
 			case e.High == nil:
@@ -651,9 +661,9 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid())
 			}
 			if typesutil.IsJsPackage(obj.Pkg()) && obj.Name() == "InternalObject" {
-				return c.translateExpr(e.Args[0])
+				return c.translateExpr(e.Args[0], nil)
 			}
-			return c.translateCall(e, sig, c.translateExpr(f))
+			return c.translateCall(e, sig, c.translateExpr(f, nil))
 
 		case *ast.SelectorExpr:
 			sel, ok := c.p.SelectionOf(f)
@@ -665,11 +675,11 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 					case "Debugger":
 						return c.formatExpr("debugger")
 					case "InternalObject":
-						return c.translateExpr(e.Args[0])
+						return c.translateExpr(e.Args[0], nil)
 					}
 				}
 				// 99999 fmt-tracking from Sprintf alone.
-				return c.translateCall(e, sig, c.translateExpr(f))
+				return c.translateCall(e, sig, c.translateExpr(f, nil))
 			}
 
 			externalizeExpr := func(e ast.Expr) string {
@@ -677,7 +687,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				if types.Identical(t, types.Typ[types.UntypedNil]) {
 					return "null"
 				}
-				return c.externalize(c.translateExpr(e).String(), t)
+				return c.externalize(c.translateExpr(e, nil).String(), t)
 			}
 			externalizeArgs := func(args []ast.Expr) string {
 				s := make([]string, len(args))
@@ -784,13 +794,13 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				return c.translateCall(e, sig, c.formatExpr("%e.%s", f.X, strings.Join(fields, ".")))
 
 			case types.MethodExpr:
-				return c.translateCall(e, sig, c.translateExpr(f))
+				return c.translateCall(e, sig, c.translateExpr(f, nil))
 
 			default:
 				panic(fmt.Sprintf("unexpected sel.Kind(): %T", sel.Kind()))
 			}
 		default:
-			return c.translateCall(e, sig, c.translateExpr(plainFun))
+			return c.translateCall(e, sig, c.translateExpr(plainFun, nil))
 		}
 
 	case *ast.StarExpr:
@@ -800,19 +810,19 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 		if c1, isCall := e.X.(*ast.CallExpr); isCall && len(c1.Args) == 1 {
 			if c2, isCall := c1.Args[0].(*ast.CallExpr); isCall && len(c2.Args) == 1 && types.Identical(c.p.TypeOf(c2.Fun), types.Typ[types.UnsafePointer]) {
 				if unary, isUnary := c2.Args[0].(*ast.UnaryExpr); isUnary && unary.Op == token.AND {
-					return c.translateExpr(unary.X) // unsafe conversion
+					return c.translateExpr(unary.X, nil) // unsafe conversion
 				}
 			}
 		}
 		switch exprType.Underlying().(type) {
 		case *types.Struct, *types.Array:
-			return c.translateExpr(e.X)
+			return c.translateExpr(e.X, nil)
 		}
 		return c.formatExpr("%e.$get()", e.X)
 
 	case *ast.TypeAssertExpr:
 		if e.Type == nil {
-			return c.translateExpr(e.X)
+			return c.translateExpr(e.X, nil)
 		}
 		t := c.p.TypeOf(e.Type)
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
@@ -1028,6 +1038,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("$append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))
 	case "delete":
 		keyType := c.p.TypeOf(args[0]).Underlying().(*types.Map).Key()
+		pp("delete, keyType='%v'", keyType)
 		return c.formatExpr(`%e("delete",%s)`, args[0], c.translateImplicitConversion(args[1], keyType))
 	case "copy":
 		if basic, isBasic := c.p.TypeOf(args[1]).Underlying().(*types.Basic); isBasic && isString(basic) {
@@ -1080,7 +1091,7 @@ func (c *funcContext) translateExprSlice(exprs []ast.Expr, desiredType types.Typ
 func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type) *expression {
 	exprType := c.p.TypeOf(expr)
 	if types.Identical(exprType, desiredType) {
-		return c.translateExpr(expr)
+		return c.translateExpr(expr, nil)
 	}
 
 	if c.p.Pkg.Path() == "reflect" {
@@ -1091,7 +1102,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 					case "arrayType", "chanType", "funcType", "interfaceType", "mapType", "ptrType", "sliceType", "structType":
 						return c.formatExpr("%e.kindType", call.Args[0]) // unsafe conversion
 					default:
-						return c.translateExpr(expr)
+						return c.translateExpr(expr, nil)
 					}
 				}
 			}
@@ -1116,15 +1127,15 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 				if !isUnsigned(t) && !isUnsigned(basicExprType) {
 					return c.fixNumber(c.formatParenExpr("%1l + ((%1h >> 31) * 4294967296)", expr), t)
 				}
-				return c.fixNumber(c.formatExpr("%s.$low", c.translateExpr(expr)), t)
+				return c.fixNumber(c.formatExpr("%s.$low", c.translateExpr(expr, nil)), t)
 			case isFloat(basicExprType):
 				// jea
 				//return c.formatParenExpr("%e >> 0", expr)
 				return c.formatParenExpr("%e", expr)
 			case types.Identical(exprType, types.Typ[types.UnsafePointer]):
-				return c.translateExpr(expr)
+				return c.translateExpr(expr, nil)
 			default:
-				return c.fixNumber(c.translateExpr(expr), t)
+				return c.fixNumber(c.translateExpr(expr, nil), t)
 			}
 		case isFloat(t):
 			if t.Kind() == types.Float32 && exprType.Underlying().(*types.Basic).Kind() == types.Float64 {
@@ -1134,7 +1145,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 		case isComplex(t):
 			return c.formatExpr("new %1s(%2r, %2i)", c.typeName(desiredType), expr)
 		case isString(t):
-			value := c.translateExpr(expr)
+			value := c.translateExpr(expr, nil)
 			switch et := exprType.Underlying().(type) {
 			case *types.Basic:
 				if is64Bit(et) {
@@ -1167,7 +1178,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 					target := c.newVariable("_struct")
 					c.Printf("%s = new Uint8Array(%d);", array, sizes32.Sizeof(s))
 					c.Delayed(func() {
-						c.Printf("%s = %s, %s;", target, c.translateExpr(expr), c.loadStruct(array, target, s))
+						c.Printf("%s = %s, %s;", target, c.translateExpr(expr, nil), c.loadStruct(array, target, s))
 					})
 					return c.formatExpr("%s", array)
 				}
@@ -1195,7 +1206,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 	case *types.Pointer:
 		switch u := t.Elem().Underlying().(type) {
 		case *types.Array:
-			return c.translateExpr(expr)
+			return c.translateExpr(expr, nil)
 		case *types.Struct:
 			if c.p.Pkg.Path() == "syscall" && types.Identical(exprType, types.Typ[types.UnsafePointer]) {
 				array := c.newVariable("_array")
@@ -1215,7 +1226,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 
 	case *types.Interface:
 		if types.Identical(exprType, types.Typ[types.UnsafePointer]) {
-			return c.translateExpr(expr)
+			return c.translateExpr(expr, nil)
 		}
 	}
 
@@ -1242,14 +1253,15 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
-		return c.translateExpr(expr)
+		return c.translateExpr(expr, nil)
 	}
 
 	exprType := c.p.TypeOf(expr)
+	pp("exprType = '%v'", exprType)
 	if types.Identical(exprType, desiredType) {
 		pp("YYY 2 translateImplicitConversion exiting early, b/c types are identical, exprType='%#v' and desiredType='%#v'. expr ='%#v'", exprType, desiredType, expr)
 		// 99999 fmt-tracking from Sprintf alone.
-		return c.translateExpr(expr)
+		return c.translateExpr(expr, nil)
 	}
 
 	basicExprType, isBasicExpr := exprType.Underlying().(*types.Basic)
@@ -1289,8 +1301,8 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			return c.formatExpr("new %1e.constructor.elem(%1e)", expr)
 		}
 	}
-	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v'", expr)
-	return c.translateExpr(expr)
+	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v', exprType='%v'", expr, exprType)
+	return c.translateExpr(expr, desiredType)
 }
 
 func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType types.Type) *expression {
@@ -1298,7 +1310,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 	case *types.Array, *types.Pointer:
 		return c.formatExpr("new %s(%e)", c.typeName(desiredType), expr)
 	}
-	return c.translateExpr(expr)
+	return c.translateExpr(expr, nil)
 }
 
 func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
@@ -1460,7 +1472,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 			parens = false
 		}
 		v := c.newVariable("x")
-		out.WriteString(v + " = " + c.translateExpr(e.(ast.Expr)).String() + ", ")
+		out.WriteString(v + " = " + c.translateExpr(e.(ast.Expr), nil).String() + ", ")
 		vars[i] = v
 	}
 
@@ -1470,7 +1482,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 				out.WriteString(vars[n] + suffix)
 				return
 			}
-			out.WriteString(c.translateExpr(a[n].(ast.Expr)).StringWithParens() + suffix)
+			out.WriteString(c.translateExpr(a[n].(ast.Expr), nil).StringWithParens() + suffix)
 		}
 		switch k {
 		case 0:
@@ -1488,7 +1500,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 		case 'e':
 			e := a[n].(ast.Expr)
 			if val := c.p.Types[e].Value; val != nil {
-				out.WriteString(c.translateExpr(e).String())
+				out.WriteString(c.translateExpr(e, nil).String())
 				return
 			}
 			writeExpr("")

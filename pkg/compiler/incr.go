@@ -389,7 +389,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 										// jea, this is getting our "var x [3]int" decl,
 										// which needs to end up in code.
-										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type())).String()))
+										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type()), nil).String()))
 
 										pp("placeN+1, appending to newCodeText: d.InitCode='%s'", string(de.InitCode))
 										newCodeText = append(newCodeText, de.InitCode)
@@ -685,7 +685,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				constructor = fmt.Sprintf("function(%s) {\n\t\tthis.$val = this;\n\t\tif (arguments.length === 0) {\n", strings.Join(params, ", "))
 				for i := 0; i < t.NumFields(); i++ {
-					constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type())).String())
+					constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 				}
 				constructor += "\t\t\treturn;\n\t\t}\n"
 				for i := 0; i < t.NumFields(); i++ {
