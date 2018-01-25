@@ -13,7 +13,10 @@ status
 2018 Jan 25 update
 -------
 Release v0.7.1 makes all integers work as map keys.
-Integers (int, int64, uint, etc) are(represented with cdata in LuaJIT.
+Go integers (int, int64, uint, etc) are represented with
+cdata in LuaJIT, since otherwise all number default
+to float64/doubles.
+
 This was a problem because cdata are boxed, so equality
 comparison on ints was comparing their addresses. Now we
 translate all map keys to strings in Lua, which makes
