@@ -348,7 +348,7 @@ func Test017DeleteFromMap(t *testing.T) {
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`)
 		code = `delete(x, 3)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3ULL);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3LL);`)
 	})
 }
 
@@ -363,7 +363,7 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`, `x3 = x('get',"3LL");`}
+		expect := []string{`x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`, `x3 = x('get',"3LL", "");`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
