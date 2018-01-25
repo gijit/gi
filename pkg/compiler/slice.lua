@@ -208,4 +208,5 @@ function copySlice(dest, src)
    if len == 0 then
       return 0
    end
+   error "not done, use wrapped Go arrays/slices"
 end
