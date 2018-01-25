@@ -38,22 +38,23 @@ _intentionalNilValue = {}
 
        -- invar: k is not nil
 
+       ks = tostring(k)
        if v ~= nil then
-          if t[_giPrivateMapRaw][k] == nil then
+          if t[_giPrivateMapRaw][ks] == nil then
              -- new key
              props.len = len + 1
           end
-          t[_giPrivateMapRaw][k] = v
+          t[_giPrivateMapRaw][ks] = v
           return
 
        else
           -- invar: k is not nil. v is nil.
 
-          if t[_giPrivateMapRaw][k] == nil then
+          if t[_giPrivateMapRaw][ks] == nil then
              -- new key
              props.len = len + 1
           end
-          t[_giPrivateMapRaw][k] = _intentionalNilValue
+          t[_giPrivateMapRaw][ks] = _intentionalNilValue
           return
       end
       --print("len at end of newidnex is ", len)
@@ -78,8 +79,9 @@ _intentionalNilValue = {}
        end
 
        -- k is not nil.
-       
-       local val = t[_giPrivateMapRaw][k]
+
+       ks = tostring(k)       
+       local val = t[_giPrivateMapRaw][ks]
        if val == _intentionalNilValue then
           return nil
        end
@@ -114,8 +116,9 @@ _intentionalNilValue = {}
        local function stateless_iter(t, k)
            local v
            --  Implement your own key,value selection logic in place of next
-           k, v = next(t[_giPrivateMapRaw], k)
-           if v then return k,v end
+           ks = tostring(k)
+           ks, v = next(t[_giPrivateMapRaw], tostring(k))
+           if v then return ks,v end
        end
 
        -- Return an iterator function, the table, starting point
@@ -146,8 +149,8 @@ _intentionalNilValue = {}
            end
            
            -- k is not nil.
-           
-           local val = t[_giPrivateMapRaw][k]
+           ks = tostring(k)      
+           local val = t[_giPrivateMapRaw][ks]
            if val == _intentionalNilValue then
               print("val is the _intentinoalNilValue")
               return nil, true;
@@ -183,13 +186,14 @@ _intentionalNilValue = {}
               return
            end
 
-           if t[_giPrivateMapRaw][k] == nil then
+           ks = tostring(k)           
+           if t[_giPrivateMapRaw][ks] == nil then
               -- key not present
               return
            end
            
            -- key present and key is not nil
-           t[_giPrivateMapRaw][k] = nil
+           t[_giPrivateMapRaw][ks] = nil
            props.len = len - 1
            
            --print("len at end of delete is ", props.len)

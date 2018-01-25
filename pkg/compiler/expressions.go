@@ -184,7 +184,7 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 			entries := make([]string, len(e.Elts))
 			for i, element := range e.Elts {
 				kve := element.(*ast.KeyValueExpr)
-				entries[i] = fmt.Sprintf("[%s]=%s", c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
+				entries[i] = fmt.Sprintf(`["%s"]=%s`, c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
 			}
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
@@ -539,6 +539,11 @@ func (c *funcContext) translateExpr(expr ast.Expr) *expression {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: e.Index.Pos(), Msg: "cannot use js.Object as map key"})
 			}
 			key := fmt.Sprintf("%s", c.translateImplicitConversion(e.Index, t.Key()))
+			pp("t.Key()='%T'/%#v", t.Key(), t.Key())
+			switch t.Key().(type) {
+			case *types.Basic:
+				key = `"` + key + `"`
+			}
 			//key := fmt.Sprintf("%s.keyFor(%s)", c.typeName(t.Key()), c.translateImplicitConversion(e.Index, t.Key()))
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
 				return c.formatExpr(` %1e('get', %2s, %3e) `, e.X, key, c.zeroValue(t.Elem()))

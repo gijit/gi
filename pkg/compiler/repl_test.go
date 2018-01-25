@@ -214,8 +214,8 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 a = _gi_NewMap("int", "int", {});
-a[1LL] = 10LL;
-a[2LL] = 20LL;
+a["1LL"] = 10LL;
+a["2LL"] = 20LL;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -332,7 +332,7 @@ func Test016MapCreation(t *testing.T) {
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`)
 
 	})
 }
@@ -346,7 +346,7 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`)
 		code = `delete(x, 3)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3ULL);`)
 	})
@@ -363,7 +363,7 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("int", "string", {[3LL]="hello", [4LL]="gophers"});`, `x3 = x('get',3LL);`}
+		expect := []string{`x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`, `x3 = x('get',"3LL");`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
