@@ -275,6 +275,7 @@ Go has big advantages over python, R, and Matlab.
 It has good type checking, reasonable compiled performance,
 and excellent multicore support.
 
+
 # the aim
 
 We want to provide one excellent integrated REPL for Go.
@@ -303,6 +304,13 @@ BLAS library for this task and beats both Go
 and LuaJIT by multiplying in 6 msec, but
 is too immature and too large to be
 a viable embedded target.
+
+Bonus: LuaJIT has Torch7 for machine learning.
+And, Torch7 has GPU support. [1][2]
+
+[1] https://github.com/torch/cutorch
+
+[2] https://github.com/torch/torch7/wiki/Cheatsheet#gpu-support
 
 # installation
 
