@@ -137,7 +137,7 @@ _intentionalNilValue = {}
         
         if oper == "get" then
 
-           print("get called for key", k)
+           --print("get called for key", k)
            if k == nil then
               local props = t[_giPrivateMapProps]
               if props.nilKeyStored then
@@ -152,15 +152,15 @@ _intentionalNilValue = {}
            ks = tostring(k)      
            local val = t[_giPrivateMapRaw][ks]
            if val == _intentionalNilValue then
-              print("val is the _intentinoalNilValue")
+              --print("val is the _intentinoalNilValue")
               return nil, true;
 
            elseif val == nil then
               -- key not present
-              print("key not present, zeroVal=", zeroVal)
-              for i,v in pairs(t[_giPrivateMapRaw]) do
-                 print("debug: i=", i, "  v=", v)
-              end
+              --print("key not present, zeroVal=", zeroVal)
+              --for i,v in pairs(t[_giPrivateMapRaw]) do
+              --   print("debug: i=", i, "  v=", v)
+              --end
               return zeroVal, false;
            end
            
