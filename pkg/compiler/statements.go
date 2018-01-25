@@ -168,14 +168,16 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 
 	case *ast.RangeStmt:
 		refVar := c.newVariable("_ref")
+		lenRefVar := c.newVariable("_lenref")
 
 		switch t := c.p.TypeOf(s.X).Underlying().(type) {
 		case *types.Basic:
 			c.Printf("%s = %s;", refVar, c.translateExpr(s.X, nil))
+			c.Printf("%s = __utf8.len(%s)", lenRefVar, refVar)
 			iVar := c.newVariable("_i")
 			c.Printf("%s = 0;", iVar)
 			runeVar := c.newVariable("_rune")
-			c.translateLoopingStmt(func() string { return iVar + " < #" + refVar }, s.Body, func() {
+			c.translateLoopingStmt(func() string { return iVar + " < " + lenRefVar }, s.Body, func() {
 				c.Printf("%s = __decodeRune(%s, %s);", runeVar, refVar, iVar)
 				if !isBlank(s.Key) {
 					c.Printf("%s", c.translateAssign(s.Key, c.newIdent(iVar, types.Typ[types.Int]), s.Tok == token.DEFINE))
