@@ -10,6 +10,15 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 25 update
+-------
+Release v0.7.1 makes all integers work as map keys.
+Integers (int, int64, uint, etc) are(represented with cdata in LuaJIT.
+This was a problem because cdata are boxed, so equality
+comparison on ints was comparing their addresses. Now we
+translate all map keys to strings in Lua, which makes
+key lookup for an Go integer key work as expected.
+
 2018 Jan 23 update
 ------
 Release v0.7.0 brings local variables inside
