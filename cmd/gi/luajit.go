@@ -218,7 +218,7 @@ these special commands:
 			prompt = goPrompt
 			translation, err := translateAndCatchPanic(inc, []byte(src))
 			if err != nil {
-				fmt.Printf("oops: '%v' on input '%s'\n", err, string(src))
+				fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(string(src)))
 				translation = "\n"
 				// still write, so we get another prompt
 			} else {

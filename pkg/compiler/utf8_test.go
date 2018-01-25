@@ -1,7 +1,7 @@
 package compiler
 
 /* comment out for now to keep tests green. When you start
-    work on this, make a new branch (e.g. git checkout -b fix13)
+    work on this, make a new branch (e.g. git checkout -b fix4)
     then uncomment on that branch.
 
 import (

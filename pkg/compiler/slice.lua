@@ -194,6 +194,18 @@ function append(t, ...)
 end
 
 function appendSlice(...)
-   print("appendSlice called")
+   --print("appendSlice called")
    return append(...)
+end
+
+function copySlice(dest, src)
+   local dlen = #dest
+   local slen = #src
+   local len = dlen
+   if slen < len then
+      len = slen
+   end
+   if len == 0 then
+      return 0
+   end
 end
