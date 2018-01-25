@@ -856,7 +856,12 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: l.Index.Pos(), Msg: "cannot use js.Object as map key"})
 			}
 			// jea: map assignment in lua:
-			return fmt.Sprintf(`%s[%s] = %s;`, c.translateExpr(l.X), c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			dq := ``
+			switch t.Key().(type) {
+			case *types.Basic:
+				dq = `"`
+			}
+			return fmt.Sprintf(`%s[%s%s%s] = %s;`, c.translateExpr(l.X), dq, c.translateImplicitConversionWithCloning(l.Index, t.Key()), dq, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 			// jea replace next 2 lines with the above
 			//keyVar := c.newVariable("_key")
 			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))

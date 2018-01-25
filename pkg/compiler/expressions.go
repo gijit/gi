@@ -7,6 +7,7 @@ import (
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -1222,7 +1223,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 }
 
 func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desiredType types.Type) *expression {
-	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s'", expr, desiredType)
+	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s', at: '%s'", expr, desiredType, string(debug.Stack()))
 	switch desiredType.Underlying().(type) {
 	case *types.Struct, *types.Array:
 		switch expr.(type) {

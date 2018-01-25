@@ -157,7 +157,7 @@ _intentionalNilValue = {}
 
            elseif val == nil then
               -- key not present
-              print("key not present")
+              print("key not present, zeroVal=", zeroVal)
               for i,v in pairs(t[_giPrivateMapRaw]) do
                  print("debug: i=", i, "  v=", v)
               end
