@@ -1,14 +1,9 @@
 package compiler
 
-/* comment out for now to keep tests green. When you start
-    work on this, make a new branch (e.g. git checkout -b fix4)
-    then uncomment on that branch.
-
 import (
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
-	luajit "github.com/glycerine/golua/lua"
 )
 
 func Test041RangeOverUtf8BytesInString(t *testing.T) {
@@ -67,26 +62,19 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		// points. No printing f
 
 		code := `
-    runes := make([]rune, 3)
+    runes := []rune{0,0,0}
     const nihongo = "日本語"  // translated, means "Japanese"
     for i, runeValue := range nihongo {
         runes[i] = runeValue
     }
 `
-		inc := NewIncrState()
-		translation := inc.Tr([]byte(code))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`			(TODO: fill this in :)
-`)
-
-		// and verify that it happens correctly
-		vm := luajit.NewState()
-		defer vm.Close()
-		vm.OpenLibs()
-		files, err := FetchPrelude(".")
+		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
-		LuaDoFiles(vm, files)
+		defer vm.Close()
+		inc := NewIncrState(vm)
+
+		translation := inc.Tr([]byte(code))
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt(vm, "runes[0]", '日')
@@ -95,4 +83,3 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 
 	})
 }
-*/

@@ -176,15 +176,15 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Printf("%s = 0;", iVar)
 			runeVar := c.newVariable("_rune")
 			c.translateLoopingStmt(func() string { return iVar + " < #" + refVar }, s.Body, func() {
-				c.Printf("%s = $decodeRune(%s, %s);", runeVar, refVar, iVar)
+				c.Printf("%s = __decodeRune(%s, %s);", runeVar, refVar, iVar)
 				if !isBlank(s.Key) {
 					c.Printf("%s", c.translateAssign(s.Key, c.newIdent(iVar, types.Typ[types.Int]), s.Tok == token.DEFINE))
 				}
 				if !isBlank(s.Value) {
-					c.Printf("%s", c.translateAssign(s.Value, c.newIdent(runeVar+"[0]", types.Typ[types.Rune]), s.Tok == token.DEFINE))
+					c.Printf("%s", c.translateAssign(s.Value, c.newIdent(runeVar+"[1]", types.Typ[types.Rune]), s.Tok == token.DEFINE))
 				}
 			}, func() {
-				c.Printf("%s += %s[1];", iVar, runeVar)
+				c.Printf("%s = %s + %s[2];", iVar, iVar, runeVar)
 			}, label, c.Flattened[s])
 
 		case *types.Map:
