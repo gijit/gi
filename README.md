@@ -12,6 +12,8 @@ status
 
 2018 Jan 25 update
 -------
+In release v0.7.2, for range over strings produces utf8 runes.
+
 Release v0.7.1 makes all integers work as map keys.
 Go integers (int, int64, uint, etc) are represented with
 cdata in LuaJIT, since otherwise all numbers default
