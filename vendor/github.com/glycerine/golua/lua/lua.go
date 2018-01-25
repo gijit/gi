@@ -606,6 +606,10 @@ func (L *State) CdataToInt64(index int) int64 {
 	return int64(C.lua_cdata_to_int64(L.s, C.int(index)))
 }
 
+func (L *State) CdataToInt32(index int) int32 {
+	return int32(C.lua_cdata_to_int32(L.s, C.int(index)))
+}
+
 func (L *State) CdataToUint64(index int) uint64 {
 	return uint64(C.lua_cdata_to_uint64(L.s, C.int(index)))
 }

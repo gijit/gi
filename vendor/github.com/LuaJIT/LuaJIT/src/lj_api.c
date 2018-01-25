@@ -362,6 +362,24 @@ LUA_API int64_t lua_cdata_to_int64(lua_State *L, int idx)
   return *(int64_t*)(cdataptr(cd));
 }
 
+LUA_API int32_t lua_cdata_to_int32(lua_State *L, int idx)
+{
+  TValue *o = index2adr(L, idx);
+  
+  if (!tviscdata(o)) {
+    lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  GCcdata *cd = cdataV(o);
+
+  CTypeID ctypeid = cd->ctypeid;
+    if (ctypeid != 9) {
+      lj_err_argtype(L, 1, "int32");
+      //lj_err_argt(L, 1, LUA_TCDATA);
+    }
+  return *(int32_t*)(cdataptr(cd));
+}
+
+
 LUA_API uint64_t lua_cdata_to_uint64(lua_State *L, int idx)
 {
   TValue *o = index2adr(L, idx);

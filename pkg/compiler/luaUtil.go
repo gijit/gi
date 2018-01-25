@@ -283,3 +283,16 @@ func dumpTableString(L *golua.State, index int) (s string) {
 	// Stack is now the same as it was on entry to this function
 	return
 }
+
+func LuaMustRune(vm *golua.State, varname string, expect rune) {
+
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value_int := rune(vm.CdataToInt64(top))
+
+	pp("LuaMustRune, expect='%v'; observe value_int='%v'", expect, value_int)
+	if value_int != expect {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
+	}
+}

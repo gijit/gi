@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
@@ -66,8 +67,10 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
     const nihongo = "日本語"  // translated, means "Japanese"
     for i, runeValue := range nihongo {
         runes[i] = runeValue
-        println("done with i=", i)
     }
+    r0 := runes[0]
+    r1 := runes[1]
+    r2 := runes[2]
 `
 
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -76,11 +79,12 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		inc := NewIncrState(vm)
 
 		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n\n translation = '%s'\n\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt(vm, "runes[0]", '日')
-		LuaMustInt(vm, "runes[1]", '本')
-		LuaMustInt(vm, "runes[2]", '語')
-
+		fmt.Printf("\n past LuaRunAndReport \n")
+		LuaMustString(vm, "r0", "日")
+		LuaMustString(vm, "r1", "本")
+		LuaMustString(vm, "r2", "語")
 	})
 }
