@@ -35,6 +35,13 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	}
 	err = LuaDoFiles(vm, files)
 
+	// load the utf8 library as __utf8
+	cwd, err := os.Getwd()
+	panicOn(err)
+	panicOn(os.Chdir(cfg.PreludePath))
+	LuaRunAndReport(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
+	panicOn(os.Chdir(cwd))
+
 	lua2go := func(b interface{}) (a interface{}) {
 		return b
 	}

@@ -66,6 +66,7 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
     const nihongo = "日本語"  // translated, means "Japanese"
     for i, runeValue := range nihongo {
         runes[i] = runeValue
+        println("done with i=", i)
     }
 `
 
