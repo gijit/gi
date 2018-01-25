@@ -140,3 +140,60 @@ function _gi_Raw(t)
    
    return t[_giPrivateSliceRaw]
 end
+
+
+-- append slice, as raw lua array, indexed from 1.
+function append(t, ...)
+   slc = {...}
+   --print("append running")
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   local props = t[_giPrivateSliceProps]
+   if props == nil then
+      error "append() called with first value not a slice"
+   end
+   local len = props["len"]
+   local raw = t[_giPrivateSliceRaw]
+   if raw == nil then
+      error "could not get raw table from slice, internal error?"
+   end
+
+   -- make copy
+   local proxy = {}
+   proxy["Typeof"]="_gi_Slice"
+
+   local raw2 = {}
+   if len > 0 then
+      raw2[0] = raw[0]
+      --print("copied raw[0] ==", raw[0])
+   end
+   for i,v in ipairs(raw) do
+      raw2[i] = v
+      --print("copied raw2[i=",i,"] ==", v)
+   end
+   
+   --print("append at slc addition")
+   local k = 0
+   for i,v in ipairs(slc) do
+      --print("append: i=",i," next slc element is at len+i-1=",len+i-1,"  is v=",v)
+      raw2[len+i-1]=v
+      k=k+1
+   end
+   len=len+k
+
+   proxy[_giPrivateSliceRaw] = raw2
+   proxy[_giGo] = __lua2go(raw2)
+   proxy[_giPrivateSliceProps] = {len=len, typeKind=t.typeKind}
+   
+   setmetatable(proxy, _giPrivateSliceMt)
+   
+   return proxy
+
+end
+
+function appendSlice(...)
+   print("appendSlice called")
+   return append(...)
+end
