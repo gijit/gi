@@ -42,7 +42,9 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	LuaRunAndReport(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
 	panicOn(os.Chdir(cwd))
 
-	lua2go := func(b interface{}) (a interface{}) {
+	// take a Lua value, turn it into a Go value, wrap
+	// it in a proxy and return it to Lua.
+	lua2GoProxy := func(b interface{}) (a interface{}) {
 		return b
 	}
 
@@ -70,8 +72,9 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	}
 
 	luar.Register(vm, "", luar.Map{
-		"__lua2go": lua2go,
-		"sumSlice": sumSliceOfInts,
+		"__lua2go":      lua2GoProxy,
+		"sumSlice":      sumSliceOfInts,
+		"sumArrayInt64": sumArrayInt64,
 	})
 	fmt.Printf("registered __lua2go\n")
 
