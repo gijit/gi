@@ -3,7 +3,7 @@
 
 
 -- create private index
-_giPrivateSliceRaw = {}
+_giPrivateRaw = _giPrivateRaw or {}
 _giPrivateSliceProps = {}
 _giGo = {}
 
@@ -13,7 +13,7 @@ _giPrivateSliceMt = {
       --print("newindex called for key", k, " val=", v)
       local len = t[_giPrivateSliceProps]["len"]
       --print("newindex called for key", k, " len at start is ", len)
-      if t[_giPrivateSliceRaw][k] == nil then
+      if t[_giPrivateRaw][k] == nil then
          if  v ~= nil then
          -- new value
             len = len +1
@@ -26,7 +26,7 @@ _giPrivateSliceMt = {
               -- replace, no count change              
           end
       end
-      t[_giPrivateSliceRaw][k] = v
+      t[_giPrivateRaw][k] = v
       t[_giPrivateSliceProps]["len"] = len
       --print("len at end of newidnex is ", len)
     end,
@@ -35,14 +35,14 @@ _giPrivateSliceMt = {
   --
     __index = function(t, k)
       --print("index called for key", k)
-      return t[_giPrivateSliceRaw][k]
+      return t[_giPrivateRaw][k]
     end,
 
     __tostring = function(t)
        local len = t[_giPrivateSliceProps]["len"]
        local s = "slice of length " .. tostring(len) .. " is _giSlice{"
-       local r = t[_giPrivateSliceRaw]
-       -- we want to skip both the _giPrivateSliceRaw and the len
+       local r = t[_giPrivateRaw]
+       -- we want to skip both the _giPrivateRaw and the len
        -- when iterating, which happens automatically if we
        -- iterate on r, the inside private data, and not on the proxy.
        for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
@@ -68,7 +68,7 @@ _giPrivateSliceMt = {
        local function stateless_iter(t, k)
            local v
            --  Implement your own key,value selection logic in place of next
-           k, v = next(t[_giPrivateSliceRaw], k)
+           k, v = next(t[_giPrivateRaw], k)
            if v then return k,v end
        end
 
@@ -97,7 +97,7 @@ function _gi_NewSlice(typeKind, x)
    end
 
    local proxy = {}
-   proxy[_giPrivateSliceRaw] = x
+   proxy[_giPrivateRaw] = x
    proxy["Typeof"]="_gi_Slice"
    proxy[_giGo] = __lua2go(x)
    
@@ -120,7 +120,7 @@ function _gi_UnpackSliceRaw(t)
       return t
    end
    
-   raw = t[_giPrivateSliceRaw]
+   raw = t[_giPrivateRaw]
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.
@@ -138,7 +138,7 @@ function _gi_Raw(t)
       return t
    end
    
-   return t[_giPrivateSliceRaw]
+   return t[_giPrivateRaw]
 end
 
 
@@ -155,7 +155,7 @@ function append(t, ...)
       error "append() called with first value not a slice"
    end
    local len = props["len"]
-   local raw = t[_giPrivateSliceRaw]
+   local raw = t[_giPrivateRaw]
    if raw == nil then
       error "could not get raw table from slice, internal error?"
    end
@@ -183,7 +183,7 @@ function append(t, ...)
    end
    len=len+k
 
-   proxy[_giPrivateSliceRaw] = raw2
+   proxy[_giPrivateRaw] = raw2
    proxy[_giGo] = __lua2go(raw2)
    proxy[_giPrivateSliceProps] = {len=len, typeKind=t.typeKind}
    

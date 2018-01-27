@@ -1,7 +1,7 @@
 -- arrays
 
 -- create private index
-_giPrivateArrayRaw = {}
+_giPrivateRaw = _giPrivateRaw or {}
 _giPrivateArrayProps = {}
 
 _giPrivateArrayMt = {
@@ -9,7 +9,7 @@ _giPrivateArrayMt = {
     __newindex = function(t, k, v)
       local len = t[_giPrivateArrayProps]["len"]
       --print("newindex called for key", k, " len at start is ", len)
-      if t[_giPrivateArrayRaw][k] == nil then
+      if t[_giPrivateRaw][k] == nil then
          if  v ~= nil then
          -- new value
             len = len +1
@@ -22,7 +22,7 @@ _giPrivateArrayMt = {
               -- replace, no count change              
           end
       end
-      t[_giPrivateArrayRaw][k] = v
+      t[_giPrivateRaw][k] = v
       t[_giPrivateArrayProps]["len"] = len
       --print("len at end of newidnex is ", len)
     end,
@@ -34,16 +34,16 @@ _giPrivateArrayMt = {
       -- I don't think we need raw any more, now that
       -- __pairs works. It would be a problem for hash
       -- tables that want to store the key 'raw'.
-      -- if k == 'raw' then return t[_giPrivateArrayRaw] end
-      return t[_giPrivateArrayRaw][k]
+      -- if k == 'raw' then return t[_giPrivateRaw] end
+      return t[_giPrivateRaw][k]
    end,
 
    __tostring = function(t)
       local len =  t[_giPrivateArrayProps]["len"]
       local s = "array of length " .. tostring(len) .. " is _gi_Array{"
       --print("t.len is", len)
-      local r = t[_giPrivateArrayRaw]
-      -- we want to skip both the _giPrivateArrayRaw and the len
+      local r = t[_giPrivateRaw]
+      -- we want to skip both the _giPrivateRaw and the len
       -- when iterating, which happens automatically if we
       -- iterate on r, the inside private data, and not on the proxy.
       for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
@@ -66,7 +66,7 @@ _giPrivateArrayMt = {
       local function stateless_iter(t, k)
          local v
          --  Implement your own key,value selection logic in place of next
-         k, v = next(t[_giPrivateArrayRaw], k)
+         k, v = next(t[_giPrivateRaw], k)
          if v then return k,v end
       end
 
@@ -93,7 +93,7 @@ function _gi_NewArray(x, typeKind, len)
    end
 
    local proxy = {}
-   proxy[_giPrivateArrayRaw] = x
+   proxy[_giPrivateRaw] = x
 
    local props = {len=len, typeKind=typeKind}
    proxy[_giPrivateArrayProps] = props
@@ -116,7 +116,7 @@ function _gi_clone(t, typ)
          error "_gi_clone for arrayType could not get props" 
       end
       -- make a copy of the data
-      local src = t[_giPrivateArrayRaw]
+      local src = t[_giPrivateRaw]
       local dest = {}
       for i,v in pairs(src) do
          dest[i] = v
@@ -143,7 +143,7 @@ function _gi_UnpackArrayRaw(t)
       return t
    end
    
-   raw = t[_giPrivateArrayRaw]
+   raw = t[_giPrivateRaw]
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.
@@ -161,5 +161,5 @@ function _gi_ArrayRaw(t)
       return t
    end
    
-   return t[_giPrivateArrayRaw]
+   return t[_giPrivateRaw]
 end

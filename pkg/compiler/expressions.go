@@ -721,7 +721,6 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 						return c.translateExpr(e.Args[0], nil)
 					}
 				}
-				// 99999 fmt-tracking from Sprintf alone.
 				return c.translateCall(e, sig, c.translateExpr(f, nil))
 			}
 
@@ -1284,7 +1283,6 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 		case nil, *ast.CompositeLit:
 			// nothing
 		default:
-			panic("where?")
 			return c.formatExpr(`_gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 		}
 	}
@@ -1304,7 +1302,6 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 	pp("exprType = '%v'", exprType)
 	if types.Identical(exprType, desiredType) {
 		pp("YYY 2 translateImplicitConversion exiting early, b/c types are identical, exprType='%#v' and desiredType='%#v'. expr ='%#v'", exprType, desiredType, expr)
-		// 99999 fmt-tracking from Sprintf alone.
 		return c.translateExpr(expr, nil)
 	}
 

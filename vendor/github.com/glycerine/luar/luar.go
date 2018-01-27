@@ -600,8 +600,8 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 	return
 }
 
-// Also for arrays. TODO: Create special function for arrays?
-func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+// Also for arrays, but isSlice will be false. TODO: Create special function for arrays?
+func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value, isSlice bool) (status error) {
 	pp("top of copyTableToSlice. here is stack:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
@@ -612,7 +612,11 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 	pp("in copyTableToSlice, n='%v', t='%v'. top=%v, idx=%v", n, t, L.GetTop(), idx)
 
 	// detect _gi_Slice and specialize for it.
-	L.GetGlobal("_giPrivateSliceProps") // stack++
+	if isSlice {
+		L.GetGlobal("_giPrivateSliceProps") // stack++
+	} else {
+		L.GetGlobal("_giPrivateArrayProps") // stack++
+	}
 	if !L.IsNil(-1) {
 		// we are running under `gi`
 		// is this a _gi_Slice? it is if the _giPrivateSliceProps key is present.
@@ -634,7 +638,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 			// yes, is _gi_Slice
 			// leave the props on the top of the stack, we'll use
 			// them immediately.
-			return copyGiTableToSlice(L, adj, v, visited)
+			return copyGiTableToSlice(L, adj, v, visited, isSlice)
 		} else {
 			L.Pop(1)
 		}
@@ -918,9 +922,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 
 		switch kind {
 		case reflect.Array:
-			fallthrough
+			return copyTableToSlice(L, idx, v, visited, false)
 		case reflect.Slice:
-			return copyTableToSlice(L, idx, v, visited)
+			return copyTableToSlice(L, idx, v, visited, true)
 		case reflect.Map:
 			return copyTableToMap(L, idx, v, visited)
 		case reflect.Struct:
@@ -937,7 +941,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			case reflect.Slice:
 				// Need to make/resize the slice here since interface values are not adressable.
 				v.Set(reflect.MakeSlice(v.Elem().Type(), n, n))
-				return copyTableToSlice(L, idx, v.Elem(), visited)
+				return copyTableToSlice(L, idx, v.Elem(), visited, true)
 				// jea debug: add default: case
 			default:
 				pp("v.Elem().Kind() = '%#v', v='%#v'/type='%T'", v.Elem().Kind(), v, v) // 0x0, nil interface, reflect.Value
@@ -955,7 +959,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 						}
 			*/
 			v.Set(reflect.MakeSlice(tslice, n, n))
-			return copyTableToSlice(L, idx, v.Elem(), visited)
+			return copyTableToSlice(L, idx, v.Elem(), visited, true)
 		default:
 			pp("luar.go ConvError: from '%v' to '%v'\n stack:\n%s\n",
 				luaDesc(L, idx), v.Type(),
@@ -1222,9 +1226,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	*/
 
 	// get the raw table
-	L.GetGlobal("_giPrivateSliceRaw") // stack++
+	L.GetGlobal("_giPrivateRaw") // stack++
 	if L.IsNil(-1) {
-		panic(`could not lookup "_giPrivateSliceRaw" in global table`)
+		panic(`could not lookup "_giPrivateRaw" in global table`)
 	}
 
 	// since we increased the stack depth by 1, adjust idx.
@@ -1232,18 +1236,18 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		idx--
 	}
 
-	pp("found the global string _giPrivateSliceRaw, here is stack, with adjusted idx=%v:", idx)
+	pp("found the global string _giPrivateRaw, here is stack, with adjusted idx=%v:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
 	// get table[key]. replaces key with value,
-	// i.e. replace the key _giPrivateSliceRaw with
+	// i.e. replace the key _giPrivateRaw with
 	//  the actual table it represents.
 	L.GetTable(idx)
 	pp("under `gi`, after GetTable(idx=%v), top is %v, and Top is nil: %v", idx, L.GetTop(), L.IsNil(-1))
 	if L.IsNil(-1) {
-		panic("_giPrivateSliceRaw not found in _gi_Slice outer value!")
+		panic("_giPrivateRaw not found in _gi_Slice outer value!")
 	}
 	pp("in copyGiTableToSlice. after fetching raw table to the top of the stack, here is stack:")
 	if verb.VerboseVerbose {
@@ -1262,7 +1266,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 }
 
 // props is on top of stack. The actual table at idx, which props describes.
-func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
+func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value, isSlice bool) (status error) {
 	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
