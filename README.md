@@ -10,6 +10,14 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 27 update
+-------
+In release v0.7.3, arrays are passed to Go native functions, and
+array copy by value is implemented. Having arrays work well, now
+we are well-positioned to get slices pointing to arrays working.
+That will be the next focus.
+
+
 2018 Jan 25 update
 -------
 In release v0.7.2, for range over strings produces utf8 runes.
