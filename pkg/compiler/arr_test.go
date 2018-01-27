@@ -139,7 +139,6 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		// check for exception
 		LuaMustInt64(vm, "b", 2)
 		LuaMustInt64(vm, "c", 3)
 
@@ -177,14 +176,13 @@ func Test083Int64ArraysCopyByValue(t *testing.T) {
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		// check for exception
-		LuaMustInt64(vm, "a0", 0)
-		LuaMustInt64(vm, "a1", 1)
-		LuaMustInt64(vm, "a2", 2)
-
 		LuaMustInt64(vm, "b0", 1)
 		LuaMustInt64(vm, "b1", 2)
 		LuaMustInt64(vm, "b2", 3)
+
+		LuaMustInt64(vm, "a0", 0)
+		LuaMustInt64(vm, "a1", 1)
+		LuaMustInt64(vm, "a2", 2)
 
 	})
 }
