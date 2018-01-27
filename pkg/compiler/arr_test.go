@@ -128,11 +128,11 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			// 		a = __lua2go(_gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3));
 			`
-		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3);
-        a[0] = (a[0] + (1LL));
-        a[2] = (a[2] - (1LL));
-        b = a[0];
-        c = a[2];
+	a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3);
+  	_gi_SetRangeCheck(a, 0, (a[0] + (1LL)));
+  	_gi_SetRangeCheck(a, 2, (a[2] - (1LL)));
+  	b = a[0];
+  	c = a[2];
 `)
 
 		// and verify that it happens correctly
