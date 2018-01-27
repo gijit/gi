@@ -101,7 +101,7 @@ function _gi_NewSlice(typeKind, x)
    proxy["Typeof"]="_gi_Slice"
    proxy[_giGo] = __lua2go(x)
    
-   local props = {len=len, typeKind=typeKind}
+   local props = {beg=0, len=len, cap=len, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
 
    setmetatable(proxy, _giPrivateSliceMt)
@@ -214,3 +214,4 @@ end
 function __gi_clone(a, typ)
    return a
 end
+

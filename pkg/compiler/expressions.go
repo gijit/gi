@@ -642,16 +642,16 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return c.formatExpr("%s", slice)
 		case e.Low == nil:
 			if e.Max != nil {
-				return c.formatExpr("$subslice(%s, 0, %f, %f)", slice, e.High, e.Max)
+				return c.formatExpr("__subslice(%s, 0, %f, %f)", slice, e.High, e.Max)
 			}
-			return c.formatExpr("$subslice(%s, 0, %f)", slice, e.High)
+			return c.formatExpr("__subslice(%s, 0, %f)", slice, e.High)
 		case e.High == nil:
-			return c.formatExpr("$subslice(%s, %f)", slice, e.Low)
+			return c.formatExpr("__subslice(%s, %f)", slice, e.Low)
 		default:
 			if e.Max != nil {
-				return c.formatExpr("$subslice(%s, %f, %f, %f)", slice, e.Low, e.High, e.Max)
+				return c.formatExpr("__subslice(%s, %f, %f, %f)", slice, e.Low, e.High, e.Max)
 			}
-			return c.formatExpr("$subslice(%s, %f, %f)", slice, e.Low, e.High)
+			return c.formatExpr("__subslice(%s, %f, %f)", slice, e.Low, e.High)
 		}
 
 	case *ast.SelectorExpr:
@@ -1315,7 +1315,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 	switch desiredType.Underlying().(type) {
 	case *types.Slice:
 		pp("YYY 4 translateImplicitConversion exiting early")
-		return c.formatExpr("$subslice(new %1s(%2e.$array), %2e.$offset, %2e.$offset + %2e.$length)", c.typeName(desiredType), expr)
+		return c.formatExpr("__subslice(new %1s(%2e.$array), %2e.$offset, %2e.$offset + %2e.$length)", c.typeName(desiredType), expr)
 
 	case *types.Interface:
 		if typesutil.IsJsObject(exprType) {

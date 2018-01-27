@@ -301,3 +301,7 @@ func sumArrayInt64(a [3]int64) (tot int64) {
 	fmt.Printf("\n sumArrayInt64 is returning tot='%v'", tot)
 	return
 }
+
+//func __subslice(t, low, hi, cap) {
+//
+//}
