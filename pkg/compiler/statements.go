@@ -739,7 +739,7 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
 }
 
-// jea: TODO. currently just a copy of the above translateLoopingStmt
+// jea: modified copy of the above translateLoopingStmt
 func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
 
 	prevFlowData := c.flowDatas[nil]
@@ -785,7 +785,6 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	c.p.escapingVars = prevEV
 	c.Printf(" end ")
-	//c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
 }
 
 // body helper
