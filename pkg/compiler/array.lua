@@ -104,6 +104,27 @@ function _gi_NewArray(x, typeKind, len)
    return proxy
 end;
 
-function _gi_clone(a, typ)
-   return a
+function _gi_clone(t, typ)
+   print("_gi_clone called with typ ", typ)
+   if type(t) ~= 'table' then
+      error "_gi_clone called on non-table"
+   end
+
+   if typ == "arrayType" then
+      local props = t[_giPrivateArrayProps]
+      if props == nil then
+         error "_gi_clone for arrayType could not get props" 
+      end
+      -- make a copy of the data
+      local src = t[_giPrivateArrayRaw]
+      local dest = {}
+      for i,v in pairs(src) do
+         dest[i] = v
+      end
+      
+      local b = _gi_NewArray(dest, props.typeKind, props.len)
+      return b
+   end
+   print("unimplemented typ in _gi_clone:", typ)
+   error "unimplemented typ in _gi_clone"
 end
