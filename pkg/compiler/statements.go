@@ -510,6 +510,7 @@ __defer_func(%s)
 		}
 
 	case *ast.ExprStmt:
+		pp("calling c.translateExpr with s.X = '%#v'", s.X)
 		expr := c.translateExpr(s.X, nil)
 		if expr != nil && expr.String() != "" {
 			c.Printf("%s;", expr)

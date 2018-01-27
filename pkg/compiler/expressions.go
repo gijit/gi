@@ -54,7 +54,19 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 	if desiredType != nil {
 		desiredStr = desiredType.String()
 	}
-	pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprType.String(), desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
+	if expr == nil || c == nil {
+		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='<nil>')")
+	} else {
+		pp("%v", c.p.Types[expr].Value)
+		pp("exprType = '%#v'", exprType)
+		var exprTypeStr string
+		if exprType == nil {
+			exprTypeStr = "<nil>"
+		} else {
+			exprTypeStr = exprType.String()
+		}
+		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
+	}
 	defer func() {
 		if xprn == nil {
 			pp("444444 returning from gi translateExpr(): '<nil>'")
