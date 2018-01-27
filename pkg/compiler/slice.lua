@@ -108,7 +108,7 @@ function _gi_NewSlice(typeKind, x)
    return proxy
 end;
 
--- _gi_UnpackRaw is a helper, used in
+-- _gi_UnpackSliceRaw is a helper, used in
 -- generated Lua code,
 -- for calling into vararg ... Go functions.
 -- This helper unpacks the raw _gi_giSlice

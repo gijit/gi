@@ -57,8 +57,6 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 	if expr == nil || c == nil {
 		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='<nil>')")
 	} else {
-		pp("%v", c.p.Types[expr].Value)
-		pp("exprType = '%#v'", exprType)
 		var exprTypeStr string
 		if exprType == nil {
 			exprTypeStr = "<nil>"
@@ -1286,6 +1284,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 		case nil, *ast.CompositeLit:
 			// nothing
 		default:
+			panic("where?")
 			return c.formatExpr(`_gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 		}
 	}

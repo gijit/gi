@@ -121,10 +121,45 @@ function _gi_clone(t, typ)
       for i,v in pairs(src) do
          dest[i] = v
       end
+      -- unpack ignores the [0] value, so less useful.
       
       local b = _gi_NewArray(dest, props.typeKind, props.len)
       return b
    end
    print("unimplemented typ in _gi_clone:", typ)
    error "unimplemented typ in _gi_clone"
+end
+
+
+-- _gi_UnpackArrayRaw is a helper, used in
+-- generated Lua code.
+--
+-- This helper unpacks the raw _giArray
+-- arguments. It returns non tables unchanged,
+-- and non _giArray tables unpacked.
+--
+function _gi_UnpackArrayRaw(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   raw = t[_giPrivateArrayRaw]
+   
+   if raw == nil then
+      -- unpack of empty table is ok. returns nil.
+      return unpack(t) 
+   end
+
+   if #raw == 0 then
+      return nil
+   end
+   return raw[0], unpack(raw)
+end
+
+function _gi_ArrayRaw(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   return t[_giPrivateArrayRaw]
 end
