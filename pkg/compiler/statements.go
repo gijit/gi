@@ -900,7 +900,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		switch lhsType.Underlying().(type) {
 		case *types.Array, *types.Struct:
 			if define {
-				return fmt.Sprintf("%s = $clone(%s, %s);", c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
+				return fmt.Sprintf("%s = __gi_clone(%s, %s);", c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
 			}
 			return fmt.Sprintf("%s.copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
 		}
