@@ -188,3 +188,33 @@ func Test083Int64ArraysCopyByValue(t *testing.T) {
 
 	})
 }
+
+// working for slices, but not for arrays
+func Test084ForRangeOverArrayAndChangeValue(t *testing.T) {
+
+	cv.Convey(`for i := range a { a[i] = a[i] + 1 } should change the value of a[i]`, t, func() {
+
+		code := `
+   b := [1]int{0}
+   for i := range b {
+     b[i] = b[i]+1
+   }
+   b0 := b[0]
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		// check for exception
+		LuaMustInt64(vm, "b0", 1)
+
+	})
+}

@@ -924,13 +924,14 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	case *ast.IndexExpr:
 		switch t := c.p.TypeOf(l.X).Underlying().(type) {
 		case *types.Array, *types.Pointer:
+			pp("in assignment to array or pointer, statements.go")
 			pattern := rangeCheck("%1e[%2f] = %3s", c.p.Types[l.Index].Value != nil, true)
 			if _, ok := t.(*types.Pointer); ok { // check pointer for nil (attribute getter causes a panic)
 				pattern = `%1e.nilCheck, ` + pattern
 			}
 			return c.formatExpr(pattern, l.X, l.Index, rhsExpr).String() + ";"
 		case *types.Slice:
-			pp("in assignment to slice, statements.go:854, ")
+			pp("in assignment to slice, statements.go")
 			return c.formatExpr(setRangeCheck(c.p.Types[l.Index].Value != nil, false), l.X, l.Index, rhsExpr).String() + ";"
 			//return c.formatExpr(rangeCheck("%1e.$array[%1e.$offset + %2f] = %3s", c.p.Types[l.Index].Value != nil, false), l.X, l.Index, rhsExpr).String() + ";"
 		default:
