@@ -149,7 +149,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 	if obj == nil {
 		debugNilCount++
 		if debugNilCount > 2 {
-			panic("where obj nil?")
+			//panic("where obj nil?")
 		}
 	}
 

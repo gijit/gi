@@ -27,6 +27,14 @@ func (cfg *GIConfig) LuajitMain() {
 	inc := compiler.NewIncrState(vm, vmCfg)
 
 	var history []string
+	home := os.Getenv("HOME")
+	var histFn string
+	var histFile *os.File
+	if home != "" {
+		histFn = home + string(os.PathSeparator) + ".gi.hist"
+		histFile, err = os.OpenFile(histFn, os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_SYNC, 0666)
+		panicOn(err)
+	}
 
 	_ = inc
 	reader := bufio.NewReader(os.Stdin)
@@ -233,6 +241,10 @@ these special commands:
 
 		p("sending use='%v'\n", use)
 		history = append(history, src)
+		if histFile != nil {
+			fmt.Fprintf(histFile, src)
+			histFile.Sync()
+		}
 		// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
 		interr := vm.LoadString(use)
 		if interr != 0 {
