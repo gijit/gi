@@ -53,6 +53,16 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		"Incr":      Incr,
 	})
 
+	// test only:
+	if !ic.vmCfg.NotTestMode {
+		luar.Register(ic.vm, "fmt", luar.Map{
+			// Go functions may be registered directly.
+			"Summer":    Summer,
+			"SummerAny": SummerAny,
+			"Incr":      Incr,
+		})
+	}
+
 	return &Archive{
 		ImportPath: path,
 		pkg:        pkg,

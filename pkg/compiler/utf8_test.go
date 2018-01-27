@@ -76,7 +76,7 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n\n translation = '%s'\n\n", string(translation))

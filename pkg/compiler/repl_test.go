@@ -29,7 +29,7 @@ func Test001LuaTranslation(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("assignment", t, func() {
 		cv.So(string(inc.Tr([]byte("a := 10;"))), cv.ShouldMatchModuloWhiteSpace, "a = 10LL;")
@@ -62,7 +62,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	srcs := []string{"a := 10;", "func adder(a, b int) int { return a + b}; ", "sum := adder(a,a);"}
 	for _, src := range srcs {
@@ -89,7 +89,7 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("expressions alone at top level", t, func() {
 		cv.So(string(inc.Tr([]byte(`a:=10;`))), cv.ShouldMatchModuloWhiteSpace, `a=10LL;`)
@@ -100,7 +100,7 @@ func Test005BacktickStringsToLua(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("Go backtick delimited strings should translate to Lua", t, func() {
 		cv.So(string(inc.Tr([]byte("s:=`\n\n\"hello\"\n\n`"))), cv.ShouldMatchModuloWhiteSpace, `s = "\n\n\"hello\"\n\n";`)
@@ -112,7 +112,7 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("At the repl, `a:=1; a:=2;` is allowed. We disable the traditional Go re-definition checks at the REPL", t, func() {
 		cv.So(string(inc.Tr([]byte("a:=1; a:=2;"))), cv.ShouldMatchModuloWhiteSpace, `a=1LL; a=2LL;`)
@@ -128,7 +128,7 @@ func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("At the repl, in separate commands`a:=1; a=2;` sets a to 2", t, func() {
 
@@ -145,7 +145,7 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("if then else within a closure/function should compile into lua", t, func() {
 
@@ -159,7 +159,7 @@ func Test009NumericalForLoop(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("numerical for loops should compile into lua", t, func() {
 
@@ -194,7 +194,7 @@ func Test010Slice(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("slice literal should compile into lua", t, func() {
 
@@ -207,7 +207,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("maps and range for loops should compile into lua", t, func() {
 
@@ -224,7 +224,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("range over a slice should compile into lua", t, func() {
 
@@ -240,7 +240,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
@@ -255,7 +255,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
@@ -268,7 +268,7 @@ func Test014LenOfSlice(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
@@ -281,7 +281,7 @@ func Test015ArrayCreation(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
@@ -307,7 +307,7 @@ func Test015_5_ArrayCreation(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
@@ -322,7 +322,7 @@ func Test016MapCreation(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey(`creating maps via x := map[int]string{3:"hello", 4:"gophers"} should compile`, t, func() {
 
@@ -341,7 +341,7 @@ func Test017DeleteFromMap(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
@@ -360,7 +360,7 @@ func Test018ReadFromMap(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
 		expect := []string{`x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`, `x3 = x('get',"3LL", "");`}
@@ -384,7 +384,7 @@ func Test018ReadFromSlice(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
 		expect := []string{`x=_gi_NewSlice("int", {[0]=3LL, 4LL});`, `x3 = _gi_GetRangeCheck(x,0);`}
@@ -405,7 +405,7 @@ func Test019TopLevelScope(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("top level numerical for loops should be able to refer to other top level variables", t, func() {
 
@@ -428,7 +428,7 @@ func Test020StructTypeDeclarations(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("declaring a struct with `type A struct{}` should compile and pass type checking, and register a prototype", t, func() {
 
@@ -444,7 +444,7 @@ func Test021StructTypeValues(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("Given `type A struct{}`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
@@ -462,7 +462,7 @@ func Test022StructTypeValues(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("Given `type A struct{ B int }`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
@@ -484,7 +484,7 @@ func Test023CopyingStructValues(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm,nil)
 
 
 	cv.Convey("Given `type A struct{ B int }`, when `var a =A{B:23}` and then `cp := a; cp.B = 78` then a.B should still be 23 because a full copy/clone should have been made of a during the `cp := a` operation.", t, func() {
@@ -511,7 +511,7 @@ func Test024MultipleAssignment(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		//cv.So(string(inc.Tr([]byte(src))), cv.ShouldMatchModuloWhiteSpace, `a, b, c = 1, 2, 3;`)
 
@@ -532,7 +532,7 @@ func Test025ComplexNumbers(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey("a := 6.67428e-11i should compile, since luajit has builtin support for complex number syntax", t, func() {
 
@@ -551,7 +551,7 @@ func Test026LenOfString(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -590,7 +590,7 @@ book := snoopy.Write("with a pen")`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -629,7 +629,7 @@ _ = snoopy
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -666,7 +666,7 @@ book := snoopy.Write("with a pen")`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -714,7 +714,7 @@ book := snoopy.Write("with a pen")
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -739,7 +739,7 @@ alone1 := m[1]
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -771,7 +771,7 @@ len3 := len(m)
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -794,7 +794,7 @@ println("hello")
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -836,7 +836,7 @@ x,y,z,s := f()
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -875,7 +875,7 @@ default:
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -928,7 +928,7 @@ myc := f()
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -962,7 +962,7 @@ default:
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -993,7 +993,7 @@ func Test042LenAtRepl(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
 	defer vm.Close()
-	inc := NewIncrState(vm)
+	inc := NewIncrState(vm, nil)
 
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
@@ -1015,7 +1015,7 @@ m := 1%a
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -1073,7 +1073,7 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 
@@ -1096,7 +1096,7 @@ f()
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,

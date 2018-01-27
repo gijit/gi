@@ -25,13 +25,17 @@ import (
 )
 
 // the incremental translation state
-func NewIncrState(vm *luajit.State) *IncrState {
+func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 
+	if vmCfg == nil {
+		vmCfg = NewVmConfig()
+	}
 	//	options := &gbuild.Options{CreateMapFile: true}
 	//	s := gbuild.NewSession(options)
 
 	ic := &IncrState{
-		vm: vm,
+		vm:    vm,
+		vmCfg: vmCfg,
 		pack: &build.Package{
 			Name:       "main",
 			ImportPath: "main",
@@ -67,6 +71,8 @@ type IncrState struct {
 	// the vm lets us add import bindings
 	// like `import "fmt"` on demand.
 	vm *luajit.State
+
+	vmCfg *VmConfig
 
 	minify   bool
 	PrintAST bool

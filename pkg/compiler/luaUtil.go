@@ -49,14 +49,6 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		return b
 	}
 
-	/*
-		// creating a proxy for a Go value, then calling a function with it.
-		b = __lua2go({10,5})
-		s = sumSlice(b)
-		print(s)
-		15LL
-	*/
-
 	luar.Register(vm, "", luar.Map{
 		"__lua2go": lua2GoProxy,
 	})
@@ -64,9 +56,8 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 
 	// for tests only
 	if !cfg.NotTestMode {
-		luar.Register(vm, "", luar.Map{
-			"sumSlice":      sumSliceOfInts,
-			"sumArrayInt64": sumArrayInt64,
+		luar.Register(vm, "fmt", luar.Map{
+			"SumArrayInt64": sumArrayInt64,
 		})
 		fmt.Printf("registered test-only functions with luar.\n")
 	}

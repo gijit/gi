@@ -270,7 +270,7 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		vm.GetGlobal("_giPrivateSliceProps")
 		cv.So(vm.IsNil(-1), cv.ShouldBeFalse)
@@ -391,7 +391,7 @@ func testOp(m *myGoTestStruct) string { return "" }
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))

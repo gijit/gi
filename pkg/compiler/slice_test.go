@@ -22,7 +22,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)

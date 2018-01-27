@@ -24,7 +24,7 @@ func (cfg *GIConfig) LuajitMain() {
 	vm, err := compiler.NewLuaVmWithPrelude(vmCfg)
 	panicOn(err)
 	defer vm.Close()
-	inc := compiler.NewIncrState(vm)
+	inc := compiler.NewIncrState(vm, vmCfg)
 
 	var history []string
 

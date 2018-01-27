@@ -41,7 +41,7 @@ f()
 		panicOn(err)
 		defer vm.Close()
 
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
 		pp("translation='%s'", string(translation))
@@ -64,7 +64,7 @@ func Test035DefersRunWithoutPanic(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
 		pp("translation='%s'", string(translation))

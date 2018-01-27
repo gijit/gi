@@ -15,7 +15,7 @@ func Test050CallFmtSprintf(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -43,7 +43,7 @@ func Test051CallFmtSprintf(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -67,7 +67,7 @@ func Test052CallFmtSprintf(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -91,7 +91,7 @@ func Test058CallFmtIncr(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -117,7 +117,7 @@ func Test059CallFmtSummer(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -143,7 +143,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
@@ -166,7 +166,7 @@ func Test062SprintfOneSlice(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
@@ -190,7 +190,7 @@ func Test063SprintfOneSlice(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
@@ -214,7 +214,7 @@ func Test064SprintfOneSlice(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
@@ -239,7 +239,7 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-		inc := NewIncrState(vm)
+		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
