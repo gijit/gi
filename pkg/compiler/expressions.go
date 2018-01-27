@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/printer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"runtime/debug"
@@ -36,10 +37,23 @@ func (e *expression) StringWithParens() string {
 	return e.str
 }
 
+// jea add
+func (c *funcContext) exprToString(expr ast.Expr) string {
+	var buf bytes.Buffer
+	printer.Fprint(&buf, c.p.fileSet, expr)
+	return buf.String()
+}
+
+// desiredType can be nil. When present, for example, it guides
+// the proper signed vs. unsigned translation of int,int64 types.
 func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) *expression {
 
 	exprType := c.p.TypeOf(expr)
-	pp("TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%#v'). exprType='%#v'. c.p.Types[expr].Value='%#v', stack=\n%s\n", expr, exprType, c.p.Types[expr].Value, string(debug.Stack()))
+	desiredStr := "<nil>"
+	if desiredType != nil {
+		desiredStr = desiredType.String()
+	}
+	pp("TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprType.String(), desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {

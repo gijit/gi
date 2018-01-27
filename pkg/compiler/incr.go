@@ -158,6 +158,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			dependencies: make(map[types.Object]bool),
 			minify:       minify,
 			fileSet:      fileSet,
+			files:        files,
 		},
 		allVars:     make(map[string]int),
 		flowDatas:   map[*types.Label]*flowData{nil: {}},

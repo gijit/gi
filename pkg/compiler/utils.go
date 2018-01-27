@@ -765,7 +765,7 @@ func rangeCheck(pattern string, constantIndex, array bool) string {
 	if constantIndex && array {
 		return pattern
 	}
-
+	panic("where?")
 	return "_gi_GetRangeCheck(%1e, %2f)"
 	/*
 		lengthProp := "$length"

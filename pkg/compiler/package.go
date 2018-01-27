@@ -32,6 +32,7 @@ type pkgContext struct {
 	dependencies map[types.Object]bool
 	minify       bool
 	fileSet      *token.FileSet
+	files        []*ast.File
 	errList      ErrorList
 }
 
