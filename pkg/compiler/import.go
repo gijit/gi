@@ -67,6 +67,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 			luar.Register(ic.vm, "gitesting", luar.Map{
 				"SumArrayInt64": sumArrayInt64,
+				//"__giClone":     __giClone,
 			})
 		}
 	} // end switch on path
@@ -179,3 +180,5 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 	fun := types.NewFunc(token.NoPos, pkg, "Incr", sig)
 	return fun
 }
+
+//"__giClone", __giClone,

@@ -104,3 +104,6 @@ function _gi_NewArray(x, typeKind, len)
    return proxy
 end;
 
+function _gi_clone(a, typ)
+   return a
+end

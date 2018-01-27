@@ -1243,7 +1243,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 		case nil, *ast.CompositeLit:
 			// nothing
 		default:
-			return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
+			return c.formatExpr(`_gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 		}
 	}
 

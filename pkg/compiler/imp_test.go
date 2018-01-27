@@ -149,7 +149,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = fmt.SummerAny(_gi_UnpackRaw(b));`)
+			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = fmt.SummerAny(_gi_UnpackSliceRaw(b));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -197,7 +197,7 @@ func Test063SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackRaw(_gi_NewSlice("emptyInterface",{[0]=4LL, 5LL, 6LL})));`)
+			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackSliceRaw(_gi_NewSlice("emptyInterface",{[0]=4LL, 5LL, 6LL})));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 

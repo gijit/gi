@@ -17,6 +17,7 @@ type GIConfig struct {
 	VerboseVerbose bool
 	RawLua         bool
 	PreludePath    string
+	IsTestMode     bool
 }
 
 // call DefineFlags before myflags.Parse()
@@ -26,6 +27,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.VerboseVerbose, "vv", false, "show even more verbose debug prints")
 	fs.BoolVar(&c.RawLua, "r", false, "raw mode: skip all translation, type raw Lua to LuaJIT with our prelude installed")
 	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GOINTERP_PRELUDE_DIR' env var. -prelude overrides this.")
+	fs.BoolVar(&c.IsTestMode, "t", true, "load test mode functions and types")
 }
 
 var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler"

@@ -250,7 +250,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 					}, elemType), s.Tok == token.DEFINE))
 				}
 			}, func() {
-				c.Printf("%s++;", iVar)
+				c.Printf("%s = %s + 1;", iVar, iVar)
 			}, label, c.Flattened[s])
 
 		case *types.Chan:
@@ -900,7 +900,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		switch lhsType.Underlying().(type) {
 		case *types.Array, *types.Struct:
 			if define {
-				return fmt.Sprintf(`%s = __gi_clone(%s, "%s");`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
+				return fmt.Sprintf(`%s = _gi_clone(%s, "%s");`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
 			}
 			return fmt.Sprintf("%s.copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
 		}

@@ -115,7 +115,7 @@ end;
 -- arguments. It returns non tables unchanged,
 -- and non _giSlice tables unpacked.
 --
-function _gi_UnpackRaw(t)
+function _gi_UnpackSliceRaw(t)
    if type(t) ~= 'table' then
       return t
    end
