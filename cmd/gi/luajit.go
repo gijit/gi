@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gijit/gi/pkg/compiler"
 	"github.com/gijit/gi/pkg/front"
@@ -26,6 +27,7 @@ func (cfg *GIConfig) LuajitMain() {
 	defer vm.Close()
 	inc := compiler.NewIncrState(vm, vmCfg)
 
+	var t0, t1 time.Time
 	var history []string
 	home := os.Getenv("HOME")
 	var histFn string
@@ -245,6 +247,7 @@ these special commands:
 			fmt.Fprintf(histFile, src)
 			histFile.Sync()
 		}
+		t0 = time.Now()
 		// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
 		interr := vm.LoadString(use)
 		if interr != 0 {
@@ -260,10 +263,12 @@ these special commands:
 			vm.Pop(1)
 			continue
 		}
+		t1 = time.Now()
 		// jea debug:
 		//compiler.DumpLuaStack(vm)
 		fmt.Printf("\n")
 		reader.Reset(os.Stdin)
+		fmt.Printf("elapsed: '%v'\n", t1.Sub(t0))
 	}
 }
 
