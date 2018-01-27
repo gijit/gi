@@ -19,6 +19,7 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 )
 
+var debugNilCount int
 var pp = verb.PP
 
 type expression struct {
@@ -145,6 +146,12 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		}
 	}
 	pp("obj is '%#v'", obj)
+	if obj == nil {
+		debugNilCount++
+		if debugNilCount > 2 {
+			panic("where obj nil?")
+		}
+	}
 
 	if obj != nil && typesutil.IsJsPackage(obj.Pkg()) {
 		switch obj.Name() {
@@ -427,7 +434,10 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			case token.LSS, token.LEQ, token.GTR, token.GEQ:
 				return c.formatExpr("%e %t %e", e.X, e.Op, e.Y)
 			case token.ADD, token.SUB:
-				return c.fixNumber(c.formatExpr("%e %t %e", e.X, e.Op, e.Y), basic)
+				pp("token.ADD or SUB,calling c.formatExpr, e.X='%s', op='%v', e.Y='%s'", c.exprToString(e.X), e.Op.String(), c.exprToString(e.Y))
+				xx := c.formatExpr("%e %t %e", e.X, e.Op, e.Y)
+				pp("token.ADD or SUB,calling c.fixNumber(xx) with xx = '%s'", x2s(xx))
+				return c.fixNumber(xx, basic)
 			case token.MUL:
 				switch basic.Kind() {
 				case types.Int32, types.Int:
@@ -1370,7 +1380,18 @@ func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
 	return code
 }
 
-func (c *funcContext) fixNumber(value *expression, basic *types.Basic) *expression {
+func x2s(x *expression) string {
+	if x == nil {
+		return "<nil>"
+	}
+	return x.str
+}
+
+func (c *funcContext) fixNumber(value *expression, basic *types.Basic) (xprn *expression) {
+	pp("top of fixNumber with value='%s'", x2s(value))
+	defer func() {
+		pp("returning from fixNumber with xprn='%s'", x2s(xprn))
+	}()
 	switch basic.Kind() {
 	case types.Int8:
 		// jea
@@ -1426,11 +1447,12 @@ func (c *funcContext) internalize(s *expression, t types.Type) *expression {
 }
 
 func (c *funcContext) formatExpr(format string, a ...interface{}) *expression {
-	// 99999 fmt-tracking from Sprintf alone.
+	//
 	return c.formatExprInternal(format, a, false)
 }
 
 func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expression {
+	pp("top of formatParenExpr")
 	return c.formatExprInternal(format, a, true)
 }
 
@@ -1519,7 +1541,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	}
 
 	processFormat(func(b, k uint8, n int) {
-		writeExpr := func(suffix string) {
+		writeExprWithSuffix := func(suffix string) {
 			if vars[n] != "" {
 				out.WriteString(vars[n] + suffix)
 				return
@@ -1545,7 +1567,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 				out.WriteString(c.translateExpr(e, nil).String())
 				return
 			}
-			writeExpr("")
+			writeExprWithSuffix("")
 		case 'f':
 			e := a[n].(ast.Expr)
 			if val := c.p.Types[e].Value; val != nil {
@@ -1555,11 +1577,11 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 			}
 			if is64Bit(c.p.TypeOf(e).Underlying().(*types.Basic)) {
 				out.WriteString("$flatten64(")
-				writeExpr("")
+				writeExprWithSuffix("")
 				out.WriteString(")")
 				return
 			}
-			writeExpr("")
+			writeExprWithSuffix("")
 		case 'h':
 			e := a[n].(ast.Expr)
 			if val := c.p.Types[e].Value; val != nil {
@@ -1571,28 +1593,28 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 				out.WriteString(strconv.FormatUint(d>>32, 10))
 				return
 			}
-			writeExpr(".$high")
+			writeExprWithSuffix(".$high")
 		case 'l':
 			if val := c.p.Types[a[n].(ast.Expr)].Value; val != nil {
 				d, _ := constant.Uint64Val(constant.ToInt(val))
 				out.WriteString(strconv.FormatUint(d&(1<<32-1), 10))
 				return
 			}
-			writeExpr(".$low")
+			writeExprWithSuffix(".$low")
 		case 'r':
 			if val := c.p.Types[a[n].(ast.Expr)].Value; val != nil {
 				r, _ := constant.Float64Val(constant.Real(val))
 				out.WriteString(strconv.FormatFloat(r, 'g', -1, 64))
 				return
 			}
-			writeExpr(".$real")
+			writeExprWithSuffix(".$real")
 		case 'i':
 			if val := c.p.Types[a[n].(ast.Expr)].Value; val != nil {
 				i, _ := constant.Float64Val(constant.Imag(val))
 				out.WriteString(strconv.FormatFloat(i, 'g', -1, 64))
 				return
 			}
-			writeExpr(".$imag")
+			writeExprWithSuffix(".$imag")
 		case '%':
 			out.WriteRune('%')
 		default:
