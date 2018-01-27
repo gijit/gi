@@ -35,7 +35,9 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	//check.scope.Dump() // jea add
 	//pp("end of check.scope Dump")
 	scope, obj = check.scope.LookupParent(e.Name, check.pos)
-	pp("check.scope.LookupParent for e.Name='%s' got obj = '%s'", e.Name, obj.Name())
+	if e != nil && obj != nil {
+		pp("check.scope.LookupParent for e.Name='%s' got obj = '%s'", e.Name, obj.Name())
+	}
 	/*
 		// jea add, try at filescope
 		if obj == nil {

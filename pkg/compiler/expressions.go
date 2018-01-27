@@ -58,7 +58,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) *expr
 					pp("k = '%#v'/'%s'", k, k)
 				}
 			}
-			pp("isInteger and k = '%s'", k)
+			pp("isInteger and k = '%v'", k) // k of 6 is int64, 2 is int.
 			if k == types.Int64 || k == types.Int || k == types.Int32 || k == types.Int16 || k == types.Int8 {
 
 				d, ok := constant.Int64Val(constant.ToInt(value))

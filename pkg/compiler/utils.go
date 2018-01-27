@@ -306,8 +306,8 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// want to re-use the same variable name when
 	// we re-declare vars, not add another variable with _1 tacked
 	// on at the end.
-	// Answer, this generates different tmp variables with different
-	// names.
+	// Answer, this was generating different tmp variables with different
+	// names. Use a gensym instead.
 
 	if false { // jea add
 		if n > 0 {
@@ -506,7 +506,7 @@ func fieldName(t *types.Struct, i int) string {
 func typeKind(ty types.Type) string {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
-		return "_kind" + toJavaScriptType(t)
+		return toJavaScriptType(t)
 	case *types.Array:
 		return "_kindArray"
 	case *types.Chan:
