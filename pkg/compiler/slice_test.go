@@ -14,9 +14,10 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		// a := [3]int64{1,2,3}
 		// should call, a = __lua2go(_gi_NewArray({1,2,3}, "int64", 3))
 		code := `
+   import "gitesting"
    a := [3]int64{1,2,3}
    a[0]--
-   sum := sumArrayInt64(a)
+   sum := gitesting.SumArrayInt64(a)
 `
 
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -31,7 +32,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 			`
 		a = __lua2go(_gi_NewArray({1,2,3}, "int64", 3));
         a[0] = (a[0] - (1LL));
-        sum := sumArrayInt64(a)
+        sum := __git_test.SumArrayInt64(a)
 `)
 
 		// and verify that it happens correctly

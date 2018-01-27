@@ -54,14 +54,6 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	})
 	//fmt.Printf("registered __lua2go with luar.\n")
 
-	// for tests only
-	if !cfg.NotTestMode {
-		luar.Register(vm, "fmt", luar.Map{
-			"SumArrayInt64": sumArrayInt64,
-		})
-		fmt.Printf("registered test-only functions with luar.\n")
-	}
-
 	return vm, err
 }
 
