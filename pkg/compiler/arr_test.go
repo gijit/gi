@@ -9,7 +9,7 @@ import (
 
 func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
-	cv.Convey(`Proxies for [3]int64 should be allocated from Lua and passable to a Go native function`, t, func() {
+	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function`, t, func() {
 
 		// a := [3]int64{1,2,3}
 		// should call, a = __lua2go(_gi_NewArray({1,2,3}, "int64", 3))
@@ -28,7 +28,6 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			// 		a = __lua2go(_gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3));
 			`
 		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3);
         sum = gitesting.SumArrayInt64(_gi_clone(a, "arrayType"));
@@ -42,31 +41,6 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 	})
 }
-
-/*
-works:
-gi>    import "gitesting"
-   a := [3]int64{1,3,4}
-   a[0]++
-
-
- registering gitesting.SumArrayInt64!
-import "gitesting"
-gi>
-gi>
-gi> gi> :r
-Raw LuaJIT language mode.
-raw luajit gi> sum = gitesting.SumArrayInt64({10,100,1000});
-
- 0, sumArrayInt64 adding '10' to tot
- 1, sumArrayInt64 adding '100' to tot
- 2, sumArrayInt64 adding '1000' to tot
- sumArrayInt64 is returning tot='1110'
-raw luajit gi> print(sum)
-1110LL
-
-raw luajit gi>
-*/
 
 func Test081CloneOfInt64Array(t *testing.T) {
 
