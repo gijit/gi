@@ -861,11 +861,3 @@ func translateTypeNameToNewOper(typeName string) string {
 	}
 	panic(fmt.Sprintf("what here? for typeName = '%s'", typeName))
 }
-
-// for Test080
-func sumArrayInt64(a [3]int64) (tot int64) {
-	for _, v := range a {
-		tot += v
-	}
-	return
-}

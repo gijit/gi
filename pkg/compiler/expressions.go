@@ -350,39 +350,41 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) *expr
 		}
 
 		if basic, isBasic := t.Underlying().(*types.Basic); isBasic && isNumeric(basic) {
-			if is64Bit(basic) {
-				switch e.Op {
-				case token.MUL:
-					return c.formatExpr("$mul64(%e, %e)", e.X, e.Y)
-				case token.QUO:
-					return c.formatExpr("$div64(%e, %e, false)", e.X, e.Y)
-				case token.REM:
-					return c.formatExpr("$div64(%e, %e, true)", e.X, e.Y)
-				case token.SHL:
-					return c.formatExpr("$shiftLeft64(%e, %f)", e.X, e.Y)
-				case token.SHR:
-					return c.formatExpr("$shiftRight%s(%e, %f)", toJavaScriptType(basic), e.X, e.Y)
-				case token.EQL:
-					return c.formatExpr("(%1h == %2h && %1l == %2l)", e.X, e.Y)
-				case token.LSS:
-					return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l < %2l))", e.X, e.Y)
-				case token.LEQ:
-					return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l <= %2l))", e.X, e.Y)
-				case token.GTR:
-					return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l > %2l))", e.X, e.Y)
-				case token.GEQ:
-					return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l >= %2l))", e.X, e.Y)
-				case token.ADD, token.SUB:
-					return c.formatExpr("new %3s(%1h %4t %2h, %1l %4t %2l)", e.X, e.Y, c.typeName(t), e.Op)
-				case token.AND, token.OR, token.XOR:
-					return c.formatExpr("new %3s(%1h %4t %2h, (%1l %4t %2l) >>> 0)", e.X, e.Y, c.typeName(t), e.Op)
-				case token.AND_NOT:
-					return c.formatExpr("new %3s(%1h & ~%2h, (%1l & ~%2l) >>> 0)", e.X, e.Y, c.typeName(t))
-				default:
-					panic(e.Op)
-				}
-			}
-
+			/* jea: all this javascript specialization for 64-bit numbers in a 32-bit env
+			               shouldn't be needed anymore.
+						if is64Bit(basic) {
+							switch e.Op {
+							case token.MUL:
+								return c.formatExpr("$mul64(%e, %e)", e.X, e.Y)
+							case token.QUO:
+								return c.formatExpr("$div64(%e, %e, false)", e.X, e.Y)
+							case token.REM:
+								return c.formatExpr("$div64(%e, %e, true)", e.X, e.Y)
+							case token.SHL:
+								return c.formatExpr("$shiftLeft64(%e, %f)", e.X, e.Y)
+							case token.SHR:
+								return c.formatExpr("$shiftRight%s(%e, %f)", toJavaScriptType(basic), e.X, e.Y)
+							case token.EQL:
+								return c.formatExpr("(%1h == %2h && %1l == %2l)", e.X, e.Y)
+							case token.LSS:
+								return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l < %2l))", e.X, e.Y)
+							case token.LEQ:
+								return c.formatExpr("(%1h < %2h || (%1h == %2h && %1l <= %2l))", e.X, e.Y)
+							case token.GTR:
+								return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l > %2l))", e.X, e.Y)
+							case token.GEQ:
+								return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l >= %2l))", e.X, e.Y)
+							case token.ADD, token.SUB:
+								return c.formatExpr("new %3s(%1h %4t %2h, %1l %4t %2l)", e.X, e.Y, c.typeName(t), e.Op)
+							case token.AND, token.OR, token.XOR:
+								return c.formatExpr("new %3s(%1h %4t %2h, (%1l %4t %2l) >>> 0)", e.X, e.Y, c.typeName(t), e.Op)
+							case token.AND_NOT:
+								return c.formatExpr("new %3s(%1h & ~%2h, (%1l & ~%2l) >>> 0)", e.X, e.Y, c.typeName(t))
+							default:
+								panic(e.Op)
+							}
+						}
+			*/
 			if isComplex(basic) {
 				switch e.Op {
 				case token.EQL:
@@ -1139,7 +1141,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			}
 		case isFloat(t):
 			if t.Kind() == types.Float32 && exprType.Underlying().(*types.Basic).Kind() == types.Float64 {
-				return c.formatExpr("$fround(%e)", expr)
+				return c.formatExpr("$fround(%e)", expr) // fround returns the nearest 32-bit single precision float representation of a Number.
 			}
 			return c.formatExpr("%f", expr)
 		case isComplex(t):
@@ -1350,21 +1352,33 @@ func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
 func (c *funcContext) fixNumber(value *expression, basic *types.Basic) *expression {
 	switch basic.Kind() {
 	case types.Int8:
-		return c.formatParenExpr("%s << 24 >> 24", value)
+		// jea
+		fallthrough
+		//return c.formatParenExpr("%s << 24 >> 24", value)
 	case types.Uint8:
-		return c.formatParenExpr("%s << 24 >>> 24", value)
+		// jea
+		fallthrough
+		//return c.formatParenExpr("%s << 24 >>> 24", value)
 	case types.Int16:
-		return c.formatParenExpr("%s << 16 >> 16", value)
+		// jea
+		fallthrough
+		//return c.formatParenExpr("%s << 16 >> 16", value)
 	case types.Uint16:
-		return c.formatParenExpr("%s << 16 >>> 16", value)
-	case types.Int32, types.Int, types.UntypedInt:
+		// jea
+		fallthrough
+		//return c.formatParenExpr("%s << 16 >>> 16", value)
+	case types.Uint32, types.Uint, types.Uintptr:
+		// jea
+		fallthrough
+		//return c.formatParenExpr("%s >>> 0", value)
+	case types.Int32, types.Int, types.Int64, types.UntypedInt:
 		// jea
 		//return c.formatParenExpr("%s >> 0", value)
 		return c.formatParenExpr("%s", value)
-	case types.Uint32, types.Uint, types.Uintptr:
-		return c.formatParenExpr("%s >>> 0", value)
 	case types.Float32:
-		return c.formatExpr("$fround(%s)", value)
+		// jea:
+		return value
+		//return c.formatExpr("$fround(%s)", value) // // fround returns the nearest 32-bit single precision float representation of a Number.
 	case types.Float64:
 		return value
 	default:
@@ -1408,8 +1422,8 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	defer func() {
 		if xprn != nil {
 			pp("expressions.go:1352, formatExprInternal('%s') returning '%s'", format, xprn.str)
-			if xprn.str == "Sprintf" {
-				panic("where Sprintf -- why not fmt too?")
+			if xprn.str == `(x = a[0], x = 1LL, new int64(x.$high - x.$high, x.$low - x.$low))` {
+				panic("where a[0]-- ?")
 			}
 		} else {
 			pp("expressions.go:1357, formatExprInternal('%s') returning nil", format)

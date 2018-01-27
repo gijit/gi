@@ -20,6 +20,7 @@ func (cfg *GIConfig) LuajitMain() {
 	vmCfg := compiler.NewVmConfig()
 	vmCfg.PreludePath = cfg.PreludePath
 	vmCfg.Quiet = cfg.Quiet
+	vmCfg.NotTestMode = true
 	vm, err := compiler.NewLuaVmWithPrelude(vmCfg)
 	panicOn(err)
 	defer vm.Close()

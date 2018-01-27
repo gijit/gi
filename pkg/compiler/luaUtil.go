@@ -14,6 +14,7 @@ import (
 type VmConfig struct {
 	PreludePath string
 	Quiet       bool
+	NotTestMode bool // set to true for production, not running under test.
 }
 
 func NewVmConfig() *VmConfig {
@@ -55,28 +56,20 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		print(s)
 		15LL
 	*/
-	sumSliceOfInts := func(a []interface{}) (tot int) {
-		for _, v := range a {
-			switch y := v.(type) {
-			case int:
-				tot += y
-			case int64:
-				tot += int(y)
-			case float64:
-				tot += int(y)
-			default:
-				panic(fmt.Sprintf("unknown type '%T'", v))
-			}
-		}
-		return
-	}
 
 	luar.Register(vm, "", luar.Map{
-		"__lua2go":      lua2GoProxy,
-		"sumSlice":      sumSliceOfInts,
-		"sumArrayInt64": sumArrayInt64,
+		"__lua2go": lua2GoProxy,
 	})
-	fmt.Printf("registered __lua2go\n")
+	//fmt.Printf("registered __lua2go with luar.\n")
+
+	// for tests only
+	if !cfg.NotTestMode {
+		luar.Register(vm, "", luar.Map{
+			"sumSlice":      sumSliceOfInts,
+			"sumArrayInt64": sumArrayInt64,
+		})
+		fmt.Printf("registered test-only functions with luar.\n")
+	}
 
 	return vm, err
 }
@@ -298,4 +291,28 @@ func LuaMustRune(vm *golua.State, varname string, expect rune) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
 	}
+}
+
+func sumSliceOfInts(a []interface{}) (tot int) {
+	for _, v := range a {
+		switch y := v.(type) {
+		case int:
+			tot += y
+		case int64:
+			tot += int(y)
+		case float64:
+			tot += int(y)
+		default:
+			panic(fmt.Sprintf("unknown type '%T'", v))
+		}
+	}
+	return
+}
+
+// for Test080
+func sumArrayInt64(a [3]int64) (tot int64) {
+	for _, v := range a {
+		tot += v
+	}
+	return
 }
