@@ -29,10 +29,11 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			// 		a = __lua2go(_gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3));
 			`
-		a = __lua2go(_gi_NewArray({1,2,3}, "int64", 3));
+		a = _gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3);
         a[0] = (a[0] - (1LL));
-        sum := __git_test.SumArrayInt64(a)
+        sum = gitesting.SumArrayInt64(__gi_clone(a, "arrayType"));
 `)
 
 		// and verify that it happens correctly

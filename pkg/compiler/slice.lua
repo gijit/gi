@@ -210,3 +210,7 @@ function copySlice(dest, src)
    end
    error "not done, use wrapped Go arrays/slices"
 end
+
+function __gi_clone(a, typ)
+   return a
+end

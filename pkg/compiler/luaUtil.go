@@ -294,8 +294,10 @@ func sumSliceOfInts(a []interface{}) (tot int) {
 
 // for Test080
 func sumArrayInt64(a [3]int64) (tot int64) {
-	for _, v := range a {
+	for i, v := range a {
+		fmt.Printf("\n %v, sumArrayInt64 adding '%v' to tot", i, v)
 		tot += v
 	}
+	fmt.Printf("\n sumArrayInt64 is returning tot='%v'", tot)
 	return
 }
