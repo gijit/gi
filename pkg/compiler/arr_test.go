@@ -74,7 +74,7 @@ func Test081CloneOfInt64Array(t *testing.T) {
 
 		code := `
    a := [3]int64{1,3,4}
-   b := __giClone(a)
+   b := a
    c := b[2]
 `
 
@@ -90,15 +90,14 @@ func Test081CloneOfInt64Array(t *testing.T) {
 			// 		a = __lua2go(_gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3));
 			`
 		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3);
-        a[0] = (a[0] + (1LL));
-        sum = gitesting.SumArrayInt64(_gi_clone(a, "arrayType"));
+        b = _gi_clone(a, "arrayType");
+        c = b[2];
 `)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		// check for exception
-		LuaMustInt64(vm, "sum", 9)
+		LuaMustInt64(vm, "c", 4)
 
 	})
 }
