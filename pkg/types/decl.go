@@ -242,7 +242,7 @@ func underlying(typ Type) Type {
 }
 
 func (n *Named) setUnderlying(typ Type) {
-	pp("4444444 jea debug, decl.go: Named.setUnderlying for typ='%#v'/'%s'", typ, typ)
+	pp("jea debug, decl.go: Named.setUnderlying for typ='%#v'/'%s'", typ, typ)
 	switch x := typ.(type) {
 	case *Named:
 		if x.methods != nil {

@@ -46,14 +46,21 @@ func (c *funcContext) exprToString(expr ast.Expr) string {
 
 // desiredType can be nil. When present, for example, it guides
 // the proper signed vs. unsigned translation of int,int64 types.
-func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) *expression {
+func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn *expression) {
 
 	exprType := c.p.TypeOf(expr)
 	desiredStr := "<nil>"
 	if desiredType != nil {
 		desiredStr = desiredType.String()
 	}
-	pp("TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprType.String(), desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
+	pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprType.String(), desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
+	defer func() {
+		if xprn == nil {
+			pp("444444 returning from gi translateExpr(): '<nil>'")
+		} else {
+			pp("444444 returning from gi translateExpr(): '%s'", xprn.str)
+		}
+	}()
 	if value := c.p.Types[expr].Value; value != nil {
 		basic := exprType.Underlying().(*types.Basic)
 		switch {
@@ -1428,7 +1435,14 @@ func (c *funcContext) formatParenExpr(format string, a ...interface{}) *expressi
 }
 
 func (c *funcContext) formatExprInternal(format string, a []interface{}, parens bool) (xprn *expression) {
-	pp("top of formatExprInternal(), format='%s', parens='%v', len(a)=%v, a='%#v'.", format, parens, len(a), a)
+	pp("111111 top of formatExprInternal(), format='%s', parens='%v', len(a)=%v, a='%#v'.", format, parens, len(a), a)
+	defer func() {
+		if xprn == nil {
+			pp("222222 returning from formatExprInternal, xrpn='<nil>'")
+		} else {
+			pp("222222 returning from formatExprInternal, xrpn='%s'", xprn.str)
+		}
+	}()
 	// jea debug
 	if len(a) == 2 {
 		//panic("where?")
