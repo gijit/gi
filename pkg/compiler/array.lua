@@ -82,7 +82,7 @@ _giPrivateArrayMt = {
    end
 }
 
-function _gi_NewArray(x, typeKind, len)
+function _gi_NewArray(x, typeKind, len, zeroVal)
    --print("_gi_NewArray constructor called with x=",x," and typeKind=", typeKind," len=", len)
    if typeKind == nil or typeKind == "" then
       error("must provide typeKind to _gi_NewArray")
@@ -95,6 +95,15 @@ function _gi_NewArray(x, typeKind, len)
    local proxy = {}
    proxy[_giPrivateRaw] = x
 
+   -- zero any tail that is not set
+   if zeroVal ~= nil then
+      for i =0,len-1 do
+         if x[i] == nil then
+            x[i] = zeroVal
+         end
+      end
+   end
+   
    local props = {len=len, typeKind=typeKind}
    proxy[_giPrivateArrayProps] = props
 

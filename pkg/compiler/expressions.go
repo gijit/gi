@@ -209,17 +209,18 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		switch t := exprType.Underlying().(type) {
 		case *types.Array:
 			elements := collectIndexedElements(t.Elem())
+			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
+
 			if len(elements) == 0 {
 				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)
 				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
-				return c.formatExpr(fmt.Sprintf(`_gi_NewArray({}, "%s", %v)`, typeKind(t.Elem()), t.Len()))
+				return c.formatExpr(fmt.Sprintf(`_gi_NewArray({}, "%s", %v, %s)`, typeKind(t.Elem()), t.Len(), zero))
 			}
-			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
-			return c.formatExpr(fmt.Sprintf(`_gi_NewArray({[0]=%s}, "%s", %v)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len()))
+			return c.formatExpr(fmt.Sprintf(`_gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
 		case *types.Slice:
 			ele := strings.Join(collectIndexedElements(t.Elem()), ", ")
 			if len(ele) > 0 {
