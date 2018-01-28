@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 
+	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"github.com/glycerine/luar"
@@ -70,6 +71,11 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 				//"__giClone":     __giClone,
 			})
 		}
+	default:
+
+		// try this: loading from real GOROOT/GOPATH.
+		// Omit vendor support for now, for sanity.
+		return ic.ActuallyImportPackage(path, "")
 	} // end switch on path
 
 	ic.importContext.Packages[path] = pkg
@@ -181,4 +187,57 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 	return fun
 }
 
-//"__giClone", __giClone,
+// We use the go/importer to load the compiled form of
+// the package. This reads from the
+// last built binary .a lib on disk. Warning: this might
+// be out of date. Later we might read source using the
+// go/loader from tools/x, to be most up to date.
+//
+// dir provides where to import from, to honor vendored packages.
+func (ic *IncrState) ActuallyImportPackage(path, dir string) (*Archive, error) {
+	var pkg *types.Package
+
+	imp := importer.Default()
+	imp2, ok := imp.(types.ImporterFrom)
+	if !ok {
+		panic("importer.ImportFrom not available, vendored packages would be lost")
+	}
+	var mode types.ImportMode
+	var err error
+	pkg, err = imp2.ImportFrom(path, dir, mode)
+
+	if err != nil {
+		return nil, err
+	}
+
+	pkgName := pkg.Name()
+	/*
+				// do the actual assignment of actually callable functions
+				// to names in the luar namespace.
+
+
+					scope := pkg.Scope()
+						nms := scope.Names()
+						m := make(map[string]interface{})
+
+							fmt.Printf("Houston, we have %v names in the '%v' Scope\n", len(nms), path)
+							for _, nm := range nms {
+								obj := scope.Lookup(nm)
+		                         // this isn't right
+								m[nm] = obj
+								pp("in package '%s', registering nm='%s' -> '%#v'", pkgName, nm, obj)
+							}
+							luar.Register(ic.vm, pkgName, m)
+	*/
+
+	res := &Archive{
+		Name:       pkgName,
+		ImportPath: path,
+		pkg:        pkg,
+	}
+
+	// very important, must do this or we won't locate the package!
+	ic.importContext.Packages[path] = pkg
+
+	return res, nil
+}
