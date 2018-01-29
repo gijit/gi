@@ -10,6 +10,35 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 29 update
+-------
+In release v0.7.5, we added the ability for the `gi` REPL
+to import "regexp" and "os". More generally, we added
+the general ability
+to quickly add existing native Go packages to be imported.
+
+The process of making an existing native Go package available
+is called shadowing.
+
+The shadowing process is fairly straightforward.
+
+A new utility, `gen-gijit-shadow-import`
+is run, passing as an argument the package to be shadowed. The utility
+produces a new directory and file under `pkg/compiler/shadow`. Then
+a few lines must be added to `pkg/compiler/import.go` so
+that the package's exported functions will be available
+to the REPL at runtime, after import. The "regexp" and "os"
+shadow packages provide examples of how to do this.
+
+While shadowing (sandboxing) does
+not allow arbitrary imports to be called from the inside
+the `gi` REPL at runtime without prior preparation, this is
+often a useful and desirable security feature. Moreover
+we are able to provide these imports without using Go's
+linux-only DLL loading system, so we remain more cross-
+platform compatible.
+
+
 2018 Jan 27 update
 -------
 In release v0.7.3, arrays are passed to Go native functions, and
