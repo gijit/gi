@@ -108,6 +108,10 @@ func (cfg *GIConfig) LuajitMain() {
 					src = history[num[0]-1]
 					fmt.Printf("%s\n", src)
 				case 2:
+					if num[1] < num[0] {
+						fmt.Printf("bad history request, end before beginning.\n")
+						continue
+					}
 					fmt.Printf("replay history %03d - %03d:\n", num[0], num[1])
 					src = strings.Join(history[num[0]-1:num[1]], "\n") + "\n"
 					fmt.Printf("%s\n", src)
@@ -197,7 +201,7 @@ these special commands:
  :?          show this help (:help does the same)
  :h          show command line history
  :30         replay command number 30 from history
- :1-10       reply commands 1 - 10 from history
+ :1-10       replay commands 1 - 10 inclusive
  ctrl-d to exit
 `)
 			continue
