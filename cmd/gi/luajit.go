@@ -33,7 +33,7 @@ func (cfg *GIConfig) LuajitMain() {
 	var histFn string
 	var histFile *os.File
 	if home != "" {
-		histFn = home + string(os.PathSeparator) + ".gi.hist"
+		histFn = home + string(os.PathSeparator) + ".gijit.hist"
 
 		// open and close once to read back history
 		history, err = readHistory(histFn)
@@ -109,7 +109,7 @@ func (cfg *GIConfig) LuajitMain() {
 					fmt.Printf("%s\n", src)
 				case 2:
 					fmt.Printf("replay history %03d - %03d:\n", num[0], num[1])
-					src = strings.Join(history[num[0]-1:num[1]], "\n")
+					src = strings.Join(history[num[0]-1:num[1]], "\n") + "\n"
 					fmt.Printf("%s\n", src)
 				}
 			}
@@ -269,7 +269,10 @@ these special commands:
 		}
 
 		p("sending use='%v'\n", use)
-		history = append(history, src)
+		srcLines := strings.Split(src, "\n")
+		if len(srcLines) > 0 {
+			history = append(history, srcLines[:len(srcLines)-1]...)
+		}
 		if histFile != nil {
 			fmt.Fprintf(histFile, src)
 			histFile.Sync()
