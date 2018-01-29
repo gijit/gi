@@ -119,7 +119,7 @@ _giPrivateSliceMt = {
     end
  }
 
-function _gi_NewSlice(typeKind, x, beg, endx, cap)
+function _gi_NewSlice(typeKind, x, zeroVal, beg, endx, cap)
    --print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
@@ -169,7 +169,7 @@ function _gi_NewSlice(typeKind, x, beg, endx, cap)
 
    --print("_gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
    
-   local props = {beg=beg, len=len, cap=cap, endx=endx, typeKind=typeKind}
+   local props = {beg=beg, len=len, cap=cap, endx=endx, typeKind=typeKind, zeroVal=zeroVal}
    proxy[_giPrivateSliceProps] = props
 
    setmetatable(proxy, _giPrivateSliceMt)
@@ -218,8 +218,13 @@ function append(t, ...)
    if type(t) ~= 'table' then
       return t
    end
+
+   local props = rawget(t, _giPrivateSliceProps)   
+   local tot = #t + #slc
+
+   local arr = _gi_NewArray({}, props.typeKind, tot, props.zeroVal)
+   local res = _gi_NewSlice(props.typeKind, arr, 0, tot, tot)
    
-   local props = rawget(t, _giPrivateSliceProps)
    if props == nil then
       error "append() called with first value not a slice"
    end

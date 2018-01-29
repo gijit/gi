@@ -224,12 +224,13 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			return c.formatExpr(fmt.Sprintf(`_gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
 		case *types.Slice:
+			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 			ele := strings.Join(collectIndexedElements(t.Elem()), ", ")
 			if len(ele) > 0 {
 				// jea: do 0-based indexing of slices, not 1-based.
 				ele = "[0]=" + ele
 			}
-			return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s})`, c.typeName(t.Elem()), ele))
+			return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
 			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))
@@ -1369,14 +1370,16 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		// currently just a copy of the below
 		et := x.Elem()
 		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
-		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
+		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
+		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
 		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(desiredType), expr)
 	case *types.Array:
 		et := x.Elem()
 		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
+		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
 		// c.typeName(desiredType)
 		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
-		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
+		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr, zero)
 	}
 	return c.translateExpr(expr, nil)
 }

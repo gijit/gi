@@ -149,7 +149,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = gitesting.SummerAny(_gi_UnpackSliceRaw(b));`)
+			`b = _gi_NewSlice("int",{[0]=8LL,9LL}, 0LL); a = gitesting.SummerAny(_gi_UnpackSliceRaw(b));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
