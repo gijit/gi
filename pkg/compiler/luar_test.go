@@ -287,7 +287,7 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a =_gi_NewSlice("int",{[0]=5LL,6LL,4LL});`)
+			`a =_gi_NewSlice("int",{[0]=5LL,6LL,4LL}, 0LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 

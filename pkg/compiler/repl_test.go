@@ -199,7 +199,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);`)
 	})
 }
 
@@ -230,7 +230,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});
+a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -246,7 +246,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL});
+a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);
 hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
@@ -260,7 +260,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("string",{[0]="hi","gophers!"}); _gi_SetRangeCheck(b, 0, "");`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("string",{[0]="hi","gophers!"}, ""); _gi_SetRangeCheck(b, 0, "");`)
 	})
 }
 
@@ -273,7 +273,7 @@ func Test014LenOfSlice(t *testing.T) {
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("string",{[0]="hi","gophers!"}); bb = #x;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("string",{[0]="hi","gophers!"},""); bb = #x;`)
 	})
 }
 
@@ -387,7 +387,7 @@ func Test018ReadFromSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
-		expect := []string{`x=_gi_NewSlice("int", {[0]=3LL, 4LL});`, `x3 = _gi_GetRangeCheck(x,0);`}
+		expect := []string{`x=_gi_NewSlice("int", {[0]=3LL, 4LL},0LL);`, `x3 = _gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -998,7 +998,7 @@ func Test042LenAtRepl(t *testing.T) {
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
 		code := `a := []int{3}; len(a)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3LL}); print(#a);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3LL}, 0LL); print(#a);`)
 	})
 }
 
