@@ -249,7 +249,7 @@ function appendSlice(...)
    return append(...)
 end
 
-function copySlice(dest, src)
+function __copySlice(dest, src)
    local dlen = #dest
    local slen = #src
    local len = dlen
@@ -259,7 +259,10 @@ function copySlice(dest, src)
    if len == 0 then
       return 0
    end
-   error "not done, use wrapped Go arrays/slices"
+   for i = 0 len-1 do
+      dest[i] = src[i]
+   end
+   return len
 end
 
 function __gi_clone(a, typ)
@@ -292,7 +295,7 @@ function __subslice(a, beg, endx)
 end
 
 function __gi_makeSlice(typeKind, zeroVal, len, cap)
-   print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
+   --print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
    raw = {}
    cap = cap or len
    for i = 0, cap-1 do

@@ -1102,7 +1102,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		if basic, isBasic := c.p.TypeOf(args[1]).Underlying().(*types.Basic); isBasic && isString(basic) {
 			return c.formatExpr("$copyString(%e, %e)", args[0], args[1])
 		}
-		return c.formatExpr("copySlice(%e, %e)", args[0], args[1])
+		return c.formatExpr("__copySlice(%e, %e)", args[0], args[1])
 	case "print", "println":
 		return c.formatExpr("print(%s)", strings.Join(c.translateExprSlice(args, nil), ", "))
 	case "complex":
