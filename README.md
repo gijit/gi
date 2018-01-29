@@ -12,7 +12,7 @@ binary is called simply `gi`, as it is a
 status
 ------
 
-2018 Jan 29 update, part deux.
+2018 Jan 29 update
 -------
 In release v0.7.7, make applied to slices works. For example,
 `make([]int, 4)` will create a new length four array filled
@@ -20,7 +20,7 @@ with the zero value for `int`, and then take a slice of that array.
 
 In release v0.7.6, taking a slice of an array works.
 
-2018 Jan 29 update
+2018 Jan 28 update
 -------
 In release v0.7.5, we added the ability for the `gi` REPL
 to import "regexp" and "os". More generally, we added
