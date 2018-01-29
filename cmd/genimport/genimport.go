@@ -58,7 +58,10 @@ func init() {
 			continue
 		}
 		switch obj.Type().(type) {
-		case *types.Signature:
+		case *types.Tuple:
+			continue
+		default:
+			//case *types.Signature:
 			pp("in package '%s', registering nm='%s' -> '%#v'", pkgName, nm, obj)
 			fmt.Fprintf(o, `    Pkg["%s"] = %s.%s
 `, nm, pkgName, nm)
