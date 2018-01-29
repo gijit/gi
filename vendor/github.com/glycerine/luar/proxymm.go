@@ -352,10 +352,13 @@ func slice__index(L *lua.State) int {
 	}
 	if L.IsNumber(2) {
 		idx := L.ToInteger(2)
-		if idx < 1 || idx > v.Len() {
+		// jea: change to 0-based instead of 1-based indexing.
+		//if idx < 1 || idx > v.Len() {
+		if idx < 0 || idx >= v.Len() {
 			L.RaiseError("slice/array get: index out of range")
 		}
-		v := v.Index(idx - 1)
+		//v := v.Index(idx - 1)
+		v := v.Index(idx)
 		GoToLuaProxy(L, v)
 	} else if L.IsString(2) {
 		name := L.ToString(2)
