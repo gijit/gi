@@ -4,9 +4,6 @@ import (
 	"github.com/glycerine/liner"
 )
 
-// filled at init time based on BuiltinFunctions
-var completion_keywords = []string{}
-
 type Prompter struct {
 	prompt   string
 	prompter *liner.State
@@ -33,7 +30,6 @@ func NewPrompter(prompt string) *Prompter {
 	p.rawMode = rawMode
 
 	p.prompter.SetCtrlCAborts(false)
-	//p.prompter.SetWordCompleter(liner.WordCompleter(MyWordCompleter))
 
 	return p
 }

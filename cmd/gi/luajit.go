@@ -56,16 +56,31 @@ func (cfg *GIConfig) LuajitMain() {
 	goPrompt := "gi> "
 	goMorePrompt := ">>>    "
 	luaPrompt := "raw luajit gi> "
+
+	var prompter *Prompter
+	if !cfg.NoLiner {
+		prompter = NewPrompter(goPrompt)
+		for i := range history {
+			prompter.prompter.AppendHistory(history[i])
+		}
+	}
+
 	prompt := goPrompt
 	if cfg.RawLua {
 		prompt = luaPrompt
 	}
 	prevSrc := ""
+	var prompterLine string
 	var by []byte
 
 	for {
-		fmt.Printf(prompt)
-		by, err = reader.ReadBytes('\n')
+		if cfg.NoLiner {
+			fmt.Printf(prompt)
+			by, err = reader.ReadBytes('\n')
+		} else {
+			prompterLine, err = prompter.Getline(&prompt)
+			by = []byte(prompterLine)
+		}
 		if err == io.EOF {
 			if len(by) > 0 {
 				fmt.Printf("\n on EOF, but len(by) = %v, by='%s'", len(by), string(by))
