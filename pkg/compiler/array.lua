@@ -50,11 +50,11 @@ _giPrivateArrayMt = {
       -- when iterating, which happens automatically if we
       -- iterate on r, the inside private data, and not on the proxy.
       quo = ""
-      if len > 0 and type(r[0]) == "string" then
+      if len > 0 and type(raw[0]) == "string" then
          quo = '"'
       end
       
-      for i, _ in pairs(r) do
+      for i, _ in pairs(raw) do
          s = s .. "["..tostring(i).."]" .. "= " .. quo..tostring(raw[i])..quo .. ", "
       end
       return s .. "}"

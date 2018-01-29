@@ -40,10 +40,14 @@ _giPrivateSliceMt = {
     __index = function(t, k)
        print("_gi_Slice: __index called for key", k)       
        local props = rawget(t, _giPrivateSliceProps)
+       local raw = rawget(t, _giPrivateRaw)       
        local beg = props.beg
-       local len = props.len
-       print("_gi_Slice: __index called for key", k, " with beg=", beg, " and len=", len)
-       if k+beg >= len then
+       local rawlen = #raw
+       if raw[0] ~= nil then
+          rawlen = rawlen + 1
+       end
+       print("_gi_Slice: __index called for key", k, " with beg=", beg, " and rawlen=", rawlen)
+       if k+beg >= rawlen then
           print("out of bounds access " .. tostring(k+beg))
           error("out of bounds access " .. tostring(k+beg))
        end
@@ -57,18 +61,18 @@ _giPrivateSliceMt = {
        local props = rawget(t, _giPrivateSliceProps)
        local len = props.len
        local beg = props.beg
-       local s = "slice of length " .. tostring(len) .. " is _giSlice{"
-       local r = rawget(t, _giPrivateRaw)
+       local s = "slice of length " .. tostring(len) .. " with beg=" .. beg .. " with len=" .. len .. " with cap=" .. props.cap ..  " is _giSlice{"
+       local raw = rawget(t, _giPrivateRaw)
 
        -- we want to skip both the _giPrivateRaw and the len
        -- when iterating, which happens automatically if we
-       -- iterate on r, the raw inside private data, and not on the proxy.
+       -- iterate on raw, the raw inside private data, and not on the proxy.
        local quo = ""
-       if len > 0 and type(r[beg]) == "string" then
+       if len > 0 and type(raw[beg]) == "string" then
           quo = '"'
        end
        for i = 0, len-1 do
-          s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(r[beg+i]) .. quo .. ", "
+          s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(raw[beg+i]) .. quo .. ", "
        end
        
        return s .. "}"
