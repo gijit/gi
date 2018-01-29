@@ -50,9 +50,12 @@ _giPrivateSliceMt = {
        -- we want to skip both the _giPrivateRaw and the len
        -- when iterating, which happens automatically if we
        -- iterate on r, the raw inside private data, and not on the proxy.
-
+       local quo = ""
+       if len > 0 and type(r[beg]) == "string" then
+          quo = '"'
+       end
        for i = 0, len-1 do
-          s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[beg+i]) .. ", "
+          s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(r[beg+i]) .. quo .. ", "
        end
        
        return s .. "}"

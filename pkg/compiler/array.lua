@@ -49,7 +49,14 @@ _giPrivateArrayMt = {
       -- we want to skip both the _giPrivateRaw and the len
       -- when iterating, which happens automatically if we
       -- iterate on r, the inside private data, and not on the proxy.
-      for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(raw[i]) .. ", " end
+      quo = ""
+      if len > 0 and type(r[0]) == "string" then
+         quo = '"'
+      end
+      
+      for i, _ in pairs(r) do
+         s = s .. "["..tostring(i).."]" .. "= " .. quo..tostring(raw[i])..quo .. ", "
+      end
       return s .. "}"
    end,
 
