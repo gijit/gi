@@ -63,7 +63,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		} else {
 			exprTypeStr = exprType.String()
 		}
-		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, string(debug.Stack()))
+		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, "") //, string(debug.Stack()))
 	}
 	defer func() {
 		if xprn == nil {
@@ -818,9 +818,18 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				if reservedKeywords[methodName] {
 					methodName += "$"
 				}
+
+				isLuar := typesutil.IsLuarObject(declaredFuncRecv)
+
+				fmt.Printf("\n isLuar='%v', recv = '%#v', declaredFuncRecv = '%#v'\n",
+					isLuar, recv, declaredFuncRecv)
+
+				if isLuar {
+					// jea: then change back to . for Luar cdata methods. imp_test 087
+					return c.translateCall(e, sig, c.formatExpr("%s.%s", recv, methodName))
+				}
 				// jea: change to object:method call for Lua.
 				return c.translateCall(e, sig, c.formatExpr("%s:%s", recv, methodName))
-
 			case types.FieldVal:
 				fields, jsTag := c.translateSelection(sel, f.Pos())
 				if jsTag != "" {

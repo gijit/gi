@@ -9,8 +9,8 @@ import (
 	"github.com/glycerine/luar"
 
 	// shadow: available to REPL
-	"github.com/gijit/gi/pkg/compiler/shadow/shadow_fmt"
-	"github.com/gijit/gi/pkg/compiler/shadow/shadow_regexp"
+	shadow_fmt "github.com/gijit/gi/pkg/compiler/shadow/fmt"
+	shadow_regexp "github.com/gijit/gi/pkg/compiler/shadow/regexp"
 )
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
@@ -66,7 +66,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.
-	return ic.ActuallyImportPackage(path, "")
+	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
+	return ic.ActuallyImportPackage(path, "", shadowPath)
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
@@ -178,7 +179,7 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 // go/loader from tools/x, to be most up to date.
 //
 // dir provides where to import from, to honor vendored packages.
-func (ic *IncrState) ActuallyImportPackage(path, dir string) (*Archive, error) {
+func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
 	var pkg *types.Package
 
 	imp := importer.Default()
@@ -219,6 +220,8 @@ func (ic *IncrState) ActuallyImportPackage(path, dir string) (*Archive, error) {
 		ImportPath: path,
 		pkg:        pkg,
 	}
+
+	pkg.SetPath(shadowPath)
 
 	// very important, must do this or we won't locate the package!
 	ic.importContext.Packages[path] = pkg
