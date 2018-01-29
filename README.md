@@ -10,6 +10,11 @@ ahead-of-time compiled Go code.
 status
 ------
 
+2018 Jan 30 update
+-------
+In release v0.7.6, taking a slice of an array works.
+
+
 2018 Jan 29 update
 -------
 In release v0.7.5, we added the ability for the `gi` REPL
