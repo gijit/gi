@@ -43,7 +43,7 @@ _giPrivateArrayMt = {
    __tostring = function(t)
       local props = rawget(t, _giPrivateArrayProps)
       local len =  props.len
-      local s = "array of length " .. tostring(len) .. " is _gi_Array{"
+      local s = "array <len= " .. tostring(len) .. "> is _gi_Array{"
       --print("t.len is", len)
       local raw = rawget(t, _giPrivateRaw)
       -- we want to skip both the _giPrivateRaw and the len

@@ -10,13 +10,13 @@ _giGo = _giGo or {}
 _giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
-       print("newindex called for key", k, " val=", v)
+       --print("newindex called for key", k, " val=", v)
        local props = rawget(t, _giPrivateSliceProps)
        local len = props.len
        local beg = props.beg
        local raw = rawget(t, _giPrivateRaw)
        
-       print("newindex called for key", k, " with b=", b, " len at start is ", len)
+       --print("newindex called for key", k, " with b=", b, " len at start is ", len)
        if raw[k+beg] == nil then
          if  v ~= nil then
          -- new value
@@ -38,7 +38,7 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-       print("_gi_Slice: __index called for key", k)       
+       --print("_gi_Slice: __index called for key", k)       
        local props = rawget(t, _giPrivateSliceProps)
        local raw = rawget(t, _giPrivateRaw)       
        local beg = props.beg
@@ -46,13 +46,13 @@ _giPrivateSliceMt = {
        if raw[0] ~= nil then
           rawlen = rawlen + 1
        end
-       print("_gi_Slice: __index called for key", k, " with beg=", beg, " and rawlen=", rawlen)
+       --print("_gi_Slice: __index called for key", k, " with beg=", beg, " and rawlen=", rawlen)
        if k+beg >= rawlen then
-          print("out of bounds access " .. tostring(k+beg))
+          --print("out of bounds access " .. tostring(k+beg))
           error("out of bounds access " .. tostring(k+beg))
        end
        local res = rawget(t, _giPrivateRaw)[beg+k]
-       print("_gi_Slice __index returing res = ", res)
+       --print("_gi_Slice __index returing res = ", res)
        return res
     end,
 
@@ -61,7 +61,7 @@ _giPrivateSliceMt = {
        local props = rawget(t, _giPrivateSliceProps)
        local len = props.len
        local beg = props.beg
-       local s = "slice of length " .. tostring(len) .. " with beg=" .. beg .. " with len=" .. len .. " with cap=" .. props.cap ..  " is _giSlice{"
+       local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. props.cap ..  "> is _giSlice{"
        local raw = rawget(t, _giPrivateRaw)
 
        -- we want to skip both the _giPrivateRaw and the len
@@ -84,7 +84,7 @@ _giPrivateSliceMt = {
        -- in the LuaJIT build. So use it!
        --
        local len = rawget(t, _giPrivateSliceProps)["len"]
-       print("len called for _gi_Slice, returning ", len)
+       --print("len called for _gi_Slice, returning ", len)
        return len
     end,
 
@@ -120,7 +120,7 @@ _giPrivateSliceMt = {
  }
 
 function _gi_NewSlice(typeKind, x, beg, endx, cap)
-   print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
+   --print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
    local arrProp = rawget(x, _giPrivateArrayProps)
@@ -268,7 +268,7 @@ function appendSlice(...)
 end
 
 function __copySlice(dest, src)
-   print("__copySlice called")
+   --print("__copySlice called")
    local propsDest = rawget(dest, _giPrivateSliceProps)
    local propsSrc  = rawget(src,  _giPrivateSliceProps)
    if propsDest == nil then
@@ -295,17 +295,17 @@ function __copySlice(dest, src)
    
    -- copy direction allows for overlap   
    if begSrc > begDest then
-      print("src.beg > dest.beg, copying forward, step=+1")
+      --print("src.beg > dest.beg, copying forward, step=+1")
       for i = 0, len-1 do
          rawset(rawDest, i+begDest, rawget(rawSrc, i+begSrc))
       end
    else
-      print("src.beg <= dest.beg, copying backward, step=-1")
+      --print("src.beg <= dest.beg, copying backward, step=-1")
       for i = len-1, 0, -1 do
          rawset(rawDest, i+begDest,  rawget(rawSrc, i+begSrc))
       end
    end
-   print("done with __copySlice, returning len=", len)
+   --print("done with __copySlice, returning len=", len)
    return int(len)
 end
 
