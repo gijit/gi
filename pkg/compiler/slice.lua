@@ -95,13 +95,16 @@ function _gi_NewSlice(typeKind, x)
 
    local arrProp = x[_giPrivateArrayProps]
    local slcProp = x[_giPrivateSliceProps]
-   
+
+   local raw = x
    if arrProp ~= nil then
       print("_gi_NewSlice sees x is an array")
    elseif slcProp ~= nil then
       print("_gi_NewSlice sees x is a slice")
+      raw = x[_giPrivateRaw]
    else
       print("_gi_NewSlice sees x is not an array or slice. Hmm?")      
+      raw = x[_giPrivateRaw]
    end
    
    -- get initial count
@@ -112,7 +115,7 @@ function _gi_NewSlice(typeKind, x)
    end
    
    local proxy = {}
-   proxy[_giPrivateRaw] = x
+   proxy[_giPrivateRaw] = raw
    proxy["Typeof"]="_gi_Slice"
    proxy[_giGo] = __lua2go(x)
    

@@ -308,7 +308,8 @@ these special commands:
 			use = translation
 
 		} else {
-			use += "\n"
+			// :r/raw mode
+			use = src
 		}
 
 		p("sending use='%v'\n", use)
