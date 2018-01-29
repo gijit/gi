@@ -106,9 +106,22 @@ func getHistoryRange(lows string, history []string) (slc []int, err error) {
 	}
 	num := make([]int, len(parts))
 	for i := range parts {
-		num[i], err = strconv.Atoi(strings.TrimSpace(parts[i]))
-		if err != nil {
-			return nil, fmt.Errorf("bad history request, could not convert to integer.\n")
+		s := strings.TrimSpace(parts[i])
+		if s == "" {
+			// allow ":rm -4" to indicate "from the beginning through 4"
+			// and ":rm 4-" to mean "from 4 until the end".
+
+			if i == 0 {
+				num[i] = 1
+			} else {
+				num[i] = len(history)
+			}
+		} else {
+			num[i], err = strconv.Atoi(s)
+			if err != nil {
+				return nil, fmt.Errorf("bad history request, could "+
+					"not convert '%v' to integer.\n", s)
+			}
 		}
 		if num[i] < 1 || num[i] > len(history) {
 			return nil, fmt.Errorf("bad history request, out of range.\n")

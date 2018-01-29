@@ -87,7 +87,7 @@ func (cfg *GIConfig) LuajitMain() {
 				// likely the start of a lua label for a goto, not a special : command.
 				goto notColonCmd
 			}
-			if low[1] >= '0' && low[1] <= '9' {
+			if low[1] == '-' || (low[1] >= '0' && low[1] <= '9') {
 				// replay history, one command, or a range.
 
 				// check for range
