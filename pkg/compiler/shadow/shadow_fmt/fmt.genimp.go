@@ -1,4 +1,4 @@
-package compiler
+package shadow_fmt
 
 import "fmt"
 

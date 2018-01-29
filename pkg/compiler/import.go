@@ -7,6 +7,10 @@ import (
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"github.com/glycerine/luar"
+
+	// shadow: available to REPL
+	"github.com/gijit/gi/pkg/compiler/shadow/shadow_fmt"
+	"github.com/gijit/gi/pkg/compiler/shadow/shadow_regexp"
 )
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
@@ -18,31 +22,6 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	var pkg *types.Package
 
 	switch path {
-	case "fmt":
-		pkg = types.NewPackage("fmt", "fmt")
-		pkg.MarkComplete()
-		//scope := pkg.Scope()
-
-		// These scope.Insert() calls let us get
-		// past the Go type checker.
-
-		// As it should, scope.Insert(fun)
-		// gets rid of 'Sprintf not declared by package fmt'
-		// from types/call.go:302.
-		//fun := getFunForSprintf(pkg)
-		//scope.Insert(fun)
-		//scope.Insert(getFunForPrintf(pkg))
-
-		// implementation via luar-based reflection
-
-		// fmt
-		luar.Register(ic.vm, "fmt", Pkg) // Pkg from fmt.genimp.go
-		for i := range Pkg {
-			fmt.Printf("registered '%s'\n", i)
-		}
-		// make the type declarations available
-		return ic.ActuallyImportPackage(path, "")
-
 	case "gitesting":
 		// test only:
 		if !ic.vmCfg.NotTestMode {
@@ -70,19 +49,24 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 				"SummerAny": SummerAny,
 				"Incr":      Incr,
 			})
+
+			ic.importContext.Packages[path] = pkg
+			return &Archive{
+				ImportPath: path,
+				pkg:        pkg,
+			}, nil
 		}
-	default:
 
-		// try this: loading from real GOROOT/GOPATH.
-		// Omit vendor support for now, for sanity.
-		return ic.ActuallyImportPackage(path, "")
-	} // end switch on path
+		// gen-gijit-import outputs to pkg/compiler/shadow/...
+	case "fmt":
+		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
+	case "regexp":
+		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
+	}
 
-	ic.importContext.Packages[path] = pkg
-	return &Archive{
-		ImportPath: path,
-		pkg:        pkg,
-	}, nil
+	// loading from real GOROOT/GOPATH.
+	// Omit vendor support for now, for sanity.
+	return ic.ActuallyImportPackage(path, "")
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
