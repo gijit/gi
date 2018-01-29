@@ -251,3 +251,42 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 
 	})
 }
+
+func Test087ShadowRegexp(t *testing.T) {
+
+	cv.Convey(`import "regexp" and then using it should function via the shadow_regexp import system`, t, func() {
+
+		src := `import "regexp"
+    a := regexp.MustCompile("llo")
+	loc := a.FindStringIndex("hello")
+	lenloc := len(loc)
+	a0 := loc[0]
+	a1 := loc[1]
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		// need the side effect of loading `import "fmt"` package.
+		translation := inc.Tr([]byte(src))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		// gotta translate to a.FindStringIndex(), not a:FindStringIndex()
+		// because FindStringIndex doesn't take a first 'self' parameter.
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+	a = regexp.MustCompile("llo");
+	loc = a.FindStringIndex("hello");
+	lenloc =  #loc;
+	a0 = _gi_GetRangeCheck(loc, 0);
+	a1 = _gi_GetRangeCheck(loc, 1);
+`)
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustInt64(vm, "a0", 2)
+		LuaMustInt64(vm, "a1", 5)
+	})
+}
