@@ -34,11 +34,12 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-      --print("index called for key", k)
+       --print("_gi_Slice: index called for key", k)
       return t[_giPrivateRaw][k]
     end,
 
     __tostring = function(t)
+       --print("_gi_Slice: tostring called")
        local len = t[_giPrivateSliceProps]["len"]
        local s = "slice of length " .. tostring(len) .. " is _giSlice{"
        local r = t[_giPrivateRaw]
@@ -54,7 +55,7 @@ _giPrivateSliceMt = {
        -- the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used
        -- in the LuaJIT build. So use it!
        --
-       -- print("len called for _gi_Slice")
+       print("len called for _gi_Slice")
        return t[_giPrivateSliceProps]["len"]
     end,
 
@@ -99,12 +100,12 @@ function _gi_NewSlice(typeKind, x)
    local raw = x
    if arrProp ~= nil then
       print("_gi_NewSlice sees x is an array")
+      raw = x[_giPrivateRaw]
    elseif slcProp ~= nil then
       print("_gi_NewSlice sees x is a slice")
       raw = x[_giPrivateRaw]
    else
       print("_gi_NewSlice sees x is not an array or slice. Hmm?")      
-      raw = x[_giPrivateRaw]
    end
    
    -- get initial count
@@ -113,16 +114,20 @@ function _gi_NewSlice(typeKind, x)
    if x[0] ~= nil then
       len = len + 1
    end
+   --print("len is ", len)
    
    local proxy = {}
    proxy[_giPrivateRaw] = raw
    proxy["Typeof"]="_gi_Slice"
-   proxy[_giGo] = __lua2go(x)
-   
+
+   -- this next is crashing
+   --proxy[_giGo] = __lua2go(x)
+
    local props = {beg=0, len=len, cap=len, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
 
    setmetatable(proxy, _giPrivateSliceMt)
+
    return proxy
 end;
 
