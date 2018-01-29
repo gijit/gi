@@ -14,6 +14,11 @@ status
 
 2018 Jan 29 update
 -------
+What is left to do: pointers, interfaces. go-routines
+and channels. The channels and go-routines will just wrap the
+existing go runtime functionality, using reflection
+and Luar.
+
 Release v0.8.0 has command line history available with
 the up-arrow/down-arrow. This is a nice supplement to
 the the `:h` history listing and re-play facility.
@@ -333,8 +338,7 @@ Functions, closures and slices, as well as
 basic expressions compile and run. For-loops
 including for-range loops compile and run.
 
-Much is left to do: maps, structs, switch,
-interfaces, imports. If this is exciting to
+If this is exciting to
 you, contribute! Existing TODOs/open issues and polite improvement
 suggestions can be found here
 https://github.com/gijit/gi/issues
