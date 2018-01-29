@@ -18,7 +18,6 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	// `import "fmt"` means that path == "fmt", for example.
 	pp("GiImportFunc called with path = '%s'", path)
 
-	//panic("where import?")
 	var pkg *types.Package
 
 	switch path {
@@ -62,6 +61,9 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
 	case "regexp":
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
+	default:
+		// need to run gen-gijit-import
+		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-import on the package, add a case and import above, and recompile gijit.", path)
 	}
 
 	// loading from real GOROOT/GOPATH.
@@ -196,24 +198,6 @@ func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archi
 	}
 
 	pkgName := pkg.Name()
-	/*
-				// do the actual assignment of actually callable functions
-				// to names in the luar namespace.
-
-
-					scope := pkg.Scope()
-						nms := scope.Names()
-						m := make(map[string]interface{})
-
-							fmt.Printf("Houston, we have %v names in the '%v' Scope\n", len(nms), path)
-							for _, nm := range nms {
-								obj := scope.Lookup(nm)
-		                         // this isn't right
-								m[nm] = obj
-								pp("in package '%s', registering nm='%s' -> '%#v'", pkgName, nm, obj)
-							}
-							luar.Register(ic.vm, pkgName, m)
-	*/
 
 	res := &Archive{
 		Name:       pkgName,
