@@ -14,7 +14,7 @@ status
 
 2018 Jan 29 update
 -------
-What is left to do: pointers, interfaces. go-routines
+What is left to do: pointers, interfaces, go-routines
 and channels. The channels and go-routines will just wrap the
 existing go runtime functionality, using reflection
 and Luar.
