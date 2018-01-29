@@ -38,7 +38,7 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-       --print("_gi_Slice: __index called for key", k)       
+       print("_gi_Slice: __index called for key", k)       
        local props = rawget(t, _giPrivateSliceProps)
        local raw = rawget(t, _giPrivateRaw)       
        local beg = props.beg
@@ -214,17 +214,17 @@ end
 -- append slice, as raw lua array, indexed from 1.
 function append(t, ...)
    slc = {...}
-   --print("append running")
+   print("append running, t=", tostring(t), " and slc = ", ts(slc))
    if type(t) ~= 'table' then
       return t
    end
    
-   local props = t[_giPrivateSliceProps]
+   local props = rawget(t, _giPrivateSliceProps)
    if props == nil then
       error "append() called with first value not a slice"
    end
-   local len = props["len"]
-   local raw = t[_giPrivateRaw]
+   local len = props.len
+   local raw = rawget(t, _giPrivateRaw)
    if raw == nil then
       error "could not get raw table from slice, internal error?"
    end
@@ -236,28 +236,31 @@ function append(t, ...)
    local raw2 = {}
    if len > 0 then
       raw2[0] = raw[0]
-      --print("copied raw[0] ==", raw[0])
+      print("copied raw[0] ==", raw[0])
    end
    for i,v in ipairs(raw) do
       raw2[i] = v
-      --print("copied raw2[i=",i,"] ==", v)
+      print("copied raw2[i=",i,"] ==", v)
    end
    
-   --print("append at slc addition")
+   print("append at slc addition")
    local k = 0
    for i,v in ipairs(slc) do
-      --print("append: i=",i," next slc element is at len+i-1=",len+i-1,"  is v=",v)
+      print("append: i=",i," next slc element is at len+i-1=",len+i-1,"  is v=",v)
       raw2[len+i-1]=v
       k=k+1
    end
    len=len+k
-
+   print("done with slice addition, now len=", len)
+   
    proxy[_giPrivateRaw] = raw2
-   proxy[_giGo] = __lua2go(raw2)
-   proxy[_giPrivateSliceProps] = {len=len, typeKind=t.typeKind}
-   
+   --proxy[_giGo] = __lua2go(raw2)
+   proxy[_giPrivateSliceProps] = {beg=0, len=len, cap=len, typeKind=props.typeKind}
+
+   print("ok here")
    setmetatable(proxy, _giPrivateSliceMt)
-   
+
+   print("append returning new slice = ", tostring(proxy))
    return proxy
 
 end
@@ -339,7 +342,7 @@ function __subslice(a, beg, endx)
 end
 
 function __gi_makeSlice(typeKind, zeroVal, len, cap)
-   --print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
+   print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
    raw = {}
    cap = cap or len
    for i = 0, cap-1 do

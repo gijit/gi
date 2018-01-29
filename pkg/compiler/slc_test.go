@@ -137,3 +137,35 @@ func Test090CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
 	})
 
 }
+
+func Test091AppendSlices(t *testing.T) {
+
+	cv.Convey(`Given a:= []int{0,1} and b := []int{2,3}, c := append(a,b...) should give us []int{0,1,2,3} in a slice`, t, func() {
+
+		code := `
+	   a :=   []int{0, 1}
+       b := []int{2, 3}
+	   c := append(a, b...)
+       c0 := c[0]
+       c1 := c[1]
+       c2 := c[2]
+       c3 := c[3]
+	`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "c0", 0)
+		LuaMustInt64(vm, "c1", 1)
+		LuaMustInt64(vm, "c2", 2)
+		LuaMustInt64(vm, "c3", 3)
+	})
+
+}
