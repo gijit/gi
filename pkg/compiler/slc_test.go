@@ -81,3 +81,56 @@ func Test088SlicesFromArrays(t *testing.T) {
 
 	})
 }
+
+func Test089CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
+
+	cv.Convey(`Given two overlapping slices from the same array, copy should not destroy data`, t, func() {
+
+		code := `
+   a :=   []int{0, 1, 2, 3}
+   b := a[1:3]  // 1, 2
+   c := a[2:4]  //    2, 3
+   n := copy(c,b) 
+   a3 := a[3]   // should end up 2, not 1
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "n", 2)
+		LuaMustInt64(vm, "a3", 2)
+	})
+
+	/*
+		cv.Convey(`Reverse direction, given two overlapping slices from the same array, copy should not destroy data`, t, func() {
+
+			code := `
+	   a :=   []int{0, 1, 2, 3}
+	   b := a[1:3]  // 1, 2
+	   c := a[2:4]  //    2, 3
+	   n := copy(b,c)
+	   a0 := a[0]   // should end up 2, not 3
+	`
+			vm, err := NewLuaVmWithPrelude(nil)
+			panicOn(err)
+			defer vm.Close()
+			inc := NewIncrState(vm, nil)
+
+			translation := inc.Tr([]byte(code))
+			fmt.Printf("\n translation='%s'\n", translation)
+
+			// and verify that it happens correctly
+			LuaRunAndReport(vm, string(translation))
+
+			LuaMustInt64(vm, "n", 2)
+			LuaMustInt64(vm, "a0", 2)
+		})
+	*/
+}
