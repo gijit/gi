@@ -102,7 +102,7 @@ _giPrivateSliceMt = {
  }
 
 function _gi_NewSlice(typeKind, x, beg, endx, cap)
-   print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
+   --print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
    local arrProp = rawget(x, _giPrivateArrayProps)
@@ -112,22 +112,22 @@ function _gi_NewSlice(typeKind, x, beg, endx, cap)
    local xlen = #x
    
    if arrProp ~= nil then
-      print("_gi_NewSlice sees x is an array")
+      --print("_gi_NewSlice sees x is an array")
       raw = rawget(x, _giPrivateRaw)
       -- xlen is correct
    elseif slcProp ~= nil then
-      print("_gi_NewSlice sees x is a slice")
+      --print("_gi_NewSlice sees x is a slice")
       raw = rawget(x, _giPrivateRaw)
       -- xlen is correct
    else
-      print("_gi_NewSlice sees x is not an array or slice. Hmm: raw input table")
+      --print("_gi_NewSlice sees x is not an array or slice. Hmm: raw input table")
       -- #x misses the [0] value, if present.
       if x[0] ~= nil then
          xlen = xlen + 1
       end      
    end
    
-   print("_gi_NewSlice: xlen is ", xlen)
+   --print("_gi_NewSlice: xlen is ", xlen)
    
    local proxy = {}
    proxy[_giPrivateRaw] = raw
@@ -144,12 +144,12 @@ function _gi_NewSlice(typeKind, x, beg, endx, cap)
       len = endx - beg 
    end
    
-   print("_gi_NewSlice: beg=", beg, " endx=",endx," len of the new slice is ", len)
+   --print("_gi_NewSlice: beg=", beg, " endx=",endx," len of the new slice is ", len)
    
    -- TODO: cap not really implemented in any way, just stored.
    cap = cap or len
 
-   print("_gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
+   --print("_gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
    
    local props = {beg=beg, len=len, cap=cap, endx=endx, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
@@ -263,25 +263,25 @@ function copySlice(dest, src)
 end
 
 function __gi_clone(a, typ)
-   print("__gi_clone called: not done! TODO: finish me!")
+   error("__gi_clone called: not done! TODO: finish me!")
    return a
 end
 
 function __subslice(a, beg, endx)
-   print("top of __subslice, beg=",beg, " endx=", endx)
+   --print("top of __subslice, beg=",beg, " endx=", endx)
    
    local arrProp = rawget(a, _giPrivateArrayProps)
    local slcProp = rawget(a, _giPrivateSliceProps)
 
    local raw = a
    if arrProp ~= nil then
-      print("__subslice sees x is an array")
+      --print("__subslice sees x is an array")
       raw = rawget(a, _giPrivateRaw)
    elseif slcProp ~= nil then
-      print("__subslice sees x is a slice")
+      --print("__subslice sees x is a slice")
       raw = rawget(a, _giPrivateRaw)
    else
-      print("__subslice sees x is not an array or slice. Hmm?")
+      --print("__subslice sees x is not an array or slice. Hmm?")
       error("must have slice or array in __subslice")
    end
 
@@ -291,3 +291,12 @@ function __subslice(a, beg, endx)
    return _gi_NewSlice(typeKind, raw, beg, endx)
 end
 
+function __gi_makeSlice(typeKind, zeroVal, len, cap)
+   print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
+   raw = {}
+   cap = cap or len
+   for i = 0, cap do
+      raw[i] = zeroVal
+   end
+   return _gi_NewSlice(typeKind, raw, 0, len)
+end
