@@ -49,7 +49,7 @@ func Test086SlicesPointToArrays(t *testing.T) {
 
 func Test088SlicesFromArrays(t *testing.T) {
 
-	cv.Convey(`a slices from an array should work against an array proxy`, t, func() {
+	cv.Convey(`a slices from an array should work standalone, not yet against an array proxy`, t, func() {
 
 		code := `
    a := [2]int64{88,99}
