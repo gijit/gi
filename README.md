@@ -1,18 +1,21 @@
-gi: a go interpreter
+gijit: a go interpreter
 =======
-`gi` aims at being a scalable Go REPL
+`gijit` aims at being a scalable Go REPL
 for doing interactive coding and data analysis.
 It is backed by LuaJIT, a tracing Just-in-time
 compiler for Lua that provides quite
 nice performance, sometimes even beating
-ahead-of-time compiled Go code.
+ahead-of-time compiled Go code. The REPL
+binary is called simply `gi`, as it is a
+"go interpreter".
 
 status
 ------
 
 2018 Jan 30 update
 -------
-In release v0.7.6, taking a slice of an array works.
+In release v0.7.6, taking a slice of an array works
+correctly.
 
 
 2018 Jan 29 update
