@@ -258,10 +258,10 @@ function __subslice(a, beg, endx)
    local raw = a
    if arrProp ~= nil then
       print("__subslice sees x is an array")
-      raw = a[_giPrivateRaw]
+      raw = rawget(a, _giPrivateRaw)
    elseif slcProp ~= nil then
       print("__subslice sees x is a slice")
-      raw = a[_giPrivateRaw]
+      raw = rawget(a, _giPrivateRaw)
    else
       print("__subslice sees x is not an array or slice. Hmm?")
       error("must have slice or array in __subslice")
