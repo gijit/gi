@@ -88,14 +88,15 @@ _giPrivateSliceMt = {
  }
 
 function _gi_NewSlice(typeKind, x)
-   assert(type(x) == 'table', 'bad parameter #1: must be table')
+   assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
    -- get initial count
-   local len = 0
-   for k, v in pairs(x) do
+   local len = #x
+   -- #x misses the [0] value, if present.
+   if x[0] ~= nil then
       len = len + 1
    end
-
+   
    local proxy = {}
    proxy[_giPrivateRaw] = x
    proxy["Typeof"]="_gi_Slice"
@@ -212,6 +213,11 @@ function copySlice(dest, src)
 end
 
 function __gi_clone(a, typ)
+   print("__gi_clone called: not done! TODO: finish me!")
    return a
+end
+
+function __gi_newSliceFromArray(a)
+
 end
 
