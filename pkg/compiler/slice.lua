@@ -324,7 +324,7 @@ function __gi_clone(a, typ)
 end
 
 function __subslice(a, beg, endx)
-   print("top of __subslice, beg=",beg, " endx=", endx)
+   --print("top of __subslice, beg=",beg, " endx=", endx)
    
    local arrProp = rawget(a, _giPrivateArrayProps)
    local slcProp = rawget(a, _giPrivateSliceProps)
@@ -348,7 +348,7 @@ function __subslice(a, beg, endx)
 end
 
 function __gi_makeSlice(typeKind, zeroVal, len, cap)
-   print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
+   --print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
    raw = {}
    cap = cap or len
    for i = 0, cap-1 do
