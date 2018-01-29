@@ -82,18 +82,36 @@ func (cfg *GIConfig) LuajitMain() {
 				goto notColonCmd
 			}
 			if low[1] >= '0' && low[1] <= '9' {
-				num, err := strconv.Atoi(low[1:])
-				if err != nil {
-					fmt.Printf("bad history request, must be digits only after ':'.\n")
+				// check for range
+				parts := strings.Split(low[1:], "-")
+				if len(parts) > 2 {
+					fmt.Printf("bad history range request, more than one '-' found.\n")
 					continue
 				}
-				if num < 1 || num > len(history) {
-					fmt.Printf("bad history request, out of range.\n")
-					continue
+				num := make([]int, len(parts))
+				var err error
+				for i := range parts {
+					num[i], err = strconv.Atoi(parts[i])
+					if err != nil {
+						fmt.Printf("bad history request, could not convert to integer.\n")
+						continue
+					}
+					if num[i] < 1 || num[i] > len(history) {
+						fmt.Printf("bad history request, out of range.\n")
+						continue
+					}
 				}
-				fmt.Printf("replay history %03d:\n", num)
-				src = history[num-1]
-				fmt.Printf("%s\n", src)
+
+				switch len(parts) {
+				case 1:
+					fmt.Printf("replay history %03d:\n", num[0])
+					src = history[num[0]-1]
+					fmt.Printf("%s\n", src)
+				case 2:
+					fmt.Printf("replay history %03d - %03d:\n", num[0], num[1])
+					src = strings.Join(history[num[0]-1:num[1]], "\n")
+					fmt.Printf("%s\n", src)
+				}
 			}
 		}
 		switch low {
@@ -177,8 +195,9 @@ these special commands:
  :noast      stop printing the Go AST
  :do <path>  run dofile(path) on a .lua file
  :?          show this help (:help does the same)
- :h          show command history
+ :h          show command line history
  :30         replay command number 30 from history
+ :1-10       reply commands 1 - 10 from history
  ctrl-d to exit
 `)
 			continue
