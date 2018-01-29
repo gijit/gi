@@ -119,7 +119,7 @@ func Test090CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
 	   b := a[1:3]  // 1, 2
 	   c := a[2:4]  //    2, 3
 	   n := copy(b,c)
-	   a0 := a[0]   // should end up 2, not 3
+	   a1 := a[1]   // should end up 2, not 3
 	`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -133,7 +133,7 @@ func Test090CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "n", 2)
-		LuaMustInt64(vm, "a0", 2)
+		LuaMustInt64(vm, "a1", 2)
 	})
 
 }
