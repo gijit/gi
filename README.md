@@ -12,7 +12,7 @@ binary is called simply `gi`, as it is a
 status
 ------
 
-2018 Jan 30 update
+2018 Jan 29 update, part deux.
 -------
 In release v0.7.7, make applied to slices works. For example,
 `make([]int, 4)` will create a new length four array filled
