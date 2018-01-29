@@ -88,27 +88,16 @@ func (cfg *GIConfig) LuajitMain() {
 				goto notColonCmd
 			}
 			if low[1] >= '0' && low[1] <= '9' {
+				// replay history, one command, or a range.
+
 				// check for range
-				parts := strings.Split(low[1:], "-")
-				if len(parts) > 2 {
-					fmt.Printf("bad history range request, more than one '-' found.\n")
+				num, err := getHistoryRange(low[1:], history)
+				if err != nil {
+					fmt.Printf("%s\n", err.Error())
 					continue
 				}
-				num := make([]int, len(parts))
-				var err error
-				for i := range parts {
-					num[i], err = strconv.Atoi(parts[i])
-					if err != nil {
-						fmt.Printf("bad history request, could not convert to integer.\n")
-						continue
-					}
-					if num[i] < 1 || num[i] > len(history) {
-						fmt.Printf("bad history request, out of range.\n")
-						continue
-					}
-				}
 
-				switch len(parts) {
+				switch len(num) {
 				case 1:
 					fmt.Printf("replay history %03d:\n", num[0])
 					src = history[num[0]-1]
@@ -123,6 +112,13 @@ func (cfg *GIConfig) LuajitMain() {
 					fmt.Printf("%s\n", src)
 				}
 			}
+		}
+		if len(low) > 4 && low[:4] == ":rm " {
+			history, histFile, err = removeCommands(history, histFn, histFile, low[4:])
+			if err != nil {
+				fmt.Printf("%s\n", err.Error())
+			}
+			continue
 		}
 		switch low {
 		case ":ast":
@@ -231,6 +227,7 @@ these special commands:
  :30         replay command number 30 from history
  :1-10       replay commands 1 - 10 inclusive
  :reset      reset and clear history (also :clear)
+ :rm 3-4     remove commands 3-4 from history
  ctrl-d to exit
 `)
 			continue

@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"runtime/debug"
+	"strconv"
 	"strings"
 
 	"github.com/gijit/gi/pkg/compiler"
@@ -51,4 +53,61 @@ func readHistory(histFn string) (history []string, err error) {
 		return splt[:n-1], nil
 	}
 	return splt, nil
+}
+
+func removeCommands(history []string, histFn string, histFile *os.File, rms string) (history2 []string, histFile2 *os.File, err error) {
+
+	history2 = history
+	histFile2 = histFile
+	var num []int
+
+	num, err = getHistoryRange(rms, history)
+	if err != nil {
+		return
+	}
+
+	switch len(num) {
+	case 1:
+		k := num[0]
+		fmt.Printf("remove history %03d.\n", k)
+		fmt.Printf("%s\n", history[k-1])
+		history2 = append(history[:k-1], history[k:]...)
+	case 2:
+		if num[1] < num[0] {
+			err = fmt.Errorf("bad remove history request, end before beginning.")
+			return
+		}
+		fmt.Printf("remove history %03d - %03d.\n", num[0], num[1])
+		history2 = append(history[:num[0]-1], history[num[1]:]...)
+	}
+
+	histFile.Close()
+	os.Remove(histFn)
+	histFile2, err = os.OpenFile(histFn,
+		os.O_WRONLY|os.O_CREATE|os.O_APPEND|os.O_SYNC,
+		0600)
+	panicOn(err)
+	// print new history to file
+	for i := range history2 {
+		fmt.Fprintf(histFile2, "%s\n", history2[i])
+	}
+	return
+}
+
+func getHistoryRange(lows string, history []string) (slc []int, err error) {
+	parts := strings.Split(lows, "-")
+	if len(parts) > 2 {
+		return nil, fmt.Errorf("bad history range request, more than one '-' found.")
+	}
+	num := make([]int, len(parts))
+	for i := range parts {
+		num[i], err = strconv.Atoi(strings.TrimSpace(parts[i]))
+		if err != nil {
+			return nil, fmt.Errorf("bad history request, could not convert to integer.\n")
+		}
+		if num[i] < 1 || num[i] > len(history) {
+			return nil, fmt.Errorf("bad history request, out of range.\n")
+		}
+	}
+	return num, nil
 }
