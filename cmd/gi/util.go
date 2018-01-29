@@ -55,8 +55,10 @@ func readHistory(histFn string) (history []string, err error) {
 	return splt, nil
 }
 
-func removeCommands(history []string, histFn string, histFile *os.File, rms string) (history2 []string, histFile2 *os.File, err error) {
+func removeCommands(history []string, histFn string, histFile *os.File, rms string) (history2 []string, histFile2 *os.File, beg int, end int, err error) {
 
+	beg = -1
+	end = -1
 	history2 = history
 	histFile2 = histFile
 	var num []int
@@ -69,14 +71,17 @@ func removeCommands(history []string, histFn string, histFile *os.File, rms stri
 	switch len(num) {
 	case 1:
 		k := num[0]
+		beg = k - 1
+		end = k - 1
 		fmt.Printf("remove history %03d.\n", k)
-		fmt.Printf("%s\n", history[k-1])
 		history2 = append(history[:k-1], history[k:]...)
 	case 2:
 		if num[1] < num[0] {
 			err = fmt.Errorf("bad remove history request, end before beginning.")
 			return
 		}
+		beg = num[0] - 1
+		end = num[1] - 1
 		fmt.Printf("remove history %03d - %03d.\n", num[0], num[1])
 		history2 = append(history[:num[0]-1], history[num[1]:]...)
 	}

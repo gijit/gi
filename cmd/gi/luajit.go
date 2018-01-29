@@ -114,9 +114,22 @@ func (cfg *GIConfig) LuajitMain() {
 			}
 		}
 		if len(low) > 4 && low[:4] == ":rm " {
-			history, histFile, err = removeCommands(history, histFn, histFile, low[4:])
+			// remove some commands from history
+			var beg, end int
+			history, histFile, beg, end, err = removeCommands(history, histFn, histFile, low[4:])
 			if err != nil {
 				fmt.Printf("%s\n", err.Error())
+			}
+			if end >= 0 {
+				delcount := (end - beg + 1)
+				if end < sessionStartAfter {
+					// deleted history before our session, adjust marker
+					sessionStartAfter -= delcount
+
+				} else if beg < sessionStartAfter {
+					// delete history crosses into our session
+					sessionStartAfter = beg
+				}
 			}
 			continue
 		}
