@@ -70,6 +70,7 @@ we are able to provide these imports without using Go's
 linux-only DLL loading system, so we remain portable/more
 cross-platform compatible.
 
+Interfaces are not yet implemented, and so are not yet imported.
 
 2018 Jan 27 update
 -------
