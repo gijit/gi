@@ -34,7 +34,7 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-       print("_gi_Slice: __index called for key", k)
+       --print("_gi_Slice: __index called for key", k)
        local beg = rawget(t, _giPrivateSliceProps)["beg"]
        return rawget(t, _giPrivateRaw)[beg+k]
     end,
@@ -63,7 +63,7 @@ _giPrivateSliceMt = {
        -- the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used
        -- in the LuaJIT build. So use it!
        --
-       print("len called for _gi_Slice")
+       --print("len called for _gi_Slice")
        return rawget(t, _giPrivateSliceProps)["len"]
     end,
 
@@ -88,13 +88,13 @@ _giPrivateSliceMt = {
     end,
 
     __call = function(t, ...)
-        print("__call() invoked, with ... = ", ...)
-        local oper, key = ...
-        print("oper is", oper)
-        print("key is ", key)
-        if oper == "slice" then
-           print("slice oper called!")
-        end
+       --print("__call() invoked, with ... = ", ...)
+       local oper, key = ...
+       print("oper is", oper)
+       print("key is ", key)
+       if oper == "slice" then
+          print("slice oper called!")
+       end
     end
  }
 
