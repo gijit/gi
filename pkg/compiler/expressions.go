@@ -950,7 +950,6 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 	if !c.Blocking[e] {
 		joined := strings.Join(args, ", ")
 		pp("c.Blocking[e] is false, joined = '%v'", joined)
-		// joined = '_gi_NewSlice("interface{}",{1, 2, 3})'
 		return c.formatExpr("%s(%s)", fun, joined)
 	}
 
@@ -1379,7 +1378,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
 		// c.typeName(desiredType)
 		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
-		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr, zero)
+		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
 	}
 	return c.translateExpr(expr, nil)
 }

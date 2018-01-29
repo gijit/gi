@@ -219,11 +219,13 @@ function append(t, ...)
       return t
    end
 
-   local props = rawget(t, _giPrivateSliceProps)   
-   local tot = #t + #slc
+   local props = rawget(t, _giPrivateSliceProps)
 
-   local arr = _gi_NewArray({}, props.typeKind, tot, props.zeroVal)
-   local res = _gi_NewSlice(props.typeKind, arr, 0, tot, tot)
+   -- simpler?
+   --local tot = #t + #slc
+   --local arr = _gi_NewArray({}, props.typeKind, tot, props.zeroVal)
+   --local res = _gi_NewSlice(props.typeKind, arr, props.zeroVal, 0, tot, tot)
+   --copy(res, t)
    
    if props == nil then
       error "append() called with first value not a slice"
@@ -323,7 +325,7 @@ function __gi_clone(a, typ)
 end
 
 function __subslice(a, beg, endx)
-   --print("top of __subslice, beg=",beg, " endx=", endx)
+   print("top of __subslice, beg=",beg, " endx=", endx)
    
    local arrProp = rawget(a, _giPrivateArrayProps)
    local slcProp = rawget(a, _giPrivateSliceProps)
@@ -340,10 +342,10 @@ function __subslice(a, beg, endx)
       error("must have slice or array in __subslice")
    end
 
-   local props = arrProp or slcProp
+   local props = slcProp or arrProp
    local typeKind = props.typeKind
 
-   return _gi_NewSlice(typeKind, raw, beg, endx)
+   return _gi_NewSlice(typeKind, raw, props.zeroVal, beg, endx)
 end
 
 function __gi_makeSlice(typeKind, zeroVal, len, cap)
@@ -353,5 +355,5 @@ function __gi_makeSlice(typeKind, zeroVal, len, cap)
    for i = 0, cap-1 do
       raw[i] = zeroVal
    end
-   return _gi_NewSlice(typeKind, raw, 0, len)
+   return _gi_NewSlice(typeKind, raw, zeroVal, 0, len)
 end
