@@ -33,7 +33,7 @@ func main() {
 gi: a go interpreter
 ====================
 https://github.com/gijit/gi
-Copyright (c) 2018, Jason E. Aten, Ph.D.
+Copyright (c) 2018, Jason E. Aten. All rights reserved.
 License: 3-clause BSD. See the LICENSE file at
 https://github.com/gijit/gi/blob/master/LICENSE
 ====================
