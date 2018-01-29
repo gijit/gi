@@ -40,8 +40,8 @@ not allow arbitrary imports to be called from inside
 the `gi` without prior preparation, this is
 often a useful and desirable security feature. Moreover
 we are able to provide these imports without using Go's
-linux-only DLL loading system, so we remain more cross-
-platform compatible.
+linux-only DLL loading system, so we remain portable/more
+cross-platform compatible.
 
 
 2018 Jan 27 update
