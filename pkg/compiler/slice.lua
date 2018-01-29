@@ -295,7 +295,7 @@ function __gi_makeSlice(typeKind, zeroVal, len, cap)
    print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
    raw = {}
    cap = cap or len
-   for i = 0, cap do
+   for i = 0, cap-1 do
       raw[i] = zeroVal
    end
    return _gi_NewSlice(typeKind, raw, 0, len)
