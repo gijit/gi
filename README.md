@@ -30,6 +30,11 @@ that the package's exported functions will be available
 to the REPL at runtime, after import. The "regexp" and "os"
 shadow packages provide examples of how to do this.
 
+Some non-functions in the shadow package
+may need to be manually commented out in
+the generated file to finish preparation. The Go compiler
+will tell you which ones when you rebuild `gi`.
+
 While shadowing (sandboxing) does
 not allow arbitrary imports to be called from the inside
 the `gi` REPL at runtime without prior preparation, this is
