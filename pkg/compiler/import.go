@@ -190,6 +190,8 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
 	var pkg *types.Package
 
+	//imp := importer.For("source", nil) // Default()
+	// faster than source importing is reading the binary.
 	imp := importer.Default()
 	imp2, ok := imp.(types.ImporterFrom)
 	if !ok {
