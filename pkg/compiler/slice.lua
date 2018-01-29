@@ -47,7 +47,9 @@ _giPrivateSliceMt = {
           print("out of bounds access " .. tostring(k+beg))
           error("out of bounds access " .. tostring(k+beg))
        end
-       return rawget(t, _giPrivateRaw)[beg+k]
+       local res = rawget(t, _giPrivateRaw)[beg+k]
+       print("_gi_Slice __index returing res = ", res)
+       return res
     end,
 
     __tostring = function(t)
@@ -284,7 +286,7 @@ function __copySlice(dest, src)
       len = slen
    end
    if len == 0 then
-      return 0
+      return 0LL
    end
    
    -- copy direction allows for overlap   
@@ -300,7 +302,7 @@ function __copySlice(dest, src)
       end
    end
    print("done with __copySlice, returning len=", len)
-   return len
+   return int(len)
 end
 
 function __gi_clone(a, typ)
