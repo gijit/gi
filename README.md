@@ -36,8 +36,8 @@ the generated file to finish preparation. The Go compiler
 will tell you which ones when you rebuild `gi`.
 
 While shadowing (sandboxing) does
-not allow arbitrary imports to be called from the inside
-the `gi` REPL at runtime without prior preparation, this is
+not allow arbitrary imports to be called from inside
+the `gi` without prior preparation, this is
 often a useful and desirable security feature. Moreover
 we are able to provide these imports without using Go's
 linux-only DLL loading system, so we remain more cross-
