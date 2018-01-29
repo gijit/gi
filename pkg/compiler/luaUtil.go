@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	golua "github.com/glycerine/golua/lua"
@@ -153,6 +154,8 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	if len(files) < 1 {
 		return nil, fmt.Errorf("-prelude dir '%s' had no lua files in it.", preludePath)
 	}
+	// get a consisten application order, by sorting by name.
+	sort.Strings(files)
 	if !quiet {
 		fmt.Printf("using this prelude directory: '%s'\n", preludePath)
 		shortFn := make([]string, len(files))
