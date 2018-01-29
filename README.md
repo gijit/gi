@@ -14,8 +14,7 @@ status
 
 2018 Jan 30 update
 -------
-In release v0.7.6, taking a slice of an array works
-correctly.
+In release v0.7.6, taking a slice of an array works.
 
 
 2018 Jan 29 update
