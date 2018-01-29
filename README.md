@@ -14,6 +14,10 @@ status
 
 2018 Jan 29 update
 -------
+Release v0.7.8 has `copy` of slice to slice working. `copy`
+allows source and destination slices to overlap, adjusting
+the copy direction automatically.
+
 In release v0.7.7, make applied to slices works. For example,
 `make([]int, 4)` will create a new length four array filled
 with the zero value for `int`, and then take a slice of that array.
