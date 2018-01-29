@@ -25,7 +25,10 @@ import (
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/scanner"
 	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/verb"
 )
+
+var pp = verb.PP
 
 /*
 type File struct {
@@ -2443,10 +2446,17 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 }
 
 func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
-	//fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
+	// fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
-	case token.IDENT, token.FOR, token.SWITCH, token.IF:
+
+	// jea: started to try and allow expressions alone, but still todo...
+	// not sure if this is a good idea or not. User can always turn it into
+	// a simple assignment.
+	//case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
+	// return p.parseExpr(false)
+
+	case token.IDENT, token.FOR, token.SWITCH, token.IF, token.GO, token.GOTO, token.SELECT:
 		return p.parseStmt()
 	}
 	return p.parseDecl(sync)

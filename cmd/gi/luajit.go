@@ -32,11 +32,16 @@ func (cfg *GIConfig) LuajitMain() {
 	home := os.Getenv("HOME")
 	var histFn string
 	var histFile *os.File
+	var sessionStartAfter int
 	if home != "" {
 		histFn = home + string(os.PathSeparator) + ".gijit.hist"
 
 		// open and close once to read back history
 		history, err = readHistory(histFn)
+		lh := len(history)
+		if lh > 0 {
+			sessionStartAfter = lh
+		}
 		panicOn(err)
 
 		// re-open for append new history
@@ -63,6 +68,7 @@ func (cfg *GIConfig) LuajitMain() {
 		by, err = reader.ReadBytes('\n')
 		if err == io.EOF {
 			if len(by) > 0 {
+				fmt.Printf("\n on EOF, but len(by) = %v, by='%s'", len(by), string(by))
 				// process bytes first,
 				// return next time.
 				err = nil
@@ -140,9 +146,28 @@ func (cfg *GIConfig) LuajitMain() {
 			verb.Verbose = true
 			verb.VerboseVerbose = true
 			continue
+		case ":clear", ":reset":
+			history = history[:0]
+			if histFn != "" {
+				histFile, err = os.OpenFile(histFn,
+					os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC,
+					0600)
+				panicOn(err)
+			}
+			sessionStartAfter = 0
+			fmt.Printf("history cleared.\n")
+			continue
 		case ":h":
+			if len(history) == 0 {
+				fmt.Printf("history: empty\n")
+				fmt.Printf("----- current session: -----\n")
+				continue
+			}
 			fmt.Printf("history:\n")
 			newline := "\n"
+			if sessionStartAfter == 0 {
+				fmt.Printf("----- current session: -----\n")
+			}
 			for i, h := range history {
 				lenh := len(h)
 				switch {
@@ -154,6 +179,9 @@ func (cfg *GIConfig) LuajitMain() {
 					newline = "\n"
 				}
 				fmt.Printf("%03d: %s%s", i+1, h, newline)
+				if i+1 == sessionStartAfter {
+					fmt.Printf("----- current session: -----\n")
+				}
 			}
 			fmt.Printf("\n")
 			continue
@@ -202,6 +230,7 @@ these special commands:
  :h          show command line history
  :30         replay command number 30 from history
  :1-10       replay commands 1 - 10 inclusive
+ :reset      reset and clear history (also :clear)
  ctrl-d to exit
 `)
 			continue
@@ -274,11 +303,19 @@ these special commands:
 
 		p("sending use='%v'\n", use)
 		srcLines := strings.Split(src, "\n")
-		if len(srcLines) > 0 {
-			history = append(history, srcLines[:len(srcLines)-1]...)
+		//fmt.Printf("appending to history: src='%#v', srcLines='%#v'\n", src, srcLines)
+		lensrc := len(srcLines)
+		histBeg := len(history)
+		if lensrc > 1 && strings.TrimSpace(srcLines[lensrc-1]) == "" {
+			history = append(history, srcLines[:lensrc-1]...)
+		} else {
+			history = append(history, srcLines[:len(srcLines)]...)
 		}
+		histEnd := len(history)
 		if histFile != nil {
-			fmt.Fprintf(histFile, src)
+			for i := histBeg; i < histEnd; i++ {
+				fmt.Fprintf(histFile, "%s\n", history[i])
+			}
 			histFile.Sync()
 		}
 		t0 = time.Now()

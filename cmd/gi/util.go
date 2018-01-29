@@ -42,5 +42,13 @@ func readHistory(histFn string) (history []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(by), "\n"), nil
+	splt := strings.Split(string(by), "\n")
+	n := len(splt)
+
+	// avoid returning an extra blank history line
+	// at the end of the history file.
+	if n > 0 && strings.TrimSpace(splt[n-1]) == "" {
+		return splt[:n-1], nil
+	}
+	return splt, nil
 }
