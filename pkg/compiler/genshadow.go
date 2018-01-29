@@ -35,7 +35,7 @@ func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error
 		return err
 	}
 
-	fmt.Fprintf(o, `package %s
+	fmt.Fprintf(o, `package shadow_%s
 
 import "%s"
 

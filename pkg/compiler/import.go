@@ -56,14 +56,14 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			}, nil
 		}
 
-		// gen-gijit-import outputs to pkg/compiler/shadow/...
+		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
 	case "fmt":
 		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
 	case "regexp":
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
 	default:
-		// need to run gen-gijit-import
-		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-import on the package, add a case and import above, and recompile gijit.", path)
+		// need to run gen-gijit-shadow-import
+		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)
 	}
 
 	// loading from real GOROOT/GOPATH.
