@@ -371,7 +371,7 @@ And, Torch7 has GPU support. [1][2]
 
 # installation
 
-Works on Mac OSX and Linux. I have no idea about windows (theoretically it should work on windows, if one can work out the right compiler flags and have the necessary C compiler installed, etc.)
+Works on Mac OSX and Linux. On windows: theoretically it should work on windows, I have not worked out what flags are needed. One will need to install a C compiler on windows and work out the right compiler flags to make CGO build and link LuaJIT into the Go `gi` binary.
 
 ~~~
 $ go get -t -u -v github.com/gijit/gi/...
