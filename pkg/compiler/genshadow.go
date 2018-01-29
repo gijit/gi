@@ -1,7 +1,4 @@
-/*
-genimport: create a map from string (pkg.FuncName) -> function pointer
-*/
-package main
+package compiler
 
 import (
 	"fmt"
@@ -9,16 +6,13 @@ import (
 
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/types"
-	"github.com/gijit/gi/pkg/verb"
 )
 
-var pp = verb.PP
-
-func main() {
-	readImport("fmt", "", "main")
-}
-
-func readImport(importPath, dir string, residentPkg string) error {
+//
+//GenShadowImport: create a map from string (pkg.FuncName) -> function pointer
+//  that can be used inside the "shadow" REPL environment that Luar can call.
+//
+func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error {
 	var pkg *types.Package
 
 	imp := importer.Default()
@@ -28,7 +22,7 @@ func readImport(importPath, dir string, residentPkg string) error {
 	}
 	var mode types.ImportMode
 	var err error
-	pkg, err = imp2.ImportFrom(importPath, dir, mode)
+	pkg, err = imp2.ImportFrom(importPath, dirForVendor, mode)
 
 	if err != nil {
 		return err
@@ -36,7 +30,7 @@ func readImport(importPath, dir string, residentPkg string) error {
 
 	pkgName := pkg.Name()
 
-	o, err := os.Create(pkgName + ".genimp.go")
+	o, err := os.Create(outDir + string(os.PathSeparator) + pkgName + ".genimp.go")
 	if err != nil {
 		return err
 	}
