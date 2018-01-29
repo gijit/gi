@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"runtime/debug"
 	"strings"
 
@@ -31,4 +32,15 @@ func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation st
 	}
 	p("go:'%s'  -->  '%s'\n", src, t2)
 	return
+}
+
+func readHistory(histFn string) (history []string, err error) {
+	if !FileExists(histFn) {
+		return nil, nil
+	}
+	by, err := ioutil.ReadFile(histFn)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(string(by), "\n"), nil
 }

@@ -19,6 +19,8 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 )
 
+var _ = debug.Stack
+
 var debugNilCount int
 var pp = verb.PP
 
@@ -1286,7 +1288,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 }
 
 func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desiredType types.Type) *expression {
-	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s', at: '%s'", expr, desiredType, string(debug.Stack()))
+	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s', at: '%s'", expr, desiredType, "") // string(debug.Stack()))
 	switch desiredType.Underlying().(type) {
 	case *types.Struct, *types.Array:
 		switch expr.(type) {
@@ -1357,9 +1359,20 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 }
 
 func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType types.Type) *expression {
-	switch c.p.TypeOf(expr).Underlying().(type) {
-	case *types.Array, *types.Pointer:
-		return c.formatExpr("new %s(%e)", c.typeName(desiredType), expr)
+	typeExpr := c.p.TypeOf(expr)
+	switch x := typeExpr.Underlying().(type) {
+	case *types.Pointer:
+		// currently just a copy of the below
+		et := x.Elem()
+		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
+		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
+		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(desiredType), expr)
+	case *types.Array:
+		et := x.Elem()
+		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
+		// c.typeName(desiredType)
+		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
+		return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
 	}
 	return c.translateExpr(expr, nil)
 }

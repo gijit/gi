@@ -34,7 +34,15 @@ func (cfg *GIConfig) LuajitMain() {
 	var histFile *os.File
 	if home != "" {
 		histFn = home + string(os.PathSeparator) + ".gi.hist"
-		histFile, err = os.OpenFile(histFn, os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_SYNC, 0666)
+
+		// open and close once to read back history
+		history, err = readHistory(histFn)
+		panicOn(err)
+
+		// re-open for append new history
+		histFile, err = os.OpenFile(histFn,
+			os.O_WRONLY|os.O_CREATE|os.O_APPEND|os.O_SYNC,
+			0600)
 		panicOn(err)
 	}
 
@@ -85,7 +93,7 @@ func (cfg *GIConfig) LuajitMain() {
 				}
 				fmt.Printf("replay history %03d:\n", num)
 				src = history[num-1]
-				fmt.Printf("%s", src)
+				fmt.Printf("%s\n", src)
 			}
 		}
 		switch low {

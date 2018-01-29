@@ -4,8 +4,8 @@
 
 -- create private index
 _giPrivateRaw = _giPrivateRaw or {}
-_giPrivateSliceProps = {}
-_giGo = {}
+_giPrivateSliceProps = _giPrivateSliceProps or {}
+_giGo = _giGo or {}
 
 _giPrivateSliceMt = {
 
@@ -62,7 +62,9 @@ _giPrivateSliceMt = {
        -- print("__pairs called!")
        -- this makes a _giSlice work in a for k,v in pairs() do loop.
 
-       -- Iterator function takes the table and an index and returns the next index and associated value
+       -- Iterator function takes the table and
+       -- an index and returns the next index and
+       -- associated value,
        -- or nil to end iteration
 
        local function stateless_iter(t, k)
@@ -88,8 +90,20 @@ _giPrivateSliceMt = {
  }
 
 function _gi_NewSlice(typeKind, x)
+   print("_gi_NewSlice called!")
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
+   local arrProp = x[_giPrivateArrayProps]
+   local slcProp = x[_giPrivateSliceProps]
+   
+   if arrProp ~= nil then
+      print("_gi_NewSlice sees x is an array")
+   elseif slcProp ~= nil then
+      print("_gi_NewSlice sees x is a slice")
+   else
+      print("_gi_NewSlice sees x is not an array or slice. Hmm?")      
+   end
+   
    -- get initial count
    local len = #x
    -- #x misses the [0] value, if present.
@@ -217,7 +231,7 @@ function __gi_clone(a, typ)
    return a
 end
 
-function __gi_newSliceFromArray(a)
+function __subslice(a, beg, endx)
 
 end
 

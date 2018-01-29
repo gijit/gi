@@ -2,7 +2,7 @@
 
 -- create private index
 _giPrivateRaw = _giPrivateRaw or {}
-_giPrivateArrayProps = {}
+_giPrivateArrayProps = _giPrivateArrayProps or {}
 
 _giPrivateArrayMt = {
 
