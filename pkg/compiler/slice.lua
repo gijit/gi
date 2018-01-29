@@ -34,8 +34,9 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-       --print("_gi_Slice: index called for key", k)
-      return t[_giPrivateRaw][k]
+       print("_gi_Slice: __index called for key", k)
+       local beg =t[_giPrivateSliceProps]["beg"]
+       return t[_giPrivateRaw][beg+k]
     end,
 
     __tostring = function(t)
@@ -90,7 +91,7 @@ _giPrivateSliceMt = {
     end
  }
 
-function _gi_NewSlice(typeKind, x)
+function _gi_NewSlice(typeKind, x, beg, endx, cap)
    print("_gi_NewSlice called!")
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
@@ -105,7 +106,8 @@ function _gi_NewSlice(typeKind, x)
       print("_gi_NewSlice sees x is a slice")
       raw = x[_giPrivateRaw]
    else
-      print("_gi_NewSlice sees x is not an array or slice. Hmm?")      
+      print("_gi_NewSlice sees x is not an array or slice. Hmm?")
+      error("must have x input to _gi_NewSlice or array or slice")
    end
    
    -- get initial count
@@ -123,7 +125,15 @@ function _gi_NewSlice(typeKind, x)
    -- this next is crashing
    --proxy[_giGo] = __lua2go(x)
 
-   local props = {beg=0, len=len, cap=len, typeKind=typeKind}
+   beg = beg or 0
+   endx = endx or (beg + len)
+   len = endx - beg
+   -- TODO: cap not really implemented in any way, just stored.
+   cap = cap or len
+
+   print("_gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
+   
+   local props = {beg=beg, len=len, cap=cap, endx=endx, typeKind=typeKind}
    proxy[_giPrivateSliceProps] = props
 
    setmetatable(proxy, _giPrivateSliceMt)
@@ -240,6 +250,26 @@ function __gi_clone(a, typ)
 end
 
 function __subslice(a, beg, endx)
+   print("top of __subslice")
+   
+   local arrProp = rawget(a, _giPrivateArrayProps)
+   local slcProp = rawget(a, _giPrivateSliceProps)
 
+   local raw = a
+   if arrProp ~= nil then
+      print("__subslice sees x is an array")
+      raw = a[_giPrivateRaw]
+   elseif slcProp ~= nil then
+      print("__subslice sees x is a slice")
+      raw = a[_giPrivateRaw]
+   else
+      print("__subslice sees x is not an array or slice. Hmm?")
+      error("must have slice or array in __subslice")
+   end
+
+   local props = arrProp or slcProp
+   local typeKind = props.typeKind
+
+   return _gi_NewSlice(typeKind, raw, beg, endx)
 end
 
