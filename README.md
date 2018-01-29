@@ -21,7 +21,7 @@ and Luar.
 
 Release v0.8.0 has command line history available with
 the up-arrow/down-arrow. This is a nice supplement to
-the the `:h` history listing and re-play facility.
+the `:h` history listing and replay facility.
 Like traditional shell editing, we now have ctrl-a (move
 to beginning of line); ctrl-e (move to end of line);
 ctrl-k (cut); and ctrl-y (paste) at the REPL.
