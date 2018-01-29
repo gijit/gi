@@ -11,9 +11,9 @@ _giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
       --print("newindex called for key", k, " val=", v)
-      local len = t[_giPrivateSliceProps]["len"]
+       local len = rawget(t, _giPrivateSliceProps)["len"]
       --print("newindex called for key", k, " len at start is ", len)
-      if t[_giPrivateRaw][k] == nil then
+       if rawget(t, _giPrivateRaw)[k] == nil then
          if  v ~= nil then
          -- new value
             len = len +1
@@ -26,28 +26,35 @@ _giPrivateSliceMt = {
               -- replace, no count change              
           end
       end
-      t[_giPrivateRaw][k] = v
-      t[_giPrivateSliceProps]["len"] = len
-      --print("len at end of newidnex is ", len)
+       rawget(t, _giPrivateRaw)[k] = v
+       rawget(t, _giPrivateSliceProps)["len"] = len
+       --print("len at end of newidnex is ", len)
     end,
 
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
        print("_gi_Slice: __index called for key", k)
-       local beg =t[_giPrivateSliceProps]["beg"]
-       return t[_giPrivateRaw][beg+k]
+       local beg = rawget(t, _giPrivateSliceProps)["beg"]
+       return rawget(t, _giPrivateRaw)[beg+k]
     end,
 
     __tostring = function(t)
        --print("_gi_Slice: tostring called")
-       local len = t[_giPrivateSliceProps]["len"]
+       local props = rawget(t, _giPrivateSliceProps)
+       local len = props.len
+       local beg = props.beg
        local s = "slice of length " .. tostring(len) .. " is _giSlice{"
-       local r = t[_giPrivateRaw]
+       local r = rawget(t, _giPrivateRaw)
+
        -- we want to skip both the _giPrivateRaw and the len
        -- when iterating, which happens automatically if we
-       -- iterate on r, the inside private data, and not on the proxy.
-       for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
+       -- iterate on r, the raw inside private data, and not on the proxy.
+
+       for i = 0, len-1 do
+          s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[beg+i]) .. ", "
+       end
+       
        return s .. "}"
     end,
 
@@ -57,7 +64,7 @@ _giPrivateSliceMt = {
        -- in the LuaJIT build. So use it!
        --
        print("len called for _gi_Slice")
-       return t[_giPrivateSliceProps]["len"]
+       return rawget(t, _giPrivateSliceProps)["len"]
     end,
 
     __pairs = function(t)
@@ -72,7 +79,7 @@ _giPrivateSliceMt = {
        local function stateless_iter(t, k)
            local v
            --  Implement your own key,value selection logic in place of next
-           k, v = next(t[_giPrivateRaw], k)
+           k, v = next(rawget(t, _giPrivateRaw), k)
            if v then return k,v end
        end
 
@@ -92,31 +99,32 @@ _giPrivateSliceMt = {
  }
 
 function _gi_NewSlice(typeKind, x, beg, endx, cap)
-   print("_gi_NewSlice called!")
+   print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
-   local arrProp = x[_giPrivateArrayProps]
-   local slcProp = x[_giPrivateSliceProps]
+   local arrProp = rawget(x, _giPrivateArrayProps)
+   local slcProp = rawget(x, _giPrivateSliceProps)
 
    local raw = x
+   local xlen = #x
+   
    if arrProp ~= nil then
       print("_gi_NewSlice sees x is an array")
-      raw = x[_giPrivateRaw]
+      raw = rawget(x, _giPrivateRaw)
+      -- xlen is correct
    elseif slcProp ~= nil then
       print("_gi_NewSlice sees x is a slice")
-      raw = x[_giPrivateRaw]
+      raw = rawget(x, _giPrivateRaw)
+      -- xlen is correct
    else
-      print("_gi_NewSlice sees x is not an array or slice. Hmm?")
-      error("must have x input to _gi_NewSlice or array or slice")
+      print("_gi_NewSlice sees x is not an array or slice. Hmm: raw input table")
+      -- #x misses the [0] value, if present.
+      if x[0] ~= nil then
+         xlen = xlen + 1
+      end      
    end
    
-   -- get initial count
-   local len = #x
-   -- #x misses the [0] value, if present.
-   if x[0] ~= nil then
-      len = len + 1
-   end
-   --print("len is ", len)
+   print("_gi_NewSlice: xlen is ", xlen)
    
    local proxy = {}
    proxy[_giPrivateRaw] = raw
@@ -126,8 +134,15 @@ function _gi_NewSlice(typeKind, x, beg, endx, cap)
    --proxy[_giGo] = __lua2go(x)
 
    beg = beg or 0
-   endx = endx or (beg + len)
-   len = endx - beg
+   if endx == nil then
+      len = xlen - beg
+      endx = beg + len
+   else
+      len = endx - beg 
+   end
+   
+   print("_gi_NewSlice: beg=", beg, " endx=",endx," len of the new slice is ", len)
+   
    -- TODO: cap not really implemented in any way, just stored.
    cap = cap or len
 
@@ -250,7 +265,7 @@ function __gi_clone(a, typ)
 end
 
 function __subslice(a, beg, endx)
-   print("top of __subslice")
+   print("top of __subslice, beg=",beg, " endx=", endx)
    
    local arrProp = rawget(a, _giPrivateArrayProps)
    local slcProp = rawget(a, _giPrivateSliceProps)
