@@ -21,7 +21,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	case "fmt":
 		pkg = types.NewPackage("fmt", "fmt")
 		pkg.MarkComplete()
-		scope := pkg.Scope()
+		//scope := pkg.Scope()
 
 		// These scope.Insert() calls let us get
 		// past the Go type checker.
@@ -29,31 +29,19 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		// As it should, scope.Insert(fun)
 		// gets rid of 'Sprintf not declared by package fmt'
 		// from types/call.go:302.
-		fun := getFunForSprintf(pkg)
-		scope.Insert(fun)
-
-		scope.Insert(getFunForPrintf(pkg))
-
-		summer := getFunForSummer(pkg)
-		scope.Insert(summer)
-
-		summerAny := getFunForSummerAny(pkg)
-		scope.Insert(summerAny)
-
-		incr := getFunForIncr(pkg)
-		scope.Insert(incr)
+		//fun := getFunForSprintf(pkg)
+		//scope.Insert(fun)
+		//scope.Insert(getFunForPrintf(pkg))
 
 		// implementation via luar-based reflection
 
 		// fmt
-		luar.Register(ic.vm, "fmt", luar.Map{
-			// Go functions may be registered directly.
-			"Sprintf":   fmt.Sprintf,
-			"Printf":    fmt.Printf,
-			"Summer":    Summer,
-			"SummerAny": SummerAny,
-			"Incr":      Incr,
-		})
+		luar.Register(ic.vm, "fmt", Pkg) // Pkg from fmt.genimp.go
+		for i := range Pkg {
+			fmt.Printf("registered '%s'\n", i)
+		}
+		// make the type declarations available
+		return ic.ActuallyImportPackage(path, "")
 
 	case "gitesting":
 		// test only:
@@ -66,9 +54,21 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			fun := getFunForSumArrayInt64(pkg)
 			scope.Insert(fun)
 
+			summer := getFunForSummer(pkg)
+			scope.Insert(summer)
+
+			summerAny := getFunForSummerAny(pkg)
+			scope.Insert(summerAny)
+
+			incr := getFunForIncr(pkg)
+			scope.Insert(incr)
+
 			luar.Register(ic.vm, "gitesting", luar.Map{
 				"SumArrayInt64": sumArrayInt64,
 				//"__giClone":     __giClone,
+				"Summer":    Summer,
+				"SummerAny": SummerAny,
+				"Incr":      Incr,
 			})
 		}
 	default:

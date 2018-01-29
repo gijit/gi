@@ -86,7 +86,7 @@ func Test058CallFmtIncr(t *testing.T) {
 
 	cv.Convey(`Given a pre-compiled Go function fmt.Incr, we should be able to call it from gi`, t, func() {
 
-		src := `import "fmt"; a := fmt.Incr(1);` // then a should be 2
+		src := `import "gitesting"; a := gitesting.Incr(1);` // then a should be 2
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -97,7 +97,7 @@ func Test058CallFmtIncr(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Incr(1LL);`)
+			`a = gitesting.Incr(1LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -107,12 +107,12 @@ func Test058CallFmtIncr(t *testing.T) {
 
 func Test059CallFmtSummer(t *testing.T) {
 
-	cv.Convey(`Given a pre-compiled Go function fmt.SummerAny(a ...int), we should be able to call it from gi using fmt.SummerAny(1, 2, 3);`, t, func() {
+	cv.Convey(`Given a pre-compiled Go function gitesting.SummerAny(a ...int), we should be able to call it from gi using gitesting.SummerAny(1, 2, 3);`, t, func() {
 
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
 
-		src := `import "fmt"; a := fmt.SummerAny(1, 2, 3);` // then a should be 6
+		src := `import "gitesting"; a := gitesting.SummerAny(1, 2, 3);` // then a should be 6
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -123,7 +123,7 @@ func Test059CallFmtSummer(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.SummerAny(1LL, 2LL, 3LL);`)
+			`a = gitesting.SummerAny(1LL, 2LL, 3LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -133,12 +133,12 @@ func Test059CallFmtSummer(t *testing.T) {
 
 func Test061CallFmtSummerWithDots(t *testing.T) {
 
-	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function fmt.SummerAny(a ...int), the call fmt.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
+	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function gitesting.SummerAny(a ...int), the call gitesting.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
 
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
 
-		src := `import "fmt"; b := []int{8,9}; a := fmt.SummerAny(b...);` // then a = 17
+		src := `import "gitesting"; b := []int{8,9}; a := gitesting.SummerAny(b...);` // then a = 17
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -149,7 +149,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = fmt.SummerAny(_gi_UnpackSliceRaw(b));`)
+			`b = _gi_NewSlice("int",{[0]=8LL,9LL}); a = gitesting.SummerAny(_gi_UnpackSliceRaw(b));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
