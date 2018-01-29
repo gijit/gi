@@ -10,6 +10,7 @@ import (
 
 	// shadow_ imports: available inside the REPL
 	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
+	"github.com/gijit/gi/pkg/compiler/shadow/io"
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 )
@@ -64,6 +65,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
 	case "os":
 		luar.Register(ic.vm, "os", shadow_os.Pkg)
+	case "io":
+		luar.Register(ic.vm, "io", shadow_io.Pkg)
 	default:
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)
