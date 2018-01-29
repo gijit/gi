@@ -8,9 +8,10 @@ import (
 	"github.com/gijit/gi/pkg/types"
 	"github.com/glycerine/luar"
 
-	// shadow: available to REPL
-	shadow_fmt "github.com/gijit/gi/pkg/compiler/shadow/fmt"
-	shadow_regexp "github.com/gijit/gi/pkg/compiler/shadow/regexp"
+	// shadow_ imports: available inside the REPL
+	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
+	"github.com/gijit/gi/pkg/compiler/shadow/os"
+	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 )
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
@@ -61,6 +62,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
 	case "regexp":
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
+	case "os":
+		luar.Register(ic.vm, "os", shadow_os.Pkg)
 	default:
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)

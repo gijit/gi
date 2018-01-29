@@ -1,7 +1,7 @@
 package typesutil
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/gijit/gi/pkg/types"
 	"strings"
 )
@@ -20,19 +20,19 @@ func IsJsObject(t types.Type) bool {
 }
 
 func IsLuarPackage(pkg *types.Package) bool {
-	fmt.Printf("\n pkg.Path()='%s'\n", pkg.Path())
+	//fmt.Printf("\n pkg.Path()='%s'\n", pkg.Path())
 	return pkg != nil && strings.HasPrefix(pkg.Path(), "github.com/gijit/gi/pkg/compiler/shadow")
 }
 
 func IsLuarObject(t types.Type) bool {
 	ptr, isPtr := t.(*types.Pointer)
 	if !isPtr {
-		fmt.Printf("\n IsLuarObject, not b/c !isPtr\n")
+		//fmt.Printf("\n IsLuarObject, not b/c !isPtr\n")
 		return false
 	}
 	named, isNamed := ptr.Elem().(*types.Named)
 	if isNamed {
-		fmt.Printf(" named.Obj().Name()= '%#v', named.Obj().Pkg()='%#v'\n", named.Obj().Name(), named.Obj().Pkg())
+		//fmt.Printf(" named.Obj().Name()= '%#v', named.Obj().Pkg()='%#v'\n", named.Obj().Name(), named.Obj().Pkg())
 	}
 	return isNamed && IsLuarPackage(named.Obj().Pkg())
 }
