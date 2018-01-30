@@ -159,6 +159,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			minify:       minify,
 			fileSet:      fileSet,
 			files:        files,
+			funcSrcCache: make(map[string]string),
 		},
 		allVars:     make(map[string]int),
 		flowDatas:   map[*types.Label]*flowData{nil: {}},
@@ -256,6 +257,13 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				pp("next is an *ast.FuncDecl...:'%#v'. with source:", d)
 				err := printer.Fprint(os.Stdout, fileSet, d)
 				panicOn(err)
+				// cache the source for checking at the repl
+				var by bytes.Buffer
+				err = printer.Fprint(&by, fileSet, d)
+				panicOn(err)
+				c.p.funcSrcCache[d.Name.Name] = by.String()
+				pp("stored in c.p.funcSrcCache['%s'] the value '%s'", d.Name.Name, c.p.funcSrcCache[d.Name.Name])
+
 				pp("with AST:")
 				if verb.Verbose {
 					ast.Print(fileSet, d)

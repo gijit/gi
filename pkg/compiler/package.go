@@ -2,10 +2,12 @@ package compiler
 
 import (
 	"bytes"
+	"os"
 	//"encoding/json"
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	//"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/printer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"sort"
@@ -34,6 +36,7 @@ type pkgContext struct {
 	fileSet      *token.FileSet
 	files        []*ast.File
 	errList      ErrorList
+	funcSrcCache map[string]string
 }
 
 func (p *pkgContext) SelectionOf(e *ast.SelectorExpr) (selection, bool) {
@@ -775,6 +778,9 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	if info == nil {
 		panic("nil info")
 	}
+
+	pp("translateFunction called, source = ")
+	printer.Fprint(os.Stdout, outerContext.p.fileSet, body)
 
 	c := &funcContext{
 		FuncInfo:    info,

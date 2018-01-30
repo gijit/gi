@@ -613,7 +613,7 @@ func isWrapped(ty types.Type) bool {
 							return false
 						}
 
-						return !is64Bit(t) && !isComplex(t) && t.Kind() != types.UntypedNil
+			return !is64Bit(t) && !isComplex(t) && t.Kind() != types.UntypedNil
 		*/
 	case *types.Array, *types.Chan, *types.Map, *types.Signature:
 		return true
