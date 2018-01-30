@@ -46,7 +46,13 @@ Commands executed in the current session appear after the
 `----- current session: -----` delineator.
 
 ~~~
- $ gi -q
+$ gi -q
+gi> :h
+history:
+001: greet := "hello gophers!"
+----- current session: -----
+
+gi>   ## notice that stuff from past sessions is above the `current session:` line.
 gi> :reset
 history cleared.
 gi> :h
