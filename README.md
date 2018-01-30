@@ -31,6 +31,10 @@ A quick demo of the history functionality:
 History is stored in ~/.gijit.hist, and is preserved
 across `gi` restarts. It can be edited by removed
 sets of lines using the `:rm a-b` command.
+
+Commands executed in the current session appear after the
+`----- current session: -----` delineator.
+
 ~~~
  $ gi -q
 gi> :reset
