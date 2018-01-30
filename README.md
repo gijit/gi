@@ -30,7 +30,7 @@ A quick demo of the `:h` history functionality, which
 is also new (and distinct from the up-arrow/liner
 functionality).
 
-Line history is stored in ~/.gijit.hist, and is preserved
+Line history is stored in `$HOME/.gijit.hist`, and is preserved
 across `gi` restarts. It can be edited by removing
 sets of lines using the `:rm a-b` command. The `:n`
 command, where `n` is a number, replays history line `n`.
