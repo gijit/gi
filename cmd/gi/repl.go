@@ -30,14 +30,14 @@ func main() {
 	if !cfg.Quiet {
 		fmt.Printf(
 			`====================
-gi: a go interpreter
+gijit: a go interpreter
 ====================
 https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten. All rights reserved.
 License: 3-clause BSD. See the LICENSE file at
 https://github.com/gijit/gi/blob/master/LICENSE
 ====================
-  [ gi is an interactive Golang environment,
+  [ gigit/gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop ]
   [ type ctrl-d to exit ]
   [ type :help for help ]
