@@ -61,7 +61,21 @@ func init() {
 		switch oty.(type) {
 		default:
 			panic(fmt.Sprintf("genshadow: "+
-				"unhandled type! what oty type? '%T'", oty))
+				"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
+		case *types.Slice:
+			//fmt.Printf("Slice: nm = '%s', obj='%#v', oty='%#v', under='%#v'\n", nm, obj, oty, under)
+			// ex: os.Args
+			switch obj.(type) {
+			case *types.Var:
+				direct(o, nm, pkgName)
+			}
+		case *types.Pointer:
+			//fmt.Printf("Pointer: nm = '%s', obj='%#v', oty='%#v', under='%#v'\n", nm, obj, oty, under)
+			// ex: os.Stderr, os.Stdin, os.Stdout
+			switch obj.(type) {
+			case *types.Var:
+				direct(o, nm, pkgName)
+			}
 		case *types.Basic:
 			// these all compile
 			direct(o, nm, pkgName)
@@ -82,7 +96,7 @@ func init() {
 				}
 			case *types.Struct:
 				// none of these in "io"
-				structTemplate(o, obj, nm, pkgName, oty, under)
+				structTemplate(o, obj, nm, pkgName, oty, under, &atEnd)
 			}
 		}
 	}
@@ -108,8 +122,8 @@ func __gi_ConvertTo1_Reader(x interface{}) io.Reader {
 */
 func GenInterfaceConverter(pkg, name string) (funcName1, funcName2, decl string) {
 
-	funcName2 = fmt.Sprintf("__gi_ConvertTo2_%s", name)
-	funcName1 = fmt.Sprintf("__gi_ConvertTo1_%s", name)
+	funcName2 = fmt.Sprintf("GijitShadow_InterfaceConvertTo2_%s", name)
+	funcName1 = fmt.Sprintf("GijitShadow_InterfaceConvertTo1_%s", name)
 
 	decl = fmt.Sprintf(`
 func %s(x interface{}) (y %s.%s, b bool) {
@@ -131,7 +145,12 @@ func direct(o *os.File, nm, pkgName string) {
 	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s.%s\n", nm, pkgName, nm)
 }
 
-func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type) {
+/* make a function like:
+func GijitShadow_NewStruct_PipeReader() *io.PipeReader {
+	return &io.PipeReader{}
+}
+*/
+func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type, atEnd *[]string) {
 	// example from "io":
 	/*
 		type PipeReader struct {
@@ -140,12 +159,15 @@ func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under
 	*/
 	switch obj.(type) {
 	case *types.TypeName:
-		// ignore type names, the declaration of a struct type...
-		return
+		*atEnd = append(*atEnd, fmt.Sprintf(`
+func GijitShadow_NewStruct_%s() *%s.%s {
+	return &%s.%s{}
+}
+`, nm, pkgName, nm, pkgName, nm))
+	default:
+		direct(o, nm, pkgName)
 	}
 
-	fmt.Printf("we have under as a struct type, for nm='%s', obj='%#v'\n", nm, obj)
-	pp("ignoring nm='%v' as under is *types.Struct", nm)
 }
 
 func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type, atEnd *[]string) {
