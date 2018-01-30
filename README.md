@@ -388,7 +388,15 @@ reports "error in error handling".
 
 I asked on the Lua and LuaJIT mailing lists about
 this, and posted on Stack Overflow. So far no
-replies. https://stackoverflow.com/questions/48202338/on-latest-luajit-2-1-0-beta3-is-recursive-xpcall-possible
+replies. https://stackoverflow.com/questions/48202338/on-latest-luajit-2-1-0-beta3-is-recursive-xpcall-possible.
+
+[Update: Mike Pall replied, (yay!) -- but (sadly),
+it doesn't sound like he'll be fixing
+this himself.
+
+> Error handlers shouldn't throw errors themselves. The semantics would be too messy.
+ -- Mike Pall, on https://github.com/LuaJIT/LuaJIT/issues/383
+ ]
 
 It's a fairly minor limitation, and easy to work
 around once you notice the bug: just call `panic`
