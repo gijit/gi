@@ -29,8 +29,16 @@ ctrl-k (cut); and ctrl-y (paste) at the REPL.
 A quick demo of the history functionality:
 
 History is stored in ~/.gijit.hist, and is preserved
-across `gi` restarts. It can be edited by removed
-sets of lines using the `:rm a-b` command.
+across `gi` restarts. It can be edited by removing
+sets of lines using the `:rm a-b` command. The `:n`
+command, where `n` is a number, replays history line `n`.
+With a `-` dash, a range of commands to be replayed
+is specified. `:10-` replays from 10 to the end of
+history, while `:-10` replays everything from the
+first line in the history, up to and
+including line 10. `:-` replays everything in the
+history, because the range endpoints have the intuitive
+defaults.
 
 Commands executed in the current session appear after the
 `----- current session: -----` delineator.
