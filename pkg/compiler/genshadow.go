@@ -95,21 +95,35 @@ func init() {
 }
 
 /* make a function like:
-func __gi_ConvertTo_Reader(x interface{}) (y io.Reader, b bool) {
+func __gi_ConvertTo2_Reader(x interface{}) (y io.Reader, b bool) {
 	y, b = x.(io.Reader)
 	return
 }
-*/
-func GenInterfaceConverter(pkg, name string) (funcName, decl string) {
 
-	funcName = fmt.Sprintf("__gi_ConvertTo_%s", name)
+and one like:
+func __gi_ConvertTo1_Reader(x interface{}) io.Reader {
+	return x.(io.Reader)
+}
+
+*/
+func GenInterfaceConverter(pkg, name string) (funcName1, funcName2, decl string) {
+
+	funcName2 = fmt.Sprintf("__gi_ConvertTo2_%s", name)
+	funcName1 = fmt.Sprintf("__gi_ConvertTo1_%s", name)
 
 	decl = fmt.Sprintf(`
 func %s(x interface{}) (y %s.%s, b bool) {
 	y, b = x.(%s.%s)
 	return
 }
-`, funcName, pkg, name, pkg, name)
+`, funcName2, pkg, name, pkg, name)
+
+	decl += fmt.Sprintf(`
+func %s(x interface{}) %s.%s {
+	return x.(%s.%s)
+}
+`, funcName1, pkg, name, pkg, name)
+
 	return
 }
 
@@ -124,6 +138,11 @@ func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under
 			p *pipe
 		}
 	*/
+	switch obj.(type) {
+	case *types.TypeName:
+		// ignore type names, the declaration of a struct type...
+		return
+	}
 
 	fmt.Printf("we have under as a struct type, for nm='%s', obj='%#v'\n", nm, obj)
 	pp("ignoring nm='%v' as under is *types.Struct", nm)
@@ -133,7 +152,8 @@ func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under 
 
 	//pp("ifaceTemplate:: we see Named '%s'\n. oty:'%#v',\n under:'%#v',\n, obj='%#v', \n", nm, oty, under, obj)
 
-	funcName, decl := GenInterfaceConverter(pkgName, nm)
+	_, funcName2, decl := GenInterfaceConverter(pkgName, nm)
 	*atEnd = append((*atEnd), decl)
-	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName)
+	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName2)
+	//fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName1)
 }
