@@ -26,6 +26,113 @@ Like traditional shell editing, we now have ctrl-a (move
 to beginning of line); ctrl-e (move to end of line);
 ctrl-k (cut); and ctrl-y (paste) at the REPL.
 
+A quick demo of the history functionality:
+
+History is stored in ~/.gijit.hist, and is preserved
+across `gi` restarts. It can be edited by removed
+sets of lines using the `:rm a-b` command.
+~~~
+ $ gi -q
+gi> :reset
+history cleared.
+gi> :h
+history: empty
+----- current session: -----
+gi> a := 1
+
+elapsed: '17.614µs'
+gi> :h
+history:
+----- current session: -----
+001: a := 1
+
+gi> b := a * 2
+
+elapsed: '50.054µs'
+gi> :h
+history:
+----- current session: -----
+001: a := 1
+002: b := a * 2
+
+gi> :1-
+replay history 001 - 002:
+a := 1
+b := a * 2
+
+
+elapsed: '41.932µs'
+gi> :h
+history:
+----- current session: -----
+001: a := 1
+002: b := a * 2
+003: a := 1
+004: b := a * 2
+
+gi> :3-4
+replay history 003 - 004:
+a := 1
+b := a * 2
+
+
+elapsed: '76.605µs'
+gi> :-2
+replay history 001 - 002:
+a := 1
+b := a * 2
+
+
+elapsed: '91.664µs'
+gi> :-     ## replay everything in our history
+replay history 001 - 008:
+a := 1
+b := a * 2
+a := 1
+b := a * 2
+a := 1
+b := a * 2
+a := 1
+b := a * 2
+
+
+elapsed: '37.896µs'
+gi> :h
+history:
+----- current session: -----
+001: a := 1
+002: b := a * 2
+003: a := 1
+004: b := a * 2
+005: a := 1
+006: b := a * 2
+007: a := 1
+008: b := a * 2
+009: a := 1
+010: b := a * 2
+011: a := 1
+012: b := a * 2
+013: a := 1
+014: b := a * 2
+015: a := 1
+016: b := a * 2
+
+gi> :rm 3-
+remove history 003 - 016.
+gi> :h
+history:
+----- current session: -----
+001: a := 1
+002: b := a * 2
+
+gi> :rm -
+remove history 001 - 002.
+gi> :h
+history: empty
+----- current session: -----
+gi> 
+~~~
+
 Release v0.7.9 has slice `copy` and `append` working.
 `copy` allows source and destination
 slices to overlap, adjusting
