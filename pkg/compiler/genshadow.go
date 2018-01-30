@@ -46,22 +46,94 @@ func init() {
 	scope := pkg.Scope()
 	nms := scope.Names()
 
+	atEnd := []string{}
+
 	for _, nm := range nms {
+
 		obj := scope.Lookup(nm)
 		if !obj.Exported() {
 			continue
 		}
-		switch obj.Type().(type) {
-		case *types.Tuple:
-			continue
+
+		oty := obj.Type()
+		under := oty.Underlying()
+
+		switch oty.(type) {
 		default:
-			//case *types.Signature:
-			pp("in package '%s', registering nm='%s' -> '%#v'", pkgName, nm, obj)
-			fmt.Fprintf(o, `    Pkg["%s"] = %s.%s
-`, nm, pkgName, nm)
+			panic(fmt.Sprintf("genshadow: "+
+				"unhandled type! what oty type? '%T'", oty))
+		case *types.Basic:
+			// these all compile
+			direct(o, nm, pkgName)
+
+		case *types.Signature:
+			// these all compile
+			direct(o, nm, pkgName)
+
+		case *types.Named:
+
+			switch under.(type) {
+			case *types.Interface:
+				switch obj.(type) {
+				case *types.TypeName:
+					ifaceTemplate(o, obj, nm, pkgName, oty, under, &atEnd)
+				case *types.Var:
+					direct(o, nm, pkgName)
+				}
+			case *types.Struct:
+				// none of these in "io"
+				structTemplate(o, obj, nm, pkgName, oty, under)
+			}
 		}
 	}
 	fmt.Fprintf(o, "\n}")
 
+	for _, s := range atEnd {
+		fmt.Fprintf(o, "%s\n", s)
+	}
 	return nil
+}
+
+/* make a function like:
+func __gi_ConvertTo_Reader(x interface{}) (y io.Reader, b bool) {
+	y, b = x.(io.Reader)
+	return
+}
+*/
+func GenInterfaceConverter(pkg, name string) (funcName, decl string) {
+
+	funcName = fmt.Sprintf("__gi_ConvertTo_%s", name)
+
+	decl = fmt.Sprintf(`
+func %s(x interface{}) (y %s.%s, b bool) {
+	y, b = x.(%s.%s)
+	return
+}
+`, funcName, pkg, name, pkg, name)
+	return
+}
+
+func direct(o *os.File, nm, pkgName string) {
+	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s.%s\n", nm, pkgName, nm)
+}
+
+func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type) {
+	// example from "io":
+	/*
+		type PipeReader struct {
+			p *pipe
+		}
+	*/
+
+	fmt.Printf("we have under as a struct type, for nm='%s', obj='%#v'\n", nm, obj)
+	pp("ignoring nm='%v' as under is *types.Struct", nm)
+}
+
+func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type, atEnd *[]string) {
+
+	//pp("ifaceTemplate:: we see Named '%s'\n. oty:'%#v',\n under:'%#v',\n, obj='%#v', \n", nm, oty, under, obj)
+
+	funcName, decl := GenInterfaceConverter(pkgName, nm)
+	*atEnd = append((*atEnd), decl)
+	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName)
 }
