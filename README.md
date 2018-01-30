@@ -534,7 +534,7 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 # installation
 
-Works on Mac OSX and Linux. On windows: theoretically it should work on windows, I have not worked out what flags are needed. One will need to install a C compiler on windows and work out the right compiler flags to make CGO build and link LuaJIT into the Go `gi` binary.
+Needs go1.9 or later. Works on Mac OSX and Linux. On windows: theoretically it should work on windows, I have not worked out what flags are needed. One will need to install a C compiler on windows and work out the right compiler flags to make CGO build and link LuaJIT into the Go `gi` binary.
 
 ~~~
 $ go get -t -u -v github.com/gijit/gi/...
