@@ -33,6 +33,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 
 	var newCodeText [][]byte
+	var funcSrcCache map[string]string
 
 	var typesInfo *types.Info
 	if a == nil {
@@ -44,8 +45,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			Selections: make(map[*ast.SelectorExpr]*types.Selection),
 			Scopes:     make(map[ast.Node]*types.Scope),
 		}
+		funcSrcCache = make(map[string]string)
 	} else {
 		typesInfo = a.typesInfo
+		funcSrcCache = a.funcSrcCache
 	}
 
 	var importError error
@@ -159,7 +162,6 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			minify:       minify,
 			fileSet:      fileSet,
 			files:        files,
-			funcSrcCache: make(map[string]string),
 		},
 		allVars:     make(map[string]int),
 		flowDatas:   map[*types.Label]*flowData{nil: {}},
@@ -261,8 +263,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				var by bytes.Buffer
 				err = printer.Fprint(&by, fileSet, d)
 				panicOn(err)
-				c.p.funcSrcCache[d.Name.Name] = by.String()
-				pp("stored in c.p.funcSrcCache['%s'] the value '%s'", d.Name.Name, c.p.funcSrcCache[d.Name.Name])
+				funcSrcCache[d.Name.Name] = by.String()
+				pp("stored in c.p.funcSrcCache['%s'] the value '%s'", d.Name.Name, funcSrcCache[d.Name.Name])
 
 				pp("with AST:")
 				if verb.Verbose {
@@ -518,7 +520,15 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						tmp = ele + ";"
 					} else {
 						pp("wrapping '%s' in print at the repl", ele)
-						tmp = fmt.Sprintf(`print(%[1]s);`, ele)
+						key := fmt.Sprintf("%s", ele)
+						fsrc, haveSrc := funcSrcCache[key]
+						if haveSrc {
+							pp("cache hit for '%s' -> '%s'", key, fsrc)
+							tmp = fmt.Sprintf(`print([===[%s]===]);`, fsrc)
+						} else {
+							pp("no cache hit for '%s'", key)
+							tmp = fmt.Sprintf(`print(%[1]s);`, ele)
+						}
 					}
 					newCodeText = append(newCodeText, []byte(tmp))
 				}
@@ -640,11 +650,13 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			config:       config,
 			pkg:          pkg,
 			check:        check,
+			funcSrcCache: funcSrcCache,
 		}, nil
 	} else {
 		a.pkg = pkg
 		a.check = check
 		a.NewCodeText = newCodeText
+		a.funcSrcCache = funcSrcCache
 	}
 	return a, nil
 }

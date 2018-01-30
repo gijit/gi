@@ -36,7 +36,6 @@ type pkgContext struct {
 	fileSet      *token.FileSet
 	files        []*ast.File
 	errList      ErrorList
-	funcSrcCache map[string]string
 }
 
 func (p *pkgContext) SelectionOf(e *ast.SelectorExpr) (selection, bool) {

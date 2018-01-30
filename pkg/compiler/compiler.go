@@ -46,6 +46,8 @@ type Archive struct {
 	config    *types.Config
 	pkg       *types.Package
 	check     *types.Checker
+
+	funcSrcCache map[string]string
 }
 
 type Decl struct {
