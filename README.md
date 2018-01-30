@@ -117,7 +117,7 @@ history:
 015: a := 1
 016: b := a * 2
 
-gi> :rm 3-
+gi> :rm 3-    ## if a range leaves off an endpoint, it defaults to the beginning/end.
 remove history 003 - 016.
 gi> :h
 history:
@@ -125,7 +125,7 @@ history:
 001: a := 1
 002: b := a * 2
 
-gi> :rm -
+gi> :rm -    ## same as :reset or :clear
 remove history 001 - 002.
 gi> :h
 history: empty
