@@ -68,6 +68,9 @@ func init() {
 			switch obj.(type) {
 			case *types.Var:
 				direct(o, nm, pkgName)
+			default:
+				panic(fmt.Sprintf("genshadow: "+
+					"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
 			}
 		case *types.Pointer:
 			//fmt.Printf("Pointer: nm = '%s', obj='%#v', oty='%#v', under='%#v'\n", nm, obj, oty, under)
@@ -75,6 +78,9 @@ func init() {
 			switch obj.(type) {
 			case *types.Var:
 				direct(o, nm, pkgName)
+			default:
+				panic(fmt.Sprintf("genshadow: "+
+					"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
 			}
 		case *types.Basic:
 			// these all compile
@@ -93,6 +99,9 @@ func init() {
 					ifaceTemplate(o, obj, nm, pkgName, oty, under, &atEnd)
 				case *types.Var:
 					direct(o, nm, pkgName)
+				default:
+					panic(fmt.Sprintf("genshadow: "+
+						"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
 				}
 			case *types.Struct:
 				// none of these in "io"
