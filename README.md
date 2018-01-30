@@ -371,12 +371,11 @@ you require interaction with your data.
 
 # of course we need a backend to develop against
 
-Considering possible backends for a
-reference implementation,
+Considering possible backends,
 I compared node.js, chez scheme, otto,
 gopher-lua, and LuaJIT.
 
-# LuaJIT did what?
+# LuaJIT did what?  Will Golang run on GPU?
 
 LuaJIT in particular is an amazing
 backend to target. In our quick and
@@ -395,6 +394,8 @@ And, Torch7 has GPU support. [1][2]
 [1] https://github.com/torch/cutorch
 
 [2] https://github.com/torch/torch7/wiki/Cheatsheet#gpu-support
+
+Will golang (Go) run on GPUs?  It might be possible!
 
 # installation
 
