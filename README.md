@@ -26,9 +26,11 @@ Like traditional shell editing, we now have ctrl-a (move
 to beginning of line); ctrl-e (move to end of line);
 ctrl-k (cut); and ctrl-y (paste) at the REPL.
 
-A quick demo of the history functionality:
+A quick demo of the `:h` history functionality, which
+is also new (and distinct from the up-arrow/liner
+functionality).
 
-History is stored in ~/.gijit.hist, and is preserved
+Line history is stored in ~/.gijit.hist, and is preserved
 across `gi` restarts. It can be edited by removing
 sets of lines using the `:rm a-b` command. The `:n`
 command, where `n` is a number, replays history line `n`.
