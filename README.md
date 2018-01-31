@@ -12,6 +12,27 @@ binary is called simply `gi`, as it is a
 status
 ------
 
+2018 Jan 31 update
+-------
+Using `gijit` as a calculator, to evaluate expressions at the command line,
+now works. In order to continue to detect syntax errors in Go code, we
+adopt the same convention as Lua: prepend an '=' equals sign to the
+expression, in order to evaluate it immediately. For example:
+
+~~~
+gi> = 24/3
+8LL
+gi>
+~~~
+(The 'LL' suffix indicates a 64-bit integer.)
+
+Notice, however, that without the '=', a syntax error is properly detected:
+~~~
+gi> 24.0 / 3.0
+oops: 'problem detected during Go static type checking: '1:1: expected declaration, found 'FLOAT' 24.0'' on input '24.0 / 3.0'
+gi> 
+~~~
+
 2018 Jan 29 update
 -------
 What is left to do: pointers, interfaces, go-routines,
