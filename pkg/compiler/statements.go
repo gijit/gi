@@ -118,8 +118,9 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			if types.Identical(c.p.TypeOf(cond), types.Typ[types.UntypedNil]) {
 				return c.formatExpr("%s === $ifaceNil", refVar)
 			}
-			// jea, type assertion place 3
-			return c.formatExpr("$99assertType(%s, %s, true)[1]", refVar, c.typeName(c.p.TypeOf(cond)))
+			// jea, type assertion place 1
+			return c.formatExpr(`__gi_assertType(%s, "%s", 1)`, refVar, c.typeName(c.p.TypeOf(cond)))
+			//return c.formatExpr("$assertType(%s, %s, true)[1]", refVar, c.typeName(c.p.TypeOf(cond)))
 		}
 		var caseClauses []*ast.CaseClause
 		var defaultClause *ast.CaseClause
