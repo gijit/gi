@@ -257,8 +257,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				pp("next decl from file.Nodes is a funcDecl: '%#v'", d)
 
 				pp("next is an *ast.FuncDecl...:'%#v'. with source:", d)
-				err := printer.Fprint(os.Stdout, fileSet, d)
-				panicOn(err)
+				if verb.Verbose {
+					err := printer.Fprint(os.Stdout, fileSet, d)
+					panicOn(err)
+				}
 				// cache the source for checking at the repl
 				var by bytes.Buffer
 				err = printer.Fprint(&by, fileSet, d)
@@ -338,8 +340,10 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			case *ast.GenDecl:
 				// jea: could also be *ast.TypeSpec here when declaring a struct!
 				pp("next is an *ast.GenDecl...:'%#v'. with source:", d)
-				err := printer.Fprint(os.Stdout, fileSet, d)
-				panicOn(err)
+				if verb.Verbose {
+					err := printer.Fprint(os.Stdout, fileSet, d)
+					panicOn(err)
+				}
 				pp("with AST:")
 				if verb.Verbose {
 					ast.Print(fileSet, d)

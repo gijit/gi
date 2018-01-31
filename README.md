@@ -1,9 +1,9 @@
-gijit: a go interpreter
+gijit: a just-in-time trace-compiled golang interpreter
 =======
 `gijit` aims at being a scalable Go REPL
 for doing interactive coding and data analysis.
-It is backed by LuaJIT, a tracing Just-in-time
-compiler for Lua that provides quite
+It is backed by LuaJIT, a Just-in-Time
+trace compiler that provides quite
 nice performance, sometimes even beating
 ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
@@ -46,7 +46,7 @@ Commands executed in the current session appear after the
 `----- current session: -----` delineator.
 
 ~~~
-$ gi -q
+$ gi -q   ## start quietly, omit the banner for the demo.
 gi> :h
 history:
 001: greet := "hello gophers!"

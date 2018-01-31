@@ -114,7 +114,7 @@ end
 
 
 function __reg:AddMethod(structName, methodName, method)
-
+   print("__reg:AddMethod called with methodName ", methodName)
       -- lookup the methodset
       local methodset = self.structs[structName]
       if methodset == nil then
