@@ -362,10 +362,13 @@ func (init *Initializer) String() string {
 // The package is specified by a list of *ast.Files and corresponding
 // file set, and the package path the package is identified with.
 // The clean path must not be empty or dot (".").
-func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token.FileSet, files []*ast.File, info *Info) (*Package, *Checker, error) {
+func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token.FileSet, files []*ast.File, info *Info, addPreludeToNewPkg func(pkg *Package)) (*Package, *Checker, error) {
 	// jea: gotta make these incremental, not new every time!
 	if pkg == nil {
 		pkg = NewPackage(path, "")
+		if addPreludeToNewPkg != nil {
+			addPreludeToNewPkg(pkg)
+		}
 	}
 	if check == nil {
 		check = NewChecker(conf, fset, pkg, info)

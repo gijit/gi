@@ -42,3 +42,11 @@ point = ffi.metatype("complex", {
 function _gi_NewComplex128(real, imag)
 
 end
+
+function __gijit_printQuoted(a)
+   if type(a) == "string" then
+      print("`"..a.."`")
+      return
+   end
+   print(a)
+end

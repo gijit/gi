@@ -220,3 +220,16 @@ func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archi
 
 	return res, nil
 }
+
+// __gijit_printQuoted(a ...interface{})
+func getFunForGijitPrintQuoted(pkg *types.Package) *types.Func {
+	// func __gijit_printQuoted(a ...interface{})
+	var recv *types.Var
+	var T types.Type = &types.Interface{}
+	results := types.NewTuple()
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", types.NewSlice(T)))
+	variadic := true
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "__gijit_printQuoted", sig)
+	return fun
+}

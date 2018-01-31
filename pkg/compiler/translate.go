@@ -428,7 +428,7 @@ func (s *Session) WaitForChange() {
 }
 
 var gijitAnsPrefix = []byte("__gijit_ans := ")
-var gijitAnsSuffix = []byte("\n println(__gijit_ans);")
+var gijitAnsSuffix = []byte("\n __gijit_printQuoted(__gijit_ans);")
 
 // at the beginning of src, transform a first '='[^=] into
 // "__gijit_ans := "

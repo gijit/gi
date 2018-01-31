@@ -21,6 +21,16 @@ import (
 	//"github.com/glycerine/luar"
 )
 
+func addPreludeToNewPkg(pkg *types.Package) {
+	//
+	// allow static type checking of the __gijit_printQuoted
+	// REPL utility function. It wraps strings
+	// in backticks for better printing.
+	//
+	scope := pkg.Scope()
+	scope.Insert(getFunForGijitPrintQuoted(pkg))
+}
+
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 
 	pp("jea debug, top of incrementallyCompile(): here is what files has:")
@@ -83,7 +93,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		check = a.check
 	}
 	var err error
-	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo)
+	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
 	if importError != nil {
 		//pp("config.Check: importError")
 		return nil, importError

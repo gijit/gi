@@ -24,7 +24,7 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
 __gijit_ans = 7LL;
-print(__gijit_ans);
+__gijit_printQuoted(__gijit_ans);
 `)
 
 	})
