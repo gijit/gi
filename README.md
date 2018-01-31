@@ -14,6 +14,8 @@ status
 
 2018 Jan 31 update
 -------
+As of release v0.8.2, we support pointers, taking and de-referencing.
+
 As of release v0.8.1, `gijit` works as a calculator. It will evaluate expressions at the command line.
 
 In order to continue to detect syntax errors in Go code, we
