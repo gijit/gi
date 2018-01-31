@@ -37,3 +37,29 @@ b := s.val
 
 	})
 }
+
+func Test099PointerDeference(t *testing.T) {
+
+	cv.Convey(`dereferencing a pointer`, t, func() {
+
+		code := `
+a:= 1
+b := &a
+c := *b
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "c", 1)
+
+	})
+}
