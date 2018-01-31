@@ -6,13 +6,13 @@ __giPrivatePointerProps = __giPrivatePointerProps or {}
 __gi_PrivatePointerMt = {
 
     __newindex = function(t, k, v)
-       print("__gi_Pointer: __newindex called val=", v)
+       print("__gi_Pointer: __newindex called, calling set() with val=", v)
        local props = rawget(t, __giPrivatePointerProps)
        return props.set(v)
     end,
 
     __index = function(t, k)
-       print("__gi_Pointer: __index called for key", k)       
+       print("__gi_Pointer: __index called, doing get()")       
        local props = rawget(t, __giPrivatePointerProps)
        return props.get()
     end,
