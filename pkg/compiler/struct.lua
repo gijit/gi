@@ -1,7 +1,7 @@
 -- structs
 
 __gi_PrivateInterfaceProps = {}
-__gi_ifaceNil = {[__gi_PrivateInterfaceProps]={name="nil"}}
+__gi_PrivateStructProps = {}
 
 -- st or showtable, a helper.
 function st(t)
@@ -14,7 +14,6 @@ end
 
 -- don't think we're going to use these/the slice and map approach for structs.
 -- _giPrivateStructRaw = {}
--- _giPrivateStructProps = {}
 
 -- __reg is a struct registry that associates
 -- names to an  __index metatable
@@ -73,6 +72,7 @@ function __reg:RegisterStruct(name)
    methodset.__index = methodset
    
    local props = {__typename = name}
+   props[__gi_PrivateStructProps] = props
    props.__index = props
    
    setmetatable(props, __gi_structMT)
@@ -89,6 +89,7 @@ function __reg:RegisterInterface(name)
    methodset.__index = methodset
    
    local props = {__typename = name}
+   props[__gi_PrivateInterfaceProps] = props
    props.__index = props
 
    setmetatable(props, __gi_ifaceMT)
@@ -97,6 +98,10 @@ function __reg:RegisterInterface(name)
    self.interfaces[name] = methodset
    return methodset
 end
+
+
+
+__gi_ifaceNil = __reg:RegisterInterface("nil")
 
 function __reg:IsInterface(name)
    return self.interfaces[name] ~= nil
