@@ -196,7 +196,14 @@ function _gi_UnpackSliceRaw(t)
       return unpack(t) 
    end
 
+   --print("jea debug, _gi_UnpackSliceRaw in slice.lua, raw is:")
+   --st(raw)
+
    if #raw == 0 then
+      -- will get here with just a single element, 0 indexed.
+      if raw[0] ~= nil then
+         return raw[0]
+      end
       return nil
    end
    return raw[0], unpack(raw)

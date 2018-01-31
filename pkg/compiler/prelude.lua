@@ -45,11 +45,19 @@ end
 
 function __gijit_printQuoted(...)
    a = {...}
+   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
+   if a[0] ~= nil then
+      if type(v) == "string" then
+         print("`"..v.."`")
+      else
+         print(v)
+      end
+   end
    for i,v in ipairs(a) do
       if type(v) == "string" then
          print("`"..v.."`")
-         return
+      else
+         print(v)
       end
-      print(v)
    end
 end
