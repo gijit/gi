@@ -39,7 +39,7 @@ gi>
 ~~~
 
 Keeping Go's type checking intact at the REPL preserves one of the most important
-advantages of Go. We catch bugs early, at compile time.
+advantages of Go. We catch typos early, at compile time.
 
 Multiple expressions at once also work, and each is printed on its own line.
 ~~~
