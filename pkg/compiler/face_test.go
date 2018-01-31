@@ -63,6 +63,18 @@ func (s *S) Next() int {
 var c Counter = &S{}
 a := c.Next()
 b := c.Next()
+
+type ByTen struct {
+   v int
+}
+func (s *ByTen) Next() int {
+   s.v += 10
+   return s.v
+}
+bt := &ByTen{}
+c = bt
+d := c.Next()
+e := c.Next()
 	`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -79,6 +91,9 @@ b := c.Next()
 
 		LuaMustInt64(vm, "a", 1)
 		LuaMustInt64(vm, "b", 2)
+
+		LuaMustInt64(vm, "d", 10)
+		LuaMustInt64(vm, "e", 20)
 
 	})
 }
