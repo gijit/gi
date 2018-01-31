@@ -14,7 +14,7 @@ status
 
 2018 Jan 31 update
 -------
-Now `gijit` works as a calculator. It will evaluate expressions at the command line.
+As of release v0.8.1, `gijit` works as a calculator. It will evaluate expressions at the command line.
 
 In order to continue to detect syntax errors in Go code, we
 adopt the same convention as Lua: the user must prepend an '=' equals sign to the
