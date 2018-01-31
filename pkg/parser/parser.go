@@ -2446,15 +2446,20 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 }
 
 func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
-	// fmt.Printf("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
+	//pp("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
 
+	// jea: instead, we'll try Lua style '=' in front of the expression.
+	// That will cause us to compile __ans := RHS, and then print(__ans);
+	//
 	// jea: started to try and allow expressions alone, but still todo...
-	// not sure if this is a good idea or not. User can always turn it into
-	// a simple assignment.
-	//case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
-	// return p.parseExpr(false)
+	// not sure if this is a good idea or not. B/c would mess up
+	// detection of errors in normal compiled code...? try it and see.
+	//	case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
+	//		x := p.parseExpr(false)
+	//		pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
+	//		return x
 
 	case token.IDENT, token.FOR, token.SWITCH, token.IF, token.GO, token.GOTO, token.SELECT:
 		return p.parseStmt()
@@ -2520,7 +2525,7 @@ func (p *parser) parseFile() *ast.File {
 		p.expectSemi()
 	}
 
-	// for gofront, we don't insist on a package clause.
+	// jea: for gijit, we don't insist on a package clause.
 
 	p.openScope()
 	p.pkgScope = p.topScope

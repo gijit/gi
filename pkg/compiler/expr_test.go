@@ -9,10 +9,10 @@ import (
 
 func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 
-	cv.Convey(`simple math expressions like 3 + 4 should return results at the REPL`, t, func() {
+	cv.Convey(`simple math expressions like = 3 + 4 should return results at the REPL. Following the Lua convention, in order to view a simple expression, the user adds an equals sign '=' to the start of the line.`, t, func() {
 
 		code := `
-3 + 4
+= 3 + 4
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -23,7 +23,8 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-println(3 + 4)
+__ans := 3 + 4
+print(__ans)
 `)
 
 	})
