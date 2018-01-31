@@ -1,5 +1,7 @@
 -- structs
 
+__gi_PrivateInterfaceProps = __gi_PrivateInterfaceProps or {}
+
 -- st or showtable, a helper.
 function st(t)
    local k = 1
@@ -64,7 +66,7 @@ function __reg:RegisterStruct(name)
 end
 
 function __reg:RegisterInterface(name)
-   local methodset = {}
+   local methodset = {[__gi_PrivateInterfaceProps] = {name=name}}
    methodset.__index = methodset
    self.interfaces[name] = methodset
    return methodset
@@ -138,3 +140,4 @@ function __gi_methodVal(recvr, methodName, recvrType)
    end
    return method
 end
+
