@@ -427,18 +427,19 @@ func (s *Session) WaitForChange() {
 	s.Watcher.Close()
 }
 
-var gijitAnsPrefix = []byte("__gijit_ans := ")
-var gijitAnsSuffix = []byte("\n __gijit_printQuoted(__gijit_ans);")
+var gijitAnsPrefix = []byte("__gijit_ans := []interface{}{")
+var gijitAnsSuffix = []byte("}\n __gijit_printQuoted(__gijit_ans...);")
 
 // at the beginning of src, transform a first '='[^=] into
 // "__gijit_ans := "
 func prependAns(src []byte) []byte {
 	nsrc := len(src)
-	trimmed := bytes.TrimLeftFunc(src, unicode.IsSpace)
-	n := len(trimmed)
-	diff := nsrc - n
-	if n > 1 && trimmed[0] == '=' && trimmed[1] != '=' {
-		return append(gijitAnsPrefix, append(src[diff+1:], gijitAnsSuffix...)...)
+	leftTrimmed := bytes.TrimLeftFunc(src, unicode.IsSpace)
+	trimmed := bytes.TrimFunc(src, unicode.IsSpace)
+	n := len(leftTrimmed)
+	leftdiff := nsrc - n
+	if n > 1 && leftTrimmed[0] == '=' && leftTrimmed[1] != '=' {
+		return append(gijitAnsPrefix, append(trimmed[leftdiff+1:], gijitAnsSuffix...)...)
 	}
 	return src
 }

@@ -64,3 +64,32 @@ __gijit_printQuoted(__gijit_ans);
 
 	})
 }
+
+func Test096MultipleExpressionsAtOnceAtTheREPL(t *testing.T) {
+
+	cv.Convey(`Multiple expressions after the equals sign: = 1, 2+5, "hi"+" there" should print all three expressions`, t, func() {
+
+		code := `
+= 1, 2+5, "hi" + " there"
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n  b = __gijit_ans[1]\n  c = __gijit_ans[2]\n ")...)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(withHelp))
+
+		LuaMustInt64(vm, "a", 1)
+		LuaMustInt64(vm, "b", 7)
+		LuaMustString(vm, "c", "hi there")
+
+	})
+}

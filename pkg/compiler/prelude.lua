@@ -43,10 +43,13 @@ function _gi_NewComplex128(real, imag)
 
 end
 
-function __gijit_printQuoted(a)
-   if type(a) == "string" then
-      print("`"..a.."`")
-      return
+function __gijit_printQuoted(...)
+   a = {...}
+   for i,v in ipairs(a) do
+      if type(v) == "string" then
+         print("`"..v.."`")
+         return
+      end
+      print(v)
    end
-   print(a)
 end
