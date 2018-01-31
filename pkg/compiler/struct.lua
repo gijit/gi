@@ -45,6 +45,18 @@ __structPairs = function(t)
    return stateless_iter, t, nil
 end
 
+-- common struct behavior in this metatable
+__gi_structMT = {
+   __structPairs = __structPairs,
+   __tostring = __structPrinter,
+   __pairs = __structPairs,
+}
+__gi_structMT.__index = __gi_structMT -- act as its own MT.
+
+-- common interface behavior
+__gi_ifaceMT = {}
+__gi_ifaceMT.__index = __gi_ifaceMT
+
 --
 -- RegisterStruct is the first step in making a new struct.
 -- It returns a methodset object.
@@ -53,23 +65,35 @@ end
 --   Bus   = __reg:RegisterStruct("Bus")
 --   Train =  __reg:RegisterStruct("Train")
 --
+-- let -> point to the metatable:
+--    methodset -> props -> __gi_structMT
+--
 function __reg:RegisterStruct(name)
-      local methodset = {}
-      methodset.__tostring = __structPrinter
-      methodset.__index = methodset -- is its own metatable, saving a table. (p151 / Ch 16.1 Classes, PIL 2nd ed.)
-      methodset.__typename = name
-      methodset.__pairs = __structPairs
+   local methodset = {}
+   methodset.__index = methodset
+   
+   local props = {__typename = name}
+   props.__index = props
+   
+   setmetatable(props, __gi_structMT)
+   setmetatable(methodset, props)
       
-      self.structs[name] = methodset
-      --print("debug: new methodset is: ", methodset)
-      --st(methodset)
-      return methodset
+   self.structs[name] = methodset
+   --print("debug: new methodset is: ", methodset)
+   --st(methodset)
+   return methodset
 end
 
 function __reg:RegisterInterface(name)
    local methodset = {}
    methodset.__index = methodset
-   methodset.__typename = name
+   
+   local props = {__typename = name}
+   props.__index = props
+
+   setmetatable(props, __gi_ifaceMT)
+   setmetatable(methodset, props)
+   
    self.interfaces[name] = methodset
    return methodset
 end
@@ -126,7 +150,7 @@ end
 
 
 function __reg:AddStructMethod(structName, methodName, method)
-   print("__reg:AddStructMethod called with methodName ", methodName)
+   --print("__reg:AddStructMethod called with methodName ", methodName)
       -- lookup the methodset
       local methodset = self.structs[structName]
       if methodset == nil then
@@ -166,9 +190,10 @@ function __gi_count_methods(vi)
    local uscore = 95 -- "_"
    
    for i, v in pairs(mt) do
+      -- we omit __ prefixed methods/values
       if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
          if type(v) == "function" then
-            print("we see a function! '"..tostring(i).."'")
+            --print("we see a function! '"..tostring(i).."'")
             n = n + 1
          end
       end
@@ -199,10 +224,10 @@ function __gi_assertType(value, typ, returnTuple)
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
    
    local isInterface = false
-   local interfacemethods = nil
+   local interfaceMethods = nil
    if __reg:IsInterface(typ) then
       isInterface = true
-      interfacemethods = __reg:GetInterface(typ)
+      interfaceMethods = __reg:GetInterface(typ)
    end
    
    local ok = false
