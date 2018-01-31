@@ -316,7 +316,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				switch xTypeNm {
 				case "ptrType":
 					// basic taking address of value to get pointer. See ptr_test.go, test 099.
-					return c.formatExpr(`__gi_ptrType(function() return %1s; end, function(v) %2s; end, "%s")`, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false), exprType.String())
+					return c.formatExpr(`__gi_ptrType(function() return %1s; end, function(v) %2s; end, "%s")`, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false), starToAmp(exprType.String()))
 				default:
 					panic(fmt.Sprintf("jea: unimplemented handling for type '%s'", xTypeNm))
 				}
@@ -887,7 +887,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return c.translateExpr(e.X, nil)
 		}
 		// jea: pointer dereference
-		return c.formatExpr("%e[0]", e.X)
+		return c.formatExpr("%e[0]", e.X) // any key will do.
 		//return c.formatExpr("%e.$get()", e.X)
 
 	case *ast.TypeAssertExpr:
@@ -1700,4 +1700,14 @@ func structFieldNameValuesForLua(t *types.Struct, ele []string) (r []string) {
 		r = append(r, fmt.Sprintf(`["%s"]=%s`, fld.Name(), ele[i]))
 	}
 	return
+}
+
+func starToAmp(a string) string {
+	if len(a) == 0 {
+		return a
+	}
+	if a[0] == '*' {
+		return "&" + a[1:]
+	}
+	return a
 }
