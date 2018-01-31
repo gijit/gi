@@ -1,7 +1,6 @@
 -- structs and interfaces
 
-__gi_InterfacePropsKey = {}
-__gi_StructPropsKey = {}
+__gi_PropsKey = {}
 __gi_MethodsetKey = {}
 __gi_BaseKey = {}
 
@@ -128,8 +127,8 @@ function __reg:RegisterStruct(name)
    }
    methodset.__index = methodset
    
-   local props = {__typename = name, __name="structProps"}
-   props[__gi_StructPropsKey] = props
+   local props = {__typename = name, __name="structProps", __nMethod=0}
+   props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props[__gi_BaseKey] = __gi_structMT
    props.__index = props -- __gi_structMT
@@ -150,7 +149,7 @@ function __reg:RegisterInterface(name)
    methodset.__index = methodset
    
    local props = {__typename = name, __name="ifaceProps"}
-   props[__gi_InterfacePropsKey] = props
+   props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props[__gi_BaseKey] = __gi_ifaceMT
    props.__tostring = __ifacePrinter
@@ -200,14 +199,23 @@ end
 
 function __reg:AddStructMethod(structName, methodName, method)
    --print("__reg:AddStructMethod called with methodName ", methodName)
-      -- lookup the methodset
-      local methodset = self.structs[structName]
-      if methodset == nil then
-         error("unregistered struct name '"..structName.."'")
-      end
-      
-      -- add the method
-      methodset[methodName] = method
+   -- lookup the methodset
+   local methodset = self.structs[structName]
+   if methodset == nil then
+      error("unregistered struct name '"..structName.."'")
+   end
+
+   local props = methodset[__gi_PropsKey]
+   -- new?
+   if methodset[methodName] ~= nil then
+      -- not new
+   else
+      -- new, count it.
+      props.__nMethod = props.__nMethod + 1
+   end
+   
+   -- add the method
+   methodset[methodName] = method
 end
 
 
@@ -277,19 +285,22 @@ function __gi_assertType(value, typ, returnTuple)
    if __reg:IsInterface(typ) then
       isInterface = true
       interfaceMethods = __reg:GetInterface(typ)
-   end
+    end
    
    local ok = false
    local missingMethod = ""
 
-   local valueMethods = getmetatable(value)
+    local valueMethods = value[__gi_MethodsetKey]
+    local valueProps = value[__gi_PropsKey]
 
+    local nMethod = valeProps.__nMethod
+    
    local nvm = __gi_count_methods(valueMethods)
    
-  if value == __gi_ifaceNil then
-     ok = false;
-     
-  elseif not isInterface then
+    if value == __gi_ifaceNil then
+    ok = false;
+    
+    elseif not isInterface then
      ok = value.constructor == typ;
      
   else
