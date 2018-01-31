@@ -170,6 +170,8 @@ end
 function __gi_assertType(value, typ, returnTuple)
 
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
+   
+   --[=====[
 
    local isInterface = false
    local iMethodSet = nil
@@ -244,7 +246,6 @@ function __gi_assertType(value, typ, returnTuple)
   if typ == $jsObjectPtr then
      value = value.object;
   end
-   --]=====]
   
   if returnTupe == 0 then
      return value
@@ -252,5 +253,6 @@ function __gi_assertType(value, typ, returnTuple)
      return true
   end
   return value, true
+   --]=====]
    
 end
