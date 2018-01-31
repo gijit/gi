@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/fsnotify/fsnotify"
 	luajit "github.com/glycerine/golua/lua"
@@ -81,6 +82,12 @@ type IncrState struct {
 // Tr: translate from go to javascript, statement by statement or
 // expression by expression
 func (tr *IncrState) Tr(src []byte) []byte {
+
+	// detect the leading '=' and turn it into
+	// __gijit_ans :=
+	src = prependAns(src)
+
+	pp("after prependAns, src = '%s'", src)
 
 	// classic
 	file, err := parser.ParseFile(tr.fileSet, "", src, 0)
@@ -418,4 +425,20 @@ func (s *Session) WaitForChange() {
 		}
 	}()
 	s.Watcher.Close()
+}
+
+var gijitAnsPrefix = []byte("__gijit_ans := ")
+var gijitAnsSuffix = []byte("\n println(__gijit_ans);")
+
+// at the beginning of src, transform a first '='[^=] into
+// "__gijit_ans := "
+func prependAns(src []byte) []byte {
+	nsrc := len(src)
+	trimmed := bytes.TrimLeftFunc(src, unicode.IsSpace)
+	n := len(trimmed)
+	diff := nsrc - n
+	if n > 1 && trimmed[0] == '=' && trimmed[1] != '=' {
+		return append(gijitAnsPrefix, append(src[diff+1:], gijitAnsSuffix...)...)
+	}
+	return src
 }

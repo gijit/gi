@@ -23,8 +23,8 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-__ans := 3 + 4
-print(__ans)
+__gijit_ans = 7LL;
+print(__gijit_ans);
 `)
 
 	})
