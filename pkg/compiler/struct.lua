@@ -1,7 +1,8 @@
--- structs
+-- structs and interfaces
 
-__gi_PrivateInterfaceProps = {}
-__gi_PrivateStructProps = {}
+__gi_InterfacePropsKey = {}
+__gi_StructPropsKey = {}
+__gi_MethodsetKey = {}
 
 -- st or showtable, a helper.
 function st(t)
@@ -72,7 +73,8 @@ function __reg:RegisterStruct(name)
    methodset.__index = methodset
    
    local props = {__typename = name}
-   props[__gi_PrivateStructProps] = props
+   props[__gi_StructPropsKey] = props
+   props[__gi_MethodsetKey] = methodset
    props.__index = props
    
    setmetatable(props, __gi_structMT)
@@ -89,7 +91,8 @@ function __reg:RegisterInterface(name)
    methodset.__index = methodset
    
    local props = {__typename = name}
-   props[__gi_PrivateInterfaceProps] = props
+   props[__gi_InterfacePropsKey] = props
+   props[__gi_MethodsetKey] = methodset
    props.__index = props
 
    setmetatable(props, __gi_ifaceMT)
