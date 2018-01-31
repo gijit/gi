@@ -69,6 +69,7 @@ end
 function __reg:RegisterInterface(name)
    local methodset = {}
    methodset.__index = methodset
+   methodset.__typename = name
    self.interfaces[name] = methodset
    return methodset
 end
@@ -103,23 +104,24 @@ function __reg:NewInstance(name, data)
 end
 
 function __structPrinter(self)
-     local s = self.__typename .." {\n"
-     for i, v in pairs(self) do
-        if #i >=2 and i[1]=="_" and i[2]=="_" then
-           -- skip __ prefixed methods when printing; atypical
+   local s = self.__typename .." {\n"
+
+   local uscore = 95 -- "_"
+   
+   for i, v in pairs(self) do
+      if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
+           -- skip __ prefixed methods when printing;
            -- since most of these live in the metatable anyway.
-           goto continue
-        end
-        sv = ""
-        if type(v) == "string" then
-           sv = string.format("%q", v)
-        else
-           sv = tostring(v)
-        end
-        s = s .. "    "..tostring(i).. ":\t" .. sv .. ",\n"
-        ::continue::
-     end
-     return s .. "}"
+         sv = ""
+         if type(v) == "string" then
+            sv = string.format("%q", v)
+         else
+            sv = tostring(v)
+         end
+         s = s .. "    "..tostring(i).. ":\t" .. sv .. ",\n"
+      end
+   end
+   return s .. "}"
 end
 
 
@@ -149,6 +151,31 @@ function __gi_methodVal(recvr, methodName, recvrType)
    return method
 end
 
+-- __gi_count_methods
+--
+-- vi can be struct value or interface value;
+-- We count the number of non "__" prefixed
+-- methods in the metatable of vi.
+--
+function __gi_count_methods(vi)
+   local mt = getmetatable(vi)
+   if mt == nil then
+      return 0
+   end
+   local n = 0
+   local uscore = 95 -- "_"
+   
+   for i, v in pairs(mt) do
+      if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
+         if type(v) == "function" then
+            print("we see a function! '"..tostring(i).."'")
+            n = n + 1
+         end
+      end
+   end
+   return n
+end
+
 -- face.lua merged into struct.lua, because we need _reg
 
 -- __gi_assertType is an interface type assertion.
@@ -168,20 +195,22 @@ end
 --   if 0, then we panic when the interface conversion fails.
 --
 function __gi_assertType(value, typ, returnTuple)
-
+ --[=[
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
    
-   --[=====[
-
    local isInterface = false
-   local iMethodSet = nil
+   local interfacemethods = nil
    if __reg:IsInterface(typ) then
       isInterface = true
-      iMethodSet = __reg:GetInterface(typ)
+      interfacemethods = __reg:GetInterface(typ)
    end
    
    local ok = false
    local missingMethod = ""
+
+   local valueMethods = getmetatable(value)
+
+   local nvm = __gi_count_methods(valueMethods)
    
   if value == __gi_ifaceNil then
      ok = false;
@@ -196,9 +225,19 @@ function __gi_assertType(value, typ, returnTuple)
         
         ok = true;
         local valueMethodSet = __gi_methodSet(value.constructor);
-        local interfaceMethods = typ.methods;
+        
         local ni = #interfaceMethods
         
+      for i, v in pairs(interfaceMethods) do
+          if #i >=2 and i[1]=="_" and i[2]=="_" then
+             -- skip __ prefixed methods when printing; atypical
+             -- since most of these live in the metatable anyway.
+             goto continue
+        end
+
+        ::continue::
+     end
+
         for i = 1, ni do
            
            local tm = interfaceMethods[i];
@@ -253,6 +292,5 @@ function __gi_assertType(value, typ, returnTuple)
      return true
   end
   return value, true
-   --]=====]
-   
+ --]=]   
 end
