@@ -752,15 +752,17 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		d.MethodListCode = c.CatchOutput(0, func() {
 			named := o.Type().(*types.Named)
 			if _, ok := named.Underlying().(*types.Interface); ok {
+				pp("is interface, not! skipping... ???")
 				return
 			}
 			var methods []string
 			var ptrMethods []string
 			for i := 0; i < named.NumMethods(); i++ {
+				pp("on method i=%v, '%v'\n", i, named.Method(i).Name())
 				method := named.Method(i)
 				name := method.Name()
 				if reservedKeywords[name] {
-					name += "$"
+					name += "_"
 				}
 				pkgPath := ""
 				if !method.Exported() {

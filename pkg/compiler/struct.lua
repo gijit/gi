@@ -69,6 +69,31 @@ function __structPrinter(self)
 end
 
 
+function __ifacePrinter(self)
+   --print("__ifacePrinter called")
+   local s = "type " .. self.__typename .." interface{\n"
+
+   local methset = self[__gi_MethodsetKey]
+   
+   local uscore = 95 -- "_"
+   
+   for i, v in pairs(methset) do
+      if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
+           -- skip __ prefixed methods when printing;
+           -- since most of these live in the metatable anyway.
+         sv = ""
+         if type(v) == "string" then
+            sv = string.format("%q", v)
+         else
+            sv = tostring(v)
+         end
+         s = s .. "    "..tostring(i).. ":\t" .. sv .. ",\n"
+      end
+   end
+   return s .. "}"
+end
+
+
 -- common struct behavior in this metatable
 __gi_structMT = {
    __structPairs = __structPairs,
@@ -95,6 +120,10 @@ __gi_ifaceMT = {
 function __reg:RegisterStruct(name)
    local methodset = {
       __name="structMethodSet",
+
+      -- make __tostring as local as possible,
+      -- to avoid the infinite looping we got
+      -- when it was higher up.
       __tostring = __structPrinter
    }
    methodset.__index = methodset
@@ -115,13 +144,16 @@ function __reg:RegisterStruct(name)
 end
 
 function __reg:RegisterInterface(name)
-   local methodset = {__name="ifaceMethodSet"}
+   local methodset = {
+      __name="ifaceMethodSet",
+   }
    methodset.__index = methodset
    
    local props = {__typename = name, __name="ifaceProps"}
    props[__gi_InterfacePropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props[__gi_BaseKey] = __gi_ifaceMT
+   props.__tostring = __ifacePrinter
    props.__index = props
 
    setmetatable(props, __gi_ifaceMT)
