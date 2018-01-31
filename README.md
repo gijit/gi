@@ -23,14 +23,18 @@ expression. For example:
 ~~~
 gi> = 24/3
 8LL
+
+elapsed: '117.858µs'
 gi>
 ~~~
-(NB, the 'LL' suffix indicates a 64-bit integer.)
+Aside: the 'LL' suffix indicates a 64-bit integer. Borrowed by LuaJIT from C++, it stands for "long long".
 
 Notice, however, that without the '=', a syntax error is properly detected:
 ~~~
-gi> 24.0 / 3.0
-oops: 'problem detected during Go static type checking: '1:1: expected declaration, found 'FLOAT' 24.0'' on input '24.0 / 3.0'
+gi> 24/3
+oops: 'problem detected during Go static type checking: '1:1: expected declaration, found 'INT' 24'' on input '24/3'
+
+elapsed: '24.166µs'
 gi> 
 ~~~
 
