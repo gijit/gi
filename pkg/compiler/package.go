@@ -706,10 +706,14 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
 		pp("funcRef in translateFunction, package.go:698 is '%s'; isMethod='%v'", funcRef, isMethod)
+		splt := strings.Split(funcRef, ":")
 		joinedParams = strings.Join(params, ", ")
 		if isMethod {
-			return []byte(fmt.Sprintf("\tfunction %s%s;\n",
-				funcRef, fun))
+			return []byte(fmt.Sprintf("\tfunction %s%s;\n "+
+				"__reg:AddStructMethod(\"%s\", \"%s\", %s)\n",
+				funcRef, fun,
+				splt[0], splt[1], splt[0]+"."+splt[1],
+			))
 		} else {
 			return []byte(fmt.Sprintf("\t%s = %s;\n", funcRef, fun))
 		}

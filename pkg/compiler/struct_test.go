@@ -11,16 +11,13 @@ func Test093NewMethodsShouldBeRegistered(t *testing.T) {
 
 	cv.Convey(`new methods defined on types should be registered with the __reg for the type and be added to the methodset that __reg holds for that type`, t, func() {
 
-		// jea: temp disabled!
-		return
-
 		code := `
 type S struct{}
 func (s *S) hi() string {
    return "hi called!"
 }
 `
-		// __reg:AddMethod should get called.
+		// __reg:AddStructMethod should get called.
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -35,7 +32,7 @@ func (s *S) hi() string {
 		s = self;
 		return "hi called!";
 	end;
-    __reg:AddMethod("S", "hi", S.hi)
+    __reg:AddStructMethod("S", "hi", S.hi)
 `)
 
 		// and verify that it happens correctly

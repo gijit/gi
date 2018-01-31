@@ -1,6 +1,7 @@
 -- structs
 
-__gi_PrivateInterfaceProps = __gi_PrivateInterfaceProps or {}
+__gi_PrivateInterfaceProps = {}
+__gi_ifaceNil = {[__gi_PrivateInterfaceProps]={name="nil"}}
 
 -- st or showtable, a helper.
 function st(t)
@@ -66,12 +67,19 @@ function __reg:RegisterStruct(name)
 end
 
 function __reg:RegisterInterface(name)
-   local methodset = {[__gi_PrivateInterfaceProps] = {name=name}}
+   local methodset = {}
    methodset.__index = methodset
    self.interfaces[name] = methodset
    return methodset
 end
 
+function __reg:IsInterface(name)
+   return self.interfaces[name] ~= nil
+end
+
+function __reg:GetInterface(name)
+   return self.interfaces[name]
+end
 
 -- create a new struct instance by
 -- attaching the appropriate methodset
@@ -115,8 +123,8 @@ function __structPrinter(self)
 end
 
 
-function __reg:AddMethod(structName, methodName, method)
-   print("__reg:AddMethod called with methodName ", methodName)
+function __reg:AddStructMethod(structName, methodName, method)
+   print("__reg:AddStructMethod called with methodName ", methodName)
       -- lookup the methodset
       local methodset = self.structs[structName]
       if methodset == nil then
@@ -141,3 +149,108 @@ function __gi_methodVal(recvr, methodName, recvrType)
    return method
 end
 
+-- face.lua merged into struct.lua, because we need _reg
+
+-- __gi_assertType is an interface type assertion.
+--
+--  either
+--    a, ok := b.(Face)  ## the two value form (returnTupe==2)
+--  or
+--    a := b.(Face)      ## the one value form (returnTuple==0; can panic)
+--  or
+--    _, ok := b.(Face)  ## (returnTuple==1; does not panic)
+--
+-- returnTuple in {0, 1, 2},
+--   0 returns just the interface-value, converted or nil/zero-value.
+--   1 returns just the ok (2nd-value in a conversion, a bool)
+--   2 returns both
+--
+--   if 0, then we panic when the interface conversion fails.
+--
+function __gi_assertType(value, typ, returnTuple)
+
+   print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
+
+   local isInterface = false
+   local iMethodSet = nil
+   if __reg:IsInterface(typ) then
+      isInterface = true
+      iMethodSet = __reg:GetInterface(typ)
+   end
+   
+   local ok = false
+   local missingMethod = ""
+   
+  if value == __gi_ifaceNil then
+     ok = false;
+     
+  elseif not isInterface then
+     ok = value.constructor == typ;
+     
+  else
+     local valueTypeString = value.constructor.string;
+     ok = typ.implementedBy[valueTypeString];
+     if ok == nil then
+        
+        ok = true;
+        local valueMethodSet = __gi_methodSet(value.constructor);
+        local interfaceMethods = typ.methods;
+        local ni = #interfaceMethods
+        
+        for i = 1, ni do
+           
+           local tm = interfaceMethods[i];
+           local found = false;
+           local msl = #valueMethodSet
+           
+           for j = 1,msl do
+              local vm = valueMethodSet[j];
+              if vm.name == tm.name and vm.pkg == tm.pkg and vm.typ == tm.typ then
+                 found = true;
+                 break;
+              end
+           end
+           
+           if not found then
+              ok = false;
+              -- cannot cache, as repl may add/subtract methods.
+              missingMethod = tm.name;
+              break;
+           end
+        end
+
+        -- can't cache this, repl may change it.
+        --typ.implementedBy[valueTypeString] = ok;
+        
+     end
+  end
+  
+  if not ok then
+     
+     if returnTuple == 0 then
+        __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", (value === __gi_ifaceNil ? "" : value.constructor.string), typ.string, missingMethod));
+        
+     elseif returnTuple == 1 then
+        return false
+     else
+        return zeroVal, false
+     end
+  end
+  
+  if not isInterface then
+     value = value.$val;
+  end
+  
+  if typ == $jsObjectPtr then
+     value = value.object;
+  end
+   --]=====]
+  
+  if returnTupe == 0 then
+     return value
+  elseif returnTuple == 1 then
+     return true
+  end
+  return value, true
+   
+end

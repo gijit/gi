@@ -741,9 +741,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				// the Luar object system will probably override the
 				// choices here anyway!
 				c.Printf(`%s = __reg:RegisterStruct("%s");`, lhs, o.Name())
-				if lhs == "Dog" {
-					//panic("where")
-				}
+
 			case *types.Interface:
 				c.Printf(`%s = __reg:RegisterInterface("%s");`, lhs, o.Name())
 			}
