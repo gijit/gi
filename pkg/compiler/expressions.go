@@ -837,8 +837,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 				isLuar := typesutil.IsLuarObject(declaredFuncRecv)
 
-				fmt.Printf("\n isLuar='%v', recv = '%#v', declaredFuncRecv = '%#v'\n",
-					isLuar, recv, declaredFuncRecv)
+				//fmt.Printf("\n isLuar='%v', recv = '%#v', declaredFuncRecv = '%#v'\n",
+				//	isLuar, recv, declaredFuncRecv)
 
 				if isLuar {
 					// jea: then change back to . for Luar cdata methods. imp_test 087
