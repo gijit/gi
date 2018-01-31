@@ -312,7 +312,15 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				if c.p.escapingVars[obj] {
 					return c.formatExpr("(%1s.$ptr || (%1s.$ptr = new %2s(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, %1s)))", c.p.objectNames[obj], c.typeName(exprType))
 				}
-				return c.formatExpr(`(%1s || (%1s = new %2s(function() { return %3s; }, function($v) { %4s })))`, c.varPtrName(obj), c.typeName(exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("$v", exprType), false))
+				xTypeNm := c.typeName(exprType)
+				switch xTypeNm {
+				case "ptrType":
+					// basic taking address of value to get pointer. See ptr_test.go, test 099.
+					return c.formatExpr(`__gi_ptrType(function() return %1s; end, function(v) %2s; end, "%s")`, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false), exprType.String())
+				default:
+					panic(fmt.Sprintf("jea: unimplemented handling for type '%s'", xTypeNm))
+				}
+				//return c.formatExpr(`(%1s or (%1s = new %2s(function() return %3s; end, function(v) %4s; end)))`, c.varPtrName(obj), xTypeNm, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false))
 			case *ast.SelectorExpr:
 				sel, ok := c.p.SelectionOf(x)
 				if !ok {
@@ -878,7 +886,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case *types.Struct, *types.Array:
 			return c.translateExpr(e.X, nil)
 		}
-		return c.formatExpr("%e.$get()", e.X)
+		// jea: pointer dereference
+		return c.formatExpr("%e[0]", e.X)
+		//return c.formatExpr("%e.$get()", e.X)
 
 	case *ast.TypeAssertExpr:
 		if e.Type == nil {
