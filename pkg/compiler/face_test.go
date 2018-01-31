@@ -11,63 +11,74 @@ var _ = fmt.Printf
 var _ = testing.T{}
 var _ = cv.So
 
-func Test092Interfaces(t *testing.T) {
+func Test100Interfaces(t *testing.T) {
 
 	/*
-		        a) one-value conversion:
-		             as := any.(Stringer)
+		       0) declare a var as an interface
 
-		    b)    two-value conversion check:
+			        a) one-value conversion:
+			             as := any.(Stringer)
 
-		   type Stringer interface {
-		      String() string
-		   }
-		    if v, ok := any.(Stringer); ok {
-		        return v.String()
-		    }
+			    b)    two-value conversion check:
 
-		    c) type switch:
+			   type Stringer interface {
+			      String() string
+			   }
+			    if v, ok := any.(Stringer); ok {
+			        return v.String()
+			    }
 
-		   func ToString(any interface{}) string {
+			    c) type switch:
 
-		    switch v := any.(type) {
-		    case int:
-		        return strconv.Itoa(v)
-		    case float:
-		        return strconv.Ftoa(v, 'g', -1)
-		    }
-		    return "???"
-		    }
+			   func ToString(any interface{}) string {
 
-		                d) assignment /compile time check:
+			    switch v := any.(type) {
+			    case int:
+			        return strconv.Itoa(v)
+			    case float:
+			        return strconv.Ftoa(v, 'g', -1)
+			    }
+			    return "???"
+			    }
 
-		       var s Stringer = &MyType{}
+			                d) assignment /compile time check:
 
+			       var s Stringer = &MyType{}
 
-
-		cv.Convey(``, t, func() {
-
-			code := `
-
-	`
-			vm, err := NewLuaVmWithPrelude(nil)
-			panicOn(err)
-			defer vm.Close()
-			inc := NewIncrState(vm, nil)
-
-			translation := inc.Tr([]byte(code))
-			fmt.Printf("\n translation='%s'\n", translation)
-
-			cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-	`)
-
-			// and verify that it happens correctly
-			LuaRunAndReport(vm, string(translation))
-
-			// check for exception
-			LuaMustInt64(vm, "c0", 4)
-			LuaMustInt64(vm, "a1", 4)
-
-		})
 	*/
+
+	cv.Convey(`declare an interface`, t, func() {
+
+		code := `
+type Counter interface {
+   Next() int
+}
+type S struct {
+   v int
+}
+func (s *S) Next() int {
+  s.v++
+  return s.v
+}
+var c Counter = &S{}
+a := c.Next()
+b := c.Next()
+	`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "a", 1)
+		LuaMustInt64(vm, "b", 2)
+
+	})
 }
