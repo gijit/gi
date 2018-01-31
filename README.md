@@ -41,6 +41,17 @@ gi>
 Keeping Go's type checking intact at the REPL preserves one of the most important
 advantages of Go. We catch bugs early, at compile time.
 
+Multiple expressions at once also work, and each is printed on its own line.
+~~~
+gi> = 2+4, "gophers" + " " + "rock",  7-3
+6LL
+`gophers rock`
+4LL
+
+elapsed: '155.55µs'
+gi> 
+~~~
+
 2018 Jan 29 update
 -------
 What is left to do: pointers, interfaces, go-routines,
