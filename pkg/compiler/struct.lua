@@ -47,6 +47,7 @@ __structPairs = function(t)
 end
 
 function __structPrinter(self)
+   --print("__structPrinter called")
    local s = self.__typename .." {\n"
 
    local uscore = 95 -- "_"
@@ -67,20 +68,18 @@ function __structPrinter(self)
    return s .. "}"
 end
 
+
 -- common struct behavior in this metatable
 __gi_structMT = {
    __structPairs = __structPairs,
-   __tostring = __structPrinter,
    __pairs = __structPairs,
    __name = "__gi_structMT"
 }
-__gi_structMT.__index = __gi_structMT -- act as its own MT.
 
 -- common interface behavior
 __gi_ifaceMT = {
    __name = "__gi_ifaceMT"
 }
-__gi_ifaceMT.__index = __gi_ifaceMT
 
 --
 -- RegisterStruct is the first step in making a new struct.
@@ -94,14 +93,17 @@ __gi_ifaceMT.__index = __gi_ifaceMT
 --    methodset -> props -> __gi_structMT
 --
 function __reg:RegisterStruct(name)
-   local methodset = {__name="structMethodSet"}
+   local methodset = {
+      __name="structMethodSet",
+      __tostring = __structPrinter
+   }
    methodset.__index = methodset
    
    local props = {__typename = name, __name="structProps"}
    props[__gi_StructPropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props[__gi_BaseKey] = __gi_structMT
-   props.__index = props
+   props.__index = props -- __gi_structMT
    
    setmetatable(props, __gi_structMT)
    setmetatable(methodset, props)
