@@ -22,16 +22,14 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-__gijit_ans = 7LL;
-__gijit_printQuoted(__gijit_ans);
-`)
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
 
 		// and verify that it happens correctly
-		LuaRunAndReport(vm, string(translation))
+		LuaRunAndReport(vm, string(withHelp))
 
-		// check for exception
-		LuaMustInt64(vm, "__gijit_ans", 7)
+		LuaMustInt64(vm, "a", 7)
 
 	})
 }
@@ -51,16 +49,15 @@ func Test095StringExpressionsShouldWorkAtREPL(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-__gijit_ans = "hi there";
-__gijit_printQuoted(__gijit_ans);
-`)
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
 
 		// and verify that it happens correctly
-		LuaRunAndReport(vm, string(translation))
+		LuaRunAndReport(vm, string(withHelp))
 
 		// check for exception
-		LuaMustString(vm, "__gijit_ans", "hi there")
+		LuaMustString(vm, "a", "hi there")
 
 	})
 }
