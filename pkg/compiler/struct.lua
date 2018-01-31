@@ -126,5 +126,15 @@ function __reg:AddMethod(structName, methodName, method)
 end
 
 
-
-
+function __gi_methodVal(recvr, methodName, recvrType)
+   print("__gi_methodVal with methodName ", methodName, " recvrType=", recvrType)
+   local methodset = __reg.structs[recvrType]
+   if methodset == nil then
+      error("error in __gi_methodVal: unregistered struct name '"..recvrType.."'")
+   end
+   local method = methodset[methodName]
+   if method == nil then
+      error("error in __gi_methodVal: method '"..methodName .."' not found for type '"..recvrType.."'")
+   end
+   return method
+end

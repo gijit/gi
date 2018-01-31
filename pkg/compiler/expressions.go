@@ -679,7 +679,12 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			return c.formatExpr("%e.%s", e.X, strings.Join(fields, "."))
 		case types.MethodVal:
-			return c.formatExpr(`$methodVal(%s, "%s")`, c.makeReceiver(e), sel.Obj().(*types.Func).Name())
+			sel, _ := c.p.SelectionOf(e)
+			recvType := sel.Recv()
+			pp("case types.MethodVal: typeName of e.X = '%#v'", c.typeName(recvType))
+			recvr := c.makeReceiver(e)
+			return c.formatExpr(`__gi_methodVal(%s, "%s", "%s")`, recvr, sel.Obj().(*types.Func).Name(), c.typeName(recvType))
+			//return c.formatExpr(`$methodVal(%s, "%s")`, c.makeReceiver(e), sel.Obj().(*types.Func).Name())
 		case types.MethodExpr:
 			if !sel.Obj().Exported() {
 				c.p.dependencies[sel.Obj()] = true
@@ -1014,7 +1019,7 @@ func (c *funcContext) makeReceiver(e *ast.SelectorExpr) *expression {
 
 	recv := c.translateImplicitConversionWithCloning(x, methodsRecvType)
 	if isWrapped(recvType) {
-		recv = c.formatExpr("new %s(%s)", c.typeName(methodsRecvType), recv)
+		recv = c.formatExpr("new 777777 %s(%s)", c.typeName(methodsRecvType), recv)
 	}
 	return recv
 }
