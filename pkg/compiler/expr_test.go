@@ -93,3 +93,30 @@ func Test096MultipleExpressionsAtOnceAtTheREPL(t *testing.T) {
 
 	})
 }
+
+func Test097SingleExpressionAtTheREPL(t *testing.T) {
+
+	cv.Convey(`One expression after the equals sign: = 2+5, should print 7LL`, t, func() {
+
+		code := `
+= 2+5
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(withHelp))
+
+		LuaMustInt64(vm, "a", 7)
+
+	})
+}
