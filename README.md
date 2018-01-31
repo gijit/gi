@@ -29,7 +29,7 @@ gi> = 24/3
 elapsed: '117.858µs'
 gi>
 ~~~
-Aside: the 'LL' suffix indicates a 64-bit integer. Borrowed by LuaJIT from C++, it stands for "long long".
+Aside: the 'LL' suffix indicates a 64-bit, signed integer. Borrowed by LuaJIT from C/C++, it stands for "long long". There's also 'ULL' for uint64.
 
 Notice, however, that without the '=', a syntax error is properly detected:
 ~~~
@@ -225,11 +225,6 @@ a few lines must be added to `pkg/compiler/import.go` so
 that the package's exported functions will be available
 to the REPL at runtime, after import. The "regexp" and "os"
 shadow packages provide examples of how to do this.
-
-Some non-functions in the shadow package
-may need to be manually commented out in
-the generated file to finish preparation. The Go compiler
-will tell you which ones when you rebuild `gi`.
 
 While shadowing (sandboxing) does
 not allow arbitrary imports to be called from inside
