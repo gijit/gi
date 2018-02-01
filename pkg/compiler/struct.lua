@@ -57,8 +57,8 @@ function __structPrinter(self)
    
    for i, v in pairs(self) do
       if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
-           -- skip __ prefixed methods when printing;
-           -- since most of these live in the metatable anyway.
+         -- skip __ prefixed methods when printing;
+         -- since most of these live in the metatable anyway.
          sv = ""
          if type(v) == "string" then
             sv = string.format("%q", v)
@@ -82,8 +82,8 @@ function __ifacePrinter(self)
    
    for i, v in pairs(methset) do
       if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
-           -- skip __ prefixed methods when printing;
-           -- since most of these live in the metatable anyway.
+         -- skip __ prefixed methods when printing;
+         -- since most of these live in the metatable anyway.
          sv = ""
          if type(v) == "string" then
             sv = string.format("%q", v)
@@ -139,7 +139,7 @@ function __reg:RegisterStruct(name)
    
    setmetatable(props, __gi_structMT)
    setmetatable(methodset, props)
-      
+   
    self.structs[name] = methodset
    --print("debug: new methodset is: ", methodset)
    --st(methodset)
@@ -183,20 +183,20 @@ end
 -- to data and returning it.
 function __reg:NewInstance(name, data)
    
-      local methodset = self.structs[name]
-      if methodset == nil then
-         error("error in _struct_registry.NewInstance:"..
-                  "unknown struct '"..name.."'")
-      end
-      -- this is the essence. The
-      -- methodset is the
-      -- metatable for the struct.
-      -- 
-      -- Thus unknown direct keys like method
-      -- names are forwarded
-      -- to the methodset.
-      setmetatable(data, methodset)
-      return data
+   local methodset = self.structs[name]
+   if methodset == nil then
+      error("error in _struct_registry.NewInstance:"..
+               "unknown struct '"..name.."'")
+   end
+   -- this is the essence. The
+   -- methodset is the
+   -- metatable for the struct.
+   -- 
+   -- Thus unknown direct keys like method
+   -- names are forwarded
+   -- to the methodset.
+   setmetatable(data, methodset)
+   return data
 end
 
 
@@ -412,7 +412,7 @@ function __gi_assertType(value, typ, returnTuple)
          end
          error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
          -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", ctor, typ.string, missingMethod)
-                    
+         
       elseif returnTuple == 1 then
          return false
       else
@@ -468,24 +468,24 @@ __gi_kindUnsafePointer = 26;
 
 __gi_methodSynthesizers = {}
 __gi_addMethodSynthesizer = function(f) 
-  if __gi_methodSynthesizers == nil then
-    f();
-    return;
-  end
-  __gi_methodSynthesizers.push(f);
+   if __gi_methodSynthesizers == nil then
+      f();
+      return;
+   end
+   __gi_methodSynthesizers.push(f);
 end
 
 __gi_synthesizeMethods = function() 
-  __gi_methodSynthesizers.forEach(function(f) f(); end);
-  __gi_methodSynthesizers = nil;
+   __gi_methodSynthesizers.forEach(function(f) f(); end);
+   __gi_methodSynthesizers = nil;
 end
 
 __gi_ifaceKeyFor = function(x)
-  if x == __gi_ifaceNil then
-    return "nil"
-  end
-  local c = x.constructor
-  return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
+   if x == __gi_ifaceNil then
+      return "nil"
+   end
+   local c = x.constructor
+   return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
 end
 
 __gi_identity = function(x) return x; end
@@ -493,11 +493,11 @@ __gi_identity = function(x) return x; end
 __gi_typeIDCounter = 0;
 
 __gi_idKey = function(x) 
-  if x.__gi_id == nil then
-     __gi_idCounter = __gi_idCounter + 1
-     x.__gi_id = __gi_idCounter;
-  end
-  return tostring(x.__gi_id);
+   if x.__gi_id == nil then
+      __gi_idCounter = __gi_idCounter + 1
+      x.__gi_id = __gi_idCounter;
+   end
+   return tostring(x.__gi_id);
 end
 
 __castableMT = {
@@ -514,7 +514,7 @@ __gi_identity = function(x) return x; end
 __gi_floatKey = function(f)
    if f ~= f then
       __gi_idCounter = __gi_idCounter+1
-         return "NaN_" + __gi_idCounter;
+      return "NaN_" + __gi_idCounter;
    end
    return tostring(f);
 end
@@ -526,193 +526,321 @@ end
 --
 function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
 
-      print("size=",size,", kind=",kind,", str=",str)
-      print("named=",named,", pkg=",pkg)
-      print("exported=",exported,", constructor=",constructor)
+   print("size=",size,", kind=",kind,", str=",str)
+   print("named=",named,", pkg=",pkg)
+   print("exported=",exported,", constructor=",constructor)
+   
+   local typ = {}
+   if kind == __gi_kindBool or
+      kind == __gi_kindInt or
+      kind == __gi_kindInt8 or
+      kind == __gi_kindInt16 or
+      kind == __gi_kindInt32 or
+      kind == __gi_kindInt64 or
+      kind == __gi_kindUint or
+      kind == __gi_kindUint8 or
+      kind == __gi_kindUint16 or
+      kind == __gi_kindUint32 or
+      kind == __gi_kindUint64 or
+      kind == __gi_kindUintptr or
+   kind == __gi_kindUnsafePointer then
       
-      local typ = {}
-      if kind == __gi_kindBool or
-         kind == __gi_kindInt or
-         kind == __gi_kindInt8 or
-         kind == __gi_kindInt16 or
-         kind == __gi_kindInt32 or
-         kind == __gi_kindInt64 or
-         kind == __gi_kindUint or
-         kind == __gi_kindUint8 or
-         kind == __gi_kindUint16 or
-         kind == __gi_kindUint32 or
-         kind == __gi_kindUint64 or
-         kind == __gi_kindUintptr or
-      kind == __gi_kindUnsafePointer then
-         
-         typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
-         setmetatable(typ, __castableMT);
-         -- gopherjs:
-         -- typ = function(v) this.__gi_val = v; end
-         -- typ.wrapped = true;
-         -- typ.keyFor = __gi_identity;
-         
-         
-      elseif kind == __gi_kindString then
+      typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
+      setmetatable(typ, __castableMT);
+      -- gopherjs:
+      -- typ = function(v) this.__gi_val = v; end
+      -- typ.wrapped = true;
+      -- typ.keyFor = __gi_identity;
+      
+      
+   elseif kind == __gi_kindString then
 
-         typ = {__gi_val, wrapped=true};
-         setmetatable(typ, __castableMT);
-         -- typ = function(v) this.__gi_val = v; end
-         -- typ.wrapped = true;
-         typ.keyFor = function(x) return "__gi_"..x; end
-         
+      typ = {__gi_val, wrapped=true};
+      setmetatable(typ, __castableMT);
+      -- typ = function(v) this.__gi_val = v; end
+      -- typ.wrapped = true;
+      typ.keyFor = function(x) return "__gi_"..x; end
+      
 
-      elseif kind ==  __gi_kindFloat32 or
-      kind == __gi_kindFloat64 then
+   elseif kind ==  __gi_kindFloat32 or
+   kind == __gi_kindFloat64 then
 
-         typ = {__gi_val, wrapped=true};
-         setmetatable(typ, __castableMT);         
-         -- typ = function(v) { this.__gi_val = v; };
-         typ.keyFor = function(x) return __gi_floatKey(x) end
-         
-               
-  elseif kind == __gi_kindComplex64 then
-     typ = function(real, imag)
-      this.__gi_real = __gi_fround(real);
-      this.__gi_imag = __gi_fround(imag);
-      this.__gi_val = this;
-    end
-    typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
-    
-
-  elseif kind == __gi_kindComplex128 then
-    typ = function(real, imag) 
-      this.__gi_real = real;
-      this.__gi_imag = imag;
-      this.__gi_val = this;
-    end
-    typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
-    
-
-      elseif kind == __gi_kindArray then
-         setmetatable(typ, __castableMT)
-         --typ = function(v) this.__gi_val = v; end
-         typ.wrapped = true;
-         typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, "", false, function(array) 
-                                   this.__gi_get = function() return array; end;
-                                   this.__gi_set = function(v) typ.copy(this, v); end
-                                   this.__gi_val = array;
-         end);
-    typ.init = function(elem, len) 
-       typ.elem = elem;
-       typ.len = len;
-       typ.comparable = elem.comparable;
-       typ.keyFor = function(x) 
-          return Array.prototype.join.call(__gi_mapArray(x, function(e) {
-          return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-        end), "__gi_");
-       end
-       typ.copy = function(dst, src) 
-          __gi_copyArray(dst, src, 0, 0, src.length, elem);
-       end
-       typ.ptr.init(typ);
-       Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
-    end
-    
-
-  elseif kind == __gi_kindChan then
-    typ = function(v) this.__gi_val = v; end
-    typ.wrapped = true;
-    typ.keyFor = __gi_idKey;
-    typ.init = function(elem, sendOnly, recvOnly)
-      typ.elem = elem;
-      typ.sendOnly = sendOnly;
-      typ.recvOnly = recvOnly;
-    end
-    
-
-  elseif kind == __gi_kindFunc then
-    typ = function(v) this.__gi_val = v; end
-    typ.wrapped = true;
-    typ.init = function(params, results, variadic)
-      typ.params = params;
-      typ.results = results;
-      typ.variadic = variadic;
-      typ.comparable = false;
-    end
-    
-
-  elseif kind == __gi_kindInterface then
-    typ = { implementedBy= {}, missingMethodFor= {} };
-    typ.keyFor = __gi_ifaceKeyFor;
-    typ.init = function(methods) 
-      typ.methods = methods;
-      methods.forEach(function(m) 
-        __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
-      end);
-    end
-    
-
-  elseif kind == __gi_kindMap then
-    typ = function(v) this.__gi_val = v; end
-    typ.wrapped = true;
-    typ.init = function(key, elem)
-      typ.key = key;
-      typ.elem = elem;
-      typ.comparable = false;
-    end
-    
-
-      elseif kind == __gi_kindPtr then
-         error("jea: kindPtr in struct.lua not yet finished")
---   jea put off pointers until we get basic types going
---       typ = constructor  or  function(getter, setter, target)
---       this.__gi_get = getter;
---       this.__gi_set = setter;
---       this.__gi_target = target;
---       this.__gi_val = this;
---     end
---     typ.keyFor = __gi_idKey;
---     typ.init = function(elem) 
---       typ.elem = elem;
---       typ.wrapped = (elem.kind == __gi_kindArray);
---       typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
---     end
-    
-
-  elseif kind == __gi_kindSlice then
-    typ = function(array)
-      if array.constructor ~= typ.nativeArray then
-        array = new typ.nativeArray(array);
+      typ = {__gi_val, wrapped=true};
+      setmetatable(typ, __castableMT);         
+      -- typ = function(v) { this.__gi_val = v; };
+      typ.keyFor = function(x) return __gi_floatKey(x) end
+      
+      
+   elseif kind == __gi_kindComplex64 then
+      typ = function(real, imag)
+         this.__gi_real = __gi_fround(real);
+         this.__gi_imag = __gi_fround(imag);
+         this.__gi_val = this;
       end
-      this.__gi_array = array;
-      this.__gi_offset = 0;
-      this.__gi_length = array.length;
-      this.__gi_capacity = array.length;
-      this.__gi_val = this;
-    end
-    typ.init = function(elem)
-      typ.elem = elem;
-      typ.comparable = false;
-      typ.nativeArray = __gi_nativeArray(elem.kind);
-      typ.nil = new typ([]);
-    end
-    
+      typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
+      
 
-  elseif kind == __gi_kindStruct then
-    typ = function(v)  this.__gi_val = v; end
-    typ.wrapped = true;
-    typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
-    typ.ptr.elem = typ;
-    typ.ptr.prototype.__gi_get = function()  return this; end
-    typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
-    typ.init = function(pkgPath, fields)
+   elseif kind == __gi_kindComplex128 then
+      typ = function(real, imag) 
+         this.__gi_real = real;
+         this.__gi_imag = imag;
+         this.__gi_val = this;
+      end
+      typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
+      
+
+   elseif kind == __gi_kindArray then
+      setmetatable(typ, __castableMT)
+      --typ = function(v) this.__gi_val = v; end
+      typ.wrapped = true;
+      typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, "", false, function(array) 
+                                this.__gi_get = function() return array; end;
+                                this.__gi_set = function(v) typ.copy(this, v); end
+                                this.__gi_val = array;
+      end);
+      typ.init = function(elem, len) 
+         typ.elem = elem;
+         typ.len = len;
+         typ.comparable = elem.comparable;
+         typ.keyFor = function(x)
+
+            -- js:
+            -- return Array.prototype.join.call($mapArray(x, function(e) {
+            --    return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\$/g, "\\$");
+            -- }), "$");
+
+            -- jea TODO: come back and effect the substitution above, here
+            -- just dropped it to get rough compilation.
+            return Array.prototype.join.call(__gi_mapArray(x, function(e)
+                                                              return tostring(elem.keyFor(e))
+                                                          end), "__gi_")
+         end
+         typ.copy = function(dst, src) 
+            __gi_copyArray(dst, src, 0, 0, src.length, elem);
+         end
+         typ.ptr.init(typ);
+         --jea: what to do with this? define a __call somewhere?
+         --jea: Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
+      end
+      
+
+   elseif kind == __gi_kindChan then
+      typ = function(v) this.__gi_val = v; end
+      typ.wrapped = true;
+      typ.keyFor = __gi_idKey;
+      typ.init = function(elem, sendOnly, recvOnly)
+         typ.elem = elem;
+         typ.sendOnly = sendOnly;
+         typ.recvOnly = recvOnly;
+      end
+      
+
+   elseif kind == __gi_kindFunc then
+      typ = function(v) this.__gi_val = v; end
+      typ.wrapped = true;
+      typ.init = function(params, results, variadic)
+         typ.params = params;
+         typ.results = results;
+         typ.variadic = variadic;
+         typ.comparable = false;
+      end
+      
+
+   elseif kind == __gi_kindInterface then
+      typ = { implementedBy= {}, missingMethodFor= {} };
+      typ.keyFor = __gi_ifaceKeyFor;
+      typ.init = function(methods) 
+         typ.methods = methods;
+         methods.forEach(function(m) 
+               __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
+         end);
+      end
+      
+
+   elseif kind == __gi_kindMap then
+      typ = function(v) this.__gi_val = v; end
+      typ.wrapped = true;
+      typ.init = function(key, elem)
+         typ.key = key;
+         typ.elem = elem;
+         typ.comparable = false;
+      end
+      
+
+   elseif kind == __gi_kindPtr then
+      error("jea: kindPtr in struct.lua not yet finished")
+      --   jea put off pointers until we get basic types going
+      --       typ = constructor  or  function(getter, setter, target)
+      --       this.__gi_get = getter;
+      --       this.__gi_set = setter;
+      --       this.__gi_target = target;
+      --       this.__gi_val = this;
+      --     end
+      --     typ.keyFor = __gi_idKey;
+      --     typ.init = function(elem) 
+      --       typ.elem = elem;
+      --       typ.wrapped = (elem.kind == __gi_kindArray);
+      --       typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
+      --     end
+      
+
+   elseif kind == __gi_kindSlice then
+      typ = function(array)
+         if array.constructor ~= typ.nativeArray then
+            array = new typ.nativeArray(array);
+         end
+         this.__gi_array = array;
+         this.__gi_offset = 0;
+         this.__gi_length = array.length;
+         this.__gi_capacity = array.length;
+         this.__gi_val = this;
+      end
+      typ.init = function(elem)
+         typ.elem = elem;
+         typ.comparable = false;
+         typ.nativeArray = __gi_nativeArray(elem.kind);
+         --typ.nil = new typ([]);
+         typ.Nil = typ({});
+      end
+      
+
+   elseif kind == __gi_kindStruct then
+      -- jea: see file struct.lua.partial.js.port.of.NewType
+      -- for the elided stuff... or commit 012444fb3aeeec2eb0d7086148b9342d85968a45
+
+      __helperHandleStruct()
+      
+   else
+      -- __gi_panic(new __gi_String("invalid kind: " .. kind));
+      __gi_panic(__gi_String("invalid kind: " .. kind));
+   end
+
+   --switch (kind) {
+   if kind == __gi_kindBool or
+   kind == __gi_kindMap then
+      
+      typ.zero = function() return false; end
+      
+      
+   elseif kind == __gi_kindInt or
+      kind == __gi_kindInt8 or
+      kind == __gi_kindInt16 or
+      kind == __gi_kindInt32 or
+      kind == __gi_kindInt64 or
+      kind == __gi_kindUint or
+      kind == __gi_kindUint8  or
+      kind == __gi_kindUint16 or
+      kind == __gi_kindUint32 or
+      kind == __gi_kindUint64 or
+      kind == __gi_kindUintptr or
+   kind == __gi_kindUnsafePointer then
+      
+      typ.zero = function() return 0LL; end
+      
+
+   elseif kind == __gi_kindFloat32 or
+   kind == __gi_kindFloat64 then
+
+      typ.zero = function() return 0; end
+      
+      
+   elseif kind ==  __gi_kindString then
+      typ.zero = function() return ""; end
+      
+
+   elseif kind ==  __gi_kindComplex64 or
+   kind ==  __gi_kindComplex128 then
+      
+      -- hmm... how to translate this new typ(0, 0)from javascript?
+      -- local zero = new typ(0, 0);
+      typ.zero = function() return 0,0; end
+      
+      
+   elseif kind ==  __gi_kindPtr or
+   kind ==  __gi_kindSlice then
+      
+      typ.zero = function() return typ.Nil; end
+      
+
+   elseif kind ==  __gi_kindChan then
+      
+      typ.zero = function() return __gi_chanNil; end
+      
+
+   elseif kind ==  __gi_kindFunc then
+      
+      typ.zero = function() return __gi_throwNilPointerError; end
+      
+
+   elseif kind ==  __gi_kindInterface then
+      
+      typ.zero = function() return __gi_ifaceNil; end
+      
+
+   elseif kind ==  __gi_kindArray then
+      
+      typ.zero = function() 
+         local arrayClass = __gi_nativeArray(typ.elem.kind);
+         if arrayClass ~= Array then
+            --return new arrayClass(typ.len)
+            return arrayClass(typ.len)
+         end
+         local array = new Array(typ.len)
+         for i = 0, typ.len-1 do
+            array[i] = typ.elem.zero()
+         end
+         return array;
+      end
+      
+      
+
+   elseif kind ==  __gi_kindStruct then
+
+      --typ.zero = function() return new typ.ptr(); end
+      typ.zero = function() return typ.ptr(); end
+      
+
+   else
+      __gi_panic("invalid kind: "..kind)
+   end
+
+   typ.id = __gi_typeIDCounter;
+   __gi_typeIDCounter = __gi_typeIDCounter+1;
+   typ.size = size;
+   typ.kind = kind;
+   typ.str = str;
+   typ.named = named;
+   typ.pkg = pkg;
+   typ.exported = exported;
+   typ.methods = {};
+   typ.methodSetCache = nil;
+   typ.comparable = true;
+   
+   return typ;
+end
+
+
+function __helperHandleStruct()
+   typ = function(v)  this.__gi_val = v; end
+   typ.wrapped = true;
+   typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
+   typ.ptr.elem = typ;
+   typ.ptr.prototype.__gi_get = function()  return this; end
+   typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
+   typ.init = function(pkgPath, fields)
       typ.pkgPath = pkgPath;
       typ.fields = fields;
       fields.forEach(function(f) 
-        if not f.typ.comparable then
-          typ.comparable = false;
-        end
+            if not f.typ.comparable then
+               typ.comparable = false;
+            end
       end);
       typ.keyFor = function(x) 
          local val = x.__gi_val;
          return __gi_mapArray(fields, function(f)
-                                 return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+                                 -- jea TODO: fix this back up
+                                 --return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+                                 return tostring(f.typ.keyFor(val[f.prop]))
          end).join("__gi_");
       end
       typ.copy = function(dst, src) 
@@ -732,10 +860,10 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       -- nil value
       local properties = {};
       fields.forEach(function(f) 
-            properties[f.prop] = { get: __gi_throwNilPointerError, set: __gi_throwNilPointerError };
-      end);
-      typ.ptr.nil = Object.create(constructor.prototype, properties);
-      typ.ptr.nil.__gi_val = typ.ptr.nil;
+            properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
+      end)
+      typ.ptr.Nil = Object.create(constructor.prototype, properties);
+      typ.ptr.Nil.__gi_val = typ.ptr.Nil;
       -- methods for embedded fields
       __gi_addMethodSynthesizer(function()
             local synthesizeMethod = function(target, m, f)
@@ -765,112 +893,5 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
                   end
             end);
       end);
-      end
-
-
-  else
-    __gi_panic(new __gi_String("invalid kind: " .. kind));
-  end
-
---switch (kind) {
-if kind == __gi_kindBool or
-kind == __gi_kindMap then
-   
-   typ.zero = function() return false; end
-   
-    
-elseif kind == __gi_kindInt or
-   kind == __gi_kindInt8 or
-   kind == __gi_kindInt16 or
-   kind == __gi_kindInt32 or
-   kind == __gi_kindInt64 or
-   kind == __gi_kindUint or
-   kind == __gi_kindUint8  or
-   kind == __gi_kindUint16 or
-   kind == __gi_kindUint32 or
-   kind == __gi_kindUint64 or
-   kind == __gi_kindUintptr or
-kind == __gi_kindUnsafePointer then
-   
-   typ.zero = function() return 0LL; end
-   
-
-elseif kind == __gi_kindFloat32 or
-kind == __gi_kindFloat64 then
-
-   typ.zero = function() return 0; end
-   
-      
-elseif kind ==  __gi_kindString then
-    typ.zero = function() return ""; end
-    
-
-elseif kind ==  __gi_kindComplex64 or
-kind ==  __gi_kindComplex128 then
-   
-   -- hmm... how to translate this new typ(0, 0)from javascript?
-   -- local zero = new typ(0, 0);
-   typ.zero = function() return 0,0; end
-   
-   
-elseif kind ==  __gi_kindPtr or
-kind ==  __gi_kindSlice then
-   
-    typ.zero = function() return typ.nil; end
-    
-
-elseif kind ==  __gi_kindChan then
-   
-    typ.zero = function() return __gi_chanNil; end
-    
-
-elseif kind ==  __gi_kindFunc then
-   
-    typ.zero = function() return __gi_throwNilPointerError; end
-    
-
-elseif kind ==  __gi_kindInterface then
-   
-    typ.zero = function() return __gi_ifaceNil; end
-    
-
-elseif kind ==  __gi_kindArray then
-   
-   typ.zero = function() 
-      local arrayClass = __gi_nativeArray(typ.elem.kind);
-      if arrayClass ~= Array then
-         return new arrayClass(typ.len)
-      end
-      local array = new Array(typ.len)
-      for i = 0, typ.len-1 do
-         array[i] = typ.elem.zero()
-      end
-      return array;
    end
-   
-   
-
-elseif kind ==  __gi_kindStruct then
-
-   typ.zero = function() return new typ.ptr(); end
-   
-
-else
-   __gi_panic("invalid kind: "..kind)
 end
-
-  typ.id = __gi_typeIDCounter;
-  __gi_typeIDCounter = __gi_typeIDCounter+1;
-  typ.size = size;
-  typ.kind = kind;
-  typ.str = str;
-  typ.named = named;
-  typ.pkg = pkg;
-  typ.exported = exported;
-  typ.methods = {};
-  typ.methodSetCache = nil;
-  typ.comparable = true;
-  
-  return typ;
-end
-
