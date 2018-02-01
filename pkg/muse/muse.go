@@ -131,6 +131,26 @@ func (m *Muse) Pun(tt types.Type) (rt reflect.Type, err error) {
 	case *types.Signature:
 		// reflect.FuncOf(in, out []Type, variadic bool) Type
 	case *types.Named:
+		pp("in *types.Named: x ='%#v'", x)
+		// x = '&types.Named{obj:(*types.TypeName)(0xc42007d450), underlying:(*types.Struct)(0xc42000ec90), methods:[]*types.Func(nil)}'
+
+		obj := x.Obj() // returns *type.TypeName
+		pkg := obj.Pkg()
+		nm := obj.Name()
+		ttyp := obj.Type()
+		under := x.Underlying()
+
+		numMeth := x.NumMethods()
+		//x.Method(i)
+
+		pp("obj = '%#v'", obj)
+		pp("pkg = '%#v'", pkg)
+		pp("nm = '%#v'", nm)
+		pp("ttyp = '%#v'", ttyp)
+		pp("under = '%#v'", under)
+		pp("numMeth = '%#v'", numMeth)
+
+		panic("not done: *types.Named")
 	case *types.Interface:
 	default:
 		panic(fmt.Sprintf("unknown types.Type '%T'", tt))
