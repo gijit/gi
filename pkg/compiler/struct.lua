@@ -539,7 +539,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
          typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
          setmetatable(typ, castableMT);
          -- gopherjs:
-         -- typ = function(v) { this.$val = v; };
+         -- typ = function(v) this.$val = v; end
          -- typ.wrapped = true;
          -- typ.keyFor = $identity;
          break;
@@ -548,7 +548,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
 
          typ = {__gi_val, wrapped=true};
          setmetatable(typ, castableMT);
-         -- typ = function(v) { this.__gi_val = v; };
+         -- typ = function(v) this.__gi_val = v; end
          -- typ.wrapped = true;
          typ.keyFor = function(x) return "__gi_"..x; end
          break;
