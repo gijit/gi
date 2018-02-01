@@ -525,13 +525,19 @@ end
 -- translate __gi_newType() in js,
 -- from gopherjs/compiler/prelude/types.go#L64
 --
-function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
 
    print("size=",size,", kind=",kind,", str=",str)
-   print("named=",named,", pkg=",pkg)
+   print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
    print("exported=",exported,", constructor=",constructor)
-   
+
+   -- we return typ at the end.
    local typ = {}
+   
+   if kind == __gi_kind_Struct then
+       typ.registered  = __reg:RegisterStruct(str)
+   end
+   
    if kind == __gi_kind_bool or
       kind == __gi_kind_Int or
       kind == __gi_kind_Int8 or

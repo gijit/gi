@@ -747,7 +747,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			case *types.Interface:
 				c.Printf(`%s = __reg:RegisterInterface("%s");`, lhs, o.Name())
 			}
-			c.Printf(`%s = __gi_NewType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+			c.Printf(`%s = __gi_NewType(%d, %s, "%s", "%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 		})
 		allby = append(allby, d.DeclCode...)
