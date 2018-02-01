@@ -437,6 +437,7 @@ function __gi_assertType(value, typ, returnTuple)
 
 end
 
+
 -- support for __gi_NewType
 
 __gi_kindBool = 1;
@@ -706,9 +707,82 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind == __gi_kindStruct then
       -- jea: see file struct.lua.partial.js.port.of.NewType
-      -- for the elided stuff... or commit 012444fb3aeeec2eb0d7086148b9342d85968a45
+      -- for the elided stuff... or commit 012444fb3aeeec2e
 
-      __helperHandleStruct()
+      setmetatable(typ, __castableMT)
+      --typ = function(v)  this.__gi_val = v; end
+      typ.wrapped = true;
+      typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
+      typ.ptr.elem = typ;
+      typ.ptr.prototype.__gi_get = function()  return this; end
+      typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
+      typ.init = function(pkgPath, fields)
+         typ.pkgPath = pkgPath;
+         typ.fields = fields;
+         fields.forEach(function(f) 
+               if not f.typ.comparable then
+                  typ.comparable = false;
+               end
+         end);
+         typ.keyFor = function(x) 
+            local val = x.__gi_val;
+            return __gi_mapArray(fields, function(f)
+                                    -- jea TODO: fix this back up
+                                    --return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+                                    return tostring(f.typ.keyFor(val[f.prop]))
+            end).join("__gi_");
+         end
+         typ.copy = function(dst, src) 
+            for i = 0,fields.length-1 do
+               local f = fields[i];
+               local knd = f.typ.kind
+               if knd ==  __gi_kindArray then
+                  -- do nothing
+               elseif knd == __gi_kindStruct then
+                  f.typ.copy(dst[f.prop], src[f.prop]);
+               else
+                  -- default:
+                  dst[f.prop] = src[f.prop];
+               end
+            end
+         end
+         -- nil value
+         local properties = {};
+         fields.forEach(function(f) 
+               properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
+         end)
+         typ.ptr.Nil = Object.create(constructor.prototype, properties);
+         typ.ptr.Nil.__gi_val = typ.ptr.Nil;
+         -- methods for embedded fields
+         __gi_addMethodSynthesizer(function()
+               local synthesizeMethod = function(target, m, f)
+                  
+                  if target.prototype[m.prop] ~= nil then return end
+                  
+                  target.prototype[m.prop] = function()
+                     local v = this.__gi_val[f.prop];
+                     if f.typ == __gi_jsObjectPtr then
+                        v = new __gi_jsObjectPtr(v);
+                     end
+                     if v.__gi_val == nil then
+                        v = new f.typ(v);
+                     end
+                     return v[m.prop].apply(v, arguments);
+                  end
+               end
+               fields.forEach(function(f)
+                     if (f.anonymous) then
+                        __gi_methodSet(f.typ).forEach(function(m) 
+                              synthesizeMethod(typ, m, f);
+                              synthesizeMethod(typ.ptr, m, f);
+                                                     end)
+                        __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
+                              synthesizeMethod(typ.ptr, m, f);
+                                                                   end);
+                     end
+               end);
+         end);
+      end
       
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
@@ -820,78 +894,3 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
 end
 
 
-function __helperHandleStruct()
-   typ = function(v)  this.__gi_val = v; end
-   typ.wrapped = true;
-   typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
-   typ.ptr.elem = typ;
-   typ.ptr.prototype.__gi_get = function()  return this; end
-   typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
-   typ.init = function(pkgPath, fields)
-      typ.pkgPath = pkgPath;
-      typ.fields = fields;
-      fields.forEach(function(f) 
-            if not f.typ.comparable then
-               typ.comparable = false;
-            end
-      end);
-      typ.keyFor = function(x) 
-         local val = x.__gi_val;
-         return __gi_mapArray(fields, function(f)
-                                 -- jea TODO: fix this back up
-                                 --return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-                                 return tostring(f.typ.keyFor(val[f.prop]))
-         end).join("__gi_");
-      end
-      typ.copy = function(dst, src) 
-         for i = 0,fields.length-1 do
-            local f = fields[i];
-            local knd = f.typ.kind
-            if knd ==  __gi_kindArray then
-               -- do nothing
-            elseif knd == __gi_kindStruct then
-               f.typ.copy(dst[f.prop], src[f.prop]);
-            else
-               -- default:
-               dst[f.prop] = src[f.prop];
-            end
-         end
-      end
-      -- nil value
-      local properties = {};
-      fields.forEach(function(f) 
-            properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
-      end)
-      typ.ptr.Nil = Object.create(constructor.prototype, properties);
-      typ.ptr.Nil.__gi_val = typ.ptr.Nil;
-      -- methods for embedded fields
-      __gi_addMethodSynthesizer(function()
-            local synthesizeMethod = function(target, m, f)
-               
-               if target.prototype[m.prop] ~= nil then return end
-               
-               target.prototype[m.prop] = function()
-                  local v = this.__gi_val[f.prop];
-                  if f.typ == __gi_jsObjectPtr then
-                     v = new __gi_jsObjectPtr(v);
-                  end
-                  if v.__gi_val == nil then
-                     v = new f.typ(v);
-                  end
-                  return v[m.prop].apply(v, arguments);
-               end
-            end
-            fields.forEach(function(f)
-                  if (f.anonymous) then
-                     __gi_methodSet(f.typ).forEach(function(m) 
-                           synthesizeMethod(typ, m, f);
-                           synthesizeMethod(typ.ptr, m, f);
-                                                  end)
-                     __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
-                           synthesizeMethod(typ.ptr, m, f);
-                                                                end);
-                  end
-            end);
-      end);
-   end
-end
