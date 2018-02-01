@@ -551,7 +551,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
          -- typ = function(v) this.__gi_val = v; end
          -- typ.wrapped = true;
          -- typ.keyFor = __gi_identity;
-         break;
+         
          
       elseif kind == __gi_kindString then
 
@@ -560,7 +560,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
          -- typ = function(v) this.__gi_val = v; end
          -- typ.wrapped = true;
          typ.keyFor = function(x) return "__gi_"..x; end
-         break;
+         
 
       elseif kind ==  __gi_kindFloat32 or
       kind == __gi_kindFloat64 then
@@ -569,7 +569,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
          setmetatable(typ, __castableMT);         
          -- typ = function(v) { this.__gi_val = v; };
          typ.keyFor = function(x) return __gi_floatKey(x) end
-         break;
+         
                
   elseif kind == __gi_kindComplex64 then
      typ = function(real, imag)
@@ -578,7 +578,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       this.__gi_val = this;
     end
     typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
-    break;
+    
 
   elseif kind == __gi_kindComplex128 then
     typ = function(real, imag) 
@@ -587,7 +587,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       this.__gi_val = this;
     end
     typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
-    break;
+    
 
       elseif kind == __gi_kindArray then
          setmetatable(typ, __castableMT)
@@ -613,7 +613,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
        typ.ptr.init(typ);
        Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
     end
-    break;
+    
 
   elseif kind == __gi_kindChan then
     typ = function(v) this.__gi_val = v; end
@@ -624,7 +624,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       typ.sendOnly = sendOnly;
       typ.recvOnly = recvOnly;
     end
-    break;
+    
 
   elseif kind == __gi_kindFunc then
     typ = function(v) this.__gi_val = v; end
@@ -635,7 +635,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       typ.variadic = variadic;
       typ.comparable = false;
     end
-    break;
+    
 
   elseif kind == __gi_kindInterface then
     typ = { implementedBy= {}, missingMethodFor= {} };
@@ -646,7 +646,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
         __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
       end);
     end
-    break;
+    
 
   elseif kind == __gi_kindMap then
     typ = function(v) this.__gi_val = v; end
@@ -656,22 +656,24 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       typ.elem = elem;
       typ.comparable = false;
     end
-    break;
+    
 
-  elseif kind == __gi_kindPtr then
-    typ = constructor  or  function(getter, setter, target)
-      this.__gi_get = getter;
-      this.__gi_set = setter;
-      this.__gi_target = target;
-      this.__gi_val = this;
-    end
-    typ.keyFor = __gi_idKey;
-    typ.init = function(elem) 
-      typ.elem = elem;
-      typ.wrapped = (elem.kind == __gi_kindArray);
-      typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
-    end
-    break;
+      elseif kind == __gi_kindPtr then
+         error("jea: kindPtr in struct.lua not yet finished")
+--   jea put off pointers until we get basic types going
+--       typ = constructor  or  function(getter, setter, target)
+--       this.__gi_get = getter;
+--       this.__gi_set = setter;
+--       this.__gi_target = target;
+--       this.__gi_val = this;
+--     end
+--     typ.keyFor = __gi_idKey;
+--     typ.init = function(elem) 
+--       typ.elem = elem;
+--       typ.wrapped = (elem.kind == __gi_kindArray);
+--       typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
+--     end
+    
 
   elseif kind == __gi_kindSlice then
     typ = function(array)
@@ -690,7 +692,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       typ.nativeArray = __gi_nativeArray(elem.kind);
       typ.nil = new typ([]);
     end
-    break;
+    
 
   elseif kind == __gi_kindStruct then
     typ = function(v)  this.__gi_val = v; end
@@ -764,7 +766,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
             end);
       end);
       end
-break;
+
 
   else
     __gi_panic(new __gi_String("invalid kind: " .. kind));
@@ -775,7 +777,7 @@ if kind == __gi_kindBool or
 kind == __gi_kindMap then
    
    typ.zero = function() return false; end
-   break;
+   
     
 elseif kind == __gi_kindInt or
    kind == __gi_kindInt8 or
@@ -791,17 +793,17 @@ elseif kind == __gi_kindInt or
 kind == __gi_kindUnsafePointer then
    
    typ.zero = function() return 0LL; end
-   break;
+   
 
 elseif kind == __gi_kindFloat32 or
 kind == __gi_kindFloat64 then
 
    typ.zero = function() return 0; end
-   break;
+   
       
 elseif kind ==  __gi_kindString then
     typ.zero = function() return ""; end
-    break;
+    
 
 elseif kind ==  __gi_kindComplex64 or
 kind ==  __gi_kindComplex128 then
@@ -809,28 +811,28 @@ kind ==  __gi_kindComplex128 then
    -- hmm... how to translate this new typ(0, 0)from javascript?
    -- local zero = new typ(0, 0);
    typ.zero = function() return 0,0; end
-   break;
+   
    
 elseif kind ==  __gi_kindPtr or
 kind ==  __gi_kindSlice then
    
     typ.zero = function() return typ.nil; end
-    break;
+    
 
 elseif kind ==  __gi_kindChan then
    
     typ.zero = function() return __gi_chanNil; end
-    break;
+    
 
 elseif kind ==  __gi_kindFunc then
    
     typ.zero = function() return __gi_throwNilPointerError; end
-    break;
+    
 
 elseif kind ==  __gi_kindInterface then
    
     typ.zero = function() return __gi_ifaceNil; end
-    break;
+    
 
 elseif kind ==  __gi_kindArray then
    
@@ -846,12 +848,12 @@ elseif kind ==  __gi_kindArray then
       return array;
    end
    
-   break;
+   
 
 elseif kind ==  __gi_kindStruct then
 
    typ.zero = function() return new typ.ptr(); end
-   break;
+   
 
 else
    __gi_panic("invalid kind: "..kind)
