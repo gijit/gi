@@ -719,15 +719,19 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
 				}
-				constructor = fmt.Sprintf("function(...) \n\t\t local self={}; local args={...}\n\t\t local %s = ...  \n\t\t if #args == 0 then\n", strings.Join(params, ", "))
-				for i := 0; i < t.NumFields(); i++ {
-					constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+				if t.NumFields() == 0 {
+					constructor = fmt.Sprintf("function() \n\t\t return {} end")
+				} else {
+					constructor = fmt.Sprintf("function(...) \n\t\t local self={}; local args={...}\n\t\t local %s = ...  \n\t\t if #args == 0 then\n", strings.Join(params, ", "))
+					for i := 0; i < t.NumFields(); i++ {
+						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+					}
+					constructor += "\t\t\t return self;\n\t\t end \n"
+					for i := 0; i < t.NumFields(); i++ {
+						constructor += fmt.Sprintf("\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
+					}
+					constructor += "\t\t return self; \n\t end "
 				}
-				constructor += "\t\t\t return self;\n\t\t end \n"
-				for i := 0; i < t.NumFields(); i++ {
-					constructor += fmt.Sprintf("\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
-				}
-				constructor += "\t\t return self; \n\t end "
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 				//size = sizes32.Sizeof(t)
 				size = sizes64.Sizeof(t)

@@ -560,9 +560,9 @@ end
 --
 function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
 
-   print("size=",size,", kind=",kind, "kind2str=", __kind2str[kind],", str=",str)
-   print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
-   print("exported=",exported,", constructor=",constructor)
+   print("size='"..tostring(size).."', kind='"..tostring(kind).. "', kind2str='".. __kind2str[kind].."', str='"..str.."'")
+   print("named='"..tostring(named).. "' shortPkg='".. shortPkg.. "', pkg='"..pkg.."'")
+   print("exported='"..tostring(exported).."', constructor='"..tostring(constructor).."'")
    
    -- we return typ at the end.
    local typ = {}
