@@ -327,105 +327,114 @@ end
 function __gi_assertType(value, typ, returnTuple)
 
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
- --[=[   
+
    local isInterface = false
    local interfaceMethods = nil
    if __reg:IsInterface(typ) then
       isInterface = true
       interfaceMethods = __reg:GetInterface(typ)
-    end
+   end
    
    local ok = false
    local missingMethod = ""
-
-    local valueMethods = value[__gi_MethodsetKey]
-    local valueProps = value[__gi_PropsKey]
-
-    local nMethod = valeProps.__nMethod
-    
+   
+   local valueMethods = value[__gi_MethodsetKey]
+   local valueProps = value[__gi_PropsKey]
+   
+   local nMethod = valeProps.__nMethod
+   
    local nvm = __gi_count_methods(valueMethods)
    
-    if value == __gi_ifaceNil then
-    ok = false;
-    
-    elseif not isInterface then
-     ok = value.constructor == typ;
-     
-  else
-     local valueTypeString = value.constructor.string;
-     ok = typ.implementedBy[valueTypeString];
-     if ok == nil then
-        
-        ok = true;
-        local valueMethodSet = __gi_methodSet(value.constructor);
-        
-        local ni = #interfaceMethods
-        
-      for i, v in pairs(interfaceMethods) do
-          if #i >=2 and i[1]=="_" and i[2]=="_" then
-             -- skip __ prefixed methods when printing; atypical
-             -- since most of these live in the metatable anyway.
-             goto continue
-        end
+   if value == __gi_ifaceNil then
+      ok = false;
+      
+   elseif not isInterface then
+      ok = value.constructor == typ;
+      
+   else
+      local valueTypeString = value.constructor.string;
+      ok = typ.implementedBy[valueTypeString];
+      if ok == nil then
+         
+         ok = true;
+         local valueMethodSet = __gi_methodSet(value.constructor);
+         
+         local ni = #interfaceMethods
+         
+         for i, v in pairs(interfaceMethods) do
+            if #i >=2 and i[1]=="_" and i[2]=="_" then
+               -- skip __ prefixed methods when printing; atypical
+               -- since most of these live in the metatable anyway.
+               goto continue
+            end
+            
+            ::continue::
+         end
+         
+         for i = 1, ni do
+            
+            local tm = interfaceMethods[i];
+            local found = false;
+            local msl = #valueMethodSet
+            
+            for j = 1,msl do
+               local vm = valueMethodSet[j];
+               if vm.name == tm.name and vm.pkg == tm.pkg and vm.typ == tm.typ then
+                  found = true;
+                  break;
+               end
+            end
+            
+            if not found then
+               ok = false;
+               -- cannot cache, as repl may add/subtract methods.
+               missingMethod = tm.name;
+               break;
+            end
+         end
+         
+         -- can't cache this, repl may change it.
+         --typ.implementedBy[valueTypeString] = ok;
+         
+      end
+   end
+   
+   if not ok then
+      
+      if returnTuple == 0 then
+         
+         local ctor
+         -- (value == __gi_ifaceNil ? "" : value.constructor.string)
+         if value == __gi_ifaceNil then 
+            ctor = ""
+         else
+            ctor = value.constructor.string
+         end
+         error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
+         -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", ctor, typ.string, missingMethod)
+                    
+      elseif returnTuple == 1 then
+         return false
+      else
+         return zeroVal, false
+      end
+   end
+   
+   if not isInterface then
+      value = value.__gi_val;
+   end
+   
+   if typ == __gi_jsObjectPtr then
+      value = value.object;
+   end
+   
+   if returnTupe == 0 then
+      return value
+   elseif returnTuple == 1 then
+      return true
+   end
+   return value, true
 
-        ::continue::
-     end
-
-        for i = 1, ni do
-           
-           local tm = interfaceMethods[i];
-           local found = false;
-           local msl = #valueMethodSet
-           
-           for j = 1,msl do
-              local vm = valueMethodSet[j];
-              if vm.name == tm.name and vm.pkg == tm.pkg and vm.typ == tm.typ then
-                 found = true;
-                 break;
-              end
-           end
-           
-           if not found then
-              ok = false;
-              -- cannot cache, as repl may add/subtract methods.
-              missingMethod = tm.name;
-              break;
-           end
-        end
-
-        -- can't cache this, repl may change it.
-        --typ.implementedBy[valueTypeString] = ok;
-        
-     end
-  end
-  
-  if not ok then
-     
-     if returnTuple == 0 then
-        __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", (value == __gi_ifaceNil ? "" : value.constructor.string), typ.string, missingMethod));
-        
-     elseif returnTuple == 1 then
-        return false
-     else
-        return zeroVal, false
-     end
-  end
-  
-  if not isInterface then
-     value = value.__gi_val;
-  end
-  
-  if typ == __gi_jsObjectPtr then
-     value = value.object;
-  end
-  
-  if returnTupe == 0 then
-     return value
-  elseif returnTuple == 1 then
-     return true
-  end
-  return value, true
- --]=]   
 end
 
 -- support for __gi_NewType
@@ -629,7 +638,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind == __gi_kindInterface then
-    typ = { implementedBy: {}, missingMethodFor: {} };
+    typ = { implementedBy= {}, missingMethodFor= {} };
     typ.keyFor = __gi_ifaceKeyFor;
     typ.init = function(methods) 
       typ.methods = methods;
@@ -650,7 +659,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind == __gi_kindPtr then
-    typ = constructor || function(getter, setter, target)
+    typ = constructor  or  function(getter, setter, target)
       this.__gi_get = getter;
       this.__gi_set = setter;
       this.__gi_target = target;
