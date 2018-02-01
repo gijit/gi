@@ -556,7 +556,7 @@ end
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor, sio)
+function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, constructor)
 
    print("size=",size,", kind=", __kind2str[kind],", str=",str)
    print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
@@ -711,26 +711,25 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       
 
    elseif kind == __gi_kind_Ptr then
-      error("jea: kindPtr in struct.lua not yet finished")
-      --   jea put off pointers until we get basic types going
-      --       typ = constructor  or  function(getter, setter, target)
-      --       this.__gi_get = getter;
-      --       this.__gi_set = setter;
-      --       this.__gi_target = target;
-      --       this.__gi_val = this;
-      --     end
-      --     typ.keyFor = __gi_idKey;
-      --     typ.init = function(elem) 
-      --       typ.elem = elem;
-      --       typ.wrapped = (elem.kind == __gi_kind_Array);
-      --       typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
-      --     end
+      typ = constructor  or  function(getter, setter, target)
+         this.__gi_get = getter;
+         this.__gi_set = setter;
+         this.__gi_target = target;
+         this.__gi_val = this;
+                             end
+      typ.keyFor = __gi_idKey;
+      typ.init = function(elem) 
+         typ.elem = elem;
+         typ.wrapped = (elem.kind == __gi_kind_Array);
+         typ.Nil = typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
+      end
       
 
    elseif kind == __gi_kind_Slice then
       typ = function(array)
          if array.constructor ~= typ.nativeArray then
-            array = new typ.nativeArray(array);
+            --array = new typ.nativeArray(array);
+            array = typ.nativeArray(array);
          end
          this.__gi_array = array;
          this.__gi_offset = 0;
@@ -804,10 +803,12 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
                   target.prototype[m.prop] = function()
                      local v = this.__gi_val[f.prop];
                      if f.typ == __gi_jsObjectPtr then
-                        v = new __gi_jsObjectPtr(v);
+                        --v = new __gi_jsObjectPtr(v);
+                        v = __gi_jsObjectPtr(v);
                      end
                      if v.__gi_val == nil then
-                        v = new f.typ(v);
+                        --v = new f.typ(v);
+                        v = f.typ(v);
                      end
                      return v[m.prop].apply(v, arguments);
                   end
@@ -902,11 +903,8 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
             --return new arrayClass(typ.len)
             return arrayClass(typ.len)
          end
-         local array = new Array(typ.len)
-         for i = 0, typ.len-1 do
-            array[i] = typ.elem.zero()
-         end
-         return array;
+         --local array = new Array(typ.len)
+         return  _gi_NewArray({}, typ.elem.kind, typ.len, typ.elem.zero())
       end
       
       
