@@ -1,5 +1,9 @@
 -- structs and interfaces
 
+-- TODO: syncrhonize around this/deal with multi-threading?
+--  may need to teach LuaJIT how to grab go mutexes or use sync.Atomics.
+__gi_idCounter = 0;
+
 __gi_PropsKey = {}
 __gi_MethodsetKey = {}
 __gi_BaseKey = {}
@@ -423,3 +427,421 @@ function __gi_assertType(value, typ, returnTuple)
   return value, true
  --]=]   
 end
+
+-- support for __gi_NewType
+
+__gi_kindBool = 1;
+__gi_kindInt = 2;
+__gi_kindInt8 = 3;
+__gi_kindInt16 = 4;
+__gi_kindInt32 = 5;
+__gi_kindInt64 = 6;
+__gi_kindUint = 7;
+__gi_kindUint8 = 8;
+__gi_kindUint16 = 9;
+__gi_kindUint32 = 10;
+__gi_kindUint64 = 11;
+__gi_kindUintptr = 12;
+__gi_kindFloat32 = 13;
+__gi_kindFloat64 = 14;
+__gi_kindComplex64 = 15;
+__gi_kindComplex128 = 16;
+__gi_kindArray = 17;
+__gi_kindChan = 18;
+__gi_kindFunc = 19;
+__gi_kindInterface = 20;
+__gi_kindMap = 21;
+__gi_kindPtr = 22;
+__gi_kindSlice = 23;
+__gi_kindString = 24;
+__gi_kindStruct = 25;
+__gi_kindUnsafePointer = 26;
+
+__gi_methodSynthesizers = {}
+__gi_addMethodSynthesizer = function(f) 
+  if __gi_methodSynthesizers == nil then
+    f();
+    return;
+  end
+  __gi_methodSynthesizers.push(f);
+end
+
+__gi_synthesizeMethods = function() 
+  __gi_methodSynthesizers.forEach(function(f) f(); end);
+  __gi_methodSynthesizers = nil;
+end
+
+__gi_ifaceKeyFor = function(x)
+  if x == __gi_ifaceNil then
+    return "nil"
+  end
+  local c = x.constructor
+  return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
+end
+
+__gi_identity = function(x) return x; end
+
+__gi_typeIDCounter = 0;
+
+__gi_idKey = function(x) 
+  if x.__gi_id == nil then
+     __gi_idCounter = __gi_idCounter + 1
+     x.__gi_id = __gi_idCounter;
+  end
+  return tostring(x.__gi_id);
+end
+
+castableMT = {
+   __call = function(t, ...)
+      print("castableMT __call() invoked, with ... = ", ...)
+      local arg0 = ...
+      print("arg0 is", arg0)
+      t.__gi_val = arg0
+   end
+}
+
+__gi_identity = function(x) return x; end
+
+__gi_floatKey = function(f)
+   if f ~= f then
+      __gi_idCounter = __gi_idCounter+1
+         return "NaN$" + __gi_idCounter;
+   end
+   return tostring(f);
+end
+
+
+-- create new type. 
+-- translate __gi_newType() in js,
+-- from gopherjs/compiler/prelude/types.go#L64
+--
+function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
+
+      print("size=",size,", kind=",kind,", str=",str)
+      print("named=",named,", pkg=",pkg)
+      print("exported=",exported,", constructor=",constructor)
+      
+      local typ;
+      if kind == __gi_kindBool or
+         kind == __gi_kindInt or
+         kind == __gi_kindInt8 or
+         kind == __gi_kindInt16 or
+         kind == __gi_kindInt32 or
+         kind == __gi_kindInt64 or
+         kind == __gi_kindUint or
+         kind == __gi_kindUint8 or
+         kind == __gi_kindUint16 or
+         kind == __gi_kindUint32 or
+         kind == __gi_kindUint64 or
+         kind == __gi_kindUintptr or
+      kind == __gi_kindUnsafePointer then
+         
+         typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
+         setmetatable(typ, castableMT);
+         -- gopherjs:
+         -- typ = function(v) { this.$val = v; };
+         -- typ.wrapped = true;
+         -- typ.keyFor = $identity;
+         break;
+         
+      elseif kind == __gi_kindString then
+
+         typ = {__gi_val, wrapped=true};
+         setmetatable(typ, castableMT);
+         -- typ = function(v) { this.__gi_val = v; };
+         -- typ.wrapped = true;
+         typ.keyFor = function(x) return "__gi_"..x; end
+         break;
+
+      elseif kind ==  __gi_kindFloat32 or
+      kind == __gi_kindFloat64 then
+
+         typ = {__gi_val, wrapped=true};
+         setmetatable(typ, castableMT);         
+         -- typ = function(v) { this.__gi_val = v; };
+         typ.keyFor = function(x) return __gi_floatKey(x) end
+         break;
+               
+  elseif kind == __gi_kindComplex64 then
+    typ = function(real, imag) {
+      this.__gi_real = __gi_fround(real);
+      this.__gi_imag = __gi_fround(imag);
+      this.__gi_val = this;
+    };
+    typ.keyFor = function(x) { return x.__gi_real + "__gi_" + x.__gi_imag; };
+    break;
+
+  elseif kind == __gi_kindComplex128 then
+    typ = function(real, imag) {
+      this.__gi_real = real;
+      this.__gi_imag = imag;
+      this.__gi_val = this;
+    };
+    typ.keyFor = function(x) { return x.__gi_real + "__gi_" + x.__gi_imag; };
+    break;
+
+  elseif kind == __gi_kindArray then
+    typ = function(v) { this.__gi_val = v; };
+    typ.wrapped = true;
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" + string, false, "", false, function(array) {
+      this.__gi_get = function() { return array; };
+      this.__gi_set = function(v) { typ.copy(this, v); };
+      this.__gi_val = array;
+    });
+    typ.init = function(elem, len) {
+      typ.elem = elem;
+      typ.len = len;
+      typ.comparable = elem.comparable;
+      typ.keyFor = function(x) {
+        return Array.prototype.join.call(__gi_mapArray(x, function(e) {
+          return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+        }), "__gi_");
+      };
+      typ.copy = function(dst, src) {
+        __gi_copyArray(dst, src, 0, 0, src.length, elem);
+      };
+      typ.ptr.init(typ);
+      Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
+    };
+    break;
+
+  elseif kind == __gi_kindChan then
+    typ = function(v) { this.__gi_val = v; };
+    typ.wrapped = true;
+    typ.keyFor = __gi_idKey;
+    typ.init = function(elem, sendOnly, recvOnly) {
+      typ.elem = elem;
+      typ.sendOnly = sendOnly;
+      typ.recvOnly = recvOnly;
+    };
+    break;
+
+  elseif kind == __gi_kindFunc then
+    typ = function(v) { this.__gi_val = v; };
+    typ.wrapped = true;
+    typ.init = function(params, results, variadic) {
+      typ.params = params;
+      typ.results = results;
+      typ.variadic = variadic;
+      typ.comparable = false;
+    };
+    break;
+
+  elseif kind == __gi_kindInterface then
+    typ = { implementedBy: {}, missingMethodFor: {} };
+    typ.keyFor = __gi_ifaceKeyFor;
+    typ.init = function(methods) {
+      typ.methods = methods;
+      methods.forEach(function(m) {
+        __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
+      });
+    };
+    break;
+
+  elseif kind == __gi_kindMap then
+    typ = function(v) { this.__gi_val = v; };
+    typ.wrapped = true;
+    typ.init = function(key, elem) {
+      typ.key = key;
+      typ.elem = elem;
+      typ.comparable = false;
+    };
+    break;
+
+  elseif kind == __gi_kindPtr then
+    typ = constructor || function(getter, setter, target) {
+      this.__gi_get = getter;
+      this.__gi_set = setter;
+      this.__gi_target = target;
+      this.__gi_val = this;
+    };
+    typ.keyFor = __gi_idKey;
+    typ.init = function(elem) {
+      typ.elem = elem;
+      typ.wrapped = (elem.kind === __gi_kindArray);
+      typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
+    };
+    break;
+
+  elseif kind == __gi_kindSlice then
+    typ = function(array) {
+      if (array.constructor !== typ.nativeArray) {
+        array = new typ.nativeArray(array);
+      }
+      this.__gi_array = array;
+      this.__gi_offset = 0;
+      this.__gi_length = array.length;
+      this.__gi_capacity = array.length;
+      this.__gi_val = this;
+    };
+    typ.init = function(elem) {
+      typ.elem = elem;
+      typ.comparable = false;
+      typ.nativeArray = __gi_nativeArray(elem.kind);
+      typ.nil = new typ([]);
+    };
+    break;
+
+  elseif kind == __gi_kindStruct then
+    typ = function(v) { this.__gi_val = v; };
+    typ.wrapped = true;
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" + string, false, pkg, exported, constructor);
+    typ.ptr.elem = typ;
+    typ.ptr.prototype.__gi_get = function() { return this; };
+    typ.ptr.prototype.__gi_set = function(v) { typ.copy(this, v); };
+    typ.init = function(pkgPath, fields) {
+      typ.pkgPath = pkgPath;
+      typ.fields = fields;
+      fields.forEach(function(f) {
+        if (!f.typ.comparable) {
+          typ.comparable = false;
+        }
+      });
+      typ.keyFor = function(x) {
+        var val = x.__gi_val;
+        return __gi_mapArray(fields, function(f) {
+          return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+        }).join("__gi_");
+      };
+      typ.copy = function(dst, src) {
+        for (var i = 0; i < fields.length; i++) {
+          var f = fields[i];
+          switch (f.typ.kind) {
+          case __gi_kindArray then
+          case __gi_kindStruct then
+            f.typ.copy(dst[f.prop], src[f.prop]);
+            continue;
+          default:
+            dst[f.prop] = src[f.prop];
+            continue;
+          }
+        }
+      };
+      /* nil value */
+      var properties = {};
+      fields.forEach(function(f) {
+        properties[f.prop] = { get: __gi_throwNilPointerError, set: __gi_throwNilPointerError };
+      });
+      typ.ptr.nil = Object.create(constructor.prototype, properties);
+      typ.ptr.nil.__gi_val = typ.ptr.nil;
+      /* methods for embedded fields */
+      __gi_addMethodSynthesizer(function() {
+        var synthesizeMethod = function(target, m, f) {
+          if (target.prototype[m.prop] !== undefined) { return; }
+          target.prototype[m.prop] = function() {
+            var v = this.__gi_val[f.prop];
+            if (f.typ === __gi_jsObjectPtr) {
+              v = new __gi_jsObjectPtr(v);
+            }
+            if (v.__gi_val === undefined) {
+              v = new f.typ(v);
+            }
+            return v[m.prop].apply(v, arguments);
+          };
+        };
+        fields.forEach(function(f) {
+          if (f.anonymous) {
+            __gi_methodSet(f.typ).forEach(function(m) {
+              synthesizeMethod(typ, m, f);
+              synthesizeMethod(typ.ptr, m, f);
+            });
+            __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m) {
+              synthesizeMethod(typ.ptr, m, f);
+            });
+          }
+        });
+      });
+    };
+    break;
+
+  else
+    __gi_panic(new __gi_String("invalid kind: " + kind));
+  end
+
+  switch (kind) {
+  case __gi_kindBool:
+  case __gi_kindMap:
+    typ.zero = function() { return false; };
+    break;
+
+  case __gi_kindInt:
+  case __gi_kindInt8:
+  case __gi_kindInt16:
+  case __gi_kindInt32:
+  case __gi_kindUint:
+  case __gi_kindUint8 :
+  case __gi_kindUint16:
+  case __gi_kindUint32:
+  case __gi_kindUintptr:
+  case __gi_kindUnsafePointer:
+  case __gi_kindFloat32:
+  case __gi_kindFloat64:
+    typ.zero = function() { return 0; };
+    break;
+
+  case __gi_kindString:
+    typ.zero = function() { return ""; };
+    break;
+
+  case __gi_kindInt64:
+  case __gi_kindUint64:
+  case __gi_kindComplex64:
+  case __gi_kindComplex128:
+    var zero = new typ(0, 0);
+    typ.zero = function() { return zero; };
+    break;
+
+  case __gi_kindPtr:
+  case __gi_kindSlice:
+    typ.zero = function() { return typ.nil; };
+    break;
+
+  case __gi_kindChan:
+    typ.zero = function() { return __gi_chanNil; };
+    break;
+
+  case __gi_kindFunc:
+    typ.zero = function() { return __gi_throwNilPointerError; };
+    break;
+
+  case __gi_kindInterface:
+    typ.zero = function() { return __gi_ifaceNil; };
+    break;
+
+  case __gi_kindArray:
+    typ.zero = function() {
+      var arrayClass = __gi_nativeArray(typ.elem.kind);
+      if (arrayClass !== Array) {
+        return new arrayClass(typ.len);
+      }
+      var array = new Array(typ.len);
+      for (var i = 0; i < typ.len; i++) {
+        array[i] = typ.elem.zero();
+      }
+      return array;
+    };
+    break;
+
+  case __gi_kindStruct:
+    typ.zero = function() { return new typ.ptr(); };
+    break;
+
+  default:
+    __gi_panic(new __gi_String("invalid kind: " + kind));
+  }
+
+  typ.id = __gi_typeIDCounter;
+  __gi_typeIDCounter = __gi_typeIDCounter+1;
+  typ.size = size;
+  typ.kind = kind;
+  typ.string = string;
+  typ.named = named;
+  typ.pkg = pkg;
+  typ.exported = exported;
+  typ.methods = {};
+  typ.methodSetCache = nil;
+  typ.comparable = true;
+  
+  return typ;
+end
+

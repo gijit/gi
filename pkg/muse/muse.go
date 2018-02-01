@@ -150,6 +150,29 @@ func (m *Muse) Pun(tt types.Type) (rt reflect.Type, err error) {
 		pp("under = '%#v'", under)
 		pp("numMeth = '%#v'", numMeth)
 
+		/*
+		   util.go:178 2018-02-01 13:30:44.021 +0700 ICT we're in the token.TYPE!
+
+		   util.go:182 2018-02-01 13:30:44.021 +0700 ICT o='&types.TypeName{object:types.object{parent:(*types.Scope)(0xc420056540), pos:7, pkg:(*types.Package)(0xc42007d400), name:"Tree", typ:(*types.Named)(0xc42000ebd0), order_:0x1, scopePos_:0}}'
+
+		   muse_test.go:94 2018-02-01 13:30:44.021 +0700 ICT checked = '&types.Named{obj:(*types.TypeName)(0xc42007d450), underlying:(*types.Struct)(0xc42000ec90), methods:[]*types.Func(nil)}'
+
+		   muse.go:134 2018-02-01 13:30:44.046 +0700 ICT in *types.Named: x ='&types.Named{obj:(*types.TypeName)(0xc42007d450), underlying:(*types.Struct)(0xc42000ec90), methods:[]*types.Func(nil)}'
+
+		   muse.go:146 2018-02-01 13:30:44.046 +0700 ICT obj = '&types.TypeName{object:types.object{parent:(*types.Scope)(0xc420056540), pos:7, pkg:(*types.Package)(0xc42007d400), name:"Tree", typ:(*types.Named)(0xc42000ebd0), order_:0x1, scopePos_:0}}'
+
+		   muse.go:147 2018-02-01 13:30:44.046 +0700 ICT pkg = '&types.Package{path:"", name:"", scope:(*types.Scope)(0xc420056540), complete:true, imports:[]*types.Package(nil), fake:false}'
+
+		   muse.go:148 2018-02-01 13:30:44.046 +0700 ICT nm = '"Tree"'
+
+		   muse.go:149 2018-02-01 13:30:44.046 +0700 ICT ttyp = '&types.Named{obj:(*types.TypeName)(0xc42007d450), underlying:(*types.Struct)(0xc42000ec90), methods:[]*types.Func(nil)}'
+
+		   muse.go:150 2018-02-01 13:30:44.046 +0700 ICT under = '&types.Struct{fields:[]*types.Var{(*types.Var)(0xc42007d680)}, tags:[]string(nil)}'
+
+		   muse.go:151 2018-02-01 13:30:44.06 +0700 ICT numMeth = '0'
+
+		*/
+
 		panic("not done: *types.Named")
 	case *types.Interface:
 	default:
