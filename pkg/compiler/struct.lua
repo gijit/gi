@@ -515,7 +515,7 @@ end
 -- translate __gi_newType() in js,
 -- from gopherjs/compiler/prelude/types.go#L64
 --
-function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
+function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
 
       print("size=",size,", kind=",kind,", str=",str)
       print("named=",named,", pkg=",pkg)
@@ -572,89 +572,89 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
     break;
 
   elseif kind == __gi_kindComplex128 then
-    typ = function(real, imag) {
+    typ = function(real, imag) 
       this.__gi_real = real;
       this.__gi_imag = imag;
       this.__gi_val = this;
-    };
-    typ.keyFor = function(x) { return x.__gi_real .. "__gi_" .. x.__gi_imag; };
+    end
+    typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
     break;
 
   elseif kind == __gi_kindArray then
-    typ = function(v) { this.__gi_val = v; };
+    typ = function(v) this.__gi_val = v; end
     typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. string, false, "", false, function(array) {
-      this.__gi_get = function() { return array; };
-      this.__gi_set = function(v) { typ.copy(this, v); };
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. str, false, "", false, function(array) 
+      this.__gi_get = function() return array; end;
+      this.__gi_set = function(v) typ.copy(this, v); end
       this.__gi_val = array;
-    });
-    typ.init = function(elem, len) {
-      typ.elem = elem;
-      typ.len = len;
-      typ.comparable = elem.comparable;
-      typ.keyFor = function(x) {
-        return Array.prototype.join.call(__gi_mapArray(x, function(e) {
-          return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-        }), "__gi_");
-      };
-      typ.copy = function(dst, src) {
-        __gi_copyArray(dst, src, 0, 0, src.length, elem);
-      };
-      typ.ptr.init(typ);
-      Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
-    };
+    end);
+    typ.init = function(elem, len) 
+       typ.elem = elem;
+       typ.len = len;
+       typ.comparable = elem.comparable;
+       typ.keyFor = function(x) 
+          return Array.prototype.join.call(__gi_mapArray(x, function(e) {
+          return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+        end), "__gi_");
+       end
+       typ.copy = function(dst, src) 
+          __gi_copyArray(dst, src, 0, 0, src.length, elem);
+       end
+       typ.ptr.init(typ);
+       Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
+    end
     break;
 
   elseif kind == __gi_kindChan then
-    typ = function(v) { this.__gi_val = v; };
+    typ = function(v) this.__gi_val = v; end
     typ.wrapped = true;
     typ.keyFor = __gi_idKey;
-    typ.init = function(elem, sendOnly, recvOnly) {
+    typ.init = function(elem, sendOnly, recvOnly)
       typ.elem = elem;
       typ.sendOnly = sendOnly;
       typ.recvOnly = recvOnly;
-    };
+    end
     break;
 
   elseif kind == __gi_kindFunc then
-    typ = function(v) { this.__gi_val = v; };
+    typ = function(v) this.__gi_val = v; end
     typ.wrapped = true;
-    typ.init = function(params, results, variadic) {
+    typ.init = function(params, results, variadic)
       typ.params = params;
       typ.results = results;
       typ.variadic = variadic;
       typ.comparable = false;
-    };
+    end
     break;
 
   elseif kind == __gi_kindInterface then
     typ = { implementedBy: {}, missingMethodFor: {} };
     typ.keyFor = __gi_ifaceKeyFor;
-    typ.init = function(methods) {
+    typ.init = function(methods) 
       typ.methods = methods;
-      methods.forEach(function(m) {
+      methods.forEach(function(m) 
         __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
-      });
-    };
+      end);
+    end
     break;
 
   elseif kind == __gi_kindMap then
-    typ = function(v) { this.__gi_val = v; };
+    typ = function(v) this.__gi_val = v; end
     typ.wrapped = true;
-    typ.init = function(key, elem) {
+    typ.init = function(key, elem)
       typ.key = key;
       typ.elem = elem;
       typ.comparable = false;
-    };
+    end
     break;
 
   elseif kind == __gi_kindPtr then
-    typ = constructor || function(getter, setter, target) {
+    typ = constructor || function(getter, setter, target)
       this.__gi_get = getter;
       this.__gi_set = setter;
       this.__gi_target = target;
       this.__gi_val = this;
-    };
+    end
     typ.keyFor = __gi_idKey;
     typ.init = function(elem) 
       typ.elem = elem;
@@ -683,12 +683,12 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
     break;
 
   elseif kind == __gi_kindStruct then
-    typ = function(v) { this.__gi_val = v; };
+    typ = function(v)  this.__gi_val = v; end
     typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. string, false, pkg, exported, constructor);
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
-    typ.ptr.prototype.__gi_get = function() { return this; };
-    typ.ptr.prototype.__gi_set = function(v) { typ.copy(this, v); };
+    typ.ptr.prototype.__gi_get = function()  return this; end
+    typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
     typ.init = function(pkgPath, fields)
       typ.pkgPath = pkgPath;
       typ.fields = fields;
@@ -700,7 +700,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
       typ.keyFor = function(x) 
          local val = x.__gi_val;
          return __gi_mapArray(fields, function(f)
-                                 return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+                                 return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
          end).join("__gi_");
       end
       typ.copy = function(dst, src) 
@@ -780,25 +780,25 @@ elseif kind == __gi_kindInt or
    kind == __gi_kindUintptr or
 kind == __gi_kindUnsafePointer then
    
-   typ.zero = function() { return 0LL; };
-      break;
+   typ.zero = function() return 0LL; end
+   break;
 
 elseif kind == __gi_kindFloat32 or
 kind == __gi_kindFloat64 then
 
-   typ.zero = function() { return 0; };
-      break;
+   typ.zero = function() return 0; end
+   break;
       
 elseif kind ==  __gi_kindString then
-    typ.zero = function() { return ""; };
+    typ.zero = function() return ""; end
     break;
 
 elseif kind ==  __gi_kindComplex64 or
 kind ==  __gi_kindComplex128 then
    
    -- hmm... how to translate this new typ(0, 0)from javascript?
-   local zero = new typ(0, 0);
-   typ.zero = function() return zero; end
+   -- local zero = new typ(0, 0);
+   typ.zero = function() return 0,0; end
    break;
    
 elseif kind ==  __gi_kindPtr or
@@ -826,7 +826,7 @@ elseif kind ==  __gi_kindArray then
    
    typ.zero = function() 
       local arrayClass = __gi_nativeArray(typ.elem.kind);
-      if (arrayClass ~= Array) then
+      if arrayClass ~= Array then
          return new arrayClass(typ.len)
       end
       local array = new Array(typ.len)
@@ -851,7 +851,7 @@ end
   __gi_typeIDCounter = __gi_typeIDCounter+1;
   typ.size = size;
   typ.kind = kind;
-  typ.string = string;
+  typ.str = str;
   typ.named = named;
   typ.pkg = pkg;
   typ.exported = exported;
