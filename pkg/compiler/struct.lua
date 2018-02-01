@@ -786,7 +786,8 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
-      __gi_panic(__gi_String("invalid kind: " .. kind));
+      kind = kind or "<nil>"
+      error("error at struct.lua:790: invalid kind: "..kind);
    end
 
    --switch (kind) {

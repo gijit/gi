@@ -719,15 +719,15 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
 				}
-				constructor = fmt.Sprintf("function(%s) {\n\t\tthis.$val = this;\n\t\tif (arguments.length === 0) {\n", strings.Join(params, ", "))
+				constructor = fmt.Sprintf("function(%s) \n\t\t -- jea, what to do with this?:  this.$val = this;\n\t\tif #arguments == 0 then\n", strings.Join(params, ", "))
 				for i := 0; i < t.NumFields(); i++ {
 					constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 				}
-				constructor += "\t\t\treturn;\n\t\t}\n"
+				constructor += "\t\t\treturn;\n\t\t end \n"
 				for i := 0; i < t.NumFields(); i++ {
 					constructor += fmt.Sprintf("\t\tthis.%[1]s = %[1]s_;\n", fieldName(t, i))
 				}
-				constructor += "\t}"
+				constructor += "\t end "
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 				//size = sizes32.Sizeof(t)
 				size = sizes64.Sizeof(t)
