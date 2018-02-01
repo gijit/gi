@@ -1,6 +1,7 @@
 package muse
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -87,7 +88,13 @@ type Tree struct {
 				pp("nm = '%#v', typ= '%#v'", nm, typ)
 				// nm = '&ast.Ident{NamePos:7, Name:"Tree", Obj:(*ast.Object)(0xc42007d360)}', typ= '&ast.StructType{Struct:12, Fields:(*ast.FieldList)(0xc42000e8a0), Incomplete:false}'
 
-				checked := check(typ, fileSet, file)
+				pp("file = '%#v'", file)
+
+				checked := typeCheck(typ, fileSet, file)
+				pp("checked = '%#v'", checked)
+				if checked == nil {
+					panic(fmt.Sprintf("got nil checked back for typ='%#v'", typ))
+				}
 
 				rt, err := m.Pun(checked)
 				cv.So(err, cv.ShouldBeNil)

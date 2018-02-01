@@ -3,16 +3,23 @@ package muse
 import (
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/parser"
+	//"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 )
 
-func check(typ *ast.Expr, fileSet *ast.FileSet, files []*ast.File) types.Type {
+var sizes64 = &types.StdSizes{WordSize: 8, MaxAlign: 8}
+
+func typeCheck(typ ast.Expr, fileSet *token.FileSet, file *ast.File) types.Type {
+
+	file.Name = &ast.Ident{
+		Name: "",
+	}
+	files := []*ast.File{file}
 
 	config := &types.Config{
 		DisableUnusedImportCheck: true,
-		Sizes: sizes32,
+		Sizes: sizes64,
 		Error: func(err error) {
 			panic(fmt.Sprintf("where error? err = '%v'", err))
 		},
@@ -28,8 +35,11 @@ func check(typ *ast.Expr, fileSet *ast.FileSet, files []*ast.File) types.Type {
 	}
 
 	importPath := ""
-	pkg, check, err := config.Check(nil, check, importPath, fileSet, files, typesInfo, nil)
+	pkg, check, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, nil)
 	panicOn(err)
 
-	pp("got past config.Check")
+	pp("check: '%#v'", check)
+	pp("pkg: '%#v'", pkg)
+
+	return nil
 }

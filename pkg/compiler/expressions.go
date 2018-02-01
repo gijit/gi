@@ -1253,7 +1253,8 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 				if s, isStruct := ptr.Elem().Underlying().(*types.Struct); isStruct {
 					array := c.newVariable("_array")
 					target := c.newVariable("_struct")
-					c.Printf("%s = new Uint8Array(%d);", array, sizes32.Sizeof(s))
+					// jea: sizes32 -> sizes64
+					c.Printf("%s = new Uint8Array(%d);", array, sizes64.Sizeof(s)) // jea
 					c.Delayed(func() {
 						c.Printf("%s = %s, %s;", target, c.translateExpr(expr, nil), c.loadStruct(array, target, s))
 					})
@@ -1262,7 +1263,8 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			}
 			if call, ok := expr.(*ast.CallExpr); ok {
 				if id, ok := call.Fun.(*ast.Ident); ok && id.Name == "new" {
-					return c.formatExpr("new Uint8Array(%d)", int(sizes32.Sizeof(c.p.TypeOf(call.Args[0]))))
+					// jea: sizes32 -> sizes64
+					return c.formatExpr("new Uint8Array(%d)", int(sizes64.Sizeof(c.p.TypeOf(call.Args[0]))))
 				}
 			}
 		}
@@ -1418,7 +1420,8 @@ func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
 		}
 	}
 	collectFields(s, target)
-	offsets := sizes32.Offsetsof(fields)
+	// jea: sizes32 -> sizes64
+	offsets := sizes64.Offsetsof(fields)
 	for i, field := range fields {
 		switch t := field.Type().Underlying().(type) {
 		case *types.Basic:

@@ -74,7 +74,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				importContext: importContext,
 				importError:   &importError,
 			},
-			Sizes: sizes32,
+			//Sizes: sizes32,
+			Sizes: sizes64,
 			Error: func(err error) {
 				panic(fmt.Sprintf("where error? err = '%v'", err))
 				if previousErr != nil && previousErr.Error() == err.Error() {
@@ -728,7 +729,8 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				constructor += "\t}"
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
-				size = sizes32.Sizeof(t)
+				//size = sizes32.Sizeof(t)
+				size = sizes64.Sizeof(t)
 				_ = size
 			}
 			// jea

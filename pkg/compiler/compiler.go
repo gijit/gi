@@ -15,7 +15,9 @@ import (
 	gcimporter "golang.org/x/tools/go/gcimporter15"
 )
 
-var sizes32 = &types.StdSizes{WordSize: 4, MaxAlign: 8}
+//jea comment sizes32 in favor of sizes64
+//var sizes32 = &types.StdSizes{WordSize: 4, MaxAlign: 8}
+var sizes64 = &types.StdSizes{WordSize: 8, MaxAlign: 8}
 var reservedKeywords = make(map[string]bool)
 
 func init() {
