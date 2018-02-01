@@ -636,7 +636,7 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, "*" .. str, false, "", false, function(array) 
+      typ.ptr = __gi_NewType("other", 8, __gi_kind_Ptr, shortPkg, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
                                 this.__gi_val = array;
@@ -753,7 +753,7 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
       setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, "*" .. str, false, pkg, exported, constructor);
+      typ.ptr = __gi_NewType("other", 8, __gi_kind_Ptr, shortPkg, "*" .. str, false, pkg, exported, constructor);
       typ.ptr.elem = typ;
       typ.ptr.prototype.__gi_get = function()  return this; end
       typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
@@ -830,7 +830,7 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
       kind = kind or "<nil>"
-      error("error at struct.lua:790: invalid kind: "..kind);
+      error("error at struct.lua:833: invalid kind: "..kind);
    end
 
    --switch (kind) {
