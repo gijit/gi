@@ -698,14 +698,14 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
         }
       });
       typ.keyFor = function(x) {
-        var val = x.__gi_val;
+        local val = x.__gi_val;
         return __gi_mapArray(fields, function(f) {
           return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
         }).join("__gi_");
       };
       typ.copy = function(dst, src) {
-        for (var i = 0; i < fields.length; i++) {
-          var f = fields[i];
+        for i = 0,fields.length-1 do
+          local f = fields[i];
           switch (f.typ.kind) {
           case __gi_kindArray then
           case __gi_kindStruct then
@@ -718,117 +718,134 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
         }
       };
       /* nil value */
-      var properties = {};
-      fields.forEach(function(f) {
-        properties[f.prop] = { get: __gi_throwNilPointerError, set: __gi_throwNilPointerError };
-      });
+      local properties = {};
+      fields.forEach(function(f) 
+            properties[f.prop] = { get: __gi_throwNilPointerError, set: __gi_throwNilPointerError };
+      end);
       typ.ptr.nil = Object.create(constructor.prototype, properties);
       typ.ptr.nil.__gi_val = typ.ptr.nil;
-      /* methods for embedded fields */
-      __gi_addMethodSynthesizer(function() {
-        var synthesizeMethod = function(target, m, f) {
-          if (target.prototype[m.prop] !== undefined) { return; }
-          target.prototype[m.prop] = function() {
-            var v = this.__gi_val[f.prop];
-            if (f.typ === __gi_jsObjectPtr) {
-              v = new __gi_jsObjectPtr(v);
-            }
-            if (v.__gi_val === undefined) {
-              v = new f.typ(v);
-            }
-            return v[m.prop].apply(v, arguments);
-          };
-        };
-        fields.forEach(function(f) {
-          if (f.anonymous) {
-            __gi_methodSet(f.typ).forEach(function(m) {
-              synthesizeMethod(typ, m, f);
-              synthesizeMethod(typ.ptr, m, f);
-            });
-            __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m) {
-              synthesizeMethod(typ.ptr, m, f);
-            });
-          }
-        });
-      });
-    };
-    break;
+      -- methods for embedded fields
+      __gi_addMethodSynthesizer(function()
+            local synthesizeMethod = function(target, m, f)
+               
+               if target.prototype[m.prop] ~= nil then return end
+               
+               target.prototype[m.prop] = function()
+                  local v = this.__gi_val[f.prop];
+                  if f.typ == __gi_jsObjectPtr then
+                     v = new __gi_jsObjectPtr(v);
+                  end
+                  if v.__gi_val == nil then
+                     v = new f.typ(v);
+                  end
+                  return v[m.prop].apply(v, arguments);
+               end
+            end
+            fields.forEach(function(f)
+                  if (f.anonymous) then
+                     __gi_methodSet(f.typ).forEach(function(m) 
+                           synthesizeMethod(typ, m, f);
+                           synthesizeMethod(typ.ptr, m, f);
+                                                  end)
+                     __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
+                           synthesizeMethod(typ.ptr, m, f);
+                                                                end);
+                  end
+            end);
+      end);
+      end
+break;
 
   else
     __gi_panic(new __gi_String("invalid kind: " + kind));
   end
 
-  switch (kind) {
-  case __gi_kindBool:
-  case __gi_kindMap:
-    typ.zero = function() { return false; };
-    break;
+--switch (kind) {
+if kind == __gi_kindBool or
+kind == __gi_kindMap then
+   
+   typ.zero = function() return false; end
+   break;
+    
+elseif kind == __gi_kindInt or
+   kind == __gi_kindInt8 or
+   kind == __gi_kindInt16 or
+   kind == __gi_kindInt32 or
+   kind == __gi_kindInt64 or
+   kind == __gi_kindUint or
+   kind == __gi_kindUint8  or
+   kind == __gi_kindUint16 or
+   kind == __gi_kindUint32 or
+   kind == __gi_kindUint64 or
+   kind == __gi_kindUintptr or
+kind == __gi_kindUnsafePointer then
+   
+   typ.zero = function() { return 0LL; };
+      break;
 
-  case __gi_kindInt:
-  case __gi_kindInt8:
-  case __gi_kindInt16:
-  case __gi_kindInt32:
-  case __gi_kindUint:
-  case __gi_kindUint8 :
-  case __gi_kindUint16:
-  case __gi_kindUint32:
-  case __gi_kindUintptr:
-  case __gi_kindUnsafePointer:
-  case __gi_kindFloat32:
-  case __gi_kindFloat64:
-    typ.zero = function() { return 0; };
-    break;
+elseif kind == __gi_kindFloat32 or
+kind == __gi_kindFloat64 then
 
-  case __gi_kindString:
+   typ.zero = function() { return 0; };
+      break;
+      
+elseif kind ==  __gi_kindString then
     typ.zero = function() { return ""; };
     break;
 
-  case __gi_kindInt64:
-  case __gi_kindUint64:
-  case __gi_kindComplex64:
-  case __gi_kindComplex128:
-    var zero = new typ(0, 0);
-    typ.zero = function() { return zero; };
+elseif kind ==  __gi_kindComplex64 or
+kind ==  __gi_kindComplex128 then
+   
+   -- hmm... how to translate this new typ(0, 0)from javascript?
+   local zero = new typ(0, 0);
+   typ.zero = function() return zero; end
+   break;
+   
+elseif kind ==  __gi_kindPtr or
+kind ==  __gi_kindSlice then
+   
+    typ.zero = function() return typ.nil; end
     break;
 
-  case __gi_kindPtr:
-  case __gi_kindSlice:
-    typ.zero = function() { return typ.nil; };
+elseif kind ==  __gi_kindChan then
+   
+    typ.zero = function() return __gi_chanNil; end
     break;
 
-  case __gi_kindChan:
-    typ.zero = function() { return __gi_chanNil; };
+elseif kind ==  __gi_kindFunc then
+   
+    typ.zero = function() return __gi_throwNilPointerError; end
     break;
 
-  case __gi_kindFunc:
-    typ.zero = function() { return __gi_throwNilPointerError; };
+elseif kind ==  __gi_kindInterface then
+   
+    typ.zero = function() return __gi_ifaceNil; end
     break;
 
-  case __gi_kindInterface:
-    typ.zero = function() { return __gi_ifaceNil; };
-    break;
-
-  case __gi_kindArray:
-    typ.zero = function() {
-      var arrayClass = __gi_nativeArray(typ.elem.kind);
-      if (arrayClass !== Array) {
-        return new arrayClass(typ.len);
-      }
-      var array = new Array(typ.len);
-      for (var i = 0; i < typ.len; i++) {
-        array[i] = typ.elem.zero();
-      }
+elseif kind ==  __gi_kindArray then
+   
+   typ.zero = function() 
+      local arrayClass = __gi_nativeArray(typ.elem.kind);
+      if (arrayClass ~= Array) then
+         return new arrayClass(typ.len)
+      end
+      local array = new Array(typ.len)
+      for i = 0, typ.len-1 do
+         array[i] = typ.elem.zero()
+      end
       return array;
-    };
-    break;
+   end
+   
+   break;
 
-  case __gi_kindStruct:
-    typ.zero = function() { return new typ.ptr(); };
-    break;
+elseif kind ==  __gi_kindStruct then
 
-  default:
-    __gi_panic(new __gi_String("invalid kind: " + kind));
-  }
+   typ.zero = function() return new typ.ptr(); end
+   break;
+
+else
+   __gi_panic("invalid kind: "..kind)
+end
 
   typ.id = __gi_typeIDCounter;
   __gi_typeIDCounter = __gi_typeIDCounter+1;
