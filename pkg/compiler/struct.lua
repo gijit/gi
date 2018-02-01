@@ -196,21 +196,57 @@ function __reg:NewInstance(name, data)
 end
 
 
-
-function __reg:AddStructMethod(structName, methodName, method)
-   --print("__reg:AddStructMethod called with methodName ", methodName)
-   -- lookup the methodset
-   local methodset = self.structs[structName]
-   if methodset == nil then
-      error("unregistered struct name '"..structName.."'")
+-- si should be "struct" or "iface"
+-- siName is the name of the struct or interface.
+--
+function __reg:RemoveMethod(si, siName, methodName)
+   -- known?
+   local methodset
+   if si == "struct" then
+      methodset = self.structs[siName]
+   else
+      methodset = self.interfaces[siName]
    end
 
+   if methodset == nil then
+      error("unregistered "..si.." name '"..siName.."'")
+   end
+
+   if methodset[methodName] == nil then
+      -- not known, don't adjust nMethod count
+      error("error in RemoveMethod: '"..methodName.."' not found in "..si.." '"..siName.."'")
+      return
+   end
+   -- delete from methoset, decrease nMethod count.
+   methodset[methodName] = nil
    local props = methodset[__gi_PropsKey]
+   props.__nMethod = props.__nMethod -1
+end
+
+-- AddMethod works for both structs and interfaces.
+--
+-- si should be "struct" or "iface", to say which type.
+-- siName is the name of the struct or interface.
+--
+function __reg:AddMethod(si, siName, methodName, method)
+   --print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
+   -- lookup the methodset
+   local methodset
+   if si == "struct" then
+      methodset = self.structs[siName]
+   else
+      methodset = self.interfaces[siName]
+   end
+   if methodset == nil then
+      error("unregistered "..si.." name '"..siName.."'")
+   end
+
    -- new?
    if methodset[methodName] ~= nil then
       -- not new
    else
       -- new, count it.
+      local props = methodset[__gi_PropsKey]
       props.__nMethod = props.__nMethod + 1
    end
    
@@ -218,13 +254,20 @@ function __reg:AddStructMethod(structName, methodName, method)
    methodset[methodName] = method
 end
 
-
 function __gi_methodVal(recvr, methodName, recvrType)
    print("__gi_methodVal with methodName ", methodName, " recvrType=", recvrType)
+
+   -- try structs, then interfaces.
+   
    local methodset = __reg.structs[recvrType]
    if methodset == nil then
-      error("error in __gi_methodVal: unregistered struct name '"..recvrType.."'")
+      methodset = __reg.interfaces[recvrType]
    end
+   
+   if methodset == nil then
+      error("error in __gi_methodVal: unregistered receiver type '"..recvrType.."'")
+   end
+   
    local method = methodset[methodName]
    if method == nil then
       error("error in __gi_methodVal: method '"..methodName .."' not found for type '"..recvrType.."'")
@@ -258,7 +301,8 @@ function __gi_count_methods(vi)
    return n
 end
 
--- face.lua merged into struct.lua, because we need _reg
+-- face.lua merged into struct.lua, because we need _reg.
+-- Thus the sequencing of these declarations is significant.
 
 -- __gi_assertType is an interface type assertion.
 --
@@ -277,9 +321,9 @@ end
 --   if 0, then we panic when the interface conversion fails.
 --
 function __gi_assertType(value, typ, returnTuple)
- --[=[
+
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
-   
+ --[=[   
    local isInterface = false
    local interfaceMethods = nil
    if __reg:IsInterface(typ) then

@@ -101,74 +101,98 @@ e := c.Next()
 func Test101InterfaceConversion(t *testing.T) {
 
 	// work in progress
-	/*
-		cv.Convey(`two-value interface conversion check`, t, func() {
 
-			code := `
-	package main
+	cv.Convey(`two-value interface conversion check`, t, func() {
 
-	import (
-		"fmt"
-	)
+		code := `
+		package main
 
-	type Counter interface {
-		Next() int
-	}
-	type S struct {
-		v int
-	}
+		import (
+			"fmt"
+		)
 
-	func (s *S) Next() int {
-		s.v++
-		return s.v
-	}
+		type Counter interface {
+			Next() int
+		}
+		type S struct {
+			v int
+		}
 
-	type Bad struct {
-		v int
-	}
+		func (s *S) Next() int {
+			s.v++
+			return s.v
+		}
 
-	//func main() {
+		type Bad struct {
+			v int
+		}
 
-		s := &S{}
+		//func main() {
 
-		asCounter_s, s_ok := interface{}(s).(Counter)
-		sNil := asCounter_s == nil
+			s := &S{}
 
-		a := asCounter_s.Next()
-		b := asCounter_s.Next()
+			asCounter_s, s_ok := interface{}(s).(Counter)
+			sNil := asCounter_s == nil
 
-		bad := &Bad{}
+			a := asCounter_s.Next()
+			b := asCounter_s.Next()
 
-		asCounter_bad, bad_ok := interface{}(bad).(Counter)
-		acbIsNil := asCounter_bad == nil
+			bad := &Bad{}
 
-		fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, acbIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, acbIsNil, bad_ok)
-		// s_ok=true, asCounter_s=&{2}, sNil=false, a=1, b=2, acbIsNil=true, bad_ok=false
+			asCounter_bad, bad_ok := interface{}(bad).(Counter)
+			acbIsNil := asCounter_bad == nil
 
-	//}
-		`
-			vm, err := NewLuaVmWithPrelude(nil)
-			panicOn(err)
-			defer vm.Close()
-			inc := NewIncrState(vm, nil)
+			fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, acbIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, acbIsNil, bad_ok)
+			// s_ok=true, asCounter_s=&{2}, sNil=false, a=1, b=2, acbIsNil=true, bad_ok=false
 
-			translation := inc.Tr([]byte(code))
-			fmt.Printf("\n translation='%s'\n", translation)
+		//}
+			`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
 
-			//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
 
-			// and verify that it happens correctly
-			LuaRunAndReport(vm, string(translation))
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
-			LuaMustBool(vm, "sNil", false)
-			LuaMustBool(vm, "s_ok", true)
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
 
-			LuaMustInt64(vm, "a", 1)
-			LuaMustInt64(vm, "b", 2)
+		LuaMustBool(vm, "sNil", false)
+		LuaMustBool(vm, "s_ok", true)
 
-			LuaMustBool(vm, "abcIsNil", true)
-			LuaMustBool(vm, "bad_ok", false)
+		LuaMustInt64(vm, "a", 1)
+		LuaMustInt64(vm, "b", 2)
 
-		})
-	*/
+		LuaMustBool(vm, "abcIsNil", true)
+		LuaMustBool(vm, "bad_ok", false)
+
+	})
+
+}
+
+func Test102InterfaceMethodset(t *testing.T) {
+
+	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction`, t, func() {
+		code := `
+		type Counter interface {
+			Next() int
+		}
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+Counter = __reg:RegisterInterface("Counter");
+Counter = __reg:RegisterInterface("Counter");
+`)
+
+	})
 }
