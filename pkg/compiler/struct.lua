@@ -556,14 +556,11 @@ end
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
 
    print("size=",size,", kind=", __kind2str[kind],", str=",str)
    print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
    print("exported=",exported,", constructor=",constructor)
-   if sio ~= nil then
-      print("sio = '"..sio.."'")
-   end
    
    -- we return typ at the end.
    local typ = {}
@@ -636,7 +633,7 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType("other", 8, __gi_kind_Ptr, shortPkg, "*" .. str, false, "", false, function(array) 
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
                                 this.__gi_val = array;
@@ -711,17 +708,18 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
       
 
    elseif kind == __gi_kind_Ptr then
-      typ = constructor  or  function(getter, setter, target)
-         this.__gi_get = getter;
-         this.__gi_set = setter;
-         this.__gi_target = target;
-         this.__gi_val = this;
-                             end
+      typ.constructor = constructor or
+         function(getter, setter, target)
+            typ.__gi_get = getter;
+            typ.__gi_set = setter;
+            typ.__gi_target = target;
+            typ.__gi_val = this;
+         end
       typ.keyFor = __gi_idKey;
       typ.init = function(elem) 
          typ.elem = elem;
          typ.wrapped = (elem.kind == __gi_kind_Array);
-         typ.Nil = typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
+         typ.Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
       
 
@@ -753,8 +751,9 @@ function __gi_NewType(sio, size, kind, shortPkg, str, named, pkg, exported, cons
       setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType("other", 8, __gi_kind_Ptr, shortPkg, "*" .. str, false, pkg, exported, constructor);
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*" .. str, false, pkg, exported, constructor);
       typ.ptr.elem = typ;
+      typ.ptr.prototype = {}
       typ.ptr.prototype.__gi_get = function()  return this; end
       typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
       typ.init = function(pkgPath, fields)

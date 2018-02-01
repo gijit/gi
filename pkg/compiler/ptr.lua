@@ -35,7 +35,11 @@ function __gi_ptrType(getter, setter, typeName)
       error "__gi_ptrType sees nil setter"
    end
    local proxy = {}
-   proxy[__giPrivatePointerProps] = {["get"]=getter, ["set"]=setter, ["typ"]=typeName}
+   proxy[__giPrivatePointerProps] = {
+      ["get"]=getter,
+      ["set"]=setter,
+      ["typ"]=typeName,
+   }
    setmetatable(proxy, __gi_PrivatePointerMt)
    return proxy
 end
