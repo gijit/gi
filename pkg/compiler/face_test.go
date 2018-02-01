@@ -98,6 +98,7 @@ e := c.Next()
 	})
 }
 
+/* WIP
 func Test101InterfaceConversion(t *testing.T) {
 
 	// work in progress
@@ -173,6 +174,8 @@ func Test101InterfaceConversion(t *testing.T) {
 
 }
 
+// also WIP work in progress
+
 func Test102InterfaceMethodset(t *testing.T) {
 
 	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction`, t, func() {
@@ -190,7 +193,7 @@ func Test102InterfaceMethodset(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-    Counter = __reg:RegisterInterface("Counter");
+    Counter = __gi_NewType(16, __gi_kind_Interface, "", "Counter", true, "", true, null);
 	function S:Next()
         error("error: abstract iface method Next() invoked.")
 	end;
@@ -199,3 +202,4 @@ func Test102InterfaceMethodset(t *testing.T) {
 
 	})
 }
+*/

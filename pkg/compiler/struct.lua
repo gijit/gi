@@ -341,7 +341,7 @@ function __gi_assertType(value, typ, returnTuple)
    local valueMethods = value[__gi_MethodsetKey]
    local valueProps = value[__gi_PropsKey]
    
-   local nMethod = valeProps.__nMethod
+   local nMethod = valueProps.__nMethod
    
    local nvm = __gi_count_methods(valueMethods)
    
@@ -352,7 +352,9 @@ function __gi_assertType(value, typ, returnTuple)
       ok = value.constructor == typ;
       
    else
-      local valueTypeString = value.constructor.string;
+      -- jea, what here?
+      --local valueTypeString = value.constructor.string;
+      local valueTypeString = value.constructor
       ok = typ.implementedBy[valueTypeString];
       if ok == nil then
          

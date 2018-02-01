@@ -130,7 +130,7 @@ function _gi_clone(t, typ)
       error "_gi_clone called on non-table"
    end
 
-   if typ == "arrayType" then
+   if typ == "kind_arrayType" then
       local props = rawget(t, _giPrivateArrayProps)
       if props == nil then
          error "_gi_clone for arrayType could not get props" 

@@ -12,7 +12,6 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function`, t, func() {
 
 		// a := [3]int64{1,2,3}
-		// should call, a = __lua2go(_gi_NewArray({1,2,3}, "int64", 3))
 		code := `
    import "gitesting"
    a := [3]int64{1,3,4}
@@ -29,8 +28,8 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3, 0LL);
-        sum = gitesting.SumArrayInt64(_gi_clone(a, "arrayType"));
+		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
+        sum = gitesting.SumArrayInt64(_gi_clone(a, "kind_arrayType"));
 `)
 
 		// and verify that it happens correctly
@@ -61,10 +60,9 @@ func Test081CloneOfInt64Array(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			// 		a = __lua2go(_gi_NewArray({[0]=1LL,2LL,3LL}, "int64", 3));
 			`
-		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3, 0LL);
-        b = _gi_clone(a, "arrayType");
+		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
+        b = _gi_clone(a, "kind_arrayType");
         c = b[2];
 `)
 
@@ -98,7 +96,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-	a = _gi_NewArray({[0]=1LL,3LL,4LL}, "int64", 3, 0LL);
+	a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
   	_gi_SetRangeCheck(a, 0, (a[0] + (1LL)));
   	_gi_SetRangeCheck(a, 2, (a[2] - (1LL)));
   	b = a[0];
