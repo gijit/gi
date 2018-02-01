@@ -104,7 +104,8 @@ func (m *Muse) Pun(tt types.Type) (rt reflect.Type, err error) {
 				// jea: no idea what Offset should be set to.
 				Offset: 0, //    uintptr   // offset within struct, in bytes
 
-				// jea: not sure if this is correct:
+				// jea: not sure if this is correct, in particular
+				// when embedded structs are present.
 				Index: []int{i}, //     []int     // index sequence for Type.FieldByIndex
 
 				Anonymous: anon,
