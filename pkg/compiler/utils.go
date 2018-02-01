@@ -506,23 +506,23 @@ func fieldName(t *types.Struct, i int) string {
 func typeKind(ty types.Type) string {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
-		return toJavaScriptType(t)
+		return "__gi_kind_" + toJavaScriptType(t)
 	case *types.Array:
-		return "_kindArray"
+		return "__gi_kind_Array"
 	case *types.Chan:
-		return "_kindChan"
+		return "__gi_kind_Chan"
 	case *types.Interface:
-		return "_kindInterface"
+		return "__gi_kind_Interface"
 	case *types.Map:
-		return "_kindMap"
+		return "__gi_kind_Map"
 	case *types.Signature:
-		return "_kindFunc"
+		return "__gi_kind_Func"
 	case *types.Slice:
-		return "_kindSlice"
+		return "__gi_kind_Slice"
 	case *types.Struct:
-		return "_kindStruct"
+		return "__gi_kind_Struct"
 	case *types.Pointer:
-		return "_kindPtr"
+		return "__gi_kind_Ptr"
 	default:
 		panic(fmt.Sprintf("Unhandled type: %T\n", t))
 	}
