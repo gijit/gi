@@ -17,7 +17,7 @@ func (s *S) hi() string {
    return "hi called!"
 }
 `
-		// __reg:AddStructMethod should get called.
+		// __reg:AddMethod should get called.
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -32,7 +32,7 @@ func (s *S) hi() string {
 		s = self;
 		return "hi called!";
 	end;
-    __reg:AddStructMethod("S", "hi", S.hi)
+    __reg:AddMethod("struct", "S", "hi", S.hi)
 `)
 
 		// and verify that it happens correctly

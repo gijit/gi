@@ -710,7 +710,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		joinedParams = strings.Join(params, ", ")
 		if isMethod {
 			return []byte(fmt.Sprintf("\tfunction %s%s;\n "+
-				"__reg:AddStructMethod(\"%s\", \"%s\", %s)\n",
+				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", %s)\n",
 				funcRef, fun,
 				splt[0], splt[1], splt[0]+"."+splt[1],
 			))

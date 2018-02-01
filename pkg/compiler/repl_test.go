@@ -603,7 +603,7 @@ book := snoopy.Write("with a pen")`
             b = self;
   		    return b.word .. ":it was a dark and stormy night, " .. with;
      	end;
-        __reg:AddStructMethod("Beagle", "Write", Beagle.Write)
+        __reg:AddMethod("struct", "Beagle", "Write", Beagle.Write)
         snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
 
   	    _r = snoopy:Write("with a pen");
@@ -679,7 +679,7 @@ book := snoopy.Write("with a pen")`
             b = self;
   		    return b.word .. ":it was a dark and stormy night, " .. with;
      	end;
-        __reg:AddStructMethod("Beagle", "Write", Beagle.Write)
+        __reg:AddMethod("struct", "Beagle", "Write", Beagle.Write)
         snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
 
   	    _r = snoopy:Write("with a pen");

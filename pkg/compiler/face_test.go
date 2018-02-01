@@ -190,8 +190,11 @@ func Test102InterfaceMethodset(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-Counter = __reg:RegisterInterface("Counter");
-Counter = __reg:RegisterInterface("Counter");
+    Counter = __reg:RegisterInterface("Counter");
+	function S:Next()
+        error("error: abstract iface method Next() invoked.")
+	end;
+    __reg:AddMethod("iface", "Counter", "Next", Counter.Next)
 `)
 
 	})
