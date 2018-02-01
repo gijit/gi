@@ -402,7 +402,7 @@ function __gi_assertType(value, typ, returnTuple)
   if not ok then
      
      if returnTuple == 0 then
-        __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", (value === __gi_ifaceNil ? "" : value.constructor.string), typ.string, missingMethod));
+        __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", (value == __gi_ifaceNil ? "" : value.constructor.string), typ.string, missingMethod));
         
      elseif returnTuple == 1 then
         return false
@@ -563,12 +563,12 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
          break;
                
   elseif kind == __gi_kindComplex64 then
-    typ = function(real, imag) {
+    typ = function(real, imag)
       this.__gi_real = __gi_fround(real);
       this.__gi_imag = __gi_fround(imag);
       this.__gi_val = this;
-    };
-    typ.keyFor = function(x) { return x.__gi_real + "__gi_" + x.__gi_imag; };
+    end
+    typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
     break;
 
   elseif kind == __gi_kindComplex128 then
@@ -577,13 +577,13 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
       this.__gi_imag = imag;
       this.__gi_val = this;
     };
-    typ.keyFor = function(x) { return x.__gi_real + "__gi_" + x.__gi_imag; };
+    typ.keyFor = function(x) { return x.__gi_real .. "__gi_" .. x.__gi_imag; };
     break;
 
   elseif kind == __gi_kindArray then
     typ = function(v) { this.__gi_val = v; };
     typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" + string, false, "", false, function(array) {
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. string, false, "", false, function(array) {
       this.__gi_get = function() { return array; };
       this.__gi_set = function(v) { typ.copy(this, v); };
       this.__gi_val = array;
@@ -656,68 +656,68 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
       this.__gi_val = this;
     };
     typ.keyFor = __gi_idKey;
-    typ.init = function(elem) {
+    typ.init = function(elem) 
       typ.elem = elem;
-      typ.wrapped = (elem.kind === __gi_kindArray);
+      typ.wrapped = (elem.kind == __gi_kindArray);
       typ.nil = new typ(__gi_throwNilPointerError, __gi_throwNilPointerError);
-    };
+    end
     break;
 
   elseif kind == __gi_kindSlice then
-    typ = function(array) {
-      if (array.constructor !== typ.nativeArray) {
+    typ = function(array)
+      if array.constructor ~= typ.nativeArray then
         array = new typ.nativeArray(array);
-      }
+      end
       this.__gi_array = array;
       this.__gi_offset = 0;
       this.__gi_length = array.length;
       this.__gi_capacity = array.length;
       this.__gi_val = this;
-    };
-    typ.init = function(elem) {
+    end
+    typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
       typ.nativeArray = __gi_nativeArray(elem.kind);
       typ.nil = new typ([]);
-    };
+    end
     break;
 
   elseif kind == __gi_kindStruct then
     typ = function(v) { this.__gi_val = v; };
     typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" + string, false, pkg, exported, constructor);
+    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. string, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
     typ.ptr.prototype.__gi_get = function() { return this; };
     typ.ptr.prototype.__gi_set = function(v) { typ.copy(this, v); };
-    typ.init = function(pkgPath, fields) {
+    typ.init = function(pkgPath, fields)
       typ.pkgPath = pkgPath;
       typ.fields = fields;
-      fields.forEach(function(f) {
-        if (!f.typ.comparable) {
+      fields.forEach(function(f) 
+        if not f.typ.comparable then
           typ.comparable = false;
-        }
-      });
-      typ.keyFor = function(x) {
-        local val = x.__gi_val;
-        return __gi_mapArray(fields, function(f) {
-          return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-        }).join("__gi_");
-      };
-      typ.copy = function(dst, src) {
-        for i = 0,fields.length-1 do
-          local f = fields[i];
-          switch (f.typ.kind) {
-          case __gi_kindArray then
-          case __gi_kindStruct then
-            f.typ.copy(dst[f.prop], src[f.prop]);
-            continue;
-          default:
-            dst[f.prop] = src[f.prop];
-            continue;
-          }
-        }
-      };
-      /* nil value */
+        end
+      end);
+      typ.keyFor = function(x) 
+         local val = x.__gi_val;
+         return __gi_mapArray(fields, function(f)
+                                 return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+         end).join("__gi_");
+      end
+      typ.copy = function(dst, src) 
+         for i = 0,fields.length-1 do
+            local f = fields[i];
+            local knd = f.typ.kind
+            if knd ==  __gi_kindArray then
+               -- do nothing
+            elseif knd == __gi_kindStruct then
+               f.typ.copy(dst[f.prop], src[f.prop]);
+            else
+               -- default:
+               dst[f.prop] = src[f.prop];
+            end
+         end
+      end
+      -- nil value
       local properties = {};
       fields.forEach(function(f) 
             properties[f.prop] = { get: __gi_throwNilPointerError, set: __gi_throwNilPointerError };
@@ -757,7 +757,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor) {
 break;
 
   else
-    __gi_panic(new __gi_String("invalid kind: " + kind));
+    __gi_panic(new __gi_String("invalid kind: " .. kind));
   end
 
 --switch (kind) {
