@@ -467,6 +467,35 @@ __gi_kind_String = 24;
 __gi_kind_Struct = 25;
 __gi_kind_UnsafePointer = 26;
 
+__kind2str = {
+[1]="__gi_kind_bool",
+[2]="__gi_kind_Int",
+[3]="__gi_kind_Int8",
+[4]="__gi_kind_Int16",
+[5]="__gi_kind_Int32",
+[6]="__gi_kind_Int64",
+[7]="__gi_kind_Uint",
+[8]="__gi_kind_Uint8",
+[9]="__gi_kind_Uint16",
+[10]="__gi_kind_Uint32",
+[11]="__gi_kind_Uint64",
+[12]="__gi_kind_Uintptr",
+[13]="__gi_kind_Float32",
+[14]="__gi_kind_Float64",
+[15]="__gi_kind_Complex64",
+[16]="__gi_kind_Complex128",
+[17]="__gi_kind_Array",
+[18]="__gi_kind_Chan",
+[19]="__gi_kind_Func",
+[20]="__gi_kind_Interface",
+[21]="__gi_kind_Map",
+[22]="__gi_kind_Ptr",
+[23]="__gi_kind_Slice",
+[24]="__gi_kind_String",
+[25]="__gi_kind_Struct",
+[26]="__gi_kind_UnsafePointer"
+}
+
 __gi_methodSynthesizers = {}
 __gi_addMethodSynthesizer = function(f) 
    if __gi_methodSynthesizers == nil then
@@ -525,17 +554,24 @@ end
 -- translate __gi_newType() in js,
 -- from gopherjs/compiler/prelude/types.go#L64
 --
-function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
+-- sio \in {"struct", "iface", "other"}
+--
+function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor, sio)
 
-   print("size=",size,", kind=",kind,", str=",str)
+   print("size=",size,", kind=", __kind2str[kind],", str=",str)
    print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
    print("exported=",exported,", constructor=",constructor)
-
+   if sio ~= nil then
+      print("sio = '"..sio.."'")
+   end
+   
    -- we return typ at the end.
    local typ = {}
    
    if kind == __gi_kind_Struct then
-       typ.registered  = __reg:RegisterStruct(str)
+      typ.registered  = __reg:RegisterStruct(str)
+   elseif kind == __gi_kind_Interface then
+      typ.registered  = __reg:RegisterInterface(str)
    end
    
    if kind == __gi_kind_bool or
