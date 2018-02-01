@@ -412,10 +412,10 @@ function __gi_assertType(value, typ, returnTuple)
   end
   
   if not isInterface then
-     value = value.$val;
+     value = value.__gi_val;
   end
   
-  if typ == $jsObjectPtr then
+  if typ == __gi_jsObjectPtr then
      value = value.object;
   end
   
@@ -491,9 +491,9 @@ __gi_idKey = function(x)
   return tostring(x.__gi_id);
 end
 
-castableMT = {
+__castableMT = {
    __call = function(t, ...)
-      print("castableMT __call() invoked, with ... = ", ...)
+      print("__castableMT __call() invoked, with ... = ", ...)
       local arg0 = ...
       print("arg0 is", arg0)
       t.__gi_val = arg0
@@ -505,7 +505,7 @@ __gi_identity = function(x) return x; end
 __gi_floatKey = function(f)
    if f ~= f then
       __gi_idCounter = __gi_idCounter+1
-         return "NaN$" + __gi_idCounter;
+         return "NaN_" + __gi_idCounter;
    end
    return tostring(f);
 end
@@ -521,7 +521,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       print("named=",named,", pkg=",pkg)
       print("exported=",exported,", constructor=",constructor)
       
-      local typ;
+      local typ = {}
       if kind == __gi_kindBool or
          kind == __gi_kindInt or
          kind == __gi_kindInt8 or
@@ -537,17 +537,17 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       kind == __gi_kindUnsafePointer then
          
          typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
-         setmetatable(typ, castableMT);
+         setmetatable(typ, __castableMT);
          -- gopherjs:
-         -- typ = function(v) this.$val = v; end
+         -- typ = function(v) this.__gi_val = v; end
          -- typ.wrapped = true;
-         -- typ.keyFor = $identity;
+         -- typ.keyFor = __gi_identity;
          break;
          
       elseif kind == __gi_kindString then
 
          typ = {__gi_val, wrapped=true};
-         setmetatable(typ, castableMT);
+         setmetatable(typ, __castableMT);
          -- typ = function(v) this.__gi_val = v; end
          -- typ.wrapped = true;
          typ.keyFor = function(x) return "__gi_"..x; end
@@ -557,13 +557,13 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
       kind == __gi_kindFloat64 then
 
          typ = {__gi_val, wrapped=true};
-         setmetatable(typ, castableMT);         
+         setmetatable(typ, __castableMT);         
          -- typ = function(v) { this.__gi_val = v; };
          typ.keyFor = function(x) return __gi_floatKey(x) end
          break;
                
   elseif kind == __gi_kindComplex64 then
-    typ = function(real, imag)
+     typ = function(real, imag)
       this.__gi_real = __gi_fround(real);
       this.__gi_imag = __gi_fround(imag);
       this.__gi_val = this;
@@ -580,14 +580,15 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
     typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
     break;
 
-  elseif kind == __gi_kindArray then
-    typ = function(v) this.__gi_val = v; end
-    typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. str, false, "", false, function(array) 
-      this.__gi_get = function() return array; end;
-      this.__gi_set = function(v) typ.copy(this, v); end
-      this.__gi_val = array;
-    end);
+      elseif kind == __gi_kindArray then
+         setmetatable(typ, __castableMT)
+         --typ = function(v) this.__gi_val = v; end
+         typ.wrapped = true;
+         typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, "", false, function(array) 
+                                   this.__gi_get = function() return array; end;
+                                   this.__gi_set = function(v) typ.copy(this, v); end
+                                   this.__gi_val = array;
+         end);
     typ.init = function(elem, len) 
        typ.elem = elem;
        typ.len = len;
@@ -685,7 +686,7 @@ function __gi_NewType(size, kind, str, named, pkg, exported, constructor)
   elseif kind == __gi_kindStruct then
     typ = function(v)  this.__gi_val = v; end
     typ.wrapped = true;
-    typ.ptr = __gi_newType(4, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
+    typ.ptr = __gi_NewType(8, __gi_kindPtr, "*" .. str, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
     typ.ptr.prototype.__gi_get = function()  return this; end
     typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
