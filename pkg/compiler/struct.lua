@@ -441,21 +441,21 @@ end
 -- support for __gi_NewType
 
 __gi_kind_bool = 1;
-__gi_kind_Int = 2;
-__gi_kind_Int8 = 3;
-__gi_kind_Int16 = 4;
-__gi_kind_Int32 = 5;
-__gi_kind_Int64 = 6;
-__gi_kind_Uint = 7;
-__gi_kind_Uint8 = 8;
-__gi_kind_Uint16 = 9;
-__gi_kind_Uint32 = 10;
-__gi_kind_Uint64 = 11;
-__gi_kind_Uintptr = 12;
-__gi_kind_Float32 = 13;
-__gi_kind_Float64 = 14;
-__gi_kind_Complex64 = 15;
-__gi_kind_Complex128 = 16;
+__gi_kind_int = 2;
+__gi_kind_int8 = 3;
+__gi_kind_int16 = 4;
+__gi_kind_int32 = 5;
+__gi_kind_int64 = 6;
+__gi_kind_uint = 7;
+__gi_kind_uint8 = 8;
+__gi_kind_uint16 = 9;
+__gi_kind_uint32 = 10;
+__gi_kind_uint64 = 11;
+__gi_kind_uintptr = 12;
+__gi_kind_float32 = 13;
+__gi_kind_float64 = 14;
+__gi_kind_complex64 = 15;
+__gi_kind_complex128 = 16;
 __gi_kind_Array = 17;
 __gi_kind_Chan = 18;
 __gi_kind_Func = 19;
@@ -469,21 +469,21 @@ __gi_kind_UnsafePointer = 26;
 
 __kind2str = {
 [1]="__gi_kind_bool",
-[2]="__gi_kind_Int",
-[3]="__gi_kind_Int8",
-[4]="__gi_kind_Int16",
-[5]="__gi_kind_Int32",
-[6]="__gi_kind_Int64",
-[7]="__gi_kind_Uint",
-[8]="__gi_kind_Uint8",
-[9]="__gi_kind_Uint16",
-[10]="__gi_kind_Uint32",
-[11]="__gi_kind_Uint64",
-[12]="__gi_kind_Uintptr",
-[13]="__gi_kind_Float32",
-[14]="__gi_kind_Float64",
-[15]="__gi_kind_Complex64",
-[16]="__gi_kind_Complex128",
+[2]="__gi_kind_int",
+[3]="__gi_kind_int8",
+[4]="__gi_kind_int16",
+[5]="__gi_kind_int32",
+[6]="__gi_kind_int64",
+[7]="__gi_kind_uint",
+[8]="__gi_kind_uint8",
+[9]="__gi_kind_uint16",
+[10]="__gi_kind_uint32",
+[11]="__gi_kind_uint64",
+[12]="__gi_kind_uintptr",
+[13]="__gi_kind_float32",
+[14]="__gi_kind_float64",
+[15]="__gi_kind_complex64",
+[16]="__gi_kind_complex128",
 [17]="__gi_kind_Array",
 [18]="__gi_kind_Chan",
 [19]="__gi_kind_Func",
@@ -558,7 +558,7 @@ end
 --
 function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
 
-   print("size=",size,", kind=", __kind2str[kind],", str=",str)
+   print("size=",size,", kind=",kind, "kind2str=", __kind2str[kind],", str=",str)
    print("named=",named, " shortPkg='", shortPkg, "', pkg=",pkg)
    print("exported=",exported,", constructor=",constructor)
    
@@ -572,17 +572,17 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
    end
    
    if kind == __gi_kind_bool or
-      kind == __gi_kind_Int or
-      kind == __gi_kind_Int8 or
-      kind == __gi_kind_Int16 or
-      kind == __gi_kind_Int32 or
-      kind == __gi_kind_Int64 or
-      kind == __gi_kind_Uint or
-      kind == __gi_kind_Uint8 or
-      kind == __gi_kind_Uint16 or
-      kind == __gi_kind_Uint32 or
-      kind == __gi_kind_Uint64 or
-      kind == __gi_kind_Uintptr or
+      kind == __gi_kind_int or
+      kind == __gi_kind_int8 or
+      kind == __gi_kind_int16 or
+      kind == __gi_kind_int32 or
+      kind == __gi_kind_int64 or
+      kind == __gi_kind_uint or
+      kind == __gi_kind_uint8 or
+      kind == __gi_kind_uint16 or
+      kind == __gi_kind_uint32 or
+      kind == __gi_kind_uint64 or
+      kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
       typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
@@ -832,24 +832,24 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       error("error at struct.lua:833: invalid kind: "..kind);
    end
 
-   --switch (kind) {
+   --big switch (kind) in js.
    if kind == __gi_kind_bool or
    kind == __gi_kind_Map then
       
       typ.zero = function() return false; end
       
       
-   elseif kind == __gi_kind_Int or
-      kind == __gi_kind_Int8 or
-      kind == __gi_kind_Int16 or
-      kind == __gi_kind_Int32 or
-      kind == __gi_kind_Int64 or
-      kind == __gi_kind_Uint or
-      kind == __gi_kind_Uint8  or
-      kind == __gi_kind_Uint16 or
-      kind == __gi_kind_Uint32 or
-      kind == __gi_kind_Uint64 or
-      kind == __gi_kind_Uintptr or
+   elseif kind == __gi_kind_int or
+      kind == __gi_kind_int8 or
+      kind == __gi_kind_int16 or
+      kind == __gi_kind_int32 or
+      kind == __gi_kind_int64 or
+      kind == __gi_kind_uint or
+      kind == __gi_kind_uint8  or
+      kind == __gi_kind_uint16 or
+      kind == __gi_kind_uint32 or
+      kind == __gi_kind_uint64 or
+      kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
       typ.zero = function() return 0LL; end
@@ -865,8 +865,8 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       typ.zero = function() return ""; end
       
 
-   elseif kind ==  __gi_kind_Complex64 or
-   kind ==  __gi_kind_Complex128 then
+   elseif kind ==  __gi_kind_complex64 or
+   kind ==  __gi_kind_complex128 then
       
       -- hmm... how to translate this new typ(0, 0)from javascript?
       -- local zero = new typ(0, 0);
@@ -915,7 +915,8 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       
 
    else
-      __gi_panic("invalid kind: "..kind)
+      --__gi_panic("invalid kind: "..kind)
+      error("invalid kind: "..kind)
    end
 
    typ.id = __gi_typeIDCounter;
