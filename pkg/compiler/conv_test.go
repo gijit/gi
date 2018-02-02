@@ -11,10 +11,15 @@ func Test110ConvertFloat64ToInt64(t *testing.T) {
 
 	cv.Convey(`converting with int() should take a float64 into an int`, t, func() {
 
+		// don't know why the int() is getting lost. a literal copy
+		// into lua works fine, because we defined int() as a constructor
+		// for the int64 type.
+
 		code := `
  f := float64(3.5)
 i := int(f)
 `
+		// just translate to `i = int(f)` and it will work.
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
