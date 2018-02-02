@@ -169,7 +169,7 @@ var f F = 2.5
 			}
 			f()
 			cv.So(gotPanic, cv.ShouldBeTrue)
-			cv.So(strings.Contains(pval, "bad identifier: cannot use 'float64' as an identifier in gijit."),
+			cv.So(strings.Contains(pval, "bad identifier: cannot use 'float64' as an identifier in gijit"),
 				cv.ShouldBeTrue)
 		}
 
