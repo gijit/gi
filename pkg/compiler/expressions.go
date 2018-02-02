@@ -1213,7 +1213,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			case isFloat(basicExprType):
 				// jea
 				//return c.formatParenExpr("%e >> 0", expr)
-				return c.formatParenExpr("%e", expr)
+				return c.formatParenExpr("int(%e)", expr)
 			case types.Identical(exprType, types.Typ[types.UnsafePointer]):
 				return c.translateExpr(expr, nil)
 			default:
