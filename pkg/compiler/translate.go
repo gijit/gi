@@ -121,7 +121,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	tr.archive, err = IncrementallyCompile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)
 	panicOn(err)
-	pp("archive = '%#v'", tr.archive)
+	//pp("archive = '%#v'", tr.archive)
 	//pp("len(tr.archive.Declarations)= '%v'", len(tr.archive.Declarations))
 	//pp("len(tr.archive.NewCode)= '%v'", len(tr.archive.NewCodeText))
 

@@ -121,10 +121,15 @@ __gi_ifaceMT = {
 --   Bus   = __reg:RegisterStruct("Bus")
 --   Train =  __reg:RegisterStruct("Train")
 --
--- let -> point to the metatable:
+-- if we denote metatable with the
+--  arrow from table -> metatable, then
+--
 --    methodset -> props -> __gi_structMT
 --
-function __reg:RegisterStruct(name)
+function __reg:RegisterStruct(pkgPath, shortPkg, shortTypName)
+   local name = shortTypName -- temporary fix
+   print("RegisterStruct called, with shortTypName="..shortTypName)
+   
    local methodset = {
       __name="structMethodSet",
 
@@ -150,7 +155,12 @@ function __reg:RegisterStruct(name)
    return methodset
 end
 
-function __reg:RegisterInterface(name)
+function __reg:RegisterInterface(pkgPath, shortPkg, shortTypName)
+   local name = shortTypName -- temporary fix
+   if name == nil then
+      error "error in RegisterInterface: shortTypName  cannot be nil"
+   end
+   
    local methodset = {
       __name="ifaceMethodSet",
    }
@@ -172,7 +182,7 @@ end
 
 
 
-__gi_ifaceNil = __reg:RegisterInterface("nil")
+__gi_ifaceNil = __reg:RegisterInterface("main","main","nil")
 
 function __reg:IsInterface(name)
    return self.interfaces[name] ~= nil
@@ -611,9 +621,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
    setmetatable(typ, __gi_type_MT) -- make it callable
    
    if kind == __gi_kind_Struct then
-      typ.registered  = __reg:RegisterStruct(str)
+      typ.registered  = __reg:RegisterStruct(pkgPath, shortPkg, shortTypName)
    elseif kind == __gi_kind_Interface then
-      typ.registered  = __reg:RegisterInterface(str)
+      typ.registered  = __reg:RegisterInterface(pkgPath, shortPkg, shortTypName)
    end
    
    if kind == __gi_kind_bool or
