@@ -32,6 +32,7 @@ import (
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
+	pathutil "path"
 )
 
 // An Error describes a type-checking error; it implements the error interface.
@@ -365,7 +366,15 @@ func (init *Initializer) String() string {
 func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token.FileSet, files []*ast.File, info *Info, addPreludeToNewPkg func(pkg *Package)) (*Package, *Checker, error) {
 	// jea: gotta make these incremental, not new every time!
 	if pkg == nil {
-		pkg = NewPackage(path, "")
+		// jea, I used to have:
+		// pkg = NewPackage(path, "")
+		// instead, try:
+		name := pathutil.Base(path)
+		if path == "" || name == "." {
+			name = "main"
+		}
+		pp("NewPackage, using path='%s' and name='%s'", path, name)
+		pkg = NewPackage(path, name)
 		if addPreludeToNewPkg != nil {
 			addPreludeToNewPkg(pkg)
 		}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/constant"
+	//"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/printer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
@@ -313,6 +313,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						switch o.Name() {
 						case "main":
 							mainFunc = o
+							_ = mainFunc // keep compiler happy
 							de.DceObjectFilter = ""
 						case "init":
 							de.InitCode = c.CatchOutput(1, func() {
@@ -602,36 +603,41 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	// moved up to stay in order.
 	//	for _, fun := range functions {
 	//	}
-	if pkg.Name() == "main" {
-		if mainFunc == nil {
-			return nil, fmt.Errorf("missing main function")
-		}
-		id := c.newIdent("", types.NewSignature(nil, nil, nil, false))
-		c.p.Uses[id] = mainFunc
-		call := &ast.CallExpr{Fun: id}
-		ifStmt := &ast.IfStmt{
-			Cond: c.newIdent("$pkg === $mainPkg", types.Typ[types.Bool]),
-			Body: &ast.BlockStmt{
-				List: []ast.Stmt{
-					&ast.ExprStmt{X: call},
-					&ast.AssignStmt{
-						Lhs: []ast.Expr{c.newIdent("$mainFinished", types.Typ[types.Bool])},
-						Tok: token.ASSIGN,
-						Rhs: []ast.Expr{c.newConst(types.Typ[types.Bool], constant.MakeBool(true))},
+
+	// jea: don't treat main as special/don't require a main func.
+	// At least for now.
+	/*
+		if pkg.Name() == "main" {
+			if mainFunc == nil {
+				return nil, fmt.Errorf("missing main function")
+			}
+			id := c.newIdent("", types.NewSignature(nil, nil, nil, false))
+			c.p.Uses[id] = mainFunc
+			call := &ast.CallExpr{Fun: id}
+			ifStmt := &ast.IfStmt{
+				Cond: c.newIdent("$pkg === $mainPkg", types.Typ[types.Bool]),
+				Body: &ast.BlockStmt{
+					List: []ast.Stmt{
+						&ast.ExprStmt{X: call},
+						&ast.AssignStmt{
+							Lhs: []ast.Expr{c.newIdent("$mainFinished", types.Typ[types.Bool])},
+							Tok: token.ASSIGN,
+							Rhs: []ast.Expr{c.newConst(types.Typ[types.Bool], constant.MakeBool(true))},
+						},
 					},
 				},
-			},
+			}
+			if len(c.p.FuncDeclInfos[mainFunc].Blocking) != 0 {
+				c.Blocking[call] = true
+				c.Flattened[ifStmt] = true
+			}
+			funcDecls = append(funcDecls, &Decl{
+				InitCode: c.CatchOutput(1, func() {
+					c.translateStmt(ifStmt, nil)
+				}),
+			})
 		}
-		if len(c.p.FuncDeclInfos[mainFunc].Blocking) != 0 {
-			c.Blocking[call] = true
-			c.Flattened[ifStmt] = true
-		}
-		funcDecls = append(funcDecls, &Decl{
-			InitCode: c.CatchOutput(1, func() {
-				c.translateStmt(ifStmt, nil)
-			}),
-		})
-	}
+	*/
 
 	// moved up above to preserve sequence of entry.
 	// 	var typeDecls []*Decl

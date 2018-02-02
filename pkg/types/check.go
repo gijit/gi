@@ -195,8 +195,8 @@ func (check *Checker) initFiles(files []*ast.File) {
 	// determine package name and collect valid files
 	pkg := check.pkg
 	for _, file := range files {
-		//pp("file.Name.Name='%v'", file.Name.Name)
-		//pp("pkg.name = '%v'", pkg.name)
+		pp("file.Name.Name='%v'", file.Name.Name)
+		pp("pkg.name = '%v'", pkg.name)
 		switch name := file.Name.Name; pkg.name {
 		case "":
 			if name != "_" {
@@ -206,6 +206,12 @@ func (check *Checker) initFiles(files []*ast.File) {
 			}
 			fallthrough
 
+			// jea add
+		case "main":
+			if name == "" {
+				// jea: our most common case. name == "" and pkg.name = "main"
+				check.files = append(check.files, file)
+			}
 		case name:
 			check.files = append(check.files, file)
 

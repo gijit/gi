@@ -158,7 +158,7 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	// get a consisten application order, by sorting by name.
 	sort.Strings(files)
 	if !quiet {
-		fmt.Printf("using this prelude directory: '%s'\n", preludePath)
+		fmt.Printf("\nusing this prelude directory: '%s'\n", preludePath)
 		shortFn := make([]string, len(files))
 		for i, fn := range files {
 			shortFn[i] = path.Base(fn)
