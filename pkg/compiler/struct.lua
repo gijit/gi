@@ -647,8 +647,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       typ.keyFor = function(x) return "__gi_"..x; end
       
 
-   elseif kind ==  __gi_kind_Float32 or
-   kind == __gi_kind_Float64 then
+   elseif kind ==  __gi_kind_float32 or
+   kind == __gi_kind_float64 then
 
       typ = {__gi_val, wrapped=true};
       setmetatable(typ, __castableMT);         
@@ -656,7 +656,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       typ.keyFor = function(x) return __gi_floatKey(x) end
       
       
-   elseif kind == __gi_kind_Complex64 then
+   elseif kind == __gi_kind_complex64 then
       typ = function(real, imag)
          this.__gi_real = __gi_fround(real);
          this.__gi_imag = __gi_fround(imag);
@@ -665,7 +665,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
 
-   elseif kind == __gi_kind_Complex128 then
+   elseif kind == __gi_kind_complex128 then
       typ = function(real, imag) 
          this.__gi_real = real;
          this.__gi_imag = imag;
@@ -881,7 +881,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
       kind = kind or "<nil>"
-      error("error at struct.lua:833: invalid kind: "..kind);
+      error("error at struct.lua:(maybe line 884?): invalid kind: "..kind);
    end
 
    --big switch (kind) in js.
@@ -907,8 +907,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       typ.zero = function() return 0LL; end
       
 
-   elseif kind == __gi_kind_Float32 or
-   kind == __gi_kind_Float64 then
+   elseif kind == __gi_kind_float32 or
+   kind == __gi_kind_float64 then
 
       typ.zero = function() return 0; end
       
