@@ -197,21 +197,22 @@ end
 
 function __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
    local goal = string.sub(shortTypeName, 2)
-   print("top of __reg:GetPointeeMethodset, goal='"..goal.."'")
+   print("top of __reg:GetPointeeMethodset, goal='"..goal.."' are here are structs:")
+   st(self.structs)
    
-   local strct = __reg.structs[name]
+   local strct = self.structs[goal]
    if strct ~= nil then
       print("__reg:GetPointeeMethodset: found in structs")
       return strct
    end
    
-   local face = __reg.interfaces[name]
+   local face = self.interfaces[goal]
    if face ~=nil then
       print("__reg:GetPointeeMethodset: found in interfaces")
       return face
    end
 
-   print("__reg:GetPointeeMethodset: *not* found in structs or interfaces")   
+   print("__reg:GetPointeeMethodset: '"..goal .."' *not* found in structs or interfaces")   
    
    -- other types? well, they
    -- won't have methodsets, so nil seems appropriate.
