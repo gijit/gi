@@ -720,13 +720,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					params[i] = fieldName(t, i) + "_"
 				}
 				if t.NumFields() == 0 {
-					constructor = fmt.Sprintf("function() \n\t\t return {} end")
+					constructor = fmt.Sprintf("function(self) \n\t\t self.__gi_val=self; return self; end")
 				} else {
-					constructor = fmt.Sprintf("function(...) \n\t\t local self={}; local args={...}\n\t\t local %s = ...  \n\t\t if #args == 0 then\n", strings.Join(params, ", "))
+					constructor = fmt.Sprintf("function(self, ...) \n\t\t self.__gi_val=self;\n\t\t local args={...};\n\t\t if #args == 0 then\n")
 					for i := 0; i < t.NumFields(); i++ {
 						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 					}
-					constructor += "\t\t\t return self;\n\t\t end \n"
+					constructor += fmt.Sprintf("\t\t\t return self;\n\t\t end \n\t\t local %s = ... ;\n", strings.Join(params, ", "))
 					for i := 0; i < t.NumFields(); i++ {
 						constructor += fmt.Sprintf("\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
 					}
@@ -763,6 +763,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 			var methods []string
 			var ptrMethods []string
+			pp("named.NumMethods() = %v", named.NumMethods())
 			for i := 0; i < named.NumMethods(); i++ {
 				pp("on method i=%v, '%v'\n", i, named.Method(i).Name())
 				method := named.Method(i)

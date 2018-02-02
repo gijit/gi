@@ -173,12 +173,11 @@ func Test101InterfaceConversion(t *testing.T) {
 	})
 
 }
-
-// also WIP work in progress
+*/
 
 func Test102InterfaceMethodset(t *testing.T) {
 
-	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction`, t, func() {
+	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction.`, t, func() {
 		code := `
 		type Counter interface {
 			Next() int
@@ -194,7 +193,7 @@ func Test102InterfaceMethodset(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
     Counter = __gi_NewType(16, __gi_kind_Interface, "", "Counter", true, "", true, null);
-	function S:Next()
+	function Counter:Next()
         error("error: abstract iface method Next() invoked.")
 	end;
     __reg:AddMethod("iface", "Counter", "Next", Counter.Next)
@@ -202,4 +201,31 @@ func Test102InterfaceMethodset(t *testing.T) {
 
 	})
 }
-*/
+
+func Test103StoringMethodSignaturesFromStructsAndInterfaces(t *testing.T) {
+
+	cv.Convey(`We need a way to store in Lua the signature of the methods belonging to an interface, so we can compare against structs/other interfaces to see if they match`, t, func() {
+		code := `
+		type Counter interface {
+			Next(a, b string, d int) (e int, err error)
+		}
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+    __reg:AddMethod("iface", "Counter", "Next", {
+  methodname="Next",
+  argTyp={"string","string","int"},
+  vararg=false,
+  returnTyp={"int", "error"}
+})
+`)
+
+	})
+}
