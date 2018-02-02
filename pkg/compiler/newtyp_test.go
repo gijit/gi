@@ -117,6 +117,17 @@ func Test108SyntaxErrorDoesNotMessUpTypeSystem(t *testing.T) {
 
 	cv.Convey(`a syntax error was disabling subsequent type checks`, t, func() {
 
+		// this sequence is messing with the type checker's state
+		/*
+		   type F float64     (1) // a new type, is not equal to float64
+		   var f F = 2.5      (2) // an instance of that type.
+		   var float64 w      (3) // a syntax error involving the float64 type.
+		   var a float64 = f  (4) // *should* be a type assignment error.
+		*/
+		// Without line (3), the type checker correctly rejects line (4).
+		// (change `if true` to `if false` below to verify that).
+		// With line (3), after the syntax error, the type checker allows (4).
+		//
 		code := `
 type F float64
 var f F = 2.5
