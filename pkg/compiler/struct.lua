@@ -552,6 +552,24 @@ __gi_floatKey = function(f)
 end
 
 
+-- metatable for __gi_NewType types
+__gi_type_MT = {
+   __call = function(self, ...)
+      local args = {...}
+      print("jea debug: __git_type_MT.__call() invoked, self='",tostring(self),"', with args=")
+      st(args)
+   end
+}
+
+__gi_NewType_constructor_MT = {
+   __call = function(self, ...)
+      print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
+      st({...})
+      self.constructor(self, ...)
+   end
+}
+
+
 -- create new type. 
 -- translate __gi_newType() in js,
 -- from gopherjs/compiler/prelude/types.go#L64
@@ -567,6 +585,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
    
    -- we return typ at the end.
    local typ = {}
+   --setmetatable(typ, __castableMT)
+   setmetatable(typ, __gi_type_MT) -- make it callable
    
    if kind == __gi_kind_Struct then
       typ.registered  = __reg:RegisterStruct(str)
@@ -588,7 +608,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
-      typ = {__gi_val, wrapped=true, keyFor=__gi_identity};
+      typ = {__gi_val=0LL, wrapped=true, keyFor=__gi_identity};
       setmetatable(typ, __castableMT);
       -- gopherjs:
       -- typ = function(v) this.__gi_val = v; end
@@ -711,12 +731,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       
 
    elseif kind == __gi_kind_Ptr then
+      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
+
+      setmetatable(typ, __gi_NewType_constructor_MT)
       typ.constructor = constructor or
-         function(getter, setter, target)
-            typ.__gi_get = getter;
-            typ.__gi_set = setter;
-            typ.__gi_target = target;
-            typ.__gi_val = this;
+         function(self, getter, setter, target)
+            self.__gi_get = getter;
+            self.__gi_set = setter;
+            self.__gi_target = target;
+            self.__gi_val = self;
          end
       typ.keyFor = __gi_idKey;
       typ.init = function(elem) 
@@ -727,16 +750,17 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       
 
    elseif kind == __gi_kind_Slice then
-      typ = function(array)
-         if array.constructor ~= typ.nativeArray then
-            --array = new typ.nativeArray(array);
-            array = typ.nativeArray(array);
-         end
-         this.__gi_array = array;
-         this.__gi_offset = 0;
-         this.__gi_length = array.length;
-         this.__gi_capacity = array.length;
-         this.__gi_val = this;
+      typ.typFuc = function(self, array)
+         -- jea comment out for now:
+         --if array.constructor ~= typ.nativeArray then
+         --   --array = new typ.nativeArray(array);
+         --   array = typ.nativeArray(array);
+         --end
+         self.__gi_array = array;
+         self.__gi_offset = 0;
+         self.__gi_length = array.length;
+         self.__gi_capacity = array.length;
+         self.__gi_val = self;
       end
       typ.init = function(elem)
          typ.elem = elem;
@@ -748,8 +772,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       
 
    elseif kind == __gi_kind_Struct then
-      -- jea: see file struct.lua.partial.js.port.of.NewType
-      -- for the elided stuff... or commit 012444fb3aeeec2e
+      print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
 
       setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
