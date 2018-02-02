@@ -14,8 +14,31 @@ status
 
 2018 Feb 02 update
 -------
+In version v0.8.4, we began integrating the
+GopherJS type system, in order to properly support
+interfaces. It turns out that, because the Go
+reflect system is incomplete, GopherJS and
+now `gijit` both need a complete, stand-alone type system
+implementation. So adding interface support
+is a much bigger job than I orignally thought.
 
-In version v0.8.3, we restrict `gijit` programs
+Nonetheless, with GopherJS lighting the way, we
+are making progress with the port. Test 100
+in face_test.go was red for a long time
+while we began integrating our updated
+Lua-metable based object model for types with the
+GopherJS object model for types. The
+integration isn't finished yet, as many
+of the properties that live in the leaf
+table of a new struct need to be moved
+up in the properties table, but we've
+got the basic machinery going and now
+its simply a matter of fine tuning.
+
+Other tests remain red, so v0.8.4 was
+an internal only release.
+
+In version v0.8.3, an internal release, we restrict `gijit` programs
 to a subset of legal `go` programs, by imposing
 a mild restriction on variable names.
 
