@@ -118,17 +118,20 @@ __gi_ifaceMT = {
 -- It returns a methodset object.
 -- Typically:
 --
---   Bus   = __reg:RegisterStruct("Bus")
---   Train =  __reg:RegisterStruct("Train")
+--   Bus   = __reg:RegisterStruct("Bus","main","main")
+--   Train =  __reg:RegisterStruct("Train","main","main")
 --
 -- if we denote metatable with the
 --  arrow from table -> metatable, then
 --
 --    methodset -> props -> __gi_structMT
 --
-function __reg:RegisterStruct(pkgPath, shortPkg, shortTypName)
-   local name = shortTypName -- temporary fix
-   print("RegisterStruct called, with shortTypName="..shortTypName)
+function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
+   local name = shortTypeName -- temporary fix
+   print("RegisterStruct called, with shortTypeName='"..shortTypeName.."'")
+   if shortTypeName == nil then
+      error "error in __reg:RegisterStruct: shortTypeName cannot be nil"
+   end
    
    local methodset = {
       __name="structMethodSet",
@@ -150,15 +153,15 @@ function __reg:RegisterStruct(pkgPath, shortPkg, shortTypName)
    setmetatable(methodset, props)
    
    self.structs[name] = methodset
-   --print("debug: new methodset is: ", methodset)
-   --st(methodset)
+   print("__reg:RegisterStruct done, debug: new methodset is: ", methodset)
+   st(methodset)
    return methodset
 end
 
-function __reg:RegisterInterface(pkgPath, shortPkg, shortTypName)
-   local name = shortTypName -- temporary fix
+function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
+   local name = shortTypeName -- temporary fix
    if name == nil then
-      error "error in RegisterInterface: shortTypName  cannot be nil"
+      error "error in RegisterInterface: shortTypeName  cannot be nil"
    end
    
    local methodset = {
@@ -190,6 +193,29 @@ end
 
 function __reg:GetInterface(name)
    return self.interfaces[name]
+end
+
+function __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
+   local goal = string.sub(shortTypeName, 2)
+   print("top of __reg:GetPointeeMethodset, goal='"..goal.."'")
+   
+   local strct = __reg.structs[name]
+   if strct ~= nil then
+      print("__reg:GetPointeeMethodset: found in structs")
+      return strct
+   end
+   
+   local face = __reg.interfaces[name]
+   if face ~=nil then
+      print("__reg:GetPointeeMethodset: found in interfaces")
+      return face
+   end
+
+   print("__reg:GetPointeeMethodset: *not* found in structs or interfaces")   
+   
+   -- other types? well, they
+   -- won't have methodsets, so nil seems appropriate.
+   return nil
 end
 
 -- create a new struct instance by
@@ -608,10 +634,14 @@ __gi_NewType_constructor_MT = {
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, constructor)
 
+   print("=====================")
+   print("top of __gi_NewType()")
+   print("=====================")
+   
    print("size='"..tostring(size).."', kind='"..tostring(kind).. "', kind2str='".. __kind2str[kind].."', str='"..str.."'")
-   print("shortTypName='"..shortTypName.."'")
+   print("shortTypeName='"..shortTypeName.."'")
    print("named='"..tostring(named).. "' shortPkg='".. shortPkg.. "', pkgPath='"..pkgPath.."'")
    print("exported='"..tostring(exported).."', constructor='"..tostring(constructor).."'")
    
@@ -621,9 +651,12 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
    setmetatable(typ, __gi_type_MT) -- make it callable
    
    if kind == __gi_kind_Struct then
-      typ.registered  = __reg:RegisterStruct(pkgPath, shortPkg, shortTypName)
+      typ.registered = __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    elseif kind == __gi_kind_Interface then
-      typ.registered  = __reg:RegisterInterface(pkgPath, shortPkg, shortTypName)
+      typ.registered = __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
+   elseif kind == __gi_kind_Ptr then
+      typ.registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
+      print("typ.registered back from __reg:GetPointeeMethodset = ", typ.registered)
    end
    
    if kind == __gi_kind_bool or
@@ -688,7 +721,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypName, "*" .. str, false, "", false, function(array) 
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
                                 this.__gi_val = array;
@@ -761,30 +794,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
          typ.comparable = false;
       end
       
-
-   elseif kind == __gi_kind_Ptr then
-      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
-
-      setmetatable(typ, __gi_NewType_constructor_MT)
-      typ.constructor = constructor
-      
-      --      typ.constructor = constructor or function(self, getter, setter, target)
-      --            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
-      --            self.__gi_get = getter;
-      --            self.__gi_set = setter;
-      --            self.__gi_target = target;
-      --            self.__gi_val = self;
-      --            return self
-      --         end
-      
-      typ.keyFor = __gi_idKey;
-      typ.init = function(elem) 
-         typ.elem = elem;
-         typ.wrapped = (elem.kind == __gi_kind_Array);
-         typ.Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
-      end
-      
-
    elseif kind == __gi_kind_Slice then
       typ.typFuc = function(self, array)
          -- jea comment out for now:
@@ -805,15 +814,91 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
          --typ.nil = new typ([]);
          typ.Nil = typ({});
       end
-      
 
+   --------------------------------------------
+   --------------------------------------------
+   --------------------------------------------
+      
+   elseif kind == __gi_kind_Ptr then
+      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
+
+      local mt = {
+         __call = function(self, wat, ...)
+            print("jea debug: per-ptr-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
+            print("start st")
+            st({...})
+            print("end st")
+
+            if self ~= nil and self.constructor ~= nil then
+               print("calling ptr self.constructor!")
+               local newb = self.constructor(self, ...)
+               print("done calling ptr self.constructor!")               
+               if typ.registered ~= nil then
+                  print("after ptr self.ctor, setting typ.registered as metatable.")
+                  setmetatable(newb, typ.registered)
+               else
+                  print("after ptr self.ctor, setting typ.registered was nil")
+                  setmetatable(newb, __gi_NewType_constructor_MT)
+               end
+               return newb
+            end
+            setmetatable(self, typ.registered)
+            return self
+         end
+      }
+      setmetatable(typ, mt)
+      typ.constructor = constructor
+      
+      --      typ.constructor = constructor or function(self, getter, setter, target)
+      --            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
+      --            self.__gi_get = getter;
+      --            self.__gi_set = setter;
+      --            self.__gi_target = target;
+      --            self.__gi_val = self;
+      --            return self
+      --         end
+      
+      typ.keyFor = __gi_idKey;
+      typ.init = function(elem) 
+         typ.elem = elem;
+         typ.wrapped = (elem.kind == __gi_kind_Array);
+         typ.Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
+      end
+
+   --------------------------------------------
+   --------------------------------------------
+   --------------------------------------------
+      
    elseif kind == __gi_kind_Struct then
       print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
 
-      setmetatable(typ, __castableMT)
+      local mt = {
+         __call = function(self, wat, ...)
+            print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
+            print("start st")
+            st({...})
+            print("end st")
+            if self ~= nil and self.constructor ~= nil then
+               print("calling self.constructor!")
+               local newb = self.constructor(self, ...)
+               if typ.registered ~= nil then
+                  setmetatable(newb, typ.registered)
+               else
+                  setmetatable(newb, __gi_NewType_constructor_MT)                  
+               end
+               return newb
+            end
+            setmetatable(self, typ.registered)
+            return self
+         end
+      }
+      setmetatable(typ, mt)
+      typ.constructor = constructor
+      
+      -- setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypName, "*" .. str, false, pkgPath, exported, constructor);
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
       typ.ptr.elem = typ;
       typ.ptr.prototype = {}
       typ.ptr.prototype.__gi_get = function()  return this; end
@@ -887,6 +972,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
                end);
          end);
       end
+
+   --------------------------------------------
+   --------------------------------------------
+   --------------------------------------------
       
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));

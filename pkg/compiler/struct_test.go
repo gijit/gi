@@ -27,7 +27,7 @@ func (s *S) hi() string {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-	S = __reg:RegisterStruct("S");
+	S = __reg:RegisterStruct("S","main","main");
 	function S:hi() 
 		s = self;
 		return "hi called!";

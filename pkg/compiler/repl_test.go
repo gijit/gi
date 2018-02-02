@@ -434,7 +434,7 @@ func Test020StructTypeDeclarations(t *testing.T) {
 
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-       A = __reg:RegisterStruct("A");
+       A = __reg:RegisterStruct("A","main","main");
 `)
 
 	})
@@ -450,7 +450,7 @@ func Test021StructTypeValues(t *testing.T) {
 
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-    A = __reg:RegisterStruct("A");
+    A = __reg:RegisterStruct("A","main","main");
 `)
 		code = `var a A`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
@@ -468,7 +468,7 @@ func Test022StructTypeValues(t *testing.T) {
 
 		code := `type A struct{ B int}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-    A = __reg:RegisterStruct("A");
+    A = __reg:RegisterStruct("A","main","main");
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
@@ -596,8 +596,8 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        Dog = __reg:RegisterInterface("main","main","Dog");
-        Beagle = __reg:RegisterStruct("main","main","Beagle");
+        Dog = __reg:RegisterInterface("Dog","main","main");
+        Beagle = __reg:RegisterStruct("Beagle","main","main");
 
 	    function Beagle:Write(with)
             b = self;
@@ -635,7 +635,7 @@ _ = snoopy
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        Beagle = __reg:RegisterStruct("Beagle");
+        Beagle = __reg:RegisterStruct("Beagle","main","main");
         snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
 `)
 
@@ -672,8 +672,8 @@ book := snoopy.Write("with a pen")`
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-        Dog = __reg:RegisterInterface("main","main","Dog");
-        Beagle = __reg:RegisterStruct("main","main","Beagle");
+        Dog = __reg:RegisterInterface("Dog","main","main");
+        Beagle = __reg:RegisterStruct("Beagle","main","main");
 
 	    function Beagle:Write(with)
             b = self;
