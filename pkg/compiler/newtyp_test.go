@@ -64,6 +64,8 @@ c := b.counter
 	})
 }
 
+/*
+// unfinished
 func Test107TypesHavePackagePath(t *testing.T) {
 
 	cv.Convey(`types at the repl have the "main" package (or whatever package we are working in) short name AND full path attached to their type, so we can distinguish types with the same name that come from different packages (even vendored) whose ultimate paths differ`, t, func() {
@@ -74,7 +76,6 @@ type Bean struct{
 }
 
 `
-
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -91,3 +92,4 @@ type Bean struct{
 
 	})
 }
+*/

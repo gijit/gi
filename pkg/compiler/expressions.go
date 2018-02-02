@@ -270,8 +270,12 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				}
 			}
 			//flds := structFieldTypes(t)
-			vals := structFieldNameValuesForLua(t, elements)
-			return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
+			return c.formatExpr("__gi_new(%s.ptr, %s)", c.typeName(exprType), strings.Join(elements, ", "))
+			// first lua attempt:
+			//vals := structFieldNameValuesForLua(t, elements)
+			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
+			// original:
+			//return c.formatExpr("new %s.ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
 		}

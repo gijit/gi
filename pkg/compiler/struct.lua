@@ -558,10 +558,11 @@ end
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, exported, constructor)
 
    print("size='"..tostring(size).."', kind='"..tostring(kind).. "', kind2str='".. __kind2str[kind].."', str='"..str.."'")
-   print("named='"..tostring(named).. "' shortPkg='".. shortPkg.. "', pkg='"..pkg.."'")
+   print("shortTypName='"..shortTypName.."'")
+   print("named='"..tostring(named).. "' shortPkg='".. shortPkg.. "', pkgPath='"..pkgPath.."'")
    print("exported='"..tostring(exported).."', constructor='"..tostring(constructor).."'")
    
    -- we return typ at the end.
@@ -635,7 +636,7 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*" .. str, false, "", false, function(array) 
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypName, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
                                 this.__gi_val = array;
@@ -753,7 +754,7 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
       setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
       typ.wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*" .. str, false, pkg, exported, constructor);
+      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypName, "*" .. str, false, pkgPath, exported, constructor);
       typ.ptr.elem = typ;
       typ.ptr.prototype = {}
       typ.ptr.prototype.__gi_get = function()  return this; end
@@ -927,7 +928,7 @@ function __gi_NewType(size, kind, shortPkg, str, named, pkg, exported, construct
    typ.kind = kind;
    typ.str = str;
    typ.named = named;
-   typ.pkg = pkg;
+   typ.pkg = pkgPath;
    typ.exported = exported;
    typ.methods = {};
    typ.methodSetCache = nil;
