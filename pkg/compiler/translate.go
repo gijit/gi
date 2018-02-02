@@ -112,9 +112,11 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	hasBadId, whichBad := checkAllowedIdents(file)
 	if hasBadId {
-		fmt.Printf("bad identifier: cannot "+
+		msg := fmt.Sprintf("bad identifier: cannot "+
 			"use '%s' as an identifier in gijit.\n",
 			whichBad)
+		fmt.Printf(msg)
+		panic(msg)
 		return nil
 	}
 

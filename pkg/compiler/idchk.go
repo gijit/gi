@@ -52,11 +52,26 @@ func newAssignVisitor() *assignVisitor {
 
 func (av *assignVisitor) Visit(node ast.Node) (w ast.Visitor) {
 	switch n := node.(type) {
+
+	case *ast.ValueSpec:
+		pp("Visit assignVisitor, ValueSpec, n = '%#v'", n)
+		for _, id := range n.Names {
+			if predeclared[id.Name] {
+				pp("Visit found bad '%s'", id.Name)
+				av.bad = true
+				av.which = id.Name
+				return nil
+			}
+		}
+
 	case *ast.AssignStmt:
+		pp("Visit assignVisitor, AssignStmt, n = '%#v'", n)
 		walkExprList(av.iv, n.Lhs)
 		if av.bad {
 			return nil
 		}
+	default:
+		pp("Visit assignVisitor ignoring node '%#v'/'%T'", node, node)
 	}
 	return av
 }
@@ -70,7 +85,7 @@ func walkExprList(v ast.Visitor, list []ast.Expr) {
 func (iv *identVisitor) Visit(node ast.Node) (w ast.Visitor) {
 	switch id := node.(type) {
 	case *ast.Ident:
-		pp("identCheckVisitor, nm = '%v'", id.Name)
+		pp("Visit identCheckVisitor, nm = '%v'", id.Name)
 		if predeclared[id.Name] {
 			iv.av.bad = true
 			iv.av.which = id.Name
@@ -81,6 +96,7 @@ func (iv *identVisitor) Visit(node ast.Node) (w ast.Visitor) {
 }
 
 func checkAllowedIdents(file *ast.File) (hasBadId bool, whichBad string) {
+	pp("top of checkAllowedIdents")
 	v := newAssignVisitor()
 	for _, n := range file.Nodes {
 		ast.Walk(v, n)
