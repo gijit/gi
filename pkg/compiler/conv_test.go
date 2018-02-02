@@ -13,7 +13,7 @@ func Test110ConvertFloat64ToInt64(t *testing.T) {
 
 		// don't know why the int() is getting lost. a literal copy
 		// into lua works fine, because we defined int() as a constructor
-		// for the int64 type.
+		// for the int64 type, in pkg/compiler/int64.lua.
 
 		code := `
  f := float64(3.5)
