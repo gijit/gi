@@ -35,8 +35,11 @@ up in the properties table, but we've
 got the basic machinery going and now
 its simply a matter of fine tuning.
 
-Other tests remain red, so v0.8.4 was
-an internal only release.
+Test 100 finally went green, so we felt it
+was time to mark progress with a release.
+
+However other tests remain red, so v0.8.4 will be
+an internal-only release.
 
 In version v0.8.3, an internal release, we restrict `gijit` programs
 to a subset of legal `go` programs, by imposing
