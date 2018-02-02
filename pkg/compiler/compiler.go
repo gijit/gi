@@ -19,10 +19,23 @@ import (
 //var sizes32 = &types.StdSizes{WordSize: 4, MaxAlign: 8}
 var sizes64 = &types.StdSizes{WordSize: 8, MaxAlign: 8}
 var reservedKeywords = make(map[string]bool)
+var predeclared = make(map[string]bool)
 
 func init() {
-	for _, keyword := range []string{"abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "undefined", "var", "void", "volatile", "while", "with", "yield"} {
-		reservedKeywords[keyword] = true
+	// javascript reserved words
+	for _, w := range []string{"abstract", "arguments", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "debugger", "default", "delete", "do", "double", "else", "enum", "eval", "export", "extends", "false", "final", "finally", "float", "for", "function", "goto", "if", "implements", "import", "in", "instanceof", "int", "interface", "let", "long", "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "typeof", "undefined", "var", "void", "volatile", "while", "with", "yield"} {
+		reservedKeywords[w] = true
+	}
+
+	// predeclared numeric types
+	for _, w := range []string{"int", "uint", "uint8", "uint16", "uint32", "uint64", "int8", "int16", "int32", "int64", "float32", "float64", "complex64", "complex128", "byte", "rune", "uintptr"} {
+		reservedKeywords[w] = true
+		predeclared[w] = true
+	}
+
+	// lua reserved words
+	for _, w := range []string{"and", "break", "do", "else", "elseif", "", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"} {
+		reservedKeywords[w] = true
 	}
 }
 

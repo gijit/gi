@@ -837,7 +837,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 				methodName := sel.Obj().Name()
 				if reservedKeywords[methodName] {
-					methodName += "$"
+					methodName += "_" // jea, was "$"
 				}
 
 				isLuar := typesutil.IsLuarObject(declaredFuncRecv)

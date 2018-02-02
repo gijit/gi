@@ -12,6 +12,37 @@ binary is called simply `gi`, as it is a
 status
 ------
 
+
+2018 Feb 02 update
+-------
+
+Restriction to a subset of legal `go` programs:
+
+In `gijit`, you can't have a variable named `int`, or `float64`. These
+are names of two of the pre-declared numeric types in Go.
+
+`gijit` won't let you declare a variable name that
+reuses any of the basic, pre-declared type names.
+
+Although in Go this is technically allowed, it is highly confusing,
+and poor practice.
+
+So while:
+~~~
+func main() {
+	var int int
+        _ = int
+}
+~~~
+is a legal `Go` program, it won't run on `gijit`.
+
+The reason for this restriction is that otherwise
+the Go type checker can get corrupted by simple syntax errors. That's not an
+issue for a full-recompile from the start each time, but for
+a continuously online REPL, it messes with the type checking
+that follows the syntax error.
+
+
 2018 Jan 31 update
 -------
 As of release v0.8.2, we support pointers, taking and de-referencing.

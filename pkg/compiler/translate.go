@@ -8,7 +8,7 @@ import (
 	"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -21,7 +21,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	luajit "github.com/glycerine/golua/lua"
-	"github.com/shurcooL/go-goon"
+	//"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
 )
 
@@ -110,22 +110,21 @@ func (tr *IncrState) Tr(src []byte) []byte {
 		Name: "", // jea: was "/repl", but that seemed to cause scope issues.
 	}
 
+	hasBadId, whichBad := checkAllowedIdents(file)
+	if hasBadId {
+		fmt.Printf("bad identifier: cannot "+
+			"use '%s' as an identifier in gijit.\n",
+			whichBad)
+		return nil
+	}
+
 	tr.archive, err = IncrementallyCompile(tr.archive, importPath, files, tr.fileSet, tr.importContext, tr.minify)
 	panicOn(err)
 	pp("archive = '%#v'", tr.archive)
 	//pp("len(tr.archive.Declarations)= '%v'", len(tr.archive.Declarations))
 	//pp("len(tr.archive.NewCode)= '%v'", len(tr.archive.NewCodeText))
 
-	// debug/figure out signature of Sprintf
-
 	pp("got past config.Check")
-	obj := tr.archive.pkg.Scope().Lookup("Sprintf")
-	if verb.VerboseVerbose {
-		pp("Sprintf obj is:\n")
-		goon.Dump(obj)
-	}
-
-	// end debug/figure out Sprintf
 
 	var res bytes.Buffer
 	for i, d := range tr.archive.NewCodeText {
