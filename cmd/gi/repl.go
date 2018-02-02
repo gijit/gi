@@ -30,7 +30,7 @@ func main() {
 	if !cfg.Quiet {
 		fmt.Printf(
 			`====================
-gijit: a go interpreter
+gijit: a go interpreter, just-in-time.
 ====================
 https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten. All rights reserved.

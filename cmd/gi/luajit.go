@@ -235,7 +235,7 @@ func (cfg *GIConfig) LuajitMain() {
 		case ":help", ":?":
 			fmt.Printf(`
 ======================
-gijit: a go interpreter
+gijit: a go interpreter, just-in-time
 https://github.com/gijit/gi
 command prompt help: 
 simply type Go expressions or statements
