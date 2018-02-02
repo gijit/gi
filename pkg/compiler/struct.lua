@@ -1,5 +1,9 @@
 -- structs and interfaces
 
+-- general note:
+-- the convention in translating gopherjs javascript's '$'
+-- is to replace the '$' prefix with "__gi_"
+
 -- TODO: syncrhonize around this/deal with multi-threading?
 --  may need to teach LuaJIT how to grab go mutexes or use sync.Atomics.
 __gi_idCounter = 0;
@@ -561,11 +565,29 @@ __gi_type_MT = {
    end
 }
 
+-- ugh. too much javascript magic. avoid this in favor
+-- of being more explicit.
+--
+-- for porting gopherjs' 'new Ctor' code where Ctor is a constructor
+-- that must take 'self' as its first argument:
+-- function __gi_new(ctor, ...)
+--   local self = {}
+--   ctor(self, ...)
+--   return self
+-- end
+
+
 __gi_NewType_constructor_MT = {
-   __call = function(self, ...)
+   __call = function(self, wat, ...)
       print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
+      print("start st")
       st({...})
-      self.constructor(self, ...)
+      print("end st")
+      if self ~= nil and self.constructor ~= nil then
+         print("calling self.constructor!")
+         return self.constructor(self, ...)
+      end
+      return self
    end
 }
 
@@ -734,12 +756,13 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
 
       setmetatable(typ, __gi_NewType_constructor_MT)
-      typ.constructor = constructor or
-         function(self, getter, setter, target)
+      typ.constructor = function(self, getter, setter, target)
+            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
             self.__gi_get = getter;
             self.__gi_set = setter;
             self.__gi_target = target;
             self.__gi_val = self;
+            return self
          end
       typ.keyFor = __gi_idKey;
       typ.init = function(elem) 

@@ -62,13 +62,4 @@ function __gijit_printQuoted(...)
    end
 end
 
--- the convention in translating gopherjs javascript's '$'
--- is to replace the '$' prefix with "__gi_"
 
--- for porting gopherjs' 'new Ctor' code where Ctor is a constructor
--- that must take 'self' as its first argument:
-function __gi_new(ctor, ...)
-   local self = {}
-   ctor(self, ...)
-   return self
-end

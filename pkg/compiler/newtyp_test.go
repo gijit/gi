@@ -88,7 +88,7 @@ type Bean struct{
 
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustInt64(vm, "c", 3)
+//		LuaMustInt64(vm, "c", 3)
 
 	})
 }

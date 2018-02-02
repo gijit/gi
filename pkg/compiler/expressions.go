@@ -270,7 +270,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				}
 			}
 			//flds := structFieldTypes(t)
-			return c.formatExpr("__gi_new(%s.ptr, %s)", c.typeName(exprType), strings.Join(elements, ", "))
+			return c.formatExpr("%s.ptr({}, %s)", c.typeName(exprType), strings.Join(elements, ", "))
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
