@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -191,6 +192,19 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 	if value_int != expect {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
+	}
+}
+
+func LuaMustFloat64(vm *golua.State, varname string, expect float64) {
+
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	value := vm.ToNumber(top)
+
+	pp("LuaMustInt64, expect='%v'; observed value='%v'", expect, value)
+	if math.Abs(value-expect) > 1e-8 {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value, varname))
 	}
 }
 

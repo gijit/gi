@@ -64,9 +64,36 @@ c := b.counter
 	})
 }
 
+func Test107NewTypeForFloat64(t *testing.T) {
+
+	cv.Convey(`declare a new named type for a basic float64`, t, func() {
+
+		code := `
+type F float64
+var f F = 2.5
+g := F(3.4)
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustFloat64(vm, "f", 2.5)
+		LuaMustFloat64(vm, "g", 3.4)
+
+	})
+}
+
 /*
 // unfinished
-func Test107TypesHavePackagePath(t *testing.T) {
+func Test108TypesHavePackagePath(t *testing.T) {
 
 	cv.Convey(`types at the repl have the "main" package (or whatever package we are working in) short name AND full path attached to their type, so we can distinguish types with the same name that come from different packages (even vendored) whose ultimate paths differ`, t, func() {
 
