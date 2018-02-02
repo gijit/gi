@@ -1015,7 +1015,10 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			if v.Kind() == reflect.Uint {
 				v.Set(f.Convert(v.Type()))
 			} else {
-				v.Set(f)
+				if !canAndDidAssign(&f, &v) {
+					return ConvError{From: luaDesc(L, idx), To: v.Type()}
+				}
+				//v.Set(f)
 			}
 			return nil
 		case 13: //  float32
