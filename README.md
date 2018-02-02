@@ -12,35 +12,39 @@ binary is called simply `gi`, as it is a
 status
 ------
 
-
 2018 Feb 02 update
 -------
 
-Restriction to a subset of legal `go` programs:
+In version v0.8.3, we restrict `gijit` programs
+to a subset of legal `go` programs, by imposing
+a mild restriction on variable names.
 
 In `gijit`, you can't have a variable named `int`, or `float64`. These
 are names of two of the pre-declared numeric types in Go.
 
-`gijit` won't let you declare a variable name that
-reuses any of the basic, pre-declared type names.
-
-Although in Go this is technically allowed, it is highly confusing,
-and poor practice.
-
-So while:
+For example, while
 ~~~
 func main() {
 	var int int
         _ = int
 }
 ~~~
-is a legal `Go` program, it won't run on `gijit`.
+is a legal `Go` program, `gijit` will reject it.
 
-The reason for this restriction is that otherwise
-the Go type checker can get corrupted by simple syntax errors. That's not an
-issue for a full-recompile from the start each time, but for
-a continuously online REPL, it messes with the type checking
-that follows the syntax error.
+`gijit` won't let you declare a variable name that
+re-uses any of the basic, pre-declared type names.
+
+Although in Go this is technically allowed, it can be highly confusing.
+It is poor practice.
+
+The technical reason for this restriction in `gijit` is that otherwise
+the Go type checker can be corrupted by simple syntax errors
+involving pre-declared identifiers. That's not an
+issue for a full-recompile from the scratch each time, but for
+a continuously online typechecker, it is a problem. To
+stay online and functional after a syntax error like `var int w`,
+(where w is unknown, provoking a syntax error yet shadowing
+the pre-declared type), we disallow such variable names.
 
 
 2018 Jan 31 update
