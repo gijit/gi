@@ -181,8 +181,7 @@ func Test102InterfaceMethodset(t *testing.T) {
 		code := `
 		type Counter interface {
 			Next() int
-		}
-`
+		}`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -192,12 +191,11 @@ func Test102InterfaceMethodset(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-    Counter = __gi_NewType(16, __gi_kind_Interface, "", "Counter", true, "", true, null);
+    Counter = __gi_NewType(16, __gi_kind_Interface, "main", "Counter", "main.Counter", true, "", true, null);
 	function Counter:Next()
         error("error: abstract iface method Next() invoked.")
 	end;
-    __reg:AddMethod("iface", "Counter", "Next", Counter.Next)
-`)
+    __reg:AddMethod("iface", "Counter", "Next", Counter.Next)`)
 
 	})
 }
