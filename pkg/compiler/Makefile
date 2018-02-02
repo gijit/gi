@@ -1,0 +1,2 @@
+all:
+	cd gi && make
