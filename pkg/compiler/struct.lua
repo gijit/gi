@@ -756,14 +756,17 @@ function __gi_NewType(size, kind, shortPkg, shortTypName, str, named, pkgPath, e
       print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
 
       setmetatable(typ, __gi_NewType_constructor_MT)
-      typ.constructor = function(self, getter, setter, target)
-            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
-            self.__gi_get = getter;
-            self.__gi_set = setter;
-            self.__gi_target = target;
-            self.__gi_val = self;
-            return self
-         end
+      typ.constructor = constructor
+      
+      --      typ.constructor = constructor or function(self, getter, setter, target)
+      --            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
+      --            self.__gi_get = getter;
+      --            self.__gi_set = setter;
+      --            self.__gi_target = target;
+      --            self.__gi_val = self;
+      --            return self
+      --         end
+      
       typ.keyFor = __gi_idKey;
       typ.init = function(elem) 
          typ.elem = elem;
