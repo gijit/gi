@@ -156,7 +156,9 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
       -- make __tostring as local as possible,
       -- to avoid the infinite looping we got
       -- when it was higher up.
-      __tostring = __structPrinter
+
+      -- temp debug:
+      --__tostring = __structPrinter
    }
    methodset.__index = methodset
    
@@ -164,8 +166,9 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props.__index = props
-   props.__structPairs = __structPairs
-   props.__pairs = __structPairs
+   -- temp debug:
+   --props.__structPairs = __structPairs
+   --props.__pairs = __structPairs
    
    setmetatable(methodset, props)
    
@@ -189,7 +192,8 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    local props = {__typename = name, __name="ifaceProps"}
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
-   props.__tostring = __ifacePrinter
+   -- temp debug
+   --props.__tostring = __ifacePrinter
    props.__index = props
 
    setmetatable(props, __gi_ifaceMT)

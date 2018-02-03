@@ -733,11 +733,11 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					for i := 0; i < t.NumFields(); i++ {
 						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 					}
-					constructor += fmt.Sprintf("\t\t\t return self;\n\t\t end \n\t\t local %s = ... ;\n", strings.Join(params, ", "))
+					constructor += fmt.Sprintf("\t\t else \n\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
 					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
+						constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
 					}
-					constructor += "\t\t return self; \n\t end "
+					constructor += "\t\t end\n\t\t return self; \n\t end "
 				}
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 				//size = sizes32.Sizeof(t)

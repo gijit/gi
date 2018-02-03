@@ -94,7 +94,7 @@ e := c.Next()
 
 		LuaMustInt64(vm, "d", 10)
 		LuaMustInt64(vm, "e", 20)
-
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 
