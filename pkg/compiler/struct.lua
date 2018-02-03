@@ -13,12 +13,22 @@ __gi_MethodsetKey = {}
 __gi_BaseKey = {}
 
 -- st or showtable, a helper.
-function st(t)
-   local k = 1
+function st(t, name, indent, quiet)
+   local k = 0
+   local indent = indent or 0
+   local pre = string.rep(" ", 4*indent)..tostring(name)..": "
+   local s = ""
    for i,v in pairs(t) do
-      print("num ",k, "key:",i,"val:",v)
       k=k+1
+      s = s .. pre.."num: '"..tostring(k).. "' key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
    end
+   if k == 0 then
+      s = pre.."<empty table>"
+   end
+   if not quiet then
+      print(s)
+   end
+   return s
 end
 
 -- don't think we're going to use these/the slice and map approach for structs.
