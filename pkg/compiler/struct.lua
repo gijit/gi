@@ -182,7 +182,7 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
    props.__index = props
-   -- temp debug:
+   -- temp debug, but do we really need these?:
    --props.__structPairs = __structPairs
    --props.__pairs = __structPairs
    
@@ -208,8 +208,7 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    local props = {__typename = name, __name="ifaceProps"}
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
-   -- temp debug
-   --props.__tostring = __ifacePrinter
+   props.__tostring = __ifacePrinter
    props.__index = props
 
    setmetatable(props, __gi_ifaceMT)
@@ -1141,3 +1140,28 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 end
 
 
+-------------------
+
+__gi_funcTypes = {};
+__gi_funcType = function(params, results, variadic)
+   
+   local typeKey = __gi_mapArray(params, function(p) return p.id; end).join(",") .. "_" .. __gi_mapArray(results, function(r) return r.id; end).join(",") .. "_" .. variadic;
+                                                                                             
+  local typ = __gi_funcTypes[typeKey];
+  if typ == nil then
+    local paramTypes = __gi_mapArray(params, function(p) return p.str; end);
+    if variadic then
+       paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2);
+    end
+    local str = "func(" .. paramTypes.join(", ") .. ")";
+    if #results == 1 then
+      str = str.. " " .. results[0].str;
+      elseif #results > 1 then
+      str = str.. " (" .. __gi_mapArray(results, function(r) return r.str; end).join(", ") .. ")";
+    end
+    typ = __gi_newType(4, __gi_kind_Func, str, false, "", false, null);
+    __gi_funcTypes[typeKey] = typ;
+    typ.init(params, results, variadic);
+  end
+  return typ;
+end

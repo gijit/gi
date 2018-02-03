@@ -1329,7 +1329,9 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 		case nil, *ast.CompositeLit:
 			// nothing
 		default:
-			return c.formatExpr(`_gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
+			// this is the __gi_clone that is called for value receivers on methods.
+			// $clone in gohperjs.
+			return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 		}
 	}
 

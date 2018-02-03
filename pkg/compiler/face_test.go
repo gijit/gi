@@ -64,6 +64,10 @@ var c Counter = &S{}
 a := c.Next()
 b := c.Next()
 
+r := &S{}
+r1 := r.Next()
+r2 := r.Next()
+
 type ByTen struct {
    v int
 }
@@ -94,71 +98,12 @@ e := c.Next()
 
 		LuaMustInt64(vm, "d", 10)
 		LuaMustInt64(vm, "e", 20)
+
+		LuaMustInt64(vm, "r1", 1)
+		LuaMustInt64(vm, "r2", 2)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
-
-/* test making two objects
-
-type S struct {a int }
-var s S
-var r S
-
-is giving:
-
-error from Lua vm.Call(0,0): '[string "..."]:1: attempt to call field 'ptr' (a table value)'. supplied lua with: '		r = __type__S.ptr({}, nil);'
-lua stack:
-
-========== begin DumpLuaStack: top = 1
-DumpLuaStack: i=1, t= 4
- String : 	[string "..."]:1: attempt to call field 'ptr' (a table value)
-========= end of DumpLuaStack
-
-1st 'var s S' works:
-
-luajit.go:321 2018-02-03 16:24:42.586 +0700 ICT got translation of line from Go into lua: 's = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);'
-
-
-luajit.go:330 2018-02-03 16:24:42.586 +0700 ICT sending use='		s = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);
-'
-
-jea debug: per-ptr-type ctor_mt.__call() invoked, self='	table: 0x04d1d398	', with args=
-start st
-Ptr.mt.__call.dots: ============================ table: 0x04d20118
-Ptr.mt.__call.dots:  1 key: '1' val: '0LL'
-Ptr.mt.__call.dots:  2 key: '2' val: '0LL'
-Ptr.mt.__call.dots:  3 key: '3' val: '0LL'
-Ptr.mt.__call.dots:  4 key: '4' val: '0LL'
-
-end st
-calling ptr self.constructor!
-done calling ptr self.constructor!
-after ptr self.ctor, setting typ.registered as metatable.
-
-elapsed: '2.088249ms'
-gi>
-
-2nd, var r S failing with:
-
-util.go:35 2018-02-03 16:25:59.841 +0700 ICT go:'var r S'  -->  'r = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);'
-
-
-luajit.go:321 2018-02-03 16:25:59.841 +0700 ICT got translation of line from Go into lua: 'r = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);'
-
-
-luajit.go:330 2018-02-03 16:25:59.841 +0700 ICT sending use='		r = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);
-'
-
-error from Lua vm.Call(0,0): '[string "..."]:1: attempt to call field 'ptr' (a table value)'. supplied lua with: '		r = __type__S.ptr({}, 0LL, 0LL, 0LL, 0LL);'
-lua stack:
-
-========== begin DumpLuaStack: top = 1
-DumpLuaStack: i=1, t= 4
- String : 	[string "..."]:1: attempt to call field 'ptr' (a table value)
-========= end of DumpLuaStack
-
-
-*/
 
 /* WIP
 func Test101InterfaceConversion(t *testing.T) {

@@ -728,7 +728,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				// add debug code?
 				diag := ""
-				if true {
+				if verb.Verbose || verb.VerboseVerbose {
 					diag = fmt.Sprintf("\n\t\t print(\"top of ctor for type '%s'\")", typeName)
 				}
 				if t.NumFields() == 0 {
@@ -792,8 +792,12 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 			if len(methods) > 0 {
 				// jea: the call to c.typeName() will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
+				// TODO: add incrementally O(n) total, instead of current
+				// re-define method set completely every time, which is O(n^2)
+				c.Printf("__type__%s.methods = {%s};", c.typeName(named), strings.Join(methods, ", "))
 
-				c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
+				// S.methods = [{prop: "hi", name: "hi", pkg: "main", typ: $funcType([], [], false)}];
+				//c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
 			}
 			if len(ptrMethods) > 0 {
 				// example:

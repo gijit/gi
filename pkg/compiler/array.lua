@@ -124,31 +124,43 @@ function _gi_NewArray(x, typeKind, len, zeroVal)
    return proxy
 end;
 
-function _gi_clone(t, typ)
-   print("_gi_clone called with typ ", typ)
-   if type(t) ~= 'table' then
-      error "_gi_clone called on non-table"
-   end
-
-   if typ == "kind_arrayType" then
-      local props = rawget(t, _giPrivateArrayProps)
-      if props == nil then
-         error "_gi_clone for arrayType could not get props" 
-      end
-      -- make a copy of the data
-      local src = rawget(t, _giPrivateRaw)
-      local dest = {}
-      for i,v in pairs(src) do
-         dest[i] = v
-      end
-      -- unpack ignores the [0] value, so less useful.
-      
-      local b = _gi_NewArray(dest, props.typeKind, props.len)
-      return b
-   end
-   print("unimplemented typ in _gi_clone:", typ)
-   error "unimplemented typ in _gi_clone"
+-- port gopherjs system $clone()
+--
+function __gi_clone(src, typ)
+   print("__gi_clone() called with typ="..tostring(typ))
+   local clone = typ.zero();
+   typ.copy(clone, src);
+   return clone;
 end
+
+
+-- jea: my earlier Proof of concept; comment
+-- out and see if we can get the above working.
+-- function _gi_clone(t, typ)
+--    print("_gi_clone called with typ ", typ)
+--    if type(t) ~= 'table' then
+--       error "_gi_clone called on non-table"
+--    end
+-- 
+--    if typ == "kind_arrayType" then
+--       local props = rawget(t, _giPrivateArrayProps)
+--       if props == nil then
+--          error "_gi_clone for arrayType could not get props" 
+--       end
+--       -- make a copy of the data
+--       local src = rawget(t, _giPrivateRaw)
+--       local dest = {}
+--       for i,v in pairs(src) do
+--          dest[i] = v
+--       end
+--       -- unpack ignores the [0] value, so less useful.
+--       
+--       local b = _gi_NewArray(dest, props.typeKind, props.len)
+--       return b
+--    end
+--    print("unimplemented typ in _gi_clone:", typ)
+--    error "unimplemented typ in _gi_clone"
+-- end
 
 
 -- _gi_UnpackArrayRaw is a helper, used in
