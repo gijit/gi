@@ -185,6 +185,7 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 // last built binary .a lib on disk. Warning: this might
 // be out of date. Later we might read source using the
 // go/loader from tools/x, to be most up to date.
+// However, the binary loader is *much* faster.
 //
 // dir provides where to import from, to honor vendored packages.
 func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
