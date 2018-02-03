@@ -197,6 +197,36 @@ var f F = 2.5
 	})
 }
 
+func Test109NewTypeSpaceAndVariableSpaceAreSeparate(t *testing.T) {
+
+	cv.Convey(`In Go, the type namespace and the variable namespace are distinct, so that one can have a variable name that is the same as a type name, and there is no compile error. Apparently this allows the introduction of new pre-defined types without breaking old code.`, t, func() {
+
+		code := `
+type F struct{
+  a int
+}
+type G struct{
+   F F
+}
+g := G{F:F{a:2}}
+two := g.F.a;`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "two", 2)
+	})
+}
+
 /*
 // unfinished
 func Test110TypesHavePackagePath(t *testing.T) {
