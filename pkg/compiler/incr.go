@@ -726,10 +726,15 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
 				}
+				// add debug code?
+				diag := ""
+				if true {
+					diag = fmt.Sprintf("\n\t\t print(\"top of ctor for type '%s'\")", typeName)
+				}
 				if t.NumFields() == 0 {
-					constructor = fmt.Sprintf("function(self) \n\t\t self.__gi_val=self; return self; end")
+					constructor = fmt.Sprintf("function(self) %s\n\t\t self.__gi_val=self; return self; end", diag)
 				} else {
-					constructor = fmt.Sprintf("function(self, ...) \n\t\t self.__gi_val=self;\n\t\t local args={...};\n\t\t if #args == 0 then\n")
+					constructor = fmt.Sprintf("function(self, ...) %s\n\t\t self.__gi_val=self;\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
 					for i := 0; i < t.NumFields(); i++ {
 						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 					}

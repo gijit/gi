@@ -128,10 +128,10 @@ func (cfg *GIConfig) LuajitMain() {
 				}
 			}
 		}
-		if len(low) > 4 && low[:4] == ":rm " {
+		if len(low) > 3 && low[:3] == ":rm" {
 			// remove some commands from history
 			var beg, end int
-			history, histFile, beg, end, err = removeCommands(history, histFn, histFile, low[4:])
+			history, histFile, beg, end, err = removeCommands(history, histFn, histFile, low[3:])
 			if err != nil {
 				fmt.Printf("%s\n", err.Error())
 			}

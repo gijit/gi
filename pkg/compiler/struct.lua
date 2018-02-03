@@ -874,10 +874,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
       local mt = {
          __name = "Ptr type constructed mt",
-         __call = function(self, wat, ...)
-            print("jea debug: per-ptr-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
+         __call = function(the_mt, self, ...)
+            print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self='"..tostring(self).."', with args=")
             print("start st")
-            __st({...}, "Ptr.mt.__call.dots")
+            __st({...}, "Ptr.mt.__call.per-ptr-type-ctor.args")
             print("end st")
 
             if self ~= nil and self.constructor ~= nil then
@@ -893,11 +893,13 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                end
                return newb
             end
+            --is this why our .ptr changing after instantiation? nope.
             setmetatable(self, typ.registered)
             return self
          end
       }
       setmetatable(typ, mt)
+      print("setting Ptr typ.constructor to construction: "..tostring(constructor))
       typ.constructor = constructor
       
       --      typ.constructor = constructor or function(self, getter, setter, target)
@@ -925,7 +927,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
       local mt = {
          __name = "Struct type constructed mt",
-         __call = function(self, wat, ...)
+         __call = function(the_mt, self, ...)
             print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
             print("start st")
             __st({...},"Struct.mt.__call.dots")
