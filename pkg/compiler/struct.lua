@@ -13,17 +13,27 @@ __gi_MethodsetKey = {}
 __gi_BaseKey = {}
 
 -- st or showtable, a helper.
-function st(t, name, indent, quiet)
+function __st(t, name, indent, quiet)
    local k = 0
+   local name = name or ""
+   local namec = name
+   if name ~= "" then
+      namec = namec .. ": "
+   end
    local indent = indent or 0
-   local pre = string.rep(" ", 4*indent)..tostring(name)..": "
-   local s = ""
+   local pre = string.rep(" ", 4*indent)..namec
+   local s = pre .. "============================\n"
    for i,v in pairs(t) do
       k=k+1
       s = s .. pre.."num: '"..tostring(k).. "' key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
    end
    if k == 0 then
       s = pre.."<empty table>"
+   end
+
+   local mt = getmetatable(t)
+   if mt ~= nil then
+      s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true)
    end
    if not quiet then
       print(s)
