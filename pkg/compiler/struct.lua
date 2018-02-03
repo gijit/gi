@@ -664,16 +664,26 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    
    -- we return typ at the end.
    local typ = {}
-   --setmetatable(typ, __castableMT)
-   setmetatable(typ, __gi_type_MT) -- make it callable
-   
+
    if kind == __gi_kind_Struct then
+      
       typ.registered = __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
+      -- replace typ with the props for a struct
+      typ = typ.registered[__gi_PropsKey]
+      
    elseif kind == __gi_kind_Interface then
+
       typ.registered = __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
+      -- replace typ with the props for the interface
+      typ = typ.registered[__gi_PropsKey]
+      
    elseif kind == __gi_kind_Ptr then
+      
       typ.registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
       print("typ.registered back from __reg:GetPointeeMethodset = ", typ.registered)
+
+   else
+      setmetatable(typ, __gi_type_MT) -- make it callable
    end
    
    if kind == __gi_kind_bool or
