@@ -214,7 +214,7 @@ func (cfg *GIConfig) LuajitMain() {
 			prompt = luaPrompt
 			fmt.Printf("Raw LuaJIT language mode.\n")
 			continue
-		case ":go", ":g":
+		case ":go", ":g", ":":
 			cfg.RawLua = false
 			prompt = goPrompt
 			fmt.Printf("Go language mode.\n")
