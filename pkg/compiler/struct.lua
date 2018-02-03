@@ -85,8 +85,15 @@ end
 
 function __structPrinter(self)
    --print("__structPrinter called")
-   local s = self.__typename .." {\n"
 
+   -- get address, avoiding infinite loop of self-calls.
+   local mt = getmetatable(self)
+   setmetatable(self, nil)
+   local addr = tostring(self) 
+   setmetatable(self, mt)
+
+   local s = "self.__typename: "..self.__typename .." "..addr.." {\n"   
+   
    local uscore = 95 -- "_"
    
    for i, v in pairs(self) do
@@ -166,8 +173,8 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
       -- to avoid the infinite looping we got
       -- when it was higher up.
 
-      -- temp debug:
-      --__tostring = __structPrinter
+      -- essential for pretty-printing a struct
+      __tostring = __structPrinter
    }
    methodset.__index = methodset
    
