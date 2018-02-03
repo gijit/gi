@@ -11,6 +11,15 @@ __gi_idCounter = 0;
 __gi_PropsKey = {}
 __gi_MethodsetKey = {}
 
+-- keep types and values separate; keep
+-- packages distinct.
+__curpkg = {
+   path = "main",
+   name = "main",
+   types = {},
+   vars  = {}
+}
+
 -- st or showtable, a helper.
 function __st(t, name, indent, quiet)
    local k = 0
