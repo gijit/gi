@@ -214,7 +214,7 @@ func (cfg *GIConfig) LuajitMain() {
 			prompt = luaPrompt
 			fmt.Printf("Raw LuaJIT language mode.\n")
 			continue
-		case ":go":
+		case ":go", ":g":
 			cfg.RawLua = false
 			prompt = goPrompt
 			fmt.Printf("Go language mode.\n")
@@ -246,7 +246,7 @@ these special commands:
  :vv         turns on very verbose printing
  :q          quiets the debug prints (default)
  :r or :raw  change to raw-luajit entry mode
- :go         change back from raw mode to Go mode
+ :g or :go   change back from raw to default Go mode 
  :ast        print the Go AST prior to translation
  :noast      stop printing the Go AST
  :do <path>  run dofile(path) on a .lua file

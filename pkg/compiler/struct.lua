@@ -610,6 +610,7 @@ __gi_idKey = function(x)
 end
 
 __castableMT = {
+   __name = "__castableMT",
    __call = function(t, ...)
       print("__castableMT __call() invoked, with ... = ", ...)
       local arg0 = ...
@@ -631,6 +632,7 @@ end
 
 -- metatable for __gi_NewType types
 __gi_type_MT = {
+   __name = "__gi_type_MT",
    __call = function(self, ...)
       local args = {...}
       print("jea debug: __git_type_MT.__call() invoked, self='",tostring(self),"', with args=")
@@ -651,6 +653,7 @@ __gi_type_MT = {
 
 
 __gi_NewType_constructor_MT = {
+   __name = "__gi_NewType_constructor_MT",
    __call = function(self, wat, ...)
       print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
       print("start st")
@@ -870,6 +873,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
 
       local mt = {
+         __name = "Ptr type constructed mt",
          __call = function(self, wat, ...)
             print("jea debug: per-ptr-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
             print("start st")
@@ -920,6 +924,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
 
       local mt = {
+         __name = "Struct type constructed mt",
          __call = function(self, wat, ...)
             print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
             print("start st")
