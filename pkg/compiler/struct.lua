@@ -10,7 +10,6 @@ __gi_idCounter = 0;
 
 __gi_PropsKey = {}
 __gi_MethodsetKey = {}
-__gi_BaseKey = {}
 
 -- st or showtable, a helper.
 function __st(t, name, indent, quiet)
@@ -25,7 +24,7 @@ function __st(t, name, indent, quiet)
    local s = pre .. "============================ "..tostring(t).."\n"
    for i,v in pairs(t) do
       k=k+1
-      s = s .. pre.."num: '"..tostring(k).. "' key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
+      s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
    end
    if k == 0 then
       s = pre.."<empty table>"
@@ -56,6 +55,8 @@ __reg={
    structs = {},
    interfaces={}
 }
+
+-- jea: can we delete this, or no?
 
 -- helper for iterating over structs
 __structPairs = function(t)
@@ -121,12 +122,8 @@ function __ifacePrinter(self)
 end
 
 
--- common struct behavior in this metatable
-__gi_structMT = {
-   __structPairs = __structPairs,
-   __pairs = __structPairs,
-   __name = "__gi_structMT"
-}
+-- delete and fold into props:: __gi_structMT
+
 
 -- common interface behavior
 __gi_ifaceMT = {
@@ -144,7 +141,7 @@ __gi_ifaceMT = {
 -- if we denote metatable with the
 --  arrow from table -> metatable, then
 --
---    methodset -> props -> __gi_structMT
+--  instance ->  methodset -> props
 --
 function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    local name = shortTypeName -- temporary fix
@@ -166,15 +163,15 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    local props = {__typename = name, __name="structProps", __nMethod=0}
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
-   props[__gi_BaseKey] = __gi_structMT
-   props.__index = props -- __gi_structMT
+   props.__index = props
+   props.__structPairs = __structPairs
+   props.__pairs = __structPairs
    
-   setmetatable(props, __gi_structMT)
    setmetatable(methodset, props)
    
    self.structs[name] = methodset
    print("__reg:RegisterStruct done, debug: new methodset is: ", methodset)
-   st(methodset)
+   __st(methodset, shortTypeName..".methodset")
    return methodset
 end
 
@@ -192,7 +189,6 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    local props = {__typename = name, __name="ifaceProps"}
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
-   props[__gi_BaseKey] = __gi_ifaceMT
    props.__tostring = __ifacePrinter
    props.__index = props
 
@@ -218,7 +214,7 @@ end
 function __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
    local goal = string.sub(shortTypeName, 2)
    print("top of __reg:GetPointeeMethodset, goal='"..goal.."' are here are structs:")
-   st(self.structs)
+   __st(self.structs, "__reg.structs")
    
    local strct = self.structs[goal]
    if strct ~= nil then
@@ -618,7 +614,7 @@ __gi_type_MT = {
    __call = function(self, ...)
       local args = {...}
       print("jea debug: __git_type_MT.__call() invoked, self='",tostring(self),"', with args=")
-      st(args)
+      __st(args, "__gi_type_MT.args")
    end
 }
 
@@ -638,7 +634,7 @@ __gi_NewType_constructor_MT = {
    __call = function(self, wat, ...)
       print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
       print("start st")
-      st({...})
+      __st({...}, "__gi_NewType_constructor_MT.dots")
       print("end st")
       if self ~= nil and self.constructor ~= nil then
          print("calling self.constructor!")
@@ -847,7 +843,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          __call = function(self, wat, ...)
             print("jea debug: per-ptr-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
             print("start st")
-            st({...})
+            __st({...}, "Ptr.mt.__call.dots")
             print("end st")
 
             if self ~= nil and self.constructor ~= nil then
@@ -897,7 +893,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          __call = function(self, wat, ...)
             print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
             print("start st")
-            st({...})
+            __st({...},"Struct.mt.__call.dots")
             print("end st")
             if self ~= nil and self.constructor ~= nil then
                print("calling self.constructor!")
