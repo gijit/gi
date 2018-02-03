@@ -203,8 +203,8 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		splt := strings.Split(funcRef, ":")
 		joinedParams = strings.Join(params, ", ")
 		if isMethod {
-			return []byte(fmt.Sprintf("\tfunction %s%s;\n "+
-				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", %s)\n",
+			return []byte(fmt.Sprintf("\tfunction __type__%s%s;\n "+
+				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", __type__%s)\n",
 				funcRef, fun,
 				splt[0], splt[1], splt[0]+"."+splt[1],
 			))
@@ -240,6 +240,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
 		// jea
+		// methods written here
 		code.Write(primaryFunction(true, fmt.Sprintf("%s:%s", typeName, funName)))
 
 		pp("WHOPPER! code is now '%s'", code.String())
