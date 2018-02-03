@@ -880,10 +880,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             __st({...}, "Ptr.mt.__call.per-ptr-type-ctor.args")
             print("end st")
 
-            if self ~= nil and self.constructor ~= nil then
+            -- typ captured by closure.
+            if typ ~= nil and typ.constructor ~= nil then
                print("calling ptr self.constructor!")
-               local newb = self.constructor(self, ...)
-               print("done calling ptr self.constructor!")               
+               local newb = typ.constructor(self, ...)
+               print("done calling ptr typ.constructor!")               
                if typ.registered ~= nil then
                   print("after ptr self.ctor, setting typ.registered as metatable.")
                   setmetatable(newb, typ.registered)
