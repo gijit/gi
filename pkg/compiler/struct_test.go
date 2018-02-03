@@ -16,6 +16,8 @@ type S struct{}
 func (s *S) hi() string {
    return "hi called!"
 }
+var s S
+h := s.hi()
 `
 		// __reg:AddMethod should get called.
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -26,19 +28,12 @@ func (s *S) hi() string {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-	S = __reg:RegisterStruct("S","main","main");
-	function S:hi() 
-		s = self;
-		return "hi called!";
-	end;
-    __reg:AddMethod("struct", "S", "hi", S.hi)
-`)
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		//LuaMustInt64(vm, "c0", 4)
+		LuaMustString(vm, "h", "hi called!")
 
 	})
 }

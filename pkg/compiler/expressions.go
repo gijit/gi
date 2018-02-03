@@ -207,7 +207,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return elements
 		}
 
-		pp("in expressions.go:145 at underlying switch, exprType='%T'/'%#v'", exprType, exprType)
+		pp("in expressions.go, at underlying switch, exprType='%T'/'%#v'", exprType, exprType)
 		switch t := exprType.Underlying().(type) {
 		case *types.Array:
 			elements := collectIndexedElements(t.Elem())
@@ -244,7 +244,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 			// return c.formatExpr("$makeMap(%s.keyFor, [%s])", c.typeName(t.Key()), strings.Join(entries, ", "))
 		case *types.Struct:
-			pp("in expressions.go:179 for *types.Struct")
+			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())
 			isKeyValue := true
 			if len(e.Elts) != 0 {
@@ -270,7 +270,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				}
 			}
 			//flds := structFieldTypes(t)
-			return c.formatExpr("%s.ptr({}, %s)", c.typeName(exprType), strings.Join(elements, ", "))
+			sele := "nil"
+			if len(elements) > 0 {
+				sele = strings.Join(elements, ", ")
+			}
+			return c.formatExpr("%s.ptr({}, %s)", c.typeName(exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
