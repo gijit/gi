@@ -22,7 +22,7 @@ function __st(t, name, indent, quiet)
    end
    local indent = indent or 0
    local pre = string.rep(" ", 4*indent)..namec
-   local s = pre .. "============================\n"
+   local s = pre .. "============================ "..tostring(t).."\n"
    for i,v in pairs(t) do
       k=k+1
       s = s .. pre.."num: '"..tostring(k).. "' key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
