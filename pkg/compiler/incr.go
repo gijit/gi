@@ -33,7 +33,8 @@ func addPreludeToNewPkg(pkg *types.Package) {
 
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
 
-	pp("jea debug, top of incrementallyCompile(): here is what files has:")
+	pp("jea debug, top of incrementallyCompile()."+
+		" importPath='%s' here is what files has:", importPath)
 	j := 0
 	for _, file := range files {
 		for _, decl := range file.Nodes {

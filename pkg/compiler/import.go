@@ -51,7 +51,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 				"Incr":      Incr,
 			})
 
-			ic.importContext.Packages[path] = pkg
+			ic.curPkg.importContext.Packages[path] = pkg
 			return &Archive{
 				ImportPath: path,
 				pkg:        pkg,
@@ -216,7 +216,7 @@ func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archi
 	pkg.SetPath(shadowPath)
 
 	// very important, must do this or we won't locate the package!
-	ic.importContext.Packages[path] = pkg
+	ic.curPkg.importContext.Packages[path] = pkg
 
 	return res, nil
 }
