@@ -669,8 +669,8 @@ __gi_ifaceKeyFor = function(x)
       return "nil"
    end
    local c = x.__constructor
-   --return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
-   return c.string .. "__gi_" .. c.keyFor(x)
+   --return c.string .. "__gi_" .. c.__keyFor(x.__gi_val)
+   return c.string .. "__gi_" .. c.__keyFor(x)
 end
 
 __gi_identity = function(x) return x; end
@@ -854,8 +854,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__keyFor = function(x)  return x.__gi_real .. "_" .. x.__gi_imag; end
 
    elseif kind == __gi_kind_Array then
-      typ.__constructor = function(self, v)      
-         --self.__gi_val = v;
+      
+      typ.__constructor = function(v)
+         return __gi_NewArray(v, typ.__elem, #v, typ.__elem.__zero())
       end      
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
@@ -868,17 +869,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__len = len;
          typ.__comparable = elem.__comparable;
          typ.__keyFor = function(x)
-
-            -- js:
-            -- return Array.prototype.join.call($mapArray(x, function(e) {
-            --    return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\$/g, "\\$");
-            -- }), "$");
-
-            -- jea TODO: come back and effect the substitution above, here
-            -- just dropped it to get rough compilation.
-            return Array.prototype.join.call(__gi_mapArray(x, function(e)
-                                                              return tostring(elem.keyFor(e))
-                                                          end), "__gi_")
+            local ma = __gi_mapArray(x, function(e)
+                                        return tostring(elem.__keyFor(e))
+            end)
+            return table.concat(ma, "_")
          end
          typ.__copy = function(dst, src) 
             __gi_copyArray(dst, src, 0, 0, src.length, elem);
@@ -903,8 +897,12 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Func then
-      typ = function(self, v)
-         --self.__gi_val = v;
+      typ.__constructor = function(v)
+         local newb = {__gi_val = v}
+         setmetatable(newb, {
+                         __call = function(the_mt, me, ...) return me.__gi_val(...) end
+         })
+         return newb
       end
       typ.__wrapped = true;
       typ.__init = function(params, results, variadic)
@@ -928,8 +926,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       end
       
    elseif kind == __gi_kind_Map then
-      typ.__constructor = function(self, v)
-         --self.__gi_val = v;
+      typ.__constructor = function(v)
+         local newb = {__gi_val = v}
+         return newb
       end
       typ.__wrapped = true;
       typ.__init = function(key, elem)
@@ -950,7 +949,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__elem = elem;
          typ.__comparable = false;
          typ.__nativeArray = __gi_nativeArray(elem.__kind);
-         typ.__Nil = typ({});
+         typ.__nil = typ({});
       end
 
    --------------------------------------------
@@ -989,23 +988,21 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       }
       setmetatable(typ, mt)
       print("setting Ptr typ.__constructor to construction: "..tostring(constructor))
-      typ.__constructor = constructor
+      -- typ.__constructor = constructor
       
-      --      typ.__constructor = constructor or function(self, getter, setter, target)
-      --            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
-      --            self.__gi_get = getter;
-      --            self.__gi_set = setter;
-      --            self.__gi_target = target;
-      --            self.__gi_val = self;
-      --            return self
-      --         end
+      typ.__constructor = constructor or
+         function(getter, setter, target)
+            print("jea debug: top of kind_Ptr constructor")
+            local newb = {__gi_get = getter, __gi_set = setter}
+            newb.__gi_val = newb
+            return newb
+         end
       
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem) 
          typ.__elem = elem;
-         -- key insight: what __wrapped means!
-         typ.__wrapped = (elem.__kind == __gi_kind_Array);
-         typ.__Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
+         typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
+         typ.__nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
 
    --------------------------------------------
@@ -1172,7 +1169,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_Ptr or
    kind ==  __gi_kind_Slice then
       
-      typ.__zero = function() return typ.__Nil; end
+      typ.__zero = function() return typ.__nil; end
       
 
    elseif kind ==  __gi_kind_Chan then
@@ -1234,8 +1231,11 @@ end
 -------------------
 
 function __gi_mapArray(array, f)
+   if array == nil then
+      return {}
+   end
    local na = #array
-   local newArray = new array.__constructor(na);
+   local newArray = array.__constructor(na);
    for i = 0,na-1 do
       newArray[i] = f(array[i]);
    end

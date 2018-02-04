@@ -786,7 +786,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					pkgPath = method.Pkg().Path()
 				}
 				t := method.Type().(*types.Signature)
-				// jea: this generates, for example,
+
 				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 					ptrMethods = append(ptrMethods, entry)
@@ -812,14 +812,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		switch t := o.Type().Underlying().(type) {
 		case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 			d.TypeInitCode = c.CatchOutput(0, func() {
-				// jea: we currently don't use this struct init code, so comment it for now.
-				//c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
+				// jea: we need to initialize our interfaces with
+				// their methods.
+				c.Printf("__type__%s.init(%s);", c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 			})
-			// jea: for now we'll leave off the separate type init calls; we might need to bring them back later.
 			// example of what is generated:
 			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}]);
-
 			allby = append(allby, d.TypeInitCode...)
 		}
 	})
