@@ -37,23 +37,24 @@ function __copySlice(286,8007
 function __subslice(328,9200
 function __gi_makeSlice(352,9916
 
-pkg/compiler/struct.lua,585
+pkg/compiler/struct.lua,627
 function __NOTINUSE__gi_clone(11,202
-function __st(35,794
-function __structPrinter(118,2805
-function __ifacePrinter(148,3640
-function __reg:RegisterStruct(194,4798
-function __reg:RegisterInterface(229,5926
-function __reg:IsInterface(257,6692
-function __reg:GetInterface(261,6769
-function __reg:GetPointeeMethodset(265,6840
-function __reg:NewInstance(292,7707
-function __reg:RemoveMethod(314,8255
-function __reg:AddMethod(346,9205
-function __gi_methodVal(379,10136
-function __gi_count_methods(406,10919
-function __gi_assertType(445,12048
-function __gi_NewType(726,19139
+function __st(36,813
+function __structPrinter(119,2824
+function __ifacePrinter(149,3659
+function __reg:RegisterStruct(195,4817
+function __reg:RegisterInterface(230,5945
+function __reg:IsInterface(260,6803
+function __reg:GetInterfaceMethods(265,6905
+function __reg:GetPointeeMethodset(270,7008
+function __reg:NewInstance(297,7875
+function __reg:RemoveMethod(319,8423
+function __reg:AddMethod(351,9373
+function __gi_methodVal(384,10304
+function __gi_count_methods(411,11087
+function __gi_assertType(450,12216
+function __gi_NewType(755,20126
+function __gi_mapArray(1232,36546
 
 pkg/compiler/templates/defer.lua,17
 function f(3,14

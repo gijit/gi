@@ -406,17 +406,17 @@ end
 --
 -- vi can be struct value or interface value;
 -- We count the number of non "__" prefixed
--- methods in the metatable of vi.
+-- methods in the methodset of vi.
 --
 function __gi_count_methods(vi)
-   local mt = getmetatable(vi)
-   if mt == nil then
+   local mset = vi[ __gi_MethodsetKey]
+   if mset == nil then
       return 0
    end
    local n = 0
    local uscore = 95 -- "_"
    
-   for i, v in pairs(mt) do
+   for i, v in pairs(mset) do
       -- we omit __ prefixed methods/values
       if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
          if type(v) == "function" then
@@ -459,11 +459,12 @@ function __gi_assertType(value, typ, returnTuple)
    if __reg:IsInterface(typ) then
       print("__gi_assertType notes that typ is interface")
       isInterface = true
-      interfaceMethods = __reg:GetInterfaceMethods(typ)
+      --interfaceMethods = __reg:GetInterfaceMethods(typ)
+      interfaceMethods = typ.__methods
       if interfaceMethods == nil then
          print("interfaceMethods for typ was nil!?!")
       else
-            __st(interfaceMethods, "interfacemethods")
+         __st(interfaceMethods, "interfacemethods")
       end
    else
       print("__gi_assertType notes that typ is NOT an interface")
@@ -501,6 +502,8 @@ function __gi_assertType(value, typ, returnTuple)
          __st(valueMethodSet, "valueMethodSet")
          
          --local valueMethodSet = __gi_methodSet(value.__str);
+
+         local msl = __gi_count_methods(valueMethodSet)
          
          local ni = #interfaceMethods
          local uscore = 95 -- "_"
@@ -519,23 +522,36 @@ function __gi_assertType(value, typ, returnTuple)
             end
             
             local found = false;
-            local msl = #valueMethodSet
 
             print("i = ", i)
+            __st(valueMethodSet, "valueMethodSet")
             
-            for j = 1,msl do
-               local vm = valueMethodSet[j];
-               if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
-                  print("found 0000000000 method match")
+            for j, vm in pairs(valueMethodSet) do
+
+               if #j >= 2 and
+                  string.byte(j,1,1)==uscore and
+               string.byte(j,2,2) == uscore then
+                  
+                  print("skipping '__' prefixed method: "..tostring(j))
+                  goto continue2
+               end
+               
+               -- if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
+               -- temp debug: just match on the name until we
+               -- figure out where the vm typ info lives.
+               if j == tm.__name then 
+                  print("found 0000000000 method match, j="..j)
                   found = true;
                   break;
                else
                   -- debug prints:
-                  print("not match, 111111111: tried to compare: vm=")
+                  print("not match, 111111111: tried to compare: j="..j.." vs tm.name="..tm.__name.." vm=")
                   __st(vm, "vm")
-                  print("not match, 111111111: tried to compare: vm=")
+                  print("not match, 111111111: tried to compare: tm=")
                   __st(tm, "tm")
                end
+               
+               ::continue2::
             end
             
             if not found then
