@@ -1042,7 +1042,79 @@ f();
 	})
 }
 
-// TODO: multiline strings
-// a := `
-//    multi
-//  line`
+func Test027StructMethods(t *testing.T) {
+
+	cv.Convey(`a simple method call through an interface to a struct method should translate. syntax only. see 029 for execution on the vm`, t, func() {
+
+		code := `
+type Dog interface {
+    Write(with string) string
+}
+
+type Beagle struct{
+    word string
+}
+
+func (b *Beagle) Write(with string) string {
+    return b.word + ":it was a dark and stormy night, " + with
+}
+
+var snoopy Dog = &Beagle{word:"hiya"}
+
+book := snoopy.Write("with a pen")`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+			`
+        Dog = __reg:RegisterInterface("Dog","main","main");
+        Beagle = __reg:RegisterStruct("Beagle","main","main");
+
+	    function Beagle:Write(with)
+            b = self;
+  		    return b.word .. ":it was a dark and stormy night, " .. with;
+     	end;
+        __reg:AddMethod("struct", "Beagle", "Write", Beagle.Write)
+        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
+
+  	    _r = snoopy:Write("with a pen");
+  	    book = _r;
+`)
+
+		// and verify that it happens correctly? see test 029
+	})
+}
+
+func Test028CopyAStruct(t *testing.T) {
+
+	cv.Convey(`copy a struct value`, t, func() {
+
+		code := `
+type Beagle struct{ 
+    word string 
+    a, b, c int
+} 
+var snoopy = Beagle{word:"hiya", b: 2}
+denver := snoopy
+d := denver.b
+w := denver.word
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "d", 2)
+		LuaMustString(vm, "w", "hiya")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
