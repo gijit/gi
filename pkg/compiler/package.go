@@ -198,15 +198,19 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 			return []byte(fmt.Sprintf("\t%s = function() \n\t\t$throwRuntimeError(\"native function not implemented: %s\");\n\t end ;\n", funcRef, o.FullName()))
 		}
 
-		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
-		pp("funcRef in translateFunction, package.go:698 is '%s'; isMethod='%v'", funcRef, isMethod)
+		params, fun, _ := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)
+		pp("funcRef in translateFunction, package.go:698 is '%s'; isMethod='%v'; fun='%#v'; recv='%#v'; fun='%#v'; params='%#v';", funcRef, isMethod, fun, recv, fun, params)
 		splt := strings.Split(funcRef, ":")
 		joinedParams = strings.Join(params, ", ")
 		if isMethod {
-			return []byte(fmt.Sprintf("\tfunction __type__%s%s;\n "+
-				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", __type__%s)\n",
-				funcRef, fun,
-				splt[0], splt[1], splt[0]+"."+splt[1],
+			if len(params) > 0 {
+				joinedParams = "," + joinedParams
+			}
+			return []byte(fmt.Sprintf("\t__type__%s[__gi_MethodsetKey].%s=function%s;\n "+
+				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", __type__%s[__gi_MethodsetKey]%s, true)\n",
+				splt[0], splt[1],
+				fun,
+				splt[0], splt[1], splt[0], "."+splt[1],
 			))
 		} else {
 			return []byte(fmt.Sprintf("\t%s = %s;\n", funcRef, fun))
@@ -269,7 +273,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	return code.Bytes()
 }
 
-func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, outerContext *funcContext, sig *types.Signature, info *analysis.FuncInfo, funcRef string, isMethod bool) ([]string, string) {
+func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, outerContext *funcContext, sig *types.Signature, info *analysis.FuncInfo, funcRef string, isMethod bool) (params []string, fun string, recvName string) {
 	if info == nil {
 		panic("nil info")
 	}
@@ -296,7 +300,6 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	}
 	prevEV := c.p.escapingVars
 
-	var params []string
 	for _, param := range typ.Params.List {
 		if len(param.Names) == 0 {
 			params = append(params, c.newVariable("param"))
@@ -329,11 +332,19 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		}
 
 		if recv != nil && !isBlank(recv) {
-			this := "self"
-			if isWrapped(c.p.TypeOf(recv)) {
-				this = "this.$val"
-			}
-			c.Printf("%s = %s;", c.translateExpr(recv, nil), this)
+			recvName = c.translateExpr(recv, nil).String()
+
+			// jea: omit "r = self" now in favor of
+			// specifying 'r' as a part of the arguments explicitly
+			// from the start, so we get the receiver name 'r' correct,
+			// and don't face collisions with vars that happened to
+			// be named 'self'.
+			//
+			//this := "self"
+			//if isWrapped(c.p.TypeOf(recv)) {
+			// this = "this.$val"
+			//}
+			//c.Printf("%s = %s;", c.translateExpr(recv, nil), this)
 		}
 
 		c.translateStmtList(body.List)
@@ -422,7 +433,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 end
 `,
 			functionWord, functionName, formals,
-			bodyOutput, functionName)
+			bodyOutput, functionName), recvName
 
 		//prefix = prefix + " $deferred = []; $deferred.index = $curGoroutine.deferStack.length; $curGoroutine.deferStack.push($deferred);"
 	}
@@ -439,6 +450,15 @@ end
 		//bodyOutput = fmt.Sprintf("%svar %s;\n", strings.Repeat("\t", c.p.indentation+1), strings.Join(c.localVars, ", ")) + bodyOutput
 	}
 
-	return params, fmt.Sprintf("%s%s(%s) \n%s%s end",
-		functionWord, functionName, formals, bodyOutput, strings.Repeat("\t", c.p.indentation))
+	recvInsert := ""
+	if recvName != "" {
+		recvInsert = recvName
+		if formals != "" {
+			recvInsert = recvInsert + ","
+		}
+	}
+	return params, fmt.Sprintf("%s%s(%s%s) \n%s%s end",
+			functionWord, functionName, recvInsert, formals,
+			bodyOutput, strings.Repeat("\t", c.p.indentation)),
+		recvName
 }

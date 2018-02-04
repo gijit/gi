@@ -327,7 +327,10 @@ end
 -- si should be "struct" or "iface", to say which type.
 -- siName is the name of the struct or interface.
 --
-function __reg:AddMethod(si, siName, methodName, method)
+-- incCount is true if we need to increment the method
+-- count to account for this just directly added method.
+--
+function __reg:AddMethod(si, siName, methodName, method, incCount)
    print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
    -- lookup the methodset
    local methodset
@@ -340,18 +343,24 @@ function __reg:AddMethod(si, siName, methodName, method)
       error("unregistered "..si.." name '"..siName.."'")
    end
 
+   print("prior to addition, methodset is:")
+   __st(methodset, "methodset")
+   
    -- new?
-   if methodset[methodName] ~= nil then
-      -- not new
-      print("methodName "..methodName.." was not new, val is:", methodset[methodName])
-   else
+   if methodset[methodName] == nil or incCount then
       -- new, count it.
       local props = methodset[__gi_PropsKey]
       props.__nMethod = props.__nMethod + 1
+   else      
+      -- not new
+      print("methodName "..methodName.." was not new, val is:", methodset[methodName])
    end
    
    -- add the method
    methodset[methodName] = method
+
+   print("after addition, methodset is:")
+   __st(methodset, "methodset")   
 end
 
 function __gi_methodVal(recvr, methodName, recvrType)
