@@ -60,6 +60,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	} else {
 		typesInfo = a.typesInfo
 		funcSrcCache = a.funcSrcCache
+		//pp("typesInfo.Types = '%#v'", typesInfo.Types)
 	}
 
 	var importError error
