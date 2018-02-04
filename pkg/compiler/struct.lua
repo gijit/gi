@@ -260,7 +260,7 @@ function __reg:IsInterface(typ)
    return self.interfaces[name] ~= nil
 end
 
-function __reg:GetInterface(typ)
+function __reg:GetInterfaceMethods(typ)
    local name = typ.__str
    return self.interfaces[name]
 end
@@ -457,8 +457,7 @@ function __gi_assertType(value, typ, returnTuple)
    if __reg:IsInterface(typ) then
       print("__gi_assertType notes that typ is interface")
       isInterface = true
-      interfaceMethods = __reg:GetInterface(typ)
-      --interfaceMethods = typ[__gi_MethodsetKey]
+      interfaceMethods = __reg:GetInterfaceMethods(typ)
    else
       print("__gi_assertType notes that typ is NOT an interface")
    end
@@ -480,7 +479,6 @@ function __gi_assertType(value, typ, returnTuple)
       ok = value.__constructor == typ;
       
    else
-      -- jea, what here?
       local valueTypeString = value.__str
       
       print("__gi_assertType: valueTypeString='"..valueTypeString.."' and typ is: ")
