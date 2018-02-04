@@ -4,6 +4,15 @@
 -- the convention in translating gopherjs javascript's '$'
 -- is to replace the '$' prefix with "__gi_"
 
+-- port gopherjs system $clone()
+--
+function __gi_clone(src, typ)
+   print("__gi_clone() called with typ="..tostring(typ))
+   local clone = typ.__zero();
+   typ.__copy(clone, src);
+   return clone;
+end
+
 -- TODO: syncrhonize around this/deal with multi-threading?
 --  may need to teach LuaJIT how to grab go mutexes or use sync.Atomics.
 __gi_idCounter = 0;
@@ -653,7 +662,7 @@ __gi_type_MT = {
 
 __gi_NewType_constructor_MT = {
    __name = "__gi_NewType_constructor_MT",
-   __call = function(self, wat, ...)
+   __call = function(the_mt, self, ...)
       print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
       print("start st")
       __st({...}, "__gi_NewType_constructor_MT.dots")
@@ -679,10 +688,16 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    print("top of __gi_NewType()")
    print("=====================")
    
-   print("size='"..tostring(size).."', kind='"..tostring(kind).. "', kind2str='".. __kind2str[kind].."', str='"..str.."'")
+   print("size='"..tostring(size).."'")
+   print("kind='"..tostring(kind).."'")
+   print("kind2str='".. __kind2str[kind].."'")
+   print("str='"..str.."'")
    print("shortTypeName='"..shortTypeName.."'")
-   print("named='"..tostring(named).. "' shortPkg='".. shortPkg.. "', pkgPath='"..pkgPath.."'")
-   print("exported='"..tostring(exported).."', constructor='"..tostring(constructor).."'")
+   print("named='"..tostring(named).."'")
+   print("shortPkg='".. shortPkg.."'")
+   print("pkgPath='"..pkgPath.."'")
+   print("exported='"..tostring(exported).."'")
+   print("constructor='"..tostring(constructor).."'")
    
    -- we return typ at the end.
    local typ = {}
@@ -705,7 +720,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       print("typ.__registered back from __reg:GetPointeeMethodset = ", typ.__registered)
 
    else
-      setmetatable(typ, __gi_type_MT) -- make it callable
+      setmetatable(typ, __gi_NewType_constructor_MT)
+      --setmetatable(typ, __gi_type_MT) -- make it callable
    end
    
    if kind == __gi_kind_bool or
@@ -722,49 +738,44 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
-      typ = {__gi_val=0LL, __wrapped=true, keyFor=__gi_identity};
-      setmetatable(typ, __castableMT);
-      -- gopherjs:
-      -- typ = function(v) this.__gi_val = v; end
-      -- typ.__wrapped = true;
-      -- typ.__keyFor = __gi_identity;
+      typ.__constructor= function(self, v) self.__gi_val = v; end
+      typ.__gi_val = 0LL
+      typ.__wrapped = true;
+      typ.__keyFor = __gi_identity;
       
       
    elseif kind == __gi_kind_String then
 
-      typ = {__gi_val, __wrapped=true};
-      setmetatable(typ, __castableMT);
-      -- typ = function(v) this.__gi_val = v; end
-      -- typ.__wrapped = true;
+      typ.__constructor = function(self, v) self.__gi_val = v; end
+      typ.__wrapped = true;
       typ.__keyFor = function(x) return "__gi_"..x; end
-      
 
    elseif kind ==  __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      typ = {__gi_val, __wrapped=true};
-      setmetatable(typ, __castableMT);         
-      -- typ = function(v) { this.__gi_val = v; };
+      typ.__gi_val = 0
+      typ.__constructor = function(self, v) self.__gi_val = v; end
+      typ.__wrapped = true;      
       typ.__keyFor = function(x) return __gi_floatKey(x) end
       
-      
    elseif kind == __gi_kind_complex64 then
-      typ = function(real, imag)
-         this.__gi_real = __gi_fround(real);
-         this.__gi_imag = __gi_fround(imag);
-         this.__gi_val = this;
+      typ.__wrapped = true;      
+      typ.__constructor = function(self, real, imag)
+         self.__gi_real = __gi_fround(real);
+         self.__gi_imag = __gi_fround(imag);
+         self.__gi_val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
 
    elseif kind == __gi_kind_complex128 then
-      typ = function(real, imag) 
-         this.__gi_real = real;
-         this.__gi_imag = imag;
-         this.__gi_val = this;
+      typ.__wrapped = true;      
+      typ.__constructor = function(self, real, imag)      
+         self.__gi_real = real;
+         self.__gi_imag = imag;
+         self.__gi_val = this;
       end
-      typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
-      
+      typ.__keyFor = function(x)  return x.__gi_real .. "_" .. x.__gi_imag; end
 
    elseif kind == __gi_kind_Array then
       setmetatable(typ, __castableMT)
@@ -1107,8 +1118,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             --return new arrayClass(typ.__len)
             return arrayClass(typ.__len)
          end
-         --local array = new Array(typ.__len)
-         return  _gi_NewArray({}, typ.__elem.__kind, typ.__len, typ.__elem.__zero())
+         --Local array = new Array(typ.__len)
+         return  __gi_NewArray({}, typ.__elem.__kind, typ.__len, typ.__elem.__zero())
       end
       
       
@@ -1169,3 +1180,23 @@ __gi_funcType = function(params, results, variadic)
   end
   return typ;
 end
+
+-- basic types
+__bool = __gi_NewType(1, __gi_kind_bool, "", "bool", "bool", true, "", false, nil);
+__int = __gi_NewType(8, __gi_kind_int, "", "int", "int", true, "", false, nil);
+__int8 = __gi_NewType(1, __gi_kind_int8, "", "int8", "int8", true, "", false, nil);
+__int16 = __gi_NewType(2, __gi_kind_int16, "", "int16", "int16", true, "", false, nil);
+__int32 = __gi_NewType(4, __gi_kind_int32, "", "int32", "int32", true, "", false, nil);
+__int64 = __gi_NewType(8, __gi_kind_int64, "", "int64", "int64", true, "", false, nil);
+__uint = __gi_NewType(8, __gi_kind_uint, "", "uint", "uint", true, "", false, nil);
+__uint8 = __gi_NewType(1, __gi_kind_uint8, "", "uint8", "uint8", true, "", false, nil);
+__uint16 = __gi_NewType(2, __gi_kind_uint16, "", "uint16", "uint16", true, "", false, nil);
+__uint32 = __gi_NewType(4, __gi_kind_uint32, "", "uint32", "uint32", true, "", false, nil);
+__uint64 = __gi_NewType(8, __gi_kind_uint64, "", "uint64", "uint64", true, "", false, nil);
+__uintptr = __gi_NewType(8, __gi_kind_uintptr, "", "uintptr", "uintptr", true, "", false, nil);
+__float32 = __gi_NewType(4, __gi_kind_float32, "", "float32", "float32", true, "", false, nil);
+__float64 = __gi_NewType(8, __gi_kind_float64, "", "float64", "float64", true, "", false, nil);
+__complex64 = __gi_NewType(8, __gi_kind_complex64, "", "complex64", "complex64", true, "", false, nil);
+__complex128 = __gi_NewType(16, __gi_kind_complex128, "", "complex128", "complex128", true, "", false, nil);
+__String = __gi_NewType(8, __gi_kind_String, "", "string", "string", true, "", false, nil);
+__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Pointer", "unsafe.Pointer", true, "", false, nil);

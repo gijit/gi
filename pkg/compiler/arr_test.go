@@ -28,7 +28,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
+		a = __gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
         sum = gitesting.SumArrayInt64(__gi_clone(a, "kind_arrayType"));
 `)
 
@@ -61,7 +61,7 @@ func Test081CloneOfInt64Array(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-		a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
+		a = __gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
         b = __gi_clone(a, "kind_arrayType");
         c = b[2];
 `)
@@ -96,7 +96,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 			`
-	a = _gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
+	a = __gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
   	_gi_SetRangeCheck(a, 0, (a[0] + (1LL)));
   	_gi_SetRangeCheck(a, 2, (a[2] - (1LL)));
   	b = a[0];

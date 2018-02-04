@@ -93,14 +93,14 @@ _giPrivateArrayMt = {
    end
 }
 
-function _gi_NewArray(x, typeKind, len, zeroVal)
-   --print("_gi_NewArray constructor called with x=",x," and typeKind=", typeKind," len=", len)
+function __gi_NewArray(x, typeKind, len, zeroVal)
+   --print("__gi_NewArray constructor called with x=",x," and typeKind=", typeKind," len=", len)
    if typeKind == nil or typeKind == "" then
-      error("must provide typeKind to _gi_NewArray")
+      error("must provide typeKind to __gi_NewArray")
    end
    
    if len == nil then
-      error("must provide len to _gi_NewArray")
+      error("must provide len to __gi_NewArray")
    end
 
    local proxy = {}
@@ -124,18 +124,11 @@ function _gi_NewArray(x, typeKind, len, zeroVal)
    return proxy
 end;
 
--- port gopherjs system $clone()
---
-function __gi_clone(src, typ)
-   print("__gi_clone() called with typ="..tostring(typ))
-   local clone = typ.zero();
-   typ.copy(clone, src);
-   return clone;
-end
 
 
 -- jea: my earlier Proof of concept; comment
--- out and see if we can get the above working.
+-- out and see if we can get gopherjs based
+-- __clone functionality working.
 -- function _gi_clone(t, typ)
 --    print("_gi_clone called with typ ", typ)
 --    if type(t) ~= 'table' then
@@ -155,7 +148,7 @@ end
 --       end
 --       -- unpack ignores the [0] value, so less useful.
 --       
---       local b = _gi_NewArray(dest, props.typeKind, props.len)
+--       local b = __gi_NewArray(dest, props.typeKind, props.len)
 --       return b
 --    end
 --    print("unimplemented typ in _gi_clone:", typ)

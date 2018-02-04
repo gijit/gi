@@ -230,7 +230,7 @@ function append(t, ...)
 
    -- simpler?
    --local tot = #t + #slc
-   --local arr = _gi_NewArray({}, props.typeKind, tot, props.zeroVal)
+   --local arr = __gi_NewArray({}, props.typeKind, tot, props.zeroVal)
    --local res = _gi_NewSlice(props.typeKind, arr, props.zeroVal, 0, tot, tot)
    --copy(res, t)
    

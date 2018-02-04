@@ -29,7 +29,7 @@ func Test086SlicesPointToArrays(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-	a = _gi_NewArray({[0]=1LL, 3LL}, "__gi_kind_int64", 2, 0LL);
+	a = __gi_NewArray({[0]=1LL, 3LL}, "__gi_kind_int64", 2, 0LL);
   	b = _gi_NewSlice("int64", a, 0LL);
   	c = __subslice(_gi_NewSlice("int64", a, 0LL), 1);
   	_gi_SetRangeCheck(b, 1, (_gi_GetRangeCheck(b, 1) + (1LL)));
@@ -66,7 +66,7 @@ func Test088SlicesFromArrays(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-	a = _gi_NewArray({[0]=88LL, 99LL}, "__gi_kind_int64", 2, 0LL);
+	a = __gi_NewArray({[0]=88LL, 99LL}, "__gi_kind_int64", 2, 0LL);
   	b = _gi_NewSlice("int64", a, 0LL);
  	b0 = _gi_GetRangeCheck(b, 0);
    	b1 = _gi_GetRangeCheck(b, 1);
