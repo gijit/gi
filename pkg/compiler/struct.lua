@@ -8,8 +8,8 @@ __debug = false
 
 -- port gopherjs system $clone()
 --
-function __gi_clone(src, typ)
-   print("__gi_clone() called with typ="..tostring(typ))
+function __NOTINUSE__gi_clone(src, typ, newType)
+   print("__gi_clone() called with typ="..tostring(typ), " and newType="..tostring(newType))
    local clone = typ.__zero();
    typ.__copy(clone, src);
    return clone;

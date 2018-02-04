@@ -904,7 +904,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			if define {
 				return fmt.Sprintf(`%s = __gi_clone(%s, "%s");`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
 			}
-			return fmt.Sprintf("%s.copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
+			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
 		}
 	}
 

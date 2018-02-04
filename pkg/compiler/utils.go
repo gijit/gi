@@ -415,7 +415,20 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 }
 
 func (c *funcContext) typeName(ty types.Type) (res string) {
-	pp("in typeName, ty='%#v'", ty)
+	res, _, _, _ = c.typeNameWithAnonInfo(ty)
+	return
+}
+
+func (c *funcContext) typeNameWithAnonInfo(
+	ty types.Type,
+) (
+	res string,
+	isAnon bool,
+	anonType *types.TypeName,
+	createdVarName string,
+) {
+
+	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
 		pp("funcContext.typeName returning with res = '%s'", res)
@@ -424,20 +437,25 @@ func (c *funcContext) typeName(ty types.Type) (res string) {
 	case *types.Basic:
 		jst := toJavaScriptType(t)
 		pp("in typeName, basic, calling toJavaScriptType t='%#v', got jst='%s'", t, jst)
-		return jst
+		res = jst
+		return
 	case *types.Named:
 		if t.Obj().Name() == "error" {
-			return "error"
+			res = "error"
+			return
 		}
-		return c.objectName(t.Obj())
+		res = c.objectName(t.Obj())
+		return
 	case *types.Interface:
 		if t.Empty() {
-			return "emptyInterface"
+			res = "emptyInterface"
+			return
 		}
 	}
 
-	anonType, ok := c.p.anonTypeMap.At(ty).(*types.TypeName)
-	if !ok {
+	anonType, isAnon = c.p.anonTypeMap.At(ty).(*types.TypeName)
+	if !isAnon {
+		isAnon = true
 		c.initArgs(ty)                                    // cause all embeddeed types to be registered
 		low := strings.ToLower(typeKind(ty)[5:]) + "Type" // 5: takes the word _kind off.
 
@@ -449,9 +467,11 @@ func (c *funcContext) typeName(ty types.Type) (res string) {
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
 		pp("just added anonType='%s'", anonType.Name())
 		c.p.anonTypeMap.Set(ty, anonType)
+		createdVarName = varName
 	}
 	c.p.dependencies[anonType] = true
-	return anonType.Name()
+	res = anonType.Name()
+	return
 }
 
 func (c *funcContext) externalize(s string, t types.Type) string {
@@ -503,7 +523,10 @@ func fieldName(t *types.Struct, i int) string {
 	return name
 }
 
-func typeKind(ty types.Type) string {
+func typeKind(ty types.Type) (res string) {
+	defer func() {
+		pp("typeKind called on ty='%#v', returning res='%s'", ty, res)
+	}()
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
 		return "__gi_kind_" + toJavaScriptType(t)

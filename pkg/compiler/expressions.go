@@ -1345,12 +1345,34 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 	pp("translateImplicitConversionWithCloning(expr='%#v', desiredType='%s', at: '%s'", expr, desiredType, "") // string(debug.Stack()))
 	switch desiredType.Underlying().(type) {
 	case *types.Struct, *types.Array:
+		// either a struct or an array
 		switch expr.(type) {
 		case nil, *ast.CompositeLit:
 			// nothing
 		default:
 			// this is the __gi_clone that is called for value receivers on methods.
 			// $clone in gohperjs.
+			// And for passing an array to a function argument (by-value of course).
+
+			/*
+				switch desiredType.Underlying().(type) {
+				case *types.Array:
+
+					desiredTypeTypeName, isAnon, anonType, createdVarName := c.typeNameWithAnonInfo(desiredType)
+					_ = anonType
+					if isAnon && createdVarName != "" {
+						// c.p.anonTypes = append(c.p.anonTypes, anonType) has been called.
+						// c.p.anonTypeMap.Set(desiredType, anonType) has been called.
+
+						return c.formatExpr(`__gi_clone(%e, "%s", "%s")`, expr, desiredTypeTypeName, createdVarName)
+					}
+
+					return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
+
+				case *types.Struct:
+					return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
+				}
+			*/
 			return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 		}
 	}
