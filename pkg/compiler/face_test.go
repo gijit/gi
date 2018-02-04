@@ -201,6 +201,12 @@ type Possum interface {
     Pebbles()
 }
 
+type Unsat interface {
+	Hi()
+    Pebbles()
+    MissMe()
+}
+
 type B struct{}
 
 func (b *B) Hi() {
@@ -220,7 +226,15 @@ func (b *B) Pebbles() {}
 	}
     fmt.Printf("chk = '%v'\n", chk)
 
+    // and verify that v implements Bowser too:
+    asBowser, isBowser := v.(Bowser)
+    asIsNil := (asBowser == nil)
+
+    // negative check, should not convert:
+    asUn, isUn := v.(Unsat)
+    asUnNil := (asUn == nil)
 `
+
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -231,6 +245,11 @@ func (b *B) Pebbles() {}
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "chk", 2)
+		LuaMustBool(vm, "isBowser", true)
+		LuaMustBool(vm, "asIsNil", false)
+
+		LuaMustBool(vm, "isUn", false)
+		LuaMustBool(vm, "asUnNil", true)
 	})
 }
 
