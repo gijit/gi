@@ -841,6 +841,14 @@ fastest alternative.
 Compared to defining and then calling a new closure,
 boxing and unboxing is 100x faster.
 
+e) join of strings:
+
+table.concat({"a", "b", "c"}, ",")
+
+f splitting strings, see string:split(sep)
+
+NB: Lua has a limit of a few thousand return values.
+
 # origin
 
 Author: Jason E. Aten
