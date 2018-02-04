@@ -186,9 +186,41 @@ func Test102InterfaceMethodset(t *testing.T) {
 
 	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction.`, t, func() {
 		code := `
-		type Counter interface {
-			Next() int
-		}`
+package main
+
+import (
+	"fmt"
+)
+
+type Bowser interface {
+	Hi()
+}
+
+type Possum interface {
+	Hi()
+    Pebbles()
+}
+
+type B struct{}
+
+func (b *B) Hi() {
+	fmt.Printf("B.Hi called\n")
+}
+func (b *B) Pebbles() {}
+
+    chk := 0
+	var v Bowser = &B{}
+	switch v.(type) {
+    case Possum:
+		fmt.Printf("ooh! it types as a Possum!\n")
+        chk = 2
+	case Bowser:
+		fmt.Printf("yabadadoo! it types as a Bowser!\n")
+        chk = 1
+	}
+    fmt.Printf("chk = '%v'\n", chk)
+
+`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -197,13 +229,8 @@ func Test102InterfaceMethodset(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-    Counter = __gi_NewType(16, __gi_kind_Interface, "main", "Counter", "main.Counter", true, "", true, null);
-	function Counter:Next()
-        error("error: abstract iface method Next() invoked.")
-	end;
-    __reg:AddMethod("iface", "Counter", "Next", Counter.Next)`)
-
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "chk", 2)
 	})
 }
 

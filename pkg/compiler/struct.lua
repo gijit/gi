@@ -431,7 +431,8 @@ end
 --
 function __gi_assertType(value, typ, returnTuple)
 
-   print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'")
+   print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'. full value __st dump:")
+   __st(value, "value")
 
    local isInterface = false
    local interfaceMethods = nil
@@ -458,8 +459,7 @@ function __gi_assertType(value, typ, returnTuple)
       
    else
       -- jea, what here?
-      --local valueTypeString = value.__constructor.string;
-      local valueTypeString = value.__constructor
+      local valueTypeString = value.__str
       ok = typ.__implementedBy[valueTypeString];
       if ok == nil then
          
@@ -500,8 +500,8 @@ function __gi_assertType(value, typ, returnTuple)
             end
          end
          
-         -- can't cache this, repl may change it.
-         --typ.__implementedBy[valueTypeString] = ok;
+         -- but, note we can't cache this, repl may change it.
+         typ.__implementedBy[valueTypeString] = ok;
          
       end
    end
