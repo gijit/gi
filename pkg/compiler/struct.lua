@@ -531,11 +531,10 @@ function __gi_assertType(value, typ, returnTuple)
       if returnTuple == 0 then
          
          local ctor
-         -- (value == __gi_ifaceNil ? "" : value.__constructor.string)
          if value == __gi_ifaceNil then 
             ctor = ""
          else
-            ctor = value.__constructor.string
+            ctor = value.str
          end
          error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
          -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.__ptr("", ctor, typ.__str, missingMethod)
@@ -549,13 +548,14 @@ function __gi_assertType(value, typ, returnTuple)
    
    if not isInterface then
       --jea value = value.__gi_val;
+      -- jea: I think value should just be value, why not? no?
    end
    
    if typ == __gi_jsObjectPtr then
       value = value.object;
    end
    
-   if returnTupe == 0 then
+   if returnTuple == 0 then
       return value
    elseif returnTuple == 1 then
       return true
@@ -892,7 +892,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__implementedBy= {}
       typ.__missingMethodFor= {}
       typ.__keyFor = __gi_ifaceKeyFor;
-      typ.__init = function(self, methods)
+      typ.__init = function(methods)
          print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
          typ.__methods = methods;
          for i,m in pairs(methods) do
@@ -905,10 +905,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          --self.__gi_val = v;
       end
       typ.__wrapped = true;
-      typ.__init = function(self, key, elem)
-         self.__key = key;
-         self.__elem = elem;
-         self.__comparable = false;
+      typ.__init = function(key, elem)
+         typ.__key = key;
+         typ.__elem = elem;
+         typ.__comparable = false;
       end
       
    elseif kind == __gi_kind_Slice then
@@ -919,11 +919,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          self.__gi_capacity = self.__gi_length
          --self.__gi_val = self;
       end
-      typ.__init = function(self, elem)
-         self.__elem = elem;
-         self.__comparable = false;
-         self.__nativeArray = __gi_nativeArray(elem.__kind);
-         self.__Nil = typ({});
+      typ.__init = function(elem)
+         typ.__elem = elem;
+         typ.__comparable = false;
+         typ.__nativeArray = __gi_nativeArray(elem.__kind);
+         typ.__Nil = typ({});
       end
 
    --------------------------------------------
@@ -976,6 +976,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem) 
          typ.__elem = elem;
+         -- key insight: what __wrapped means!
          typ.__wrapped = (elem.__kind == __gi_kind_Array);
          typ.__Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
@@ -1013,7 +1014,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
-      typ.__ptr.elem = typ;
+      typ.__ptr.__elem = typ;
       typ.__ptr.prototype = {}
       typ.__ptr.prototype.__gi_get = function()  return this; end
       typ.__ptr.prototype.__gi_set = function(v) typ.__copy(this, v); end
