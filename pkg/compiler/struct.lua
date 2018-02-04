@@ -41,6 +41,19 @@ function __st(t, name, indent, quiet)
       return s
    end
    
+   if type(t) ~= "table" then
+      local s = tostring(t)
+      if not quiet then
+         if type(t) == "string" then
+            print('"'..s..'"')
+         else 
+            print(s)
+         end
+      end
+      return s
+   end
+   
+   
    local k = 0
    local name = name or ""
    local namec = name
@@ -111,7 +124,7 @@ function __structPrinter(self)
    local addr = tostring(self) 
    setmetatable(self, mt)
 
-   local s = "self.__typename: "..self.__typename .." "..addr.." {\n"   
+   local s = "self.__typename: "..self.__typename .."; "..addr.." {\n"   
    
    local uscore = 95 -- "_"
    
@@ -433,7 +446,9 @@ function __gi_assertType(value, typ, returnTuple)
 
    print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'. full value __st dump:")
    __st(value, "value")
-
+   print("\n\n and typ is: ", type(typ))
+   __st(typ, "typ")
+   
    local isInterface = false
    local interfaceMethods = nil
    if __reg:IsInterface(typ) then
@@ -460,11 +475,16 @@ function __gi_assertType(value, typ, returnTuple)
    else
       -- jea, what here?
       local valueTypeString = value.__str
+      
+      print("__gi_assertType: valueTypeString='"..valueTypeString.."' and typ is: ")
+      __st(typ)
+      
       ok = typ.__implementedBy[valueTypeString];
       if ok == nil then
+         print("assertType: ")
          
          ok = true;
-         local valueMethodSet = __gi_methodSet(value.__constructor);
+         local valueMethodSet = __gi_methodSet(value.__str);
          
          local ni = #interfaceMethods
          

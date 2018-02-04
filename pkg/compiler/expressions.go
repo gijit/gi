@@ -929,11 +929,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
 			// jea, type assertion place 2; face_test 101 goes here.
 			// return both converted-interface-value, and ok.
-			return c.formatExpr(`__gi_assertType(%e, "%s", 2)`, e.X, c.typeName(t))
+			return c.formatExpr(`__gi_assertType(%e, __type__%s, 2)`, e.X, c.typeName(t))
 			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(t))
 		}
-		// jea, type assertion place 0: only return value, not ok.
-		return c.formatExpr(`__gi_assertType(%e, "%s", 0)`, e.X, c.typeName(t))
+		// jea, type assertion place 0: only return value, without the 2nd 'ok' return.
+		return c.formatExpr(`__gi_assertType(%e, __type__%s, 0)`, e.X, c.typeName(t))
 
 	case *ast.Ident:
 		if e.Name == "_" {
