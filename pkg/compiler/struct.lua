@@ -785,6 +785,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       print("pkgPath='"..pkgPath.."'")
       print("exported='"..tostring(exported).."'")
       print("constructor='"..tostring(constructor).."'")
+      print("elemTyp='"..tostring(elemTyp).."'")
    end
    
    -- we return typ at the end.
@@ -1062,7 +1063,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__ptr.prototype.__gi_get = function()  return this; end
       typ.__ptr.prototype.__gi_set = function(v) typ.__copy(this, v); end
       typ.__init = function(pkgPath, fields)
-         typ.__pkgPath = pkgPath;
+         typ.__pkg = pkgPath;
          typ.__fields = fields;
          for i,f in pairs(fields) do
             if not f.typ.__comparable then
@@ -1255,6 +1256,8 @@ __ptrTypeFromElem = function(elem)
   if typ == nil then
      typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
      elem.__ptr = typ;
+
+     -- this is where we set __elem on the typ.
      typ.__init(elem);
   end
   return typ;
