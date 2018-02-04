@@ -719,7 +719,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				//lhs += " = $pkg." + encodeIdent(o.Name())
 			}
 			size := int64(0)
-			constructor := "null"
+			constructor := "nil"
 			switch t := o.Type().Underlying().(type) {
 			case *types.Struct:
 				pp("incr.go:580, in a Struct")
@@ -752,16 +752,17 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				size = sizes64.Sizeof(t)
 				_ = size
 			}
-			// jea
-			switch o.Type().Underlying().(type) {
-			case *types.Struct:
-				//c.Printf(`%s = __reg:RegisterStruct("%s");`, lhs, o.Name())
-
-			case *types.Interface:
-				//c.Printf(`%s = __reg:RegisterInterface("main","main","%s");`, lhs, o.Name())
-			}
 			c.Printf(`__type__%s = __gi_NewType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t,%s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+
+			// jea: gopherJS can defer init which adds the methods
+			// to the interface, but at the REPL we cannot.
+			switch o.Type().Underlying().(type) {
+			case *types.Interface:
+				pp("just printed __gi_NewType for an interface, now, where are the methods?")
+				// are they just below here...?
+			}
+
 		})
 		allby = append(allby, d.DeclCode...)
 		d.MethodListCode = c.CatchOutput(0, func() {
@@ -786,7 +787,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				t := method.Type().(*types.Signature)
 				// jea: this generates, for example,
-				entry := fmt.Sprintf(`{prop: "%s", name: "%s", pkg: "%s", typ: $funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 					ptrMethods = append(ptrMethods, entry)
 					continue
@@ -795,23 +796,14 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 			if len(methods) > 0 {
 				// jea: the call to c.typeName() will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
-				// TODO: add incrementally O(n) total, instead of current
-				// re-define method set completely every time, which is O(n^2)
-				c.Printf("__type__%s.methods = {%s};", c.typeName(named), strings.Join(methods, ", "))
+
+				c.Printf("__type__%s.__methods = {%s};", c.typeName(named), strings.Join(methods, ", "))
 
 				// S.methods = [{prop: "hi", name: "hi", pkg: "main", typ: $funcType([], [], false)}];
 				//c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
 			}
 			if len(ptrMethods) > 0 {
-				// example:
-				// ptrType.methods = [{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}];
-				// TODO: revisit. once we get the Luar compatible
-				//  struct generation, this will probably be
-				// fully obsolete.
-				//
-				// jea, might need to bring these back, but for
-				//  now we won't define the methods for a type.
-				//c.Printf("%s.methods = [%s];", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+				c.Printf("__type__%s.__methods = {%s};", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
 			}
 		})
 		// jea: leave these off for now. might bring back later.

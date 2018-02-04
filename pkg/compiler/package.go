@@ -146,9 +146,9 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !method.Exported() {
 				pkgPath = method.Pkg().Path()
 			}
-			methods[i] = fmt.Sprintf(`{prop: "%s", name: "%s", pkg: "%s", typ: $funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
+			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
 		}
-		return fmt.Sprintf("[%s]", strings.Join(methods, ", "))
+		return fmt.Sprintf("{%s}", strings.Join(methods, ", "))
 	case *types.Map:
 		return fmt.Sprintf("%s, %s", c.typeName(t.Key()), c.typeName(t.Elem()))
 	case *types.Pointer:
@@ -164,7 +164,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 		for i := range results {
 			results[i] = c.typeName(t.Results().At(i).Type())
 		}
-		return fmt.Sprintf("[%s], [%s], %t", strings.Join(params, ", "), strings.Join(results, ", "), t.Variadic())
+		return fmt.Sprintf("{%s}, {%s}, %t", strings.Join(params, ", "), strings.Join(results, ", "), t.Variadic())
 	case *types.Struct:
 		pkgPath := ""
 		fields := make([]string, t.NumFields())
@@ -173,9 +173,9 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !field.Exported() {
 				pkgPath = field.Pkg().Path()
 			}
-			fields[i] = fmt.Sprintf(`{prop: "%s", name: "%s", anonymous: %t, exported: %t, typ: %s, tag: %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(field.Type()), encodeString(t.Tag(i)))
+			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(field.Type()), encodeString(t.Tag(i)))
 		}
-		return fmt.Sprintf(`"%s", [%s]`, pkgPath, strings.Join(fields, ", "))
+		return fmt.Sprintf(`"%s", {%s}`, pkgPath, strings.Join(fields, ", "))
 	default:
 		panic("invalid type")
 	}
