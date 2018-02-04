@@ -17,10 +17,10 @@ func LoadAndRunTestHelper(t *testing.T, vm *luajit.State, translation []byte) {
 	}
 	err := vm.Call(0, 0)
 	if err != nil {
-		//	fmt.Printf("error: '%v'\n", err)
+		fmt.Printf("error: '%v'\n", err)
 		DumpLuaStack(vm)
 		vm.Pop(1)
-		t.Fatal(err)
+		panic(err)
 	}
 }
 

@@ -195,7 +195,8 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	var joinedParams string
 	primaryFunction := func(isMethod bool, funcRef string) []byte {
 		if fun.Body == nil {
-			return []byte(fmt.Sprintf("\t%s = function() \n\t\t$throwRuntimeError(\"native function not implemented: %s\");\n\t end ;\n", funcRef, o.FullName()))
+			return []byte(fmt.Sprintf("\n\t -- %s -- assumed to be native\n"))
+			//return []byte(fmt.Sprintf("\t%s = function() \n\t\t$throwRuntimeError(\"native function not implemented: %s\");\n\t end ;\n", funcRef, o.FullName()))
 		}
 
 		params, fun := translateFunction(fun.Type, recv, fun.Body, c, sig, info, funcRef, isMethod)

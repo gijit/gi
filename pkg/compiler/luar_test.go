@@ -408,7 +408,7 @@ func testOp(m *myGoTestStruct) string { return "" }
 
 		src = `s := testOp(ts)`
 		translation = inc.Tr([]byte(src))
-		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+		pp("got to here, go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
 		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)

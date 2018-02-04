@@ -510,7 +510,7 @@ function __gi_assertType(value, typ, returnTuple)
    end
    
    if not isInterface then
-      value = value.__gi_val;
+      --jea value = value.__gi_val;
    end
    
    if typ == __gi_jsObjectPtr then
@@ -604,7 +604,8 @@ __gi_ifaceKeyFor = function(x)
       return "nil"
    end
    local c = x.__constructor
-   return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
+   --return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
+   return c.string .. "__gi_" .. c.keyFor(x)
 end
 
 __gi_identity = function(x) return x; end
@@ -619,15 +620,15 @@ __gi_idKey = function(x)
    return tostring(x.__id);
 end
 
-__castableMT = {
-   __name = "__castableMT",
-   __call = function(t, ...)
-      print("__castableMT __call() invoked, with ... = ", ...)
-      local arg0 = ...
-      print("in __castableMT, arg0 is", arg0)
-      t.__gi_val = arg0
-   end
-}
+--__castableMT = {
+--   __name = "__castableMT",
+--    __call = function(t, ...)
+--       print("__castableMT __call() invoked, with ... = ", ...)
+--       local arg0 = ...
+--       print("in __castableMT, arg0 is", arg0)
+--       t.__gi_val = arg0
+--    end
+-- }
 
 __gi_identity = function(x) return x; end
 
@@ -958,8 +959,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       setmetatable(typ, mt)
       typ.__constructor = constructor
       
-      -- setmetatable(typ, __castableMT)
-      --typ = function(v)  this.__gi_val = v; end
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
       typ.__ptr.elem = typ;
@@ -1009,8 +1008,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   
                   if target.prototype[m.prop] ~= nil then return end
                   
-                  target.prototype[m.prop] = function()
-                     local v = this.__gi_val[f.prop];
+                  target.prototype[m.prop] = function(self)
+                     local v = self.__gi_val[f.prop];
                      if f.typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
@@ -1022,7 +1021,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                      return v[m.prop].apply(v, arguments);
                   end
                end
-               fields.forEach(function(f)
+               for i,f in pairs(fields) do
                      if (f.anonymous) then
                         __gi_methodSet(f.typ).forEach(function(m) 
                               synthesizeMethod(typ, m, f);
@@ -1030,9 +1029,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                                                      end)
                         __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
                               synthesizeMethod(typ.__ptr, m, f);
-                                                                   end);
+                                                                   end)
                      end
-               end);
+               end;
          end);
       end
 
