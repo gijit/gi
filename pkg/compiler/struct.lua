@@ -723,7 +723,7 @@ __gi_NewType_constructor_MT = {
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, elemTypForPtr, constructor)
 
    if __debug then
       print("=====================")
@@ -831,7 +831,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          --self.__gi_val = v;
       end      
       typ.__wrapped = true;
-      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
+      local elemTyp = nil
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, elemTyp, function(self, array) 
                                 self.__gi_get = function() return array; end;
                                 self.__gi_set = function(v) typ.__copy(self, v); end
                                 --self.__gi_val = array;
@@ -1012,7 +1013,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = constructor
       
       typ.__wrapped = true;
-      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
+      local elemTyp = nil
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, elemTyp, constructor);
       typ.__ptr.elem = typ;
       typ.__ptr.prototype = {}
       typ.__ptr.prototype.__gi_get = function()  return this; end
@@ -1236,21 +1238,21 @@ end
 --
 -- basic types
 --
-__type__bool = __gi_NewType(1, __gi_kind_bool, "", "bool", "bool", true, "", false, nil);
-__type__int = __gi_NewType(8, __gi_kind_int, "", "int", "int", true, "", false, nil);
-__type__int8 = __gi_NewType(1, __gi_kind_int8, "", "int8", "int8", true, "", false, nil);
-__type__int16 = __gi_NewType(2, __gi_kind_int16, "", "int16", "int16", true, "", false, nil);
-__type__int32 = __gi_NewType(4, __gi_kind_int32, "", "int32", "int32", true, "", false, nil);
-__type__int64 = __gi_NewType(8, __gi_kind_int64, "", "int64", "int64", true, "", false, nil);
-__type__uint = __gi_NewType(8, __gi_kind_uint, "", "uint", "uint", true, "", false, nil);
-__type__uint8 = __gi_NewType(1, __gi_kind_uint8, "", "uint8", "uint8", true, "", false, nil);
-__type__uint16 = __gi_NewType(2, __gi_kind_uint16, "", "uint16", "uint16", true, "", false, nil);
-__type__uint32 = __gi_NewType(4, __gi_kind_uint32, "", "uint32", "uint32", true, "", false, nil);
-__type__uint64 = __gi_NewType(8, __gi_kind_uint64, "", "uint64", "uint64", true, "", false, nil);
-__type__uintptr = __gi_NewType(8, __gi_kind_uintptr, "", "uintptr", "uintptr", true, "", false, nil);
-__type__float32 = __gi_NewType(4, __gi_kind_float32, "", "float32", "float32", true, "", false, nil);
-__type__float64 = __gi_NewType(8, __gi_kind_float64, "", "float64", "float64", true, "", false, nil);
-__type__complex64 = __gi_NewType(8, __gi_kind_complex64, "", "complex64", "complex64", true, "", false, nil);
-__type__complex128 = __gi_NewType(16, __gi_kind_complex128, "", "complex128", "complex128", true, "", false, nil);
-__type__String = __gi_NewType(8, __gi_kind_String, "", "string", "string", true, "", false, nil);
-__type__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Pointer", "unsafe.Pointer", true, "", false, nil);
+__type__bool = __gi_NewType(1, __gi_kind_bool, "", "bool", "bool", true, "", false, nil, nil);
+__type__int = __gi_NewType(8, __gi_kind_int, "", "int", "int", true, "", false, nil, nil);
+__type__int8 = __gi_NewType(1, __gi_kind_int8, "", "int8", "int8", true, "", false, nil, nil);
+__type__int16 = __gi_NewType(2, __gi_kind_int16, "", "int16", "int16", true, "", false, nil, nil);
+__type__int32 = __gi_NewType(4, __gi_kind_int32, "", "int32", "int32", true, "", false, nil, nil);
+__type__int64 = __gi_NewType(8, __gi_kind_int64, "", "int64", "int64", true, "", false, nil, nil);
+__type__uint = __gi_NewType(8, __gi_kind_uint, "", "uint", "uint", true, "", false, nil, nil);
+__type__uint8 = __gi_NewType(1, __gi_kind_uint8, "", "uint8", "uint8", true, "", false, nil, nil);
+__type__uint16 = __gi_NewType(2, __gi_kind_uint16, "", "uint16", "uint16", true, "", false, nil, nil);
+__type__uint32 = __gi_NewType(4, __gi_kind_uint32, "", "uint32", "uint32", true, "", false, nil, nil);
+__type__uint64 = __gi_NewType(8, __gi_kind_uint64, "", "uint64", "uint64", true, "", false, nil, nil);
+__type__uintptr = __gi_NewType(8, __gi_kind_uintptr, "", "uintptr", "uintptr", true, "", false, nil, nil);
+__type__float32 = __gi_NewType(4, __gi_kind_float32, "", "float32", "float32", true, "", false, nil, nil);
+__type__float64 = __gi_NewType(8, __gi_kind_float64, "", "float64", "float64", true, "", false, nil, nil);
+__type__complex64 = __gi_NewType(8, __gi_kind_complex64, "", "complex64", "complex64", true, "", false, nil, nil);
+__type__complex128 = __gi_NewType(16, __gi_kind_complex128, "", "complex128", "complex128", true, "", false, nil, nil);
+__type__String = __gi_NewType(8, __gi_kind_String, "", "string", "string", true, "", false, nil, nil);
+__type__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Pointer", "unsafe.Pointer", true, "", false, nil, nil);
