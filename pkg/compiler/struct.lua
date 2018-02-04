@@ -457,7 +457,7 @@ function __gi_assertType(value, typ, returnTuple)
             
             for j = 1,msl do
                local vm = valueMethodSet[j];
-               if vm.name == tm.name and vm.pkg == tm.pkg and vm.typ == tm.typ then
+               if vm.name == tm.name and vm.__pkg == tm.__pkg and vm.typ == tm.typ then
                   found = true;
                   break;
                end
@@ -489,7 +489,7 @@ function __gi_assertType(value, typ, returnTuple)
             ctor = value.__constructor.string
          end
          error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
-         -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", ctor, typ.string, missingMethod)
+         -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.__ptr("", ctor, typ.string, missingMethod)
          
       elseif returnTuple == 1 then
          return false
@@ -770,7 +770,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
       typ.__wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
                                 this.__gi_val = array;
@@ -795,9 +795,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.copy = function(dst, src) 
             __gi_copyArray(dst, src, 0, 0, src.length, elem);
          end
-         typ.ptr.init(typ);
+         typ.__ptr.init(typ);
          --jea: what to do with this? define a __call somewhere?
-         --jea: Object.defineProperty(typ.ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
+         --jea: Object.defineProperty(typ.__ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
       end
       
 
@@ -827,10 +827,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ = { implementedBy= {}, missingMethodFor= {} };
       typ.keyFor = __gi_ifaceKeyFor;
       typ.init = function(methods) 
-         typ.methods = methods;
-         methods.forEach(function(m) 
-               __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
-         end);
+         typ.__methods = methods;
+         for i,m in pairs(methods) do
+            __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
+         end
       end
       
 
@@ -893,7 +893,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                end
                return newb
             end
-            --is this why our .ptr changing after instantiation? nope.
+            --is this why our .__ptr changing after instantiation? nope.
             setmetatable(self, typ.registered)
             return self
          end
@@ -952,11 +952,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       -- setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
       typ.__wrapped = true;
-      typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
-      typ.ptr.elem = typ;
-      typ.ptr.prototype = {}
-      typ.ptr.prototype.__gi_get = function()  return this; end
-      typ.ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
+      typ.__ptr.elem = typ;
+      typ.__ptr.prototype = {}
+      typ.__ptr.prototype.__gi_get = function()  return this; end
+      typ.__ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
       typ.init = function(pkgPath, fields)
          typ.pkgPath = pkgPath;
          typ.fields = fields;
@@ -992,8 +992,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          fields.forEach(function(f) 
                properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end)
-         typ.ptr.Nil = Object.create(constructor.prototype, properties);
-         typ.ptr.Nil.__gi_val = typ.ptr.Nil;
+         typ.__ptr.Nil = Object.create(constructor.prototype, properties);
+         typ.__ptr.Nil.__gi_val = typ.__ptr.Nil;
          -- methods for embedded fields
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
@@ -1017,10 +1017,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                      if (f.anonymous) then
                         __gi_methodSet(f.typ).forEach(function(m) 
                               synthesizeMethod(typ, m, f);
-                              synthesizeMethod(typ.ptr, m, f);
+                              synthesizeMethod(typ.__ptr, m, f);
                                                      end)
                         __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
-                              synthesizeMethod(typ.ptr, m, f);
+                              synthesizeMethod(typ.__ptr, m, f);
                                                                    end);
                      end
                end);
@@ -1115,8 +1115,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind ==  __gi_kind_Struct then
 
-      --typ.__zero = function() return new typ.ptr(); end
-      typ.__zero = function() return typ.ptr(); end
+      --typ.__zero = function() return new typ.__ptr(); end
+      typ.__zero = function() return typ.__ptr(); end
       
 
    else
@@ -1126,14 +1126,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    typ.__id = __gi_typeIDCounter;
    __gi_typeIDCounter = __gi_typeIDCounter+1;
-   typ.size = size;
+   typ.__size = size;
    typ.kind = kind;
-   typ.str = str;
+   typ.__str = str;
    typ.named = named;
-   typ.pkg = pkgPath;
+   typ.__pkg = pkgPath;
    typ.exported = exported;
-   typ.methods = {};
-   typ.methodSetCache = nil;
+   typ.__methods = {};
+   typ.__methodsetCache = nil;
    typ.comparable = true;
    
    return typ;
