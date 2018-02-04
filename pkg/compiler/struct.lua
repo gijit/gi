@@ -613,7 +613,7 @@ __castableMT = {
    __call = function(t, ...)
       print("__castableMT __call() invoked, with ... = ", ...)
       local arg0 = ...
-      print("arg0 is", arg0)
+      print("in __castableMT, arg0 is", arg0)
       t.__gi_val = arg0
    end
 }
@@ -1142,10 +1142,14 @@ end
 
 -------------------
 
+-- straight port from gohperjs, not done or tested, yet.
+-- It seems to be building from text a type signature...
+-- then making a new type.
+
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
    
-   local typeKey = __gi_mapArray(params, function(p) return p.id; end).join(",") .. "_" .. __gi_mapArray(results, function(r) return r.id; end).join(",") .. "_" .. variadic;
+   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.id; end),",") .. "_" .. variadic;
                                                                                              
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
@@ -1153,11 +1157,11 @@ __gi_funcType = function(params, results, variadic)
     if variadic then
        paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2);
     end
-    local str = "func(" .. paramTypes.join(", ") .. ")";
+    local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
     if #results == 1 then
-      str = str.. " " .. results[0].str;
-      elseif #results > 1 then
-      str = str.. " (" .. __gi_mapArray(results, function(r) return r.str; end).join(", ") .. ")";
+       str = str.. " " .. results[0].str;
+    elseif #results > 1 then
+       str = str.. " (" .. table.concat(__gi_mapArray(results, function(r) return r.str; end),  ", ") .. ")";
     end
     typ = __gi_newType(4, __gi_kind_Func, str, false, "", false, null);
     __gi_funcTypes[typeKey] = typ;
