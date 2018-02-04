@@ -1238,10 +1238,27 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__methods = {};
    typ.__methodsetCache = nil;
    typ.__comparable = true;
+   typ.__shortPkg = shortPkg;
+   typ.__shortTypeName = shortTypeName;
    
    return typ;
 end
 
+-------------------
+
+-- distinct from __gi_ptrTyp in ptr.lua.
+-- port of javascript $ptrType() function
+-- for top level structs (the elem).
+
+__ptrTypeFromElem = function(elem)
+  local typ = elem.__ptr;
+  if typ == nil then
+     typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
+     elem.__ptr = typ;
+     typ.__init(elem);
+  end
+  return typ;
+end
 
 -------------------
 
