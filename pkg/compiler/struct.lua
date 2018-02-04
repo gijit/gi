@@ -656,11 +656,13 @@ __gi_addMethodSynthesizer = function(f)
       f();
       return;
    end
-   __gi_methodSynthesizers.push(f);
+   __gi_methodSynthesizers[#__gi_methodSynthesizers+1] = f;
 end
 
-__gi_synthesizeMethods = function() 
-   __gi_methodSynthesizers.forEach(function(f) f(); end);
+__gi_synthesizeMethods = function()
+   for i,f in pairs(__gi_methodSynthesizers) do
+      f()
+   end
    __gi_methodSynthesizers = nil;
 end
 
