@@ -227,10 +227,11 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
 end
 
 function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
-   local name = shortTypeName -- temporary fix
+   local name = pkgPath.."."..shortTypeName
    if name == nil then
-      error "error in RegisterInterface: shortTypeName  cannot be nil"
+      error "error in RegisterInterface: name  cannot be nil"
    end
+   print("__reg:RegisterInterface called with name="..name)
    
    local methodset = {
       __name="interfaceMethodSet",
@@ -254,7 +255,8 @@ end
 
 __gi_ifaceNil = __reg:RegisterInterface("main","main","nil")
 
-function __reg:IsInterface(name)
+function __reg:IsInterface(typ)
+   local name = typ.__str
    return self.interfaces[name] ~= nil
 end
 
@@ -452,8 +454,11 @@ function __gi_assertType(value, typ, returnTuple)
    local isInterface = false
    local interfaceMethods = nil
    if __reg:IsInterface(typ) then
+      print("__gi_assertType notes that typ is interface")
       isInterface = true
       interfaceMethods = __reg:GetInterface(typ)
+   else
+      print("__gi_assertType notes that typ is NOT an interface")
    end
    
    local ok = false
@@ -507,8 +512,15 @@ function __gi_assertType(value, typ, returnTuple)
             for j = 1,msl do
                local vm = valueMethodSet[j];
                if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
+                  print("found 0000000000 method match")
                   found = true;
                   break;
+               else
+                  -- debug prints:
+                  print("not match, 111111111: tried to compare: vm=")
+                  __st(vm, "vm")
+                  print("not match, 111111111: tried to compare: vm=")
+                  __st(tm, "tm")
                end
             end
             
