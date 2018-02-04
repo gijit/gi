@@ -743,23 +743,29 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
-      typ.__constructor= function(self, v) self.__gi_val = v; end
-      typ.__gi_val = 0LL
+      typ.__constructor= function(self, v)
+         --self.__gi_val = v;
+      end
+      --typ.__gi_val = 0LL
       typ.__wrapped = true;
       typ.__keyFor = __gi_identity;
       
       
    elseif kind == __gi_kind_String then
 
-      typ.__constructor = function(self, v) self.__gi_val = v; end
+      typ.__constructor = function(self, v)
+         --self.__gi_val = v;
+      end
       typ.__wrapped = true;
       typ.__keyFor = function(x) return "__gi_"..x; end
 
    elseif kind ==  __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      typ.__gi_val = 0
-      typ.__constructor = function(self, v) self.__gi_val = v; end
+      --typ.__gi_val = 0
+      typ.__constructor = function(self, v)
+         --self.__gi_val = v;
+      end
       typ.__wrapped = true;      
       typ.__keyFor = function(x) return __gi_floatKey(x) end
       
@@ -768,7 +774,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = function(self, real, imag)
          self.__gi_real = __gi_fround(real);
          self.__gi_imag = __gi_fround(imag);
-         self.__gi_val = self;
+         --self.__gi_val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
@@ -778,19 +784,19 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = function(self, real, imag)      
          self.__gi_real = real;
          self.__gi_imag = imag;
-         self.__gi_val = self;
+         --self.__gi_val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "_" .. x.__gi_imag; end
 
    elseif kind == __gi_kind_Array then
       typ.__constructor = function(self, v)      
-         self.__gi_val = v;
+         --self.__gi_val = v;
       end      
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
                                 self.__gi_get = function() return array; end;
                                 self.__gi_set = function(v) typ.__copy(this, v); end
-                                self.__gi_val = array;
+                                --self.__gi_val = array;
       end);
       typ.__init = function(elem, len) 
          typ.__elem = elem;
@@ -819,7 +825,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Chan then
-      typ = function(v) this.__gi_val = v; end
+      typ = function(self, v)
+         --self.__gi_val = v;
+      end
       typ.__wrapped = true;
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem, sendOnly, recvOnly)
@@ -830,7 +838,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Func then
-      typ = function(v) this.__gi_val = v; end
+      typ = function(self, v)
+         --self.__gi_val = v;
+      end
       typ.__wrapped = true;
       typ.__init = function(params, results, variadic)
          typ.__params = params;
@@ -851,7 +861,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       end
       
    elseif kind == __gi_kind_Map then
-      typ.__constructor = function(self, v) self.__gi_val = v; end
+      typ.__constructor = function(self, v)
+         --self.__gi_val = v;
+      end
       typ.__wrapped = true;
       typ.__init = function(self, key, elem)
          self.__key = key;
@@ -865,7 +877,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          self.__gi_offset = 0;
          self.__gi_length = #array
          self.__gi_capacity = self.__gi_length
-         self.__gi_val = self;
+         --self.__gi_val = self;
       end
       typ.__init = function(self, elem)
          self.__elem = elem;
@@ -974,7 +986,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                end
          end);
          typ.__keyFor = function(x) 
-            local val = x.__gi_val;
+            --local val = x.__gi_val;
             return __gi_mapArray(fields, function(f)
                                     -- jea TODO: fix this back up
                                     --return tostring(f.typ.__keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
@@ -1001,7 +1013,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end)
          typ.__ptr.Nil = Object.create(constructor.prototype, properties);
-         typ.__ptr.Nil.__gi_val = typ.__ptr.Nil;
+         --typ.__ptr.Nil.__gi_val = typ.__ptr.Nil;
          -- methods for embedded fields
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
@@ -1009,15 +1021,18 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   if target.prototype[m.prop] ~= nil then return end
                   
                   target.prototype[m.prop] = function(self)
-                     local v = self.__gi_val[f.prop];
+                     -- jea, temp comment out to figure spurious __gi_val source.
+                     --local v = self.__gi_val[f.prop];
                      if f.typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
                      end
-                     if v.__gi_val == nil then
-                        --v = new f.typ(v);
-                        v = f.typ(v);
-                     end
+                     -- jea, temp comment out to figure where spurious __gi_val
+                     -- is comfing from
+                     --if v.__gi_val == nil then
+                     --   --v = new f.typ(v);
+                     --   v = f.typ(v);
+                     --end
                      return v[m.prop].apply(v, arguments);
                   end
                end
