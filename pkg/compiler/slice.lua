@@ -325,11 +325,6 @@ function __copySlice(dest, src)
    return int(len)
 end
 
-function __gi_clone(a, typ)
-   error("__gi_clone called: not done! TODO: finish me!")
-   return a
-end
-
 function __subslice(a, beg, endx)
    --print("top of __subslice, beg=",beg, " endx=", endx)
    

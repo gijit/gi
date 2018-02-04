@@ -425,17 +425,17 @@ function __gi_assertType(value, typ, returnTuple)
       ok = false;
       
    elseif not isInterface then
-      ok = value.constructor == typ;
+      ok = value.__constructor == typ;
       
    else
       -- jea, what here?
-      --local valueTypeString = value.constructor.string;
-      local valueTypeString = value.constructor
+      --local valueTypeString = value.__constructor.string;
+      local valueTypeString = value.__constructor
       ok = typ.implementedBy[valueTypeString];
       if ok == nil then
          
          ok = true;
-         local valueMethodSet = __gi_methodSet(value.constructor);
+         local valueMethodSet = __gi_methodSet(value.__constructor);
          
          local ni = #interfaceMethods
          
@@ -482,11 +482,11 @@ function __gi_assertType(value, typ, returnTuple)
       if returnTuple == 0 then
          
          local ctor
-         -- (value == __gi_ifaceNil ? "" : value.constructor.string)
+         -- (value == __gi_ifaceNil ? "" : value.__constructor.string)
          if value == __gi_ifaceNil then 
             ctor = ""
          else
-            ctor = value.constructor.string
+            ctor = value.__constructor.string
          end
          error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
          -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.ptr("", ctor, typ.string, missingMethod)
@@ -592,7 +592,7 @@ __gi_ifaceKeyFor = function(x)
    if x == __gi_ifaceNil then
       return "nil"
    end
-   local c = x.constructor
+   local c = x.__constructor
    return c.string .. "__gi_" .. c.keyFor(x.__gi_val)
 end
 
@@ -601,11 +601,11 @@ __gi_identity = function(x) return x; end
 __gi_typeIDCounter = 0;
 
 __gi_idKey = function(x) 
-   if x.__gi_id == nil then
+   if x.__id == nil then
       __gi_idCounter = __gi_idCounter + 1
-      x.__gi_id = __gi_idCounter;
+      x.__id = __gi_idCounter;
    end
-   return tostring(x.__gi_id);
+   return tostring(x.__id);
 end
 
 __castableMT = {
@@ -658,9 +658,9 @@ __gi_NewType_constructor_MT = {
       print("start st")
       __st({...}, "__gi_NewType_constructor_MT.dots")
       print("end st")
-      if self ~= nil and self.constructor ~= nil then
-         print("calling self.constructor!")
-         return self.constructor(self, ...)
+      if self ~= nil and self.__constructor ~= nil then
+         print("calling self.__constructor!")
+         return self.__constructor(self, ...)
       end
       return self
    end
@@ -722,27 +722,27 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
-      typ = {__gi_val=0LL, wrapped=true, keyFor=__gi_identity};
+      typ = {__gi_val=0LL, __wrapped=true, keyFor=__gi_identity};
       setmetatable(typ, __castableMT);
       -- gopherjs:
       -- typ = function(v) this.__gi_val = v; end
-      -- typ.wrapped = true;
+      -- typ.__wrapped = true;
       -- typ.keyFor = __gi_identity;
       
       
    elseif kind == __gi_kind_String then
 
-      typ = {__gi_val, wrapped=true};
+      typ = {__gi_val, __wrapped=true};
       setmetatable(typ, __castableMT);
       -- typ = function(v) this.__gi_val = v; end
-      -- typ.wrapped = true;
+      -- typ.__wrapped = true;
       typ.keyFor = function(x) return "__gi_"..x; end
       
 
    elseif kind ==  __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      typ = {__gi_val, wrapped=true};
+      typ = {__gi_val, __wrapped=true};
       setmetatable(typ, __castableMT);         
       -- typ = function(v) { this.__gi_val = v; };
       typ.keyFor = function(x) return __gi_floatKey(x) end
@@ -769,7 +769,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_Array then
       setmetatable(typ, __castableMT)
       --typ = function(v) this.__gi_val = v; end
-      typ.wrapped = true;
+      typ.__wrapped = true;
       typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
                                 this.__gi_set = function(v) typ.copy(this, v); end
@@ -803,7 +803,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind == __gi_kind_Chan then
       typ = function(v) this.__gi_val = v; end
-      typ.wrapped = true;
+      typ.__wrapped = true;
       typ.keyFor = __gi_idKey;
       typ.init = function(elem, sendOnly, recvOnly)
          typ.elem = elem;
@@ -814,7 +814,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind == __gi_kind_Func then
       typ = function(v) this.__gi_val = v; end
-      typ.wrapped = true;
+      typ.__wrapped = true;
       typ.init = function(params, results, variadic)
          typ.params = params;
          typ.results = results;
@@ -836,7 +836,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind == __gi_kind_Map then
       typ = function(v) this.__gi_val = v; end
-      typ.wrapped = true;
+      typ.__wrapped = true;
       typ.init = function(key, elem)
          typ.key = key;
          typ.elem = elem;
@@ -846,7 +846,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_Slice then
       typ.typFuc = function(self, array)
          -- jea comment out for now:
-         --if array.constructor ~= typ.nativeArray then
+         --if array.__constructor ~= typ.nativeArray then
          --   --array = new typ.nativeArray(array);
          --   array = typ.nativeArray(array);
          --end
@@ -880,10 +880,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             print("end st")
 
             -- typ captured by closure.
-            if typ ~= nil and typ.constructor ~= nil then
-               print("calling ptr self.constructor!")
-               local newb = typ.constructor(self, ...)
-               print("done calling ptr typ.constructor!")               
+            if typ ~= nil and typ.__constructor ~= nil then
+               print("calling ptr self.__constructor!")
+               local newb = typ.__constructor(self, ...)
+               print("done calling ptr typ.__constructor!")               
                if typ.registered ~= nil then
                   print("after ptr self.ctor, setting typ.registered as metatable.")
                   setmetatable(newb, typ.registered)
@@ -899,10 +899,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       }
       setmetatable(typ, mt)
-      print("setting Ptr typ.constructor to construction: "..tostring(constructor))
-      typ.constructor = constructor
+      print("setting Ptr typ.__constructor to construction: "..tostring(constructor))
+      typ.__constructor = constructor
       
-      --      typ.constructor = constructor or function(self, getter, setter, target)
+      --      typ.__constructor = constructor or function(self, getter, setter, target)
       --            print("jea debug: top of kind_Ptr constructor, self=", tostring(self))
       --            self.__gi_get = getter;
       --            self.__gi_set = setter;
@@ -914,7 +914,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.keyFor = __gi_idKey;
       typ.init = function(elem) 
          typ.elem = elem;
-         typ.wrapped = (elem.kind == __gi_kind_Array);
+         typ.__wrapped = (elem.kind == __gi_kind_Array);
          typ.Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
 
@@ -932,9 +932,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             print("start st")
             __st({...},"Struct.mt.__call.dots")
             print("end st")
-            if self ~= nil and self.constructor ~= nil then
-               print("calling self.constructor!")
-               local newb = self.constructor(self, ...)
+            if self ~= nil and self.__constructor ~= nil then
+               print("calling self.__constructor!")
+               local newb = self.__constructor(self, ...)
                if typ.registered ~= nil then
                   setmetatable(newb, typ.registered)
                else
@@ -947,11 +947,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       }
       setmetatable(typ, mt)
-      typ.constructor = constructor
+      typ.__constructor = constructor
       
       -- setmetatable(typ, __castableMT)
       --typ = function(v)  this.__gi_val = v; end
-      typ.wrapped = true;
+      typ.__wrapped = true;
       typ.ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
       typ.ptr.elem = typ;
       typ.ptr.prototype = {}
@@ -1041,7 +1041,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    if kind == __gi_kind_bool or
    kind == __gi_kind_Map then
       
-      typ.zero = function() return false; end
+      typ.__zero = function() return false; end
       
       
    elseif kind == __gi_kind_int or
@@ -1057,66 +1057,66 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       kind == __gi_kind_uintptr or
    kind == __gi_kind_UnsafePointer then
       
-      typ.zero = function() return 0LL; end
+      typ.__zero = function() return 0LL; end
       
 
    elseif kind == __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      typ.zero = function() return 0; end
+      typ.__zero = function() return 0; end
       
       
    elseif kind ==  __gi_kind_String then
-      typ.zero = function() return ""; end
+      typ.__zero = function() return ""; end
       
 
    elseif kind ==  __gi_kind_complex64 or
    kind ==  __gi_kind_complex128 then
       
       -- hmm... how to translate this new typ(0, 0)from javascript?
-      -- local zero = new typ(0, 0);
-      typ.zero = function() return 0,0; end
+      -- local __zero = new typ(0, 0);
+      typ.__zero = function() return 0,0; end
       
       
    elseif kind ==  __gi_kind_Ptr or
    kind ==  __gi_kind_Slice then
       
-      typ.zero = function() return typ.Nil; end
+      typ.__zero = function() return typ.Nil; end
       
 
    elseif kind ==  __gi_kind_Chan then
       
-      typ.zero = function() return __gi_chanNil; end
+      typ.__zero = function() return __gi_chanNil; end
       
 
    elseif kind ==  __gi_kind_Func then
       
-      typ.zero = function() return __gi_throwNilPointerError; end
+      typ.__zero = function() return __gi_throwNilPointerError; end
       
 
    elseif kind ==  __gi_kind_Interface then
       
-      typ.zero = function() return __gi_ifaceNil; end
+      typ.__zero = function() return __gi_ifaceNil; end
       
 
    elseif kind ==  __gi_kind_Array then
       
-      typ.zero = function() 
+      typ.__zero = function() 
          local arrayClass = __gi_nativeArray(typ.elem.kind);
          if arrayClass ~= Array then
             --return new arrayClass(typ.len)
             return arrayClass(typ.len)
          end
          --local array = new Array(typ.len)
-         return  _gi_NewArray({}, typ.elem.kind, typ.len, typ.elem.zero())
+         return  _gi_NewArray({}, typ.elem.kind, typ.len, typ.elem.__zero())
       end
       
       
 
    elseif kind ==  __gi_kind_Struct then
 
-      --typ.zero = function() return new typ.ptr(); end
-      typ.zero = function() return typ.ptr(); end
+      --typ.__zero = function() return new typ.ptr(); end
+      typ.__zero = function() return typ.ptr(); end
       
 
    else
@@ -1124,7 +1124,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       error("invalid kind: "..kind)
    end
 
-   typ.id = __gi_typeIDCounter;
+   typ.__id = __gi_typeIDCounter;
    __gi_typeIDCounter = __gi_typeIDCounter+1;
    typ.size = size;
    typ.kind = kind;
@@ -1149,7 +1149,7 @@ end
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
    
-   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.id; end),",") .. "_" .. variadic;
+   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.__id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.__id; end),",") .. "_" .. variadic;
                                                                                              
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
