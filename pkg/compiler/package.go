@@ -245,7 +245,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 		pp("WHOPPER! code is now '%s'", code.String())
 
-		//code.Write(primaryFunction(false, typeName + ".ptr.prototype." + funName))
+		//code.Write(primaryFunction(false, typeName + ".__ptr.__prototype." + funName))
 
 		//fmt.Fprintf(code, "\t%s.prototype.%s = function(%s) { return this.$val.%s(%s); };\n", typeName, funName, joinedParams, funName, joinedParams)
 		return code.Bytes()

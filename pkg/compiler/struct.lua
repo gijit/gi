@@ -431,7 +431,7 @@ function __gi_assertType(value, typ, returnTuple)
       -- jea, what here?
       --local valueTypeString = value.__constructor.string;
       local valueTypeString = value.__constructor
-      ok = typ.implementedBy[valueTypeString];
+      ok = typ.__implementedBy[valueTypeString];
       if ok == nil then
          
          ok = true;
@@ -472,7 +472,7 @@ function __gi_assertType(value, typ, returnTuple)
          end
          
          -- can't cache this, repl may change it.
-         --typ.implementedBy[valueTypeString] = ok;
+         --typ.__implementedBy[valueTypeString] = ok;
          
       end
    end
@@ -489,7 +489,7 @@ function __gi_assertType(value, typ, returnTuple)
             ctor = value.__constructor.string
          end
          error("runtime.TypeAssertionError."..typ.str.." is missing '"..missingMethod.."'")
-         -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.__ptr("", ctor, typ.string, missingMethod)
+         -- __gi_panic(new __gi_packages["runtime"].TypeAssertionError.__ptr("", ctor, typ.__str, missingMethod)
          
       elseif returnTuple == 1 then
          return false
@@ -689,20 +689,20 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    if kind == __gi_kind_Struct then
       
-      typ.registered = __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
+      typ.__registered = __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
       -- replace typ with the props for a struct
-      typ = typ.registered[__gi_PropsKey]
+      typ = typ.__registered[__gi_PropsKey]
       
    elseif kind == __gi_kind_Interface then
 
-      typ.registered = __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
+      typ.__registered = __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
       -- replace typ with the props for the interface
-      typ = typ.registered[__gi_PropsKey]
+      typ = typ.__registered[__gi_PropsKey]
       
    elseif kind == __gi_kind_Ptr then
       
-      typ.registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
-      print("typ.registered back from __reg:GetPointeeMethodset = ", typ.registered)
+      typ.__registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
+      print("typ.__registered back from __reg:GetPointeeMethodset = ", typ.__registered)
 
    else
       setmetatable(typ, __gi_type_MT) -- make it callable
@@ -727,7 +727,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       -- gopherjs:
       -- typ = function(v) this.__gi_val = v; end
       -- typ.__wrapped = true;
-      -- typ.keyFor = __gi_identity;
+      -- typ.__keyFor = __gi_identity;
       
       
    elseif kind == __gi_kind_String then
@@ -736,7 +736,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       setmetatable(typ, __castableMT);
       -- typ = function(v) this.__gi_val = v; end
       -- typ.__wrapped = true;
-      typ.keyFor = function(x) return "__gi_"..x; end
+      typ.__keyFor = function(x) return "__gi_"..x; end
       
 
    elseif kind ==  __gi_kind_float32 or
@@ -745,7 +745,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ = {__gi_val, __wrapped=true};
       setmetatable(typ, __castableMT);         
       -- typ = function(v) { this.__gi_val = v; };
-      typ.keyFor = function(x) return __gi_floatKey(x) end
+      typ.__keyFor = function(x) return __gi_floatKey(x) end
       
       
    elseif kind == __gi_kind_complex64 then
@@ -754,7 +754,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          this.__gi_imag = __gi_fround(imag);
          this.__gi_val = this;
       end
-      typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
+      typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
 
    elseif kind == __gi_kind_complex128 then
@@ -763,7 +763,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          this.__gi_imag = imag;
          this.__gi_val = this;
       end
-      typ.keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
+      typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
 
    elseif kind == __gi_kind_Array then
@@ -772,14 +772,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
                                 this.__gi_get = function() return array; end;
-                                this.__gi_set = function(v) typ.copy(this, v); end
+                                this.__gi_set = function(v) typ.__copy(this, v); end
                                 this.__gi_val = array;
       end);
-      typ.init = function(elem, len) 
-         typ.elem = elem;
-         typ.len = len;
-         typ.comparable = elem.comparable;
-         typ.keyFor = function(x)
+      typ.__init = function(elem, len) 
+         typ.__elem = elem;
+         typ.__len = len;
+         typ.__comparable = elem.__comparable;
+         typ.__keyFor = function(x)
 
             -- js:
             -- return Array.prototype.join.call($mapArray(x, function(e) {
@@ -792,10 +792,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                                                               return tostring(elem.keyFor(e))
                                                           end), "__gi_")
          end
-         typ.copy = function(dst, src) 
+         typ.__copy = function(dst, src) 
             __gi_copyArray(dst, src, 0, 0, src.length, elem);
          end
-         typ.__ptr.init(typ);
+         typ.__ptr.__init(typ);
          --jea: what to do with this? define a __call somewhere?
          --jea: Object.defineProperty(typ.__ptr.nil, "nilCheck", { get: __gi_throwNilPointerError });
       end
@@ -804,29 +804,29 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_Chan then
       typ = function(v) this.__gi_val = v; end
       typ.__wrapped = true;
-      typ.keyFor = __gi_idKey;
-      typ.init = function(elem, sendOnly, recvOnly)
-         typ.elem = elem;
-         typ.sendOnly = sendOnly;
-         typ.recvOnly = recvOnly;
+      typ.__keyFor = __gi_idKey;
+      typ.__init = function(elem, sendOnly, recvOnly)
+         typ.__elem = elem;
+         typ.__sendOnly = sendOnly;
+         typ.__recvOnly = recvOnly;
       end
       
 
    elseif kind == __gi_kind_Func then
       typ = function(v) this.__gi_val = v; end
       typ.__wrapped = true;
-      typ.init = function(params, results, variadic)
-         typ.params = params;
-         typ.results = results;
-         typ.variadic = variadic;
-         typ.comparable = false;
+      typ.__init = function(params, results, variadic)
+         typ.__params = params;
+         typ.__results = results;
+         typ.__variadic = variadic;
+         typ.__comparable = false;
       end
       
 
    elseif kind == __gi_kind_Interface then
       typ = { implementedBy= {}, missingMethodFor= {} };
-      typ.keyFor = __gi_ifaceKeyFor;
-      typ.init = function(methods) 
+      typ.__keyFor = __gi_ifaceKeyFor;
+      typ.__init = function(methods) 
          typ.__methods = methods;
          for i,m in pairs(methods) do
             __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
@@ -837,18 +837,18 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_Map then
       typ = function(v) this.__gi_val = v; end
       typ.__wrapped = true;
-      typ.init = function(key, elem)
-         typ.key = key;
-         typ.elem = elem;
-         typ.comparable = false;
+      typ.__init = function(key, elem)
+         typ.__key = key;
+         typ.__elem = elem;
+         typ.__comparable = false;
       end
       
    elseif kind == __gi_kind_Slice then
-      typ.typFuc = function(self, array)
+      typ.__typFuc = function(self, array)
          -- jea comment out for now:
-         --if array.__constructor ~= typ.nativeArray then
-         --   --array = new typ.nativeArray(array);
-         --   array = typ.nativeArray(array);
+         --if array.__constructor ~= typ.__nativeArray then
+         --   --array = new typ.__nativeArray(array);
+         --   array = typ.__nativeArray(array);
          --end
          self.__gi_array = array;
          self.__gi_offset = 0;
@@ -856,12 +856,12 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          self.__gi_capacity = array.length;
          self.__gi_val = self;
       end
-      typ.init = function(elem)
-         typ.elem = elem;
-         typ.comparable = false;
-         typ.nativeArray = __gi_nativeArray(elem.kind);
-         --typ.nil = new typ([]);
-         typ.Nil = typ({});
+      typ.__init = function(elem)
+         typ.__elem = elem;
+         typ.__comparable = false;
+         typ.__nativeArray = __gi_nativeArray(elem.__kind);
+         --typ.__nil = new typ([]);
+         typ.__Nil = typ({});
       end
 
    --------------------------------------------
@@ -884,17 +884,17 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                print("calling ptr self.__constructor!")
                local newb = typ.__constructor(self, ...)
                print("done calling ptr typ.__constructor!")               
-               if typ.registered ~= nil then
-                  print("after ptr self.ctor, setting typ.registered as metatable.")
-                  setmetatable(newb, typ.registered)
+               if typ.__registered ~= nil then
+                  print("after ptr self.ctor, setting typ.__registered as metatable.")
+                  setmetatable(newb, typ.__registered)
                else
-                  print("after ptr self.ctor, setting typ.registered was nil")
+                  print("after ptr self.ctor, setting typ.__registered was nil")
                   setmetatable(newb, __gi_NewType_constructor_MT)
                end
                return newb
             end
             --is this why our .__ptr changing after instantiation? nope.
-            setmetatable(self, typ.registered)
+            setmetatable(self, typ.__registered)
             return self
          end
       }
@@ -911,11 +911,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       --            return self
       --         end
       
-      typ.keyFor = __gi_idKey;
-      typ.init = function(elem) 
-         typ.elem = elem;
-         typ.__wrapped = (elem.kind == __gi_kind_Array);
-         typ.Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
+      typ.__keyFor = __gi_idKey;
+      typ.__init = function(elem) 
+         typ.__elem = elem;
+         typ.__wrapped = (elem.__kind == __gi_kind_Array);
+         typ.__Nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
 
    --------------------------------------------
@@ -935,14 +935,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             if self ~= nil and self.__constructor ~= nil then
                print("calling self.__constructor!")
                local newb = self.__constructor(self, ...)
-               if typ.registered ~= nil then
-                  setmetatable(newb, typ.registered)
+               if typ.__registered ~= nil then
+                  setmetatable(newb, typ.__registered)
                else
                   setmetatable(newb, __gi_NewType_constructor_MT)                  
                end
                return newb
             end
-            setmetatable(self, typ.registered)
+            setmetatable(self, typ.__registered)
             return self
          end
       }
@@ -956,31 +956,31 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__ptr.elem = typ;
       typ.__ptr.prototype = {}
       typ.__ptr.prototype.__gi_get = function()  return this; end
-      typ.__ptr.prototype.__gi_set = function(v) typ.copy(this, v); end
-      typ.init = function(pkgPath, fields)
-         typ.pkgPath = pkgPath;
-         typ.fields = fields;
+      typ.__ptr.prototype.__gi_set = function(v) typ.__copy(this, v); end
+      typ.__init = function(pkgPath, fields)
+         typ.__pkgPath = pkgPath;
+         typ.__fields = fields;
          fields.forEach(function(f) 
-               if not f.typ.comparable then
-                  typ.comparable = false;
+               if not f.typ.__comparable then
+                  typ.__comparable = false;
                end
          end);
-         typ.keyFor = function(x) 
+         typ.__keyFor = function(x) 
             local val = x.__gi_val;
             return __gi_mapArray(fields, function(f)
                                     -- jea TODO: fix this back up
-                                    --return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-                                    return tostring(f.typ.keyFor(val[f.prop]))
+                                    --return tostring(f.typ.__keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
+                                    return tostring(f.typ.__keyFor(val[f.prop]))
             end).join("__gi_");
          end
-         typ.copy = function(dst, src) 
+         typ.__copy = function(dst, src) 
             for i = 0,fields.length-1 do
                local f = fields[i];
-               local knd = f.typ.kind
+               local knd = f.typ.__kind
                if knd ==  __gi_kind_Array then
                   -- do nothing
                elseif knd == __gi_kind_Struct then
-                  f.typ.copy(dst[f.prop], src[f.prop]);
+                  f.typ.__copy(dst[f.prop], src[f.prop]);
                else
                   -- default:
                   dst[f.prop] = src[f.prop];
@@ -1081,7 +1081,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_Ptr or
    kind ==  __gi_kind_Slice then
       
-      typ.__zero = function() return typ.Nil; end
+      typ.__zero = function() return typ.__Nil; end
       
 
    elseif kind ==  __gi_kind_Chan then
@@ -1102,13 +1102,13 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_Array then
       
       typ.__zero = function() 
-         local arrayClass = __gi_nativeArray(typ.elem.kind);
+         local arrayClass = __gi_nativeArray(typ.__elem.__kind);
          if arrayClass ~= Array then
-            --return new arrayClass(typ.len)
-            return arrayClass(typ.len)
+            --return new arrayClass(typ.__len)
+            return arrayClass(typ.__len)
          end
-         --local array = new Array(typ.len)
-         return  _gi_NewArray({}, typ.elem.kind, typ.len, typ.elem.__zero())
+         --local array = new Array(typ.__len)
+         return  _gi_NewArray({}, typ.__elem.__kind, typ.__len, typ.__elem.__zero())
       end
       
       
@@ -1127,14 +1127,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__id = __gi_typeIDCounter;
    __gi_typeIDCounter = __gi_typeIDCounter+1;
    typ.__size = size;
-   typ.kind = kind;
+   typ.__kind = kind;
    typ.__str = str;
-   typ.named = named;
+   typ.__named = named;
    typ.__pkg = pkgPath;
-   typ.exported = exported;
+   typ.__exported = exported;
    typ.__methods = {};
    typ.__methodsetCache = nil;
-   typ.comparable = true;
+   typ.__comparable = true;
    
    return typ;
 end
@@ -1165,7 +1165,7 @@ __gi_funcType = function(params, results, variadic)
     end
     typ = __gi_newType(4, __gi_kind_Func, str, false, "", false, null);
     __gi_funcTypes[typeKey] = typ;
-    typ.init(params, results, variadic);
+    typ.__init(params, results, variadic);
   end
   return typ;
 end
