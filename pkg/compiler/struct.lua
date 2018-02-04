@@ -33,6 +33,14 @@ __curpkg = {
 
 -- st or showtable, a helper.
 function __st(t, name, indent, quiet)
+   if t == nil then
+      local s = "<nil>"
+      if not quiet then
+         print(s)
+      end
+      return s
+   end
+   
    local k = 0
    local name = name or ""
    local namec = name
@@ -242,7 +250,7 @@ function __reg:GetInterface(name)
 end
 
 function __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
-   local goal = string.sub(shortTypeName, 2)
+   local goal = string.sub(shortTypeName, 2) -- remove leading dot.
    print("top of __reg:GetPointeeMethodset, goal='"..goal.."' are here are structs:")
    __st(self.structs, "__reg.structs")
    
@@ -320,7 +328,7 @@ end
 -- siName is the name of the struct or interface.
 --
 function __reg:AddMethod(si, siName, methodName, method)
-   --print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
+   print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
    -- lookup the methodset
    local methodset
    if si == "struct" then
@@ -335,6 +343,7 @@ function __reg:AddMethod(si, siName, methodName, method)
    -- new?
    if methodset[methodName] ~= nil then
       -- not new
+      print("methodName "..methodName.." was not new, val is:", methodset[methodName])
    else
       -- new, count it.
       local props = methodset[__gi_PropsKey]
@@ -795,7 +804,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
                                 self.__gi_get = function() return array; end;
-                                self.__gi_set = function(v) typ.__copy(this, v); end
+                                self.__gi_set = function(v) typ.__copy(self, v); end
                                 --self.__gi_val = array;
       end);
       typ.__init = function(elem, len) 

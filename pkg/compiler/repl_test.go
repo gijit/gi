@@ -433,8 +433,8 @@ func Test020StructTypeDeclarations(t *testing.T) {
 	cv.Convey("declaring a struct with `type A struct{}` should compile and pass type checking, and register a prototype", t, func() {
 
 		code := `type A struct{}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-       A = __reg:RegisterStruct("A","main","main");
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldStartWithModuloWhiteSpace, `
+       __type__A = __gi_NewType(0, __gi_kind_Struct, "main", "A", "main.A", true, "main",
 `)
 
 	})
@@ -449,8 +449,8 @@ func Test021StructTypeValues(t *testing.T) {
 	cv.Convey("Given `type A struct{}`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
 		code := `type A struct{}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-    A = __reg:RegisterStruct("A","main","main");
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldStartWithModuloWhiteSpace, `
+       __type__A = __gi_NewType(0, __gi_kind_Struct, "main", "A", "main.A", true, "main",
 `)
 		code = `var a A`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
