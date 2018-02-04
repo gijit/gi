@@ -1,5 +1,7 @@
 -- structs and interfaces
 
+__debug = false
+
 -- general note:
 -- the convention in translating gopherjs javascript's '$'
 -- is to replace the '$' prefix with "__gi_"
@@ -466,7 +468,7 @@ function __gi_assertType(value, typ, returnTuple)
             
             for j = 1,msl do
                local vm = valueMethodSet[j];
-               if vm.name == tm.name and vm.__pkg == tm.__pkg and vm.typ == tm.typ then
+               if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
                   found = true;
                   break;
                end
@@ -684,20 +686,22 @@ __gi_NewType_constructor_MT = {
 --
 function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, constructor)
 
-   print("=====================")
-   print("top of __gi_NewType()")
-   print("=====================")
-   
-   print("size='"..tostring(size).."'")
-   print("kind='"..tostring(kind).."'")
-   print("kind2str='".. __kind2str[kind].."'")
-   print("str='"..str.."'")
-   print("shortTypeName='"..shortTypeName.."'")
-   print("named='"..tostring(named).."'")
-   print("shortPkg='".. shortPkg.."'")
-   print("pkgPath='"..pkgPath.."'")
-   print("exported='"..tostring(exported).."'")
-   print("constructor='"..tostring(constructor).."'")
+   if __debug then
+      print("=====================")
+      print("top of __gi_NewType()")
+      print("=====================")
+      
+      print("size='"..tostring(size).."'")
+      print("kind='"..tostring(kind).."'")
+      print("kind2str='".. __kind2str[kind].."'")
+      print("str='"..str.."'")
+      print("shortTypeName='"..shortTypeName.."'")
+      print("named='"..tostring(named).."'")
+      print("shortPkg='".. shortPkg.."'")
+      print("pkgPath='"..pkgPath.."'")
+      print("exported='"..tostring(exported).."'")
+      print("constructor='"..tostring(constructor).."'")
+   end
    
    -- we return typ at the end.
    local typ = {}
@@ -773,18 +777,19 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = function(self, real, imag)      
          self.__gi_real = real;
          self.__gi_imag = imag;
-         self.__gi_val = this;
+         self.__gi_val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "_" .. x.__gi_imag; end
 
    elseif kind == __gi_kind_Array then
-      setmetatable(typ, __castableMT)
-      --typ = function(v) this.__gi_val = v; end
+      typ.__constructor = function(self, v)      
+         self.__gi_val = v;
+      end      
       typ.__wrapped = true;
-      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(array) 
-                                this.__gi_get = function() return array; end;
-                                this.__gi_set = function(v) typ.__copy(this, v); end
-                                this.__gi_val = array;
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
+                                self.__gi_get = function() return array; end;
+                                self.__gi_set = function(v) typ.__copy(this, v); end
+                                self.__gi_val = array;
       end);
       typ.__init = function(elem, len) 
          typ.__elem = elem;
@@ -835,7 +840,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Interface then
-      typ = { implementedBy= {}, missingMethodFor= {} };
+      typ = { __implementedBy= {}, __missingMethodFor= {} };
       typ.__keyFor = __gi_ifaceKeyFor;
       typ.__init = function(methods) 
          typ.__methods = methods;
@@ -844,35 +849,28 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       end
       
-
    elseif kind == __gi_kind_Map then
-      typ = function(v) this.__gi_val = v; end
+      typ.__constructor = function(self, v) self.__gi_val = v; end
       typ.__wrapped = true;
-      typ.__init = function(key, elem)
-         typ.__key = key;
-         typ.__elem = elem;
-         typ.__comparable = false;
+      typ.__init = function(self, key, elem)
+         self.__key = key;
+         self.__elem = elem;
+         self.__comparable = false;
       end
       
    elseif kind == __gi_kind_Slice then
-      typ.__typFuc = function(self, array)
-         -- jea comment out for now:
-         --if array.__constructor ~= typ.__nativeArray then
-         --   --array = new typ.__nativeArray(array);
-         --   array = typ.__nativeArray(array);
-         --end
+      typ.__constructor = function(self, array)
          self.__gi_array = array;
          self.__gi_offset = 0;
-         self.__gi_length = array.length;
-         self.__gi_capacity = array.length;
+         self.__gi_length = #array
+         self.__gi_capacity = self.__gi_length
          self.__gi_val = self;
       end
-      typ.__init = function(elem)
-         typ.__elem = elem;
-         typ.__comparable = false;
-         typ.__nativeArray = __gi_nativeArray(elem.__kind);
-         --typ.__nil = new typ([]);
-         typ.__Nil = typ({});
+      typ.__init = function(self, elem)
+         self.__elem = elem;
+         self.__comparable = false;
+         self.__nativeArray = __gi_nativeArray(elem.__kind);
+         self.__Nil = typ({});
       end
 
    --------------------------------------------
