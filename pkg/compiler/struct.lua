@@ -1233,6 +1233,15 @@ end
 
 -------------------
 
+function __gi_mapArray(array, f)
+   local na = #array
+   local newArray = new array.__constructor(na);
+   for i = 0,na-1 do
+      newArray[i] = f(array[i]);
+   end
+   return newArray;
+end
+
 -- straight port from gohperjs, not done or tested, yet.
 -- It seems to be building from text a type signature...
 -- then making a new type.

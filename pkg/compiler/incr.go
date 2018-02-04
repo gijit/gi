@@ -787,7 +787,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				t := method.Type().(*types.Signature)
 				// jea: this generates, for example,
-				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 					ptrMethods = append(ptrMethods, entry)
 					continue

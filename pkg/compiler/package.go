@@ -146,7 +146,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !method.Exported() {
 				pkgPath = method.Pkg().Path()
 			}
-			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
+			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __gi_funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(methods, ", "))
 	case *types.Map:
