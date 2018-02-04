@@ -306,3 +306,18 @@ func Test019MoreVsSyntaxErr(t *testing.T) {
 
 	})
 }
+
+func Test020MoreVsSyntaxErr(t *testing.T) {
+
+	cv.Convey("multiline raw strings need more input", t, func() {
+
+		var eof, syntaxErr, empty bool
+
+		src := " a := `"
+		pp("expect need more: `%s`", src)
+		eof, syntaxErr, empty = TopLevelParseGoSource([]byte(src))
+		cv.So(syntaxErr, cv.ShouldBeFalse)
+		cv.So(eof, cv.ShouldBeTrue)
+		cv.So(empty, cv.ShouldBeFalse)
+	})
+}

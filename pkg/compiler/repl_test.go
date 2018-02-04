@@ -1114,3 +1114,8 @@ f();
 		LuaMustInt64(vm, "a", 2)
 	})
 }
+
+// TODO: multiline strings
+// a := `
+//    multi
+//  line`

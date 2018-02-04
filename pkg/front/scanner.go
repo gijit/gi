@@ -551,6 +551,7 @@ func (s *scanner) rawString() {
 			break
 		}
 		if r < 0 {
+			panic(ErrMoreInput)
 			s.errh(s.line, s.col, "string not terminated")
 			break
 		}
