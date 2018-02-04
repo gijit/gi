@@ -233,23 +233,23 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    end
    
    local methodset = {
-      __name="ifaceMethodSet",
+      __name="interfaceMethodSet",
+      __tostring = __ifacePrinter
    }
    methodset.__index = methodset
    
-   local props = {__typename = name, __name="ifaceProps"}
+   local props = {__typename = name, __name="interfaceProps"}
    props[__gi_PropsKey] = props
    props[__gi_MethodsetKey] = methodset
-   props.__tostring = __ifacePrinter
    props.__index = props
 
-   setmetatable(props, __gi_ifaceMT)
    setmetatable(methodset, props)
+   -- jea: not sure we want or need this any more:
+   --setmetatable(props, __gi_ifaceMT)
    
    self.interfaces[name] = methodset
    return methodset
 end
-
 
 
 __gi_ifaceNil = __reg:RegisterInterface("main","main","nil")
@@ -889,12 +889,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Interface then
-      typ = { __implementedBy= {}, __missingMethodFor= {} };
+      typ.__implementedBy= {}
+      typ.__missingMethodFor= {}
       typ.__keyFor = __gi_ifaceKeyFor;
-      typ.__init = function(methods) 
+      typ.__init = function(self, methods)
+         print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
          typ.__methods = methods;
          for i,m in pairs(methods) do
-            __gi_ifaceNil[m.prop] = __gi_throwNilPointerError;
+            __gi_ifaceNil[m.prop] = __gi_throwNilPointerError; -- read .prop
          end
       end
       
@@ -1028,7 +1030,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             return __gi_mapArray(fields, function(f)
                                     -- jea TODO: fix this back up
                                     --return tostring(f.typ.__keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-                                    return tostring(f.typ.__keyFor(val[f.prop]))
+                                    return tostring(f.typ.__keyFor(val[f.prop])) -- read .prop
             end).join("__gi_");
          end
          typ.__copy = function(dst, src) 
@@ -1038,18 +1040,18 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                if knd ==  __gi_kind_Array then
                   -- do nothing
                elseif knd == __gi_kind_Struct then
-                  f.typ.__copy(dst[f.prop], src[f.prop]);
+                  f.typ.__copy(dst[f.prop], src[f.prop]); -- read .prop
                else
                   -- default:
-                  dst[f.prop] = src[f.prop];
+                  dst[f.prop] = src[f.prop]; -- read .prop
                end
             end
          end
          -- nil value
          local properties = {};
-         fields.forEach(function(f) 
+         for i,f in pairs(fields) do
                properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
-         end)
+         end
          typ.__ptr.Nil = Object.create(constructor.prototype, properties);
          --typ.__ptr.Nil.__gi_val = typ.__ptr.Nil;
          -- methods for embedded fields
@@ -1071,7 +1073,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                      --   --v = new f.typ(v);
                      --   v = f.typ(v);
                      --end
-                     return v[m.prop].apply(v, arguments);
+                     return (v[m.prop])(v, arguments);
                   end
                end
                for i,f in pairs(fields) do
