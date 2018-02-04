@@ -583,15 +583,17 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case token.EQL:
 			switch u := t.Underlying().(type) {
 			case *types.Array, *types.Struct:
-				return c.formatExpr("$equal(%e, %e, %s)", e.X, e.Y, c.typeName(t))
+				return c.formatExpr("__equal(%e, %e, %s)", e.X, e.Y, c.typeName(t))
 			case *types.Interface:
 				pp("e.Y='%#v'", e.Y)
+				/* jea, I had done:
 				switch id := e.Y.(type) {
 				case *ast.Ident:
 					if id.Name == "nil" {
 						return c.formatExpr("%s == nil", c.translateImplicitConversion(e.X, t))
 					}
 				}
+				*/
 				return c.formatExpr("__interfaceIsEqual(%s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
 			case *types.Pointer:
 				if _, ok := u.Elem().Underlying().(*types.Array); ok {

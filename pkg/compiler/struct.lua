@@ -21,6 +21,7 @@ __gi_idCounter = 0;
 
 __gi_PropsKey = {}
 __gi_MethodsetKey = {}
+__jsObjectPtr = {}
 
 -- keep types and values separate; keep
 -- packages distinct.
@@ -231,7 +232,8 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    if name == nil then
       error "error in RegisterInterface: name  cannot be nil"
    end
-   print("__reg:RegisterInterface called with name="..name)
+   print("weee: __reg:RegisterInterface called with name='"..name.."'")
+   --print(debug.traceback())
    
    local methodset = {
       __name="interfaceMethodSet",
@@ -253,7 +255,7 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
 end
 
 
-__gi_ifaceNil = __reg:RegisterInterface("main","main","nil")
+__gi_ifaceNil = __reg:RegisterInterface("nil","main","main")
 
 function __reg:IsInterface(typ)
    local name = typ.__str
@@ -458,6 +460,11 @@ function __gi_assertType(value, typ, returnTuple)
       print("__gi_assertType notes that typ is interface")
       isInterface = true
       interfaceMethods = __reg:GetInterfaceMethods(typ)
+      if interfaceMethods == nil then
+         print("interfaceMethods for typ was nil!?!")
+      else
+            __st(interfaceMethods, "interfacemethods")
+      end
    else
       print("__gi_assertType notes that typ is NOT an interface")
    end
@@ -496,22 +503,25 @@ function __gi_assertType(value, typ, returnTuple)
          --local valueMethodSet = __gi_methodSet(value.__str);
          
          local ni = #interfaceMethods
-         
-         for i, v in pairs(interfaceMethods) do
-            if #i >=2 and i[1]=="_" and i[2]=="_" then
-               -- skip __ prefixed methods when printing; atypical
-               -- since most of these live in the metatable anyway.
-               goto continue
-            end
-            
-            ::continue::
-         end
+         local uscore = 95 -- "_"
+
+         print("ni = ", ni)
          
          for i = 1, ni do
             
             local tm = interfaceMethods[i];
+            print("tm =")
+            __st(tm)
+            
+            if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
+               print("skipping __ prefixed method: "..tostring(tm))
+               goto continue
+            end
+            
             local found = false;
             local msl = #valueMethodSet
+
+            print("i = ", i)
             
             for j = 1,msl do
                local vm = valueMethodSet[j];
@@ -534,14 +544,15 @@ function __gi_assertType(value, typ, returnTuple)
                missingMethod = tm.name;
                break;
             end
+            ::continue::            
          end
-         
-         -- but, note we can't cache this, repl may change it.
-         typ.__implementedBy[valueTypeString] = ok;
-         
+      
+      -- but, note we can't cache this, repl may change it.
+      typ.__implementedBy[valueTypeString] = ok;
+      
       end
    end
-   
+
    if not ok then
       
       if returnTuple == 0 then
@@ -1271,3 +1282,71 @@ __type__complex64 = __gi_NewType(8, __gi_kind_complex64, "", "complex64", "compl
 __type__complex128 = __gi_NewType(16, __gi_kind_complex128, "", "complex128", "complex128", true, "", false, nil);
 __type__String = __gi_NewType(8, __gi_kind_String, "", "string", "string", true, "", false, nil);
 __type__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Pointer", "unsafe.Pointer", true, "", false, nil);
+
+
+-- 
+
+__equal = function(a, b, typ)
+   if typ == __jsObjectPtr then
+    return a == b;
+    end
+   
+   local k = typ.__kind
+   if k ==  __gi_kind_complex64 or
+   k == __gi_kind_complex128 then
+
+      return a.re == b.re and a.im == b.im;
+      
+   elseif
+      k == __gi_kind_int64 or
+      k == __gi_kind_int or
+      k == __gi_kind_uint or
+   k == __gi_kind_uint64 then
+      
+      return a == b;
+      
+   elseif k == __gi_kind_Array then
+
+      local na = #a
+      if #b ~= na then
+         return false;
+      end
+      for i= 0,na-1 do
+         if not __equal(a[i], b[i], typ.elem) then
+            return false;
+         end
+      end
+      return true;
+      
+   elseif k ==  __gi_kind_Struct then
+
+      for i,f in pairs(typ.fields) do
+         if not __equal(a[f.prop], b[f.prop], f.typ) then
+            return false;
+         end
+      end
+      return true;
+
+   elseif k == __gi_kind_Interface then
+      return __interfaceIsEqual(a, b);
+
+   else
+      return a == b;
+   end
+end
+
+__interfaceIsEqual = function(a, b) 
+  if a == __ifaceNil or b == __ifaceNil then
+         return a == b;
+  end
+  if a.constructor ~= b.constructor then
+    return false;
+  end
+  if a.constructor == __jsObjectPtr then
+    return a.object == b.object;
+  end
+  if not a.__comparable then
+    error("comparing uncomparable typ='" .. a.str .. "'");
+  end
+  return __equal(a, b, a.constructor);
+end
