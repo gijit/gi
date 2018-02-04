@@ -781,13 +781,14 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				if reservedKeywords[name] {
 					name += "_"
 				}
+				// interface methods don't depend on any
+				// particular package, so this is the empty string.
 				pkgPath := ""
 				if !method.Exported() {
 					pkgPath = method.Pkg().Path()
 				}
 				t := method.Type().(*types.Signature)
-
-				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg="%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 					ptrMethods = append(ptrMethods, entry)
 					continue
@@ -797,16 +798,30 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			if len(methods) > 0 {
 				// jea: the call to c.typeName() will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
 
-				c.Printf("__type__%s.__methods = {%s};", c.typeName(named), strings.Join(methods, ", "))
+				tnn := c.typeName(named)
+				pp("tnn = '%s'", tnn)
+				c.Printf("__type__%s.__methods = {%s};", tnn, strings.Join(methods, ", "))
 
-				// S.methods = [{prop: "hi", name: "hi", pkg: "main", typ: $funcType([], [], false)}];
-				//c.Printf("%s.methods = [%s];", c.typeName(named), strings.Join(methods, ", "))
 			}
 			if len(ptrMethods) > 0 {
-				c.Printf("__type__%s.__methods = {%s};", c.typeName(types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+				pn := c.typeName(types.NewPointer(named)) // "kind_ptrType"
+				pp("newPtrTypeName='%s'", pn)
+				// currently crashing on trying to add methods
+				// to kind_ptrType; Now GopherJS actually
+				// has a variable named ptrType, e.g.
+				// ptrType = $ptrType(B);
+				// ...
+				// ... and then:
+				// ...
+				// ptrType.methods = [{prop: "Hi", name: "Hi", pkg: "", typ: $funcType([], [], false)}, {prop: "Pebbles", name: "Pebbles", pkg: "", typ: $funcType([], [], false)}];
+				//
+				// so these are the methods for B (test 102 face_test), but
+				// we'll need to get them to B and not to ptrType.
+				if pn != "kind_ptrType" {
+					c.Printf("__type__%s.__methods = {%s};", pn, strings.Join(ptrMethods, ", "))
+				}
 			}
 		})
-		// jea: leave these off for now. might bring back later.
 		allby = append(allby, d.MethodListCode...)
 
 		switch t := o.Type().Underlying().(type) {

@@ -920,8 +920,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__init = function(methods)
          print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
          typ.__methods = methods;
+         __st(methods, "methods")
          for i,m in pairs(methods) do
-            __gi_ifaceNil[m.prop] = __gi_throwNilPointerError; -- read .prop
+            __gi_ifaceNil[m.__prop] = __gi_throwNilPointerError;
          end
       end
       
@@ -1045,18 +1046,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__init = function(pkgPath, fields)
          typ.__pkgPath = pkgPath;
          typ.__fields = fields;
-         fields.forEach(function(f) 
-               if not f.typ.__comparable then
-                  typ.__comparable = false;
-               end
-         end);
+         for i,f in pairs(fields) do
+            if not f.typ.__comparable then
+               typ.__comparable = false;
+            end
+         end
          typ.__keyFor = function(x) 
-            --local val = x.__gi_val;
             return __gi_mapArray(fields, function(f)
-                                    -- jea TODO: fix this back up
-                                    --return tostring(f.typ.__keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__gi_/g, "\\__gi_");
-                                    return tostring(f.typ.__keyFor(val[f.prop])) -- read .prop
-            end).join("__gi_");
+                                    return tostring(f.__typ.__keyFor(val[f.__prop])) end)
          end
          typ.__copy = function(dst, src) 
             for i = 0,fields.length-1 do
@@ -1065,29 +1062,29 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                if knd ==  __gi_kind_Array then
                   -- do nothing
                elseif knd == __gi_kind_Struct then
-                  f.typ.__copy(dst[f.prop], src[f.prop]); -- read .prop
+                  f.typ.__copy(dst[f.__prop], src[f.__prop]);
                else
                   -- default:
-                  dst[f.prop] = src[f.prop]; -- read .prop
+                  dst[f.__prop] = src[f.__prop];
                end
             end
          end
          -- nil value
          local properties = {};
          for i,f in pairs(fields) do
-               properties[f.prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
+               properties[f.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end
-         typ.__ptr.Nil = Object.create(constructor.prototype, properties);
-         --typ.__ptr.Nil.__gi_val = typ.__ptr.Nil;
+         typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.prototype, properties);
+         typ.__ptr.__nil.__gi_val = typ.__ptr.__nil;
          -- methods for embedded fields
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   
-                  if target.prototype[m.prop] ~= nil then return end
+                  if target.prototype[m.__prop] ~= nil then return end
                   
-                  target.prototype[m.prop] = function(self)
+                  target.prototype[m.__prop] = function(self)
                      -- jea, temp comment out to figure spurious __gi_val source.
-                     --local v = self.__gi_val[f.prop];
+                     --local v = self.__gi_val[f.__prop];
                      if f.typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
@@ -1098,20 +1095,20 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                      --   --v = new f.typ(v);
                      --   v = f.typ(v);
                      --end
-                     return (v[m.prop])(v, arguments);
+                     return (v[m.__prop])(v, arguments);
                   end
                end
                for i,f in pairs(fields) do
-                     if (f.anonymous) then
-                        __gi_methodSet(f.typ).forEach(function(m) 
+                  if (f.__anonymous) then
+                     for i,m in pairs(__gi_methodSet(f.__typ)) do
                               synthesizeMethod(typ, m, f);
                               synthesizeMethod(typ.__ptr, m, f);
-                                                     end)
-                        __gi_methodSet(__gi_ptrType(f.typ)).forEach(function(m)
-                              synthesizeMethod(typ.__ptr, m, f);
-                                                                   end)
                      end
-               end;
+                     for i,m in pairs(__gi_methodSet(__gi_ptrType(f.__typ))) do
+                        synthesizeMethod(typ.__ptr, m, f);
+                     end
+                  end
+               end
          end);
       end
 
@@ -1336,7 +1333,7 @@ __equal = function(a, b, typ)
    elseif k ==  __gi_kind_Struct then
 
       for i,f in pairs(typ.fields) do
-         if not __equal(a[f.prop], b[f.prop], f.typ) then
+         if not __equal(a[f.__prop], b[f.__prop], f.typ) then
             return false;
          end
       end
