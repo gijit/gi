@@ -1015,10 +1015,14 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			if v.Kind() == reflect.Uint {
 				v.Set(f.Convert(v.Type()))
 			} else {
-				if !canAndDidAssign(&f, &v) {
-					return ConvError{From: luaDesc(L, idx), To: v.Type()}
-				}
-				//v.Set(f)
+				/* if we do canAndDidAssign, then we will coerce
+				                   uint to int, which is not what we want, as
+				                   we could loose information. Instead panic with a type error.
+								if !canAndDidAssign(&f, &v) {
+									return ConvError{From: luaDesc(L, idx), To: v.Type()}
+								}
+				*/
+				v.Set(f)
 			}
 			return nil
 		case 13: //  float32
