@@ -232,7 +232,7 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    if name == nil then
       error "error in RegisterInterface: name  cannot be nil"
    end
-   print("weee: __reg:RegisterInterface called with name='"..name.."'")
+   --print("weee: __reg:RegisterInterface called with name='"..name.."'")
    --print(debug.traceback())
    
    local methodset = {

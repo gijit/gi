@@ -814,7 +814,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("__type__%s.init(%s);", c.objectName(o), c.initArgs(t))
+				c.Printf("__type__%s.__init(%s);", c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 			})
 			// example of what is generated:
