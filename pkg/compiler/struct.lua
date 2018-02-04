@@ -1231,10 +1231,14 @@ end
 -------------------
 
 function __gi_mapArray(array, f)
-   if array == nil then
+   if array == nil or #array == 0 then
       return {}
    end
    local na = #array
+   if array.__constructor == nil then
+      print(debug.traceback())
+      error "why no __constructor on array??"
+   end
    local newArray = array.__constructor(na);
    for i = 0,na-1 do
       newArray[i] = f(array[i]);
@@ -1249,13 +1253,15 @@ end
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
    
-   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.__id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.__id; end),",") .. "_" .. variadic;
+   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.__id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.__id; end),",") .. "_" .. tostring(variadic);
                                                                                              
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
     local paramTypes = __gi_mapArray(params, function(p) return p.str; end);
     if variadic then
-       paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2);
+       paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1]
+       -- haven't figured why the substr(2) wants to chop off the first 2 char.
+       --paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2)
     end
     local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
     if #results == 1 then
@@ -1263,7 +1269,7 @@ __gi_funcType = function(params, results, variadic)
     elseif #results > 1 then
        str = str.. " (" .. table.concat(__gi_mapArray(results, function(r) return r.str; end),  ", ") .. ")";
     end
-    typ = __gi_newType(4, __gi_kind_Func, str, false, "", false, null);
+    typ = __gi_NewType(4, __gi_kind_Func, str, false, "", false, nil);
     __gi_funcTypes[typeKey] = typ;
     typ.__init(params, results, variadic);
   end
