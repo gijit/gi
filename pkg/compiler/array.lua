@@ -134,6 +134,7 @@ end;
 function __gi_clone2(src, typ)
    print("__gi_clone2() called with typ='"..tostring(typ).."'")
    __st(typ)
+   print(debug.traceback())
    
    local clone = typ.__zero();
    typ.__copy(clone, src);

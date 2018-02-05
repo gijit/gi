@@ -903,7 +903,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		case *types.Array, *types.Struct:
 			if define {
 				pp("debug __gi_clone2 arg: c.typeName(lhsType)='%s'", c.typeName(lhsType))
-				return fmt.Sprintf(`%s = __gi_clone2(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
+				return fmt.Sprintf(`%s = __gi_clone2(%s, __type__%s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
 			}
 			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
 		}
