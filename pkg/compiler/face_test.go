@@ -323,31 +323,3 @@ switch v.(type) {
 		LuaMustBool(vm, "asUnNil", true)
 	})
 }
-
-func Test103StoringMethodSignaturesFromStructsAndInterfaces(t *testing.T) {
-
-	cv.Convey(`We need a way to store in Lua the signature of the methods belonging to an interface, so we can compare against structs/other interfaces to see if they match`, t, func() {
-		code := `
-		type Counter interface {
-			Next(a, b string, d int) (e int, err error)
-		}
-`
-		vm, err := NewLuaVmWithPrelude(nil)
-		panicOn(err)
-		defer vm.Close()
-		inc := NewIncrState(vm, nil)
-
-		translation := inc.Tr([]byte(code))
-		fmt.Printf("\n translation='%s'\n", translation)
-
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-    __reg:AddMethod("iface", "Counter", "Next", {
-  methodname="Next",
-  argTyp={"string","string","int"},
-  vararg=false,
-  returnTyp={"int", "error"}
-})
-`)
-
-	})
-}

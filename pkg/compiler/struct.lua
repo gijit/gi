@@ -1184,7 +1184,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
       kind = kind or "<nil>"
-      error("error at struct.lua:(maybe line 884?): invalid kind: "..kind);
+      error("error at struct.lua:(maybe line 1187?): invalid kind: "..kind);
    end
 
    --big switch (kind) in js.
@@ -1344,7 +1344,7 @@ end
 --helper
 __type2str = function(t)
    if type(t) == "table" then
-      local s = t.str;
+      local s = t.__str;
       if s == nil then
          s = tostring(t)
       end
@@ -1374,8 +1374,8 @@ __gi_funcType = function(params, results, variadic)
    
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
-    local paramTypes = __mapFuncOverTable(params, function(p) return p.str; end);
-    if variadic then
+     local paramTypes = __mapFuncOverTable(params, function(ty) __type2str(ty); end);
+     if variadic then
 
        -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
        -- print to see the difference:
