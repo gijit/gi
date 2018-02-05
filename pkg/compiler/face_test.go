@@ -253,6 +253,77 @@ func (b *B) Pebbles() {}
 	})
 }
 
+func Test202InterfaceMethodset(t *testing.T) {
+
+	cv.Convey(`the methodsets of interfaces and structs can be compared to check for interface satisfaction, including the method types not just names`, t, func() {
+		code := `
+package main
+
+import (
+	"fmt"
+)
+
+type Bowser interface {
+	Hi() int
+}
+
+type Possum interface {
+	Hi() int
+    Pebbles() int
+}
+
+type Unsat interface {
+	Hi() int
+    Pebbles() int
+    MissMe() int
+}
+
+type B struct{}
+
+func (b *B) Hi() {
+	fmt.Printf("B.Hi called\n")
+}
+func (b *B) Pebbles() {}
+
+chk := 0
+var v interface{} = &B{}
+switch v.(type) {
+    case Possum:
+		fmt.Printf("ooh! it types as a Possum!\n")
+        chk = 2
+	case Bowser:
+		fmt.Printf("yabadadoo! it types as a Bowser!\n")
+        chk = 1
+	}
+    fmt.Printf("chk = '%v'\n", chk)
+
+    // and verify that v does not implement Bowser too:
+    asBowser, isBowser := v.(Bowser)
+    asIsNil := (asBowser == nil)
+
+    // negative check, should not convert:
+    asUn, isUn := v.(Unsat)
+    asUnNil := (asUn == nil)
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "chk", 0)
+		LuaMustBool(vm, "isBowser", false)
+		LuaMustBool(vm, "asIsNil", true)
+
+		LuaMustBool(vm, "isUn", false)
+		LuaMustBool(vm, "asUnNil", true)
+	})
+}
+
 func Test103StoringMethodSignaturesFromStructsAndInterfaces(t *testing.T) {
 
 	cv.Convey(`We need a way to store in Lua the signature of the methods belonging to an interface, so we can compare against structs/other interfaces to see if they match`, t, func() {
