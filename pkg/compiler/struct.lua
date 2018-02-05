@@ -459,8 +459,10 @@ function __gi_assertType(value, typ, returnTuple)
    if __reg:IsInterface(typ) then
       print("__gi_assertType notes that typ is interface")
       isInterface = true
+      
       --interfaceMethods = __reg:GetInterfaceMethods(typ)
       interfaceMethods = typ.__methods_desc
+      
       if interfaceMethods == nil then
          print("interfaceMethods for typ was nil!?!")
       else
@@ -477,8 +479,9 @@ function __gi_assertType(value, typ, returnTuple)
    local valueProps = value[__gi_PropsKey]
    
    local nMethod = valueProps.__nMethod
-   
-   local nvm = __gi_count_methods(valueMethods)
+
+   -- not used any more
+   --local nvm = __gi_count_methods(valueMethods)
    
    if value == __gi_ifaceNil then
       ok = false;
@@ -509,7 +512,10 @@ function __gi_assertType(value, typ, returnTuple)
          print("assertType: ")
          
          ok = true;
-         local  valueMethodSet = value[__gi_MethodsetKey]
+
+         local  valueMethodSet = value.__methods_desc
+         
+         --local  valueMethodSet = value[__gi_MethodsetKey]
          print("valueMethodSet is")
          __st(valueMethodSet, "valueMethodSet")
          
@@ -1449,14 +1455,14 @@ __interfaceIsEqual = function(a, b)
   if a == __ifaceNil or b == __ifaceNil then
          return a == b;
   end
-  if a.constructor ~= b.constructor then
+  if a.__constructor ~= b.__constructor then
     return false;
   end
-  if a.constructor == __jsObjectPtr then
+  if a.__constructor == __jsObjectPtr then
     return a.object == b.object;
   end
   if not a.__comparable then
     error("comparing uncomparable typ='" .. a.str .. "'");
   end
-  return __equal(a, b, a.constructor);
+  return __equal(a, b, a.__constructor);
 end
