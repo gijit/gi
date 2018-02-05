@@ -1369,6 +1369,10 @@ end
 -- for top level structs (the elem).
 
 __ptrTypeFromElem = function(elem)
+   print(debug.traceback())
+   print("jea debug: top of __ptrTypeFromElem, elem=")
+   __st(elem)
+   
   local typ = elem.__ptr;
   if typ == nil then
      typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);

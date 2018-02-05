@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -56,6 +57,8 @@ func (cfg *GIConfig) LuajitMain() {
 	goPrompt := "gi> "
 	goMorePrompt := ">>>    "
 	luaPrompt := "raw luajit gi> "
+	isDo := false
+	isSource := false
 
 	var prompter *Prompter
 	if !cfg.NoLiner {
@@ -249,20 +252,32 @@ these special commands:
  :g or :go   change back from raw to default Go mode 
  :ast        print the Go AST prior to translation
  :noast      stop printing the Go AST
- :do <path>  run dofile(path) on a .lua file
  :?          show this help (:help does the same)
  :h          show command line history
  :30         replay command number 30 from history
  :1-10       replay commands 1 - 10 inclusive
  :reset      reset and clear history (also :clear)
  :rm 3-4     remove commands 3-4 from history
+ :do <path>  run dofile(path) on a .lua file
+ :source <path>   re-play/source Go lines from a file
  ctrl-d to exit
 `)
 			continue
 		}
 
-		if strings.HasPrefix(low, ":do") {
-			files := strings.TrimSpace(low[3:])
+		isDo = strings.HasPrefix(low, ":do")
+		isSource = strings.HasPrefix(low, ":source")
+		if isDo || isSource {
+			off := 3
+			action := "running dofile"
+			nm := "dofiles"
+			if isSource {
+				off = 7
+				action = "sourcing Go from"
+				nm = "source Go files"
+			}
+
+			files := strings.TrimSpace(low[off:])
 			splt := strings.Split(files, ",")
 			var final, show []string
 			for i := range splt {
@@ -276,11 +291,22 @@ these special commands:
 					show = append(show, strconv.Quote(tmp))
 				}
 			}
+			var err error
 			if len(final) > 0 {
-				fmt.Printf("running dofile(%s)\n", strings.Join(show, ","))
-				err := compiler.LuaDoFiles(vm, final)
+				fmt.Printf("%s (%s)\n", nm, strings.Join(show, ","))
+				if isDo {
+					err = compiler.LuaDoFiles(vm, final)
+				} else {
+					by, err = sourceGoFiles(final)
+					if err != nil {
+						fmt.Printf("error during %s: '%v'\n", action, err)
+					} else {
+						src = string(by)
+						goto notColonCmd
+					}
+				}
 				if err != nil {
-					fmt.Printf("error during dofile(): '%v'\n", err)
+					fmt.Printf("error during %s: '%v'\n", action, err)
 				}
 			} else {
 				fmt.Printf("nothing to do.\n")
@@ -410,3 +436,27 @@ func DumpLuaStackAsString(L *luajit.State) string {
 	return s
 }
 */
+
+func sourceGoFiles(files []string) ([]byte, error) {
+	var buf bytes.Buffer
+	for _, f := range files {
+		fd, err := os.Open(f)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+		by, err := ioutil.ReadAll(fd)
+		if err != nil {
+			return nil, err
+		}
+		_, err = io.Copy(&buf, bytes.NewBuffer(by))
+		if err != nil {
+			return nil, err
+		}
+		// newline between files.
+		fmt.Fprintf(&buf, "\n")
+	}
+	bb := buf.Bytes()
+	fmt.Printf("sourceGoFiles() returning '%s'\n", string(bb))
+	return bb, nil
+}
