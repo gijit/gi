@@ -150,6 +150,7 @@ function __gi_clone(t, typ)
        return b
     end
     print("unimplemented typ in __gi_clone:", typ)
+    print(debug.traceback())
     error "unimplemented typ in __gi_clone"
  end
 
