@@ -133,8 +133,8 @@ end;
 
 function __clone(src, typ)
    print("__clone called with typ ", typ)
-   local clone = typ.zero();
-   typ.copy(clone, src);
+   local clone = typ.__zero();
+   typ.__copy(clone, src);
    return clone;
 end
 
