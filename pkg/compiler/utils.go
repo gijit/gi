@@ -460,7 +460,8 @@ func (c *funcContext) typeNameWithAnonInfo(
 		// cause all embedded types to be registered
 		c.initArgs(ty)
 
-		low := strings.ToLower(typeKind(ty)[10:]) + "Type" // 5: takes the word _kind off.
+		// [10:] takes prefix "__gi__kind" off.
+		low := "anon_" + strings.ToLower(typeKind(ty)[10:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)

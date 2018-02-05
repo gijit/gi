@@ -6,6 +6,8 @@ __debug = false
 -- the convention in translating gopherjs javascript's '$'
 -- is to replace the '$' prefix with "__gi_"
 
+__gi_throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
+
 -- get these in the global namespace, so that __gi_NewType
 -- can refer to them, before they are defined by a call to __gi_NewType.
 __type__bool = nil
@@ -978,7 +980,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             return table.concat(ma, "_")
          end
          typ.__copy = function(dst, src) 
-            __gi_copyArray(dst, src, 0, 0, src.length, elem);
+            __copyArray(dst, src, 0, 0, #src, elem);
          end
          typ.__ptr.__init(typ);
          --jea: what to do with this? define a __call somewhere?
@@ -1103,7 +1105,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       
       typ.__keyFor = __gi_idKey;
-      typ.__init = function(elem) 
+      typ.__init = function(elem)
+         print("jea debug: top of ptr __init() with elem=",elem)
+         __st(elem)
          typ.__elem = elem;
          typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
          typ.__nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
@@ -1322,12 +1326,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_Array then
       
       typ.__zero = function() 
-         local arrayClass = __gi_nativeArray(typ.__elem.__kind);
-         if arrayClass ~= Array then
-            --return new arrayClass(typ.__len)
-            return arrayClass(typ.__len)
-         end
-         --Local array = new Array(typ.__len)
          return  __gi_NewArray({}, typ.__elem.__kind, typ.__len, typ.__elem.__zero())
       end
       
@@ -1362,6 +1360,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    return typ;
 end
 
+----
+
 -------------------
 
 -- distinct from __gi_ptrTyp in ptr.lua.
@@ -1379,6 +1379,8 @@ __ptrTypeFromElem = function(elem)
   end
   return typ;
 end
+
+__ptrType = __ptrTypeFromElem
 
 -------------------
 
@@ -1615,3 +1617,4 @@ function __arrayType(elem, len, shortPkg, pkgPath)
    end
    return typ;
 end
+

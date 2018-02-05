@@ -358,3 +358,45 @@ function __gi_makeSlice(typeKind, zeroVal, len, cap)
    end
    return _gi_NewSlice(typeKind, raw, zeroVal, 0, len)
 end
+
+-- from gopherjs
+
+__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
+  if n == 0 or (dst == src and dstOffset == srcOffset) then
+     return;
+  end
+  
+  --  if src.subarray then
+  --     dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
+  --     return;
+  --  end
+  
+  local knd = elem.__kind
+  
+  if knd == __gi_kind_Array or
+  knd == __gi_kind_Struct then
+     
+     if dst == src and dstOffset > srcOffset then
+        for i=n-1,0,-1 do
+           elem.__copy(dst[dstOffset + i], src[srcOffset + i]);
+        end
+        return
+     end
+     for i=0,n-1 do
+        elem.__copy(dst[dstOffset + i], src[srcOffset + i]);
+     end
+     return
+  end
+
+  -- not struct, not array.
+  
+  if dst == src and dstOffset > srcOffset then
+     for i=n-1,0,-1 do
+        dst[dstOffset + i] = src[srcOffset + i];
+     end
+     return;
+  end
+  for i=0,n-1 do
+     dst[dstOffset + i] = src[srcOffset + i];
+  end
+end

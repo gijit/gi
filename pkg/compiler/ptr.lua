@@ -28,6 +28,8 @@ __gi_PrivatePointerMt = {
 
 -- getter and setter are closures
 function __gi_ptrType(getter, setter, typeName)
+   print("top of gi_ptrType()")
+   print(debug.traceback())
    if getter == nil then
       error "__gi_ptrType sees nil getter"
    end
