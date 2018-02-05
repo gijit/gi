@@ -814,28 +814,18 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 
 				tnn := c.typeName(named)
 				pp("tnn = '%s'", tnn)
-				c.Printf("__type__%s.__methods_desc = {%s};", tnn, strings.Join(methods, ", "))
+				c.Printf("__type__%s.__methods_desc = {%s}; -- incr.go:817 for methods\n", tnn, strings.Join(methods, ", "))
 
 			}
 			if len(ptrMethods) > 0 {
+				c.TypeNameSetting = SKIP_ANON
 				pn := c.typeName(types.NewPointer(named)) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
 				pn = c.objectName(o)
-				// currently crashing on trying to add methods
-				// to kind_ptrType; Now GopherJS actually
-				// has a variable named ptrType, e.g.
-				// ptrType = $ptrType(B);
-				// ...
-				// ... and then:
-				// ...
-				// ptrType.methods = [{prop: "Hi", name: "Hi", pkg: "", typ: $funcType([], [], false)}, {prop: "Pebbles", name: "Pebbles", pkg: "", typ: $funcType([], [], false)}];
-				//
 				// so these are the methods for B (test 102 face_test), but
 				// we'll need to get them to __type__B.__ptr and not to ptrType.
-				//if pn != "kind_ptrType" {
-				c.Printf("__type__%s.__ptr.__methods_desc = {%s};", pn, strings.Join(ptrMethods, ", "))
-				//}
+				c.Printf("__type__%s.__ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
 			}
 		})
 		allby = append(allby, d.MethodListCode...)

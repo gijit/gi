@@ -414,6 +414,13 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 	return name
 }
 
+type typeNameSetting int
+
+const (
+	NORMAL    typeNameSetting = 0
+	SKIP_ANON typeNameSetting = 1
+)
+
 func (c *funcContext) typeName(ty types.Type) (res string) {
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return
@@ -427,6 +434,10 @@ func (c *funcContext) typeNameWithAnonInfo(
 	anonType *types.TypeName,
 	createdVarName string,
 ) {
+
+	// c.TypeNameSetting is a one-shot setting.
+	skipPrintingAnon := c.TypeNameSetting
+	c.TypeNameSetting = NORMAL
 
 	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
 	defer func() {
@@ -473,9 +484,11 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		// gotta generate the type immediately for the REPL.
-		c.Printf("\n\t%s = __%sType(__gi_kind_%s, \"%s\", \"%s\"); -- utils.go:471 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
+		if skipPrintingAnon == NORMAL { // != SKIP_ANON
 
+			// gotta generate the type immediately for the REPL.
+			c.Printf("\n\t%s = __%sType(__gi_kind_%s, \"%s\", \"%s\"); -- utils.go:477 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
+		}
 	}
 	c.p.dependencies[anonType] = true
 	res = anonType.Name()

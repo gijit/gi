@@ -89,6 +89,8 @@ type funcContext struct {
 	genSymCounter int64
 
 	intType types.Type
+
+	TypeNameSetting typeNameSetting
 }
 
 type flowData struct {
