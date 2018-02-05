@@ -69,7 +69,7 @@ function __st(t, name, indent, quiet, methods_desc)
       local vals = ""
       if methods_desc then
          --print("methods_desc is true")
-         vals = __st(v,"",indent+1,quiet,methods_desc)
+         --vals = __st(v,"",indent+1,quiet,methods_desc)
       else 
          vals = tostring(v)
       end
@@ -478,7 +478,7 @@ function __gi_assertType(value, typ, returnTuple)
       if interfaceMethods == nil then
          print("interfaceMethods for typ was nil!?!")
       else
-         __show_methods_desc(interfaceMethods, "interfaceMethods from typ.__methods_desc")
+         --__show_methods_desc(interfaceMethods, "interfaceMethods from typ.__methods_desc")
       end
    else
       print("__gi_assertType notes that typ is NOT an interface")
@@ -490,16 +490,24 @@ function __gi_assertType(value, typ, returnTuple)
    local valueMethods = value[__gi_MethodsetKey]
    local valueProps = value[__gi_PropsKey]
    
-   -- not used any more
-   --local nMethod = valueProps.__nMethod
-   --local nvm = __gi_count_methods(valueMethods)
-   
    if value == __gi_ifaceNil then
       ok = false;
       
    elseif not isInterface then
-      ok = value.__constructor == typ;
-      
+      --ok = value.__constructor == typ.__constructor;
+
+      -- comparing props tables should suffice. They
+      -- must be unique per struct type.
+      if value[__gi_PropsKey] ~= nil then
+         if typ[__gi_PropsKey] == nil then
+            -- panic/what the heck.
+            __st(typ,"typ")
+            error("how can typ not have a props table? typ='"..tostring(typ).."', typ=")
+         end
+         ok = (value[__gi_PropsKey] == typ[__gi_PropsKey])
+      else
+         error("what here? do we ever get here, without typ[__gi_PropsKey]? struct.lua:509")
+      end
    else
       local valueTypeString = value.__str
       
@@ -625,7 +633,7 @@ function __gi_assertType(value, typ, returnTuple)
    end
    
    if not isInterface then
-      -- jea: value = value.__gi_val;
+      -- jea: value = value.__val;
       -- jea: I think value should just be value, why not? no?
    end
    
@@ -722,7 +730,7 @@ __gi_ifaceKeyFor = function(x)
       return "nil"
    end
    local c = x.__constructor
-   --return c.string .. "__gi_" .. c.__keyFor(x.__gi_val)
+   --return c.string .. "__gi_" .. c.__keyFor(x.__val)
    return c.string .. "__gi_" .. c.__keyFor(x)
 end
 
@@ -744,7 +752,7 @@ end
 --       print("__castableMT __call() invoked, with ... = ", ...)
 --       local arg0 = ...
 --       print("in __castableMT, arg0 is", arg0)
---       t.__gi_val = arg0
+--       t.__val = arg0
 --    end
 -- }
 
@@ -845,7 +853,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    else
       setmetatable(typ, __gi_NewType_constructor_MT)
-      --setmetatable(typ, __gi_type_MT) -- make it callable
    end
    
    if kind == __gi_kind_bool or
@@ -863,9 +870,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    kind == __gi_kind_UnsafePointer then
       
       typ.__constructor= function(self, v)
-         --self.__gi_val = v;
+         self.__val = v;
       end
-      --typ.__gi_val = 0LL
       typ.__wrapped = true;
       typ.__keyFor = __gi_identity;
       
@@ -873,7 +879,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_String then
 
       typ.__constructor = function(self, v)
-         --self.__gi_val = v;
+         --self.__val = v;
       end
       typ.__wrapped = true;
       typ.__keyFor = function(x) return "__gi_"..x; end
@@ -881,9 +887,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      --typ.__gi_val = 0
+      --typ.__val = 0
       typ.__constructor = function(self, v)
-         --self.__gi_val = v;
+         --self.__val = v;
       end
       typ.__wrapped = true;      
       typ.__keyFor = function(x) return __gi_floatKey(x) end
@@ -893,7 +899,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = function(self, real, imag)
          self.__gi_real = __gi_fround(real);
          self.__gi_imag = __gi_fround(imag);
-         --self.__gi_val = self;
+         --self.__val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
       
@@ -903,7 +909,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = function(self, real, imag)      
          self.__gi_real = real;
          self.__gi_imag = imag;
-         --self.__gi_val = self;
+         --self.__val = self;
       end
       typ.__keyFor = function(x)  return x.__gi_real .. "_" .. x.__gi_imag; end
 
@@ -916,7 +922,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
                                 self.__gi_get = function() return array; end;
                                 self.__gi_set = function(v) typ.__copy(self, v); end
-                                --self.__gi_val = array;
+                                self.__val = array;
       end);
       typ.__init = function(elem, len) 
          typ.__elem = elem;
@@ -939,7 +945,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind == __gi_kind_Chan then
       typ = function(self, v)
-         --self.__gi_val = v;
+         --self.__val = v;
       end
       typ.__wrapped = true;
       typ.__keyFor = __gi_idKey;
@@ -952,9 +958,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
    elseif kind == __gi_kind_Func then
       typ.__constructor = function(v)
-         local newb = {__gi_val = v}
+         local newb = {__val = v}
          setmetatable(newb, {
-                         __call = function(the_mt, me, ...) return me.__gi_val(...) end
+                         __call = function(the_mt, me, ...) return me.__val(...) end
          })
          return newb
       end
@@ -982,7 +988,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
    elseif kind == __gi_kind_Map then
       typ.__constructor = function(v)
-         local newb = {__gi_val = v}
+         local newb = {__val = v}
          return newb
       end
       typ.__wrapped = true;
@@ -998,7 +1004,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          self.__gi_offset = 0;
          self.__gi_length = #array
          self.__gi_capacity = self.__gi_length
-         --self.__gi_val = self;
+         --self.__val = self;
       end
       typ.__init = function(elem)
          typ.__elem = elem;
@@ -1049,7 +1055,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          function(getter, setter, target)
             print("jea debug: top of kind_Ptr constructor")
             local newb = {__gi_get = getter, __gi_set = setter}
-            newb.__gi_val = newb
+            newb.__val = newb
             return newb
          end
       
@@ -1140,7 +1146,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                properties[f.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end
          typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.prototype, properties);
-         typ.__ptr.__nil.__gi_val = typ.__ptr.__nil;
+         typ.__ptr.__nil.__val = typ.__ptr.__nil;
          -- methods for embedded fields
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
@@ -1148,15 +1154,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   if target.prototype[m.__prop] ~= nil then return end
                   
                   target.prototype[m.__prop] = function(self)
-                     -- jea, temp comment out to figure spurious __gi_val source.
-                     --local v = self.__gi_val[f.__prop];
+                     -- jea, temp comment out to figure spurious __val source.
+                     --local v = self.__val[f.__prop];
                      if f.__typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
                      end
-                     -- jea, temp comment out to figure where spurious __gi_val
+                     -- jea, temp comment out to figure where spurious __val
                      -- is comfing from
-                     --if v.__gi_val == nil then
+                     --if v.__val == nil then
                      --   --v = new f.__typ(v);
                      --   v = f.__typ(v);
                      --end
@@ -1287,6 +1293,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__comparable = true;
    typ.__shortPkg = shortPkg;
    typ.__shortTypeName = shortTypeName;
+   typ.__typ = typ
    
    return typ;
 end

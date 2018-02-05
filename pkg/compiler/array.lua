@@ -124,7 +124,19 @@ function __gi_NewArray(x, typeKind, len, zeroVal)
    return proxy
 end;
 
+--gohperjs:
+--var $clone = function(src, type) {
+--  var clone = type.zero();
+--  type.copy(clone, src);
+--  return clone;
+--};
 
+function __clone(src, typ)
+   print("__clone called with typ ", typ)
+   local clone = typ.zero();
+   typ.copy(clone, src);
+   return clone;
+end
 
 -- jea: my earlier Proof of concept.
 function __gi_clone(t, typ)
@@ -149,9 +161,9 @@ function __gi_clone(t, typ)
        local b = __gi_NewArray(dest, props.typeKind, props.len)
        return b
     end
-    print("unimplemented typ in __gi_clone:", typ)
+    print("unimplemented typ in __gi_clone: '"..tostring(typ).."'") -- Beagle for 028
     print(debug.traceback())
-    error "unimplemented typ in __gi_clone"
+    error("unimplemented typ in __gi_clone: '"..tostring(typ).."'")
  end
 
 
