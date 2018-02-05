@@ -493,17 +493,19 @@ function __gi_assertType(value, typ, returnTuple)
       __st(typ)
 
       -- Unfortunately, we can't use the __implementedBy
-      -- set with a dynamic method set -- one that can
-      -- change the methodset of either type at the REPL.
+      -- cache at the REPL.  The user might subtract
+      -- or add methods to either type at any time.
+      --
       -- Moreover, even if we wanted to, the updated type
       -- has no idea what other types to tell to update,
       -- and we certainly don't want to broadcast the
-      -- update to all possible types.
+      -- update to all current types.
+      --
       -- So for correctness, we can't use __implementedBy.
       --
       -- ok = typ.__implementedBy[valueTypeString];
       
-      if not ok then
+      --if not ok then
          print("assertType: ")
          
          ok = true;
@@ -576,7 +578,7 @@ function __gi_assertType(value, typ, returnTuple)
          -- but, note we can't cache this, repl may change it.
          -- typ.__implementedBy[valueTypeString] = ok;
       
-      end
+      --end
    end
 
    if not ok then
@@ -1285,7 +1287,9 @@ function __gi_mapArray(array, f)
    end
    local na = #array
    if array.__constructor == nil then
+      print("--------  begin stacktrace  ----------")
       print(debug.traceback())
+      print("--------  end stacktrace  ----------")
       error "why no __constructor on array??"
    end
    local newArray = array.__constructor(na);
@@ -1295,14 +1299,29 @@ function __gi_mapArray(array, f)
    return newArray;
 end
 
+function __mapFuncOverTable(tbl, func)
+   local newtbl = {}
+   for i,v in pairs(tbl) do
+      newtbl[i] = func(v)
+   end
+   return newtbl
+end
+
 -- straight port from gohperjs, not done or tested, yet.
 -- It seems to be building from text a type signature...
 -- then making a new type.
 
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
+
+   local paramsM = __mapFuncOverTable(params, function(p) return p.__id; end)
+   local resultsM = __mapFuncOverTable(results, function(r) return r.__id; end)
+   print("debug: paramsM = ")
+   __st(paramsM)
+   print("debug: resultsM = ")
+   __st(resultsM)
    
-   local typeKey = table.concat(__gi_mapArray(params, function(p) return p.__id; end),",") .. "_" .. table.concat(__gi_mapArray(results, function(r) return r.__id; end),",") .. "_" .. tostring(variadic);
+   local typeKey = table.concat(paramsM, ",") .. "_" .. table.concat(resultsM,",") .. "_" .. tostring(variadic);
                                                                                              
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
