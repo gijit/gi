@@ -1311,32 +1311,59 @@ end
 -- It seems to be building from text a type signature...
 -- then making a new type.
 
+--helper
+__type2str = function(t)
+   if type(t) == "table" then
+      local s = t.str;
+      if s == nil then
+         s = tostring(t)
+      end
+      return s
+   end
+   return tostring(t)
+end
+
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
-
-   local paramsM = __mapFuncOverTable(params, function(p) return p.__id; end)
-   local resultsM = __mapFuncOverTable(results, function(r) return r.__id; end)
+   print("debug: __gi_funcType called")
+   __st(params, "params")
+   __st(results, "results")
+   
+   local paramsM = __mapFuncOverTable(params, __type2str)
+   local resultsM = __mapFuncOverTable(results, __type2str)
+   
    print("debug: paramsM = ")
    __st(paramsM)
+
    print("debug: resultsM = ")
    __st(resultsM)
    
-   local typeKey = table.concat(paramsM, ",") .. "_" .. table.concat(resultsM,",") .. "_" .. tostring(variadic);
-                                                                                             
+   local typeKey = "params:"..table.concat(paramsM, ",") .. "_results:" .. table.concat(resultsM,",") .. "_variadic:" .. tostring(variadic);
+
+   print("debug: typeKey = '".. typeKey.."'")
+   
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
-    local paramTypes = __gi_mapArray(params, function(p) return p.str; end);
+    local paramTypes = __mapFuncOverTable(params, function(p) return p.str; end);
     if variadic then
+
+       -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
+       -- print to see the difference:
+       print("jea debug: paramTypes[paramTypes.length - 1].substr(2) = '"..paramTypes[paramTypes.length - 1].substr(2).."'   versus without the substr: '"..paramTypes[paramTypes.length - 1] .. "'")
+       
        paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1]
-       -- haven't figured why the substr(2) wants to chop off the first 2 char.
        --paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2)
+       
     end
     local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
     if #results == 1 then
-       str = str.. " " .. results[0].str;
+       str = str.. " " .. __type2str(results[1])
     elseif #results > 1 then
-       str = str.. " (" .. table.concat(__gi_mapArray(results, function(r) return r.str; end),  ", ") .. ")";
+       str = str.. " (" .. table.concat(__mapFuncOverTable(results, __type2str),  ", ") .. ")";
     end
+
+    print("jea debug: final func signature is: '"..str.."'")
+    
     typ = __gi_NewType(4, __gi_kind_Func, str, false, "", false, nil);
     __gi_funcTypes[typeKey] = typ;
     typ.__init(params, results, variadic);
