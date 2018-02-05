@@ -12,6 +12,20 @@ binary is called simply `gi`, as it is a
 status
 ------
 
+2018 Feb 05 update
+-------
+Excellent progress.
+
+In version v0.8.6, the majority of the type system
+from GopherJS was ported over to LuaJIT in the
+struct.lua file. Type assertions on interfaces
+are working, cf face_test.go and tests 100, 102, 202.
+
+The cloning of structs (test 028 in repl_test.go) is
+temporarily broken while their infrastructure is being
+refactored to use the new system.
+
+
 2018 Feb 02 update
 -------
 In version v0.8.4, we began integrating the
