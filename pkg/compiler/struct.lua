@@ -32,8 +32,8 @@ __curpkg = {
    vars  = {}
 }
 
--- st or showtable, a helper.
-function __st(t, name, indent, quiet)
+-- st or showtable, a debug print helper.
+function __st(t, name, indent, quiet, methods_desc)
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -66,7 +66,14 @@ function __st(t, name, indent, quiet)
    local s = pre .. "============================ "..tostring(t).."\n"
    for i,v in pairs(t) do
       k=k+1
-      s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..tostring(v).."'\n"
+      local vals = ""
+      if methods_desc then
+         --print("methods_desc is true")
+         vals = __st(v,"",indent+1,quiet,methods_desc)
+      else 
+         vals = tostring(v)
+      end
+      s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..vals.."'\n"
    end
    if k == 0 then
       s = pre.."<empty table>"
@@ -80,6 +87,11 @@ function __st(t, name, indent, quiet)
       print(s)
    end
    return s
+end
+
+-- debug helper for .__methods_desc
+function __show_methods_desc(t, name, indent, quiet)
+   return __st(t,name,indent,quiet,true)
 end
 
 -- don't think we're going to use these/the slice and map approach for structs.
@@ -466,7 +478,7 @@ function __gi_assertType(value, typ, returnTuple)
       if interfaceMethods == nil then
          print("interfaceMethods for typ was nil!?!")
       else
-         __st(interfaceMethods, "interfacemethods")
+         __show_methods_desc(interfaceMethods, "interfaceMethods from typ.__methods_desc")
       end
    else
       print("__gi_assertType notes that typ is NOT an interface")
@@ -478,9 +490,8 @@ function __gi_assertType(value, typ, returnTuple)
    local valueMethods = value[__gi_MethodsetKey]
    local valueProps = value[__gi_PropsKey]
    
-   local nMethod = valueProps.__nMethod
-
    -- not used any more
+   --local nMethod = valueProps.__nMethod
    --local nvm = __gi_count_methods(valueMethods)
    
    if value == __gi_ifaceNil then
@@ -517,7 +528,7 @@ function __gi_assertType(value, typ, returnTuple)
          
          --local  valueMethodSet = value[__gi_MethodsetKey]
          print("valueMethodSet is")
-         __st(valueMethodSet, "valueMethodSet")
+         __show_methods_desc(valueMethodSet, "valueMethodSet")
          
          --local valueMethodSet = __gi_methodSet(value.__str);
 
@@ -529,15 +540,16 @@ function __gi_assertType(value, typ, returnTuple)
          print("ni = ", ni)
          
          for i = 1, ni do
+            print("i = ",i," out of ni = ", ni)
             
             local tm = interfaceMethods[i];
             print("tm =")
             __st(tm)
-            
-            if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
-               print("skipping '__' prefixed method: "..tostring(tm))
-               goto continue
-            end
+
+            --if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
+            -- print("skipping '__' prefixed method: "..tostring(tm))
+            --   goto continue
+            --end
             
             local found = false;
 
@@ -546,39 +558,44 @@ function __gi_assertType(value, typ, returnTuple)
             
             for j, vm in pairs(valueMethodSet) do
 
-               if #j >= 2 and
-                  string.byte(j,1,1)==uscore and
-               string.byte(j,2,2) == uscore then
-                  
-                  print("skipping '__' prefixed method: "..tostring(j))
-                  goto continue2
-               end
+               print("on j =", j, " vm =")
+               __st(vm, "vm")
                
-               -- if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
+               --if type(j) == "string" and #j >= 2 and
+               --   string.byte(j,1,1)==uscore and
+               --string.byte(j,2,2) == uscore then
+               --   
+               --   print("skipping '__' prefixed method: "..tostring(j))
+               --   goto continue2
+               --end
+               
+               if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
                -- temp debug: just match on the name until we
                -- figure out where the vm typ info lives.
-               if j == tm.__name then 
-                  print("found 0000000000 method match, j="..j)
+               --if j == tm.__name then 
+                  print("found 0000000000 method match, vm=")
+                  __st(vm, "vm")
                   found = true;
                   break;
                else
                   -- debug prints:
-                  print("not match, 111111111: tried to compare: j="..j.." vs tm.name="..tm.__name.." vm=")
+                  print("not match, 111111111: tried to compare: vm=")
                   __st(vm, "vm")
                   print("not match, 111111111: tried to compare: tm=")
                   __st(tm, "tm")
                end
                
-               ::continue2::
+               --::continue2::
             end
             
             if not found then
                ok = false;
                -- cannot cache, as repl may add/subtract methods.
-               missingMethod = tm.name;
+               missingMethod = tm.__name;
+               print("7777777777 jea debug: missingMethod is '"..missingMethod.."'")
                break;
             end
-            ::continue::            
+            --::continue::            
          end
       
          -- but, note we can't cache this, repl may change it.
@@ -608,7 +625,7 @@ function __gi_assertType(value, typ, returnTuple)
    end
    
    if not isInterface then
-      --jea value = value.__gi_val;
+      -- jea: value = value.__gi_val;
       -- jea: I think value should just be value, why not? no?
    end
    

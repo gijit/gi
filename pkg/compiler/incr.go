@@ -773,6 +773,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 			var methods []string
 			var ptrMethods []string
+
 			pp("named.NumMethods() = %v", named.NumMethods())
 			for i := 0; i < named.NumMethods(); i++ {
 				pp("on method i=%v, '%v'\n", i, named.Method(i).Name())
@@ -789,10 +790,22 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				t := method.Type().(*types.Signature)
 				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg="%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
-				if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
-					ptrMethods = append(ptrMethods, entry)
-					continue
-				}
+
+				// https://golang.org/ref/spec#Method_sets
+				//
+				//   The method set of the corresponding
+				//   pointer type *T is the set of all
+				//   methods declared with receiver *T or T
+				//   (that is, it also contains the method set of T).
+				//
+				// jea:
+				ptrMethods = append(ptrMethods, entry)
+				/*
+					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
+						ptrMethods = append(ptrMethods, entry)
+						continue
+					}
+				*/
 				methods = append(methods, entry)
 			}
 			if len(methods) > 0 {
