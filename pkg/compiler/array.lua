@@ -131,8 +131,10 @@ end;
 --  return clone;
 --};
 
-function __clone(src, typ)
-   print("__clone called with typ ", typ)
+function __gi_clone2(src, typ)
+   print("__gi_clone2() called with typ='"..tostring(typ).."'")
+   __st(typ)
+   
    local clone = typ.__zero();
    typ.__copy(clone, src);
    return clone;

@@ -633,7 +633,9 @@ function __gi_assertType(value, typ, returnTuple)
    end
    
    if not isInterface then
-      -- jea: value = value.__val;
+      -- value is the original 1st arg, at the
+      -- top of this __gi_assertType invocation.
+      value = value.__val;
       -- jea: I think value should just be value, why not? no?
    end
    
@@ -879,7 +881,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_String then
 
       typ.__constructor = function(self, v)
-         --self.__val = v;
+         self.__val = v;
       end
       typ.__wrapped = true;
       typ.__keyFor = function(x) return "__gi_"..x; end
@@ -887,21 +889,23 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind ==  __gi_kind_float32 or
    kind == __gi_kind_float64 then
 
-      --typ.__val = 0
+      -- TODO: jea, do we need to wrap floats at all??
       typ.__constructor = function(self, v)
-         --self.__val = v;
+         self.__val = v;
       end
       typ.__wrapped = true;      
       typ.__keyFor = function(x) return __gi_floatKey(x) end
       
    elseif kind == __gi_kind_complex64 then
-      typ.__wrapped = true;      
+      -- TODO: is __wrapped = true needed here?
+      typ.__wrapped = true; -- javascript doesn't wrap, but may be oversight.
+      
       typ.__constructor = function(self, real, imag)
-         self.__gi_real = __gi_fround(real);
-         self.__gi_imag = __gi_fround(imag);
-         --self.__val = self;
+         self.__real = __gi_fround(real);
+         self.__imag = __gi_fround(imag);
+         self.__val = self;
       end
-      typ.__keyFor = function(x)  return x.__gi_real .. "__gi_" .. x.__gi_imag; end
+      typ.__keyFor = function(x)  return x.__real .. "_" .. x.__imag; end
       
 
    elseif kind == __gi_kind_complex128 then
@@ -1107,81 +1111,95 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__ptr.prototype = {}
       typ.__ptr.prototype.__gi_get = function()  return this; end
       typ.__ptr.prototype.__gi_set = function(v) typ.__copy(this, v); end
+
+      -- NB, let fields be a 1-base  array, so ipairs() works on it.
       typ.__init = function(pkgPath, fields)
          typ.__pkg = pkgPath;
          typ.__fields = fields;
-         for i,f in pairs(fields) do
+         for i,fld in ipairs(fields) do
 
-            print("jea debug, f =")
-            print("jea debug, type(f.__typ) =", type(f.__typ))
-            __st(f, "f in __init() for struct")
+            print("jea debug, fld =")
+            print("jea debug, type(fld.__typ) =", type(fld.__typ))
+            __st(f, "fld i='"..tostring(i).."' in __init() for struct")
             
-            if type(f.__typ) == "cdata" then
+            if type(fld.__typ) == "cdata" then
                -- cdata should be comparable.
-            elseif f ~= nil and f.__typ ~= nil and not f.__typ.__comparable then
+            elseif fld ~= nil and fld.__typ ~= nil and not fld.__typ.__comparable then
                typ.__comparable = false;
             end
          end
-         typ.__keyFor = function(x) 
-            return __gi_mapArray(fields, function(f)
-                                    return tostring(f.__typ.__keyFor(val[f.__prop])) end)
+         typ.__keyFor = function(x)
+            local val = x.__val
+            local joinme = __mapFuncOverTable(fields, function(f)
+                                                 return tostring(f.__typ.__keyFor(val[f.__prop])) end)
+            return table.concat(joinme, "_")
          end
-         typ.__copy = function(dst, src) 
-            for i = 0,fields.length-1 do
-               local f = fields[i];
-               local knd = f.__typ.__kind
-               if knd ==  __gi_kind_Array then
-                  -- do nothing
-               elseif knd == __gi_kind_Struct then
-                  f.__typ.__copy(dst[f.__prop], src[f.__prop]);
-               else
-                  -- default:
-                  dst[f.__prop] = src[f.__prop];
+         
+         -- still in kind == __gi_kind_Struct
+         
+         typ.__copy = function(dst, src)
+            
+            for i, fld in ipairs(typ.__fields) do
+
+               -- switch
+               local knd = fld.__typ.__kind
+               
+               if knd ==  __gi_kind_Array or
+               knd == __gi_kind_Struct then
+                  
+                  fld.__typ.__copy(dst[fld.__prop], src[fld.__prop]);
+                  
+               else -- default:
+                  dst[fld.__prop] = src[fld.__prop];                  
                end
             end
          end
+         
          -- nil value
          local properties = {};
-         for i,f in pairs(fields) do
-               properties[f.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
+         for i, fld in ipairs(fields) do
+               properties[fld.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end
          typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.prototype, properties);
          typ.__ptr.__nil.__val = typ.__ptr.__nil;
+         
          -- methods for embedded fields
+         -- call helper __gi_addMethodSynthesizer function:
+         
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   
                   if target.prototype[m.__prop] ~= nil then return end
                   
                   target.prototype[m.__prop] = function(self)
-                     -- jea, temp comment out to figure spurious __val source.
-                     --local v = self.__val[f.__prop];
+                     
+                     local v = self.__val[f.__prop];
                      if f.__typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
                      end
-                     -- jea, temp comment out to figure where spurious __val
-                     -- is comfing from
-                     --if v.__val == nil then
-                     --   --v = new f.__typ(v);
-                     --   v = f.__typ(v);
-                     --end
+                     if v.__val == nil then
+                        -- in js: v = new f.typ(v);
+                        v = f.__typ({});
+                     end
                      return (v[m.__prop])(v, arguments);
                   end
                end
-               for i,f in pairs(fields) do
-                  if (f.__anonymous) then
-                     for i,m in pairs(__gi_methodSet(f.__typ)) do
+               for i, fld in ipairs(fields) do
+                  if fld.__anonymous then
+                     
+                     for i,m in pairs(__gi_methodSet(fld.__typ)) do
                               synthesizeMethod(typ, m, f);
                               synthesizeMethod(typ.__ptr, m, f);
                      end
-                     for i,m in pairs(__gi_methodSet(__gi_ptrType(f.__typ))) do
+                     for i,m in pairs(__gi_methodSet(__gi_ptrType(fld.__typ))) do
                         synthesizeMethod(typ.__ptr, m, f);
                      end
                   end
                end
-         end);
-      end
+         end); -- end of __gi_addMethodSynthesizer call.
+
+      end -- end of typ.__init definition.
 
    --------------------------------------------
    --------------------------------------------
@@ -1459,7 +1477,7 @@ __equal = function(a, b, typ)
          return false;
       end
       for i= 0,na-1 do
-         if not __equal(a[i], b[i], typ.elem) then
+         if not __equal(a[i], b[i], typ.__elem) then
             return false;
          end
       end
@@ -1467,8 +1485,8 @@ __equal = function(a, b, typ)
       
    elseif k ==  __gi_kind_Struct then
 
-      for i,f in pairs(typ.fields) do
-         if not __equal(a[f.__prop], b[f.__prop], f.__typ) then
+      for i,fld in ipairs(typ.__fields) do
+         if not __equal(a[fld.__prop], b[fld.__prop], fld.__typ) then
             return false;
          end
       end
