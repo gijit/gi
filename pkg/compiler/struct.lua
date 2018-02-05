@@ -460,7 +460,7 @@ function __gi_assertType(value, typ, returnTuple)
       print("__gi_assertType notes that typ is interface")
       isInterface = true
       --interfaceMethods = __reg:GetInterfaceMethods(typ)
-      interfaceMethods = typ.__methods
+      interfaceMethods = typ.__methods_desc
       if interfaceMethods == nil then
          print("interfaceMethods for typ was nil!?!")
       else
@@ -938,7 +938,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__keyFor = __gi_ifaceKeyFor;
       typ.__init = function(methods)
          print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
-         typ.__methods = methods;
+         typ.__methods_desc = methods;
          __st(methods, "methods")
          for i,m in pairs(methods) do
             __gi_ifaceNil[m.__prop] = __gi_throwNilPointerError;
@@ -1057,6 +1057,10 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__constructor = constructor
       
       typ.__wrapped = true;
+      
+      -- NB, we are currently in kind == __gi_kind_Struct
+      -- the typ.__ptr gets built before typ itself is finished.
+      
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
       typ.__ptr.__elem = typ;
       typ.__ptr.prototype = {}
@@ -1236,7 +1240,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__named = named;
    typ.__pkg = pkgPath;
    typ.__exported = exported;
-   typ.__methods = {};
+   typ.__methods_desc = {};
    typ.__methodsetCache = nil;
    typ.__comparable = true;
    typ.__shortPkg = shortPkg;
