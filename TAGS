@@ -3,11 +3,12 @@ cmd/gi/lua.help.lua,50
 function locals(11,378
 function upvalues(30,808
 
-pkg/compiler/array.lua,132
+pkg/compiler/array.lua,163
 function __gi_NewArray(96,2880
-function __gi_clone(130,3702
-function _gi_UnpackArrayRaw(164,4670
-function _gi_ArrayRaw(182,4980
+function __gi_clone2(134,3792
+function __gi_clone(144,4021
+function _gi_UnpackArrayRaw(179,5077
+function _gi_ArrayRaw(197,5387
 
 pkg/compiler/defer.lua,18
 function ts(4,75
@@ -37,24 +38,27 @@ function __copySlice(286,8007
 function __subslice(328,9200
 function __gi_makeSlice(352,9916
 
-pkg/compiler/struct.lua,627
+pkg/compiler/struct.lua,738
 function __NOTINUSE__gi_clone(11,202
-function __st(36,813
-function __structPrinter(119,2824
-function __ifacePrinter(149,3659
-function __reg:RegisterStruct(195,4817
-function __reg:RegisterInterface(230,5945
-function __reg:IsInterface(260,6803
-function __reg:GetInterfaceMethods(265,6905
-function __reg:GetPointeeMethodset(270,7008
-function __reg:NewInstance(297,7875
-function __reg:RemoveMethod(319,8423
-function __reg:AddMethod(351,9373
-function __gi_methodVal(384,10304
-function __gi_count_methods(411,11087
-function __gi_assertType(450,12216
-function __gi_NewType(755,20126
-function __gi_mapArray(1232,36546
+function __st(36,825
+function __show_methods_desc(93,2108
+function __structPrinter(131,3175
+function __ifacePrinter(161,4010
+function __reg:RegisterStruct(207,5168
+function __reg:RegisterInterface(242,6296
+function __reg:IsInterface(272,7154
+function __reg:GetInterfaceMethods(277,7256
+function __reg:GetPointeeMethodset(282,7359
+function __reg:NewInstance(309,8226
+function __reg:RemoveMethod(331,8774
+function __reg:AddMethod(363,9724
+function __gi_methodVal(396,10655
+function __gi_count_methods(423,11438
+function __gi_assertType(462,12579
+function __gi_NewType(818,22535
+function __gi_mapArray(1347,40593
+function __mapFuncOverTable(1365,41068
+function __arrayType(1529,46619
 
 pkg/compiler/templates/defer.lua,17
 function f(3,14
@@ -128,6 +132,9 @@ pkg/compiler/templates/test.lua,78
 local function dofuss(5,77
 local function w_(9,120
 local function w(11,166
+
+pkg/compiler/tmp/hah.lua,33
+function __gi_count_methods(1,0
 
 pkg/compiler/utf8.lua,665
 local function utf8charbytes 82,3157
@@ -605,6 +612,8 @@ vendor/github.com/LuaJIT/LuaJIT/dynasm/dasm_x64.lua,0
 vendor/github.com/LuaJIT/LuaJIT/dynasm/dasm_mips64.lua,0
 
 pkg/compiler/tmp/small.lua,0
+
+pkg/compiler/tmp/s.lua,0
 
 pkg/compiler/templates/s.lua,0
 

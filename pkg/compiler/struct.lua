@@ -6,14 +6,36 @@ __debug = false
 -- the convention in translating gopherjs javascript's '$'
 -- is to replace the '$' prefix with "__gi_"
 
--- port gopherjs system $clone()
---
-function __NOTINUSE__gi_clone(src, typ, newType)
-   print("__gi_clone() called with typ="..tostring(typ), " and newType="..tostring(newType))
-   local clone = typ.__zero();
-   typ.__copy(clone, src);
-   return clone;
-end
+-- get these in the global namespace, so that __gi_NewType
+-- can refer to them, before they are defined by a call to __gi_NewType.
+__type__bool = nil
+__type__int = nil
+__type__int8 = nil
+__type__int16 = nil
+__type__int32 = nil
+__type__int64 = nil
+__type__uint = nil
+__type__uint8 = nil
+__type__uint16 = nil
+__type__uint32 = nil
+__type__uint64 = nil
+__type__uintptr = nil
+__type__float32 = nil
+__type__float64 = nil
+__type__complex64 = nil
+__type__complex128 = nil
+
+__type__Array =nil
+__type__Chan =nil
+__type__Func =nil
+__type__Interface =nil
+__type__Map =nil
+__type__Ptr =nil
+__type__Slice =nil
+__type__String =nil
+__type__Struct =nil
+__type__UnsafePointer =nil
+
 
 -- TODO: syncrhonize around this/deal with multi-threading?
 --  may need to teach LuaJIT how to grab go mutexes or use sync.Atomics.
@@ -713,6 +735,8 @@ __kind2str = {
 [27]="__gi_kind_cdata"
 }
 
+__kind2type = {}
+
 __gi_methodSynthesizers = {}
 __gi_addMethodSynthesizer = function(f) 
    if __gi_methodSynthesizers == nil then
@@ -930,7 +954,20 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                                 self.__gi_set = function(v) typ.__copy(self, v); end
                                 self.__val = array;
       end);
-      typ.__init = function(elem, len) 
+      typ.__init = function(elem, len)
+         print("jea debug: __init() for array called, elem=", elem)
+         if type(elem) == "number" then
+            local etyp = __kind2type[elem]
+            if etyp ~= nil then
+               print("jea debug: replacing number ", elem, " by etyp=")
+               __st(etyp)
+               elem = etyp
+            else
+               print("jea debug: ugh, lookup failed in __kind2typ for elem=", elem)
+            end
+         end
+         -- elem=6 => __gi_kind_int64, len=3
+         print("jea debug: __init() for Array called, elem=",elem, " and len=", len)
          typ.__elem = elem;
          typ.__len = len;
          typ.__comparable = elem.__comparable;
@@ -1216,6 +1253,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
       kind = kind or "<nil>"
+      print(debug.traceback())
       error("error at struct.lua:(maybe line 1187?): invalid kind: "..kind);
    end
 
@@ -1456,6 +1494,35 @@ __type__complex128 = __gi_NewType(16, __gi_kind_complex128, "", "complex128", "c
 __type__String = __gi_NewType(8, __gi_kind_String, "", "string", "string", true, "", false, nil);
 __type__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Pointer", "unsafe.Pointer", true, "", false, nil);
 
+--
+__kind2type = {
+[1]=__type__bool,
+[2]=__type__int,
+[3]=__type__int8,
+[4]=__type__int16,
+[5]=__type__int32,
+[6]=__type__int64,
+[7]=__type__uint,
+[8]=__type__uint8,
+[9]=__type__uint16,
+[10]=__type__uint32,
+[11]=__type__uint64,
+[12]=__type__uintptr,
+[13]=__type__float32,
+[14]=__type__float64,
+[15]=__type__complex64,
+[16]=__type__complex128,
+[17]=__type__Array,
+[18]=__type__Chan,
+[19]=__type__Func,
+[20]=__type__Interface,
+[21]=__type__Map,
+[22]=__type__Ptr,
+[23]=__type__Slice,
+[24]=__type__String,
+[25]=__type__Struct,
+[26]=__type__UnsafePointer,
+}
 
 -- 
 
@@ -1529,10 +1596,12 @@ __arrayTypes = {};
 function __arrayType(elem, len, shortPkg, pkgPath)
    local et = type(elem)
    local ets = tostring(elem)
-   print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'")
+   print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'  and len='"..tostring(len).."'")
    local typeKey
    if et == "cdata" then
       typeKey = ets .. "_" .. tostring(len)
+   elseif et == "number" then
+      typeKey = "number" .. tostring(len)
    else
       typeKey = elem.__id .. "_" .. tostring(len)
       ets = elem.__str
@@ -1540,9 +1609,9 @@ function __arrayType(elem, len, shortPkg, pkgPath)
    local typ = __arrayTypes[typeKey];
    if typ == nil then
       local str = "[" .. len .. "]" .. ets
-      typ = __gi_NewType(24, __gi_kindArray, shortPkg, str, str, false, pkgPath, false, nil, nil);
+      typ = __gi_NewType(24, __gi_kind_Array, shortPkg, str, str, false, pkgPath, false, nil, nil);
       __arrayTypes[typeKey] = typ;
-      typ.init(elem, len);
+      typ.__init(elem, len);
    end
    return typ;
 end

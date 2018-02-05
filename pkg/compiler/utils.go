@@ -473,7 +473,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		createdVarName = varName
 
 		// gotta generate the type immediately for the REPL.
-		c.Printf("\n\t%s = __%sType(%s, \"%s\", \"%s\"); -- utils.go:471 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
+		c.Printf("\n\t%s = __%sType(__gi_kind_%s, \"%s\", \"%s\"); -- utils.go:471 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
 
 	}
 	c.p.dependencies[anonType] = true
