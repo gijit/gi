@@ -456,8 +456,11 @@ func (c *funcContext) typeNameWithAnonInfo(
 	anonType, isAnon = c.p.anonTypeMap.At(ty).(*types.TypeName)
 	if !isAnon {
 		isAnon = true
-		c.initArgs(ty)                                        // cause all embedded types to be registered
-		low := strings.ToLower(typeKind(ty)[5:]) + "AnonType" // 5: takes the word _kind off.
+
+		// cause all embedded types to be registered
+		c.initArgs(ty)
+
+		low := strings.ToLower(typeKind(ty)[10:]) + "Type" // 5: takes the word _kind off.
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
@@ -468,7 +471,10 @@ func (c *funcContext) typeNameWithAnonInfo(
 		pp("just added anonType='%s'", anonType.Name())
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
-		c.Printf("\n\t__type__%s = __%sType(%s); -- utils.go:471 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[5:]), c.initArgs(anonType.Type()))
+
+		// gotta generate the type immediately for the REPL.
+		c.Printf("\n\t%s = __%sType(%s, \"%s\", \"%s\"); -- utils.go:471 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
+
 	}
 	c.p.dependencies[anonType] = true
 	res = anonType.Name()

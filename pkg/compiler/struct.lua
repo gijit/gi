@@ -1523,3 +1523,26 @@ __interfaceIsEqual = function(a, b)
   end
   return __equal(a, b, a.__constructor);
 end
+
+--var $arrayTypes = {};
+__arrayTypes = {};
+function __arrayType(elem, len, shortPkg, pkgPath)
+   local et = type(elem)
+   local ets = tostring(elem)
+   print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'")
+   local typeKey
+   if et == "cdata" then
+      typeKey = ets .. "_" .. tostring(len)
+   else
+      typeKey = elem.__id .. "_" .. tostring(len)
+      ets = elem.__str
+   end
+   local typ = __arrayTypes[typeKey];
+   if typ == nil then
+      local str = "[" .. len .. "]" .. ets
+      typ = __gi_NewType(24, __gi_kindArray, shortPkg, str, str, false, pkgPath, false, nil, nil);
+      __arrayTypes[typeKey] = typ;
+      typ.init(elem, len);
+   end
+   return typ;
+end
