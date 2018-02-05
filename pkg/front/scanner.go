@@ -293,7 +293,9 @@ redo:
 
 	default:
 		s.tok = 0
-		s.error(fmt.Sprintf("invalid character %#U", c))
+		//s.error(fmt.Sprintf("invalid character %#U", c))
+		fmt.Printf("\ninvalid character %#U\n", c)
+		panic(ErrSyntax)
 		goto redo
 	}
 
