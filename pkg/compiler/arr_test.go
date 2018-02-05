@@ -26,11 +26,8 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`
-		a = __gi_NewArray({[0]=1LL,3LL,4LL}, "__gi_kind_int64", 3, 0LL);
-        sum = gitesting.SumArrayInt64(__gi_clone(a, "kind_arrayType"));
-`)
+		// too fragile
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))

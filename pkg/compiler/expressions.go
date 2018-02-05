@@ -1377,6 +1377,8 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 					return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
 				}
 			*/
+			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'", c.typeName(desiredType))
+			// problem: 'kind_arrayType'
 			return c.formatExpr(`__gi_clone2(%e, __type__%s)`, expr, c.typeName(desiredType))
 		}
 	}
