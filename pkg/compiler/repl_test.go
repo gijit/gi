@@ -1042,16 +1042,15 @@ f();
 	})
 }
 
-/* temp disable to see whatelse left
 func Test028CopyAStruct(t *testing.T) {
 
 	cv.Convey(`copy a struct value`, t, func() {
 
 		code := `
-type Beagle struct{
-    word string
+type Beagle struct{ 
+    word string 
     a, b, c int
-}
+} 
 var snoopy = Beagle{word:"hiya", b: 2}
 denver := snoopy
 d := denver.b
@@ -1071,5 +1070,3 @@ w := denver.word
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
-
-*/
