@@ -1042,7 +1042,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       }
       setmetatable(typ, mt)
-      print("setting Ptr typ.__constructor to construction: "..tostring(constructor))
+      print("setting Ptr typ.__constructor to constructor: "..tostring(constructor))
       -- typ.__constructor = constructor
       
       typ.__constructor = constructor or
@@ -1106,13 +1106,13 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__fields = fields;
          for i,f in pairs(fields) do
 
-            --print("jea debug, f =")
-            --print("jea debug, type(f.__typ) =", type(f.__typ))
-            --__st(f, "f in __init() for struct")
+            print("jea debug, f =")
+            print("jea debug, type(f.__typ) =", type(f.__typ))
+            __st(f, "f in __init() for struct")
             
             if type(f.__typ) == "cdata" then
                -- cdata should be comparable.
-            elseif not f.__typ.__comparable then
+            elseif f ~= nil and f.__typ ~= nil and not f.__typ.__comparable then
                typ.__comparable = false;
             end
          end
