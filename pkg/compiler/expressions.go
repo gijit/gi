@@ -1379,7 +1379,16 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 			*/
 			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'", c.typeName(desiredType))
 			// problem: 'kind_arrayType'
-			return c.formatExpr(`__gi_clone2(%e, %s)`, expr, c.typeName(desiredType))
+			//return c.formatExpr(`__gi_clone2(%e, %s)`, expr, c.typeName(desiredType))
+
+			typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(desiredType)
+			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
+			if isAnon {
+				return c.formatExpr(`__gi_clone2(%e, %s)`, expr, c.typeName(anonType.Type()))
+			} else {
+				return c.formatExpr(`__gi_clone2(%e, %s)`, expr, typName)
+			}
+
 		}
 	}
 
