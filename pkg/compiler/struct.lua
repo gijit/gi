@@ -681,6 +681,7 @@ __gi_kind_Slice = 23;
 __gi_kind_String = 24;
 __gi_kind_Struct = 25;
 __gi_kind_UnsafePointer = 26;
+__gi_kind_cdata = 27;
 
 __kind2str = {
 [1]="__gi_kind_bool",
@@ -708,7 +709,8 @@ __kind2str = {
 [23]="__gi_kind_Slice",
 [24]="__gi_kind_String",
 [25]="__gi_kind_Struct",
-[26]="__gi_kind_UnsafePointer"
+[26]="__gi_kind_UnsafePointer",
+[27]="__gi_kind_cdata"
 }
 
 __gi_methodSynthesizers = {}
@@ -1140,10 +1142,16 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__copy = function(dst, src)
             
             for i, fld in ipairs(typ.__fields) do
-
-               -- switch
-               local knd = fld.__typ.__kind
+               print("in __copy(), here are typ.fields:")
+               __st(typ.__fields, "typ.__fields")
                
+               -- switch
+               local knd = 0
+               if type(fld.__typ) == "cdata" then
+                  knd = __gi_kind_cdata
+               else
+                  knd = fld.__typ.__kind
+               end
                if knd ==  __gi_kind_Array or
                knd == __gi_kind_Struct then
                   
