@@ -798,14 +798,15 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				//   methods declared with receiver *T or T
 				//   (that is, it also contains the method set of T).
 				//
-				// jea:
-				ptrMethods = append(ptrMethods, entry)
-				/*
+				// jea: true seems to be needed to have 102 face_test green.
+				if true {
+					ptrMethods = append(ptrMethods, entry)
+				} else {
 					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 						ptrMethods = append(ptrMethods, entry)
 						continue
 					}
-				*/
+				}
 				methods = append(methods, entry)
 			}
 			if len(methods) > 0 {

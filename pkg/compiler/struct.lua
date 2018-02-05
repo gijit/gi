@@ -1105,7 +1105,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__pkg = pkgPath;
          typ.__fields = fields;
          for i,f in pairs(fields) do
-            if not f.typ.__comparable then
+
+            --print("jea debug, f =")
+            --print("jea debug, type(f.__typ) =", type(f.__typ))
+            --__st(f, "f in __init() for struct")
+            
+            if type(f.__typ) == "cdata" then
+               -- cdata should be comparable.
+            elseif not f.__typ.__comparable then
                typ.__comparable = false;
             end
          end
@@ -1116,11 +1123,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__copy = function(dst, src) 
             for i = 0,fields.length-1 do
                local f = fields[i];
-               local knd = f.typ.__kind
+               local knd = f.__typ.__kind
                if knd ==  __gi_kind_Array then
                   -- do nothing
                elseif knd == __gi_kind_Struct then
-                  f.typ.__copy(dst[f.__prop], src[f.__prop]);
+                  f.__typ.__copy(dst[f.__prop], src[f.__prop]);
                else
                   -- default:
                   dst[f.__prop] = src[f.__prop];
@@ -1143,15 +1150,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   target.prototype[m.__prop] = function(self)
                      -- jea, temp comment out to figure spurious __gi_val source.
                      --local v = self.__gi_val[f.__prop];
-                     if f.typ == __gi_jsObjectPtr then
+                     if f.__typ == __gi_jsObjectPtr then
                         --v = new __gi_jsObjectPtr(v);
                         v = __gi_jsObjectPtr(v);
                      end
                      -- jea, temp comment out to figure where spurious __gi_val
                      -- is comfing from
                      --if v.__gi_val == nil then
-                     --   --v = new f.typ(v);
-                     --   v = f.typ(v);
+                     --   --v = new f.__typ(v);
+                     --   v = f.__typ(v);
                      --end
                      return (v[m.__prop])(v, arguments);
                   end
@@ -1454,7 +1461,7 @@ __equal = function(a, b, typ)
    elseif k ==  __gi_kind_Struct then
 
       for i,f in pairs(typ.fields) do
-         if not __equal(a[f.__prop], b[f.__prop], f.typ) then
+         if not __equal(a[f.__prop], b[f.__prop], f.__typ) then
             return false;
          end
       end
