@@ -491,9 +491,19 @@ function __gi_assertType(value, typ, returnTuple)
       
       print("__gi_assertType: valueTypeString='"..valueTypeString.."' and typ is: ")
       __st(typ)
+
+      -- Unfortunately, we can't use the __implementedBy
+      -- set with a dynamic method set -- one that can
+      -- change the methodset of either type at the REPL.
+      -- Moreover, even if we wanted to, the updated type
+      -- has no idea what other types to tell to update,
+      -- and we certainly don't want to broadcast the
+      -- update to all possible types.
+      -- So for correctness, we can't use __implementedBy.
+      --
+      -- ok = typ.__implementedBy[valueTypeString];
       
-      ok = typ.__implementedBy[valueTypeString];
-      if ok == nil then
+      if not ok then
          print("assertType: ")
          
          ok = true;
@@ -517,7 +527,7 @@ function __gi_assertType(value, typ, returnTuple)
             __st(tm)
             
             if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
-               print("skipping __ prefixed method: "..tostring(tm))
+               print("skipping '__' prefixed method: "..tostring(tm))
                goto continue
             end
             
@@ -563,8 +573,8 @@ function __gi_assertType(value, typ, returnTuple)
             ::continue::            
          end
       
-      -- but, note we can't cache this, repl may change it.
-      typ.__implementedBy[valueTypeString] = ok;
+         -- but, note we can't cache this, repl may change it.
+         -- typ.__implementedBy[valueTypeString] = ok;
       
       end
    end
@@ -933,7 +943,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
 
    elseif kind == __gi_kind_Interface then
-      typ.__implementedBy= {}
+      --typ.__implementedBy= {}
       typ.__missingMethodFor= {}
       typ.__keyFor = __gi_ifaceKeyFor;
       typ.__init = function(methods)
