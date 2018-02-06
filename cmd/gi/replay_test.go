@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"testing"
 
@@ -21,7 +22,18 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 `
 		fmt.Printf("replay 2x, src='%s'\n", src)
 
+		myflags := flag.NewFlagSet("gi", flag.ExitOnError)
+		cfg := &GIConfig{}
+		cfg.DefineFlags(myflags)
+
+		err := myflags.Parse([]string{"-q", "-no-liner"})
+		err = cfg.ValidateConfig()
+		panicOn(err)
 		r := NewRepl(cfg)
 
+		err = r.Eval(src)
+		cv.So(err, cv.ShouldBeNil)
+		err = r.Eval(src)
+		cv.So(err, cv.ShouldBeNil)
 	})
 }
