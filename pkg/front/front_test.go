@@ -321,3 +321,24 @@ func Test020MoreVsSyntaxErr(t *testing.T) {
 		cv.So(empty, cv.ShouldBeFalse)
 	})
 }
+
+func Test021AssignmenThoughPointer(t *testing.T) {
+
+	cv.Convey("After `a:=1; b:= &a; `, `*b = 33` must be allowed", t, func() {
+
+		var eof, syntaxErr, empty bool
+
+		src := `a:=1; b:= &a;`
+		eof, syntaxErr, empty = TopLevelParseGoSource([]byte(src))
+		cv.So(syntaxErr, cv.ShouldBeFalse)
+		cv.So(eof, cv.ShouldBeFalse)
+		cv.So(empty, cv.ShouldBeFalse)
+
+		src2 := "*b = 33`"
+		pp("parsing '*b = 33'")
+		eof, syntaxErr, empty = TopLevelParseGoSource([]byte(src2))
+		cv.So(syntaxErr, cv.ShouldBeFalse)
+		cv.So(eof, cv.ShouldBeFalse)
+		cv.So(empty, cv.ShouldBeFalse)
+	})
+}

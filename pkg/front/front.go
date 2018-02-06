@@ -7,6 +7,7 @@ import (
 	"bytes"
 )
 
+// eofSeen is returned true if our the input is incomplete.
 func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool) {
 
 	// we always start with the full source to parse, it's
