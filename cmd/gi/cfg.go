@@ -7,6 +7,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var ProgramName string = path.Base(os.Args[0])
@@ -64,6 +66,9 @@ func (c *GIConfig) ValidateConfig() error {
 			c.PreludePath = filepath.Join(append([]string{gopath}, defaultPreludePathParts...)...)
 		}
 	}
+	verb.Verbose = c.Verbose || c.VerboseVerbose
+	verb.VerboseVerbose = c.VerboseVerbose
+
 	return nil
 }
 

@@ -35,7 +35,7 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 	//	s := gbuild.NewSession(options)
 
 	ic := &IncrState{
-		pkgMap: make(map[string]*incrPkg),
+		pkgMap: make(map[string]*IncrPkg),
 		vm:     vm,
 		vmCfg:  vmCfg,
 	}
@@ -63,7 +63,7 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 	pk := newIncrPkg(key, pack, fileSet, importContext, nil)
 
 	ic.pkgMap[key] = pk
-	ic.curPkg = pk
+	ic.CurPkg = pk
 
 	return ic
 }
@@ -71,13 +71,13 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 // an incrementally built package,
 // stored in IncrState.pkgMap
 //
-type incrPkg struct {
+type IncrPkg struct {
 	key string
 
 	pack          *build.Package
 	fileSet       *token.FileSet
 	importContext *ImportContext
-	archive       *Archive
+	Arch          *Archive
 }
 
 func newIncrPkg(key string,
@@ -86,14 +86,14 @@ func newIncrPkg(key string,
 	importContext *ImportContext,
 	archive *Archive,
 
-) *incrPkg {
+) *IncrPkg {
 
-	return &incrPkg{
+	return &IncrPkg{
 		key:           key,
 		pack:          pack,
 		fileSet:       fileSet,
 		importContext: importContext,
-		archive:       archive,
+		Arch:          archive,
 	}
 }
 
@@ -103,9 +103,9 @@ type IncrState struct {
 
 	// allow multiple packages to
 	// be worked on at once.
-	pkgMap map[string]*incrPkg
+	pkgMap map[string]*IncrPkg
 
-	curPkg *incrPkg
+	CurPkg *IncrPkg
 
 	// the vm lets us add import bindings
 	// like `import "fmt"` on demand.
@@ -128,7 +128,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	pp("after prependAns, src = '%s'", src)
 
 	// classic
-	file, err := parser.ParseFile(tr.curPkg.fileSet, "", src, 0)
+	file, err := parser.ParseFile(tr.CurPkg.fileSet, "", src, 0)
 	if err != nil {
 		pp("we got an error on the ParseFile: '%v'", err)
 	}
@@ -137,7 +137,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 
 	// Print the AST.
 	if tr.PrintAST {
-		ast.Print(tr.curPkg.fileSet, file)
+		ast.Print(tr.CurPkg.fileSet, file)
 	}
 
 	files := []*ast.File{file}
@@ -156,20 +156,20 @@ func (tr *IncrState) Tr(src []byte) []byte {
 		return nil
 	}
 
-	tr.curPkg.archive, err = IncrementallyCompile(tr.curPkg.archive, tr.curPkg.pack.ImportPath, files, tr.curPkg.fileSet, tr.curPkg.importContext, tr.minify)
+	tr.CurPkg.Arch, err = IncrementallyCompile(tr.CurPkg.Arch, tr.CurPkg.pack.ImportPath, files, tr.CurPkg.fileSet, tr.CurPkg.importContext, tr.minify)
 	panicOn(err)
-	//pp("archive = '%#v'", tr.curPkg.archive)
-	//pp("len(tr.curPkg.archive.Declarations)= '%v'", len(tr.curPkg.archive.Declarations))
-	//pp("len(tr.curPkg.archive.NewCode)= '%v'", len(tr.curPkg.archive.NewCodeText))
+	//pp("archive = '%#v'", tr.CurPkg.Arch)
+	//pp("len(tr.CurPkg.Arch.Declarations)= '%v'", len(tr.CurPkg.Arch.Declarations))
+	//pp("len(tr.CurPkg.Arch.NewCode)= '%v'", len(tr.CurPkg.Arch.NewCodeText))
 
 	pp("got past config.Check")
 
 	var res bytes.Buffer
-	for i, d := range tr.curPkg.archive.NewCodeText {
-		pp("writing tr.curPkg.archive.NewCode[i=%v].Code = '%v'", i, string(tr.curPkg.archive.NewCodeText[i]))
+	for i, d := range tr.CurPkg.Arch.NewCodeText {
+		pp("writing tr.CurPkg.Arch.NewCode[i=%v].Code = '%v'", i, string(tr.CurPkg.Arch.NewCodeText[i]))
 		res.Write(d)
 	}
-	tr.curPkg.archive.NewCodeText = nil
+	tr.CurPkg.Arch.NewCodeText = nil
 
 	return res.Bytes()
 }

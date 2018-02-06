@@ -24,9 +24,6 @@ func main() {
 		log.Fatalf("%s command line flag error: '%s'", ProgramName, err)
 	}
 
-	verb.Verbose = cfg.Verbose || cfg.VerboseVerbose
-	verb.VerboseVerbose = cfg.VerboseVerbose
-
 	if !cfg.Quiet {
 		fmt.Printf(
 			`====================

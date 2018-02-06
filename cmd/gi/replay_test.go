@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	//"github.com/shurcooL/go-goon"
 	"strings"
 	"testing"
 
@@ -27,7 +28,7 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 		cfg := &GIConfig{}
 		cfg.DefineFlags(myflags)
 
-		err := myflags.Parse([]string{"-q", "-no-liner"})
+		err := myflags.Parse([]string{"-q", "-no-liner"}) // , "-vv"})
 		err = cfg.ValidateConfig()
 		panicOn(err)
 		r := NewRepl(cfg)
@@ -48,6 +49,18 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 			for i := range lines {
 				err = r.Eval(lines[i])
 				panicOn(err)
+
+				//pp("TypesInfo.Types='%#v'", r.inc.CurPkg.Arch.TypesInfo) // .Types, .Defs, .Name2node
+				// CurPkg.Arch is nil. hmm...
+				if i > 0 || j > 0 {
+					for nm := range r.inc.CurPkg.Arch.TypesInfo.Name2node {
+						fmt.Printf("nm='%s'\n", nm) // S.Hi
+					}
+					//fmt.Printf("\n node = '%#v'\n", node)
+					fmt.Printf("\n on j=%v, after Eval of line i=%v:  TypesInfo.Types='%#v'\n", j, i, r.inc.CurPkg.Arch.TypesInfo.Types) // .Types, .Defs, .Name2node
+
+					//goon.Dump(r.inc.CurPkg.Arch.TypesInfo.Types)
+				}
 			}
 			fmt.Printf("\n pass j=%v complete.\n", j)
 		}

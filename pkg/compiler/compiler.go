@@ -62,7 +62,7 @@ type Archive struct {
 	pkg       *types.Package
 	check     *types.Checker
 
-	funcSrcCache map[string]string
+	FuncSrcCache map[string]string
 }
 
 type Decl struct {
