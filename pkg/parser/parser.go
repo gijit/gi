@@ -2461,7 +2461,14 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
 	//		pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
 	//		return x
 
-	case token.IDENT, token.FOR, token.SWITCH, token.IF, token.GO, token.GOTO, token.SELECT:
+	case token.IDENT,
+		token.FOR,
+		token.SWITCH,
+		token.IF,
+		token.GO,
+		token.GOTO,
+		token.SELECT,
+		token.MUL:
 		return p.parseStmt()
 	}
 	return p.parseDecl(sync)

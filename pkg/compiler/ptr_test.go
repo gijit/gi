@@ -46,6 +46,7 @@ func Test099PointerDeference(t *testing.T) {
 a:= 1
 b := &a
 c := *b
+*b = 3
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -60,6 +61,7 @@ c := *b
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "c", 1)
+		LuaMustInt64(vm, "a", 3)
 
 	})
 }
