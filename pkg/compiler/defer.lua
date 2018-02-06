@@ -131,7 +131,7 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
   end
 
   if #__namedNames == 0 then
-     --print("__processDefers: #__namedNames was 0, no returns")
+     print("__processDefers: #__namedNames was 0, no returns")
      return nil
   end
   -- put the named return values in order

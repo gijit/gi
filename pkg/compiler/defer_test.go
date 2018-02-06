@@ -75,3 +75,23 @@ func Test035DefersRunWithoutPanic(t *testing.T) {
 
 	})
 }
+
+func Test035bNamedReturnValuesAreReturned(t *testing.T) {
+
+	cv.Convey(`__namedNames was missing named return values, so they weren't being returned`, t, func() {
+
+		code := `func f() (r int) {defer func() { println(" r was ", r); r++ }(); r = 3; return r}; a := f();`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		pp("translation='%s'", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "a", 4)
+	})
+}

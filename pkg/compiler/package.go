@@ -326,7 +326,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			c.resultNames = make([]ast.Expr, c.sig.Results().Len())
 			for i := 0; i < c.sig.Results().Len(); i++ {
 				result := c.sig.Results().At(i)
-				c.Printf("%s = %s;", c.objectName(result), c.translateExpr(c.zeroValue(result.Type()), nil).String())
+				c.Printf("local %s = %s;", c.objectName(result), c.translateExpr(c.zeroValue(result.Type()), nil).String())
 				id := ast.NewIdent("")
 				c.p.Uses[id] = result
 				c.resultNames[i] = c.setType(id, result.Type())
