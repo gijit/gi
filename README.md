@@ -16,7 +16,7 @@ status
 -------
 In version v0.8.7, pointer support is much improved.
 
-Both assignment to pointers, and assignment through
+Basic assignment to pointers, and assignment through
 pointers, work now.
 
 Still TODO is supporting pointer members

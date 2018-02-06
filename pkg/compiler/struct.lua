@@ -66,7 +66,7 @@ end
 __gi_PrivatePointer_MT = {
 
     __newindex = function(t, k, v)
-       print("__gijit_Pointer: __newindex called, calling set() with val=", v)
+       --print("__gijit_Pointer: __newindex called, calling set() with val=", v)
        local props = rawget(t, __gi_PropsKey)
        return props.__set(v)
     end,
@@ -92,7 +92,7 @@ __gi_PrivatePointer_MT = {
 -- set __gi_PrivatePointer_MT as the metatable.
 --
 function __gi_createNewPointer(getter, setter)
-   print("top of __gi_createNewPointer()")
+   --print("top of __gi_createNewPointer()")
    --print(debug.traceback())
 
    if getter == nil then
@@ -307,7 +307,7 @@ __gi_ifaceMT = {
 --
 function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    local name = shortTypeName -- temporary fix
-   print("RegisterStruct called, with shortTypeName='"..shortTypeName.."'")
+   --print("RegisterStruct called, with shortTypeName='"..shortTypeName.."'")
    if shortTypeName == nil then
       error "error in __reg:RegisterStruct: shortTypeName cannot be nil"
    end
@@ -335,8 +335,8 @@ function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    setmetatable(methodset, props)
    
    self.structs[name] = methodset
-   print("__reg:RegisterStruct done, debug: new methodset is: ", methodset)
-   __st(methodset, shortTypeName..".methodset")
+   --print("__reg:RegisterStruct done, debug: new methodset is: ", methodset)
+   --__st(methodset, shortTypeName..".methodset")
    return methodset
 end
 
@@ -382,22 +382,22 @@ end
 
 function __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
    local goal = string.sub(shortTypeName, 2) -- remove leading dot.
-   print("top of __reg:GetPointeeMethodset, goal='"..goal.."' are here are structs:")
-   __st(self.structs, "__reg.structs")
+   --print("top of __reg:GetPointeeMethodset, goal='"..goal.."' are here are structs:")
+   --__st(self.structs, "__reg.structs")
    
    local strct = self.structs[goal]
    if strct ~= nil then
-      print("__reg:GetPointeeMethodset: found in structs")
+      --print("__reg:GetPointeeMethodset: found in structs")
       return strct
    end
    
    local face = self.interfaces[goal]
    if face ~=nil then
-      print("__reg:GetPointeeMethodset: found in interfaces")
+      --print("__reg:GetPointeeMethodset: found in interfaces")
       return face
    end
 
-   print("__reg:GetPointeeMethodset: '"..goal .."' *not* found in structs or interfaces")   
+   --print("__reg:GetPointeeMethodset: '"..goal .."' *not* found in structs or interfaces")   
    
    -- other types? well, they
    -- won't have methodsets, so nil seems appropriate.
@@ -462,7 +462,7 @@ end
 -- count to account for this just directly added method.
 --
 function __reg:AddMethod(si, siName, methodName, method, incCount)
-   print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
+   --print("__reg:AddMethod for '"..si.."' called with methodName ", methodName)
    -- lookup the methodset
    local methodset
    if si == "struct" then
@@ -474,8 +474,8 @@ function __reg:AddMethod(si, siName, methodName, method, incCount)
       error("unregistered "..si.." name '"..siName.."'")
    end
 
-   print("prior to addition, methodset is:")
-   __st(methodset, "methodset")
+   --print("prior to addition, methodset is:")
+   --__st(methodset, "methodset")
    
    -- new?
    if methodset[methodName] == nil or incCount then
@@ -484,18 +484,18 @@ function __reg:AddMethod(si, siName, methodName, method, incCount)
       props.__nMethod = props.__nMethod + 1
    else      
       -- not new
-      print("methodName "..methodName.." was not new, val is:", methodset[methodName])
+      --print("methodName "..methodName.." was not new, val is:", methodset[methodName])
    end
    
    -- add the method
    methodset[methodName] = method
 
-   print("after addition, methodset is:")
-   __st(methodset, "methodset")   
+   --print("after addition, methodset is:")
+   --__st(methodset, "methodset")   
 end
 
 function __gi_methodVal(recvr, methodName, recvrType)
-   print("__gi_methodVal with methodName ", methodName, " recvrType=", recvrType)
+   --print("__gi_methodVal with methodName ", methodName, " recvrType=", recvrType)
 
    -- try structs, then interfaces.
    
@@ -562,15 +562,15 @@ end
 --
 function __gi_assertType(value, typ, returnTuple)
 
-   print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'. full value __st dump:")
-   __st(value, "value")
-   print("\n\n and typ is: ", type(typ))
-   __st(typ, "typ")
+   --print("__gi_assertType called, typ='", typ, "' value='", value, "', returnTuple='", returnTuple, "'. full value __st dump:")
+   --__st(value, "value")
+   --print("\n\n and typ is: ", type(typ))
+   --__st(typ, "typ")
    
    local isInterface = false
    local interfaceMethods = nil
    if __reg:IsInterface(typ) then
-      print("__gi_assertType notes that typ is interface")
+      --print("__gi_assertType notes that typ is interface")
       isInterface = true
       
       --interfaceMethods = __reg:GetInterfaceMethods(typ)
@@ -582,7 +582,7 @@ function __gi_assertType(value, typ, returnTuple)
          --__show_methods_desc(interfaceMethods, "interfaceMethods from typ.__methods_desc")
       end
    else
-      print("__gi_assertType notes that typ is NOT an interface")
+      --print("__gi_assertType notes that typ is NOT an interface")
    end
    
    local ok = false
@@ -612,8 +612,8 @@ function __gi_assertType(value, typ, returnTuple)
    else
       local valueTypeString = value.__str
       
-      print("__gi_assertType: valueTypeString='"..valueTypeString.."' and typ is: ")
-      __st(typ)
+      --print("__gi_assertType: valueTypeString='"..valueTypeString.."' and typ is: ")
+      --__st(typ)
 
       -- Unfortunately, we can't use the __implementedBy
       -- cache at the REPL.  The user might subtract
@@ -629,14 +629,14 @@ function __gi_assertType(value, typ, returnTuple)
       -- ok = typ.__implementedBy[valueTypeString];
       
       --if not ok then
-         print("assertType: ")
+         --print("assertType: ")
          
          ok = true;
 
          local  valueMethodSet = value.__methods_desc
          
          --local  valueMethodSet = value[__gi_MethodsetKey]
-         print("valueMethodSet is")
+         --print("valueMethodSet is")
          __show_methods_desc(valueMethodSet, "valueMethodSet")
          
          --local valueMethodSet = __gi_methodSet(value.__str);
@@ -646,14 +646,14 @@ function __gi_assertType(value, typ, returnTuple)
          local ni = #interfaceMethods
          local uscore = 95 -- "_"
 
-         print("ni = ", ni)
+         --print("ni = ", ni)
          
          for i = 1, ni do
-            print("i = ",i," out of ni = ", ni)
+            --print("i = ",i," out of ni = ", ni)
             
             local tm = interfaceMethods[i];
-            print("tm =")
-            __st(tm)
+            --print("tm =")
+            --__st(tm)
 
             --if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
             -- print("skipping '__' prefixed method: "..tostring(tm))
@@ -662,13 +662,13 @@ function __gi_assertType(value, typ, returnTuple)
             
             local found = false;
 
-            print("i = ", i)
-            __st(valueMethodSet, "valueMethodSet")
+            --print("i = ", i)
+            --__st(valueMethodSet, "valueMethodSet")
             
             for j, vm in pairs(valueMethodSet) do
 
-               print("on j =", j, " vm =")
-               __st(vm, "vm")
+               --print("on j =", j, " vm =")
+               --__st(vm, "vm")
                
                --if type(j) == "string" and #j >= 2 and
                --   string.byte(j,1,1)==uscore and
@@ -682,16 +682,16 @@ function __gi_assertType(value, typ, returnTuple)
                -- temp debug: just match on the name until we
                -- figure out where the vm typ info lives.
                --if j == tm.__name then 
-                  print("found 0000000000 method match, vm=")
-                  __st(vm, "vm")
+                  --print("found 0000000000 method match, vm=")
+                  --__st(vm, "vm")
                   found = true;
                   break;
                else
                   -- debug prints:
-                  print("not match, 111111111: tried to compare: vm=")
-                  __st(vm, "vm")
-                  print("not match, 111111111: tried to compare: tm=")
-                  __st(tm, "tm")
+                  --print("not match, 111111111: tried to compare: vm=")
+                  --__st(vm, "vm")
+                  --print("not match, 111111111: tried to compare: tm=")
+                  --__st(tm, "tm")
                end
                
                --::continue2::
@@ -701,7 +701,7 @@ function __gi_assertType(value, typ, returnTuple)
                ok = false;
                -- cannot cache, as repl may add/subtract methods.
                missingMethod = tm.__name;
-               print("7777777777 jea debug: missingMethod is '"..missingMethod.."'")
+               --print("7777777777 jea debug: missingMethod is '"..missingMethod.."'")
                break;
             end
             --::continue::            
@@ -879,8 +879,8 @@ __gi_type_MT = {
    __name = "__gi_type_MT",
    __call = function(self, ...)
       local args = {...}
-      print("jea debug: __git_type_MT.__call() invoked, self='",tostring(self),"', with args=")
-      __st(args, "__gi_type_MT.args")
+      --print("jea debug: __git_type_MT.__call() invoked, self='",tostring(self),"', with args=")
+      --__st(args, "__gi_type_MT.args")
    end
 }
 
@@ -899,22 +899,22 @@ __gi_type_MT = {
 __gi_NewType_constructor_MT = {
    __name = "__gi_NewType_constructor_MT",
    __call = function(the_mt, self, ...)
-      print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with __constructor = ",self.__constructor," and args=")
+      --print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with __constructor = ",self.__constructor," and args=")
       
-      print("in constructor_MT, start __st on ...")
-      __st({...}, "__gi_NewType_constructor_MT.dots")
-      print("in constructor_MT,   end __st on ...")
+      --print("in constructor_MT, start __st on ...")
+      --__st({...}, "__gi_NewType_constructor_MT.dots")
+      --print("in constructor_MT,   end __st on ...")
 
-      print("in constructor_MT, start __st on self")
-      __st(self, "self")
-      print("in constructor_MT,   end __st on self")
+      --print("in constructor_MT, start __st on self")
+      --__st(self, "self")
+      --print("in constructor_MT,   end __st on self")
 
       if self ~= nil and self.__constructor ~= nil then
-         print("calling self.__constructor!")
+         --print("calling self.__constructor!")
          return self.__constructor(self, ...)
       else
          if self ~= nil then
-            print("self.__constructor was nil")
+            --print("self.__constructor was nil")
          end
       end
       return self
@@ -966,14 +966,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    elseif kind == __gi_kind_Ptr then
       
       typ.__registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
-      print("typ.__registered back from __reg:GetPointeeMethodset = ", typ.__registered)
+      --print("typ.__registered back from __reg:GetPointeeMethodset = ", typ.__registered)
 
       if typ.__registered == nil then
          typ = {}
          typ[__gi_PropsKey] = typ
          
-         print("typ.__registered was nil, so I set __gi_NewType_constructor_MT on typ")
-         print("constructor is :", constructor)
+         --print("typ.__registered was nil, so I set __gi_NewType_constructor_MT on typ")
+         --print("constructor is :", constructor)
          setmetatable(typ, __gi_NewType_constructor_MT)
       else
          typ[__gi_PropsKey] = typ
@@ -1056,19 +1056,19 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                                 self.__val = array;
       end);
       typ.__init = function(elem, len)
-         print("jea debug: __init() for array called, elem=", elem)
+         --print("jea debug: __init() for array called, elem=", elem)
          if type(elem) == "number" then
             local etyp = __kind2type[elem]
             if etyp ~= nil then
-               print("jea debug: replacing number ", elem, " by etyp=")
-               __st(etyp)
+               --print("jea debug: replacing number ", elem, " by etyp=")
+               --__st(etyp)
                elem = etyp
             else
-               print("jea debug: ugh, lookup failed in __kind2typ for elem=", elem)
+               --print("jea debug: ugh, lookup failed in __kind2typ for elem=", elem)
             end
          end
          -- elem=6 => __gi_kind_int64, len=3
-         print("jea debug: __init() for Array called, elem=",elem, " and len=", len)
+         --print("jea debug: __init() for Array called, elem=",elem, " and len=", len)
          typ.__elem = elem;
          typ.__len = len;
          typ.__comparable = elem.__comparable;
@@ -1122,9 +1122,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__missingMethodFor= {}
       typ.__keyFor = __gi_ifaceKeyFor;
       typ.__init = function(methods)
-         print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
+         --print("in __init function for interface, is typ == self? -> "..tostring((typ == self)))
          typ.__methods_desc = methods;
-         __st(methods, "methods")
+         --__st(methods, "methods")
          for i,m in pairs(methods) do
             __gi_ifaceNil[m.__prop] = __gi_throwNilPointerError;
          end
@@ -1163,33 +1163,33 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       -- revert!
       
    elseif kind == __gi_kind_Ptr then
-      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
-      print("jea debug: at __gi_kind_Ptr, constructor is ", constructor)
+      --print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
+      --print("jea debug: at __gi_kind_Ptr, constructor is ", constructor)
 
       local mt = {
          __name = "Ptr type constructed mt",
          
          __call = function(the_mt, self, ...)
             
-            print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self and =")
+            --print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self and =")
 
-            print("self")
-            __st(self, "self")
-            print("self")
+            --print("self")
+            --__st(self, "self")
+            --print("self")
 
             local dots = {...}
-            print("the dots arguments:")
-            __st(dots, "Ptr.mt.__call.per-ptr-type-ctor.args")
-            print("end of the dots arguments")
+            --print("the dots arguments:")
+            --__st(dots, "Ptr.mt.__call.per-ptr-type-ctor.args")
+            --print("end of the dots arguments")
             
-            print("pointer mt.__call about to return __gi_createNewPointer(...)")
+            --print("pointer mt.__call about to return __gi_createNewPointer(...)")
 
             -- try to detect if we're getting setter and getter...
             if #dots >= 2 and
                type(dots[1]) == "function" and
                type(dots[2]) == "function" then
                
-                  print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
+                  --print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
                   local newptr = __gi_createNewPointer(...)
                   local props = newptr[__gi_PropsKey]
                   
@@ -1198,7 +1198,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                      props.__str = str; -- needed to print ourselves accurately.
                      --__st(newptr[__gi_PropsKey], "newptr[__gi_PropsKey]")
                   else
-                     print("props was nil on newptr")
+                     --print("props was nil on newptr")
                   end
 
                   return newptr
@@ -1206,14 +1206,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             -- typ captured by closure.
             if typ ~= nil and typ.__constructor ~= nil then
                
-               print("calling ptr self.__constructor!")
+               --print("calling ptr self.__constructor!")
                local newb = typ.__constructor(self, ...)
-               print("done calling ptr typ.__constructor!")
+               --print("done calling ptr typ.__constructor!")
                if typ.__registered ~= nil then
-                  print("after ptr self.ctor, setting typ.__registered as metatable.")
+                  --print("after ptr self.ctor, setting typ.__registered as metatable.")
                   setmetatable(newb, typ.__registered)
                else
-                  print("after ptr self.ctor, setting typ.__registered was nil")
+                  --print("after ptr self.ctor, setting typ.__registered was nil")
                   setmetatable(newb, __gi_NewType_constructor_MT)
                end
                return newb
@@ -1223,14 +1223,14 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          end
       }
       setmetatable(typ, mt)
-      print("setting Ptr typ.__constructor to constructor: "..tostring(constructor))
+      --print("setting Ptr typ.__constructor to constructor: "..tostring(constructor))
 
       if constructor ~= nil then
          typ.__constructor = constructor
       else
-         print("jea debug: defining custom constructor")
+         --print("jea debug: defining custom constructor")
          typ.__constructor = function(self, getter, setter, target)
-            print("jea debug: top of a kind_Ptr constructor")
+            --print("jea debug: top of a kind_Ptr constructor")
 
             return __gi_createNewPointer(getter, setter)
 
@@ -1245,15 +1245,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem)
-         print("jea debug: top of ptr __init() with elem=",elem)
-         __st(elem, "elem")
+         --print("jea debug: top of ptr __init() with elem=",elem)
+         --__st(elem, "elem")
          typ.__elem = elem;
          typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
-         print("jea debug: __init function is calling __constructor to make the typ.__nil")
+         --print("jea debug: __init function is calling __constructor to make the typ.__nil")
 
          -- jea: skip making __nil until we get the whole process figured out.
          -- typ.__nil = __gi_createNewPointer( __gi_throwNilPointerError, __gi_throwNilPointerError);
-         print("jea debug: __init function back from __constructor to make the typ.__nil")
+         --print("jea debug: __init function back from __constructor to make the typ.__nil")
       end
 
    --------------------------------------------
@@ -1261,15 +1261,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    --------------------------------------------
       
    elseif kind == __gi_kind_Struct then
-      print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
+      --print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
 
       local mt = {
          __name = "Struct type constructed mt",
          __call = function(the_mt, self, ...)
-            print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
-            print("start st")
-            __st({...},"Struct.mt.__call.dots")
-            print("end st")
+            --print("jea debug: per-struct-type ctor_mt.__call() invoked, self='",tostring(self),"', with args=")
+            --print("start st")
+            --__st({...},"Struct.mt.__call.dots")
+            --print("end st")
             if self ~= nil and self.__constructor ~= nil then
                print("calling self.__constructor!")
                local newb = self.__constructor(self, ...)
@@ -1304,9 +1304,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__fields = fields;
          for i,fld in ipairs(fields) do
 
-            print("jea debug, fld =")
-            print("jea debug, type(fld.__typ) =", type(fld.__typ))
-            __st(f, "fld i='"..tostring(i).."' in __init() for struct")
+            --print("jea debug, fld =")
+            --print("jea debug, type(fld.__typ) =", type(fld.__typ))
+            --__st(f, "fld i='"..tostring(i).."' in __init() for struct")
             
             if type(fld.__typ) == "cdata" then
                -- cdata should be comparable.
@@ -1326,8 +1326,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          typ.__copy = function(dst, src)
             
             for i, fld in ipairs(typ.__fields) do
-               print("in __copy(), here are typ.fields:")
-               __st(typ.__fields, "typ.__fields")
+               --print("in __copy(), here are typ.fields:")
+               --__st(typ.__fields, "typ.__fields")
                
                -- switch
                local knd = 0
@@ -1512,9 +1512,9 @@ end
 -- for top level structs (the elem).
 
 function __ptrType(elem)
-   print(debug.traceback())
-   print("jea debug: top of __ptrType, elem=")
-   __st(elem)
+   --print(debug.traceback())
+   --print("jea debug: top of __ptrType, elem=")
+   --__st(elem)
 
    local et = nil
    local t = type(elem)
@@ -1526,8 +1526,8 @@ function __ptrType(elem)
       else
          error("__ptrType called with numeric elem out of range: "..tostring(elem))
       end
-      print("jea debug: after taking elem from __kind2type, in __ptrType, elem=")   
-      __st(elem, "elem")
+      --print("jea debug: after taking elem from __kind2type, in __ptrType, elem=")   
+      --__st(elem, "elem")
       
    elseif t == "table" then
       
@@ -1541,15 +1541,15 @@ function __ptrType(elem)
    
   local typ = elem.__ptr;
   if typ == nil then
-     print("__ptrType sees that elem.__ptr is nil, so making a new type:")
+     --print("__ptrType sees that elem.__ptr is nil, so making a new type:")
      
      typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
      elem.__ptr = typ;
 
      -- this is where we set __elem on the typ.
-     print("__ptrType about to call typ.__init(elem)")
+     --print("__ptrType about to call typ.__init(elem)")
      typ.__init(elem);
-     print("__ptrType back from typ.__init(elem)")
+     --print("__ptrType back from typ.__init(elem)")
   end
   return typ;
 end
@@ -1600,31 +1600,31 @@ end
 
 __gi_funcTypes = {};
 __gi_funcType = function(params, results, variadic)
-   print("debug: __gi_funcType called")
-   __st(params, "params")
-   __st(results, "results")
+   --print("debug: __gi_funcType called")
+   --__st(params, "params")
+   --__st(results, "results")
    
    local paramsM = __mapFuncOverTable(params, __type2str)
    local resultsM = __mapFuncOverTable(results, __type2str)
    
-   print("debug: paramsM = ")
-   __st(paramsM)
+   --print("debug: paramsM = ")
+   --__st(paramsM)
 
-   print("debug: resultsM = ")
-   __st(resultsM)
+   --print("debug: resultsM = ")
+   --__st(resultsM)
    
    local typeKey = "params:"..table.concat(paramsM, ",") .. "_results:" .. table.concat(resultsM,",") .. "_variadic:" .. tostring(variadic);
 
-   print("debug: typeKey = '".. typeKey.."'")
+   --print("debug: typeKey = '".. typeKey.."'")
    
   local typ = __gi_funcTypes[typeKey];
   if typ == nil then
      local paramTypes = __mapFuncOverTable(params, function(ty) __type2str(ty); end);
      if variadic then
 
-       -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
-       -- print to see the difference:
-       print("jea debug: paramTypes[paramTypes.length - 1].substr(2) = '"..paramTypes[paramTypes.length - 1].substr(2).."'   versus without the substr: '"..paramTypes[paramTypes.length - 1] .. "'")
+        -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
+        -- print to see the difference:
+        --print("jea debug: paramTypes[paramTypes.length - 1].substr(2) = '"..paramTypes[paramTypes.length - 1].substr(2).."'   versus without the substr: '"..paramTypes[paramTypes.length - 1] .. "'")
        
        paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1]
        --paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2)
@@ -1637,7 +1637,7 @@ __gi_funcType = function(params, results, variadic)
        str = str.. " (" .. table.concat(__mapFuncOverTable(results, __type2str),  ", ") .. ")";
     end
 
-    print("jea debug: final func signature is: '"..str.."'")
+    --print("jea debug: final func signature is: '"..str.."'")
     
     typ = __gi_NewType(4, __gi_kind_Func, str, false, "", false, nil);
     __gi_funcTypes[typeKey] = typ;
@@ -1770,7 +1770,7 @@ __arrayTypes = {};
 function __arrayType(elem, len, shortPkg, pkgPath)
    local et = type(elem)
    local ets = tostring(elem)
-   print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'  and len='"..tostring(len).."'")
+   --print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'  and len='"..tostring(len).."'")
    local typeKey
    if et == "cdata" then
       typeKey = ets .. "_" .. tostring(len)
