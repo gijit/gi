@@ -423,7 +423,7 @@ func (r *Repl) Eval(src string) error {
 	histEnd := len(r.history)
 	if r.histFile != nil {
 		for i := histBeg; i < histEnd; i++ {
-			fmt.Fprintf(r.histFile, "%s%s", r.history[i], zeroByte)
+			fmt.Fprintf(r.histFile, "%s\n", r.history[i])
 		}
 		r.histFile.Sync()
 	}

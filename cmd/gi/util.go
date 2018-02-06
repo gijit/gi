@@ -60,8 +60,6 @@ func readHistory(histFn string) (history []string, err error) {
 	return splt, nil
 }
 
-var zeroByte = string(byte(0))
-
 func removeCommands(history []string, histFn string, histFile *os.File, rms string) (history2 []string, histFile2 *os.File, beg int, end int, err error) {
 
 	beg = -1
@@ -101,7 +99,7 @@ func removeCommands(history []string, histFn string, histFile *os.File, rms stri
 	panicOn(err)
 	// print new history to file
 	for i := range history2 {
-		fmt.Fprintf(histFile2, "%s%s", history2[i], zeroByte)
+		fmt.Fprintf(histFile2, "%s\n", history2[i])
 	}
 	return
 }
@@ -153,8 +151,7 @@ func sourceGoFiles(files []string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		// zero
-		fmt.Fprintf(&buf, zeroByte)
+		fmt.Fprintf(&buf, "\n")
 	}
 	bb := buf.Bytes()
 	fmt.Printf("sourceGoFiles() returning '%s'\n", string(bb))
