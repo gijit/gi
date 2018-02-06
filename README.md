@@ -14,6 +14,9 @@ status
 
 2018 Feb 06 update
 -------
+In version v0.8.9, the repl received some refactoring
+to make it easier to test.
+
 In version v0.8.8 (quiet) and v0.8.7 (debug prints live),
 pointer support is much improved.
 
