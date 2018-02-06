@@ -47,6 +47,12 @@ __gi_PropsKey = {}
 __gi_MethodsetKey = {}
 __jsObjectPtr = {}
 
+function starToAsterisk(s)
+   -- parenthesize to get rid of the
+   -- substitution count.
+   return (string.gsub(s,"*","&"))
+end
+
 ------------------------------
 ------------------------------
 ------------------------------
@@ -74,7 +80,8 @@ __gi_PrivatePointer_MT = {
     __tostring = function(t)
        --print("__gijit_Pointer: tostring called")
        local props = rawget(t, __gi_PropsKey)
-       local typ = props.typ or "&unknownType"
+       local typ = props.__str or "&unknownType"
+       typ = starToAsterisk(typ)
        return typ .. "{" .. tostring(props.__get()) .. "}"
     end
  }
@@ -1183,7 +1190,18 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                type(dots[2]) == "function" then
                
                   print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
-                  return __gi_createNewPointer(...)
+                  local newptr = __gi_createNewPointer(...)
+                  local props = newptr[__gi_PropsKey]
+                  
+                  if props ~= nil then
+                     --print("props was not nil, adding some detail")
+                     props.__str = str; -- needed to print ourselves accurately.
+                     --__st(newptr[__gi_PropsKey], "newptr[__gi_PropsKey]")
+                  else
+                     print("props was nil on newptr")
+                  end
+
+                  return newptr
             end
             -- typ captured by closure.
             if typ ~= nil and typ.__constructor ~= nil then
