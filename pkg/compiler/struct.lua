@@ -1161,18 +1161,33 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
       local mt = {
          __name = "Ptr type constructed mt",
+         
          __call = function(the_mt, self, ...)
-            print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self='"..tostring(self).."', with args=")
-            print("start st")
-            __st({...}, "Ptr.mt.__call.per-ptr-type-ctor.args")
-            print("end st")
+            
+            print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self and =")
+
+            print("self")
+            __st(self, "self")
+            print("self")
+
+            local dots = {...}
+            print("the dots arguments:")
+            __st(dots, "Ptr.mt.__call.per-ptr-type-ctor.args")
+            print("end of the dots arguments")
             
             print("pointer mt.__call about to return __gi_createNewPointer(...)")
-            if true then
-               return __gi_createNewPointer(...)
+
+            -- try to detect if we're getting setter and getter...
+            if #dots >= 2 and
+               type(dots[1]) == "function" and
+               type(dots[2]) == "function" then
+               
+                  print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
+                  return __gi_createNewPointer(...)
             end
             -- typ captured by closure.
             if typ ~= nil and typ.__constructor ~= nil then
+               
                print("calling ptr self.__constructor!")
                local newb = typ.__constructor(self, ...)
                print("done calling ptr typ.__constructor!")
