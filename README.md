@@ -17,6 +17,7 @@ status
 In version v0.9.0, defer handling of named
 return values received some important correctness fixes.
 
+2018 Feb 06 update
 -------
 In version v0.8.9, the repl received some refactoring
 to make it easier to test.
