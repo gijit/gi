@@ -66,7 +66,7 @@ __gi_PrivatePointer_MT = {
     end,
 
     __index = function(t, k)
-       print("__gijit_Pointer: __index called, doing get()")       
+       --print("__gijit_Pointer: __index called, doing get()")       
        local props = rawget(t, __gi_PropsKey)
        return props.__get()
     end,
@@ -86,7 +86,7 @@ __gi_PrivatePointer_MT = {
 --
 function __gi_createNewPointer(getter, setter)
    print("top of __gi_createNewPointer()")
-   print(debug.traceback())
+   --print(debug.traceback())
 
    if getter == nil then
       error "__gijit_NewPointer sees nil getter"
