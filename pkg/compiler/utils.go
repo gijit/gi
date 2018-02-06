@@ -403,12 +403,12 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 
 func (c *funcContext) varPtrName(o *types.Var) string {
 	if isPkgLevel(o) && o.Exported() {
-		return c.pkgVar(o.Pkg()) + "." + o.Name() + "$ptr"
+		return c.pkgVar(o.Pkg()) + "." + o.Name() + "_ptr"
 	}
 
 	name, ok := c.p.varPtrNames[o]
 	if !ok {
-		name = c.newVariableWithLevel(o.Name()+"$ptr", isPkgLevel(o))
+		name = c.newVariableWithLevel(o.Name()+"_ptr", isPkgLevel(o))
 		c.p.varPtrNames[o] = name
 	}
 	return name
@@ -487,7 +487,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		if skipPrintingAnon == NORMAL { // != SKIP_ANON
 
 			// gotta generate the type immediately for the REPL.
-			c.Printf("\n\t%s = __%sType(__gi_kind_%s, \"%s\", \"%s\"); -- utils.go:477 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), c.p.Pkg.Name(), c.p.Pkg.Path())
+			c.Printf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:477 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
 		}
 	}
 	c.p.dependencies[anonType] = true

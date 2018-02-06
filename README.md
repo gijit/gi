@@ -59,7 +59,11 @@ In version v0.8.3, an internal release, we restrict `gijit` programs
 to a subset of legal `go` programs, by imposing
 a mild restriction on variable names.
 
-In `gijit`, you can't have a variable named `int`, or `float64`. These
+Minor restriction number one: variable names cannot start
+with '__' two underscores.
+
+Minor restriction number two: in `gijit`, you can't
+have a variable named `int`, or `float64`. These
 are names of two of the pre-declared numeric types in Go.
 
 For example, while

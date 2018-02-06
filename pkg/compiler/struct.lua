@@ -886,13 +886,17 @@ __gi_type_MT = {
 __gi_NewType_constructor_MT = {
    __name = "__gi_NewType_constructor_MT",
    __call = function(the_mt, self, ...)
-      print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with args=")
+      print("jea debug: __git_NewType_constructor_MT.__call() invoked, self='",tostring(self),"', with __constructor = ",self.__constructor," and args=")
       print("start st")
       __st({...}, "__gi_NewType_constructor_MT.dots")
       print("end st")
       if self ~= nil and self.__constructor ~= nil then
          print("calling self.__constructor!")
          return self.__constructor(self, ...)
+      else
+         if self ~= nil then
+            print("self.__constructor was nil")
+         end
       end
       return self
    end
@@ -945,6 +949,12 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       typ.__registered = __reg:GetPointeeMethodset(shortTypeName, pkgPath, shortPkg)
       print("typ.__registered back from __reg:GetPointeeMethodset = ", typ.__registered)
 
+      if typ.__registered == nil then
+         print("typ.__registered was nil, so I set __gi_NewType_constructor_MT on typ")
+         print("constructor is :", constructor)
+         setmetatable(typ, __gi_NewType_constructor_MT)
+      end
+      
    else
       setmetatable(typ, __gi_NewType_constructor_MT)
    end
@@ -1127,54 +1137,32 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    --------------------------------------------
       
    elseif kind == __gi_kind_Ptr then
-      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
+      print("jea debug: at __gi_kind_Ptr, in __gi_NewType()")
+      print("jea debug: at __gi_kind_Ptr, constructor is ", constructor)
 
-      local mt = {
-         __name = "Ptr type constructed mt",
-         __call = function(the_mt, self, ...)
-            print("jea debug: per-ptr-type ctor_mt.__call() invoked, the_mt='"..tostring(the_mt).."', self='"..tostring(self).."', with args=")
-            print("start st")
-            __st({...}, "Ptr.mt.__call.per-ptr-type-ctor.args")
-            print("end st")
-
-            -- typ captured by closure.
-            if typ ~= nil and typ.__constructor ~= nil then
-               print("calling ptr self.__constructor!")
-               local newb = typ.__constructor(self, ...)
-               print("done calling ptr typ.__constructor!")               
-               if typ.__registered ~= nil then
-                  print("after ptr self.ctor, setting typ.__registered as metatable.")
-                  setmetatable(newb, typ.__registered)
-               else
-                  print("after ptr self.ctor, setting typ.__registered was nil")
-                  setmetatable(newb, __gi_NewType_constructor_MT)
-               end
-               return newb
-            end
-            --is this why our .__ptr changing after instantiation? nope.
-            setmetatable(self, typ.__registered)
+      if constructor ~= nil then
+         typ.__constructor = constructor
+      else
+         print("jea debug: defining custom constructor")
+         typ.__constructor = function(self, getter, setter, target)
+            print("jea debug: top of a kind_Ptr constructor, with self=")
+            __st(self, "self")
+            
+            if self == nil then self = {}; end
+            self.__get = getter
+            self.__set = setter
+            self.__target = target
+            self.__val = self
             return self
          end
-      }
-      setmetatable(typ, mt)
-      print("setting Ptr typ.__constructor to constructor: "..tostring(constructor))
-      -- typ.__constructor = constructor
-      
-      typ.__constructor = constructor or
-         function(getter, setter, target)
-            print("jea debug: top of kind_Ptr constructor")
-            local newb = {__gi_get = getter, __gi_set = setter}
-            newb.__val = newb
-            return newb
-         end
-      
+      end   
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem)
          print("jea debug: top of ptr __init() with elem=",elem)
-         __st(elem)
+         __st(elem, "elem")
          typ.__elem = elem;
          typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
-         typ.__nil = __ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
+         typ.__nil = typ.__constructor({}, __gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
 
    --------------------------------------------
@@ -1432,10 +1420,31 @@ end
 -- port of javascript $ptrType() function
 -- for top level structs (the elem).
 
-__ptrType = function(elem)
+function __ptrType(elem, pkgName, pkgPath)
    print(debug.traceback())
    print("jea debug: top of __ptrType, elem=")
    __st(elem)
+
+   local et = nil
+   local t = type(elem)
+   if t == "number" then
+
+      et = __kind2type[elem]
+      if et ~= nil then
+         elem = et
+      else
+         error("__ptrType called with numeric elem out of range: "..tostring(elem))
+      end
+      
+   elseif t == "table" then
+      
+      if elem[__gi_PropsKey] == nil then
+         error("__ptrType called with non-type for elem")
+      end
+
+   else
+      error("unknown type for elem in __ptrType: '"..t.."'")
+   end
    
   local typ = elem.__ptr;
   if typ == nil then
