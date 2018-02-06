@@ -47,6 +47,70 @@ __gi_PropsKey = {}
 __gi_MethodsetKey = {}
 __jsObjectPtr = {}
 
+------------------------------
+------------------------------
+------------------------------
+------------------------------
+-- pointers
+------------------------------
+------------------------------
+
+-- metatable for pointers
+
+__gi_PrivatePointerMt = {
+
+    __newindex = function(t, k, v)
+       print("__gijit_Pointer: __newindex called, calling set() with val=", v)
+       local props = rawget(t, __gi_PropsKey)
+       return props.__set(v)
+    end,
+
+    __index = function(t, k)
+       print("__gijit_Pointer: __index called, doing get()")       
+       local props = rawget(t, __gi_PropsKey)
+       return props.__get()
+    end,
+
+    __tostring = function(t)
+       --print("__gijit_Pointer: tostring called")
+       local props = rawget(t, __gi_PropsKey)
+       local typ = props.typ or "&unknownType"
+       return typ .. "{" .. tostring(props.get()) .. "}"
+    end
+ }
+
+
+-- getter and setter are closures
+function __gijit_NewPointer(getter, setter, typeName)
+   print("top of __gijit_NewPointer()")
+   print(debug.traceback())
+   if getter == nil then
+      error "__gijit_NewPointer sees nil getter"
+   end
+   if setter == nil then
+      error "__gijit_NewPointer sees nil setter"
+   end
+   local proxy = {}
+   proxy[__gi_PropsKey] = {
+      __get=getter,
+      __set=setter,
+      __shortTypeName=typeName
+   }
+   setmetatable(proxy, __gi_PrivatePointerMt)
+   return proxy
+end
+
+--- ported from GopherJS, see __ptrType below
+
+-- forward declaration
+__ptrType = nil
+
+------------------------------
+------------------------------
+------------------------------
+------------------------------
+
+
 -- keep types and values separate; keep
 -- packages distinct.
 __curpkg = {
@@ -1110,7 +1174,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          __st(elem)
          typ.__elem = elem;
          typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
-         typ.__nil = __gi_ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
+         typ.__nil = __ptrType(__gi_throwNilPointerError, __gi_throwNilPointerError, "nil");
       end
 
    --------------------------------------------
@@ -1241,7 +1305,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                               synthesizeMethod(typ, m, f);
                               synthesizeMethod(typ.__ptr, m, f);
                      end
-                     for i,m in pairs(__gi_methodSet(__gi_ptrType(fld.__typ))) do
+                     for i,m in pairs(__gi_methodSet(__ptrType(fld.__typ))) do
                         synthesizeMethod(typ.__ptr, m, f);
                      end
                   end
@@ -1364,13 +1428,13 @@ end
 
 -------------------
 
--- distinct from __gi_ptrTyp in ptr.lua.
+-- distinct from __gijit_NewPonter.
 -- port of javascript $ptrType() function
 -- for top level structs (the elem).
 
-__ptrTypeFromElem = function(elem)
+__ptrType = function(elem)
    print(debug.traceback())
-   print("jea debug: top of __ptrTypeFromElem, elem=")
+   print("jea debug: top of __ptrType, elem=")
    __st(elem)
    
   local typ = elem.__ptr;
@@ -1383,8 +1447,6 @@ __ptrTypeFromElem = function(elem)
   end
   return typ;
 end
-
-__ptrType = __ptrTypeFromElem
 
 -------------------
 

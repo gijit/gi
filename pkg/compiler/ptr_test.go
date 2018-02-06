@@ -39,7 +39,7 @@ b := s.val
 }
 
 func Test099PointerDeference(t *testing.T) {
-	return // TODO remove this, debug only
+
 	cv.Convey(`dereferencing a pointer`, t, func() {
 
 		code := `
