@@ -76,6 +76,7 @@ func (cfg *GIConfig) LuajitMain() {
 	var prompterLine string
 	var by []byte
 
+top:
 	for {
 		if cfg.NoLiner {
 			fmt.Printf(prompt)
@@ -112,7 +113,7 @@ func (cfg *GIConfig) LuajitMain() {
 				num, err := getHistoryRange(low[1:], history)
 				if err != nil {
 					fmt.Printf("%s\n", err.Error())
-					continue
+					continue top
 				}
 
 				switch len(num) {
@@ -123,7 +124,7 @@ func (cfg *GIConfig) LuajitMain() {
 				case 2:
 					if num[1] < num[0] {
 						fmt.Printf("bad history request, end before beginning.\n")
-						continue
+						continue top
 					}
 					fmt.Printf("replay history %03d - %03d:\n", num[0], num[1])
 					src = strings.Join(history[num[0]-1:num[1]], "\n") + "\n"
@@ -149,30 +150,30 @@ func (cfg *GIConfig) LuajitMain() {
 					sessionStartAfter = beg
 				}
 			}
-			continue
+			continue top
 		}
 		switch low {
 		case ":ast":
 			inc.PrintAST = true
-			continue
+			continue top
 		case ":noast":
 			inc.PrintAST = false
-			continue
+			continue top
 		case ":q":
 			fmt.Printf("quiet mode\n")
 			verb.Verbose = false
 			verb.VerboseVerbose = false
-			continue
+			continue top
 		case ":v":
 			fmt.Printf("verbose mode.\n")
 			verb.Verbose = true
 			verb.VerboseVerbose = false
-			continue
+			continue top
 		case ":vv":
 			fmt.Printf("very verbose mode.\n")
 			verb.Verbose = true
 			verb.VerboseVerbose = true
-			continue
+			continue top
 		case ":clear", ":reset":
 			history = history[:0]
 			if histFn != "" {
@@ -183,12 +184,12 @@ func (cfg *GIConfig) LuajitMain() {
 			}
 			sessionStartAfter = 0
 			fmt.Printf("history cleared.\n")
-			continue
+			continue top
 		case ":h":
 			if len(history) == 0 {
 				fmt.Printf("history: empty\n")
 				fmt.Printf("----- current session: -----\n")
-				continue
+				continue top
 			}
 			fmt.Printf("history:\n")
 			newline := "\n"
@@ -211,30 +212,30 @@ func (cfg *GIConfig) LuajitMain() {
 				}
 			}
 			fmt.Printf("\n")
-			continue
+			continue top
 		case ":raw", ":r":
 			cfg.RawLua = true
 			prompt = luaPrompt
 			fmt.Printf("Raw LuaJIT language mode.\n")
-			continue
+			continue top
 		case ":go", ":g", ":":
 			cfg.RawLua = false
 			prompt = goPrompt
 			fmt.Printf("Go language mode.\n")
-			continue
+			continue top
 		case ":prelude", ":reload":
 			fmt.Printf("Reloading prelude...\n")
 
 			files, err := compiler.FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 			if err != nil {
 				fmt.Printf("error during prelude reload: '%v'", err)
-				continue
+				continue top
 			}
 			err = compiler.LuaDoFiles(vm, files)
 			if err != nil {
 				fmt.Printf("error during prelude reload: '%v'", err)
 			}
-			continue
+			continue top
 		case ":help", ":?":
 			fmt.Printf(`
 ======================
@@ -262,7 +263,7 @@ these special commands:
  :source <path>   re-play/source Go lines from a file
  ctrl-d to exit
 `)
-			continue
+			continue top
 		}
 
 		isDo = strings.HasPrefix(low, ":do")
@@ -311,7 +312,7 @@ these special commands:
 			} else {
 				fmt.Printf("nothing to do.\n")
 			}
-			continue
+			continue top
 		}
 
 	notColonCmd:
@@ -326,14 +327,14 @@ these special commands:
 			eof, syntaxErr, empty := front.TopLevelParseGoSource([]byte(src))
 			if empty {
 				prevSrc = ""
-				continue
+				continue top
 			}
 			//fmt.Printf("eof = %v, syntaxErr = %v\n", eof, syntaxErr)
 			if eof && !syntaxErr {
 				prompt = goMorePrompt
 				// get another line of input
 				prevSrc = src
-				continue
+				continue top
 			}
 			prevSrc = ""
 
@@ -377,14 +378,14 @@ these special commands:
 			fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", use[:len(use)-1])
 			compiler.DumpLuaStack(vm)
 			vm.Pop(1)
-			continue
+			continue top
 		}
 		err = vm.Call(0, 0)
 		if err != nil {
 			fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
 			compiler.DumpLuaStack(vm)
 			vm.Pop(1)
-			continue
+			continue top
 		}
 		t1 = time.Now()
 		// jea debug:
@@ -394,48 +395,6 @@ these special commands:
 		fmt.Printf("elapsed: '%v'\n", t1.Sub(t0))
 	}
 }
-
-/*
-func DumpLuaStack(L *luajit.State) {
-	var top int
-
-	top = L.GetTop()
-	for i := 1; i <= top; i++ {
-		t := L.Type(i)
-		switch t {
-		case luajit.Tstring:
-			fmt.Println("String : \t", L.Tostring(i))
-		case luajit.Tboolean:
-			fmt.Println("Bool : \t\t", L.Toboolean(i))
-		case luajit.Tnumber:
-			fmt.Println("Number : \t", L.Tonumber(i))
-		default:
-			fmt.Println("Type : \t\t", L.Typename(i))
-		}
-	}
-	print("\n")
-}
-
-func DumpLuaStackAsString(L *luajit.State) string {
-	var top int
-	s := ""
-	top = L.Gettop()
-	for i := 1; i <= top; i++ {
-		t := L.Type(i)
-		switch t {
-		case luajit.Tstring:
-			s += fmt.Sprintf("String : \t%v", L.Tostring(i))
-		case luajit.Tboolean:
-			s += fmt.Sprintf("Bool : \t\t%v", L.Toboolean(i))
-		case luajit.Tnumber:
-			s += fmt.Sprintf("Number : \t%v", L.Tonumber(i))
-		default:
-			s += fmt.Sprintf("Type : \t\t%v", L.Typename(i))
-		}
-	}
-	return s
-}
-*/
 
 func sourceGoFiles(files []string) ([]byte, error) {
 	var buf bytes.Buffer
