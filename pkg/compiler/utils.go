@@ -422,7 +422,7 @@ const (
 )
 
 func (c *funcContext) typeName(ty types.Type) (res string) {
-	res, _, _, _, _ = c.typeNameWithAnonInfo(ty)
+	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return
 }
 
@@ -433,7 +433,6 @@ func (c *funcContext) typeNameWithAnonInfo(
 	isAnon bool,
 	anonType *types.TypeName,
 	createdVarName string,
-	defineDerivedAndAnonTypes func(),
 ) {
 
 	// c.TypeNameSetting is a one-shot setting.
@@ -486,13 +485,8 @@ func (c *funcContext) typeNameWithAnonInfo(
 		createdVarName = varName
 
 		if skipPrintingAnon == NORMAL { // != SKIP_ANON
-
 			// gotta generate the type immediately for the REPL.
-			anonDefn := fmt.Sprintf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
-			defineDerivedAndAnonTypes = func() {
-				c.Printf(anonDefn)
-			}
-			defineDerivedAndAnonTypes()
+			c.Printf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
 		}
 	}
 	c.p.dependencies[anonType] = true
