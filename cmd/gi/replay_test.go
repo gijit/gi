@@ -21,5 +21,7 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 `
 		fmt.Printf("replay 2x, src='%s'\n", src)
 
+		r := NewRepl(cfg)
+
 	})
 }

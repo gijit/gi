@@ -1,10 +1,9 @@
--- structs and interfaces
+-- structs and interfaces and pointers.
 
+-- if __debug is true then __gi_NewType() will
+-- dump a bunch of debug info at the top of
+-- every call.
 __debug = false
-
--- general note:
--- the convention in translating gopherjs javascript's '$'
--- is to replace the '$' prefix with "__gi_"
 
 __gi_throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
 
@@ -40,7 +39,6 @@ __type__UnsafePointer =nil
 
 
 -- TODO: syncrhonize around this/deal with multi-threading?
---  may need to teach LuaJIT how to grab go mutexes or use sync.Atomics.
 __gi_idCounter = 0;
 
 __gi_PropsKey = {}
@@ -290,14 +288,6 @@ function __ifacePrinter(self)
 end
 
 
--- delete and fold into props:: __gi_structMT
-
-
--- common interface behavior
-__gi_ifaceMT = {
-   __name = "__gi_ifaceMT"
-}
-
 --
 -- RegisterStruct is the first step in making a new struct.
 -- It returns a methodset object.
@@ -366,8 +356,6 @@ function __reg:RegisterInterface(shortTypeName, pkgPath, shortPkg)
    props.__index = props
 
    setmetatable(methodset, props)
-   -- jea: not sure we want or need this any more:
-   --setmetatable(props, __gi_ifaceMT)
    
    self.interfaces[name] = methodset
    return methodset
@@ -1586,10 +1574,6 @@ function __mapFuncOverTable(tbl, func)
    end
    return newtbl
 end
-
--- straight port from gohperjs, not done or tested, yet.
--- It seems to be building from text a type signature...
--- then making a new type.
 
 --helper
 __type2str = function(t)

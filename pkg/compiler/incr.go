@@ -58,7 +58,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		}
 		funcSrcCache = make(map[string]string)
 	} else {
-		typesInfo = a.typesInfo
+		typesInfo = a.TypesInfo
 		funcSrcCache = a.funcSrcCache
 		//pp("typesInfo.Types = '%#v'", typesInfo.Types)
 	}
@@ -669,7 +669,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			FileSet:      encodedFileSet.Bytes(),
 			Minified:     minify,
 			NewCodeText:  newCodeText,
-			typesInfo:    typesInfo,
+			TypesInfo:    typesInfo,
 			config:       config,
 			pkg:          pkg,
 			check:        check,

@@ -107,16 +107,22 @@ func NewRepl(cfg *GIConfig) *Repl {
 
 func (r *Repl) Loop() {
 	for {
-		err := r.oneEval()
+		src, err := r.Read()
+		if err == io.EOF {
+			return
+		}
+		if src == "" {
+			continue
+		}
+		err = r.Eval(src)
 		if err == io.EOF {
 			return
 		}
 	}
 }
 
-func (r *Repl) oneEval() error {
+func (r *Repl) Read() (src string, err error) {
 
-	var err error
 	var by []byte
 
 	if r.cfg.NoLiner {
@@ -131,21 +137,21 @@ func (r *Repl) oneEval() error {
 			fmt.Printf("\n on EOF, but len(by) = %v, by='%s'", len(by), string(by))
 			// process bytes first,
 			// return next time.
-			return nil
+			return
 		} else {
 			fmt.Printf("[EOF]\n")
-			return err
+			return "", err
 		}
 	}
 	panicOn(err)
 	use := string(by)
-	src := use
+	src = use
 	cmd := bytes.TrimSpace(by)
 	low := string(bytes.ToLower(cmd))
 	if len(low) > 1 && low[0] == ':' {
 		if low[:2] == "::" {
 			// likely the start of a lua label for a goto, not a special : command.
-			goto notColonCmd
+			return
 		}
 		if low[1] == '-' || (low[1] >= '0' && low[1] <= '9') {
 			// replay history, one command, or a range.
@@ -154,7 +160,7 @@ func (r *Repl) oneEval() error {
 			num, err := getHistoryRange(low[1:], r.history)
 			if err != nil {
 				fmt.Printf("%s\n", err.Error())
-				return nil
+				return "", err
 			}
 
 			switch len(num) {
@@ -165,7 +171,7 @@ func (r *Repl) oneEval() error {
 			case 2:
 				if num[1] < num[0] {
 					fmt.Printf("bad history request, end before beginning.\n")
-					return nil
+					return "", nil
 				}
 				fmt.Printf("replay history %03d - %03d:\n", num[0], num[1])
 				src = strings.Join(r.history[num[0]-1:num[1]], "\n") + "\n"
@@ -191,30 +197,30 @@ func (r *Repl) oneEval() error {
 				r.sessionStartAfter = beg
 			}
 		}
-		return nil
+		return "", nil
 	}
 	switch low {
 	case ":ast":
 		r.inc.PrintAST = true
-		return nil
+		return "", nil
 	case ":noast":
 		r.inc.PrintAST = false
-		return nil
+		return "", nil
 	case ":q":
 		fmt.Printf("quiet mode\n")
 		verb.Verbose = false
 		verb.VerboseVerbose = false
-		return nil
+		return "", nil
 	case ":v":
 		fmt.Printf("verbose mode.\n")
 		verb.Verbose = true
 		verb.VerboseVerbose = false
-		return nil
+		return "", nil
 	case ":vv":
 		fmt.Printf("very verbose mode.\n")
 		verb.Verbose = true
 		verb.VerboseVerbose = true
-		return nil
+		return "", nil
 	case ":clear", ":reset":
 		r.history = r.history[:0]
 		if r.histFn != "" {
@@ -225,12 +231,12 @@ func (r *Repl) oneEval() error {
 		}
 		r.sessionStartAfter = 0
 		fmt.Printf("history cleared.\n")
-		return nil
+		return "", nil
 	case ":h":
 		if len(r.history) == 0 {
 			fmt.Printf("history: empty\n")
 			fmt.Printf("----- current session: -----\n")
-			return nil
+			return "", nil
 		}
 		fmt.Printf("history:\n")
 		newline := "\n"
@@ -253,30 +259,30 @@ func (r *Repl) oneEval() error {
 			}
 		}
 		fmt.Printf("\n")
-		return nil
+		return "", nil
 	case ":raw", ":r":
 		r.cfg.RawLua = true
 		r.prompt = r.luaPrompt
 		fmt.Printf("Raw LuaJIT language mode.\n")
-		return nil
+		return "", nil
 	case ":go", ":g", ":":
 		r.cfg.RawLua = false
 		r.prompt = r.goPrompt
 		fmt.Printf("Go language mode.\n")
-		return nil
+		return "", nil
 	case ":prelude", ":reload":
 		fmt.Printf("Reloading prelude...\n")
 
 		files, err := compiler.FetchPreludeFilenames(r.cfg.PreludePath, r.cfg.Quiet)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
-			return nil
+			return "", err
 		}
 		err = compiler.LuaDoFiles(r.vm, files)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
 		}
-		return nil
+		return "", nil
 	case ":help", ":?":
 		fmt.Printf(`
 ======================
@@ -304,7 +310,7 @@ these special commands:
  :source <path>   re-play/source Go lines from a file
  ctrl-d to exit
 `)
-		return nil
+		return "", nil
 	}
 
 	r.isDo = strings.HasPrefix(low, ":do")
@@ -344,7 +350,7 @@ these special commands:
 					fmt.Printf("error during %s: '%v'\n", action, err)
 				} else {
 					src = string(by)
-					goto notColonCmd
+					return src, nil
 				}
 			}
 			if err != nil {
@@ -353,10 +359,14 @@ these special commands:
 		} else {
 			fmt.Printf("nothing to do.\n")
 		}
-		return nil
+		return "", nil
 	}
+	return src, nil
+}
 
-notColonCmd:
+func (r *Repl) Eval(src string) error {
+
+	var use string
 	isContinuation := len(r.prevSrc) > 0
 	if !r.cfg.RawLua {
 		if isContinuation {
@@ -421,7 +431,7 @@ notColonCmd:
 		r.vm.Pop(1)
 		return nil
 	}
-	err = r.vm.Call(0, 0)
+	err := r.vm.Call(0, 0)
 	if err != nil {
 		fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
 		compiler.DumpLuaStack(r.vm)

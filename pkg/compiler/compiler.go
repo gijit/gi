@@ -57,7 +57,7 @@ type Archive struct {
 	NewCodeText  [][]byte
 
 	// save state so we can type incrementally
-	typesInfo *types.Info
+	TypesInfo *types.Info
 	config    *types.Config
 	pkg       *types.Package
 	check     *types.Checker
