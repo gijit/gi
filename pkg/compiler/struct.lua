@@ -65,26 +65,26 @@ end
 
 __gi_PrivatePointer_MT = {
 
-    __newindex = function(t, k, v)
-       --print("__gijit_Pointer: __newindex called, calling set() with val=", v)
-       local props = rawget(t, __gi_PropsKey)
-       return props.__set(v)
-    end,
+   __newindex = function(t, k, v)
+      --print("__gijit_Pointer: __newindex called, calling set() with val=", v)
+      local props = rawget(t, __gi_PropsKey)
+      return props.__set(v)
+   end,
 
-    __index = function(t, k)
-       --print("__gijit_Pointer: __index called, doing get()")       
-       local props = rawget(t, __gi_PropsKey)
-       return props.__get()
-    end,
+   __index = function(t, k)
+      --print("__gijit_Pointer: __index called, doing get()")       
+      local props = rawget(t, __gi_PropsKey)
+      return props.__get()
+   end,
 
-    __tostring = function(t)
-       --print("__gijit_Pointer: tostring called")
-       local props = rawget(t, __gi_PropsKey)
-       local typ = props.__str or "&unknownType"
-       typ = starToAsterisk(typ)
-       return typ .. "{" .. tostring(props.__get()) .. "}"
-    end
- }
+   __tostring = function(t)
+      --print("__gijit_Pointer: tostring called")
+      local props = rawget(t, __gi_PropsKey)
+      local typ = props.__str or "&unknownType"
+      typ = starToAsterisk(typ)
+      return typ .. "{" .. tostring(props.__get()) .. "}"
+   end
+}
 
 
 -- getter and setter are closures
@@ -629,86 +629,86 @@ function __gi_assertType(value, typ, returnTuple)
       -- ok = typ.__implementedBy[valueTypeString];
       
       --if not ok then
-         --print("assertType: ")
-         
-         ok = true;
+      --print("assertType: ")
+      
+      ok = true;
 
-         local  valueMethodSet = value.__methods_desc
-         
-         --local  valueMethodSet = value[__gi_MethodsetKey]
-         --print("valueMethodSet is")
-         __show_methods_desc(valueMethodSet, "valueMethodSet")
-         
-         --local valueMethodSet = __gi_methodSet(value.__str);
+      local  valueMethodSet = value.__methods_desc
+      
+      --local  valueMethodSet = value[__gi_MethodsetKey]
+      --print("valueMethodSet is")
+      __show_methods_desc(valueMethodSet, "valueMethodSet")
+      
+      --local valueMethodSet = __gi_methodSet(value.__str);
 
-         local msl = __gi_count_methods(valueMethodSet)
-         
-         local ni = #interfaceMethods
-         local uscore = 95 -- "_"
+      local msl = __gi_count_methods(valueMethodSet)
+      
+      local ni = #interfaceMethods
+      local uscore = 95 -- "_"
 
-         --print("ni = ", ni)
+      --print("ni = ", ni)
+      
+      for i = 1, ni do
+         --print("i = ",i," out of ni = ", ni)
          
-         for i = 1, ni do
-            --print("i = ",i," out of ni = ", ni)
+         local tm = interfaceMethods[i];
+         --print("tm =")
+         --__st(tm)
+
+         --if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
+         -- print("skipping '__' prefixed method: "..tostring(tm))
+         --   goto continue
+         --end
+         
+         local found = false;
+
+         --print("i = ", i)
+         --__st(valueMethodSet, "valueMethodSet")
+         
+         for j, vm in pairs(valueMethodSet) do
+
+            --print("on j =", j, " vm =")
+            --__st(vm, "vm")
             
-            local tm = interfaceMethods[i];
-            --print("tm =")
-            --__st(tm)
-
-            --if #tm >= 2 and string.byte(tm,1,1)==uscore and string.byte(tm,2,2) == uscore then
-            -- print("skipping '__' prefixed method: "..tostring(tm))
-            --   goto continue
+            --if type(j) == "string" and #j >= 2 and
+            --   string.byte(j,1,1)==uscore and
+            --string.byte(j,2,2) == uscore then
+            --   
+            --   print("skipping '__' prefixed method: "..tostring(j))
+            --   goto continue2
             --end
             
-            local found = false;
-
-            --print("i = ", i)
-            --__st(valueMethodSet, "valueMethodSet")
-            
-            for j, vm in pairs(valueMethodSet) do
-
-               --print("on j =", j, " vm =")
-               --__st(vm, "vm")
-               
-               --if type(j) == "string" and #j >= 2 and
-               --   string.byte(j,1,1)==uscore and
-               --string.byte(j,2,2) == uscore then
-               --   
-               --   print("skipping '__' prefixed method: "..tostring(j))
-               --   goto continue2
-               --end
-               
-               if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
+            if vm.__name == tm.__name and vm.__pkg == tm.__pkg and vm.__typ == tm.__typ then
                -- temp debug: just match on the name until we
                -- figure out where the vm typ info lives.
                --if j == tm.__name then 
-                  --print("found 0000000000 method match, vm=")
-                  --__st(vm, "vm")
-                  found = true;
-                  break;
-               else
-                  -- debug prints:
-                  --print("not match, 111111111: tried to compare: vm=")
-                  --__st(vm, "vm")
-                  --print("not match, 111111111: tried to compare: tm=")
-                  --__st(tm, "tm")
-               end
-               
-               --::continue2::
+               --print("found 0000000000 method match, vm=")
+               --__st(vm, "vm")
+               found = true;
+               break;
+            else
+               -- debug prints:
+               --print("not match, 111111111: tried to compare: vm=")
+               --__st(vm, "vm")
+               --print("not match, 111111111: tried to compare: tm=")
+               --__st(tm, "tm")
             end
             
-            if not found then
-               ok = false;
-               -- cannot cache, as repl may add/subtract methods.
-               missingMethod = tm.__name;
-               --print("7777777777 jea debug: missingMethod is '"..missingMethod.."'")
-               break;
-            end
-            --::continue::            
+            --::continue2::
          end
+         
+         if not found then
+            ok = false;
+            -- cannot cache, as repl may add/subtract methods.
+            missingMethod = tm.__name;
+            --print("7777777777 jea debug: missingMethod is '"..missingMethod.."'")
+            break;
+         end
+         --::continue::            
+      end
       
-         -- but, note we can't cache this, repl may change it.
-         -- typ.__implementedBy[valueTypeString] = ok;
+      -- but, note we can't cache this, repl may change it.
+      -- typ.__implementedBy[valueTypeString] = ok;
       
       --end
    end
@@ -785,33 +785,33 @@ __gi_kind_UnsafePointer = 26;
 __gi_kind_cdata = 27;
 
 __kind2str = {
-[1]="__gi_kind_bool",
-[2]="__gi_kind_int",
-[3]="__gi_kind_int8",
-[4]="__gi_kind_int16",
-[5]="__gi_kind_int32",
-[6]="__gi_kind_int64",
-[7]="__gi_kind_uint",
-[8]="__gi_kind_uint8",
-[9]="__gi_kind_uint16",
-[10]="__gi_kind_uint32",
-[11]="__gi_kind_uint64",
-[12]="__gi_kind_uintptr",
-[13]="__gi_kind_float32",
-[14]="__gi_kind_float64",
-[15]="__gi_kind_complex64",
-[16]="__gi_kind_complex128",
-[17]="__gi_kind_Array",
-[18]="__gi_kind_Chan",
-[19]="__gi_kind_Func",
-[20]="__gi_kind_Interface",
-[21]="__gi_kind_Map",
-[22]="__gi_kind_Ptr",
-[23]="__gi_kind_Slice",
-[24]="__gi_kind_String",
-[25]="__gi_kind_Struct",
-[26]="__gi_kind_UnsafePointer",
-[27]="__gi_kind_cdata"
+   [1]="__gi_kind_bool",
+   [2]="__gi_kind_int",
+   [3]="__gi_kind_int8",
+   [4]="__gi_kind_int16",
+   [5]="__gi_kind_int32",
+   [6]="__gi_kind_int64",
+   [7]="__gi_kind_uint",
+   [8]="__gi_kind_uint8",
+   [9]="__gi_kind_uint16",
+   [10]="__gi_kind_uint32",
+   [11]="__gi_kind_uint64",
+   [12]="__gi_kind_uintptr",
+   [13]="__gi_kind_float32",
+   [14]="__gi_kind_float64",
+   [15]="__gi_kind_complex64",
+   [16]="__gi_kind_complex128",
+   [17]="__gi_kind_Array",
+   [18]="__gi_kind_Chan",
+   [19]="__gi_kind_Func",
+   [20]="__gi_kind_Interface",
+   [21]="__gi_kind_Map",
+   [22]="__gi_kind_Ptr",
+   [23]="__gi_kind_Slice",
+   [24]="__gi_kind_String",
+   [25]="__gi_kind_Struct",
+   [26]="__gi_kind_UnsafePointer",
+   [27]="__gi_kind_cdata"
 }
 
 __kind2type = {}
@@ -1051,9 +1051,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       end      
       typ.__wrapped = true;
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
-                                self.__gi_get = function() return array; end;
-                                self.__gi_set = function(v) typ.__copy(self, v); end
-                                self.__val = array;
+                                  self.__gi_get = function() return array; end;
+                                  self.__gi_set = function(v) typ.__copy(self, v); end
+                                  self.__val = array;
       end);
       typ.__init = function(elem, len)
          --print("jea debug: __init() for array called, elem=", elem)
@@ -1160,7 +1160,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       --------------------------------------------
       --------------------------------------------
       --------------------------------------------
-      -- revert!
       
    elseif kind == __gi_kind_Ptr then
       --print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
@@ -1187,21 +1186,21 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             -- try to detect if we're getting setter and getter...
             if #dots >= 2 and
                type(dots[1]) == "function" and
-               type(dots[2]) == "function" then
+            type(dots[2]) == "function" then
                
-                  --print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
-                  local newptr = __gi_createNewPointer(...)
-                  local props = newptr[__gi_PropsKey]
-                  
-                  if props ~= nil then
-                     --print("props was not nil, adding some detail")
-                     props.__str = str; -- needed to print ourselves accurately.
-                     --__st(newptr[__gi_PropsKey], "newptr[__gi_PropsKey]")
-                  else
-                     --print("props was nil on newptr")
-                  end
+               --print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
+               local newptr = __gi_createNewPointer(...)
+               local props = newptr[__gi_PropsKey]
+               
+               if props ~= nil then
+                  --print("props was not nil, adding some detail")
+                  props.__str = str; -- needed to print ourselves accurately.
+                  --__st(newptr[__gi_PropsKey], "newptr[__gi_PropsKey]")
+               else
+                  --print("props was nil on newptr")
+               end
 
-                  return newptr
+               return newptr
             end
             -- typ captured by closure.
             if typ ~= nil and typ.__constructor ~= nil then
@@ -1256,9 +1255,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          --print("jea debug: __init function back from __constructor to make the typ.__nil")
       end
 
-   --------------------------------------------
-   --------------------------------------------
-   --------------------------------------------
+      --------------------------------------------
+      --------------------------------------------
+      --------------------------------------------
       
    elseif kind == __gi_kind_Struct then
       --print("jea debug: at kind == __gi_kind_Struct in __gi_NewType()")
@@ -1350,7 +1349,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          -- nil value
          local properties = {};
          for i, fld in ipairs(fields) do
-               properties[fld.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
+            properties[fld.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end
          typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.prototype, properties);
          typ.__ptr.__nil.__val = typ.__ptr.__nil;
@@ -1381,8 +1380,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   if fld.__anonymous then
                      
                      for i,m in pairs(__gi_methodSet(fld.__typ)) do
-                              synthesizeMethod(typ, m, f);
-                              synthesizeMethod(typ.__ptr, m, f);
+                        synthesizeMethod(typ, m, f);
+                        synthesizeMethod(typ.__ptr, m, f);
                      end
                      for i,m in pairs(__gi_methodSet(__ptrType(fld.__typ))) do
                         synthesizeMethod(typ.__ptr, m, f);
@@ -1393,9 +1392,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
 
       end -- end of typ.__init definition.
 
-   --------------------------------------------
-   --------------------------------------------
-   --------------------------------------------
+      --------------------------------------------
+      --------------------------------------------
+      --------------------------------------------
       
    else
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
@@ -1539,19 +1538,19 @@ function __ptrType(elem)
       error("unknown type for elem in __ptrType: '"..t.."'")
    end
    
-  local typ = elem.__ptr;
-  if typ == nil then
-     --print("__ptrType sees that elem.__ptr is nil, so making a new type:")
-     
-     typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
-     elem.__ptr = typ;
+   local typ = elem.__ptr;
+   if typ == nil then
+      --print("__ptrType sees that elem.__ptr is nil, so making a new type:")
+      
+      typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
+      elem.__ptr = typ;
 
-     -- this is where we set __elem on the typ.
-     --print("__ptrType about to call typ.__init(elem)")
-     typ.__init(elem);
-     --print("__ptrType back from typ.__init(elem)")
-  end
-  return typ;
+      -- this is where we set __elem on the typ.
+      --print("__ptrType about to call typ.__init(elem)")
+      typ.__init(elem);
+      --print("__ptrType back from typ.__init(elem)")
+   end
+   return typ;
 end
 
 -------------------
@@ -1617,33 +1616,33 @@ __gi_funcType = function(params, results, variadic)
 
    --print("debug: typeKey = '".. typeKey.."'")
    
-  local typ = __gi_funcTypes[typeKey];
-  if typ == nil then
-     local paramTypes = __mapFuncOverTable(params, function(ty) __type2str(ty); end);
-     if variadic then
+   local typ = __gi_funcTypes[typeKey];
+   if typ == nil then
+      local paramTypes = __mapFuncOverTable(params, function(ty) __type2str(ty); end);
+      if variadic then
 
-        -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
-        -- print to see the difference:
-        --print("jea debug: paramTypes[paramTypes.length - 1].substr(2) = '"..paramTypes[paramTypes.length - 1].substr(2).."'   versus without the substr: '"..paramTypes[paramTypes.length - 1] .. "'")
-       
-       paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1]
-       --paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2)
-       
-    end
-    local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
-    if #results == 1 then
-       str = str.. " " .. __type2str(results[1])
-    elseif #results > 1 then
-       str = str.. " (" .. table.concat(__mapFuncOverTable(results, __type2str),  ", ") .. ")";
-    end
+         -- jea: Hmm, I haven't figured why the substr(2) wants to chop off the first 2 char.
+         -- print to see the difference:
+         --print("jea debug: paramTypes[paramTypes.length - 1].substr(2) = '"..paramTypes[paramTypes.length - 1].substr(2).."'   versus without the substr: '"..paramTypes[paramTypes.length - 1] .. "'")
+         
+         paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1]
+         --paramTypes[paramTypes.length - 1] = "..." .. paramTypes[paramTypes.length - 1].substr(2)
+         
+      end
+      local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
+      if #results == 1 then
+         str = str.. " " .. __type2str(results[1])
+      elseif #results > 1 then
+         str = str.. " (" .. table.concat(__mapFuncOverTable(results, __type2str),  ", ") .. ")";
+      end
 
-    --print("jea debug: final func signature is: '"..str.."'")
-    
-    typ = __gi_NewType(4, __gi_kind_Func, str, false, "", false, nil);
-    __gi_funcTypes[typeKey] = typ;
-    typ.__init(params, results, variadic);
-  end
-  return typ;
+      --print("jea debug: final func signature is: '"..str.."'")
+      
+      typ = __gi_NewType(4, __gi_kind_Func, str, false, "", false, nil);
+      __gi_funcTypes[typeKey] = typ;
+      typ.__init(params, results, variadic);
+   end
+   return typ;
 end
 
 --
@@ -1670,40 +1669,40 @@ __type__UnsafePointer = __gi_NewType(8, __gi_kind_UnsafePointer, "", "unsafe.Poi
 
 --
 __kind2type = {
-[1]=__type__bool,
-[2]=__type__int,
-[3]=__type__int8,
-[4]=__type__int16,
-[5]=__type__int32,
-[6]=__type__int64,
-[7]=__type__uint,
-[8]=__type__uint8,
-[9]=__type__uint16,
-[10]=__type__uint32,
-[11]=__type__uint64,
-[12]=__type__uintptr,
-[13]=__type__float32,
-[14]=__type__float64,
-[15]=__type__complex64,
-[16]=__type__complex128,
-[17]=__type__Array,
-[18]=__type__Chan,
-[19]=__type__Func,
-[20]=__type__Interface,
-[21]=__type__Map,
-[22]=__type__Ptr,
-[23]=__type__Slice,
-[24]=__type__String,
-[25]=__type__Struct,
-[26]=__type__UnsafePointer,
+   [1]=__type__bool,
+   [2]=__type__int,
+   [3]=__type__int8,
+   [4]=__type__int16,
+   [5]=__type__int32,
+   [6]=__type__int64,
+   [7]=__type__uint,
+   [8]=__type__uint8,
+   [9]=__type__uint16,
+   [10]=__type__uint32,
+   [11]=__type__uint64,
+   [12]=__type__uintptr,
+   [13]=__type__float32,
+   [14]=__type__float64,
+   [15]=__type__complex64,
+   [16]=__type__complex128,
+   [17]=__type__Array,
+   [18]=__type__Chan,
+   [19]=__type__Func,
+   [20]=__type__Interface,
+   [21]=__type__Map,
+   [22]=__type__Ptr,
+   [23]=__type__Slice,
+   [24]=__type__String,
+   [25]=__type__Struct,
+   [26]=__type__UnsafePointer,
 }
 
 -- 
 
 __equal = function(a, b, typ)
    if typ == __jsObjectPtr then
-    return a == b;
-    end
+      return a == b;
+   end
    
    local k = typ.__kind
    if k ==  __gi_kind_complex64 or
@@ -1750,19 +1749,19 @@ __equal = function(a, b, typ)
 end
 
 __interfaceIsEqual = function(a, b) 
-  if a == __ifaceNil or b == __ifaceNil then
-         return a == b;
-  end
-  if a.__constructor ~= b.__constructor then
-    return false;
-  end
-  if a.__constructor == __jsObjectPtr then
-    return a.object == b.object;
-  end
-  if not a.__comparable then
-    error("comparing uncomparable typ='" .. a.str .. "'");
-  end
-  return __equal(a, b, a.__constructor);
+   if a == __ifaceNil or b == __ifaceNil then
+      return a == b;
+   end
+   if a.__constructor ~= b.__constructor then
+      return false;
+   end
+   if a.__constructor == __jsObjectPtr then
+      return a.object == b.object;
+   end
+   if not a.__comparable then
+      error("comparing uncomparable typ='" .. a.str .. "'");
+   end
+   return __equal(a, b, a.__constructor);
 end
 
 --var $arrayTypes = {};
