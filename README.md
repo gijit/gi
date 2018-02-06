@@ -12,6 +12,17 @@ binary is called simply `gi`, as it is a
 status
 ------
 
+2018 Feb 06 update
+-------
+In version v0.8.7, pointer support is much improved.
+
+Both assignment to pointers, and assignment through
+pointers, work now.
+
+Still TODO is supporting pointer members
+within structs, but that should follow shortly.
+
+
 2018 Feb 05 update
 -------
 Excellent progress.
