@@ -906,9 +906,8 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 				//if true {
 				//	typPrefix = ""
 				//}
-				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
+				typName, isAnon, anonType, createdNm, _ := c.typeNameWithAnonInfo(lhsType)
 				pp("debug __gi_clone2 arg: c.typeName(lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
-
 				if isAnon {
 					return fmt.Sprintf(`%s = __gi_clone2(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type()))
 
