@@ -658,7 +658,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return c.formatExpr(` %1e('get', %2s, %3e) `, e.X, key, c.zeroValue(t.Elem()))
 			//return c.formatExpr(`(%1s = %2e[%3s], %1s !== undefined ? %1s.v : %4e)`, c.newVariable("_entry"), e.X, key, c.zeroValue(t.Elem()))
 		case *types.Basic:
-			return c.formatExpr("%e.charCodeAt(%f)", e.X, e.Index)
+			return c.formatExpr("__utf8.sub(%e,%f+1,%f+1)", e.X, e.Index, e.Index)
 		default:
 			panic(fmt.Sprintf("Unhandled IndexExpr: %T\n", t))
 		}
