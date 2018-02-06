@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
@@ -31,9 +32,24 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 		panicOn(err)
 		r := NewRepl(cfg)
 
-		err = r.Eval(src)
-		cv.So(err, cv.ShouldBeNil)
-		err = r.Eval(src)
-		cv.So(err, cv.ShouldBeNil)
+		/*
+			// oddly, when sent as a 4 line chunk, not
+			// broken up into separate lines, we don't see
+			// the issue.
+			err = r.Eval(src)
+			cv.So(err, cv.ShouldBeNil)
+			err = r.Eval(src)
+			cv.So(err, cv.ShouldBeNil)
+		*/
+		// now split into lines: then we get the oops.
+		lines := strings.Split(src, "\n")
+		// and do the lines set 2x
+		for j := 0; j < 2; j++ {
+			for i := range lines {
+				err = r.Eval(lines[i])
+				panicOn(err)
+			}
+			fmt.Printf("\n pass j=%v complete.\n", j)
+		}
 	})
 }

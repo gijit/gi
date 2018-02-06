@@ -395,6 +395,9 @@ func (r *Repl) Eval(src string) error {
 			fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(src))
 			translation = "\n"
 			// still write, so we get another prompt
+
+			// hmm, or maybe not
+			return err
 		} else {
 			p("got translation of line from Go into lua: '%s'\n", strings.TrimSpace(string(translation)))
 		}
