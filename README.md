@@ -18,7 +18,18 @@ In version v0.8.8 (quiet) and v0.8.7 (debug prints live),
 pointer support is much improved.
 
 Basic assignment to pointers, and assignment through
-pointers, work now.
+pointers, work now. For example, the sequence
+
+~~~
+ a:= 1
+ b := &a
+ c := *b
+ *b = 3
+~~~
+
+works as expected (ptr_test.go/Test099). As usual,
+after the four statements, `c` ends as 1,
+and `a` ends as 3.
 
 Still TODO is supporting pointer members
 within structs, but that should follow shortly.
