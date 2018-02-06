@@ -14,7 +14,8 @@ status
 
 2018 Feb 06 update
 -------
-In version v0.8.7, pointer support is much improved.
+In version v0.8.8 (quiet) and v0.8.7 (debug prints live),
+pointer support is much improved.
 
 Basic assignment to pointers, and assignment through
 pointers, work now.
