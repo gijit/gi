@@ -84,7 +84,7 @@ func NewRepl(cfg *GIConfig) *Repl {
 
 	r.reader = bufio.NewReader(os.Stdin)
 	r.goPrompt = "gi> "
-	r.goMorePrompt = ">>>    "
+	//r.goMorePrompt = ">>>    "
 	r.luaPrompt = "raw luajit gi> "
 	r.isDo = false
 	r.isSource = false
@@ -111,9 +111,7 @@ func (r *Repl) Loop() {
 		if err == io.EOF {
 			return
 		}
-		if src == "" {
-			continue
-		}
+
 		err = r.Eval(src)
 		if err == io.EOF {
 			return
@@ -126,7 +124,9 @@ func (r *Repl) Read() (src string, err error) {
 	var by []byte
 
 	if r.cfg.NoLiner {
-		fmt.Printf(r.prompt)
+		if r.prompt != "" {
+			fmt.Printf(r.prompt)
+		}
 		by, err = r.reader.ReadBytes('\n')
 	} else {
 		r.prompterLine, err = r.prompter.Getline(&(r.prompt))
@@ -409,6 +409,8 @@ func (r *Repl) Eval(src string) error {
 	}
 
 	p("sending use='%v'\n", use)
+
+	// add to history as separate lines
 	srcLines := strings.Split(src, "\n")
 	//fmt.Printf("appending to history: src='%#v', srcLines='%#v'\n", src, srcLines)
 	lensrc := len(srcLines)
