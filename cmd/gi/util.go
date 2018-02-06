@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"runtime/debug"
@@ -12,7 +14,7 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 )
 
-func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation, baddy string, err error) {
+func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {
 	defer func() {
 		recov := recover()
 		if recov != nil {
@@ -21,33 +23,13 @@ func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation, b
 				msg += fmt.Sprintf("\n%s\n", string(debug.Stack()))
 			}
 			err = fmt.Errorf(msg)
-		} else {
-			baddy = ""
 		}
 	}()
 	ssrc := string(src)
 	pp("about to translate Go source '%s'", ssrc)
 
-	//translation = string(inc.Tr([]byte(src)))
+	translation = string(inc.Tr([]byte(src)))
 
-	// gotta do it in chunks so the type checker
-	// updates its think about what methods a variable
-	// has on it.
-	if false {
-		chunks := strings.Split(ssrc, ChunkSep)
-		for _, chunk := range chunks {
-			// will panic on error
-			fmt.Printf("sending chunk to inc.Tr(): '%s'\n", chunk)
-			baddy = chunk
-			part := string(inc.Tr([]byte(chunk)))
-
-			// success, add to output
-			translation += "\n" + part
-		}
-	} else {
-		baddy = string(src)
-		translation = string(inc.Tr([]byte(src)))
-	}
 	t2 := strings.TrimSpace(translation)
 	nt2 := len(t2)
 	if nt2 > 0 {
@@ -67,7 +49,7 @@ func readHistory(histFn string) (history []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	splt := strings.Split(string(by), "\n")
+	splt := strings.Split(string(by), string(byte(0)))
 	n := len(splt)
 
 	// avoid returning an extra blank history line
@@ -77,6 +59,8 @@ func readHistory(histFn string) (history []string, err error) {
 	}
 	return splt, nil
 }
+
+var zeroByte = string(byte(0))
 
 func removeCommands(history []string, histFn string, histFile *os.File, rms string) (history2 []string, histFile2 *os.File, beg int, end int, err error) {
 
@@ -117,7 +101,7 @@ func removeCommands(history []string, histFn string, histFile *os.File, rms stri
 	panicOn(err)
 	// print new history to file
 	for i := range history2 {
-		fmt.Fprintf(histFile2, "%s\n", history2[i])
+		fmt.Fprintf(histFile2, "%s%s", history2[i], zeroByte)
 	}
 	return
 }
@@ -151,4 +135,28 @@ func getHistoryRange(lows string, history []string) (slc []int, err error) {
 		}
 	}
 	return num, nil
+}
+
+func sourceGoFiles(files []string) ([]byte, error) {
+	var buf bytes.Buffer
+	for _, f := range files {
+		fd, err := os.Open(f)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+		by, err := ioutil.ReadAll(fd)
+		if err != nil {
+			return nil, err
+		}
+		_, err = io.Copy(&buf, bytes.NewBuffer(by))
+		if err != nil {
+			return nil, err
+		}
+		// zero
+		fmt.Fprintf(&buf, zeroByte)
+	}
+	bb := buf.Bytes()
+	fmt.Printf("sourceGoFiles() returning '%s'\n", string(bb))
+	return bb, nil
 }

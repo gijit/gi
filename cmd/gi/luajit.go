@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -16,8 +15,6 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 )
-
-const ChunkSep = "//_\n"
 
 func (cfg *GIConfig) LuajitMain() {
 	r := NewRepl(cfg)
@@ -381,16 +378,11 @@ notColonCmd:
 			return nil
 		}
 		r.prevSrc = ""
-		if len(src) > 0 && src[len(src)-1] == '\n' {
-			src += ChunkSep
-		} else {
-			src += "\n" + ChunkSep
-		}
 
 		r.prompt = r.goPrompt
-		translation, baddy, err := translateAndCatchPanic(r.inc, []byte(src))
+		translation, err := translateAndCatchPanic(r.inc, []byte(src))
 		if err != nil {
-			fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(string(baddy)))
+			fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(src))
 			translation = "\n"
 			// still write, so we get another prompt
 		} else {
@@ -416,7 +408,7 @@ notColonCmd:
 	histEnd := len(r.history)
 	if r.histFile != nil {
 		for i := histBeg; i < histEnd; i++ {
-			fmt.Fprintf(r.histFile, "%s\n", r.history[i])
+			fmt.Fprintf(r.histFile, "%s%s", r.history[i], zeroByte)
 		}
 		r.histFile.Sync()
 	}
@@ -444,28 +436,4 @@ notColonCmd:
 	fmt.Printf("elapsed: '%v'\n", r.t1.Sub(r.t0))
 
 	return nil
-}
-
-func sourceGoFiles(files []string) ([]byte, error) {
-	var buf bytes.Buffer
-	for _, f := range files {
-		fd, err := os.Open(f)
-		if err != nil {
-			return nil, err
-		}
-		defer fd.Close()
-		by, err := ioutil.ReadAll(fd)
-		if err != nil {
-			return nil, err
-		}
-		_, err = io.Copy(&buf, bytes.NewBuffer(by))
-		if err != nil {
-			return nil, err
-		}
-		// newline between files.
-		fmt.Fprintf(&buf, "\n")
-	}
-	bb := buf.Bytes()
-	fmt.Printf("sourceGoFiles() returning '%s'\n", string(bb))
-	return bb, nil
 }
