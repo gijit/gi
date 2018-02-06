@@ -132,9 +132,9 @@ end;
 --};
 
 function __gi_clone2(src, typ)
-   print("__gi_clone2() called with typ='"..tostring(typ).."'")
-   __st(typ)
-   print(debug.traceback())
+   --print("__gi_clone2() called with typ='"..tostring(typ).."'")
+   --__st(typ)
+   --print(debug.traceback())
    
    local clone = typ.__zero();
    typ.__copy(clone, src);
@@ -142,32 +142,32 @@ function __gi_clone2(src, typ)
 end
 
 -- jea: my earlier Proof of concept.
-function __gi_clone(t, typ)
-    print("_gi_clone called with typ ", typ)
-    if type(t) ~= 'table' then
-       error "__gi_clone called on non-table"
-    end
- 
-    if typ == "kind_arrayType" then
-       local props = rawget(t, _giPrivateArrayProps)
-       if props == nil then
-          error "__gi_clone for arrayType could not get props" 
-       end
-       -- make a copy of the data
-       local src = rawget(t, _giPrivateRaw)
-       local dest = {}
-       for i,v in pairs(src) do
-          dest[i] = v
-       end
-       -- unpack ignores the [0] value, so less useful.
-       
-       local b = __gi_NewArray(dest, props.typeKind, props.len)
-       return b
-    end
-    print("unimplemented typ in __gi_clone: '"..tostring(typ).."'") -- Beagle for 028
-    print(debug.traceback())
-    error("unimplemented typ in __gi_clone: '"..tostring(typ).."'")
- end
+-- function __gi_clone(t, typ)
+--     print("_gi_clone called with typ ", typ)
+--     if type(t) ~= 'table' then
+--        error "__gi_clone called on non-table"
+--     end
+--  
+--     if typ == "kind_arrayType" then
+--        local props = rawget(t, _giPrivateArrayProps)
+--        if props == nil then
+--           error "__gi_clone for arrayType could not get props" 
+--        end
+--        -- make a copy of the data
+--        local src = rawget(t, _giPrivateRaw)
+--        local dest = {}
+--        for i,v in pairs(src) do
+--           dest[i] = v
+--        end
+--        -- unpack ignores the [0] value, so less useful.
+--        
+--        local b = __gi_NewArray(dest, props.typeKind, props.len)
+--        return b
+--     end
+--     print("unimplemented typ in __gi_clone: '"..tostring(typ).."'") -- Beagle for 028
+--     print(debug.traceback())
+--     error("unimplemented typ in __gi_clone: '"..tostring(typ).."'")
+--  end
 
 
 -- _gi_UnpackArrayRaw is a helper, used in

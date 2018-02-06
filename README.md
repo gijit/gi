@@ -18,7 +18,8 @@ In version v0.8.9, the repl received some refactoring
 to make it easier to test.
 
 In version v0.8.8 (quiet) and v0.8.7 (debug prints live),
-pointer support is much improved.
+pointer support is much improved. Cloning is restored,
+and test 028 is green.
 
 Basic assignment to pointers, and assignment through
 pointers, work now. For example, the sequence
