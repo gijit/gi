@@ -27,7 +27,7 @@ func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool) {
 
 	defer func() {
 		// jea debug:
-		// return
+		//return
 
 		// catch panics that are communicating
 		// parse results quickly to us. Re throw

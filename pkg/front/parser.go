@@ -119,7 +119,7 @@ func (p *parser) error_at(pos Pos, msg string) {
 
 // syntax_error_at reports a syntax error at the given position.
 func (p *parser) syntax_error_at(pos Pos, msg string) {
-	pp("jea debug, syntax_error_at... would normally panic(ErrSyntax) here. p.tok='%s'", p.tok)
+	pp("jea debug, syntax_error_at... would normally panic(ErrSyntax) here. p.tok='%s'/'%#v'", p.tok, p.tok)
 	if p.tok == _EOF {
 		panic(ErrMoreInput)
 	} else {

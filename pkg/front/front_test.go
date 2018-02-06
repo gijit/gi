@@ -334,7 +334,7 @@ func Test021AssignmenThoughPointer(t *testing.T) {
 		cv.So(eof, cv.ShouldBeFalse)
 		cv.So(empty, cv.ShouldBeFalse)
 
-		src2 := "*b = 33`"
+		src2 := "*b = 33"
 		pp("parsing '*b = 33'")
 		eof, syntaxErr, empty = TopLevelParseGoSource([]byte(src2))
 		cv.So(syntaxErr, cv.ShouldBeFalse)
