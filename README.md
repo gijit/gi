@@ -83,16 +83,16 @@ an internal-only release.
 
 In version v0.8.3, an internal release, we restrict `gijit` programs
 to a subset of legal `go` programs, by imposing
-a mild restriction on variable names.
+some mild restrictions on the names of variables.
 
 Minor restriction number one: variable names cannot start
 with '__' two underscores.
 
 Minor restriction number two: in `gijit`, you can't
-have a variable named `int`, or `float64`. These
+have a variable named `int`, or `float64`, for example. These
 are names of two of the pre-declared numeric types in Go.
 
-For example, while
+So, while
 ~~~
 func main() {
 	var int int
@@ -101,8 +101,9 @@ func main() {
 ~~~
 is a legal `Go` program, `gijit` will reject it.
 
-`gijit` won't let you declare a variable name that
-re-uses any of the basic, pre-declared type names.
+`gijit` won't let you re-use any of the basic,
+pre-declared type names as variables. `uint`, `int`, `int8`, `int16`,
+`int32`, `int64`, `uint8`, ... etc. are all off-limits.
 
 Although in Go this is technically allowed, it can be highly confusing.
 It is poor practice.
