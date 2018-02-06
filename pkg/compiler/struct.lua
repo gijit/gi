@@ -91,7 +91,7 @@ __gi_PrivatePointer_MT = {
 -- typ should be the Ptr type from __gi_NewType() on which we will
 -- set __gi_PrivatePointer_MT as the metatable.
 --
-function __gi_createNewPointer(getter, setter)
+function __gi_createNewPointer(getter, setter, target)
    --print("top of __gi_createNewPointer()")
    --print(debug.traceback())
 
@@ -103,11 +103,17 @@ function __gi_createNewPointer(getter, setter)
    end
    
    local proxy = {}
-   proxy[__gi_PropsKey] = {
+   local props = {
       __get=getter,
       __set=setter,
-      __shortTypeName=typeName
+      __target = target
    }
+   proxy[__gi_PropsKey] = props
+   
+   local tt = type(target)
+   if tt == "table" then
+      props.__target_typ = target.__typ
+   end
 
    setmetatable(proxy, __gi_PrivatePointer_MT)
    return proxy

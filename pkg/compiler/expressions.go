@@ -347,7 +347,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 				pp("c.typeName(exprType) = '%v'", c.typeName(exprType))
 				pp("exprType = '%#v'", exprType)
-				return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end)`, c.varPtrName(obj), c.typeName(exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
+				return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
 
 			case *ast.SelectorExpr:
 				sel, ok := c.p.SelectionOf(x)
