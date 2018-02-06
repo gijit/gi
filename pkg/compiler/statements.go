@@ -963,10 +963,28 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 }
 
 func (c *funcContext) translateResults(results []ast.Expr) string {
+	values := c.translateResultsPreJoin(results)
+	return "  " + strings.Join(values, ", ") + " "
+}
+
+func (c *funcContext) translateResultsAllQuoted(results []ast.Expr) string {
+	values := c.translateResultsPreJoinQuoted(results)
+	return "  " + strings.Join(values, ", ") + " "
+}
+
+func (c *funcContext) translateResultsPreJoinQuoted(results []ast.Expr) (ss []string) {
+	values := c.translateResultsPreJoin(results)
+	for i := range values {
+		ss = append(ss, `"`+values[i]+`"`)
+	}
+	return
+}
+
+func (c *funcContext) translateResultsPreJoin(results []ast.Expr) []string {
 	tuple := c.sig.Results()
 	switch tuple.Len() {
 	case 0:
-		return ""
+		return nil
 	case 1:
 		result := c.zeroValue(tuple.At(0).Type())
 		if results != nil {
@@ -974,7 +992,7 @@ func (c *funcContext) translateResults(results []ast.Expr) string {
 		}
 		v := c.translateImplicitConversion(result, tuple.At(0).Type())
 		c.delayedOutput = nil
-		return " " + v.String()
+		return []string{v.String()}
 	default:
 		if len(results) == 1 {
 			resultTuple := c.p.TypeOf(results[0]).(*types.Tuple)
@@ -986,7 +1004,7 @@ func (c *funcContext) translateResults(results []ast.Expr) string {
 			resultExpr := c.translateExpr(results[0], nil).String()
 
 			if types.Identical(resultTuple, tuple) {
-				return " " + resultExpr
+				return []string{" " + resultExpr}
 			}
 
 			tmpVar := c.newVariable("_returncast")
@@ -1008,7 +1026,7 @@ func (c *funcContext) translateResults(results []ast.Expr) string {
 		}
 		c.delayedOutput = nil
 		//return " [" + strings.Join(values, ", ") + "]"
-		return "  " + strings.Join(values, ", ") + " "
+		return values
 	}
 }
 

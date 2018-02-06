@@ -301,6 +301,8 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		c.allVars[k] = v
 	}
 	prevEV := c.p.escapingVars
+	preComputedNamedNames := []string{}
+	preComputedZeroRet := []string{}
 
 	for _, param := range typ.Params.List {
 		if len(param.Names) == 0 {
@@ -326,7 +328,16 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			c.resultNames = make([]ast.Expr, c.sig.Results().Len())
 			for i := 0; i < c.sig.Results().Len(); i++ {
 				result := c.sig.Results().At(i)
-				c.Printf("local %s = %s;", c.objectName(result), c.translateExpr(c.zeroValue(result.Type()), nil).String())
+				objName := c.objectName(result)
+				zeroV := c.translateExpr(c.zeroValue(result.Type()), nil).String()
+
+				// NB doesn't work with "local %s = %s'", but it's
+				// okay: this doesn't collide or
+				// pollute the global env because code in defer.lua's
+				// __actuallyCall gives the function its own environment.
+				c.Printf("%s = %s;", objName, zeroV)
+				preComputedNamedNames = append(preComputedNamedNames, `"`+objName+`"`)
+				preComputedZeroRet = append(preComputedZeroRet, zeroV)
 				id := ast.NewIdent("")
 				c.p.Uses[id] = result
 				c.resultNames[i] = c.setType(id, result.Type())
@@ -358,6 +369,8 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	sort.Strings(c.localVars)
 
 	var prefix, suffix, functionName string
+	namedNames := ""
+	zeroret := ""
 
 	if len(c.Flattened) != 0 {
 		c.localVars = append(c.localVars, "$s")
@@ -398,6 +411,8 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		}
 		deferSuffix += " } finally { $callDeferred($deferred, $err);"
 		if c.resultNames != nil {
+			namedNames = strings.Join(preComputedNamedNames, ", ") //fmt.Sprintf("{%s}", c.translateResultsAllQuoted(c.resultNames))
+			zeroret = strings.Join(preComputedZeroRet, ", ")
 			deferSuffix += fmt.Sprintf(" if (!$curGoroutine.asleep) { return %s; }", c.translateResults(c.resultNames))
 		}
 		if len(c.Blocking) != 0 {
@@ -426,15 +441,15 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 %s%s(...) 
    local __orig = {...}
    local __defers={}
-   local __zeroret = {}
-   local __namedNames = {}
+   local __zeroret = {%s}
+   local __namedNames = {%s}
    local __actual=function(%s)
       %s
    end
    return __actuallyCall("%s", __actual, __namedNames, __zeroret, __defers, __orig)
 end
 `,
-			functionWord, functionName, formals,
+			functionWord, functionName, zeroret, namedNames, formals,
 			bodyOutput, functionName), recvName
 
 		//prefix = prefix + " $deferred = []; $deferred.index = $curGoroutine.deferStack.length; $curGoroutine.deferStack.push($deferred);"

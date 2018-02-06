@@ -17,10 +17,11 @@ d1a := -1
 func f() (ret0 int, ret1 int) {
   defer func(a int) {
       d1a = a // d1a should be -1, because defer captures variables at the call point.
-      print("first defer running, a=", a, " b=",b)
+      println("first defer running, a=", a, " b=",b)
       r := recover()
       if r != nil {
           b = b + 3
+          ret1 = b
       }
   }(a)
   a = 0
@@ -33,7 +34,7 @@ func f() (ret0 int, ret1 int) {
   b = 1
   return b, 58
 }
-f()
+r0, r1 := f()
 // now b should be set to 3
 `
 
@@ -49,7 +50,57 @@ f()
 		// too comple and fragile to verify code. Just  verify that it happens correctly
 
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt64(vm, "b", 3)
+		LuaMustInt64(vm, "r1", 3)
+		LuaMustInt64(vm, "d1a", -1)
+	})
+}
+
+func Test034TwoDefersRunOnPanic(t *testing.T) {
+
+	cv.Convey(`panic invokes only those infers encountered on the path of control, in last-declared-first-to-run order`, t, func() {
+
+		code := `
+a := -1
+b := 0
+d1a := -1
+func f() (ret0 int, ret1 int) {
+  defer func(a int) {
+      d1a = a // d1a should be -1, because defer captures variables at the call point.
+      println("first defer running, a=", a, " b=",b)
+      r := recover()
+      if r != nil {
+          b = b + 3
+          ret1 = b
+      }
+      ret0 = ret0 + b
+  }(a)
+  a = 0
+  defer func() {
+      println("second defer running, a=", a, " b=",b)
+      b = (b+1) * 7
+      ret0 = ret0 + b
+  }()
+  a = 1
+  b = 1
+  return b, 58
+}
+r0, r1 := f()
+// now b should be set to 3
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		pp("translation='%s'", string(translation))
+
+		// too comple and fragile to verify code. Just  verify that it happens correctly
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "r0", 29)
 		LuaMustInt64(vm, "d1a", -1)
 	})
 }
@@ -80,7 +131,7 @@ func Test035bNamedReturnValuesAreReturned(t *testing.T) {
 
 	cv.Convey(`__namedNames was missing named return values, so they weren't being returned`, t, func() {
 
-		code := `func f() (r int) {defer func() { println(" r was ", r); r++ }(); r = 3; return r}; a := f();`
+		code := `func f() (r int) {defer func() { println(" r was ", r); r++; println(" r after++ is ", r) }(); r = 3; return r}; a := f();`
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)

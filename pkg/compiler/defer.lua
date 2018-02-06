@@ -131,12 +131,13 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
   end
 
   if #__namedNames == 0 then
-     print("__processDefers: #__namedNames was 0, no returns")
+     --print("__processDefers: #__namedNames was 0, no returns")
      return nil
   end
   -- put the named return values in order
   local orderedReturns={}
   for i, k in pairs(__namedNames) do
+     --print("debug: fetching from function env k=",k," which we see has value ", actEnv[k], "in actEnv", tostring(actEnv))
      orderedReturns[i] = actEnv[k]
   end
   for i,v in pairs(orderedReturns) do
@@ -147,8 +148,24 @@ end
 
 
 __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __orig)
-  local actEnv = getfenv(__actual)
+
+   --local actEnv = getfenv(__actual)
+   -- So getfenv(__actual) showed that actEnv
+   -- was the _G global env, not good.
+   -- To fix this, we give f its own env,
+   -- so that named return variables can
+   -- be written/read from this env.
+   
+   local actEnv = {}
+   local mt = {
+      __index = _G, -- read through to globals.
+      __newindex = _G, -- write to closure-capture globals too.
+   }
+   setmetatable(actEnv,mt)
+   setfenv(__actual, actEnv)
+
   for i,k in pairs(__namedNames) do
+     --print("filling actEnv[k='"..tostring(k).."'] = '"..tostring(actEnv[k]).."' with __zeroret[i='"..tostring(i).."']='",tostring(__zeroret[i]),"'")
      actEnv[k] = __zeroret[i]
   end  
   local myPanic = function(err) __panicHandler(err, __defers) end
