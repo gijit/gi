@@ -12,7 +12,7 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 )
 
-func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {
+func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation, baddy string, err error) {
 	defer func() {
 		recov := recover()
 		if recov != nil {
@@ -21,10 +21,33 @@ func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation st
 				msg += fmt.Sprintf("\n%s\n", string(debug.Stack()))
 			}
 			err = fmt.Errorf(msg)
+		} else {
+			baddy = ""
 		}
 	}()
-	pp("about to translate Go source '%s'", string(src))
-	translation = string(inc.Tr([]byte(src)))
+	ssrc := string(src)
+	pp("about to translate Go source '%s'", ssrc)
+
+	//translation = string(inc.Tr([]byte(src)))
+
+	// gotta do it in chunks so the type checker
+	// updates its think about what methods a variable
+	// has on it.
+	if false {
+		chunks := strings.Split(ssrc, ChunkSep)
+		for _, chunk := range chunks {
+			// will panic on error
+			fmt.Printf("sending chunk to inc.Tr(): '%s'\n", chunk)
+			baddy = chunk
+			part := string(inc.Tr([]byte(chunk)))
+
+			// success, add to output
+			translation += "\n" + part
+		}
+	} else {
+		baddy = string(src)
+		translation = string(inc.Tr([]byte(src)))
+	}
 	t2 := strings.TrimSpace(translation)
 	nt2 := len(t2)
 	if nt2 > 0 {
