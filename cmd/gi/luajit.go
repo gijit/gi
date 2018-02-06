@@ -288,27 +288,28 @@ func (r *Repl) Read() (src string, err error) {
 ======================
 gijit: a go interpreter, just-in-time
 https://github.com/gijit/gi
-command prompt help: 
-simply type Go expressions or statements
-directly at the prompt, or use one of 
-these special commands:
+Type Go expressions or statements
+directly after the prompt, or use one of 
+these special commands.
 ======================
- :v          turns on verbose debug printing
- :vv         turns on very verbose printing
- :q          quiets the debug prints (default)
- :r or :raw  change to raw-luajit entry mode
- :g or :go   change back from raw to default Go mode 
- :ast        print the Go AST prior to translation
- :noast      stop printing the Go AST
- :?          show this help (:help does the same)
- :h          show command line history
- :30         replay command number 30 from history
- :1-10       replay commands 1 - 10 inclusive
- :reset      reset and clear history (also :clear)
- :rm 3-4     remove commands 3-4 from history
- :do <path>  run dofile(path) on a .lua file
- :source <path>   re-play/source Go lines from a file
- ctrl-d to exit
+ :v              Turn on verbose debug printing.
+ :vv             Turn on very verbose printing.
+ :q              Quiet the debug prints (default).
+ :r or :raw      Change to raw-luajit entry mode.
+ :g or :go       Change back from raw to default Go mode.
+ :ast            Print the Go AST prior to translation.
+ :noast          Stop printing the Go AST.
+ :?              Show this help (:help does the same).
+ :h              Show command line history.
+ :30             Replay command number 30 from history.
+ :1-10           Replay commands 1 - 10 inclusive.
+ :reset          Reset and clear history (also :clear).
+ :rm 3-4         Remove commands 3-4 from history.
+ :do <path>      Run dofile(path) on a .lua file.
+ :source <path>  Re-play Go code from a file.
+ = 3 + 4         The '=' turns gijit into a calculator.
+ import "fmt"    Import the binary, pre-compiled package.
+ ctrl-d to exit  History is saved in ~/.gitit.hist
 `)
 		return "", nil
 	}
