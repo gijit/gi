@@ -3,7 +3,7 @@
 -- if __debug is true then __gi_NewType() will
 -- dump a bunch of debug info at the top of
 -- every call.
-__debug = false
+__debug = true -- false
 
 __dummy_placeholder = function(self) error("should never actually call placeholder!") end
 
@@ -948,6 +948,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       print("exported='"..tostring(exported).."'")
       print("constructor='"..tostring(constructor).."'")
       print("elemTyp='"..tostring(elemTyp).."'")
+      print("__id will be __gi_typeIDCounter="..tostring(__gi_typeIDCounter))
    end
    
    -- we return typ at the end.
@@ -1506,7 +1507,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__shortPkg = shortPkg;
    typ.__shortTypeName = shortTypeName;
    typ.__typ = typ
-   
+
+   print("__gi_NewType() returning typ = "..tostring(typ).." for '"..typ.__str.."'")
    return typ;
 end
 
@@ -1517,7 +1519,11 @@ end
 -- distinct from __gijit_NewPonter.
 -- port of javascript $ptrType() function
 -- for top level structs (the elem).
-
+--
+-- We return elem.__ptr if it already exists.
+-- Otherwise, make a new pointer type for it,
+-- and return that.
+--
 function __ptrType(elem)
    --print(debug.traceback())
    --print("jea debug: top of __ptrType, elem=")
@@ -1548,17 +1554,20 @@ function __ptrType(elem)
    end
    
    local typ = elem.__ptr;
-   if typ == nil then
-      --print("__ptrType sees that elem.__ptr is nil, so making a new type:")
-      
-      typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
-      elem.__ptr = typ;
-
-      -- this is where we set __elem on the typ.
-      --print("__ptrType about to call typ.__init(elem)")
-      typ.__init(elem);
-      --print("__ptrType back from typ.__init(elem)")
+   if typ ~= nil then
+      return typ
    end
+   
+   --print("__ptrType sees that elem.__ptr is nil, so making a new type:")
+   
+   typ = __gi_NewType(8, __gi_kind_Ptr, elem.__shortPkg, "*"..elem.__shortTypeName, "*"..elem.__str, false, elem.__pkg, elem.__exported, nil);
+   elem.__ptr = typ;
+   
+   -- this is where we set __elem on the typ.
+   --print("__ptrType about to call typ.__init(elem)")
+   typ.__init(elem);
+   --print("__ptrType back from typ.__init(elem)")
+   
    return typ;
 end
 
