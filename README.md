@@ -14,6 +14,11 @@ status
 
 2018 Feb 07 update
 -------
+In version v0.9.2, the REPL prints expressions that
+produce multi-lines of Lua better. We only wrap
+the final line with a print. This handles expressions
+that generate anonymous pointer types gracefully.
+
 In version v0.9.1, pointers inside structs work.
 
 In version v0.9.0, defer handling of named
