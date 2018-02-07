@@ -25,7 +25,7 @@ status
 
 * structs, interfaces, defer are all available.
 
-* current limitation: no `go`/`select`/channel implementation.
+* current limitation: no `go`/`select`/`chan` implementation.
 
 # demo
 
