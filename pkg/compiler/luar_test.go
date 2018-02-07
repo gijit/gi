@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
@@ -321,8 +321,8 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		DumpLuaStack(vm)
 
 		// Line 286: - cannot convert Lua value 'function: %!p(uintptr=75307960)' (function) to []int
-		verb.Verbose = true
-		verb.Verbose = true
+		//verb.Verbose = true
+		//verb.Verbose = true
 		panicOn(luar.LuaToGo(vm, top, &b))
 		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
 	})
