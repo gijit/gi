@@ -41,7 +41,11 @@ gi> fmt.Printf("hello expressions! %v\n", math.Exp(-0.5) * 3.3 - 2.2)
 hello expressions! -0.1984488229483099
 
 elapsed: '141.721µs'
-gi> 
+gi> = 4.0 / 1.3 /* or, with '=', no fmt.Printf needed. */
+3.0769230769231
+
+elapsed: '112.18µs'
+gi>  
 ~~~
 
 
