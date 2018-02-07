@@ -537,7 +537,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					if !wrapWithPrint || strings.HasPrefix(ele, "print") {
 						tmp = ele + ";"
 					} else {
-						pp("wrapping '%s' in print at the repl", ele)
+						pp("wrapping last line of '%s' in print at the repl", ele)
 						key := fmt.Sprintf("%s", ele)
 						fsrc, haveSrc := funcSrcCache[key]
 						if haveSrc {
@@ -545,7 +545,21 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 							pp("cache hit for '%s' -> '%s'. tmp is '%s'", key, fsrc, tmp)
 						} else {
 							pp("no cache hit for '%s'", key)
-							tmp = fmt.Sprintf(`print(%s);`, ele)
+
+							// only wrap the last of the lines in print,
+							// so that any helper/pre-amble anon types etc can be
+							// defined without messing with the final print.
+							splt := strings.Split(ele, "\n")
+							nsplit := len(splt)
+							if splt[nsplit-1] == "" {
+								splt = splt[:nsplit-1]
+								nsplit = len(splt)
+							}
+							if nsplit <= 1 {
+								tmp = fmt.Sprintf(`print(%s);`, ele)
+							} else {
+								tmp = fmt.Sprintf("%s;\nprint(%s);", strings.Join(splt[:nsplit-1], "\n"), splt[nsplit-1])
+							}
 						}
 					}
 					newCodeText = append(newCodeText, []byte(tmp))
@@ -739,9 +753,9 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 
 				// add debug code?
 				diag := ""
-				if verb.Verbose || verb.VerboseVerbose {
-					diag = fmt.Sprintf("\n\t\t print(\"top of ctor for type '%s'\")", typeName)
-				}
+				//if verb.Verbose || verb.VerboseVerbose {
+				//  diag = fmt.Sprintf("\n\t\t print(\"top of ctor for type '%s'\")", typeName)
+				//}
 				if t.NumFields() == 0 {
 					//constructor = fmt.Sprintf("function(self) %s\n\t\t self.__gi_val=self; return self; end", diag)
 					constructor = fmt.Sprintf("function(self) %s\n\t\t return self; end", diag)

@@ -116,7 +116,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		c.Printf("%s = %s;", refVar, c.translateExpr(expr, nil))
 		translateCond := func(cond ast.Expr, desiredType types.Type) *expression {
 			if types.Identical(c.p.TypeOf(cond), types.Typ[types.UntypedNil]) {
-				return c.formatExpr("%s === $ifaceNil", refVar)
+				return c.formatExpr("%s == __gi_ifaceNil", refVar)
 			}
 			// jea, type assertion place 1
 			return c.formatExpr(`__gi_assertType(%s, __type__%s, 1)`, refVar, c.typeName(c.p.TypeOf(cond)))

@@ -259,7 +259,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if isPointer {
 		if _, isArray := ptr.Elem().Underlying().(*types.Array); isArray {
-			code.Write(primaryFunction(false, typeName+".prototype."+funName))
+			code.Write(primaryFunction(false, typeName+".__prototype."+funName))
 			fmt.Fprintf(code, "\t$ptrType(%s).prototype.%s = function(%s) { return (new %s(this.$get())).%s(%s); };\n", typeName, funName, joinedParams, typeName, funName, joinedParams)
 			return code.Bytes()
 		}
@@ -270,7 +270,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	if isWrapped(recvType) {
 		value = fmt.Sprintf("new %s(%s)", typeName, value)
 	}
-	code.Write(primaryFunction(false, typeName+".prototype."+funName))
+	code.Write(primaryFunction(false, typeName+".__prototype."+funName))
 	fmt.Fprintf(code, "\t$ptrType(%s).prototype.%s = function(%s) { return %s.%s(%s); };\n", typeName, funName, joinedParams, value, funName, joinedParams)
 	return code.Bytes()
 }

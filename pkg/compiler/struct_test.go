@@ -2,9 +2,8 @@ package compiler
 
 import (
 	"fmt"
-	"testing"
-
 	cv "github.com/glycerine/goconvey/convey"
+	"testing"
 )
 
 func Test093NewMethodsShouldBeRegistered(t *testing.T) {
@@ -204,7 +203,9 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
     aIsNil := (a == nil)
     var p *int
     pIsNil := (p == nil)
+    p == nil
 `
+
 		// a should be nil
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)

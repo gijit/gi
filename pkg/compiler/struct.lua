@@ -1321,9 +1321,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
       typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor, typ);
       typ.__ptr.__elem = typ;
-      typ.__ptr.prototype = {}
-      typ.__ptr.prototype.__gi_get = function()  return this; end
-      typ.__ptr.prototype.__gi_set = function(v) typ.__copy(this, v); end
+      typ.__ptr.__prototype = {}
+      typ.__ptr.__prototype.__gi_get = function()  return this; end
+      typ.__ptr.__prototype.__gi_set = function(v) typ.__copy(this, v); end
 
       -- NB, let fields be a 1-base  array, so ipairs() works on it.
       typ.__init = function(pkgPath, fields)
@@ -1379,7 +1379,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          for i, fld in ipairs(fields) do
             properties[fld.__prop] = { get= __gi_throwNilPointerError, set= __gi_throwNilPointerError }
          end
-         typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.prototype, properties);
+         typ.__ptr.__nil = {} -- jea what here? Object.create(constructor.__prototype, properties);
          typ.__ptr.__nil.__val = typ.__ptr.__nil;
          
          -- methods for embedded fields
@@ -1388,9 +1388,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          __gi_addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   
-                  if target.prototype[m.__prop] ~= nil then return end
+                  if target.__prototype[m.__prop] ~= nil then return end
                   
-                  target.prototype[m.__prop] = function(self)
+                  target.__prototype[m.__prop] = function(self)
                      
                      local v = self.__val[f.__prop];
                      if f.__typ == __gi_jsObjectPtr then

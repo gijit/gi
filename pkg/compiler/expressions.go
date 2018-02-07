@@ -586,14 +586,6 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				return c.formatExpr("__equal(%e, %e, %s)", e.X, e.Y, c.typeName(t))
 			case *types.Interface:
 				pp("e.Y='%#v'", e.Y)
-				/* jea, I had done:
-				switch id := e.Y.(type) {
-				case *ast.Ident:
-					if id.Name == "nil" {
-						return c.formatExpr("%s == nil", c.translateImplicitConversion(e.X, t))
-					}
-				}
-				*/
 				return c.formatExpr("__interfaceIsEqual(%s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
 			case *types.Pointer:
 				if _, ok := u.Elem().Underlying().(*types.Array); ok {
@@ -609,7 +601,10 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 					}
 				}
 			}
-			return c.formatExpr("%s == %s", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
+			x := c.formatExpr("%s == %s", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
+			//fmt.Printf("debug: at an == formating... x='%#v'\n", x)
+			//panic("where?")
+			return x
 		default:
 			panic(e.Op)
 		}
@@ -1592,10 +1587,6 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 			pp("222222 returning from formatExprInternal, xrpn='%s'", xprn.str)
 		}
 	}()
-	// jea debug
-	if len(a) == 2 {
-		//panic("where?")
-	}
 	defer func() {
 		if xprn != nil {
 			pp("expressions.go:1352, formatExprInternal('%s') returning '%s'", format, xprn.str)
@@ -1673,7 +1664,9 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 				out.WriteString(vars[n] + suffix)
 				return
 			}
-			out.WriteString(c.translateExpr(a[n].(ast.Expr), nil).StringWithParens() + suffix)
+			stuff := c.translateExpr(a[n].(ast.Expr), nil).StringWithParens() + suffix
+			pp("jea debug, stuff='%#v', where suffix was '%s'\n", stuff, suffix)
+			out.WriteString(stuff)
 		}
 		switch k {
 		case 0:
