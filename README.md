@@ -15,7 +15,7 @@ status
 2018 Feb 08 update
 ------------------
 
-`gigit` v0.9.4 feature summary:
+`gijit` v0.9.4 feature summary:
 
 * interactively code in Go. Just-in-time for Valentine's Day, a Go REPL that is not based on re-compiling everything after every line.
 
