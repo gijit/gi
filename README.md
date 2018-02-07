@@ -27,6 +27,23 @@ status
 
 * current limitation: no `go`/`select`/channel implementation.
 
+# demo
+
+~~~
+$ gi -q
+gi> import "math"
+
+elapsed: '15.155µs'
+gi> import "fmt"
+
+elapsed: '16.507µs'
+gi> fmt.Printf("hello expressions! %v\n", math.Exp(-0.5) * 3.3 - 2.2)
+hello expressions! -0.1984488229483099
+
+elapsed: '141.721µs'
+gi> 
+~~~
+
 
 2018 Feb 07 update
 -------
