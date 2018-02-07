@@ -422,6 +422,18 @@ const (
 	SKIP_ANON typeNameSetting = 2
 )
 
+func (tns typeNameSetting) String() string {
+	switch tns {
+	case IMMEDIATE:
+		return "IMMEDIATE"
+	case DELAYED:
+		return "DELAYED"
+	case SKIP_ANON:
+		return "SKIP_ANON"
+	}
+	panic("unknown tns")
+}
+
 func (c *funcContext) typeName(ty types.Type) (res string) {
 
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
@@ -485,7 +497,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(__type__%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(__type__%s); -- '%s' anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 

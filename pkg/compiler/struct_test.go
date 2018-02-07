@@ -66,7 +66,7 @@ func Test120PointersInsideStructs(t *testing.T) {
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
 __type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
-anon_ptrType = __ptrType(__type__Ragdoll); -- utils.go:490 immediate anon type printing.
+anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
 
 __type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
 
@@ -117,7 +117,7 @@ func Test121PointersInsideStructs(t *testing.T) {
 
 __type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
-anon_ptrType = __ptrType(__type__Ragdoll); -- utils.go:490 immediate anon type printing.
+anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
 
 __type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
 
