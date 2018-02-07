@@ -23,7 +23,7 @@ status
 
 * use Go as a calculator. Just start the line with '='.
 
-* structs, interfaces, defer are all available.
+* structs, interfaces, pointers, defer are all available.
 
 * current limitation: no `go`/`select`/`chan` implementation.
 
