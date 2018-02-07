@@ -759,7 +759,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 				c.Printf("\n\t\t __type__%s.__constructor = %s;\n", constructor)
 				for anon := range c.setOfAnonTypes {
-					c.setOfAnonTypes[anon] = fmt.Sprintf("\n" + `  rawset(%s, "__type__%s.__constructor", %s);`)
+					c.setOfAnonTypes[anon] = fmt.Sprintf("\n"+`  rawset(%s, "__type__%s.__constructor", %s);`, anon, typeName)
 				}
 				// don't need to collect anon types anymore.
 				c.setOfAnonTypes = nil
