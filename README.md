@@ -17,7 +17,7 @@ status
 
 `gigit` v0.9.4 feature summary:
 
-* interactively code in Go. Finally a REPL not based on re-compiling whole new programs.
+* interactively code in Go. Just-in-time for Valentine's Day, a Go REPL that is not based on re-compiling everything after every line.
 
 * the ability to import binary Go packages. Call into native Go code from the REPL.
 
