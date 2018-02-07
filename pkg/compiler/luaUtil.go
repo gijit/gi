@@ -211,6 +211,14 @@ func LuaMustNotBeInGlobalEnv(vm *golua.State, varname string) {
 	}
 }
 
+func LuaMustBeInGlobalEnv(vm *golua.State, varname string) {
+
+	if !LuaInGlobalEnv(vm, varname) {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected %v to be in global env, but it was not.", varname))
+	}
+}
+
 func LuaMustFloat64(vm *golua.State, varname string, expect float64) {
 
 	vm.GetGlobal(varname)

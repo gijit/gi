@@ -165,6 +165,7 @@ func Test035cNamedReturnValuesDontPolluteGlobalEnv(t *testing.T) {
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "glob", 3)
+		LuaMustBeInGlobalEnv(vm, "glob")
 		LuaMustNotBeInGlobalEnv(vm, "x")
 		LuaMustNotBeInGlobalEnv(vm, "y") // control
 	})
