@@ -277,3 +277,37 @@ test1helper();
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test033dDefersWorkOnDirectionFunctionCalls(t *testing.T) {
+
+	cv.Convey(`defer on a repeated direct function call`, t, func() {
+
+		code := `
+import "fmt"
+
+var result string
+
+func addDotDotDot(v ...interface{}) { result += fmt.Sprint(v...) }
+
+func test2helper() {
+	for i := 0; i < 10; i++ {
+		defer addDotDotDot(i)
+	}
+}
+test2helper()
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		//verb.Verbose = true
+		//verb.VerboseVerbose = true
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		LuaMustString(vm, "result", "9876543210")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

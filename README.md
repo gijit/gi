@@ -14,10 +14,13 @@ status
 
 2018 Feb 07 update
 -------
-In version v0.9.3, the repl in raw mode can
+In version v0.9.3, defers pass additional
+tests (that found issues that were fixed),
+and the repl in raw mode can
 import Go binary libraries with
-the call __go_import(path); This
-mostly factilitates system debugging and tests.
+the call __go_import(path).
+
+Raw mode factilitates system debugging and tests.
 Raw mode isn't needed by
 end users, unless one is developing gijit. Raw
 mode allows direct LuaJIT commands to be entered. It is 
