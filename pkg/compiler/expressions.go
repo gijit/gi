@@ -1392,7 +1392,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 }
 
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
-	fmt.Printf("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
+	//fmt.Printf("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
 
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
