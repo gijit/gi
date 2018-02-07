@@ -424,6 +424,7 @@ __defer_func(%s)
 				//c.Printf("$unused(%s);", c.translateExpr(s.Rhs[0]))
 				return
 			}
+			//fmt.Printf("about to translate assign...\n")
 			c.Printf("%s", c.translateAssign(lhs, s.Rhs[0], s.Tok == token.DEFINE))
 
 		case len(s.Lhs) > 1 && len(s.Rhs) == 1:

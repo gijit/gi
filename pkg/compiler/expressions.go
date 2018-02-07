@@ -1391,7 +1391,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 }
 
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
-	pp("translateImplicitConversion top: desiredType='%#v', expr='%#v'", desiredType, expr)
+	fmt.Printf("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
 
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
@@ -1547,6 +1547,40 @@ func (c *funcContext) fixNumber(value *expression, basic *types.Basic) (xprn *ex
 		return value
 	default:
 		panic(fmt.Sprintf("fixNumber: unhandled basic.Kind(): %s", basic.String()))
+	}
+}
+
+func (c *funcContext) asFloat64(value *expression, basic *types.Basic) (xprn *expression) {
+	pp("top of asFloat64 with value='%s'", x2s(value))
+	defer func() {
+		pp("returning from asFloat64 with xprn='%s'", x2s(xprn))
+	}()
+	switch basic.Kind() {
+	case types.Int8,
+		types.Uint8,
+		types.Int16,
+		types.Uint16,
+		types.Uint32,
+		types.Uint,
+		types.Uintptr,
+		types.Int32,
+		types.Int,
+		types.Int64,
+		types.UntypedInt,
+		types.Float32:
+		return c.formatParenExpr("tonumber(%s)", value)
+
+		//case types.Float32:
+		//		//return value
+		//		//
+		//		return c.formatParenExpr("tonumber(%s)", value)
+		// return c.formatExpr("$fround(%s)", value) // // fround returns the nearest 32-bit single precision float representation of a Number.
+
+	case types.Float64:
+		return value
+
+	default:
+		panic(fmt.Sprintf("asFloat64: unhandled basic.Kind(): %s", basic.String()))
 	}
 }
 
