@@ -3,6 +3,7 @@ package compiler
 import (
 	"testing"
 
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -168,5 +169,111 @@ func Test035cNamedReturnValuesDontPolluteGlobalEnv(t *testing.T) {
 		LuaMustBeInGlobalEnv(vm, "glob")
 		LuaMustNotBeInGlobalEnv(vm, "x")
 		LuaMustNotBeInGlobalEnv(vm, "y") // control
+	})
+}
+
+func Test033bDefersWorkOnDirectionFunctionCalls(t *testing.T) {
+
+	cv.Convey(`defers on direct method calls, not function literals, also work`, t, func() {
+
+		code := `
+a := 0
+func double_a() { a = a * 2 }
+func f() {
+  defer double_a()
+  a++
+}
+f()
+// now 'a' should be 2, but if the defer ran the function right away, then 'a' would be 1
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		//verb.Verbose = true
+		//verb.VerboseVerbose = true
+		pp("translation='%s'", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "a", 2)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test033cDefersWorkOnDirectionFunctionCalls(t *testing.T) {
+
+	cv.Convey(`defer on a repeated direct function call`, t, func() {
+
+		code := `
+import "fmt"
+
+var result string
+
+func addInt(i int) { result += fmt.Sprint(i) }
+
+func test1helper() {
+	for i := 0; i < 10; i++ {
+		defer addInt(i)
+	}
+}
+test1helper()
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		//verb.Verbose = true
+		//verb.VerboseVerbose = true
+		pp("translation='%s'", string(translation))
+
+		if false {
+			cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+result = ""
+
+addInt = function(i) 
+   result = result .. (fmt.Sprint(i));
+end;
+
+test1helper =    function(...) 
+   local __orig = {...}
+   local __defers={}
+   local __zeroret = {}
+   local __namedNames = {}
+   local __actual=function()
+      local i = 0LL;
+      while (true) do
+         if (not (i < 10LL)) then break; end
+
+         local __defer_func = function(i)
+            local i = i
+            
+            __defers[1+#__defers] = function()
+               addInt(i)
+            end
+         end
+         __defer_func(i)
+
+         i = i + (1LL);
+      end 
+
+   end
+   return __actuallyCall("", __actual, __namedNames, __zeroret, __defers, __orig)
+end
+
+test1helper();
+
+`)
+		}
+		LuaRunAndReport(vm, string(translation))
+		LuaMustString(vm, "result", "9876543210")
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }

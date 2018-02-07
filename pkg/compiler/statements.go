@@ -339,6 +339,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 	case *ast.DeferStmt:
 		isBuiltin := false
 		isJs := false
+		_ = isJs
 		switch fun := s.Call.Fun.(type) {
 		case *ast.Ident:
 			var builtin *types.Builtin
@@ -352,7 +353,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		}
 		sig := c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature)
 		args := c.translateArgs(sig, s.Call.Args, s.Call.Ellipsis.IsValid())
-		if isBuiltin || isJs {
+		if true {
+			//if isBuiltin || isJs {
 			// println is a builtin, so we need this.
 
 			vars := make([]string, len(s.Call.Args))
