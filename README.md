@@ -14,6 +14,8 @@ status
 
 2018 Feb 07 update
 -------
+In version v0.9.1, pointers inside structs work.
+
 In version v0.9.0, defer handling of named
 return values received some important correctness fixes.
 
