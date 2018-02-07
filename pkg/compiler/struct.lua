@@ -5,6 +5,8 @@
 -- every call.
 __debug = false
 
+__dummy_placeholder = function(self) error("should never actually call placeholder!") end
+
 __gi_throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
 
 -- get these in the global namespace, so that __gi_NewType
@@ -138,7 +140,14 @@ __curpkg = {
 }
 
 -- st or showtable, a debug print helper.
-function __st(t, name, indent, quiet, methods_desc)
+-- seen avoids infinite looping on self-recursive types.
+function __st(t, name, indent, quiet, methods_desc, seen)
+   seen = seen or {}
+   if seen[t] ~= nil then
+      return
+   end
+   seen[t] =true
+   
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -146,7 +155,7 @@ function __st(t, name, indent, quiet, methods_desc)
       end
       return s
    end
-   
+
    if type(t) ~= "table" then
       local s = tostring(t)
       if not quiet then
@@ -157,8 +166,7 @@ function __st(t, name, indent, quiet, methods_desc)
          end
       end
       return s
-   end
-   
+   end   
    
    local k = 0
    local name = name or ""
@@ -174,7 +182,7 @@ function __st(t, name, indent, quiet, methods_desc)
       local vals = ""
       if methods_desc then
          --print("methods_desc is true")
-         --vals = __st(v,"",indent+1,quiet,methods_desc)
+         --vals = __st(v,"",indent+1,quiet,methods_desc, seen)
       else 
          vals = tostring(v)
       end
@@ -186,7 +194,7 @@ function __st(t, name, indent, quiet, methods_desc)
 
    local mt = getmetatable(t)
    if mt ~= nil then
-      s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true)
+      s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
    end
    if not quiet then
       print(s)
@@ -1156,8 +1164,8 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       --------------------------------------------
       
    elseif kind == __gi_kind_Ptr then
-      --print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
-      --print("jea debug: at __gi_kind_Ptr, constructor is ", constructor)
+      print("jea debug: at kind == __gi_kind_Ptr in __gi_NewType()")
+      print("jea debug: at __gi_kind_Ptr, constructor is ", constructor)
 
       local mt = {
          __name = "Ptr type constructed mt",
@@ -1182,7 +1190,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                type(dots[1]) == "function" and
             type(dots[2]) == "function" then
                
-               --print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
+               print("two functions passed to ptr mt.__call(), so returning __gi_createNewPointer")
                local newptr = __gi_createNewPointer(...)
                local props = newptr[__gi_PropsKey]
                
@@ -1199,11 +1207,13 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
             -- typ captured by closure.
             if typ ~= nil and typ.__constructor ~= nil then
                
-               --print("calling ptr self.__constructor!")
+               print("calling ptr self.__constructor!, on typ="..tostring(typ))
                local newb = typ.__constructor(self, ...)
-               --print("done calling ptr typ.__constructor!")
+               print("done calling ptr typ.__constructor!")
                if typ.__registered ~= nil then
-                  --print("after ptr self.ctor, setting typ.__registered as metatable.")
+                  print("after ptr self.ctor, setting typ.__registered as metatable.")
+                  __st(newb, "newb")
+                  __st(typ.__registered, "typ.__registered")
                   setmetatable(newb, typ.__registered)
                else
                   --print("after ptr self.ctor, setting typ.__registered was nil")
@@ -1238,15 +1248,19 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       
       typ.__keyFor = __gi_idKey;
       typ.__init = function(elem)
-         --print("jea debug: top of ptr __init() with elem=",elem)
-         --__st(elem, "elem")
+         print("jea debug: top of ptr __init() with elem=",elem)
+         __st(elem, "elem")
+         
          typ.__elem = elem;
          typ.__wrapped = (elem.__kind == __gi_kind_Array);-- key insight: what __wrapped means!
-         --print("jea debug: __init function is calling __constructor to make the typ.__nil")
 
-         -- jea: skip making __nil until we get the whole process figured out.
-         -- typ.__nil = __gi_createNewPointer( __gi_throwNilPointerError, __gi_throwNilPointerError);
-         --print("jea debug: __init function back from __constructor to make the typ.__nil")
+         
+         print("jea debug: __init function is making typ.__nil")
+         --typ.__nil = __gi_createNewPointer( __gi_throwNilPointerError, __gi_throwNilPointerError);
+         -- OR?
+         typ.__nil = typ( __gi_throwNilPointerError, __gi_throwNilPointerError);
+         
+         print("jea debug: __init function done making typ.__nil")
       end
 
       --------------------------------------------
@@ -1515,6 +1529,7 @@ function __ptrType(elem)
 
       et = __kind2type[elem]
       if et ~= nil then
+         print("for number t="..tostring(t).."__kind2type returned et=", elem)
          elem = et
       else
          error("__ptrType called with numeric elem out of range: "..tostring(elem))
