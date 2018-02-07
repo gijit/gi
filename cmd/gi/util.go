@@ -49,7 +49,7 @@ func readHistory(histFn string) (history []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	splt := strings.Split(string(by), string(byte(0)))
+	splt := strings.Split(string(by), "\n")
 	n := len(splt)
 
 	// avoid returning an extra blank history line
