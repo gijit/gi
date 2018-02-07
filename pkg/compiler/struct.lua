@@ -1058,10 +1058,15 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
          return __gi_NewArray(v, typ.__elem, #v, typ.__elem.__zero())
       end      
       typ.__wrapped = true;
-      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(self, array) 
-                                  self.__gi_get = function() return array; end;
-                                  self.__gi_set = function(v) typ.__copy(self, v); end
-                                  self.__val = array;
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, "", false, function(getter, setter)
+                                  print("jea debug: in ctor for pointer-to-array;")
+                                  --print(debug.traceback())
+                                  --__st({...}, "dots, in ctor-ptr-to-array")
+                                  local self = {}
+                                  self.__gi_get = getter -- function() return array; end;
+                                  self.__gi_set = setter -- function(v) typ.__copy(self, v); end
+                                  --self.__val = array;
+                                  return self
                                                                                                              end, typ);
       typ.__init = function(elem, len)
          --print("jea debug: __init() for array called, elem=", elem)
@@ -1527,7 +1532,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    typ.__shortTypeName = shortTypeName;
    typ.__typ = typ
 
-   print("__gi_NewType() returning typ = "..tostring(typ).." for '"..typ.__str.."'")
+   --print("__gi_NewType() returning typ = "..tostring(typ).." for '"..typ.__str.."'")
    return typ;
 end
 
@@ -1799,10 +1804,14 @@ end
 
 --var $arrayTypes = {};
 __arrayTypes = {};
+
 function __arrayType(elem, len, shortPkg, pkgPath)
+
    local et = type(elem)
    local ets = tostring(elem)
-   --print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'  and len='"..tostring(len).."'")
+   
+   print("jea debug: in __arrayType, with elem of type '"..et.."'  tostring: '"..ets.."'  and len='"..tostring(len).."'")
+   
    local typeKey
    if et == "cdata" then
       typeKey = ets .. "_" .. tostring(len)
