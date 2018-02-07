@@ -16,6 +16,16 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 )
 
+func (ic *IncrState) EnableImportsFromLua() {
+
+	giImportFromLua := func(path string) {
+		ic.GiImportFunc(path)
+	}
+	luar.Register(ic.vm, "", luar.Map{
+		"__gi_import": giImportFromLua,
+	})
+}
+
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.

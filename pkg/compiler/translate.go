@@ -65,6 +65,8 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 	ic.pkgMap[key] = pk
 	ic.CurPkg = pk
 
+	ic.EnableImportsFromLua() // from Lua, use __gi_import("fmt");
+
 	return ic
 }
 
