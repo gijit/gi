@@ -31,8 +31,8 @@ status
 We run on OSX and Linux.
 
 Theoretically, `gijit` should build on Windows, since both Go
-and LuaJIT are regularly used on Windows. but I don't have resources
-to check this and figure out the right flags. (See
+and LuaJIT are regularly used on Windows. I don't have resources
+to confirm this and figure out the right build flags. (See
 https://github.com/gijit/gi/issues/18 if you do.)
 
 
