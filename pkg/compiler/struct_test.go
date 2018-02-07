@@ -69,7 +69,7 @@ anon_ptrType = __ptrType(__type__Ragdoll); -- utils.go:490 immediate anon type p
 
 __type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
 
-rawset(anon_ptrType, "__constructor", function(self, ...) 
+__type__Ragdoll.__constructor = function(self, ...) 
 		 if self == nil then self = {}; end
 		 local args={...};
 		 if #args == 0 then
@@ -79,13 +79,11 @@ rawset(anon_ptrType, "__constructor", function(self, ...)
 			 self.Andy = Andy_;
 		 end
 		 return self; 
-end);
+end;
 `)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
-
-		LuaMustBool(vm, "same", true)
 
 	})
 }
@@ -115,13 +113,13 @@ func Test121PointersInsideStructs(t *testing.T) {
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
 
-__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil)
+__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
 anon_ptrType = __ptrType(__type__Ragdoll); -- utils.go:490 immediate anon type printing.
 
 __type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
 
-rawset(anon_ptrType, "__constructor", function(self, ...) 
+__type__Ragdoll.__constructor = function(self, ...) 
 		 if self == nil then self = {}; end
 		 local args={...};
 		 if #args == 0 then
@@ -130,10 +128,8 @@ rawset(anon_ptrType, "__constructor", function(self, ...)
 			 local Andy_ = ... ;
 			 self.Andy = Andy_;
 		 end
-                 print("Ragdoll ctor returing self=")
-                 __st(self, "self")
 		 return self; 
-end)
+end;
 
 doll = __type__Ragdoll.__ptr({}, anon_ptrType.__nil);
 

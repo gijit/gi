@@ -422,7 +422,7 @@ const (
 )
 
 func (c *funcContext) typeName(ty types.Type) (res string) {
-	panic("where?")
+
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return
 }
@@ -480,10 +480,6 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 		varName := c.newVariableWithLevel(low, true)
 
-		if c.setOfAnonTypes != nil {
-			// transmit up to caller, incr.go
-			c.setOfAnonTypes[varName] = true
-		}
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
 		pp("just added anonType='%s'", anonType.Name())

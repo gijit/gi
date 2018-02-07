@@ -21,6 +21,7 @@ __type__Ragdoll.__constructor = function(self, ...)
    return self; 
 end
 
+-- don't need to set these, now that our ptr ctor refers to the elem ctor.
 --__st(anon_ptrType, "anon_ptrType *prior* to __ctor set")
 --rawset(anon_ptrType, "__constructor", __type__Ragdoll.__constructor)
 --__st(anon_ptrType, "anon_ptrType *after* to __ctor set")
