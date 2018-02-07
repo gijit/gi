@@ -146,3 +146,26 @@ func Test035bNamedReturnValuesAreReturned(t *testing.T) {
 		LuaMustInt64(vm, "a", 4)
 	})
 }
+
+func Test035cNamedReturnValuesDontPolluteGlobalEnv(t *testing.T) {
+
+	cv.Convey(`the named return values of a function should not contaminate the global env`, t, func() {
+
+		code := `glob:=3; func f() (glob, x int) { glob =2; x = 1; return }; a, _ := f()`
+
+		// glob should stay 3
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation := inc.Tr([]byte(code))
+
+		pp("translation='%s'", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "glob", 3)
+		LuaMustNotBeInGlobalEnv(vm, "x")
+		LuaMustNotBeInGlobalEnv(vm, "y") // control
+	})
+}

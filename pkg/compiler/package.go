@@ -335,7 +335,13 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 				// okay: this doesn't collide or
 				// pollute the global env because code in defer.lua's
 				// __actuallyCall gives the function its own environment.
-				c.Printf("%s = %s;", objName, zeroV)
+				if c.HasDefer {
+					// will write to the intermediate env
+					// we establish with setfenv()
+					c.Printf("%s = %s;", objName, zeroV)
+				} else {
+					c.Printf("local %s = %s;", objName, zeroV)
+				}
 				preComputedNamedNames = append(preComputedNamedNames, `"`+objName+`"`)
 				preComputedZeroRet = append(preComputedZeroRet, zeroV)
 				id := ast.NewIdent("")
