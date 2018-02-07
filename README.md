@@ -27,6 +27,15 @@ status
 
 * current limitation: no `go`/`select`/`chan` implementation.
 
+* portable. Doesn't depend on Go's linux-only plugin system.
+We run on OSX and Linux.
+
+Theoretically, `gijit` should build on Windows, since both Go
+and LuaJIT are regularly used on Windows. but I don't have resources
+to check this and figure out the right flags. (See
+https://github.com/gijit/gi/issues/18 if you do.)
+
+
 # demo
 
 ~~~
