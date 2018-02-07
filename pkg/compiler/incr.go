@@ -545,7 +545,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 							pp("cache hit for '%s' -> '%s'. tmp is '%s'", key, fsrc, tmp)
 						} else {
 							pp("no cache hit for '%s'", key)
-							tmp = fmt.Sprintf(`print(%[1]s);`, ele)
+							tmp = fmt.Sprintf(`print(%s);`, ele)
 						}
 					}
 					newCodeText = append(newCodeText, []byte(tmp))

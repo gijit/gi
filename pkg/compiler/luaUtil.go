@@ -92,51 +92,63 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 	top = L.GetTop()
 	s += fmt.Sprintf("========== begin DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
+
 		t := L.Type(i)
 		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
-		switch t {
-		case golua.LUA_TSTRING:
-			s += fmt.Sprintf(" String : \t%v\n", L.ToString(i))
-		case golua.LUA_TBOOLEAN:
-			s += fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
-		case golua.LUA_TNUMBER:
-			s += fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
-		case golua.LUA_TTABLE:
-			s += fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
+		s += LuaStackPosToString(L, i)
 
-		case 10: // LUA_TCDATA aka cdata
-			//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
-			ctype := L.LuaJITctypeID(i)
-			//pp("luar.go Dump sees ctype = %v", ctype)
-			switch ctype {
-			case 5: //  int8
-			case 6: //  uint8
-			case 7: //  int16
-			case 8: //  uint16
-			case 9: //  int32
-			case 10: //  uint32
-			case 11: //  int64
-				val := L.CdataToInt64(i)
-				s += fmt.Sprintf(" int64: '%v'\n", val)
-			case 12: //  uint64
-				val := L.CdataToUint64(i)
-				s += fmt.Sprintf(" uint64: '%v'\n", val)
-			case 13: //  float32
-			case 14: //  float64
-
-			case 0: // means it wasn't a ctype
-			}
-
-		case golua.LUA_TUSERDATA:
-			s += fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
-		case golua.LUA_TFUNCTION:
-			s += fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
-		default:
-			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
-		}
 	}
 	s += fmt.Sprintf("========= end of DumpLuaStack\n")
 	return
+}
+
+func LuaStackPosToString(L *golua.State, i int) string {
+	t := L.Type(i)
+
+	switch t {
+	case golua.LUA_TNONE: // -1
+		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index", i)
+	case golua.LUA_TNIL:
+		return fmt.Sprintf("LUA_TNIL: nil")
+	case golua.LUA_TSTRING:
+		return fmt.Sprintf(" String : \t%v\n", L.ToString(i))
+	case golua.LUA_TBOOLEAN:
+		return fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
+	case golua.LUA_TNUMBER:
+		return fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
+	case golua.LUA_TTABLE:
+		return fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
+
+	case 10: // LUA_TCDATA aka cdata
+		//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
+		ctype := L.LuaJITctypeID(i)
+		//pp("luar.go Dump sees ctype = %v", ctype)
+		switch ctype {
+		case 5: //  int8
+		case 6: //  uint8
+		case 7: //  int16
+		case 8: //  uint16
+		case 9: //  int32
+		case 10: //  uint32
+		case 11: //  int64
+			val := L.CdataToInt64(i)
+			return fmt.Sprintf(" int64: '%v'\n", val)
+		case 12: //  uint64
+			val := L.CdataToUint64(i)
+			return fmt.Sprintf(" uint64: '%v'\n", val)
+		case 13: //  float32
+		case 14: //  float64
+
+		case 0: // means it wasn't a ctype
+		}
+
+	case golua.LUA_TUSERDATA:
+		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
+	case golua.LUA_TFUNCTION:
+		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
+	default:
+	}
+	return fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 }
 
 func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
@@ -256,6 +268,25 @@ func LuaMustBool(vm *golua.State, varname string, expect bool) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_bool))
 	}
+}
+
+func LuaMustBeNil(vm *golua.State, varname string) {
+	isNil, alt := LuaIsNil(vm, varname)
+
+	if !isNil {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected varname '%s' to "+
+			"be nil, but was '%s' instead.", varname, alt))
+	}
+
+}
+func LuaIsNil(vm *golua.State, varname string) (bool, string) {
+
+	vm.GetGlobal(varname)
+	isNil := vm.IsNil(-1)
+	top := vm.GetTop()
+	vm.Pop(1)
+	return isNil, LuaStackPosToString(vm, top)
 }
 
 func LuaRunAndReport(vm *golua.State, s string) {

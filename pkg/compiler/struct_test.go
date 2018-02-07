@@ -190,3 +190,33 @@ func Test122ManyPointersInsideStructs(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test123PointersInsideStructStartsNil(t *testing.T) {
+
+	cv.Convey(`pointers inside structs should begin nil`, t, func() {
+
+		code := `
+    type B struct {
+           V *int
+    }
+    var b B
+    a := b.V
+    var p *int
+`
+		// a should be nil
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustBeNil(vm, "p")
+		LuaMustBeNil(vm, "a")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
