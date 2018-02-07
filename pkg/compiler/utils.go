@@ -417,9 +417,9 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 type typeNameSetting int
 
 const (
-	DELAYED   typeNameSetting = 0 // "normal"/default
-	SKIP_ANON typeNameSetting = 1
-	IMMEDIATE typeNameSetting = 2
+	IMMEDIATE typeNameSetting = 0 // default
+	DELAYED   typeNameSetting = 1
+	SKIP_ANON typeNameSetting = 2
 )
 
 func (c *funcContext) typeName(ty types.Type) (res string) {
@@ -439,7 +439,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 	// c.TypeNameSetting is a one-shot setting.
 	whenAnonPrint := c.TypeNameSetting
-	c.TypeNameSetting = DELAYED
+	c.TypeNameSetting = IMMEDIATE
 
 	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
 	defer func() {

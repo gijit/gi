@@ -1570,6 +1570,7 @@ function __ptrType(elem)
    elseif t == "table" then
       
       if elem[__gi_PropsKey] == nil then
+         print(debug.traceback())
          error("__ptrType called with non-type for elem")
       end
 

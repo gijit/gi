@@ -729,6 +729,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
 				}
+
+				// have pointer types printed after the type they point to.
+				c.TypeNameSetting = DELAYED
+
 				// add debug code?
 				diag := ""
 				if verb.Verbose || verb.VerboseVerbose {
