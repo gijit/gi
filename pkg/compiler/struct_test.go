@@ -193,7 +193,7 @@ func Test122ManyPointersInsideStructs(t *testing.T) {
 
 func Test123PointersInsideStructStartsNil(t *testing.T) {
 
-	cv.Convey(`pointers inside structs should begin nil`, t, func() {
+	cv.Convey(`pointers inside structs should begin nil; albiet a special nil value that Go code can recognize`, t, func() {
 
 		code := `
     type B struct {
@@ -201,7 +201,9 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
     }
     var b B
     a := b.V
+    aIsNil := (a == nil)
     var p *int
+    pIsNil := (p == nil)
 `
 		// a should be nil
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -216,7 +218,8 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
 		LuaRunAndReport(vm, string(translation))
 
 		//LuaMustBeNil(vm, "p")
-		LuaMustBeNil(vm, "a")
+		LuaMustBool(vm, "aIsNil", true)
+		LuaMustBool(vm, "pIsNil", true)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
