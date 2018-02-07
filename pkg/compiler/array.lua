@@ -132,9 +132,12 @@ end;
 --};
 
 function __gi_clone2(src, typ)
-   --print("__gi_clone2() called with typ='"..tostring(typ).."'")
-   --__st(typ)
-   --print(debug.traceback())
+   if typ == nil then
+      print("__gi_clone2() called with nil typ!?!") -- typ='"..tostring(typ).."'")
+      --__st(typ)
+      print(debug.traceback())
+      error "don't call __gi_clone2 with a nil typ!"
+   end
    
    local clone = typ.__zero();
    typ.__copy(clone, src);

@@ -3,7 +3,7 @@
 -- if __debug is true then __gi_NewType() will
 -- dump a bunch of debug info at the top of
 -- every call.
-__debug = true -- false
+__debug = false
 
 __dummy_placeholder = function(self) error("should never actually call placeholder!") end
 

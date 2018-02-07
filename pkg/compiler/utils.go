@@ -417,8 +417,9 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 type typeNameSetting int
 
 const (
-	NORMAL    typeNameSetting = 0
+	DELAYED   typeNameSetting = 0 // "normal"/default
 	SKIP_ANON typeNameSetting = 1
+	IMMEDIATE typeNameSetting = 2
 )
 
 func (c *funcContext) typeName(ty types.Type) (res string) {
@@ -437,8 +438,8 @@ func (c *funcContext) typeNameWithAnonInfo(
 ) {
 
 	// c.TypeNameSetting is a one-shot setting.
-	skipPrintingAnon := c.TypeNameSetting
-	c.TypeNameSetting = NORMAL
+	whenAnonPrint := c.TypeNameSetting
+	c.TypeNameSetting = DELAYED
 
 	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
 	defer func() {
@@ -486,14 +487,18 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		if skipPrintingAnon == NORMAL { // != SKIP_ANON
-			// gotta generate the type immediately for the REPL.
-			// But the pointer  needs to come after the struct it references.
-			c.Delayed(func() {
-				c.Printf("\n\t%s = __%sType(__type__%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
-				//c.Printf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
-			})
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(__type__%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
+		// gotta generate the type immediately for the REPL.
+		// But the pointer  needs to come after the struct it references.
 
+		switch whenAnonPrint {
+		case DELAYED:
+			c.Delayed(func() {
+				c.Printf(anonTypePrint)
+			})
+		case IMMEDIATE:
+			c.Printf(anonTypePrint)
+		case SKIP_ANON:
 		}
 	}
 	c.p.dependencies[anonType] = true
