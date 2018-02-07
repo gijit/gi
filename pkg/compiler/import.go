@@ -18,11 +18,11 @@ import (
 
 func (ic *IncrState) EnableImportsFromLua() {
 
-	giImportFromLua := func(path string) {
+	goImportFromLua := func(path string) {
 		ic.GiImportFunc(path)
 	}
 	luar.Register(ic.vm, "", luar.Map{
-		"__gi_import": giImportFromLua,
+		"__go_import": goImportFromLua,
 	})
 }
 

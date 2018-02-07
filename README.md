@@ -15,7 +15,7 @@ status
 2018 Feb 07 update
 -------
 In version v0.9.3, the repl in raw mode can
-import Go binarylibraries with
+import Go binary libraries with
 the call __go_import(path); This
 mostly factilitates system debugging and tests.
 Raw mode isn't needed by
@@ -24,7 +24,19 @@ mode allows direct LuaJIT commands to be entered. It is
 accessed with the ':r' enter-raw-mode command; and
 ':' returns one to Go mode.
 ~~~
-raw luajit gi> __gi_import("fmt")
+gi> :r
+Raw LuaJIT language mode.
+
+elapsed: '20.042µs'
+raw luajit gi> __go_import "fmt"
+
+elapsed: '2.048215ms'
+raw luajit gi> fmt.Printf("hello Go!")
+hello Go!
+elapsed: '124.64µs'
+raw luajit gi> :
+Go language mode.
+gi> 
 ~~~
 
 In version v0.9.2, the REPL prints expressions that
