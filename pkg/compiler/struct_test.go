@@ -63,7 +63,7 @@ func Test120PointersInsideStructs(t *testing.T) {
 		//  we pass nil and the later rawset it.
 
 		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
-__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil)
+__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
 anon_ptrType = __ptrType(__type__Ragdoll); -- utils.go:490 immediate anon type printing.
 
@@ -79,7 +79,7 @@ rawset(anon_ptrType, "__constructor", function(self, ...)
 			 self.Andy = Andy_;
 		 end
 		 return self; 
-end)
+end);
 `)
 
 		// and verify that it happens correctly

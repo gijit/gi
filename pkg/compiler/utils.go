@@ -486,7 +486,12 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 		if skipPrintingAnon == NORMAL { // != SKIP_ANON
 			// gotta generate the type immediately for the REPL.
-			c.Printf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
+			// But the pointer  needs to come after the struct it references.
+			c.Delayed(func() {
+				c.Printf("\n\t%s = __%sType(__type__%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
+				//c.Printf("\n\t%s = __%sType(__gi_kind_%s); -- utils.go:490 immediate anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[10:]), c.initArgs(anonType.Type()))
+			})
+
 		}
 	}
 	c.p.dependencies[anonType] = true

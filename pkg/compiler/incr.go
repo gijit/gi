@@ -708,6 +708,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		Vars:            []string{typeName},
 		DceObjectFilter: o.Name(),
 	}
+	constructor := ""
 	d.DceDeps = collectDependencies(func() {
 		// interface Dog getting codegen here
 		d.DeclCode = c.CatchOutput(0, func() {
@@ -719,7 +720,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				//lhs += " = $pkg." + encodeIdent(o.Name())
 			}
 			size := int64(0)
-			constructor := "nil"
+
 			switch t := o.Type().Underlying().(type) {
 			case *types.Struct:
 				pp("incr.go:580, in a Struct")
@@ -752,7 +753,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				size = sizes64.Sizeof(t)
 				_ = size
 			}
-			c.Printf(`__type__%s = __gi_NewType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t,%s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+			c.Printf(`__type__%s = __gi_NewType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 
 			// jea: gopherJS can defer init which adds the methods
@@ -837,6 +838,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				// their methods.
 				c.Printf("__type__%s.__init(%s);", c.objectName(o), c.initArgs(t))
 				_ = t // jea add
+				// after methods init, then constructor
+				if constructor != "" {
+					c.Printf("\n"+`  rawset(anon_ptrType, "__constructor", %s);`, constructor)
+				}
 			})
 			// example of what is generated:
 			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}]);

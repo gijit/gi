@@ -958,7 +958,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				}
 				return c.formatExpr("0")
 			case *types.Slice, *types.Pointer:
-				return c.formatExpr("%s.nil", c.typeName(exprType))
+				return c.formatExpr("%s.__nil", c.typeName(exprType))
 			case *types.Chan:
 				return c.formatExpr("$chanNil")
 			case *types.Map:
