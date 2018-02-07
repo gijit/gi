@@ -437,9 +437,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 	createdVarName string,
 ) {
 
-	// c.TypeNameSetting is a one-shot setting.
 	whenAnonPrint := c.TypeNameSetting
-	c.TypeNameSetting = IMMEDIATE
 
 	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
 	defer func() {

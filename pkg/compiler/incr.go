@@ -731,6 +731,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 
 				// have pointer types printed after the type they point to.
+				prev := c.TypeNameSetting
+				defer func() {
+					c.TypeNameSetting = prev
+				}()
 				c.TypeNameSetting = DELAYED
 
 				// add debug code?

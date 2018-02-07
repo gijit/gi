@@ -34,6 +34,7 @@ h := s.hi()
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustString(vm, "h", "hi called!")
+		cv.So(true, cv.ShouldBeTrue)
 
 	})
 }
@@ -84,6 +85,7 @@ end;
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
+		cv.So(true, cv.ShouldBeTrue)
 
 	})
 }
@@ -141,6 +143,50 @@ same = doll.Andy == doll;
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustBool(vm, "same", true)
+		cv.So(true, cv.ShouldBeTrue)
 
+	})
+}
+
+func Test122ManyPointersInsideStructs(t *testing.T) {
+
+	cv.Convey(`pointers inside structs should work`, t, func() {
+
+		code := `
+
+    type Bunny struct {
+           Velvet string
+    }
+
+    type Ragdoll struct {
+	    Andy *Ragdoll
+        bun1  *Bunny
+        bun2  *Bunny
+    }
+
+	var doll Ragdoll
+    bunny1 := &Bunny{}
+    bunny2 := bunny1
+	doll.Andy = &doll
+    doll.bun1 = bunny1
+    doll.bun2 = bunny2
+    same := (doll.Andy == &doll)
+    same2 := (doll.bun1 == doll.bun2)
+`
+		// same should be true
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustBool(vm, "same", true)
+		LuaMustBool(vm, "same2", true)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
