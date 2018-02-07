@@ -194,8 +194,6 @@ f()
 		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
-		//verb.Verbose = true
-		//verb.VerboseVerbose = true
 		pp("translation='%s'", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -230,8 +228,6 @@ test1helper()
 		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
-		//verb.Verbose = true
-		//verb.VerboseVerbose = true
 		pp("translation='%s'", string(translation))
 
 		if false {
@@ -303,8 +299,6 @@ test2helper()
 		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
-		//verb.Verbose = true
-		//verb.VerboseVerbose = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustString(vm, "result", "9876543210")

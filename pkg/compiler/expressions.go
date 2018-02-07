@@ -1240,13 +1240,14 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			case types.Identical(exprType, types.Typ[types.UnsafePointer]):
 				return c.translateExpr(expr, nil)
 			default:
+				// 201 not here
 				return c.fixNumber(c.translateExpr(expr, nil), t)
 			}
 		case isFloat(t):
 			if t.Kind() == types.Float32 && exprType.Underlying().(*types.Basic).Kind() == types.Float64 {
 				return c.formatExpr("$fround(%e)", expr) // fround returns the nearest 32-bit single precision float representation of a Number.
 			}
-			return c.formatExpr("%f", expr)
+			return c.formatExpr("tonumber(%f)", expr)
 		case isComplex(t):
 			return c.formatExpr("new %1s(%2r, %2i)", c.typeName(desiredType), expr)
 		case isString(t):

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -16,7 +16,6 @@ func Test201ConvertToFloat64ActuallyDoes(t *testing.T) {
 				a:=1; b:= 2; c := float64(a + b)
 				`
 
-		verb.VerboseVerbose = true
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -28,7 +27,7 @@ func Test201ConvertToFloat64ActuallyDoes(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 				a = 1LL;
 				b = 2LL;
-				c = ((tonumber(a+b)));
+				c = (tonumber((a+b)));
 				`)
 		LuaRunAndReport(vm, translation)
 		LuaMustFloat64(vm, "c", 3.0)
