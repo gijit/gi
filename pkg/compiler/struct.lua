@@ -142,12 +142,6 @@ __curpkg = {
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
 function __st(t, name, indent, quiet, methods_desc, seen)
-   seen = seen or {}
-   if seen[t] ~= nil then
-      return
-   end
-   seen[t] =true
-   
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -156,6 +150,12 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       return s
    end
 
+   seen = seen or {}
+   if seen[t] ~= nil then
+      return
+   end
+   seen[t] =true   
+   
    if type(t) ~= "table" then
       local s = tostring(t)
       if not quiet then
@@ -1249,12 +1249,9 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                return typ.__elem.__constructor(...)
             end
          else
-            error "what to do for a ctor? below??"
-         end
-         if false then
-            typ.__constructor = function(self, getter, setter, target)
+            typ.__constructor = function(getter, setter, target)
                print("jea debug: top of custom a kind_Ptr constructor, getter=", tostring(getter), " and setter= ", tostring(setter))
-               __st(self,"self")
+               --__st(self,"self")
                __st(getter, "getter")
                __st(setter, "setter")
                __st(target, "target")
@@ -1550,8 +1547,8 @@ end
 --
 function __ptrType(elem)
    --print(debug.traceback())
-   --print("jea debug: top of __ptrType, elem=")
-   --__st(elem)
+   print("jea debug: top of __ptrType, elem=")
+   __st(elem)
 
    local et = nil
    local t = type(elem)
@@ -1569,7 +1566,7 @@ function __ptrType(elem)
       
    elseif t == "table" then
       
-      if elem[__gi_PropsKey] == nil then
+      if elem[__gi_PropsKey] == nil and elem.__typ == nil then
          print(debug.traceback())
          error("__ptrType called with non-type for elem")
       end
