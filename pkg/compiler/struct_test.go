@@ -37,3 +37,31 @@ h := s.hi()
 
 	})
 }
+
+func Test120PointersInsideStructs(t *testing.T) {
+
+	cv.Convey(`pointers inside structs should work`, t, func() {
+
+		code := `
+
+    type Ragdoll struct {
+	    Andy *Ragdoll
+    }
+
+	var doll Ragdoll
+	doll.Andy = &doll
+    same := (doll.Andy == &doll)
+`
+		// same should be true
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustBool(vm, "same", true)
+	})
+}
