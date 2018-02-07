@@ -3,12 +3,11 @@ cmd/gi/lua.help.lua,50
 function locals(11,378
 function upvalues(30,808
 
-pkg/compiler/array.lua,163
+pkg/compiler/array.lua,133
 function __gi_NewArray(96,2880
 function __gi_clone2(134,3792
-function __gi_clone(144,4021
-function _gi_UnpackArrayRaw(179,5077
-function _gi_ArrayRaw(197,5387
+function _gi_UnpackArrayRaw(183,5292
+function _gi_ArrayRaw(201,5602
 
 pkg/compiler/defer.lua,18
 function ts(4,75
@@ -21,9 +20,6 @@ function _gi_GetRangeCheck(4,84
 function _gi_SetRangeCheck(11,215
 function _gi_NewComplex128(42,965
 function __gijit_printQuoted(46,1010
-
-pkg/compiler/ptr.lua,30
-function __gi_ptrType(30,786
 
 pkg/compiler/rune.lua,27
 function __decodeRune(1,0
@@ -38,27 +34,29 @@ function __copySlice(286,8007
 function __subslice(328,9200
 function __gi_makeSlice(352,9916
 
-pkg/compiler/struct.lua,738
-function __NOTINUSE__gi_clone(11,202
-function __st(36,825
-function __show_methods_desc(93,2108
-function __structPrinter(131,3175
-function __ifacePrinter(161,4010
-function __reg:RegisterStruct(207,5168
-function __reg:RegisterInterface(242,6296
-function __reg:IsInterface(272,7154
-function __reg:GetInterfaceMethods(277,7256
-function __reg:GetPointeeMethodset(282,7359
-function __reg:NewInstance(309,8226
-function __reg:RemoveMethod(331,8774
-function __reg:AddMethod(363,9724
-function __gi_methodVal(396,10655
-function __gi_count_methods(423,11438
-function __gi_assertType(462,12579
-function __gi_NewType(818,22535
-function __gi_mapArray(1347,40593
-function __mapFuncOverTable(1365,41068
-function __arrayType(1529,46619
+pkg/compiler/struct.lua,810
+function starToAsterisk(50,1168
+function __gi_createNewPointer(94,2350
+function __st(144,3414
+function __show_methods_desc(206,4816
+function __structPrinter(244,5883
+function __ifacePrinter(274,6718
+function __reg:RegisterStruct(312,7752
+function __reg:RegisterInterface(347,8886
+function __reg:IsInterface(375,9654
+function __reg:GetInterfaceMethods(380,9756
+function __reg:GetPointeeMethodset(385,9859
+function __reg:NewInstance(412,10736
+function __reg:RemoveMethod(434,11284
+function __reg:AddMethod(466,12234
+function __gi_methodVal(499,13177
+function __gi_count_methods(526,13962
+function __gi_assertType(565,15103
+function __gi_NewType(933,25362
+function __ptrType(1546,46945
+function __gi_mapArray(1596,48336
+function __mapFuncOverTable(1614,48811
+function __arrayType(1804,54929
 
 pkg/compiler/templates/defer.lua,17
 function f(3,14
@@ -615,6 +613,8 @@ pkg/compiler/tmp/small.lua,0
 
 pkg/compiler/tmp/s.lua,0
 
+pkg/compiler/tmp/m.lua,0
+
 pkg/compiler/templates/s.lua,0
 
 pkg/compiler/templates/rexp.lua,0
@@ -624,6 +624,8 @@ pkg/compiler/templates/repcall.lua,0
 pkg/compiler/templates/r.lua,0
 
 pkg/compiler/snippet/snoopy.lua,0
+
+pkg/compiler/ptr.lua,0
 
 pkg/compiler/math.lua,0
 
