@@ -12,6 +12,22 @@ binary is called simply `gi`, as it is a
 status
 ------
 
+2018 Feb 08 update
+------------------
+
+`gigit` v0.9.4 feature summary:
+
+* interactively code in Go. Finally a REPL not based on re-compiling whole new programs.
+
+* the ability to import binary Go packages. Call into native Go code from the REPL.
+
+* use Go as a calculator. Just start the line with '='.
+
+* structs, interfaces, defer are all available.
+
+* current limitation: no `go`/`select`/channel implementation.
+
+
 2018 Feb 07 update
 -------
 In version v0.9.3, defers pass additional
