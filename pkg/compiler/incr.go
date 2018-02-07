@@ -708,6 +708,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 		Vars:            []string{typeName},
 		DceObjectFilter: o.Name(),
 	}
+	rawset_constructor := ""
 	constructor := ""
 	d.DceDeps = collectDependencies(func() {
 		// interface Dog getting codegen here
@@ -739,7 +740,15 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				} else {
 					constructor = fmt.Sprintf("function(self, ...) %s\n\t\t if self == nil then self = {}; end\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
 					//constructor = fmt.Sprintf("function(self, ...) %s\n\t\t self.__gi_val=self;\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
+
+					c.setOfAnonTypes = make(map[string]bool)
 					for i := 0; i < t.NumFields(); i++ {
+
+						// the translateExpr call here is what
+						// eventually calls c.typeName() and thus
+						// generates the deferred 'anon_ptrType' and sibling type
+						// variables for any pointers in the members.
+						//
 						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 					}
 					constructor += fmt.Sprintf("\t\t else \n\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
@@ -748,6 +757,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					}
 					constructor += "\t\t end\n\t\t return self; \n\t end "
 				}
+				c.Printf("\n\t\t __type__%s.__constructor = %s;\n", constructor)
+				for anon := range c.setOfAnonTypes {
+					c.setOfAnonTypes[anon] = fmt.Sprintf("\n" + `  rawset(%s, "__type__%s.__constructor", %s);`)
+				}
+				// don't need to collect anon types anymore.
+				c.setOfAnonTypes = nil
+
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 				//size = sizes32.Sizeof(t)
 				size = sizes64.Sizeof(t)
@@ -756,7 +772,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			c.Printf(`__type__%s = __gi_NewType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 
-			// jea: gopherJS can defer init which adds the methods
+			// jea: GopherJS can defer init which adds the methods
 			// to the interface, but at the REPL we cannot.
 			switch o.Type().Underlying().(type) {
 			case *types.Interface:
@@ -839,8 +855,8 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				c.Printf("__type__%s.__init(%s);", c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
-				if constructor != "" {
-					c.Printf("\n"+`  rawset(anon_ptrType, "__constructor", %s);`, constructor)
+				if rawset_constructor != "" {
+					c.Printf(rawset_constructor)
 				}
 			})
 			// example of what is generated:

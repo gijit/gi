@@ -930,7 +930,7 @@ __gi_NewType_constructor_MT = {
 --
 -- sio \in {"struct", "iface", "other"}
 --
-function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, constructor)
+function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, exported, constructor, elemTyp)
 
    if __debug then
       print("=====================")
@@ -953,6 +953,12 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
    
    -- we return typ at the end.
    local typ = {}
+   
+   -- set typ.__elem for Ptr and Array here, early on, notice it might
+   -- not be done being constructed itself.
+   if elemTyp ~= nil then
+      typ.__elem = elemTyp
+   end
 
    if kind == __gi_kind_Struct then
       
@@ -981,7 +987,6 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       else
          typ[__gi_PropsKey] = typ
       end
-      
       
    else
       setmetatable(typ, __gi_NewType_constructor_MT)
@@ -1057,7 +1062,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                                   self.__gi_get = function() return array; end;
                                   self.__gi_set = function(v) typ.__copy(self, v); end
                                   self.__val = array;
-      end);
+                                                                                                             end, typ);
       typ.__init = function(elem, len)
          --print("jea debug: __init() for array called, elem=", elem)
          if type(elem) == "number" then
@@ -1232,18 +1237,32 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       if constructor ~= nil then
          typ.__constructor = constructor
       else
-         --print("jea debug: defining custom constructor")
-         typ.__constructor = function(self, getter, setter, target)
-            --print("jea debug: top of a kind_Ptr constructor")
-
-            return __gi_createNewPointer(getter, setter)
-
-            --local newb = {}
-            --newb.__get = getter
-            --newb.__set = setter
-            --newb.__target = target
-            --newb.__val = newb
-            --return newb
+         print("jea debug: defining custom constructor")
+         if typ.__elem ~= nil then
+            typ.__constructor = function(...)
+               print("ptr ctor refering to elem ctor...")
+               return typ.__elem.__constructor(...)
+            end
+         else
+            error "what to do for a ctor? below??"
+         end
+         if false then
+            typ.__constructor = function(self, getter, setter, target)
+               print("jea debug: top of custom a kind_Ptr constructor, getter=", tostring(getter), " and setter= ", tostring(setter))
+               __st(self,"self")
+               __st(getter, "getter")
+               __st(setter, "setter")
+               __st(target, "target")
+               
+               return __gi_createNewPointer(getter, setter)
+               
+               --local newb = {}
+               --newb.__get = getter
+               --newb.__set = setter
+               --newb.__target = target
+               --newb.__val = newb
+               --return newb
+            end
          end
       end
       
@@ -1300,7 +1319,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       -- NB, we are currently in kind == __gi_kind_Struct
       -- the typ.__ptr gets built before typ itself is finished.
       
-      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor);
+      typ.__ptr = __gi_NewType(8, __gi_kind_Ptr, shortPkg, "*"..shortTypeName, "*" .. str, false, pkgPath, exported, constructor, typ);
       typ.__ptr.__elem = typ;
       typ.__ptr.prototype = {}
       typ.__ptr.prototype.__gi_get = function()  return this; end

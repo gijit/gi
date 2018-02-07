@@ -91,6 +91,7 @@ type funcContext struct {
 	intType types.Type
 
 	TypeNameSetting typeNameSetting
+	setOfAnonTypes  map[string]string
 }
 
 type flowData struct {
