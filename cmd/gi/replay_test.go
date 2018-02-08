@@ -34,8 +34,8 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 		panicOn(err)
 		r := NewRepl(cfg)
 
-		verb.VerboseVerbose = true
-		verb.Verbose = true
+		//verb.VerboseVerbose = true
+		//verb.Verbose = true
 
 		/*
 			// oddly, when sent as a 4 line chunk, not
@@ -65,8 +65,8 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 					}
 				}
 				// works, so try to put this into types/check.go
-				pp("on j=%v pass, deleting 'om_S'", j)
-				delete(r.inc.CurPkg.Arch.Check.ObjMap, om_S) // green!!!
+				pp("on j=%v pass, deleting 'om_S'='%p'/'%#v'", j, om_S, om_S)
+				//delete(r.inc.CurPkg.Arch.Check.ObjMap, om_S) // green!!!
 			}
 			for i := range lines {
 				err = r.Eval(lines[i])

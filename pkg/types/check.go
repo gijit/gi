@@ -371,7 +371,8 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 
 	// are we replacing an earlier definition?
 	if check.scope != nil && obj != nil {
-		prior := check.scope.Lookup(obj.Name())
+		oname := obj.Name()
+		prior := check.scope.Lookup(oname)
 		if prior != nil {
 			fmt.Printf("prior found for id='%s', prior='%#v'\n", id.Name, prior)
 			fmt.Printf(" what if we delete the prior, if it is a type?\n")
@@ -379,10 +380,11 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 			case *Var:
 				fmt.Printf("ignoring *types.Var: '%#v'\n", prior)
 			case *TypeName:
-				fmt.Printf("got TypeName! deleting obj.Name()='%s', prior='%#v'\n", obj.Name(), prior)
-				//fmt.Printf("here is stack:\n%s\n", string(runtimedebug.Stack()))
-				//check.scope.DeleteByName(obj.Name())
-				//delete(check.ObjMap, obj)
+				fmt.Printf("got TypeName! deleting obj.Name()='%s', prior='%p'/'%#v'\nwhile obj='%p'/'%T'\n", oname, prior, prior, obj, obj)
+				fmt.Printf("here is stack:\n%s\n", string(runtimedebug.Stack()))
+				//check.scope.DeleteByName(obj.Name()) // doesn't work.
+				//delete(check.ObjMap, prior) // doesn't work, but should up stack.
+				check.deleteFromObjMapPriorTypeName(oname)
 			}
 		} else {
 			fmt.Printf("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
@@ -393,6 +395,16 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 
 	if m := check.Defs; m != nil {
 		m[id] = obj
+	}
+}
+
+func (check *Checker) deleteFromObjMapPriorTypeName(name string) {
+	m := check.ObjMap
+	for k := range m {
+		if k.Name() == name {
+			delete(m, k)
+			return
+		}
 	}
 }
 
