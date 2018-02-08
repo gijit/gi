@@ -51,7 +51,14 @@ func main() {
 	odir += string(os.PathSeparator) + pkg
 	os.MkdirAll(odir, 0777)
 	fmt.Printf("writing to odir '%s'\n", odir)
-	err := compiler.GenShadowImport(pkg, "", pkg, odir)
+	cwd, err := os.Getwd()
+	panicOn(err)
+
+	err = compiler.GenShadowImport(pkg, cwd, pkg, odir)
+	panicOn(err)
+}
+
+func panicOn(err error) {
 	if err != nil {
 		panic(err)
 	}
