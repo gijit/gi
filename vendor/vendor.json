@@ -3,11 +3,83 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "PNh2CenWrk7XyVq9Ueo25mX0tOQ=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
+			"revisionTime": "2017-03-29T04:21:07Z"
+		},
+		{
+			"checksumSHA1": "d9CtLhB9xOMTKK1ntUiFZ07R5Bg=",
+			"path": "github.com/glycerine/goconvey/convey",
+			"revision": "eaa0dfea5c9a86ac6c5c40fbf47e9616421a672d",
+			"revisionTime": "2018-02-04T11:23:33Z"
+		},
+		{
+			"checksumSHA1": "4QOjlqu05xDCYzndEWSxfK9HctY=",
+			"path": "github.com/glycerine/goconvey/convey/assertions",
+			"revision": "eaa0dfea5c9a86ac6c5c40fbf47e9616421a672d",
+			"revisionTime": "2018-02-04T11:23:33Z"
+		},
+		{
+			"checksumSHA1": "KRQqglsNp+8XpEKSqj5LRufLnHM=",
+			"path": "github.com/glycerine/goconvey/convey/assertions/oglematchers",
+			"revision": "eaa0dfea5c9a86ac6c5c40fbf47e9616421a672d",
+			"revisionTime": "2018-02-04T11:23:33Z"
+		},
+		{
+			"checksumSHA1": "dZUXUSqjhxBILzygJxAQzU1QXVc=",
+			"path": "github.com/glycerine/goconvey/convey/gotest",
+			"revision": "eaa0dfea5c9a86ac6c5c40fbf47e9616421a672d",
+			"revisionTime": "2018-02-04T11:23:33Z"
+		},
+		{
+			"checksumSHA1": "1fiMolwMHj3R+4psIvNCbL2gbko=",
+			"path": "github.com/glycerine/goconvey/convey/reporting",
+			"revision": "eaa0dfea5c9a86ac6c5c40fbf47e9616421a672d",
+			"revisionTime": "2018-02-04T11:23:33Z"
+		},
+		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "444abdf920945de5d4a977b572bcc6c674d1e4eb",
+			"revisionTime": "2017-11-02T03:40:23Z"
+		},
+		{
+			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
+			"path": "github.com/jtolds/gls",
+			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
+			"revisionTime": "2017-05-03T22:40:06Z"
+		},
+		{
 			"checksumSHA1": "CaUaJLLnql96d2JGRgCpYsKomxw=",
 			"path": "github.com/neelance/astrewrite",
 			"revision": "99348263ae862cc230986ce88deaddbf7edcc034",
 			"revisionTime": "2016-05-11T09:36:45Z"
+		},
+		{
+			"checksumSHA1": "JKW74ObUrPQi6D/nD2aW5kCRvAE=",
+			"path": "github.com/neelance/sourcemap",
+			"revision": "8c68805598ab8d5637b1a72b5f7d381ea0f39c31",
+			"revisionTime": "2015-10-28T01:37:22Z"
+		},
+		{
+			"checksumSHA1": "fSVkjXu8SIkCLI9RTt/vnkg9M5A=",
+			"path": "github.com/shurcooL/httpfs/filter",
+			"revision": "809beceb23714880abc4a382a00c05f89d13b1cc",
+			"revisionTime": "2017-11-19T17:43:26Z"
+		},
+		{
+			"checksumSHA1": "xJ411WtNO4qnFH8/v1a+HYLhVA4=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "28a7276518d399b9634904daad79e18b44d481bc",
+			"revisionTime": "2018-01-02T11:13:44Z"
+		},
+		{
+			"checksumSHA1": "94Wj08Ycja9h/u9eMifhqsmz4aw=",
+			"path": "golang.org/x/tools/refactor/importgraph",
+			"revision": "f271d7a0f8cf389f3ee4f6bf8d68e716a60ea571",
+			"revisionTime": "2017-12-28T01:47:17Z"
 		}
 	],
-	"rootPath": "github.com/gopherjs/gopherjs/compiler"
+	"rootPath": "github.com/gijit/gi"
 }
