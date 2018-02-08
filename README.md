@@ -14,8 +14,8 @@ status
 
 2018 Feb 08 update
 ------------------
-v0.9.6 fixes #20, an issue where the type checker was
-stubling when when re-defining struct types at the REPL.
+v0.9.6 fixes #20. The type checker now allows
+cleanly re-defining struct types at the REPL.
 
 
 2018 Feb 08 update
