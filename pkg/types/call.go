@@ -7,10 +7,8 @@
 package types
 
 import (
-	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/token"
-	runtimedebug "runtime/debug"
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
@@ -372,8 +370,6 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		case indirect:
 			check.invalidOp(e.Pos(), "%s is not in method set of %s", sel, x.typ)
 		default:
-			fmt.Printf("looking up sel='%v' on x='%#v' gave obj==nil.\nstack:\n", sel, x)
-			fmt.Printf("%s\n", string(runtimedebug.Stack()))
 			check.invalidOp(e.Pos(), "%s has no field or method %s", x, sel)
 		}
 		goto Error
