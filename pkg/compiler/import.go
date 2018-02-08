@@ -9,11 +9,13 @@ import (
 	"github.com/glycerine/luar"
 
 	// shadow_ imports: available inside the REPL
+	"github.com/gijit/gi/pkg/compiler/shadow/bytes"
 	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
 	"github.com/gijit/gi/pkg/compiler/shadow/io"
 	"github.com/gijit/gi/pkg/compiler/shadow/math"
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
+	"github.com/gijit/gi/pkg/compiler/shadow/time"
 )
 
 func (ic *IncrState) EnableImportsFromLua() {
@@ -70,16 +72,21 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		}
 
 		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
+	case "bytes":
+		luar.Register(ic.vm, "bytes", shadow_bytes.Pkg)
 	case "fmt":
 		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
-	case "regexp":
-		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
-	case "os":
-		luar.Register(ic.vm, "os", shadow_os.Pkg)
 	case "io":
 		luar.Register(ic.vm, "io", shadow_io.Pkg)
 	case "math":
 		luar.Register(ic.vm, "math", shadow_math.Pkg)
+	case "os":
+		luar.Register(ic.vm, "os", shadow_os.Pkg)
+	case "regexp":
+		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
+	case "time":
+		luar.Register(ic.vm, "time", shadow_time.Pkg)
+
 	default:
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)
