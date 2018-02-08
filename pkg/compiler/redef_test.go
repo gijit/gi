@@ -11,9 +11,9 @@ import (
 
 var _ = fmt.Printf
 
-func Test301ReplayOfStructdDef(t *testing.T) {
+func Test301RedefinitionOfStruct(t *testing.T) {
 
-	cv.Convey(`if we replay struct defn and method call, the method call should succeed the 2nd time (was failing to replay from history, stumbling on the type checker)`, t, func() {
+	cv.Convey(`if we replay struct definition and method call, the method call should succeed the 2nd time (was failing to replay from history, stumbling on the type checker--fix required modifying the type checker to call check.deleteFromObjMapPriorTypeName(oname) in types/check.go)`, t, func() {
 		src := `
  type S struct{}
  var s S

@@ -10,7 +10,6 @@ import (
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
-	//runtimedebug "runtime/debug"
 )
 
 // debugging/development support
