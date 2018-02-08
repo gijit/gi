@@ -7,11 +7,10 @@
 package types
 
 import (
-	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
-	runtimedebug "runtime/debug"
+	//runtimedebug "runtime/debug"
 )
 
 // debugging/development support
@@ -365,7 +364,7 @@ func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, 
 }
 
 func (check *Checker) recordDef(id *ast.Ident, obj Object) {
-	pp("check.recordDef for id='%s', obj='%#v'/'%s'", id.Name, obj, obj)
+	//pp("check.recordDef for id='%s', obj='%#v'/'%s'", id.Name, obj, obj)
 	assert(id != nil)
 	//check.scope.Dump()
 
@@ -374,22 +373,21 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 		oname := obj.Name()
 		prior := check.scope.Lookup(oname)
 		if prior != nil {
-			fmt.Printf("prior found for id='%s', prior='%#v'\n", id.Name, prior)
-			fmt.Printf(" what if we delete the prior, if it is a type?\n")
+			// fmt.Printf("prior found for id='%s', prior='%#v'\n", id.Name, prior)
+
+			// jea: for the REPL, if this is a type,
+			// we will need to delete the old version of the type
+			// from the ObjMap, so it doesn't grab new
+			// methods that are added.
+			//
 			switch prior.(type) {
-			case *Var:
-				fmt.Printf("ignoring *types.Var: '%#v'\n", prior)
+			//case *Var:
 			case *TypeName:
-				fmt.Printf("got TypeName! deleting obj.Name()='%s', prior='%p'/'%#v'\nwhile obj='%p'/'%T'\n", oname, prior, prior, obj, obj)
-				fmt.Printf("here is stack:\n%s\n", string(runtimedebug.Stack()))
-				//check.scope.DeleteByName(obj.Name()) // doesn't work.
-				//delete(check.ObjMap, prior) // doesn't work, but should up stack.
 				check.deleteFromObjMapPriorTypeName(oname)
 			}
 		} else {
-			fmt.Printf("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
+			//pp("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
 			//check.scope.DeleteByName(obj.Name())
-
 		}
 	}
 

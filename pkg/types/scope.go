@@ -13,8 +13,7 @@ import (
 	"io"
 	"sort"
 	"strings"
-
-	runtimedebug "runtime/debug"
+	//runtimedebug "runtime/debug"
 )
 
 // TODO(gri) Provide scopes with a name or other mechanism so that
@@ -139,8 +138,8 @@ func (s *Scope) LookupParent(name string, pos token.Pos) (*Scope, Object) {
 // Otherwise it inserts obj, sets the object's parent scope
 // if not already set, and returns nil.
 func (s *Scope) Insert(obj Object) Object {
-	fmt.Printf("Scope.Insert called with obj.Name()='%v'\n", obj.Name())
-	fmt.Printf("Scope.Insert() traceback:\n%s\n", string(runtimedebug.Stack()))
+	//fmt.Printf("Scope.Insert called with obj.Name()='%v'\n", obj.Name())
+	//fmt.Printf("Scope.Insert() traceback:\n%s\n", string(runtimedebug.Stack()))
 
 	name := obj.Name()
 	if alt := s.elems[name]; alt != nil {
@@ -161,8 +160,8 @@ func (s *Scope) Insert(obj Object) Object {
 // of the same obj.Name(). Returns any
 // prior object.
 func (s *Scope) Replace(obj Object) Object {
-	fmt.Printf("Scope.Replace called with obj.Name()='%v'\n", obj.Name())
-	fmt.Printf("Scope.Replace() traceback:\n%s\n", string(runtimedebug.Stack()))
+	//fmt.Printf("Scope.Replace called with obj.Name()='%v'\n", obj.Name())
+	//fmt.Printf("Scope.Replace() traceback:\n%s\n", string(runtimedebug.Stack()))
 	name := obj.Name()
 	if s.elems == nil {
 		s.elems = make(map[string]Object)

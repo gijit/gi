@@ -3,12 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	//"github.com/shurcooL/go-goon"
 	"strings"
 	"testing"
 
-	"github.com/gijit/gi/pkg/types"
-	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -50,50 +47,12 @@ func Test001ReplayOfStructdDef(t *testing.T) {
 		// now split into lines: then we get the oops.
 		lines := strings.Split(src, "\n")
 		// and do the lines set 2x
-		var om_S types.Object
 		for j := 0; j < 2; j++ {
-
-			if j == 1 {
-				// display the ObjMap:
-				for k, v := range r.inc.CurPkg.Arch.Check.ObjMap {
-					pp("Arch.Check.ObjMap: key k='%#v' v ='%#c'", k, v)
-					pp("k.Name()='%#v'", k.Name())
-					switch k.Name() {
-					case "S":
-						om_S = k
-						_ = om_S
-					}
-				}
-				// works, so try to put this into types/check.go
-				pp("on j=%v pass, deleting 'om_S'='%p'/'%#v'", j, om_S, om_S)
-				//delete(r.inc.CurPkg.Arch.Check.ObjMap, om_S) // green!!!
-			}
 			for i := range lines {
 				err = r.Eval(lines[i])
 				panicOn(err)
-
-				// CurPkg.Arch is nil until i > 0 the first time.
-				if i > 0 || j > 0 {
-					fmt.Printf("TypesInfo.Types='%#v'\n", r.inc.CurPkg.Arch.TypesInfo) // .Types, .Defs, .Name2node
-
-					//for nm := range r.inc.CurPkg.Arch.TypesInfo.Name2node {
-					//	fmt.Printf("j=%v, i=%v, Name2Node[nm='%s']\n", j, i, nm) // S.Hi
-					//}
-					//fmt.Printf("\n node = '%#v'\n", node)
-					k := 0
-					for def, obj := range r.inc.CurPkg.Arch.TypesInfo.Defs {
-						if def != nil {
-							defnm := def.Name
-							_ = obj
-							fmt.Printf("\n on j=%v, after Eval of line i=%v:  TypesInfo.Defs[k=%v]='%v' = '%p'\n", j, i, k, defnm, obj) // .Types, .Defs, .Name2node
-							// see output below [1]
-						}
-						k++
-					}
-				}
-
 			}
-			fmt.Printf("\n pass j=%v complete.\n", j)
+			//fmt.Printf("\n pass j=%v complete.\n", j)
 		}
 	})
 }
