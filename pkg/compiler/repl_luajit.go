@@ -1,4 +1,4 @@
-package main
+package compiler
 
 import (
 	"bufio"
@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gijit/gi/pkg/compiler"
 	"github.com/gijit/gi/pkg/front"
 	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 )
+
+var p = verb.P
 
 func (cfg *GIConfig) LuajitMain() {
 	r := NewRepl(cfg)
@@ -23,8 +24,8 @@ func (cfg *GIConfig) LuajitMain() {
 }
 
 type Repl struct {
-	inc   *compiler.IncrState
-	vmCfg *compiler.VmConfig
+	inc   *IncrState
+	vmCfg *VmConfig
 	vm    *golua.State
 
 	t0 time.Time
@@ -54,13 +55,13 @@ type Repl struct {
 
 func NewRepl(cfg *GIConfig) *Repl {
 
-	vmCfg := compiler.NewVmConfig()
+	vmCfg := NewVmConfig()
 	vmCfg.PreludePath = cfg.PreludePath
 	vmCfg.Quiet = cfg.Quiet
 	vmCfg.NotTestMode = !cfg.IsTestMode
-	vm, err := compiler.NewLuaVmWithPrelude(vmCfg)
+	vm, err := NewLuaVmWithPrelude(vmCfg)
 	panicOn(err)
-	inc := compiler.NewIncrState(vm, vmCfg)
+	inc := NewIncrState(vm, vmCfg)
 
 	r := &Repl{cfg: cfg, vm: vm, inc: inc}
 	r.home = os.Getenv("HOME")
@@ -273,12 +274,12 @@ func (r *Repl) Read() (src string, err error) {
 	case ":prelude", ":reload":
 		fmt.Printf("Reloading prelude...\n")
 
-		files, err := compiler.FetchPreludeFilenames(r.cfg.PreludePath, r.cfg.Quiet)
+		files, err := FetchPreludeFilenames(r.cfg.PreludePath, r.cfg.Quiet)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
 			return "", err
 		}
-		err = compiler.LuaDoFiles(r.vm, files)
+		err = LuaDoFiles(r.vm, files)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
 		}
@@ -344,7 +345,7 @@ these special commands.
 		if len(final) > 0 {
 			fmt.Printf("%s (%s)\n", nm, strings.Join(show, ","))
 			if r.isDo {
-				err = compiler.LuaDoFiles(r.vm, final)
+				err = LuaDoFiles(r.vm, final)
 			} else {
 				by, err = sourceGoFiles(final)
 				if err != nil {
@@ -433,20 +434,20 @@ func (r *Repl) Eval(src string) error {
 	interr := r.vm.LoadString(use)
 	if interr != 0 {
 		fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", use[:len(use)-1])
-		compiler.DumpLuaStack(r.vm)
+		DumpLuaStack(r.vm)
 		r.vm.Pop(1)
 		return nil
 	}
 	err := r.vm.Call(0, 0)
 	if err != nil {
 		fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
-		compiler.DumpLuaStack(r.vm)
+		DumpLuaStack(r.vm)
 		r.vm.Pop(1)
 		return nil
 	}
 	r.t1 = time.Now()
 	// jea debug:
-	//compiler.DumpLuaStack(vm)
+	//DumpLuaStack(vm)
 	fmt.Printf("\n")
 	r.reader.Reset(os.Stdin)
 	fmt.Printf("elapsed: '%v'\n", r.t1.Sub(r.t0))

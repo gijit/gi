@@ -6,16 +6,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/gijit/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/repl"
+	"path"
 )
 
-var p = verb.P
-var pp = verb.PP
+var ProgramName string = path.Base(os.Args[0])
 
 func main() {
 
 	myflags := flag.NewFlagSet("gi", flag.ExitOnError)
-	cfg := &GIConfig{}
+	cfg := repl.NewGIConfig()
 	cfg.DefineFlags(myflags)
 
 	err := myflags.Parse(os.Args[1:])

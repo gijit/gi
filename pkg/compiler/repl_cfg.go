@@ -1,17 +1,14 @@
-package main
+package compiler
 
 import (
 	"flag"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/gijit/gi/pkg/verb"
 )
-
-var ProgramName string = path.Base(os.Args[0])
 
 type GIConfig struct {
 	Quiet          bool
@@ -21,6 +18,10 @@ type GIConfig struct {
 	PreludePath    string
 	IsTestMode     bool
 	NoLiner        bool // for under test/emacs
+}
+
+func NewGIConfig() *GIConfig {
+	return &GIConfig{}
 }
 
 // call DefineFlags before myflags.Parse()

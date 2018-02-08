@@ -1,4 +1,4 @@
-package main
+package compiler
 
 import (
 	"bytes"
@@ -10,11 +10,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gijit/gi/pkg/compiler"
 	"github.com/gijit/gi/pkg/verb"
 )
 
-func translateAndCatchPanic(inc *compiler.IncrState, src []byte) (translation string, err error) {
+func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err error) {
 	defer func() {
 		recov := recover()
 		if recov != nil {

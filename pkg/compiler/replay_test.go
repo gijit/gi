@@ -1,4 +1,4 @@
-package main
+package compiler
 
 import (
 	"flag"
@@ -23,7 +23,7 @@ func Test301ReplayOfStructdDef(t *testing.T) {
 		fmt.Printf("replay 2x, src='%s'\n", src)
 
 		myflags := flag.NewFlagSet("gi", flag.ExitOnError)
-		cfg := &GIConfig{}
+		cfg := NewGIConfig()
 		cfg.DefineFlags(myflags)
 
 		err := myflags.Parse([]string{"-q", "-no-liner"}) // , "-vv"})
