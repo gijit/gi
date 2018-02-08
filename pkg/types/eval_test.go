@@ -7,10 +7,10 @@
 package types_test
 
 import (
-	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"testing"
@@ -162,7 +162,7 @@ func TestEvalPos(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	pkg, _, err := conf.Check(nil, nil, "p", fset, files, nil)
+	pkg, _, err := conf.Check(nil, nil, "p", fset, files, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

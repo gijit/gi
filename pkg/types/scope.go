@@ -13,6 +13,8 @@ import (
 	"io"
 	"sort"
 	"strings"
+
+	runtimedebug "runtime/debug"
 )
 
 // TODO(gri) Provide scopes with a name or other mechanism so that
@@ -105,6 +107,13 @@ func (s *Scope) Lookup(name string) Object {
 	return s.elems[name]
 }
 
+// jea add
+func (s *Scope) DeleteByName(name string) Object {
+	obj := s.elems[name]
+	delete(s.elems, name)
+	return obj
+}
+
 // LookupParent follows the parent chain of scopes starting with s until
 // it finds a scope where Lookup(name) returns a non-nil object, and then
 // returns that scope and object. If a valid position pos is provided,
@@ -130,7 +139,8 @@ func (s *Scope) LookupParent(name string, pos token.Pos) (*Scope, Object) {
 // Otherwise it inserts obj, sets the object's parent scope
 // if not already set, and returns nil.
 func (s *Scope) Insert(obj Object) Object {
-	//pp("Scope.Insert called with obj='%#v'", obj)
+	fmt.Printf("Scope.Insert called with obj.Name()='%v'\n", obj.Name())
+	fmt.Printf("Scope.Insert() traceback:\n%s\n", string(runtimedebug.Stack()))
 
 	name := obj.Name()
 	if alt := s.elems[name]; alt != nil {
@@ -141,26 +151,28 @@ func (s *Scope) Insert(obj Object) Object {
 	}
 	s.elems[name] = obj
 	if obj.Parent() == nil {
-		obj.setParent(s)
+		obj.setParent(s) // obj.parent = s
 	}
 	return nil
 }
 
 // Replace always stores obs in s. It
 // will overwrite any existing object
-// of the same naem.
+// of the same obj.Name(). Returns any
+// prior object.
 func (s *Scope) Replace(obj Object) Object {
-	pp("Scope.Replace called with obj='%#v'", obj)
-
+	fmt.Printf("Scope.Replace called with obj.Name()='%v'\n", obj.Name())
+	fmt.Printf("Scope.Replace() traceback:\n%s\n", string(runtimedebug.Stack()))
 	name := obj.Name()
 	if s.elems == nil {
 		s.elems = make(map[string]Object)
 	}
+	alt := s.elems[name]
 	s.elems[name] = obj
 	if obj.Parent() == nil {
 		obj.setParent(s)
 	}
-	return nil
+	return alt
 }
 
 // Pos and End describe the scope's source code extent [pos, end).

@@ -7,8 +7,12 @@
 package types
 
 import (
+	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/token"
+	runtimedebug "runtime/debug"
+
+	"github.com/shurcooL/go-goon"
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {
@@ -362,6 +366,16 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 	}
 
 	obj, index, indirect = LookupFieldOrMethod(x.typ, x.mode == variable, check.pkg, sel)
+	// jea debug:
+	if sel == "Hi" {
+		if obj != nil {
+			pp("2222222 successfully looked up sel='%v', getting obj=='%#v'. x.typ='%#v'\n", sel, obj, x.typ)
+			goon.Dump(x.typ)
+		} else {
+			pp("2222222 looked up sel='%v', got nil obj. x.typ='%#v''\n", sel, x.typ)
+			goon.Dump(x.typ)
+		}
+	}
 	if obj == nil {
 		switch {
 		case index != nil:
@@ -370,6 +384,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		case indirect:
 			check.invalidOp(e.Pos(), "%s is not in method set of %s", sel, x.typ)
 		default:
+			fmt.Printf("looking up sel='%v' on x='%#v' gave obj==nil.\nstack:\n", sel, x)
+			fmt.Printf("%s\n", string(runtimedebug.Stack()))
 			check.invalidOp(e.Pos(), "%s has no field or method %s", x, sel)
 		}
 		goto Error

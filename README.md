@@ -751,7 +751,7 @@ LuaJIT's time was 135 msec. Julia uses an optimized
 BLAS library for this task and beats both Go
 and LuaJIT by multiplying in 6 msec, but
 is too immature and too large to be
-a viable embedded target.
+a viable target.
 
 Bonus: LuaJIT has Torch7 for machine learning.
 And, Torch7 has GPU support. [1][2]

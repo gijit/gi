@@ -58,9 +58,9 @@ type Archive struct {
 
 	// save state so we can type incrementally
 	TypesInfo *types.Info
-	config    *types.Config
-	pkg       *types.Package
-	check     *types.Checker
+	Config    *types.Config
+	Pkg       *types.Package
+	Check     *types.Checker
 
 	FuncSrcCache map[string]string
 }

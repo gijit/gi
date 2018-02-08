@@ -7,11 +7,11 @@
 package types
 
 import (
-	//"fmt"
-
+	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
+	runtimedebug "runtime/debug"
 )
 
 // debugging/development support
@@ -88,7 +88,7 @@ type Checker struct {
 	unusedDotImports map[*Scope]map[*Package]token.Pos // positions of unused dot-imported packages for each file scope
 
 	firstErr error                 // first error encountered
-	methods  map[string][]*Func    // maps type names to associated methods
+	Methods  map[string][]*Func    // maps type names to associated methods
 	untyped  map[ast.Expr]exprInfo // map of expressions without final type
 	funcs    []funcInfo            // list of functions to type-check
 	delayed  []func()              // delayed checks requiring fully setup types
@@ -131,10 +131,10 @@ func (check *Checker) addDeclDep(to Object) {
 }
 
 func (check *Checker) assocMethod(tname string, meth *Func) {
-	m := check.methods
+	m := check.Methods
 	if m == nil {
 		m = make(map[string][]*Func)
-		check.methods = m
+		check.Methods = m
 	}
 	m[tname] = append(m[tname], meth)
 }
@@ -187,7 +187,7 @@ func (check *Checker) initFiles(files []*ast.File) {
 	check.unusedDotImports = nil
 
 	check.firstErr = nil
-	check.methods = nil
+	check.Methods = nil
 	check.untyped = nil
 	check.funcs = nil
 	check.delayed = nil
@@ -373,7 +373,21 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 	if check.scope != nil && obj != nil {
 		prior := check.scope.Lookup(obj.Name())
 		if prior != nil {
-			pp("prior found for id='%s', prior='%#v'", id.Name, prior)
+			fmt.Printf("prior found for id='%s', prior='%#v'\n", id.Name, prior)
+			fmt.Printf(" what if we delete the prior, if it is a type?\n")
+			switch prior.(type) {
+			case *Var:
+				fmt.Printf("ignoring *types.Var: '%#v'\n", prior)
+			case *TypeName:
+				fmt.Printf("got TypeName! deleting obj.Name()='%s', prior='%#v'\n", obj.Name(), prior)
+				//fmt.Printf("here is stack:\n%s\n", string(runtimedebug.Stack()))
+				//check.scope.DeleteByName(obj.Name())
+				//delete(check.ObjMap, obj)
+			}
+		} else {
+			fmt.Printf("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
+			//check.scope.DeleteByName(obj.Name())
+
 		}
 	}
 

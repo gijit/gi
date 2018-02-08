@@ -64,7 +64,7 @@ const Boiling Celsius = 100
 	// Type information for the imported "fmt" package
 	// comes from $GOROOT/pkg/$GOOS_$GOOARCH/fmt.a.
 	conf := types.Config{Importer: importer.Default()}
-	pkg, _, err := conf.Check(nil, nil, "temperature", fset, files, nil)
+	pkg, _, err := conf.Check(nil, nil, "temperature", fset, files, nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func (c *Celsius) SetF(f float64) { *c = Celsius(f - 32 / 9 * 5) }
 	// Type information for the imported packages
 	// comes from $GOROOT/pkg/$GOOS_$GOOARCH/fmt.a.
 	conf := types.Config{Importer: importer.Default()}
-	pkg, _, err := conf.Check(nil, nil, "temperature", fset, []*ast.File{f}, nil)
+	pkg, _, err := conf.Check(nil, nil, "temperature", fset, []*ast.File{f}, nil, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func fib(x int) int {
 		Uses:  make(map[*ast.Ident]types.Object),
 	}
 	var conf types.Config
-	pkg, _, err := conf.Check(nil, nil, "fib", fset, []*ast.File{f}, &info)
+	pkg, _, err := conf.Check(nil, nil, "fib", fset, []*ast.File{f}, &info, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

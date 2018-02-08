@@ -27,10 +27,10 @@ package types_test
 
 import (
 	"flag"
-	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/scanner"
 	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"
@@ -265,7 +265,7 @@ func checkFiles(t *testing.T, testfiles []string) {
 			errlist = append(errlist, err)
 		}
 	}
-	conf.Check(nil, nil, pkgName, fset, files, nil)
+	conf.Check(nil, nil, pkgName, fset, files, nil, nil)
 
 	if *listErrors {
 		return

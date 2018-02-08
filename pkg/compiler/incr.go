@@ -68,7 +68,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	var previousErr error
 	var config *types.Config
 	if a != nil {
-		config = a.config
+		config = a.Config
 	} else {
 		config = &types.Config{
 			DisableUnusedImportCheck: true, // jea add
@@ -92,8 +92,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	var pkg *types.Package
 	var check *types.Checker
 	if a != nil {
-		pkg = a.pkg
-		check = a.check
+		pkg = a.Pkg
+		check = a.Check
 	}
 	var err error
 	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
@@ -684,14 +684,14 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			Minified:     minify,
 			NewCodeText:  newCodeText,
 			TypesInfo:    typesInfo,
-			config:       config,
-			pkg:          pkg,
-			check:        check,
+			Config:       config,
+			Pkg:          pkg,
+			Check:        check,
 			FuncSrcCache: funcSrcCache,
 		}, nil
 	} else {
-		a.pkg = pkg
-		a.check = check
+		a.Pkg = pkg
+		a.Check = check
 		a.NewCodeText = newCodeText
 		a.FuncSrcCache = funcSrcCache
 	}

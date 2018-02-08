@@ -573,7 +573,7 @@ func (check *Checker) packageObjects(objList []Object) {
 	// entries were deleted at the end of typeDecl because the respective receiver base
 	// types were not found. In that case, an error was reported when declaring those
 	// methods. We can now safely discard this map.
-	check.methods = nil
+	check.Methods = nil
 }
 
 // functionBodies typechecks all function bodies.

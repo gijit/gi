@@ -25,6 +25,7 @@ func (check *Checker) reportAltDecl(obj Object) {
 
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
 	pp("declare called for obj.Name()='%s', id='%#v', scope='%#v'", obj.Name(), id, scope)
+
 	// spec: "The blank identifier, represented by the underscore
 	// character _, may be used in a declaration like any other
 	// identifier but the declaration does not introduce a new
@@ -49,10 +50,16 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 		}
 		if alt != nil {
 			// re-declaration of variables, such as `a:=1;a:=1` errors out here.
-			pp("re-declaration error should never happen at the repl!")
-			check.errorf(obj.Pos(), "%s redeclared in this block", obj.Name())
-			check.reportAltDecl(alt)
-			return
+			pp("previous re-declaration errors now never happen at the repl, so we detect for repl purposes: alt.Name()='%s'. obj='%T'/'%#v'", alt.Name(), obj, obj)
+			switch alt.(type) {
+			case *TypeName:
+				pp("we have a TypeName being re-declared: '%s'", alt.Name())
+			}
+			/*		panic("should never reach")
+					check.errorf(obj.Pos(), "%s redeclared in this block", obj.Name())
+					check.reportAltDecl(alt)
+					return
+			*/
 		}
 		obj.setScopePos(pos)
 	}
@@ -305,11 +312,11 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 
 func (check *Checker) addMethodDecls(obj *TypeName) {
 	// get associated methods
-	methods := check.methods[obj.name]
+	methods := check.Methods[obj.name]
 	if len(methods) == 0 {
 		return // no methods
 	}
-	delete(check.methods, obj.name)
+	delete(check.Methods, obj.name)
 
 	// use an objset to check for name conflicts
 	var mset objset
@@ -366,8 +373,8 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 						// Hmm... we have an Object, not an *ast.Ident.
 						//delete(check.Defs, prior)
 
-						pp("check.methods has len %v", len(check.methods))
-						for i, slc := range check.methods {
+						pp("check.Methods has len %v", len(check.Methods))
+						for i, slc := range check.Methods {
 							fmt.Printf("methods[%v] = \n", i)
 							for j, fn := range slc {
 								fmt.Printf("   [%v] = '%s'\n", j, fn.String())

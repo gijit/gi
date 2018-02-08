@@ -206,6 +206,8 @@ func (check *Checker) funcType(
 		prior := check.Name2node[methodName]
 		if prior != nil {
 			pp("re-declaration, deleting the earlier signature scope for '%s'", methodName)
+			// hypothesis: this is causing the wrong Hi() method to be deleted in
+			// cmd/gi/replay_test.go Test001. Try commenting it out. Nope. No change.
 			delete(check.Scopes, prior.Ftype)
 			if check.scope != nil && check.scope != Universe {
 				check.scope.DeleteChild(prior.Scope)
