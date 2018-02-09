@@ -194,8 +194,11 @@ status
 
 2018 Feb 09 update
 ------------------
-v0.9.7 builds under the newly release go1.9.4 which changed
-how cgo libraries are linked.
+v0.9.7 attempted to build under the newly release go1.9.4,
+but failed to do so and has been replaced by v0.9.8 which
+is only supporting go1.9.4. Basically go1.9.4 is
+a botched release that doesn't allog CGO to link against
+specific, named .a archives.
 
 
 2018 Feb 08 update
