@@ -2,11 +2,11 @@
 
 all:
 	@echo "type 'make onetime' to install luajit (only necessary once)."
-	make install
+	export CGO_LDFLAGS_ALLOW="${GOPATH}/src/github.com/gijit/gi/vendor/github.com/glycerine/golua/lua/../../../LuaJIT/LuaJIT/src/libluajit.a"; make install
 
 
 onetime: gitversion
-	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
+	export CGO_LDFLAGS_ALLOW="${GOPATH}/src/github.com/gijit/gi/vendor/github.com/glycerine/golua/lua/../../../LuaJIT/LuaJIT/src/libluajit.a"; cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
 
 # This how we want to name the binary output
 BINARY=gi
@@ -30,11 +30,11 @@ OBJS=$(SRCS:.go=.o)
 
 
 build:
-	go build ${LDFLAGS_gi} -o gi
+	export CGO_LDFLAGS_ALLOW="${GOPATH}/src/github.com/gijit/gi/vendor/github.com/glycerine/golua/lua/../../../LuaJIT/LuaJIT/src/libluajit.a"; go build ${LDFLAGS_gi} -o gi
 
 
 install:
-	make build
+	export CGO_LDFLAGS_ALLOW="${GOPATH}/src/github.com/gijit/gi/vendor/github.com/glycerine/golua/lua/../../../LuaJIT/LuaJIT/src/libluajit.a"; make build
 	cp -p gi ${GOPATH}/bin/
 
 # Cleans our project: deletes binaries
