@@ -169,3 +169,44 @@ func Test091AppendSlices(t *testing.T) {
 	})
 
 }
+
+func Test092SliceOfSlice(t *testing.T) {
+
+	cv.Convey(`Given a matrix, 
+type Matrix struct {
+	A    [][]float64
+	Nrow int
+	Ncol int
+}
+
+the slice of slice allocation and access should work`, t, func() {
+
+		code := `
+type Matrix struct {
+	A    [][]float64
+	Nrow int
+	Ncol int
+}
+
+	   m := &Matrix{
+             A:make([][]float64,4),
+             Nrow:2,
+             Ncol:2,
+       }
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		err = LuaRunAndReport(vm, string(translation))
+		panicOn(err)
+
+		//LuaMustFloat64(vm, "c0", 0)
+	})
+
+}
