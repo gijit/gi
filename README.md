@@ -194,6 +194,8 @@ status
 
 2018 Feb 09 update
 ------------------
+v0.9.9 restores building under go1.9.3.
+
 v0.9.7 attempted to build under the newly release go1.9.4,
 but failed to do so and has been replaced by v0.9.8 which
 is only supporting go1.9.3. Basically go1.9.4 is
