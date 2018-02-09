@@ -170,9 +170,10 @@ func Test091AppendSlices(t *testing.T) {
 
 }
 
+/*
 func Test092SliceOfSlice(t *testing.T) {
 
-	cv.Convey(`Given a matrix, 
+	cv.Convey(`Given a matrix,
 type Matrix struct {
 	A    [][]float64
 	Nrow int
@@ -210,3 +211,4 @@ type Matrix struct {
 	})
 
 }
+*/

@@ -255,7 +255,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				// jea: do 0-based indexing of slices, not 1-based.
 				ele = "[0]=" + ele
 			}
-			return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
+			return c.formatExpr(fmt.Sprintf(`_gi_NewSlice(%s,{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
 			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))
@@ -299,7 +299,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("__type__%s.__ptr({}, %s)", c.typeName(exprType), sele)
+			return c.formatExpr("%s.__ptr({}, %s)", c.typeName(exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
@@ -926,11 +926,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
 			// jea, type assertion place 2; face_test 101 goes here.
 			// return both converted-interface-value, and ok.
-			return c.formatExpr(`__gi_assertType(%e, __type__%s, 2)`, e.X, c.typeName(t))
+			return c.formatExpr(`__gi_assertType(%e, %s, 2)`, e.X, c.typeName(t))
 			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(t))
 		}
 		// jea, type assertion place 0: only return value, without the 2nd 'ok' return.
-		return c.formatExpr(`__gi_assertType(%e, __type__%s, 0)`, e.X, c.typeName(t))
+		return c.formatExpr(`__gi_assertType(%e, %s, 0)`, e.X, c.typeName(t))
 
 	case *ast.Ident:
 		if e.Name == "_" {
@@ -1455,7 +1455,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		et := x.Elem()
 		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
 		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
-		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
+		return c.formatExpr(`_gi_NewSlice(%s, %e, %s)`, c.typeName(et), expr, zero)
 		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(desiredType), expr)
 	case *types.Array:
 		et := x.Elem()
@@ -1463,7 +1463,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
 		// c.typeName(desiredType)
 		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
-		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
+		return c.formatExpr(`_gi_NewSlice(%s, %e, %s)`, c.typeName(et), expr, zero)
 	}
 	return c.translateExpr(expr, nil)
 }

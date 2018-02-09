@@ -39,7 +39,6 @@ __type__String =nil
 __type__Struct =nil
 __type__UnsafePointer =nil
 
-
 -- TODO: syncrhonize around this/deal with multi-threading?
 __gi_idCounter = 0;
 
@@ -312,7 +311,7 @@ end
 --
 function __reg:RegisterStruct(shortTypeName, pkgPath, shortPkg)
    local name = shortTypeName -- temporary fix
-   --print("RegisterStruct called, with shortTypeName='"..shortTypeName.."'")
+   --print("RegisterStruct called, with shortTypeName='"..tostring(shortTypeName).."'")
    if shortTypeName == nil then
       error "error in __reg:RegisterStruct: shortTypeName cannot be nil"
    end
@@ -1734,7 +1733,7 @@ __kind2type = {
    [23]=__type__Slice,
    [24]=__type__String,
    [25]=__type__Struct,
-   [26]=__type__UnsafePointer,
+   [26]=__type__UnsafePointer
 }
 
 ------
@@ -1878,4 +1877,42 @@ function __arrayType(elem, len, shortPkg, pkgPath)
    end
    return typ;
 end
+
+--
+
+function __methodId2str(m)
+   return m.__pkg .. "," .. m.__name .. "," .. m.__typ.__id
+end
+
+function __methodNameHelper(m)
+   local prefix = ""
+   if m.__pkg ~= "" then
+      prefix = m.__pkg .. "."
+   end
+   return prefix .. m.__name .. string.sub(m.__typ.__str, 9) -- js: .substr(4)
+end
+
+__gi_interfaceTypes = {};
+__gi_interfaceType = function(methods)
+
+   local joinme = __mapFuncOverTable(methods, __methodId2str)
+   local typeKey = table.concat(joinme, "_")
+   local typ = __gi_interfaceTypes[typeKey];
+   if typ == nil then
+      local str = "interface{}";
+      if #methods ~= 0 then
+         joinme = __mapFuncOverTable(methods, __methodNameHelper)
+         str = "interface { " .. table.concat(joinme, "; ") .. " }";
+      end
+      typ = __gi_NewType(16, __gi_kind_Interface, str, false, "", false, nil);
+      __gi_interfaceTypes[typeKey] = typ;
+      typ.__init(methods);
+   end
+   return typ;
+end
+
+__gi_emptyInterface = __gi_interfaceType({});
+__type__ifaceNil = {};
+__type__error = __gi_NewType(8, __gi_kind_Interface, "", "error", "error", true, "", false, nil, nil);
+__type__error.__init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __gi_funcType({}, {__gi_kind_String}, false)}});
 

@@ -208,8 +208,8 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 			if len(params) > 0 {
 				joinedParams = "," + joinedParams
 			}
-			return []byte(fmt.Sprintf("\t__type__%s[__gi_MethodsetKey].%s=function%s;\n "+
-				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", __type__%s[__gi_MethodsetKey]%s, true)\n",
+			return []byte(fmt.Sprintf("\t%s[__gi_MethodsetKey].%s=function%s;\n "+
+				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", %s[__gi_MethodsetKey]%s, true)\n",
 				splt[0], splt[1],
 				fun,
 				splt[0], splt[1], splt[0], "."+splt[1],
