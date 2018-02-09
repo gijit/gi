@@ -9,6 +9,166 @@ ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
 "go interpreter".
 
+overview
+-------
+In the form of Q & A:
+
+~~~
+On Friday, February 9, 2018 at 12:48:17 PM UTC+7,
+Christopher Sebastian wrote on golang-nuts:
+
+gijit looks really interesting.  Do you
+have a high-level description/diagram
+anywhere that gives an overview of how
+the system works? [0]
+
+I took a brief look at the git repo,
+and it seems like you're translating
+Go into Javascript, and then to Lua,
+and then using LuaJIT. [1] Is that right?
+[2] How do you manage the complexity
+of these seemingly-unwieldy pieces
+and translation layers?
+
+It seems like you have your own 'parser'
+implementation (maybe copied from the Go src tree? [3]).
+How will you keep your parser (as well as the
+rest of the system) up-to-date as Go changes? [4]
+Is it a very manual process? [5]
+
+Thanks for working on this important project!
+~Christopher Sebastian
+~~~
+My reply:
+~~~
+Thank you for the compliment and questions, Christopher.
+
+[0]. No, at least, not yet.  The README is fairly
+extensive however. I would start by reading it
+in full. The open (and closed) issues on github also provide
+a sense of the work done to date, and that still TODO.
+
+Perhaps the answer to [1] just below will help illustrate.
+
+[1]. No, that's not quite right. Let me clarify:
+
+a) GopherJS does:  Go source  ->  Javascript source.
+
+It translates a whole program at a time.
+
+while
+
+b) `gijit` does:
+
+     i) Go source -> Lua source.
+    ii) Then run that Lua source on LuaJIT.
+
+But in small chunks; for example, line-by-line.
+
+Instead of whole program, each sequentially
+entered expression/statement/declaration,
+(or using :source, a larger fragment
+if required for mutually recursive definitions)
+is translated and evaluated. These can be
+multiple lines, but as soon as the
+gc syntax front-end tells us we have a
+complete expressions, we translate
+and evaluate it.
+
+Yes, the semantics will be subtly different.
+If you've used R/python/matlab
+to develop your algorithms before
+translating them to a compiled language
+(a highly effective practice that I
+recommend, and one that motivated gijit's development),
+you'll know that this is of little concern.
+
+So while the front end of gijit is derived
+from GopherJS, there is no javascript source generated.
+
+There's still quite a bit of javascript
+remnants in the source, however, as many corner
+cases haven't been tackled, so that might
+have misled a cursory inspection.
+
+I have adopted the practice, in the GopherJS
+derived code, of leaving in the
+javascript generation until I hit the
+problem with a new test. This lets me
+visually see, and experience when run,
+where I haven't handled a case yet.
+There are many corner cases not yet handled.
+
+
+[2]. Very carefully, with full Test-driven development. :)
+
+Seriously though, TDD is fantastic (if
+not essential) for compiler work.
+
+I would add, I'm working with extremely
+mature building blocks.
+So if there's a bug, it is almost surely
+in my code, not the libraries I'm using.
+
+The three mains libraries are already
+themselves the highly
+polished result of very high-quality
+(German and Swiss!) engineering.
+
+a) Mike Pall's LuaJIT is the work of 12
+years by a brilliant designer and engineer.
+Cloud Flare is now sponsoring King's
+College London to continue its development.
+
+b) Richard Musiol's GopherJS is the
+work of some 5 years. It passes most of
+the Go standard library tests.
+
+c) I don't know how long it took Robert Griesemer
+and the Go team to write the Go front-end
+parser and type checker, but there is a ton
+of time and effort and testing there.
+
+And a significant 4th:
+
+d) Luar (for Go <-> Lua binary object exchange,
+so that binary imports of Go libraries work)
+is a mature library. A great deal of work was
+done on it by Steve Donovan and contributors.
+
+This is all work that doesn't need to be
+reinvented, and can be leveraged.
+
+The slight changes to the above (vendored and modified)
+libraries in order
+work at the REPL are light relaxations of
+a small set of top-level checks.
+
+[3]. I re-use the front-end syntax/parser
+from the gc compiler only in order to quickly
+determine if we have a complete
+expression at the repl, or if we need to
+ask for another line of input.
+
+Then I throw away that parse and use
+the standard library's go/ast, go/parser,
+go/types to do the full parse and type-checking.
+
+This is necessary because go/parser and
+go/types are what GopherJS is built around.
+
+[4]. Go 1 is very mature, and changes very
+slowly, if at all, anymore, between releases.
+
+[5]. Yes, it is manual. I note the changes
+to the parser and typechecker are important
+but quite small, and would rebase easily.
+
+Best wishes,
+
+Jason
+~~~
+
 status
 ------
 
