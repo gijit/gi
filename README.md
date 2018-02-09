@@ -200,11 +200,7 @@ moves the gi infrastructure back to a known good point.
 v0.9.9 restores building under go1.9.3.
 
 v0.9.7 attempted to build under the newly release go1.9.4,
-but failed to do so and has been replaced by v0.9.8 which
-is only supporting go1.9.3. Basically go1.9.4 is
-a botched release that doesn't allog CGO to link against
-specific, named .a archives.
-
+but failed to do so and has been replaced.
 
 2018 Feb 08 update
 ------------------
