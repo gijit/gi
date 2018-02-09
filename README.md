@@ -192,6 +192,12 @@ in general) like a glove.
 status
 ------
 
+2018 Feb 09 update
+------------------
+v0.9.7 builds under the newly release go1.9.4 which changed
+how cgo libraries are linked.
+
+
 2018 Feb 08 update
 ------------------
 v0.9.6 fixes #20. The type checker now allows
