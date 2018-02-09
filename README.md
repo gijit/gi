@@ -72,7 +72,7 @@ if required for mutually recursive definitions)
 is translated and evaluated. These can be
 multiple lines, but as soon as the
 gc syntax front-end tells us we have a
-complete expressions, we translate
+complete expression, we translate
 and evaluate it.
 
 Yes, the semantics will be subtly different.
