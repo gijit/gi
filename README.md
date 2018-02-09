@@ -140,7 +140,7 @@ This is all work that doesn't need to be
 reinvented, and can be leveraged.
 
 The slight changes to the above (vendored and modified)
-libraries in order
+libraries in order to
 work at the REPL are light relaxations of
 a small set of top-level checks.
 
