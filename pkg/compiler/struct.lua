@@ -207,6 +207,7 @@ function __show_methods_desc(t, name, indent, quiet)
    return __st(t,name,indent,quiet,true)
 end
 
+
 -- don't think we're going to use these/the slice and map approach for structs.
 -- _giPrivateStructRaw = {}
 
@@ -1156,17 +1157,22 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       end
       
    elseif kind == __gi_kind_Slice then
+      
       typ.__constructor = function(self, array)
-         self.__gi_array = array;
-         self.__gi_offset = 0;
-         self.__gi_length = #array
-         self.__gi_capacity = self.__gi_length
+         return _gi_NewSlice(typ.__elem, array, typ.__elem.__zero(), 0, #array)
+
+         --js:
+         --self.__gi_array = array;
+         --self.__gi_offset = 0;
+         --self.__gi_length = #array
+         --self.__gi_capacity = self.__gi_length
          --self.__val = self;
       end
       typ.__init = function(elem)
          typ.__elem = elem;
          typ.__comparable = false;
-         typ.__nativeArray = __gi_nativeArray(elem.__kind);
+         --typ.__nativeArray = __gi_nativeArray(elem.__kind);
+         -- jea: replacement for the above line? needed?
          typ.__nil = typ({});
       end
 
@@ -1428,7 +1434,7 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
       -- __gi_panic(new __gi_String("invalid kind: " .. kind));
       kind = kind or "<nil>"
       print(debug.traceback())
-      error("error at struct.lua:(maybe line 1187?): invalid kind: "..kind);
+      error("error at struct.lua:(maybe line 1432?): invalid kind: "..kind);
    end
 
    --big switch (kind) in js.
@@ -1731,7 +1737,53 @@ __kind2type = {
    [26]=__type__UnsafePointer,
 }
 
--- 
+------
+
+__type2kind = {
+__type__bool = __gi_kind_bool,
+__type__int=__gi_kind_int,
+__type__int8=__gi_kind_int8,
+__type__int16=__gi_kind_int16,
+__type__int32=__gi_kind_int32,
+__type__int64=__gi_kind_int64,
+__type__uint=__gi_kind_uint,
+__type__uint8=__gi_kind_uint8,
+__type__uint16=__gi_kind_uint16,
+__type__uint32=__gi_kind_uint32,
+__type__uint64=__gi_kind_uint64,
+__type__uintptr=__gi_kind_uintptr,
+__type__float32=__gi_kind_float32,
+__type__float64=__gi_kind_float64,
+__type__complex64=__gi_kind_complex64,
+__type__complex128=__gi_kind_complex128,
+__type__Array=__gi_kind_Array,
+__type__Chan=__gi_kind_Chan,
+__type__Func=__gi_kind_Func,
+__type__Interface=__gi_kind_Interface,
+__type__Map=__gi_kind_Map,
+__type__Ptr=__gi_kind_Ptr,
+__type__Slice=__gi_kind_Slice,
+__type__String=__gi_kind_String,
+__type__Struct=__gi_kind_Struct,
+__type__UnsafePointer=__gi_kind_UnsafePointer
+}
+
+--
+
+function __sliceType(elem)
+  local typ = elem.__slice;
+  if typ ~= nil then
+     return typ;
+  end
+  
+  typ = __gi_NewType(24, __gi_kind_Slice, elem.__shortPkg, "[]"..elem.__shortTypeName, "[]"..elem.__str, false, elem.__pkg, false, nil, elem);
+  elem.__slice = typ;
+  typ.__init(elem);
+  return typ;
+end
+
+
+--
 
 __equal = function(a, b, typ)
    if typ == __jsObjectPtr then
