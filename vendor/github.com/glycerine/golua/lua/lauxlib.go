@@ -2,7 +2,7 @@ package lua
 
 /*
 #cgo CFLAGS: -I ${SRCDIR}/../../../LuaJIT/LuaJIT/src
-#cgo LDFLAGS: ${SRCDIR}/../../../LuaJIT/LuaJIT/src/libluajit.a
+#cgo LDFLAGS: -L${SRCDIR}/../../../LuaJIT/LuaJIT/src -lluajit
 
 #include <lua.h>
 #include <lauxlib.h>
