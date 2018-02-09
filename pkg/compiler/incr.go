@@ -200,7 +200,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			// but now we do it here to maintain previous behavior.
 			continue
 		}
-		c.p.pkgVars[importedPkg.Path()] = c.newVariableWithLevel(importedPkg.Name(), true)
+		c.p.pkgVars[importedPkg.Path()] = c.newVariableWithLevel(importedPkg.Name(), true, true)
 		importedPaths = append(importedPaths, importedPkg.Path())
 	}
 	sort.Strings(importedPaths)

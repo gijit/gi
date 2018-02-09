@@ -261,7 +261,7 @@ func (c *funcContext) newConst(t types.Type, value constant.Value) ast.Expr {
 }
 
 func (c *funcContext) newVariable(name string) string {
-	return c.newVariableWithLevel(name, false)
+	return c.newVariableWithLevel(name, false, true)
 }
 
 func (c *funcContext) gensym(name string) string {
@@ -269,7 +269,11 @@ func (c *funcContext) gensym(name string) string {
 	return fmt.Sprintf("__gensym_%v_%s", next, name)
 }
 
-func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
+// if newNameOnConflict, then name re-use will result
+// in a _1 or _2, a new name. If !newNameOnConflict, then
+// we will repeat the same name, allowing at the REPL
+// re-declaration of variables.
+func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool, newNameOnConflict bool) string {
 	pp("newVariableWithLevel begins, with name='%s'", name)
 	if name == "" {
 		panic("newVariable: empty name")
@@ -309,7 +313,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// Answer, this was generating different tmp variables with different
 	// names. Use a gensym instead.
 
-	if false { // jea add
+	if newNameOnConflict { // jea add
 		if n > 0 {
 			varName = fmt.Sprintf("%s_%d", name, n)
 		}
@@ -374,9 +378,6 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 		c.p.dependencies[o] = true
 
 		if o.Pkg() != c.p.Pkg || (isVarOrConst(o) && o.Exported()) {
-			// jea, foregoing pkg vars with the $Pkg. prefix, for now.
-			// return o.Name() // jea was this, until we needed fmt.Sprintf
-			// jea debug here for fmt.Sprintf
 			pp("o.Pkg() = '%#v', o.Name()='%#v'", o.Pkg(), o.Name())
 			pkgPrefix := c.pkgVar(o.Pkg())
 			if pkgPrefix == "" {
@@ -390,7 +391,8 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 	name, ok := c.p.objectNames[o]
 	pp("utils.go:307, name='%v', ok='%v'", name, ok)
 	if !ok {
-		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o))
+		newNameOnConflict := false
+		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o), newNameOnConflict)
 		pp("name='%#v', o.Name()='%v'", name, o.Name())
 		c.p.objectNames[o] = name
 	}
@@ -408,7 +410,7 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 
 	name, ok := c.p.varPtrNames[o]
 	if !ok {
-		name = c.newVariableWithLevel(o.Name()+"_ptr", isPkgLevel(o))
+		name = c.newVariableWithLevel(o.Name()+"_ptr", isPkgLevel(o), true)
 		c.p.varPtrNames[o] = name
 	}
 	return name
@@ -489,7 +491,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
 
-		varName := c.newVariableWithLevel(low, true)
+		varName := c.newVariableWithLevel(low, true, true)
 
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
