@@ -61,7 +61,6 @@ while
 b) `gijit` does:
 
      i) Go source -> Lua source.
-    ii) Then run that Lua source on LuaJIT.
 
 But in small chunks; for example, line-by-line.
 
@@ -83,12 +82,14 @@ translating them to a compiled language
 recommend, and one that motivated gijit's development),
 you'll know that this is of little concern.
 
+    ii) Then run that Lua source on LuaJIT.
+
 So while the front end of gijit is derived
 from GopherJS, there is no javascript source generated.
 
 There's still quite a bit of javascript
 remnants in the source, however, as many corner
-cases haven't been tackled, so that might
+cases haven't been tackled. So that might
 have misled a cursory inspection.
 
 I have adopted the practice, in the GopherJS
@@ -110,7 +111,7 @@ mature building blocks.
 So if there's a bug, it is almost surely
 in my code, not the libraries I'm using.
 
-The three mains libraries are already
+The three main libraries are already
 themselves the highly
 polished result of very high-quality
 (German and Swiss!) engineering.
@@ -118,7 +119,7 @@ polished result of very high-quality
 a) Mike Pall's LuaJIT is the work of 12
 years by a brilliant designer and engineer.
 Cloud Flare is now sponsoring King's
-College London to continue its development.
+College London to continue LuaJIT's development.
 
 b) Richard Musiol's GopherJS is the
 work of some 5 years. It passes most of
@@ -168,6 +169,25 @@ Best wishes,
 
 Jason
 ~~~
+
+I would add credit to Lua's originators
+and contributors from around the world.
+
+Roberto Ierusalimschy et al's design
+and evolution of Lua over the last
+25 years make it a (perhaps surprisingly)
+great tool for this purpose.
+It certainly surprised me.
+
+Lua's primary goal of acting as
+an embedded scripting language for
+many disparate host languages with
+different inheritance/prototype/overloading
+semantics has sculpted it into
+a power tool that fits the job
+(of language implementation
+in general) like a glove.
+
 
 status
 ------
