@@ -17,7 +17,36 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
+
+	// actuals
+	"gonum.org/v1/gonum/blas"
+	"gonum.org/v1/gonum/diff/fd"
+	"gonum.org/v1/gonum/floats"
+	"gonum.org/v1/gonum/graph"
+	"gonum.org/v1/gonum/integrate"
+	"gonum.org/v1/gonum/lapack"
+	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/optimize"
+	"gonum.org/v1/gonum/stat"
+	"gonum.org/v1/gonum/unit"
 )
+
+func init() {
+	a := 1
+	b := interface{}(&a)
+	_, ok := b.(blas.Complex128)
+	_ = ok
+}
+
+var _ = fd.Backward
+var _ = floats.Add
+var _ = graph.Copy
+var _ = integrate.Trapezoidal
+var _ = lapack.None
+var _ = mat.Norm
+var _ = optimize.ArmijoConditionMet
+var _ = stat.CDF
+var _ = unit.Atto
 
 func (ic *IncrState) EnableImportsFromLua() {
 
