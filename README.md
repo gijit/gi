@@ -1125,7 +1125,17 @@ Lua 5.1 https://www.lua.org/manual/5.1/
 
 # translation hints
 
-specific javascript to Lua translation hints:
+Specific javascript to Lua translation hints are below. Note
+that `gijit` doesn't generate javascript. However, the
+compiler package is derived from GopherJS, which did.
+
+The job of making the full transition
+from Javascript to Lua within the GopherJS-derived
+code base is half-done/still in progress.
+
+So when deciding how to change the output in the GopherJS derived code
+of a particular javascript idiom, we've
+note the following are helpful to keep in mind.
 
 d1) the ternary operator
 ~~~
