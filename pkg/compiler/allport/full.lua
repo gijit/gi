@@ -1,5 +1,9 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+function __new(ctor, ...)
+   return ctor({}, ...)
+end
+
 -- apply fun to each element of the array arr,
 -- then concatenate them together with splice in
 -- between each one. It arr is empty then we
@@ -24,7 +28,7 @@ __global ={};
 __module ={};
 
 if __global == nil  or  __global.Array == nil then
-  error new Error("no global object found");
+   error __new( Error("no global object found"));
 end
 if typeof module ~= "nil" then
   __module = module;
@@ -108,9 +112,9 @@ end;
 
 __ifaceMethodExprs = {};
 __ifaceMethodExpr = function(name) 
-  local expr = __ifaceMethodExprs["_" + name];
+  local expr = __ifaceMethodExprs["_"  ..  name];
   if expr == nil then
-    expr = __ifaceMethodExprs["_" + name] = function()
+    expr = __ifaceMethodExprs["_"  ..  name] = function()
       __stackDepthOffset = __stackDepthOffset-1;
       try {
         return Function.call.apply(arguments[0][name], arguments);
@@ -239,7 +243,7 @@ __bytesToString = function(e)
   end
   local str = "";
   for i = 0,#slice-1,10000 do
-    str += String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
+    str = str .. String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
   end
   return str;
 end;
@@ -269,7 +273,7 @@ __runesToString = function(e)
   end
   local str = "";
   for i = 0,#slice-1 do
-    str += __encodeRune(slice.__array[slice.__offset + i]);
+    str = str .. __encodeRune(slice.__array[slice.__offset + i]);
   end
   return str;
 end;
@@ -298,9 +302,9 @@ __copyArray = function(m)
     return;
   end
 
-  switch (elem.kind) {
-  case __kindArray:
-  case __kindStruct:
+  local sw = elem.kind
+  if sw == __kindArray or sw == __kindStruct then
+     
     if dst == src  and  dstOffset > srcOffset then
       for i = n-1,0,-1 do
         elem.copy(dst[dstOffset + i], src[srcOffset + i]);
@@ -324,13 +328,13 @@ __copyArray = function(m)
   end
 end;
 
-__clone = function(e)
+__clone = function(src, typ)
   local clone = typ.zero();
   typ.copy(clone, src);
   return clone;
 end;
 
-__pointerOfStructConversion = function(e)
+__pointerOfStructConversion = function(obj, typ)
   if(obj.__proxies == nil) then
     obj.__proxies = {};
     obj.__proxies[obj.constructor.__str] = obj;
@@ -342,10 +346,11 @@ __pointerOfStructConversion = function(e)
      local helper = function(p)
         properties[fieldProp] = {
            get= function() return obj[fieldProp]; end,
-           set= function(e) obj[fieldProp] = value; end
+           set= function(value) obj[fieldProp] = value; end
         };
      end
-     for i=0,#(typ.elem.fields)-1 do
+     -- fields must be an array for this to work.
+     for i=0,#typ.elem.fields-1 do
         helper(typ.elem.fields[i].prop);
      end
      
@@ -357,11 +362,11 @@ __pointerOfStructConversion = function(e)
   return proxy;
 end;
 
-__append = function(e)
+__append = function(slice)
   return __internalAppend(slice, arguments, 1, #arguments - 1);
 end;
 
-__appendSlice = function(d)
+__appendSlice = function(slice, toAppend)
   if toAppend.constructor == String then
     local bytes = __stringToBytes(toAppend);
     return __internalAppend(slice, bytes, 0, #bytes);
@@ -369,7 +374,7 @@ __appendSlice = function(d)
   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
 end;
 
-__internalAppend = function(h)
+__internalAppend = function(slice, array, offset, length)
   if length == 0 then
     return slice;
   end
@@ -411,18 +416,21 @@ __internalAppend = function(h)
   return newSlice;
 end;
 
-__equal = function(e)
-  if type == __jsObjectPtr then
+__equal = function(a, b, typ)
+  if typ == __jsObjectPtr then
     return a == b;
   end
-  switch (typ.kind) {
-  case __kindComplex64:
-  case __kindComplex128:
-    return a.__real == b.__real  and  a.__imag == b.__imag;
-  case __kindInt64:
-  case __kindUint64:
-    return a.__high == b.__high  and  a.__low == b.__low;
-  case __kindArray:
+
+  local sw = typ.kind
+  if sw == __kindComplex64 or
+  sw == __kindComplex128 then
+     return a.__real == b.__real  and  a.__imag == b.__imag;
+     
+  elseif sw == __kindInt64 or
+         sw == __kindUint64 then 
+     return a.__high == b.__high  and  a.__low == b.__low;
+     
+  elseif sw == __kindArray then 
     if #a ~= #b then
       return false;
     end
@@ -432,7 +440,9 @@ __equal = function(e)
       end
     end
     return true;
-    case __kindStruct:
+    
+  elseif sw == __kindStruct then
+     
     for i = 0,#(typ.fields)-1 do
       local f = typ.fields[i];
       if  not __equal(a[f.prop], b[f.prop], f.typ) then
@@ -440,9 +450,9 @@ __equal = function(e)
       end
     end
     return true;
-  case __kindInterface:
+  elseif sw == __kindInterface then 
     return __interfaceIsEqual(a, b);
-  default:
+  else
     return a == b;
   end
 end;
@@ -458,7 +468,7 @@ __interfaceIsEqual = function(b)
     return a.object == b.object;
   end
   if  not a.constructor.comparable then
-    __throwRuntimeError("comparing uncomparable type " + a.constructor.__str);
+    __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
   end
   return __equal(a.__val, b.__val, a.constructor);
 end;
@@ -548,13 +558,13 @@ __mul64 = function(y)
   end
   for i = 1,31 do
     if (y.__low & 1<<i) ~= 0 then
-      high += x.__high << i | x.__low >>> (32 - i);
-      low += (x.__low << i) >>> 0;
+      high = high + x.__high << i | x.__low >>> (32 - i);
+      low = low + (x.__low << i) >>> 0;
     end
   end
   for i = 0,31 do
     if (y.__high & 1<<i) ~= 0 then
-      high += x.__low << i;
+      high = high + x.__low << i;
     end
   end
   return new x.constructor(high, low);
@@ -715,39 +725,41 @@ __idKey = function(x)
    return String(x.__id);
 end;
 
-__newType = function(r)
-  local typ;
-  switch(kind) {
-  case __kindBool:
-  case __kindInt:
-  case __kindInt8:
-  case __kindInt16:
-  case __kindInt32:
-  case __kindUint:
-  case __kindUint8:
-  case __kindUint16:
-  case __kindUint32:
-  case __kindUintptr:
-  case __kindUnsafePointer:
+__newType = function(size, kind, string, named, pkg, exported, constructor) 
+   local typ;
+  if kind ==  __kindBool or
+  kind == __kindInt or 
+  kind == __kindInt8 or 
+  kind == __kindInt16 or 
+  kind == __kindInt32 or 
+  kind == __kindUint or 
+  kind == __kindUint8 or 
+  kind == __kindUint16 or 
+  kind == __kindUint32 or 
+  kind == __kindUintptr or 
+  kind == __kindUnsafePointer then
+     
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __identity;
     break;
 
-  case __kindString:
+  elseif kind == __kindString then
+     
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = function(x) return "_" + x; end;
     break;
 
-  case __kindFloat32:
-  case __kindFloat64:
-    typ = function(v) this.__val = v; end;
-    typ.wrapped = true;
-    typ.keyFor = function(x) return __floatKey(x); end;
-    break;
+  elseif kind == __kindFloat32 or
+  kind == __kindFloat64 then
+       
+       typ = function(v) this.__val = v; end;
+       typ.wrapped = true;
+       typ.keyFor = function(x) return __floatKey(x); end;
+       break;
 
-  case __kindInt64:
+  elseif kind ==  __kindInt64 then 
     typ = function(w)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >> 0;
       this.__low = low >>> 0;
@@ -756,7 +768,7 @@ __newType = function(r)
     typ.keyFor = function(x) return x.__high + "_" + x.__low; end;
     break;
 
-  case __kindUint64:
+  elseif kind ==  __kindUint64 then 
     typ = function(w)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >>> 0;
       this.__low = low >>> 0;
@@ -765,7 +777,7 @@ __newType = function(r)
     typ.keyFor = function(x) return x.__high + "_" + x.__low; end;
     break;
 
-  case __kindComplex64:
+  elseif kind ==  __kindComplex64 then 
     typ = function(g)
       this.__real = __fround(real);
       this.__imag = __fround(imag);
@@ -774,7 +786,7 @@ __newType = function(r)
     typ.keyFor = function(x) return x.__real + "_" + x.__imag; end;
     break;
 
-  case __kindComplex128:
+  elseif kind ==  __kindComplex128 then 
     typ = function(g)
       this.__real = real;
       this.__imag = imag;
@@ -783,7 +795,7 @@ __newType = function(r)
     typ.keyFor = function(x) return x.__real + "_" + x.__imag; end;
     break;
 
-  case __kindArray:
+  elseif kind ==  __kindArray then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.ptr = __newType(4, __kindPtr, "*" + string, false, "", false, function(y)
@@ -808,7 +820,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindChan:
+  elseif kind ==  __kindChan then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __idKey;
@@ -819,7 +831,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindFunc:
+  elseif kind ==  __kindFunc then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.init = function(c)
@@ -830,7 +842,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindInterface:
+  elseif kind ==  __kindInterface then 
      typ = { implementedBy= {}, missingMethodFor= {} };
     typ.keyFor = __ifaceKeyFor;
     typ.init = function(s)
@@ -841,7 +853,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindMap:
+  elseif kind ==  __kindMap then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.init = function(m)
@@ -851,7 +863,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindPtr:
+  elseif kind ==  __kindPtr then 
     typ = constructor  or  function(t)
       this.__get = getter;
       this.__set = setter;
@@ -866,7 +878,7 @@ __newType = function(r)
     end;
     break;
 
-  case __kindSlice:
+  elseif kind ==  __kindSlice then 
     typ = function(y)
       if array.constructor ~= typ.nativeArray then
         array = new typ.nativeArray(array);
@@ -885,7 +897,8 @@ __newType = function(r)
     end;
     break;
 
-  case __kindStruct:
+    elseif kind ==  __kindStruct then
+       
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.ptr = __newType(4, __kindPtr, "*" + string, false, pkg, exported, constructor);
@@ -908,22 +921,23 @@ __newType = function(r)
       end;
       typ.copy = function(c)
          for i=0,#fields-1 do
-          local f = fields[i];
-          switch (f.typ.kind) {
-          case __kindArray:
-          case __kindStruct:
-            f.typ.copy(dst[f.prop], src[f.prop]);
-            continue;
-          default:
-            dst[f.prop] = src[f.prop];
-            continue;
+            local f = fields[i];
+            local sw2 = f.typ.kind
+            
+            if sw2 == __kindArray or
+            sw2 ==  __kindStruct then 
+               f.typ.copy(dst[f.prop], src[f.prop]);
+               continue;
+            else
+               dst[f.prop] = src[f.prop];
+               continue;
           end
         end
       end;
       -- /* nil value */
       local properties = {};
       fields.forEach(function(f)
-        properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError end;
+            properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
       end);
       typ.ptr.nil = Object.create(constructor.prototype, properties);
       typ.ptr.nil.__val = typ.ptr.nil;
@@ -957,61 +971,60 @@ __newType = function(r)
     end;
     break;
 
-  default:
+  else
     __panic(new __String("invalid kind: " + kind));
   end
 
-  switch (kind) {
-  case __kindBool:
-  case __kindMap:
+  if kind == __kindBool or
+  kind ==__kindMap then
     typ.zero = function() return false; end;
     break;
 
-  case __kindInt:
-  case __kindInt8:
-  case __kindInt16:
-  case __kindInt32:
-  case __kindUint:
-  case __kindUint8 :
-  case __kindUint16:
-  case __kindUint32:
-  case __kindUintptr:
-  case __kindUnsafePointer:
-  case __kindFloat32:
-  case __kindFloat64:
+  elseif kind == __kindInt or
+  kind ==  __kindInt8 or
+  kind ==  __kindInt16 or
+  kind ==  __kindInt32 or
+  kind ==  __kindUint or
+  kind ==  __kindUint8  or
+  kind ==  __kindUint16 or
+  kind ==  __kindUint32 or
+  kind ==  __kindUintptr or
+  kind ==  __kindUnsafePointer or
+  kind ==  __kindFloat32 or
+  kind ==  __kindFloat64 then
     typ.zero = function() return 0; end;
     break;
 
-  case __kindString:
+ elseif kind ==  __kindString then
     typ.zero = function() return ""; end;
     break;
 
-  case __kindInt64:
-  case __kindUint64:
-  case __kindComplex64:
-  case __kindComplex128:
+  elseif k ==  __kindInt64 or
+  kind == __kindUint64 or
+  kind == __kindComplex64 or
+  kind == __kindComplex128 then
     local zero = new typ(0, 0);
     typ.zero = function() return zero; end;
     break;
 
-  case __kindPtr:
-  case __kindSlice:
+  elseif kind == __kindPtr or
+  kind == __kindSlice then
     typ.zero = function() return typ.nil; end;
     break;
 
-  case __kindChan:
+    elseif kind == __kindChan:
     typ.zero = function() return __chanNil; end;
     break;
 
-  case __kindFunc:
+  elseif kind == __kindFunc then
     typ.zero = function() return __throwNilPointerError; end;
     break;
 
-  case __kindInterface:
+  elseif kind == __kindInterface then
     typ.zero = function() return __ifaceNil; end;
     break;
 
-  case __kindArray:
+  elseif kind == __kindArray then
     typ.zero = function()
       local arrayClass = __nativeArray(typ.elem.kind);
       if arrayClass ~= Array then
@@ -1025,11 +1038,11 @@ __newType = function(r)
     end;
     break;
 
-  case __kindStruct:
+  elseif kind == __kindStruct then
     typ.zero = function() return new typ.ptr(); end;
     break;
 
-  default:
+  else
     __panic(new __String("invalid kind: " + kind));
   end
 
@@ -1777,35 +1790,43 @@ __needsExternalization = function(t)
   end
 end;
 
-__externalize = function(t)
+__externalize = function(v, t, passThis)
   if t == __jsObjectPtr then
     return v;
   end
-  switch (t.kind) {
-  case __kindBool:
-  case __kindInt:
-  case __kindInt8:
-  case __kindInt16:
-  case __kindInt32:
-  case __kindUint:
-  case __kindUint8:
-  case __kindUint16:
-  case __kindUint32:
-  case __kindUintptr:
-  case __kindFloat32:
-  case __kindFloat64:
+  local sw = t.kind
+   if sw ==  __kindBool or
+  sw ==kindInt or
+  sw ==kindInt8 or
+  sw ==kindInt16 or
+  sw ==kindInt32 or
+  sw ==kindUint or
+  sw ==kindUint8 or
+  sw ==kindUint16 or
+  sw ==kindUint32 or
+  sw ==kindUintptr or
+  sw ==kindFloat32 or
+  sw ==kindFloat64 then
     return v;
-  case __kindInt64:
-  case __kindUint64:
+
+  elseif sw ==__kindInt64 or
+   sw == __kindUint64 then
+
     return __flatten64(v);
-  case __kindArray:
+
+  elseif we == __kindArray then
+
     if __needsExternalization(t.elem) then
       return __mapArray(v, function(e) return __externalize(e, t.elem); end);
     end
     return v;
-  case __kindFunc:
+
+  elseif sw ==  __kindFunc then
+
     return __externalizeFunction(v, t, false);
-  case __kindInterface:
+
+  elseif sw ==  __kindInterface then 
+
     if v == __ifaceNil then
       return null;
     end
@@ -1813,7 +1834,9 @@ __externalize = function(t)
       return v.__val.object;
     end
     return __externalize(v.__val, v.constructor);
-  case __kindMap:
+
+  elseif sw ==  __kindMap then 
+
     local m = {};
     local keys = __keys(v);
     for i = 0,#keys-1 do
@@ -1821,34 +1844,46 @@ __externalize = function(t)
       m[__externalize(entry.k, t.key)] = __externalize(entry.v, t.elem);
     end
     return m;
-  case __kindPtr:
+  elseif sw ==  __kindPtr then 
+
     if v == t.nil then
       return null;
     end
     return __externalize(v.__get(), t.elem);
-  case __kindSlice:
+
+  elseif sw ==  __kindSlice then 
+
     if __needsExternalization(t.elem) then
       return __mapArray(__sliceToArray(v), function(e) return __externalize(e, t.elem); end);
     end
     return __sliceToArray(v);
-  case __kindString:
+
+  elseif sw ==  __kindString then 
+
     if __isASCII(v) then
       return v;
     end
     local s = "", r;
-    for (local i = 0; i < #v; i += r[1]) {
-      r = __decodeRune(v, i);
-      local c = r[0];
-      if c > 0xFFFF then
-        local h = Math.floor((c - 0x10000) / 0x400) + 0xD800;
-        local l = (c - 0x10000) % 0x400 + 0xDC00;
-        s += String.fromCharCode(h, l);
-        continue;
+    local i = 0
+    while(true) do
+       if i >= #v then
+          break
+       end
+       r = __decodeRune(v, i);
+       local c = r[1];
+       if c > 0xFFFF then
+          local h = Math.floor((c - 0x10000) / 0x400) + 0xD800;
+          local l = (c - 0x10000) % 0x400 + 0xDC00;
+          s = s.. String.fromCharCode(h, l);
+          continue;
       end
-      s += String.fromCharCode(c);
+      s = s .. String.fromCharCode(c);
+      i = i + r[2]
     end
     return s;
-  case __kindStruct:
+
+  elseif sw ==  __kindStruct then
+
     local timePkg = __packages["time"];
     if timePkg ~= nil  and  v.constructor == timePkg.Time.ptr then
       local milli = __div64(v.UnixNano(), new __Int64(0, 1000000));
@@ -1860,18 +1895,18 @@ __externalize = function(t)
       if t == __jsObjectPtr then
         return v;
       end
-      switch (t.kind) {
-      case __kindPtr:
+      local sw2 = t.kind
+      if sw2 == __kindPtr then
         if v == t.nil then
           return noJsObject;
         end
         return searchJsObject(v.__get(), t.elem);
-      case __kindStruct:
+      elseif sk2 ==  __kindStruct then
         local f = t.fields[0];
         return searchJsObject(v[f.prop], f.typ);
-      case __kindInterface:
+      elseif sk2 ==  __kindInterface then
         return searchJsObject(v.__val, v.constructor);
-      default:
+      else
         return noJsObject;
       end
     end;
@@ -1887,20 +1922,26 @@ __externalize = function(t)
       if  not f.exported then
         continue;
       end
+
       o[f.name] = __externalize(v[f.prop], f.typ);
     end
+
     return o;
   end
-  __throwRuntimeError("cannot externalize " + t.__str);
+  __throwRuntimeError("cannot externalize " .. t.__str);
+
 end;
 
-__externalizeFunction = function(s)
+__externalizeFunction = function(v, t, passThis)
+
   if v == __throwNilPointerError then
     return null;
   end
+
   if v.__externalizeWrapper == nil then
     __checkForDeadlock = false;
     v.__externalizeWrapper = function()
+
       local args = {};
       for i = 0,#params-1 do 
         if t.variadic  and  i == t.#params - 1 then
@@ -1915,17 +1956,17 @@ __externalizeFunction = function(s)
         args.push(__internalize(arguments[i], t.params[i]));
       end
       local result = v.apply(passThis ? this : nil, args);
-      switch (t.#results) {
-      case 0:
+      local sw = #(t.result)
+      if sw == 0 then
         return;
-      case 1:
+      elseif sw ==  1 then
         return __externalize(result, t.results[0]);
-      default:
+      else
         for i = 0,#results-1 do
           result[i] = __externalize(result[i], t.results[i]);
-        end
+        end;
         return result;
-      end
+      end;
     end;
   end
   return v.__externalizeWrapper;
@@ -1948,38 +1989,39 @@ __internalize = function(v)
     end
     return timePkg.Unix(new __Int64(0, 0), new __Int64(0, v.getTime() * 1000000));
   end
-  switch (t.kind) {
-  case __kindBool:
+  local sw = t.kind
+
+  if sw == __kindBool then
     return  not  not v;
-  case __kindInt:
+  elseif sw == __kindInt:
     return parseInt(v);
-  case __kindInt8:
+  elseif sw == __kindInt8:
     return parseInt(v) << 24 >> 24;
-  case __kindInt16:
+  elseif sw == __kindInt16:
     return parseInt(v) << 16 >> 16;
-  case __kindInt32:
+  elseif sw == __kindInt32:
     return parseInt(v) >> 0;
-  case __kindUint:
+  elseif sw == __kindUint:
     return parseInt(v);
-  case __kindUint8:
+  elseif sw == __kindUint8:
     return parseInt(v) << 24 >>> 24;
-  case __kindUint16:
+  elseif sw == __kindUint16:
     return parseInt(v) << 16 >>> 16;
-  case __kindUint32:
-  case __kindUintptr:
+  elseif sw == __kindUint32 or
+ sw == __kindUintptr then
     return parseInt(v) >>> 0;
-  case __kindInt64:
-  case __kindUint64:
+  elseif sw == __kindInt64 or
+  elseif sw == __kindUint64 then
     return new t(0, v);
-  case __kindFloat32:
-  case __kindFloat64:
+  elseif sw == __kindFloat32 or
+  elseif sw == __kindFloat64 then
     return parseFloat(v);
-  case __kindArray:
+  elseif sw == __kindArray then
     if #v ~= t.len then
       __throwRuntimeError("got array with wrong size from JavaScript native");
     end
     return __mapArray(v, function(e) return __internalize(e, t.elem); end);
-  case __kindFunc:
+  elseif sw == __kindFunc then
     return function()
       local args = [];
       for i = 0,t.#params-1 do
@@ -1994,20 +2036,20 @@ __internalize = function(v)
         args.push(__externalize(arguments[i], t.params[i]));
       end
       local result = v.apply(recv, args);
-      switch (t.#results) {
-      case 0:
+      local sw2 = #(t.results)
+      if sw2 == 0 then
         return;
-      case 1:
+      elseif sw2 == 1:
         return __internalize(result, t.results[0]);
-      default:
+      else
         for i=0,#(t.results)-1 do
           result[i] = __internalize(result[i], t.results[i]);
         end
         return result;
       end
     end;
-  case __kindInterface:
-    if t.#methods ~= 0 then
+  elseif sw == __kindInterface then
+    if #t.methods ~= 0 then
       __throwRuntimeError("cannot internalize " + t.__str);
     end
     if v == null then
@@ -2062,7 +2104,7 @@ __internalize = function(v)
     local keys = __keys(v);
     for i = 0,#keys-1 do
       local k = __internalize(keys[i], t.key);
-      m[t.key.keyFor(k)] = { k= k, v= __internalize(v[keys[i]], t.elem) end;
+      m[t.key.keyFor(k)] = { k= k, v= __internalize(v[keys[i]], t.elem) };
     end
     return m;
   case __kindPtr:
@@ -2135,8 +2177,16 @@ __isASCII = function(s)
 end;
 
 __packages["github.com/gopherjs/gopherjs/js"] = (function()
-   local __pkg = {}, __init, Object, Error, sliceType, ptrType, ptrType__1, MakeFunc, init;
-   Object = __pkg.Object = __newType(0, __kindStruct, "js.Object", true, "github.com/gopherjs/gopherjs/js", true, function(_)
+   local __pkg = {}
+   local __init;
+   local Object;
+   local Error;
+   local sliceType;
+   local ptrType;
+   local ptrType__1;
+   local MakeFunc;
+   local init;
+   Object = __pkg.Object = __newType(0, __kindStruct, "js.Object", true, "github.com/gopherjs/gopherjs/js", true, function(object_)
       this.__val = this;
       if #arguments == 0 then
          this.object = null;
