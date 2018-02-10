@@ -1165,36 +1165,37 @@ __String        = __newType( 8, __kindString,        "string",         true, "",
 __UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, null);
 
 __nativeArray = function(elemKind)
-  switch (elemKind) {
-  case __kindInt:
+  
+  if elemKind ==  __kindInt then 
     return Int32Array;
-  case __kindInt8:
+  elseif elemKind ==  __kindInt8 then 
     return Int8Array;
-  case __kindInt16:
+  elseif elemKind ==  __kindInt16 then 
     return Int16Array;
-  case __kindInt32:
+  elseif elemKind ==  __kindInt32 then 
     return Int32Array;
-  case __kindUint:
+  elseif elemKind ==  __kindUint then 
     return Uint32Array;
-  case __kindUint8:
+  elseif elemKind ==  __kindUint8 then 
     return Uint8Array;
-  case __kindUint16:
+  elseif elemKind ==  __kindUint16 then 
     return Uint16Array;
-  case __kindUint32:
+  elseif elemKind ==  __kindUint32 then 
     return Uint32Array;
-  case __kindUintptr:
+  elseif elemKind ==  __kindUintptr then 
     return Uint32Array;
-  case __kindFloat32:
+  elseif elemKind ==  __kindFloat32 then 
     return Float32Array;
-  case __kindFloat64:
+  elseif elemKind ==  __kindFloat64 then 
     return Float64Array;
-  default:
+  else
     return Array;
   end
 end;
-__toNativeArray = function(y)
+
+__toNativeArray = function(elemKind, array)
   local nativeArray = __nativeArray(elemKind);
-  if (nativeArray == Array) {
+  if nativeArray == Array {
     return array;
   end
   return new nativeArray(array);
@@ -1211,7 +1212,8 @@ __arrayType = function(n)
   return typ;
 end;
 
-__chanType = function(y)
+__chanType = function(elem, sendOnly, recvOnly)
+   
   local string = (recvOnly ? "<-" : "") + "chan" + (sendOnly ? "<- " : " ") + elem.__str;
   local field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
   local typ = elem[field];
@@ -1696,27 +1698,29 @@ __close = function(n)
     queuedRecv([chan.__elem.zero(), false]);
   end
 end;
-__select = function(s)
+__select = function(comms)
   local ready = {};
   local selection = -1;
   for i = 0,#comms-1 do
 
     local comm = comms[i];
     local chan = comm[0];
-    switch (#comm) {
-    case 0: -- /* default */
+    local ncomm = #comm
+    if ncomm == 0 then -- default
       selection = i;
       break;
-    case 1: -- /* recv */
-      if (chan.__#sendQueue ~= 0  or  chan.__#buffer ~= 0  or  chan.__closed) {
+
+    elseif ncomm == 1 then -- recv
+      if #chan.__sendQueue ~= 0  or  #chan.__buffer ~= 0  or  chan.__closed then
         ready.push(i);
       end
       break;
-    case 2: -- /* send */
-      if (chan.__closed) {
+
+    elseif ncomm == 2 then -- send
+      if chan.__closed then
         __throwRuntimeError("send on closed channel");
       end
-      if (chan.__#recvQueue ~= 0  or  chan.__#buffer < chan.__capacity) {
+      if #chan.__recvQueue ~= 0  or  #chan.__buffer < chan.__capacity {
         ready.push(i);
       end
       break;
@@ -1728,14 +1732,17 @@ __select = function(s)
   end
   if selection ~= -1 then
     local comm = comms[selection];
-    switch (#comm) {
-    case 0: -- /* default */
+    local ncomm = #comm
+    if ncomm == 0 then -- default
       return [selection];
-    case 1: -- /* recv */
+
+    elseif ncomm == 1 then -- recv
       return [selection, __recv(comm[0])];
-    case 2: -- /* send */
+
+    elseif ncomm == 2 then -- send
       __send(comm[0], comm[1]);
       return [selection];
+
     end
   end
 
@@ -1757,8 +1764,8 @@ __select = function(s)
 
     (function(i)
       local comm = comms[i];
-      switch (#comm) {
-      case 1: -- /* recv */
+      local ncomm = #comm
+      if ncomm == 1 then -- recv
         local queueEntry = function(e)
           f.selection = [i, value];
           removeFromQueues();
@@ -1767,9 +1774,9 @@ __select = function(s)
         entries.push([comm[0].__recvQueue, queueEntry]);
         comm[0].__recvQueue.push(queueEntry);
         break;
-      case 2: -- /* send */
+      elseif ncomm == 2 then -- send
         local queueEntry = function()
-          if (comm[0].__closed) {
+          if (comm[0].__closed) then
             __throwRuntimeError("send on closed channel");
           end
           f.selection = [i];
@@ -1790,21 +1797,22 @@ end;
 __jsObjectPtr, __jsErrorPtr;
 
 __needsExternalization = function(t)
-  switch (t.kind) {
-    case __kindBool:
-    case __kindInt:
-    case __kindInt8:
-    case __kindInt16:
-    case __kindInt32:
-    case __kindUint:
-    case __kindUint8:
-    case __kindUint16:
-    case __kindUint32:
-    case __kindUintptr:
-    case __kindFloat32:
-    case __kindFloat64:
+
+  local k = t.kind
+    if k ==  __kindBool or
+    k == __kindInt or
+    k == __kindInt8 or
+    k == __kindInt16 or
+    k == __kindInt32 or
+    k == __kindUint or
+    k == __kindUint8 or
+    k == __kindUint16 or
+    k == __kindUint32 or
+    k == __kindUintptr or
+    k == __kindFloat32 or
+    k == __kindFloat64 then
       return false;
-    default:
+    else
       return t ~= __jsObjectPtr;
   end
 end;
@@ -2012,19 +2020,19 @@ __internalize = function(v)
 
   if sw == __kindBool then
     return  not  not v;
-  elseif sw == __kindInt:
+  elseif sw == __kindInt then
     return parseInt(v);
-  elseif sw == __kindInt8:
+  elseif sw == __kindInt8 then
     return parseInt(v) << 24 >> 24;
-  elseif sw == __kindInt16:
+  elseif sw == __kindInt16 then
     return parseInt(v) << 16 >> 16;
-  elseif sw == __kindInt32:
+  elseif sw == __kindInt32 then
     return parseInt(v) >> 0;
-  elseif sw == __kindUint:
+  elseif sw == __kindUint then
     return parseInt(v);
-  elseif sw == __kindUint8:
+  elseif sw == __kindUint8 then
     return parseInt(v) << 24 >>> 24;
-  elseif sw == __kindUint16:
+  elseif sw == __kindUint16 then
     return parseInt(v) << 16 >>> 16;
   elseif sw == __kindUint32 or
  sw == __kindUintptr then
@@ -2058,7 +2066,7 @@ __internalize = function(v)
       local sw2 = #(t.results)
       if sw2 == 0 then
         return;
-      elseif sw2 == 1:
+      elseif sw2 == 1 then
         return __internalize(result, t.results[0]);
       else
         for i=0,#(t.results)-1 do
@@ -2077,48 +2085,49 @@ __internalize = function(v)
     if v == nil then
       return new __jsObjectPtr(nil);
     end
-    switch (v.constructor) {
-    case Int8Array:
+    local vc = v.constructor
+
+    if vc == Int8Array then
       return new (__sliceType(__Int8))(v);
-    case Int16Array:
+    elseif vc ==  Int16Array then
       return new (__sliceType(__Int16))(v);
-    case Int32Array:
+    elseif vc ==  Int32Array then
       return new (__sliceType(__Int))(v);
-    case Uint8Array:
+    elseif vc ==  Uint8Array then
       return new (__sliceType(__Uint8))(v);
-    case Uint16Array:
+    elseif vc ==  Uint16Array then
       return new (__sliceType(__Uint16))(v);
-    case Uint32Array:
+    elseif vc ==  Uint32Array then
       return new (__sliceType(__Uint))(v);
-    case Float32Array:
+    elseif vc ==  Float32Array then
       return new (__sliceType(__Float32))(v);
-    case Float64Array:
+    elseif vc ==  Float64Array then
       return new (__sliceType(__Float64))(v);
-    case Array:
+    elseif vc ==  Array then
       return __internalize(v, __sliceType(__emptyInterface));
-    case Boolean:
+    elseif vc ==  Boolean then
       return new __Bool( not  not v);
-    case Date:
+    elseif vc ==  Date then
       if timePkg == nil then
         -- /* time package is not present, internalize as &js.Object{Dateend so it can be externalized into original Date. */
         return new __jsObjectPtr(v);
       end
       return new timePkg.Time(__internalize(v, timePkg.Time));
-    case Function:
+    elseif vc ==  Function then
       local funcType = __funcType([__sliceType(__emptyInterface)], [__jsObjectPtr], true);
       return new funcType(__internalize(v, funcType));
-    case Number:
+    elseif vc ==  Number then
       return new __Float64(parseFloat(v));
-    case String:
+    elseif vc ==  String then
       return new __String(__internalize(v, __String));
-    default:
+    else
       if __global.Node  and  v instanceof __global.Node then
         return new __jsObjectPtr(v);
       end
       local mapType = __mapType(__String, __emptyInterface);
       return new mapType(__internalize(v, mapType));
     end
-  case __kindMap:
+  elseif sw ==  __kindMap then
     local m = {};
     local keys = __keys(v);
     for i = 0,#keys-1 do
@@ -2126,13 +2135,13 @@ __internalize = function(v)
       m[t.key.keyFor(k)] = { k= k, v= __internalize(v[keys[i]], t.elem) };
     end
     return m;
-  case __kindPtr:
+  elseif sw ==  __kindPtr then
     if t.elem.kind == __kindStruct then
       return __internalize(v, t.elem);
     end
-  case __kindSlice:
+  elseif sw ==  __kindSlice then
     return new t(__mapArray(v, function(e) return __internalize(e, t.elem); end));
-  case __kindString:
+  elseif sw ==  __kindString then
     v = String(v);
     if __isASCII(v) then
       return v;
@@ -2152,7 +2161,7 @@ __internalize = function(v)
       i=i+1
     end
     return s;
-  case __kindStruct:
+  elseif sw ==  __kindStruct then
     local noJsObject = {};
     local searchJsObject = function(t)
       if t == __jsObjectPtr then
@@ -2161,10 +2170,11 @@ __internalize = function(v)
       if t == __jsObjectPtr.elem then
         __throwRuntimeError("cannot internalize js.Object, use *js.Object instead");
       end
-      switch (t.kind) {
-      case __kindPtr:
+
+      if t.kind ==  __kindPtr then
         return searchJsObject(t.elem);
-      case __kindStruct:
+
+      elseif t.kind == __kindStruct then
         local f = t.fields[0];
         local o = searchJsObject(f.typ);
         if (o ~= noJsObject) {
@@ -2173,7 +2183,7 @@ __internalize = function(v)
           return n;
         end
         return noJsObject;
-      default:
+     else
         return noJsObject;
       end
     end;
@@ -2356,7 +2366,9 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end 
+
+::s:: while (true) do  switch (__s) { case 0:
       init();
       
  
@@ -19901,7 +19913,7 @@ __packages["fmt"] = (function()
       err = _tmp__1;
       return [n, err];
    end;
-   ss.prototype.Read = function(f) return this.__val.Read(buf); end;
+   ss.prototype.Read = function(buf) return this.__val.Read(buf); end;
    ss.ptr.prototype.ReadRune = function()
       local _r, _tuple, err, r, s, size, __s, __r;
       
@@ -19995,14 +20007,14 @@ __packages["fmt"] = (function()
       s = this;
       __panic((x = new scanError.ptr(err), new x.constructor.elem(x)));
    end;
-   ss.prototype.error = function(r) return this.__val.error(err); end;
+   ss.prototype.error = function(err) return this.__val.error(err); end;
    ss.ptr.prototype.errorString = function(r)
       local err, s, x;
       s = this;
       __panic((x = new scanError.ptr(errors.New(err)), new x.constructor.elem(x)));
    end;
-   ss.prototype.errorString = function(r) return this.__val.errorString(err); end;
-   ss.ptr.prototype.Token = function(f)
+   ss.prototype.errorString = function(err) return this.__val.errorString(err); end;
+   ss.ptr.prototype.Token = function(skipSpace, f)
       local _r, err, f, s, skipSpace, tok, __s, __deferred, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; s = __f.s; skipSpace = __f.skipSpace; tok = __f.tok; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = #__curGoroutine.deferStack; __curGoroutine.deferStack.push(__deferred);
@@ -20035,7 +20047,7 @@ __packages["fmt"] = (function()
       
  end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  [tok, err[0]]; end if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= ss.ptr.prototype.Token end; end __f._r = _r; __f.err = err; __f.f = f; __f.s = s; __f.skipSpace = skipSpace; __f.tok = tok; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
-   ss.prototype.Token = function(f) return this.__val.Token(skipSpace, f); end;
+   ss.prototype.Token = function(skipSpace, f) return this.__val.Token(skipSpace, f); end;
    isSpace = function(r)
       local _i, _ref, r, rng, rx;
       if (r >= 65536) {
@@ -20087,8 +20099,8 @@ __packages["fmt"] = (function()
       s.rs = __ifaceNil;
       ssFree.Put(s);
    end;
-   ss.prototype.free = function(d) return this.__val.free(old); end;
-   ss.ptr.prototype.skipSpace = function(e)
+   ss.prototype.free = function(old) return this.__val.free(old); end;
+   ss.ptr.prototype.skipSpace = function(stopAtNewline)
       local _r, _r__1, _r__2, _v, r, s, stopAtNewline, __s, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _v = __f._v; r = __f.r; s = __f.s; stopAtNewline = __f.stopAtNewline; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
@@ -20217,7 +20229,7 @@ __packages["fmt"] = (function()
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.peek end; end __f._r = _r; __f._r__1 = _r__1; __f.ok = ok; __f.r = r; __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
    end;
-   ss.prototype.peek = function(k) return this.__val.peek(ok); end;
+   ss.prototype.peek = function(ok) return this.__val.peek(ok); end;
    ptrType__25.methods = [{prop: "clearflags", name: "clearflags", pkg: "fmt", typ: __funcType([], [], false)end, {prop: "init", name: "init", pkg: "fmt", typ: __funcType([ptrType__1], [], false)end, {prop: "writePadding", name: "writePadding", pkg: "fmt", typ: __funcType([__Int], [], false)end, {prop: "pad", name: "pad", pkg: "fmt", typ: __funcType([sliceType__2], [], false)end, {prop: "padString", name: "padString", pkg: "fmt", typ: __funcType([__String], [], false)end, {prop: "fmt_boolean", name: "fmt_boolean", pkg: "fmt", typ: __funcType([__Bool], [], false)end, {prop: "fmt_unicode", name: "fmt_unicode", pkg: "fmt", typ: __funcType([__Uint64], [], false)end, {prop: "fmt_integer", name: "fmt_integer", pkg: "fmt", typ: __funcType([__Uint64, __Int, __Bool, __String], [], false)end, {prop: "truncate", name: "truncate", pkg: "fmt", typ: __funcType([__String], [__String], false)end, {prop: "fmt_s", name: "fmt_s", pkg: "fmt", typ: __funcType([__String], [], false)end, {prop: "fmt_sbx", name: "fmt_sbx", pkg: "fmt", typ: __funcType([__String, sliceType__2, __String], [], false)end, {prop: "fmt_sx", name: "fmt_sx", pkg: "fmt", typ: __funcType([__String, __String], [], false)end, {prop: "fmt_bx", name: "fmt_bx", pkg: "fmt", typ: __funcType([sliceType__2, __String], [], false)end, {prop: "fmt_q", name: "fmt_q", pkg: "fmt", typ: __funcType([__String], [], false)end, {prop: "fmt_c", name: "fmt_c", pkg: "fmt", typ: __funcType([__Uint64], [], false)end, {prop: "fmt_qc", name: "fmt_qc", pkg: "fmt", typ: __funcType([__Uint64], [], false)end, {prop: "fmt_float", name: "fmt_float", pkg: "fmt", typ: __funcType([__Float64, __Int, __Int32, __Int], [], false)end];
    ptrType__1.methods = [{prop: "Write", name: "Write", pkg: "", typ: __funcType([sliceType__2], [], false)end, {prop: "WriteString", name: "WriteString", pkg: "", typ: __funcType([__String], [], false)end, {prop: "WriteByte", name: "WriteByte", pkg: "", typ: __funcType([__Uint8], [], false)end, {prop: "WriteRune", name: "WriteRune", pkg: "", typ: __funcType([__Int32], [], false)end];
    ptrType__2.methods = [{prop: "free", name: "free", pkg: "fmt", typ: __funcType([], [], false)end, {prop: "Width", name: "Width", pkg: "", typ: __funcType([], [__Int, __Bool], false)end, {prop: "Precision", name: "Precision", pkg: "", typ: __funcType([], [__Int, __Bool], false)end, {prop: "Flag", name: "Flag", pkg: "", typ: __funcType([__Int], [__Bool], false)end, {prop: "Write", name: "Write", pkg: "", typ: __funcType([sliceType__2], [__Int, __error], false)end, {prop: "unknownType", name: "unknownType", pkg: "fmt", typ: __funcType([reflect.Value], [], false)end, {prop: "badVerb", name: "badVerb", pkg: "fmt", typ: __funcType([__Int32], [], false)end, {prop: "fmtBool", name: "fmtBool", pkg: "fmt", typ: __funcType([__Bool, __Int32], [], false)end, {prop: "fmt0x64", name: "fmt0x64", pkg: "fmt", typ: __funcType([__Uint64, __Bool], [], false)end, {prop: "fmtInteger", name: "fmtInteger", pkg: "fmt", typ: __funcType([__Uint64, __Bool, __Int32], [], false)end, {prop: "fmtFloat", name: "fmtFloat", pkg: "fmt", typ: __funcType([__Float64, __Int, __Int32], [], false)end, {prop: "fmtComplex", name: "fmtComplex", pkg: "fmt", typ: __funcType([__Complex128, __Int, __Int32], [], false)end, {prop: "fmtString", name: "fmtString", pkg: "fmt", typ: __funcType([__String, __Int32], [], false)end, {prop: "fmtBytes", name: "fmtBytes", pkg: "fmt", typ: __funcType([sliceType__2, __Int32, __String], [], false)end, {prop: "fmtPointer", name: "fmtPointer", pkg: "fmt", typ: __funcType([reflect.Value, __Int32], [], false)end, {prop: "catchPanic", name: "catchPanic", pkg: "fmt", typ: __funcType([__emptyInterface, __Int32], [], false)end, {prop: "handleMethods", name: "handleMethods", pkg: "fmt", typ: __funcType([__Int32], [__Bool], false)end, {prop: "printArg", name: "printArg", pkg: "fmt", typ: __funcType([__emptyInterface, __Int32], [], false)end, {prop: "printValue", name: "printValue", pkg: "fmt", typ: __funcType([reflect.Value, __Int32, __Int], [], false)end, {prop: "argNumber", name: "argNumber", pkg: "fmt", typ: __funcType([__Int, __String, __Int, __Int], [__Int, __Int, __Bool], false)end, {prop: "badArgNum", name: "badArgNum", pkg: "fmt", typ: __funcType([__Int32], [], false)end, {prop: "missingArg", name: "missingArg", pkg: "fmt", typ: __funcType([__Int32], [], false)end, {prop: "doPrintf", name: "doPrintf", pkg: "fmt", typ: __funcType([__String, sliceType], [], false)end, {prop: "doPrint", name: "doPrint", pkg: "fmt", typ: __funcType([sliceType], [], false)end, {prop: "doPrintln", name: "doPrintln", pkg: "fmt", typ: __funcType([sliceType], [], false)end];

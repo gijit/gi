@@ -242,7 +242,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		}
 	}
 
-	if _, err := w.Write(removeWhitespace([]byte("\t$init = function() {\n\t\t$pkg.$init = function() {};\n\t\t/*jea compiler.go:230*/ var $f, $c = false, $s = 0, $r; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; $s = $f.$s; $r = $f.$r; } s: while (true) { switch ($s) { case 0:\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t__init = function()\n\t\t __pkg.__init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if this ~= nil && this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) so\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {
@@ -250,7 +250,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t/*jea compiler.go:238 */ } return; } if ($f === undefined) { $f = { $blk: $init }; } $f.$s = $s; $f.$r = $r; return $f;\n\t};\n\t$pkg.$init = $init;\n\treturn $pkg;\n})();"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= __init }; } __f.__s = __s; __f.__r = __r; return __f;\n\t};\n\t__pkg.__init = __init;\n\treturn __pkg;\n})();"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified

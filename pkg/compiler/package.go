@@ -428,8 +428,8 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	}
 
 	if len(c.Flattened) != 0 {
-		prefix = prefix + " s: while (true) { switch ($s) { case 0:"
-		suffix = " } return; }" + suffix
+		prefix = prefix + " ::s:: while (true) do\n --switch (__s)\n\t\t if __s == 0 then\n"
+		suffix = " end; return; end\n" + suffix
 	}
 
 	formals := strings.Join(params, ", ")
@@ -462,10 +462,10 @@ end
 	}
 
 	if prefix != "" {
-		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "/*jea package.go:923 */" + prefix + "\n" + bodyOutput
+		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:465 \n" + prefix + "\n" + bodyOutput
 	}
 	if suffix != "" {
-		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "/*jea package.go:926 */" + suffix + "\n"
+		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:468\n" + suffix + "\n"
 	}
 	if len(c.localVars) != 0 {
 		// jea, these are javascript only: at the top of a
