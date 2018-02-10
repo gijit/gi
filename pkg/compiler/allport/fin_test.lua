@@ -60,3 +60,22 @@ expectEq("", __mapAndJoinStrings("_", {}, function(x)  return x+1 end))
 expectEq({}, __keys({}))
 expectEq({"a","b"}, __keys({b=2, a=4}))
 expectEq({"a"}, __keys({a=4}))
+expectEq({0}, __keys({[0]=4}))
+expectEq({1}, __keys({[1]=3}))
+expectEq({7,11}, __keys({[7]="seven", [11]="eleven"}))
+local f = function() end
+local g = function() end
+expectEq({tostring(f)}, __keys({[f]="seven"}))
+-- no way to know if a function (as key) is
+-- greater or smalller than another function.
+-- We use tostring to get a string with the table address
+-- before comparing.
+--
+local sf = tostring(f)
+local sg = tostring(g)
+x = {sg,sf}
+if sf < sg then
+   x = {sf,sg}
+end
+expectEq(x, __keys({[f]="seven", [g]="eight"}))
+

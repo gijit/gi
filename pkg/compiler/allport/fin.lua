@@ -26,6 +26,10 @@ __keys = function(m)
    end
    local r = {}
    for k in pairs(m) do
+      local tyk = type(k)
+      if tyk == "function" then
+         k = tostring(k)
+      end
       table.insert(r, k)
    end
    table.sort(r)
