@@ -12,7 +12,11 @@ import (
 
 	//"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	"github.com/gijit/gi/pkg/verb"
 )
+
+var p = verb.P
+var pp = verb.PP
 
 // convert from types.Type to reflect.Type, so
 // that we can wrap Go slices/arrays with Lua
