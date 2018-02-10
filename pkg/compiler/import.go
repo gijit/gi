@@ -18,6 +18,8 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
 
+	shadow_gonum_org_v1_gonum_blas "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
+
 	// actuals
 	"gonum.org/v1/gonum/blas"
 	"gonum.org/v1/gonum/diff/fd"
@@ -38,6 +40,7 @@ func init() {
 	_ = ok
 }
 
+var _ = shadow_gonum_org_v1_gonum_blas.GijitShadow_InterfaceConvertTo2_Float64
 var _ = fd.Backward
 var _ = floats.Add
 var _ = graph.Copy
