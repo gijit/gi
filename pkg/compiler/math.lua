@@ -30,3 +30,17 @@ __integerByZeroCheck = function(x)
    end
    return x + (-x % 1)
 end
+
+function __max(a,b)
+   if a > b then
+      return a
+   end
+   return b
+end
+
+function __min(a,b)
+   if a < b then
+      return a
+   end
+   return b
+end
