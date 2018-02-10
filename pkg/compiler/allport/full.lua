@@ -1,5 +1,15 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+function __assertIsArray(a)
+   local n = 0
+   for k,v in pairs(a) do
+      n=n+1
+   end
+   if #a ~= n then
+      error("not an array, __assertIsArray failed")
+   end
+end
+
 function __new(ctor, ...)
    return ctor({}, ...)
 end
@@ -1060,7 +1070,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
   return typ;
 end;
 
-__methodSet = function(p)
+__methodSet = function(typ)
   if typ.methodSetCache ~= null then
     return typ.methodSetCache;
   end
@@ -1093,18 +1103,27 @@ __methodSet = function(p)
         end
       end
 
-      switch (e.typ.kind) {
-      case __kindStruct:
-        e.typ.fields.forEach(function(f)
-          if f.anonymous then
-            local fTyp = f.typ;
-            local fIsPtr = (fTyp.kind == __kindPtr);
-            next.push({typ= fIsPtr ? fTyp.elem : fTyp, indirect= e.indirect  or  fIsPtrend);
-          end
-        end);
-        break;
+      local knd = e.typ.kind
+      if knd == __kindStruct then
 
-      case __kindInterface:
+         -- assume that e.typ.fields must be an array!
+         __assertIsArray(e.typ.fields)
+         for i,f in ipairs(e.typ.fields) do
+            if f.anonymous then
+               local fTyp = f.typ;
+               local fIsPtr = (fTyp.kind == __kindPtr);
+               local ty 
+               if fIsPtr then
+                  ty = fTyp.elem
+               else
+                  ty = fTyp
+               end
+               next.push({typ=ty, indirect= e.indirect  or  fIsPtr});
+            end;
+         end;
+         break;
+
+      elseif knd == __kindInterface then
         mset = mset.concat(e.typ.methods);
         break;
       end
@@ -1145,7 +1164,7 @@ __Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "",
 __String        = __newType( 8, __kindString,        "string",         true, "", false, null);
 __UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, null);
 
-__nativeArray = function(d)
+__nativeArray = function(elemKind)
   switch (elemKind) {
   case __kindInt:
     return Int32Array;
@@ -20311,6 +20330,7 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
    __pkg.__init = __init;
    return __pkg;
 end)();
+
 __synthesizeMethods();
 __mainPkg = __packages["github.com/gijit/gi/pkg/compiler/tmp"];
 __packages["runtime"].__init();
