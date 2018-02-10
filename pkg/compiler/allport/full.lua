@@ -21,16 +21,16 @@ end
 __global ={};
 __module ={};
 
-if (__global == nil  or  __global.Array == nil) then
+if __global == nil  or  __global.Array == nil then
   throw new Error("no global object found");
 end
-if (typeof module ~= "nil") then
+if typeof module ~= "nil" then
   __module = module;
 end
 
 __packages = {}
 __idCounter = 0;
-__keys = function(m)  return m ? Object.keys(m) : []; end;
+__keys = function(m) if m ~= nil then return Object.keys(m) else return {} end; end;
 __flushConsole = function() end;
 __throwRuntimeError; /* set by package "runtime" */
 __throwNilPointerError = function()  __throwRuntimeError("invalid memory address or nil pointer dereference"); end;
@@ -39,8 +39,8 @@ __makeFunc = function(fn)  return function()  return __externalize(fn(this, new 
 __unused = function(v) end;
 
 __mapArray = function(array, f) 
-  local newArray = new array.constructor(array.length);
-  for (var i = 0; i < array.length; i++) {
+  local newArray = new array.constructor(#array);
+  for (var i = 0; i < #array; i++) {
     newArray[i] = f(array[i]);
   end
   return newArray;
@@ -50,7 +50,7 @@ __methodVal = function(recv, name)
   local vals = recv.__methodVals  or  {};
   recv.__methodVals = vals; /* noop for primitives */
   local f = vals[name];
-  if (f ~= nil) then
+  if f ~= nil then
     return f;
   end
   local method = recv[name];
@@ -68,11 +68,11 @@ end;
 
 __methodExpr = function(typ, name) 
   local method = typ.prototype[name];
-  if (method.__expr == nil) then
+  if method.__expr == nil then
     method.__expr = function() 
       __stackDepthOffset--;
       try {
-        if (typ.wrapped) then
+        if typ.wrapped then
           arguments[0] = new typ(arguments[0]);
         end
         return Function.call.apply(method, arguments);
@@ -87,7 +87,7 @@ end;
 __ifaceMethodExprs = {};
 __ifaceMethodExpr = function(name) 
   local expr = __ifaceMethodExprs["_" + name];
-  if (expr == nil) then
+  if expr == nil then
     expr = __ifaceMethodExprs["_" + name] = function()
       __stackDepthOffset--;
       try {
@@ -101,31 +101,31 @@ __ifaceMethodExpr = function(name)
 end;
 
 __subslice = function(x)
-  if (low < 0  or  high < low  or  max < high  or  high > slice.__capacity  or  max > slice.__capacity) then
+  if low < 0  or  high < low  or  max < high  or  high > slice.__capacity  or  max > slice.__capacity then
     __throwRuntimeError("slice bounds out of range");
   end
   local s = new slice.constructor(slice.__array);
   s.__offset = slice.__offset + low;
   s.__length = slice.__length - low;
   s.__capacity = slice.__capacity - low;
-  if (high ~= nil) then
+  if high ~= nil then
     s.__length = high - low;
   end
-  if (max ~= nil) then
+  if max ~= nil then
     s.__capacity = max - low;
   end
   return s;
 end;
 
 __substring = function(h)
-  if (low < 0  or  high < low  or  high > str.length) then
+  if low < 0  or  high < low  or  high > #str then
     __throwRuntimeError("slice bounds out of range");
   end
   return str.substring(low, high);
 end;
 
 __sliceToArray = function(e)
-  if (slice.__array.constructor ~= Array) then
+  if slice.__array.constructor ~= Array then
     return slice.__array.subarray(slice.__offset, slice.__offset + slice.__length);
   end
   return slice.__array.slice(slice.__offset, slice.__offset + slice.__length);
@@ -134,51 +134,51 @@ end;
 __decodeRune = function(s)
   local c0 = str.charCodeAt(pos);
 
-  if (c0 < 0x80) then
+  if c0 < 0x80 then
     return [c0, 1];
   end
 
-  if (c0 ~= c0  or  c0 < 0xC0) then
+  if c0 ~= c0  or  c0 < 0xC0 then
     return [0xFFFD, 1];
   end
 
   local c1 = str.charCodeAt(pos + 1);
-  if (c1 ~= c1  or  c1 < 0x80  or  0xC0 <= c1) then
+  if c1 ~= c1  or  c1 < 0x80  or  0xC0 <= c1 then
     return [0xFFFD, 1];
   end
 
-  if (c0 < 0xE0) then
+  if c0 < 0xE0 then
     local r = (c0 & 0x1F) << 6 | (c1 & 0x3F);
-    if (r <= 0x7F) then
+    if r <= 0x7F then
       return [0xFFFD, 1];
     end
     return [r, 2];
   end
 
   local c2 = str.charCodeAt(pos + 2);
-  if (c2 ~= c2  or  c2 < 0x80  or  0xC0 <= c2) then
+  if c2 ~= c2  or  c2 < 0x80  or  0xC0 <= c2 then
     return [0xFFFD, 1];
   end
 
-  if (c0 < 0xF0) then
+  if c0 < 0xF0 then
     local r = (c0 & 0x0F) << 12 | (c1 & 0x3F) << 6 | (c2 & 0x3F);
-    if (r <= 0x7FF) then
+    if r <= 0x7FF then
       return [0xFFFD, 1];
     end
-    if (0xD800 <= r  and  r <= 0xDFFF) then
+    if 0xD800 <= r  and  r <= 0xDFFF then
       return [0xFFFD, 1];
     end
     return [r, 3];
   end
 
   local c3 = str.charCodeAt(pos + 3);
-  if (c3 ~= c3  or  c3 < 0x80  or  0xC0 <= c3) then
+  if c3 ~= c3  or  c3 < 0x80  or  0xC0 <= c3 then
     return [0xFFFD, 1];
   end
 
-  if (c0 < 0xF8) then
+  if c0 < 0xF8 then
     local r = (c0 & 0x07) << 18 | (c1 & 0x3F) << 12 | (c2 & 0x3F) << 6 | (c3 & 0x3F);
-    if (r <= 0xFFFF  or  0x10FFFF < r) then
+    if r <= 0xFFFF  or  0x10FFFF < r then
       return [0xFFFD, 1];
     end
     return [r, 4];
@@ -188,31 +188,31 @@ __decodeRune = function(s)
 end;
 
 __encodeRune = function(r)
-  if (r < 0  or  r > 0x10FFFF  or  (0xD800 <= r  and  r <= 0xDFFF)) then
+  if r < 0  or  r > 0x10FFFF  or  (0xD800 <= r  and  r <= 0xDFFF) then
     r = 0xFFFD;
   end
-  if (r <= 0x7F) then
+  if r <= 0x7F then
     return String.fromCharCode(r);
   end
-  if (r <= 0x7FF) then
+  if r <= 0x7FF then
     return String.fromCharCode(0xC0 | r >> 6, 0x80 | (r & 0x3F));
   end
-  if (r <= 0xFFFF) then
+  if r <= 0xFFFF then
     return String.fromCharCode(0xE0 | r >> 12, 0x80 | (r >> 6 & 0x3F), 0x80 | (r & 0x3F));
   end
   return String.fromCharCode(0xF0 | r >> 18, 0x80 | (r >> 12 & 0x3F), 0x80 | (r >> 6 & 0x3F), 0x80 | (r & 0x3F));
 end;
 
 __stringToBytes = function(r)
-  local array = new Uint8Array(str.length);
-  for (var i = 0; i < str.length; i++) {
+  local array = new Uint8Array(#str);
+  for (var i = 0; i < #str; i++) {
     array[i] = str.charCodeAt(i);
   end
   return array;
 end;
 
 __bytesToString = function(e)
-  if (slice.__length == 0) then
+  if slice.__length == 0 then
     return "";
   end
   local str = "";
@@ -223,9 +223,9 @@ __bytesToString = function(e)
 end;
 
 __stringToRunes = function(r)
-  local array = new Int32Array(str.length);
+  local array = new Int32Array(#str);
   local rune, j = 0;
-  for (var i = 0; i < str.length; i += rune[1], j++) {
+  for (var i = 0; i < #str; i += rune[1], j++) {
     rune = __decodeRune(str, i);
     array[j] = rune[0];
   end
@@ -233,7 +233,7 @@ __stringToRunes = function(r)
 end;
 
 __runesToString = function(e)
-  if (slice.__length == 0) then
+  if slice.__length == 0 then
     return "";
   end
   local str = "";
@@ -244,8 +244,8 @@ __runesToString = function(e)
 end;
 
 __copyString = function(c)
-  local n = Math.min(src.length, dst.__length);
-  for (var i = 0; i < n; i++) {
+  local n = Math.min(#src, dst.__length);
+  for i = 0,n-1 do
     dst.__array[dst.__offset + i] = src.charCodeAt(i);
   end
   return n;
@@ -258,11 +258,11 @@ __copySlice = function(c)
 end;
 
 __copyArray = function(m)
-  if (n == 0  or  (dst == src  and  dstOffset == srcOffset)) then
+  if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
     return;
   end
 
-  if (src.subarray) then
+  if src.subarray then
     dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
     return;
   end
@@ -270,25 +270,25 @@ __copyArray = function(m)
   switch (elem.kind) {
   case __kindArray:
   case __kindStruct:
-    if (dst == src  and  dstOffset > srcOffset) then
-      for (var i = n - 1; i >= 0; i--) {
+    if dst == src  and  dstOffset > srcOffset then
+      for i = n-1,0,-1 do
         elem.copy(dst[dstOffset + i], src[srcOffset + i]);
       end
       return;
     end
-    for (var i = 0; i < n; i++) {
+    for i = 0,n-1 do
       elem.copy(dst[dstOffset + i], src[srcOffset + i]);
     end
     return;
   end
 
-  if (dst == src  and  dstOffset > srcOffset) then
-    for (var i = n - 1; i >= 0; i--) {
+  if dst == src  and  dstOffset > srcOffset then
+    for i = n-1,0,-1 do
       dst[dstOffset + i] = src[srcOffset + i];
     end
     return;
   end
-  for (var i = 0; i < n; i++) {
+  for i = 0,n-1 do
     dst[dstOffset + i] = src[srcOffset + i];
   end
 end;
@@ -305,9 +305,9 @@ __pointerOfStructConversion = function(e)
     obj.__proxies[obj.constructor.string] = obj;
   end
   local proxy = obj.__proxies[type.string];
-  if (proxy == nil) then
+  if proxy == nil then
     local properties = {};
-    for (var i = 0; i < type.elem.fields.length; i++) {
+    for (var i = 0; i < type.elem.#fields; i++) {
       (function(p)
         properties[fieldProp] = {
           get= function() return obj[fieldProp]; end,
@@ -324,19 +324,19 @@ __pointerOfStructConversion = function(e)
 end;
 
 __append = function(e)
-  return __internalAppend(slice, arguments, 1, arguments.length - 1);
+  return __internalAppend(slice, arguments, 1, #arguments - 1);
 end;
 
 __appendSlice = function(d)
-  if (toAppend.constructor == String) then
+  if toAppend.constructor == String then
     local bytes = __stringToBytes(toAppend);
-    return __internalAppend(slice, bytes, 0, bytes.length);
+    return __internalAppend(slice, bytes, 0, #bytes);
   end
   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
 end;
 
 __internalAppend = function(h)
-  if (length == 0) then
+  if length == 0 then
     return slice;
   end
 
@@ -345,13 +345,13 @@ __internalAppend = function(h)
   local newLength = slice.__length + length;
   local newCapacity = slice.__capacity;
 
-  if (newLength > newCapacity) then
+  if newLength > newCapacity then
     newOffset = 0;
     newCapacity = Math.max(newLength, slice.__capacity < 1024 ? slice.__capacity * 2 : Math.floor(slice.__capacity * 5 / 4));
 
-    if (slice.__array.constructor == Array) then
+    if slice.__array.constructor == Array then
       newArray = slice.__array.slice(slice.__offset, slice.__offset + slice.__length);
-      newArray.length = newCapacity;
+      #newArray = newCapacity;
       local zero = slice.constructor.elem.zero;
       for (var i = slice.__length; i < newCapacity; i++) {
         newArray[i] = zero();
@@ -372,7 +372,7 @@ __internalAppend = function(h)
 end;
 
 __equal = function(e)
-  if (type == __jsObjectPtr) then
+  if type == __jsObjectPtr then
     return a == b;
   end
   switch (type.kind) {
@@ -383,19 +383,19 @@ __equal = function(e)
   case __kindUint64:
     return a.__high == b.__high  and  a.__low == b.__low;
   case __kindArray:
-    if (a.length ~= b.length) {
+    if #a ~= #b then
       return false;
     end
-    for (var i = 0; i < a.length; i++) {
-      if ( not __equal(a[i], b[i], type.elem)) then
+    for (var i = 0; i < #a; i++) {
+      if  not __equal(a[i], b[i], type.elem) then
         return false;
       end
     end
     return true;
   case __kindStruct:
-    for (var i = 0; i < type.fields.length; i++) {
+    for (var i = 0; i < type.#fields; i++) {
       local f = type.fields[i];
-      if ( not __equal(a[f.prop], b[f.prop], f.typ)) then
+      if  not __equal(a[f.prop], b[f.prop], f.typ) then
         return false;
       end
     end
@@ -408,16 +408,16 @@ __equal = function(e)
 end;
 
 __interfaceIsEqual = function(b)
-  if (a == __ifaceNil  or  b == __ifaceNil) then
+  if a == __ifaceNil  or  b == __ifaceNil then
     return a == b;
   end
-  if (a.constructor ~= b.constructor) then
+  if a.constructor ~= b.constructor then
     return false;
   end
-  if (a.constructor == __jsObjectPtr) then
+  if a.constructor == __jsObjectPtr then
     return a.object == b.object;
   end
-  if ( not a.constructor.comparable) then
+  if  not a.constructor.comparable then
     __throwRuntimeError("comparing uncomparable type " + a.constructor.string);
   end
   return __equal(a.__val, b.__val, a.constructor);
@@ -427,7 +427,7 @@ __min = Math.min;
 __mod = function(y) return x % y; end;
 __parseInt = parseInt;
 __parseFloat = function(f)
-  if (f ~= nil  and  f ~= null  and  f.constructor == Number) then
+  if f ~= nil  and  f ~= null  and  f.constructor == Number then
     return f;
   end
   return parseFloat(f);
@@ -448,7 +448,7 @@ __imul = Math.imul  or  function(b)
 end;
 
 __floatKey = function(f)
-  if (f ~= f) then
+  if f ~= f then
     __idCounter++;
     return "NaN__" + __idCounter;
   end
@@ -460,42 +460,42 @@ __flatten64 = function(x)
 end;
 
 __shiftLeft64 = function(y)
-  if (y == 0) then
+  if y == 0 then
     return x;
   end
-  if (y < 32) then
+  if y < 32 then
     return new x.constructor(x.__high << y | x.__low >>> (32 - y), (x.__low << y) >>> 0);
   end
-  if (y < 64) then
+  if y < 64 then
     return new x.constructor(x.__low << (y - 32), 0);
   end
   return new x.constructor(0, 0);
 end;
 
 __shiftRightInt64 = function(y)
-  if (y == 0) then
+  if y == 0 then
     return x;
   end
-  if (y < 32) then
+  if y < 32 then
     return new x.constructor(x.__high >> y, (x.__low >>> y | x.__high << (32 - y)) >>> 0);
   end
-  if (y < 64) then
+  if y < 64 then
     return new x.constructor(x.__high >> 31, (x.__high >> (y - 32)) >>> 0);
   end
-  if (x.__high < 0) then
+  if x.__high < 0 then
     return new x.constructor(-1, 4294967295);
   end
   return new x.constructor(0, 0);
 end;
 
 __shiftRightUint64 = function(y)
-  if (y == 0) then
+  if y == 0 then
     return x;
   end
-  if (y < 32) then
+  if y < 32 then
     return new x.constructor(x.__high >>> y, (x.__low >>> y | x.__high << (32 - y)) >>> 0);
   end
-  if (y < 64) then
+  if y < 64 then
     return new x.constructor(0, x.__high >>> (y - 32));
   end
   return new x.constructor(0, 0);
@@ -503,18 +503,18 @@ end;
 
 __mul64 = function(y)
   local high = 0, low = 0;
-  if ((y.__low & 1) ~= 0) then
+  if (y.__low & 1) ~= 0 then
     high = x.__high;
     low = x.__low;
   end
   for (var i = 1; i < 32; i++) {
-    if ((y.__low & 1<<i) ~= 0) then
+    if (y.__low & 1<<i) ~= 0 then
       high += x.__high << i | x.__low >>> (32 - i);
       low += (x.__low << i) >>> 0;
     end
   end
   for (var i = 0; i < 32; i++) {
-    if ((y.__high & 1<<i) ~= 0) then
+    if (y.__high & 1<<i) ~= 0 then
       high += x.__low << i;
     end
   end
@@ -522,7 +522,7 @@ __mul64 = function(y)
 end;
 
 __div64 = function(r)
-  if (y.__high == 0  and  y.__low == 0) then
+  if y.__high == 0  and  y.__low == 0 then
     __throwRuntimeError("integer divide by zero");
   end
 
@@ -531,11 +531,11 @@ __div64 = function(r)
 
   local xHigh = x.__high;
   local xLow = x.__low;
-  if (xHigh < 0) then
+  if xHigh < 0 then
     s = -1;
     rs = -1;
     xHigh = -xHigh;
-    if (xLow ~= 0) then
+    if xLow ~= 0 then
       xHigh--;
       xLow = 4294967296 - xLow;
     end
@@ -543,10 +543,10 @@ __div64 = function(r)
 
   local yHigh = y.__high;
   local yLow = y.__low;
-  if (y.__high < 0) then
+  if y.__high < 0 then
     s *= -1;
     yHigh = -yHigh;
-    if (yLow ~= 0) then
+    if yLow ~= 0 then
       yHigh--;
       yLow = 4294967296 - yLow;
     end
@@ -561,15 +561,15 @@ __div64 = function(r)
   for (var i = 0; i <= n; i++) {
     high = high << 1 | low >>> 31;
     low = (low << 1) >>> 0;
-    if ((xHigh > yHigh)  or  (xHigh == yHigh  and  xLow >= yLow)) then
+    if (xHigh > yHigh)  or  (xHigh == yHigh  and  xLow >= yLow) then
       xHigh = xHigh - yHigh;
       xLow = xLow - yLow;
-      if (xLow < 0) then
+      if xLow < 0 then
         xHigh--;
         xLow += 4294967296;
       end
       low++;
-      if (low == 4294967296) then
+      if low == 4294967296 then
         high++;
         low = 0;
       end
@@ -578,7 +578,7 @@ __div64 = function(r)
     yHigh = yHigh >>> 1;
   end
 
-  if (returnRemainder) then
+  if returnRemainder then
     return new x.constructor(xHigh * rs, xLow * rs);
   end
   return new x.constructor(high * s, low * s);
@@ -592,21 +592,21 @@ __divComplex = function(d)
   if(nnan  or  dnan) then
     return new n.constructor(NaN, NaN);
   end
-  if (ninf  and   not dinf) then
+  if ninf  and   not dinf then
     return new n.constructor(Infinity, Infinity);
   end
-  if ( not ninf  and  dinf) then
+  if  not ninf  and  dinf then
     return new n.constructor(0, 0);
   end
-  if (d.__real == 0  and  d.__imag == 0) then
-    if (n.__real == 0  and  n.__imag == 0) then
+  if d.__real == 0  and  d.__imag == 0 then
+    if n.__real == 0  and  n.__imag == 0 then
       return new n.constructor(NaN, NaN);
     end
     return new n.constructor(Infinity, Infinity);
   end
   local a = Math.abs(d.__real);
   local b = Math.abs(d.__imag);
-  if (a <= b) then
+  if a <= b then
     local ratio = d.__real / d.__imag;
     local denom = d.__real * ratio + d.__imag;
     return new n.constructor((n.__real * ratio + n.__imag) / denom, (n.__imag * ratio - n.__real) / denom);
@@ -645,7 +645,7 @@ __kindUnsafePointer = 26;
 
 __methodSynthesizers = [];
 __addMethodSynthesizer = function(f)
-  if (__methodSynthesizers == null) then
+  if __methodSynthesizers == null then
     f();
     return;
   end
@@ -657,7 +657,7 @@ __synthesizeMethods = function()
 end;
 
 __ifaceKeyFor = function(x)
-  if (x == __ifaceNil) then
+  if x == __ifaceNil then
     return 'nil';
   end
   local c = x.constructor;
@@ -669,7 +669,7 @@ __identity = function(x) return x; end;
 __typeIDCounter = 0;
 
 __idKey = function(x)
-  if (x.__id == nil) then
+  if x.__id == nil then
     __idCounter++;
     x.__id = __idCounter;
   end
@@ -762,7 +762,7 @@ __newType = function(r)
         end), "_");
       end;
       typ.copy = function(c)
-        __copyArray(dst, src, 0, 0, src.length, elem);
+        __copyArray(dst, src, 0, 0, #src, elem);
       end;
       typ.ptr.init(typ);
       Object.defineProperty(typ.ptr.nil, "nilCheck", { get= __throwNilPointerError end);
@@ -829,13 +829,13 @@ __newType = function(r)
 
   case __kindSlice:
     typ = function(y)
-      if (array.constructor ~= typ.nativeArray) then
+      if array.constructor ~= typ.nativeArray then
         array = new typ.nativeArray(array);
       end
       this.__array = array;
       this.__offset = 0;
-      this.__length = array.length;
-      this.__capacity = array.length;
+      this.__length = #array;
+      this.__capacity = #array;
       this.__val = this;
     end;
     typ.init = function(m)
@@ -857,7 +857,7 @@ __newType = function(r)
       typ.pkgPath = pkgPath;
       typ.fields = fields;
       fields.forEach(function(f)
-        if ( not f.typ.comparable) then
+        if  not f.typ.comparable then
           typ.comparable = false;
         end
       end);
@@ -868,7 +868,7 @@ __newType = function(r)
         end).join("_");
       end;
       typ.copy = function(c)
-        for (var i = 0; i < fields.length; i++) {
+        for (var i = 0; i < #fields; i++) {
           local f = fields[i];
           switch (f.typ.kind) {
           case __kindArray:
@@ -891,20 +891,20 @@ __newType = function(r)
       /* methods for embedded fields */
       __addMethodSynthesizer(function()
         local synthesizeMethod = function(f)
-          if (target.prototype[m.prop] ~= nil) then return; end
+          if target.prototype[m.prop] ~= nil then return; end
           target.prototype[m.prop] = function()
             local v = this.__val[f.prop];
-            if (f.typ == __jsObjectPtr) then
+            if f.typ == __jsObjectPtr then
               v = new __jsObjectPtr(v);
             end
-            if (v.__val == nil) then
+            if v.__val == nil then
               v = new f.typ(v);
             end
             return v[m.prop].apply(v, arguments);
           end;
         end;
         fields.forEach(function(f)
-          if (f.anonymous) then
+          if f.anonymous then
             __methodSet(f.typ).forEach(function(m)
               synthesizeMethod(typ, m, f);
               synthesizeMethod(typ.ptr, m, f);
@@ -975,7 +975,7 @@ __newType = function(r)
   case __kindArray:
     typ.zero = function()
       local arrayClass = __nativeArray(typ.elem.kind);
-      if (arrayClass ~= Array) then
+      if arrayClass ~= Array then
         return new arrayClass(typ.len);
       end
       local array = new Array(typ.len);
@@ -1009,13 +1009,13 @@ __newType = function(r)
 end;
 
 __methodSet = function(p)
-  if (typ.methodSetCache ~= null) then
+  if typ.methodSetCache ~= null then
     return typ.methodSetCache;
   end
   local base = {};
 
   local isPtr = (typ.kind == __kindPtr);
-  if (isPtr  and  typ.elem.kind == __kindInterface) then
+  if isPtr  and  typ.elem.kind == __kindInterface then
     typ.methodSetCache = [];
     return [];
   end
@@ -1024,19 +1024,19 @@ __methodSet = function(p)
 
   local seen = {};
 
-  while (current.length > 0) {
+  while (#current > 0) {
     local next = [];
     local mset = [];
 
     current.forEach(function(e)
-      if (seen[e.typ.string]) then
+      if seen[e.typ.string] then
         return;
       end
       seen[e.typ.string] = true;
 
-      if (e.typ.named) then
+      if e.typ.named then
         mset = mset.concat(e.typ.methods);
-        if (e.indirect) then
+        if e.indirect then
           mset = mset.concat(__ptrType(e.typ).methods);
         end
       end
@@ -1044,7 +1044,7 @@ __methodSet = function(p)
       switch (e.typ.kind) {
       case __kindStruct:
         e.typ.fields.forEach(function(f)
-          if (f.anonymous) then
+          if f.anonymous then
             local fTyp = f.typ;
             local fIsPtr = (fTyp.kind == __kindPtr);
             next.push({typ= fIsPtr ? fTyp.elem : fTyp, indirect= e.indirect  or  fIsPtrend);
@@ -1059,7 +1059,7 @@ __methodSet = function(p)
     end);
 
     mset.forEach(function(m)
-      if (base[m.name] == nil) then
+      if base[m.name] == nil then
         base[m.name] = m;
       end
     end);
@@ -1132,7 +1132,7 @@ __arrayTypes = {};
 __arrayType = function(n)
   local typeKey = elem.id + "_" + len;
   local typ = __arrayTypes[typeKey];
-  if (typ == nil) then
+  if typ == nil then
     typ = __newType(12, __kindArray, "[" + len + "]" + elem.string, false, "", false, null);
     __arrayTypes[typeKey] = typ;
     typ.init(elem, len);
@@ -1144,7 +1144,7 @@ __chanType = function(y)
   local string = (recvOnly ? "<-" : "") + "chan" + (sendOnly ? "<- " : " ") + elem.string;
   local field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
   local typ = elem[field];
-  if (typ == nil) then
+  if typ == nil then
     typ = __newType(4, __kindChan, string, false, "", false, null);
     elem[field] = typ;
     typ.init(elem, sendOnly, recvOnly);
@@ -1152,7 +1152,7 @@ __chanType = function(y)
   return typ;
 end;
 __Chan = function(y)
-  if (capacity < 0  or  capacity > 2147483647) then
+  if capacity < 0  or  capacity > 2147483647 then
     __throwRuntimeError("makechan: size out of range");
   end
   this.__elem = elem;
@@ -1169,15 +1169,15 @@ __funcTypes = {};
 __funcType = function(c)
   local typeKey = __mapArray(params, function(p) return p.id; end).join(",") + "_" + __mapArray(results, function(r) return r.id; end).join(",") + "_" + variadic;
   local typ = __funcTypes[typeKey];
-  if (typ == nil) then
+  if typ == nil then
     local paramTypes = __mapArray(params, function(p) return p.string; end);
-    if (variadic) then
-      paramTypes[paramTypes.length - 1] = "..." + paramTypes[paramTypes.length - 1].substr(2);
+    if variadic then
+      paramTypes[#paramTypes - 1] = "..." + paramTypes[#paramTypes - 1].substr(2);
     end
     local string = "func(" + paramTypes.join(", ") + ")";
-    if (results.length == 1) then
+    if #results == 1 then
       string += " " + results[0].string;
-    end else if (results.length > 1) then
+    end else if #results > 1 then
       string += " (" + __mapArray(results, function(r) return r.string; end).join(", ") + ")";
     end
     typ = __newType(4, __kindFunc, string, false, "", false, null);
@@ -1191,9 +1191,9 @@ __interfaceTypes = {};
 __interfaceType = function(s)
   local typeKey = __mapArray(methods, function(m) return m.pkg + "," + m.name + "," + m.typ.id; end).join("_");
   local typ = __interfaceTypes[typeKey];
-  if (typ == nil) then
+  if typ == nil then
     local string = "interface {}";
-    if (methods.length ~= 0) then
+    if #methods ~= 0 then
       string = "interface { " + __mapArray(methods, function(m)
         return (m.pkg ~= "" ? m.pkg + "." : "") + m.name + m.typ.string.substr(4);
       end).join("; ") + " end";
@@ -1213,7 +1213,7 @@ __mapTypes = {};
 __mapType = function(m)
   local typeKey = key.id + "_" + elem.id;
   local typ = __mapTypes[typeKey];
-  if (typ == nil) then
+  if typ == nil then
     typ = __newType(4, __kindMap, "map[" + key.string + "]" + elem.string, false, "", false, null);
     __mapTypes[typeKey] = typ;
     typ.init(key, elem);
@@ -1222,7 +1222,7 @@ __mapType = function(m)
 end;
 __makeMap = function(s)
   local m = {};
-  for (var i = 0; i < entries.length; i++) {
+  for (var i = 0; i < #entries; i++) {
     local e = entries[i];
     m[keyForFunc(e.k)] = e;
   end
@@ -1231,7 +1231,7 @@ end;
 
 __ptrType = function(m)
   local typ = elem.ptr;
-  if (typ == nil) then
+  if typ == nil then
     typ = __newType(4, __kindPtr, "*" + elem.string, false, "", elem.exported, null);
     elem.ptr = typ;
     typ.init(elem);
@@ -1240,7 +1240,7 @@ __ptrType = function(m)
 end;
 
 __newDataPointer = function(r)
-  if (constructor.elem.kind == __kindStruct) then
+  if constructor.elem.kind == __kindStruct then
     return data;
   end
   return new constructor(function() return data; end, function(v) data = v; end);
@@ -1253,7 +1253,7 @@ end;
 
 __sliceType = function(m)
   local typ = elem.slice;
-  if (typ == nil) then
+  if typ == nil then
     typ = __newType(12, __kindSlice, "[]" + elem.string, false, "", false, null);
     elem.slice = typ;
     typ.init(elem);
@@ -1262,14 +1262,14 @@ __sliceType = function(m)
 end;
 __makeSlice = function(y)
   capacity = capacity  or  length;
-  if (length < 0  or  length > 2147483647) then
+  if length < 0  or  length > 2147483647 then
     __throwRuntimeError("makeslice: len out of range");
   end
-  if (capacity < 0  or  capacity < length  or  capacity > 2147483647) then
+  if capacity < 0  or  capacity < length  or  capacity > 2147483647 then
     __throwRuntimeError("makeslice: cap out of range");
   end
   local array = new typ.nativeArray(capacity);
-  if (typ.nativeArray == Array) then
+  if typ.nativeArray == Array then
     for (local i = 0; i < capacity; i++) {
       array[i] = typ.elem.zero();
     end
@@ -1283,16 +1283,16 @@ __structTypes = {};
 __structType = function(s)
   local typeKey = __mapArray(fields, function(f) return f.name + "," + f.typ.id + "," + f.tag; end).join("_");
   local typ = __structTypes[typeKey];
-  if (typ == nil) then
+  if typ == nil then
     local string = "struct { " + __mapArray(fields, function(f)
       return f.name + " " + f.typ.string + (f.tag ~= "" ? (" \"" + f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"") : "");
     end).join("; ") + " end";
-    if (fields.length == 0) then
+    if #fields == 0 then
       string = "struct {}";
     end
     typ = __newType(0, __kindStruct, string, false, "", false, function()
       this.__val = this;
-      for (local i = 0; i < fields.length; i++) {
+      for (local i = 0; i < #fields; i++) {
         local f = fields[i];
         local arg = arguments[i];
         this[f.prop] = arg ~= nil ? arg : f.typ.zero();
@@ -1306,28 +1306,28 @@ end;
 
 __assertType = function(e)
   local isInterface = (type.kind == __kindInterface), ok, missingMethod = "";
-  if (value == __ifaceNil) then
+  if value == __ifaceNil then
     ok = false;
-  end else if ( not isInterface) then
+  end else if  not isInterface then
     ok = value.constructor == type;
   end else {
     local valueTypeString = value.constructor.string;
     ok = type.implementedBy[valueTypeString];
-    if (ok == nil) then
+    if ok == nil then
       ok = true;
       local valueMethodSet = __methodSet(value.constructor);
       local interfaceMethods = type.methods;
-      for (local i = 0; i < interfaceMethods.length; i++) {
+      for (local i = 0; i < #interfaceMethods; i++) {
         local tm = interfaceMethods[i];
         local found = false;
-        for (local j = 0; j < valueMethodSet.length; j++) {
+        for (local j = 0; j < #valueMethodSet; j++) {
           local vm = valueMethodSet[j];
-          if (vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ) then
+          if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
             found = true;
             break;
           end
         end
-        if ( not found) then
+        if  not found then
           ok = false;
           type.missingMethodFor[valueTypeString] = tm.name;
           break;
@@ -1335,22 +1335,22 @@ __assertType = function(e)
       end
       type.implementedBy[valueTypeString] = ok;
     end
-    if ( not ok) then
+    if  not ok then
       missingMethod = type.missingMethodFor[valueTypeString];
     end
   end
 
-  if ( not ok) then
-    if (returnTuple) then
+  if  not ok then
+    if returnTuple then
       return [type.zero(), false];
     end
     __panic(new __packages["runtime"].TypeAssertionError.ptr("", (value == __ifaceNil ? "" : value.constructor.string), type.string, missingMethod));
   end
 
-  if ( not isInterface) then
+  if  not isInterface then
     value = value.__val;
   end
-  if (type == __jsObjectPtr) then
+  if type == __jsObjectPtr then
     value = value.object;
   end
   return returnTuple ? [value, true] : value;
@@ -1359,18 +1359,18 @@ end;
 __stackDepthOffset = 0;
 __getStackDepth = function()
   local err = new Error();
-  if (err.stack == nil) then
+  if err.stack == nil then
     return nil;
   end
-  return __stackDepthOffset + err.stack.split("\n").length;
+  return __stackDepthOffset + err.stack.split("\n")#;
 end;
 
 __panicStackDepth = null, __panicValue;
 __callDeferred = function(c)
-  if ( not fromPanic  and  deferred ~= null  and  deferred.index >= __curGoroutine.deferStack.length) then
+  if  not fromPanic  and  deferred ~= null  and  deferred.index >= __curGoroutine.#deferStack then
     throw jsErr;
   end
-  if (jsErr ~= null) then
+  if jsErr ~= null then
     local newErr = null;
     try {
       __curGoroutine.deferStack.push(deferred);
@@ -1382,7 +1382,7 @@ __callDeferred = function(c)
     __callDeferred(deferred, newErr);
     return;
   end
-  if (__curGoroutine.asleep) then
+  if __curGoroutine.asleep then
     return;
   end
 
@@ -1391,27 +1391,27 @@ __callDeferred = function(c)
   local outerPanicValue = __panicValue;
 
   local localPanicValue = __curGoroutine.panicStack.pop();
-  if (localPanicValue ~= nil) then
+  if localPanicValue ~= nil then
     __panicStackDepth = __getStackDepth();
     __panicValue = localPanicValue;
   end
 
   try {
     while (true) {
-      if (deferred == null) then
-        deferred = __curGoroutine.deferStack[__curGoroutine.deferStack.length - 1];
-        if (deferred == nil) then
+      if deferred == null then
+        deferred = __curGoroutine.deferStack[__curGoroutine.#deferStack - 1];
+        if deferred == nil then
           /* The panic reached the top of the stack. Clear it and throw it as a JavaScript error. */
           __panicStackDepth = null;
-          if (localPanicValue.Object instanceof Error) then
+          if localPanicValue.Object instanceof Error then
             throw localPanicValue.Object;
           end
           local msg;
-          if (localPanicValue.constructor == __String) then
+          if localPanicValue.constructor == __String then
             msg = localPanicValue.__val;
-          end else if (localPanicValue.Error ~= nil) then
+          end else if localPanicValue.Error ~= nil then
             msg = localPanicValue.Error();
-          end else if (localPanicValue.String ~= nil) then
+          end else if localPanicValue.String ~= nil then
             msg = localPanicValue.String();
           end else then
             msg = localPanicValue;
@@ -1420,24 +1420,24 @@ __callDeferred = function(c)
         end
       end
       local call = deferred.pop();
-      if (call == nil) then
+      if call == nil then
         __curGoroutine.deferStack.pop();
-        if (localPanicValue ~= nil) then
+        if localPanicValue ~= nil then
           deferred = null;
           continue;
         end
         return;
       end
       local r = call[0].apply(call[2], call[1]);
-      if (r  and  r.__blk ~= nil) then
+      if r  and  r.__blk ~= nil then
         deferred.push([r.__blk, [], r]);
-        if (fromPanic) then
+        if fromPanic then
           throw null;
         end
         return;
       end
 
-      if (localPanicValue ~= nil  and  __panicStackDepth == null) then
+      if localPanicValue ~= nil  and  __panicStackDepth == null then
         throw null; /* error was recovered */
       end
     end
@@ -1458,7 +1458,7 @@ __panic = function(e)
   __callDeferred(null, null, true);
 end;
 __recover = function()
-  if (__panicStackDepth == null  or  (__panicStackDepth ~= nil  and  __panicStackDepth ~= __getStackDepth() - 2)) then
+  if __panicStackDepth == null  or  (__panicStackDepth ~= nil  and  __panicStackDepth ~= __getStackDepth() - 2) then
     return __ifaceNil;
   end
   __panicStackDepth = null;
@@ -1476,14 +1476,14 @@ __go = function(s)
     try {
       __curGoroutine = __goroutine;
       local r = fun.apply(nil, args);
-      if (r  and  r.__blk ~= nil) then
+      if r  and  r.__blk ~= nil then
         fun = function() return r.__blk(); end;
         args = [];
         return;
       end
       __goroutine.exit = true;
     end catch (err) {
-      if ( not __goroutine.exit) then
+      if  not __goroutine.exit then
         throw err;
       end
     end finally {
@@ -1494,9 +1494,9 @@ __go = function(s)
       end
       if (__goroutine.asleep) {
         __awakeGoroutines--;
-        if ( not __mainFinished  and  __awakeGoroutines == 0  and  __checkForDeadlock) then
+        if  not __mainFinished  and  __awakeGoroutines == 0  and  __checkForDeadlock then
           console.error("fatal error: all goroutines are asleep - deadlock not ");
-          if (__global.process ~= nil) then
+          if __global.process ~= nil then
             __global.process.exit(2);
           end
         end
@@ -1518,19 +1518,19 @@ __runScheduled = function()
       r();
     end
   end finally {
-    if (__scheduled.length > 0) then
+    if __#scheduled > 0 then
       setTimeout(__runScheduled, 0);
     end
   end
 end;
 
 __schedule = function(e)
-  if (goroutine.asleep) then
+  if goroutine.asleep then
     goroutine.asleep = false;
     __awakeGoroutines++;
   end
   __scheduled.push(goroutine);
-  if (__curGoroutine == __noGoroutine) then
+  if __curGoroutine == __noGoroutine then
     __runScheduled();
   end
 end;
@@ -1544,22 +1544,22 @@ __setTimeout = function(t)
 end;
 
 __block = function()
-  if (__curGoroutine == __noGoroutine) then
+  if __curGoroutine == __noGoroutine then
     __throwRuntimeError("cannot block in JavaScript callback, fix by wrapping code in goroutine");
   end
   __curGoroutine.asleep = true;
 end;
 
 __send = function(e)
-  if (chan.__closed) then
+  if chan.__closed then
     __throwRuntimeError("send on closed channel");
   end
   local queuedRecv = chan.__recvQueue.shift();
-  if (queuedRecv ~= nil) then
+  if queuedRecv ~= nil then
     queuedRecv([value, true]);
     return;
   end
-  if (chan.__buffer.length < chan.__capacity) then
+  if chan.__#buffer < chan.__capacity then
     chan.__buffer.push(value);
     return;
   end
@@ -1574,7 +1574,7 @@ __send = function(e)
   __block();
   return {
     __blk: function()
-      if (closedDuringSend) then
+      if closedDuringSend then
         __throwRuntimeError("send on closed channel");
       end
     end
@@ -1582,14 +1582,14 @@ __send = function(e)
 end;
 __recv = function(n)
   local queuedSend = chan.__sendQueue.shift();
-  if (queuedSend ~= nil) then
+  if queuedSend ~= nil then
     chan.__buffer.push(queuedSend(false));
   end
   local bufferedValue = chan.__buffer.shift();
-  if (bufferedValue ~= nil) then
+  if bufferedValue ~= nil then
     return [bufferedValue, true];
   end
-  if (chan.__closed) then
+  if chan.__closed then
     return [chan.__elem.zero(), false];
   end
 
@@ -1604,20 +1604,20 @@ __recv = function(n)
   return f;
 end;
 __close = function(n)
-  if (chan.__closed) then
+  if chan.__closed then
     __throwRuntimeError("close of closed channel");
   end
   chan.__closed = true;
   while (true) {
     local queuedSend = chan.__sendQueue.shift();
-    if (queuedSend == nil) then
+    if queuedSend == nil then
       break;
     end
     queuedSend(true); /* will panic */
   end
   while (true) {
     local queuedRecv = chan.__recvQueue.shift();
-    if (queuedRecv == nil) then
+    if queuedRecv == nil then
       break;
     end
     queuedRecv([chan.__elem.zero(), false]);
@@ -1626,15 +1626,15 @@ end;
 __select = function(s)
   local ready = [];
   local selection = -1;
-  for (local i = 0; i < comms.length; i++) {
+  for (local i = 0; i < #comms; i++) {
     local comm = comms[i];
     local chan = comm[0];
-    switch (comm.length) {
+    switch (#comm) {
     case 0: /* default */
       selection = i;
       break;
     case 1: /* recv */
-      if (chan.__sendQueue.length ~= 0  or  chan.__buffer.length ~= 0  or  chan.__closed) {
+      if (chan.__#sendQueue ~= 0  or  chan.__#buffer ~= 0  or  chan.__closed) {
         ready.push(i);
       end
       break;
@@ -1642,19 +1642,19 @@ __select = function(s)
       if (chan.__closed) {
         __throwRuntimeError("send on closed channel");
       end
-      if (chan.__recvQueue.length ~= 0  or  chan.__buffer.length < chan.__capacity) {
+      if (chan.__#recvQueue ~= 0  or  chan.__#buffer < chan.__capacity) {
         ready.push(i);
       end
       break;
     end
   end
 
-  if (ready.length ~= 0) then
-    selection = ready[Math.floor(Math.random() * ready.length)];
+  if #ready ~= 0 then
+    selection = ready[Math.floor(Math.random() * #ready)];
   end
-  if (selection ~= -1) then
+  if selection ~= -1 then
     local comm = comms[selection];
-    switch (comm.length) {
+    switch (#comm) {
     case 0: /* default */
       return [selection];
     case 1: /* recv */
@@ -1669,19 +1669,19 @@ __select = function(s)
   local thisGoroutine = __curGoroutine;
   local f = { __blk= function() return this.selection; end };
   local removeFromQueues = function()
-    for (local i = 0; i < entries.length; i++) {
+    for (local i = 0; i < #entries; i++) {
       local entry = entries[i];
       local queue = entry[0];
       local index = queue.indexOf(entry[1]);
-      if (index ~= -1) then
+      if index ~= -1 then
         queue.splice(index, 1);
       end
     end
   end;
-  for (local i = 0; i < comms.length; i++) {
+  for (local i = 0; i < #comms; i++) {
     (function(i)
       local comm = comms[i];
-      switch (comm.length) {
+      switch (#comm) {
       case 1: /* recv */
         local queueEntry = function(e)
           f.selection = [i, value];
@@ -1734,7 +1734,7 @@ __needsExternalization = function(t)
 end;
 
 __externalize = function(t)
-  if (t == __jsObjectPtr) then
+  if t == __jsObjectPtr then
     return v;
   end
   switch (t.kind) {
@@ -1755,47 +1755,47 @@ __externalize = function(t)
   case __kindUint64:
     return __flatten64(v);
   case __kindArray:
-    if (__needsExternalization(t.elem)) then
+    if __needsExternalization(t.elem) then
       return __mapArray(v, function(e) return __externalize(e, t.elem); end);
     end
     return v;
   case __kindFunc:
     return __externalizeFunction(v, t, false);
   case __kindInterface:
-    if (v == __ifaceNil) then
+    if v == __ifaceNil then
       return null;
     end
-    if (v.constructor == __jsObjectPtr) then
+    if v.constructor == __jsObjectPtr then
       return v.__val.object;
     end
     return __externalize(v.__val, v.constructor);
   case __kindMap:
     local m = {};
     local keys = __keys(v);
-    for (local i = 0; i < keys.length; i++) {
+    for (local i = 0; i < #keys; i++) {
       local entry = v[keys[i]];
       m[__externalize(entry.k, t.key)] = __externalize(entry.v, t.elem);
     end
     return m;
   case __kindPtr:
-    if (v == t.nil) then
+    if v == t.nil then
       return null;
     end
     return __externalize(v.__get(), t.elem);
   case __kindSlice:
-    if (__needsExternalization(t.elem)) then
+    if __needsExternalization(t.elem) then
       return __mapArray(__sliceToArray(v), function(e) return __externalize(e, t.elem); end);
     end
     return __sliceToArray(v);
   case __kindString:
-    if (__isASCII(v)) then
+    if __isASCII(v) then
       return v;
     end
     local s = "", r;
-    for (local i = 0; i < v.length; i += r[1]) {
+    for (local i = 0; i < #v; i += r[1]) {
       r = __decodeRune(v, i);
       local c = r[0];
-      if (c > 0xFFFF) then
+      if c > 0xFFFF then
         local h = Math.floor((c - 0x10000) / 0x400) + 0xD800;
         local l = (c - 0x10000) % 0x400 + 0xDC00;
         s += String.fromCharCode(h, l);
@@ -1806,19 +1806,19 @@ __externalize = function(t)
     return s;
   case __kindStruct:
     local timePkg = __packages["time"];
-    if (timePkg ~= nil  and  v.constructor == timePkg.Time.ptr) then
+    if timePkg ~= nil  and  v.constructor == timePkg.Time.ptr then
       local milli = __div64(v.UnixNano(), new __Int64(0, 1000000));
       return new Date(__flatten64(milli));
     end
 
     local noJsObject = {};
     local searchJsObject = function(t)
-      if (t == __jsObjectPtr) then
+      if t == __jsObjectPtr then
         return v;
       end
       switch (t.kind) {
       case __kindPtr:
-        if (v == t.nil) then
+        if v == t.nil then
           return noJsObject;
         end
         return searchJsObject(v.__get(), t.elem);
@@ -1832,14 +1832,14 @@ __externalize = function(t)
       end
     end;
     local o = searchJsObject(v, t);
-    if (o ~= noJsObject) then
+    if o ~= noJsObject then
       return o;
     end
 
     o = {};
-    for (local i = 0; i < t.fields.length; i++) {
+    for (local i = 0; i < t.#fields; i++) {
       local f = t.fields[i];
-      if ( not f.exported) then
+      if  not f.exported then
         continue;
       end
       o[f.name] = __externalize(v[f.prop], f.typ);
@@ -1850,17 +1850,17 @@ __externalize = function(t)
 end;
 
 __externalizeFunction = function(s)
-  if (v == __throwNilPointerError) then
+  if v == __throwNilPointerError then
     return null;
   end
-  if (v.__externalizeWrapper == nil) then
+  if v.__externalizeWrapper == nil then
     __checkForDeadlock = false;
     v.__externalizeWrapper = function()
       local args = [];
-      for (local i = 0; i < t.params.length; i++) {
-        if (t.variadic  and  i == t.params.length - 1) then
+      for (local i = 0; i < t.#params; i++) {
+        if t.variadic  and  i == t.#params - 1 then
           local vt = t.params[i].elem, varargs = [];
-          for (local j = i; j < arguments.length; j++) {
+          for (local j = i; j < #arguments; j++) {
             varargs.push(__internalize(arguments[j], vt));
           end
           args.push(new (t.params[i])(varargs));
@@ -1869,13 +1869,13 @@ __externalizeFunction = function(s)
         args.push(__internalize(arguments[i], t.params[i]));
       end
       local result = v.apply(passThis ? this : nil, args);
-      switch (t.results.length) {
+      switch (t.#results) {
       case 0:
         return;
       case 1:
         return __externalize(result, t.results[0]);
       default:
-        for (local i = 0; i < t.results.length; i++) {
+        for (local i = 0; i < t.#results; i++) {
           result[i] = __externalize(result[i], t.results[i]);
         end
         return result;
@@ -1886,18 +1886,18 @@ __externalizeFunction = function(s)
 end;
 
 __internalize = function(v)
-  if (t == __jsObjectPtr) then
+  if t == __jsObjectPtr then
     return v;
   end
-  if (t == __jsObjectPtr.elem) then
+  if t == __jsObjectPtr.elem then
     __throwRuntimeError("cannot internalize js.Object, use *js.Object instead");
   end
-  if (v  and  v.__internal_object__ ~= nil) then
+  if v  and  v.__internal_object__ ~= nil then
     return __assertType(v.__internal_object__, t, false);
   end
   local timePkg = __packages["time"];
-  if (timePkg ~= nil  and  t == timePkg.Time) then
-    if ( not (v ~= null  and  v ~= nil  and  v.constructor == Date)) then
+  if timePkg ~= nil  and  t == timePkg.Time then
+    if  not (v ~= null  and  v ~= nil  and  v.constructor == Date) then
       __throwRuntimeError("cannot internalize time.Time from " + typeof v + ", must be Date");
     end
     return timePkg.Unix(new __Int64(0, 0), new __Int64(0, v.getTime() * 1000000));
@@ -1929,15 +1929,15 @@ __internalize = function(v)
   case __kindFloat64:
     return parseFloat(v);
   case __kindArray:
-    if (v.length ~= t.len) then
+    if #v ~= t.len then
       __throwRuntimeError("got array with wrong size from JavaScript native");
     end
     return __mapArray(v, function(e) return __internalize(e, t.elem); end);
   case __kindFunc:
     return function()
       local args = [];
-      for (local i = 0; i < t.params.length; i++) {
-        if (t.variadic  and  i == t.params.length - 1) then
+      for (local i = 0; i < t.#params; i++) {
+        if t.variadic  and  i == t.#params - 1 then
           local vt = t.params[i].elem, varargs = arguments[i];
           for (local j = 0; j < varargs.__length; j++) {
             args.push(__externalize(varargs.__array[varargs.__offset + j], vt));
@@ -1947,26 +1947,26 @@ __internalize = function(v)
         args.push(__externalize(arguments[i], t.params[i]));
       end
       local result = v.apply(recv, args);
-      switch (t.results.length) {
+      switch (t.#results) {
       case 0:
         return;
       case 1:
         return __internalize(result, t.results[0]);
       default:
-        for (local i = 0; i < t.results.length; i++) {
+        for (local i = 0; i < t.#results; i++) {
           result[i] = __internalize(result[i], t.results[i]);
         end
         return result;
       end
     end;
   case __kindInterface:
-    if (t.methods.length ~= 0) then
+    if t.#methods ~= 0 then
       __throwRuntimeError("cannot internalize " + t.string);
     end
-    if (v == null) then
+    if v == null then
       return __ifaceNil;
     end
-    if (v == nil) then
+    if v == nil then
       return new __jsObjectPtr(nil);
     end
     switch (v.constructor) {
@@ -1991,7 +1991,7 @@ __internalize = function(v)
     case Boolean:
       return new __Bool( not  not v);
     case Date:
-      if (timePkg == nil) then
+      if timePkg == nil then
         /* time package is not present, internalize as &js.Object{Dateend so it can be externalized into original Date. */
         return new __jsObjectPtr(v);
       end
@@ -2004,7 +2004,7 @@ __internalize = function(v)
     case String:
       return new __String(__internalize(v, __String));
     default:
-      if (__global.Node  and  v instanceof __global.Node) then
+      if __global.Node  and  v instanceof __global.Node then
         return new __jsObjectPtr(v);
       end
       local mapType = __mapType(__String, __emptyInterface);
@@ -2013,27 +2013,27 @@ __internalize = function(v)
   case __kindMap:
     local m = {};
     local keys = __keys(v);
-    for (local i = 0; i < keys.length; i++) {
+    for (local i = 0; i < #keys; i++) {
       local k = __internalize(keys[i], t.key);
       m[t.key.keyFor(k)] = { k= k, v= __internalize(v[keys[i]], t.elem) end;
     end
     return m;
   case __kindPtr:
-    if (t.elem.kind == __kindStruct) then
+    if t.elem.kind == __kindStruct then
       return __internalize(v, t.elem);
     end
   case __kindSlice:
     return new t(__mapArray(v, function(e) return __internalize(e, t.elem); end));
   case __kindString:
     v = String(v);
-    if (__isASCII(v)) then
+    if __isASCII(v) then
       return v;
     end
     local s = "";
     local i = 0;
-    while (i < v.length) {
+    while (i < #v) {
       local h = v.charCodeAt(i);
-      if (0xD800 <= h  and  h <= 0xDBFF) then
+      if 0xD800 <= h  and  h <= 0xDBFF then
         local l = v.charCodeAt(i + 1);
         local c = (h - 0xD800) * 0x400 + l - 0xDC00 + 0x10000;
         s += __encodeRune(c);
@@ -2047,10 +2047,10 @@ __internalize = function(v)
   case __kindStruct:
     local noJsObject = {};
     local searchJsObject = function(t)
-      if (t == __jsObjectPtr) then
+      if t == __jsObjectPtr then
         return v;
       end
-      if (t == __jsObjectPtr.elem) then
+      if t == __jsObjectPtr.elem then
         __throwRuntimeError("cannot internalize js.Object, use *js.Object instead");
       end
       switch (t.kind) {
@@ -2079,8 +2079,8 @@ end;
 
 /* __isASCII reports whether string s contains only ASCII characters. */
 __isASCII = function(s)
-  for (local i = 0; i < s.length; i++) {
-    if (s.charCodeAt(i) >= 128) then
+  for (local i = 0; i < #s; i++) {
+    if s.charCodeAt(i) >= 128 then
       return false;
     end
   end
@@ -2091,7 +2091,7 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
 	local __pkg = {}, __init, Object, Error, sliceType, ptrType, ptrType__1, MakeFunc, init;
 	Object = __pkg.Object = __newType(0, __kindStruct, "js.Object", true, "github.com/gopherjs/gopherjs/js", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) then
+		if #arguments == 0 then
 			this.object = null;
 			return;
 		end
@@ -2099,7 +2099,7 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
 	end);
 	Error = __pkg.Error = __newType(0, __kindStruct, "js.Error", true, "github.com/gopherjs/gopherjs/js", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Object = null;
 			return;
 		end
@@ -2126,12 +2126,12 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
 		delete o.object[__externalize(key, __String)];
 	end;
 	Object.prototype.Delete = function(y) return this.__val.Delete(key); end;
-	Object.ptr.prototype.Length = function()
+	Object.ptr.#prototype = function()
 		local o;
 		o = this;
-		return __parseInt(o.object.length);
+		return __parseInt(o.#object);
 	end;
-	Object.prototype.Length = function() return this.__val.Length(); end;
+	Object.#prototype = function() return this.__#val(); end;
 	Object.ptr.prototype.Index = function(i)
 		local i, o;
 		o = this;
@@ -2240,7 +2240,7 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
 		__pkg.__init = function()end;
 		/* */ local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		init();
-		/* */ end return; end if (__f == nil) then __f = { __blk= __init}; end __f.__s = __s; __f.__r = __r; return __f;
+		/* */ end return; end if __f == nil then __f = { __blk= __init}; end __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	__pkg.__init = __init;
 	return __pkg;
@@ -2250,7 +2250,7 @@ __packages["runtime/internal/sys"] = (function()
 	__init = function()
 		__pkg.__init = function()end;
 		/* */ local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		/* */ end return; end if (__f == nil) then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
+		/* */ end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	__pkg.__init = __init;
 	return __pkg;
@@ -2261,7 +2261,7 @@ __packages["runtime"] = (function()
 	sys = __packages["runtime/internal/sys"];
 	TypeAssertionError = __pkg.TypeAssertionError = __newType(0, __kindStruct, "runtime.TypeAssertionError", true, "runtime", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) then
+		if #arguments == 0 then
 			this.interfaceString = "";
 			this.concreteString = "";
 			this.assertedString = "";
@@ -2309,13 +2309,13 @@ __packages["runtime"] = (function()
 		local e, inter;
 		e = this;
 		inter = e.interfaceString;
-		if (inter == "") then
+		if inter == "" then
 			inter = "interface";
 		end
-		if (e.concreteString == "") then
+		if e.concreteString == "" then
 			return "interface conversion: " + inter + " is nil, not " + e.assertedString;
 		end
-		if (e.missingMethod == "") then
+		if e.missingMethod == "" then
 			return "interface conversion: " + inter + " is " + e.concreteString + ", not " + e.assertedString;
 		end
 		return "interface conversion: " + e.concreteString + " is not " + e.assertedString + ": missing method " + e.missingMethod;
@@ -2338,8 +2338,8 @@ __packages["runtime"] = (function()
 	__init = function()
 		__pkg.__init = function()end;
 		/* */ local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		__r = js.__init(); /* */ __s = 1; case 1: if(__c) then __c = false; __r = __r.__blk(); end if (__r  and  __r.__blk ~= nil) then break s; end
-		__r = sys.__init(); /* */ __s = 2; case 2: if(__c) then __c = false; __r = __r.__blk(); end if (__r  and  __r.__blk ~= nil) then break s; end
+		__r = js.__init(); /* */ __s = 1; case 1: if(__c) then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
+		__r = sys.__init(); /* */ __s = 2; case 2: if(__c) then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
 		init();
 		/* */ end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -2350,7 +2350,7 @@ __packages["errors"] = (function()
 	local __pkg = {}, __init, errorString, ptrType, New;
 	errorString = __pkg.errorString = __newType(0, __kindStruct, "errors.errorString", true, "errors", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) then
+		if #arguments == 0 then
 			this.s = "";
 			return;
 		end
@@ -2403,7 +2403,7 @@ __packages["internal/race"] = (function()
 	__init = function()
 		__pkg.__init = function()end;
 		/* */ local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		/* */ end return; end if (__f == nil) then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
+		/* */ end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	__pkg.__init = __init;
 	return __pkg;
@@ -2413,7 +2413,7 @@ __packages["sync/atomic"] = (function()
 	js = __packages["github.com/gopherjs/gopherjs/js"];
 	Value = __pkg.Value = __newType(0, __kindStruct, "atomic.Value", true, "sync/atomic", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) then
+		if #arguments == 0 then
 			this.noCopy = new noCopy.ptr();
 			this.v = __ifaceNil;
 			return;
@@ -2423,7 +2423,7 @@ __packages["sync/atomic"] = (function()
 	end);
 	noCopy = __pkg.noCopy = __newType(0, __kindStruct, "atomic.noCopy", true, "sync/atomic", false, function()
 		this.__val = this;
-		if (arguments.length == 0) then
+		if #arguments == 0 then
 			return;
 		end
 	end);
@@ -2431,7 +2431,7 @@ __packages["sync/atomic"] = (function()
 	ptrType__1 = __ptrType(noCopy);
 	CompareAndSwapInt32 = function(1)
 		local addr, new__1, old;
-		if (addr.__get() == old) then
+		if addr.__get() == old then
 			addr.__set(new__1);
 			return true;
 		end
@@ -2440,7 +2440,7 @@ __packages["sync/atomic"] = (function()
 	__pkg.CompareAndSwapInt32 = CompareAndSwapInt32;
 	CompareAndSwapUint64 = function(1)
 		local addr, new__1, old, x;
-		if ((x = addr.__get(), (x.__high == old.__high  and  x.__low == old.__low))) then
+		if (x = addr.__get(), (x.__high == old.__high  and  x.__low == old.__low)) then
 			addr.__set(new__1);
 			return true;
 		end
@@ -2449,7 +2449,7 @@ __packages["sync/atomic"] = (function()
 	__pkg.CompareAndSwapUint64 = CompareAndSwapUint64;
 	CompareAndSwapPointer = function(1)
 		local addr, new__1, old;
-		if (addr.__get() == old) then
+		if addr.__get() == old then
 			addr.__set(new__1);
 			return true;
 		end
@@ -2489,10 +2489,10 @@ __packages["sync/atomic"] = (function()
 	Value.ptr.prototype.Store = function(x)
 		local v, x;
 		v = this;
-		if (__interfaceIsEqual(x, __ifaceNil)) then
+		if __interfaceIsEqual(x, __ifaceNil) then
 			__panic(new __String("sync/atomic: store of nil value into Value"));
 		end
-		if ( not (__interfaceIsEqual(v.v, __ifaceNil))  and   not (x.constructor == v.v.constructor)) then
+		if  not (__interfaceIsEqual(v.v, __ifaceNil))  and   not (x.constructor == v.v.constructor) then
 			__panic(new __String("sync/atomic: store of inconsistently typed value into Value"));
 		end
 		v.v = x;
@@ -2522,7 +2522,7 @@ __packages["sync"] = (function()
 	atomic = __packages["sync/atomic"];
 	Pool = __pkg.Pool = __newType(0, __kindStruct, "sync.Pool", true, "sync", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.local = 0;
 			this.localSize = 0;
 			this.store = sliceType__4.nil;
@@ -2536,7 +2536,7 @@ __packages["sync"] = (function()
 	end);
 	Map = __pkg.Map = __newType(0, __kindStruct, "sync.Map", true, "sync", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.mu = new Mutex.ptr(0, 0);
 			this.read = new atomic.Value.ptr(new atomic.noCopy.ptr(), __ifaceNil);
 			this.dirty = false;
@@ -2550,7 +2550,7 @@ __packages["sync"] = (function()
 	end);
 	readOnly = __pkg.readOnly = __newType(0, __kindStruct, "sync.readOnly", true, "sync", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.m = false;
 			this.amended = false;
 			return;
@@ -2560,7 +2560,7 @@ __packages["sync"] = (function()
 	end);
 	entry = __pkg.entry = __newType(0, __kindStruct, "sync.entry", true, "sync", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.p = 0;
 			return;
 		end
@@ -2568,7 +2568,7 @@ __packages["sync"] = (function()
 	end);
 	Mutex = __pkg.Mutex = __newType(0, __kindStruct, "sync.Mutex", true, "sync", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.state = 0;
 			this.sema = 0;
 			return;
@@ -2578,7 +2578,7 @@ __packages["sync"] = (function()
 	end);
 	poolLocalInternal = __pkg.poolLocalInternal = __newType(0, __kindStruct, "sync.poolLocalInternal", true, "sync", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.private__0 = __ifaceNil;
 			this.shared = sliceType__4.nil;
 			this.Mutex = new Mutex.ptr(0, 0);
@@ -2590,7 +2590,7 @@ __packages["sync"] = (function()
 	end);
 	poolLocal = __pkg.poolLocal = __newType(0, __kindStruct, "sync.poolLocal", true, "sync", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.poolLocalInternal = new poolLocalInternal.ptr(__ifaceNil, sliceType__4.nil, new Mutex.ptr(0, 0));
 			this.pad = arrayType__2.zero();
 			return;
@@ -2600,7 +2600,7 @@ __packages["sync"] = (function()
 	end);
 	notifyList = __pkg.notifyList = __newType(0, __kindStruct, "sync.notifyList", true, "sync", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.wait = 0;
 			this.notify = 0;
 			this.lock = 0;
@@ -2641,7 +2641,7 @@ __packages["sync"] = (function()
 			/* */ if ( not (p.New == __throwNilPointerError)) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if ( not (p.New == __throwNilPointerError)) { */ case 3:
-				_r = p.New(); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = p.New(); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__s = -1; return _r;
 			/* end */ case 4:
 			__s = -1; return __ifaceNil;
@@ -2672,7 +2672,7 @@ __packages["sync"] = (function()
 		/* if (s.__get() == 0) { */ case 1:
 			ch = new __Chan(__Bool, 0);
 			_key = s; (semWaiters  or  __throwRuntimeError("assignment to entry in nil map"))[ptrType__1.keyFor(_key)] = { k= _key, v= __append((_entry = semWaiters[ptrType__1.keyFor(s)], _entry ~= nil ? _entry.v : sliceType__1.nil), ch) end;
-			_r = __recv(ch); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = __recv(ch); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_r[0];
 		/* end */ case 2:
 		s.__set(s.__get() - (1) >>> 0);
@@ -3051,7 +3051,7 @@ __packages["sync"] = (function()
 		_i = 0;
 		_keys = __keys(_ref);
 		/* while (true) { */ case 5:
-			/* if ( not (_i < _keys.length)) { break; end */ if( not (_i < _keys.length)) { __s = 6; continue; end
+			/* if ( not (_i < _#keys)) { break; end */ if( not (_i < _#keys)) { __s = 6; continue; end
 			_entry = _ref[_keys[_i]];
 			if (_entry == nil) {
 				_i++;
@@ -3068,7 +3068,7 @@ __packages["sync"] = (function()
 				_i++;
 				/* continue; */ __s = 5; continue;
 			/* end */ case 8:
-			_r = f(k, v); /* */ __s = 11; case 11: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = f(k, v); /* */ __s = 11; case 11: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			/* */ if ( not _r) { __s = 9; continue; end
 			/* */ __s = 10; continue;
 			/* if ( not _r) { */ case 9:
@@ -3084,7 +3084,7 @@ __packages["sync"] = (function()
 		local m, x;
 		m = this;
 		m.misses = m.misses + (1) >> 0;
-		if (m.misses < __keys(m.dirty).length) {
+		if (m.misses < __keys(m.dirty)#) {
 			return;
 		end
 		m.read.Store((x = new readOnly.ptr(m.dirty, false), new x.constructor.elem(x)));
@@ -3100,12 +3100,12 @@ __packages["sync"] = (function()
 		end
 		_tuple = __assertType(m.read.Load(), readOnly, true);
 		read = __clone(_tuple[0], readOnly);
-		m.dirty = (x = __keys(read.m).length, ((x < 0  or  x > 2147483647) ? __throwRuntimeError("makemap: size out of range") : {}));
+		m.dirty = (x = __keys(read.m)#, ((x < 0  or  x > 2147483647) ? __throwRuntimeError("makemap: size out of range") : {}));
 		_ref = read.m;
 		_i = 0;
 		_keys = __keys(_ref);
 		while (true) {
-			if ( not (_i < _keys.length)) { break; end
+			if ( not (_i < _#keys)) { break; end
 			_entry = _ref[_keys[_i]];
 			if (_entry == nil) {
 				_i++;
@@ -3402,7 +3402,7 @@ __packages["syscall"] = (function()
 	sync = __packages["sync"];
 	SockaddrDatalink = __pkg.SockaddrDatalink = __newType(0, __kindStruct, "syscall.SockaddrDatalink", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Index = 0;
@@ -3426,7 +3426,7 @@ __packages["syscall"] = (function()
 	end);
 	mmapper = __pkg.mmapper = __newType(0, __kindStruct, "syscall.mmapper", true, "syscall", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Mutex = new sync.Mutex.ptr(0, 0);
 			this.active = false;
 			this.mmap = __throwNilPointerError;
@@ -3442,7 +3442,7 @@ __packages["syscall"] = (function()
 	Sockaddr = __pkg.Sockaddr = __newType(8, __kindInterface, "syscall.Sockaddr", true, "syscall", true, null);
 	SockaddrInet4 = __pkg.SockaddrInet4 = __newType(0, __kindStruct, "syscall.SockaddrInet4", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Port = 0;
 			this.Addr = arrayType__1.zero();
 			this.raw = new RawSockaddrInet4.ptr(0, 0, 0, arrayType__1.zero(), arrayType__6.zero());
@@ -3454,7 +3454,7 @@ __packages["syscall"] = (function()
 	end);
 	SockaddrInet6 = __pkg.SockaddrInet6 = __newType(0, __kindStruct, "syscall.SockaddrInet6", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Port = 0;
 			this.ZoneId = 0;
 			this.Addr = arrayType.zero();
@@ -3468,7 +3468,7 @@ __packages["syscall"] = (function()
 	end);
 	SockaddrUnix = __pkg.SockaddrUnix = __newType(0, __kindStruct, "syscall.SockaddrUnix", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Name = "";
 			this.raw = new RawSockaddrUnix.ptr(0, 0, arrayType__11.zero());
 			return;
@@ -3478,7 +3478,7 @@ __packages["syscall"] = (function()
 	end);
 	Timespec = __pkg.Timespec = __newType(0, __kindStruct, "syscall.Timespec", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Sec = new __Int64(0, 0);
 			this.Nsec = new __Int64(0, 0);
 			return;
@@ -3488,7 +3488,7 @@ __packages["syscall"] = (function()
 	end);
 	Stat_t = __pkg.Stat_t = __newType(0, __kindStruct, "syscall.Stat_t", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Dev = 0;
 			this.Mode = 0;
 			this.Nlink = 0;
@@ -3532,7 +3532,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddrInet4 = __pkg.RawSockaddrInet4 = __newType(0, __kindStruct, "syscall.RawSockaddrInet4", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Port = 0;
@@ -3548,7 +3548,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddrInet6 = __pkg.RawSockaddrInet6 = __newType(0, __kindStruct, "syscall.RawSockaddrInet6", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Port = 0;
@@ -3566,7 +3566,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddrUnix = __pkg.RawSockaddrUnix = __newType(0, __kindStruct, "syscall.RawSockaddrUnix", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Path = arrayType__11.zero();
@@ -3578,7 +3578,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddrDatalink = __pkg.RawSockaddrDatalink = __newType(0, __kindStruct, "syscall.RawSockaddrDatalink", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Index = 0;
@@ -3600,7 +3600,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddr = __pkg.RawSockaddr = __newType(0, __kindStruct, "syscall.RawSockaddr", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Len = 0;
 			this.Family = 0;
 			this.Data = arrayType__4.zero();
@@ -3612,7 +3612,7 @@ __packages["syscall"] = (function()
 	end);
 	RawSockaddrAny = __pkg.RawSockaddrAny = __newType(0, __kindStruct, "syscall.RawSockaddrAny", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Addr = new RawSockaddr.ptr(0, 0, arrayType__4.zero());
 			this.Pad = arrayType__5.zero();
 			return;
@@ -3623,7 +3623,7 @@ __packages["syscall"] = (function()
 	_Socklen = __pkg._Socklen = __newType(4, __kindUint32, "syscall._Socklen", true, "syscall", false, null);
 	Linger = __pkg.Linger = __newType(0, __kindStruct, "syscall.Linger", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Onoff = 0;
 			this.Linger = 0;
 			return;
@@ -3633,7 +3633,7 @@ __packages["syscall"] = (function()
 	end);
 	Iovec = __pkg.Iovec = __newType(0, __kindStruct, "syscall.Iovec", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Base = ptrType__2.nil;
 			this.Len = new __Uint64(0, 0);
 			return;
@@ -3643,7 +3643,7 @@ __packages["syscall"] = (function()
 	end);
 	IPMreq = __pkg.IPMreq = __newType(0, __kindStruct, "syscall.IPMreq", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Multiaddr = arrayType__1.zero();
 			this.Interface = arrayType__1.zero();
 			return;
@@ -3653,7 +3653,7 @@ __packages["syscall"] = (function()
 	end);
 	IPv6Mreq = __pkg.IPv6Mreq = __newType(0, __kindStruct, "syscall.IPv6Mreq", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Multiaddr = arrayType.zero();
 			this.Interface = 0;
 			return;
@@ -3663,7 +3663,7 @@ __packages["syscall"] = (function()
 	end);
 	Msghdr = __pkg.Msghdr = __newType(0, __kindStruct, "syscall.Msghdr", true, "syscall", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Name = ptrType__2.nil;
 			this.Namelen = 0;
 			this.Pad_cgo_0 = arrayType__1.zero();
@@ -3767,10 +3767,10 @@ __packages["syscall"] = (function()
 		end
 		jsEnv = process.env;
 		envkeys = __global.Object.keys(jsEnv);
-		envs__1 = __makeSlice(sliceType__1, __parseInt(envkeys.length));
+		envs__1 = __makeSlice(sliceType__1, __parseInt(#envkeys));
 		i = 0;
 		while (true) {
-			if ( not (i < __parseInt(envkeys.length))) { break; end
+			if ( not (i < __parseInt(#envkeys))) { break; end
 			key = __internalize(envkeys[i], __String);
 			((i < 0  or  i >= envs__1.__length) ? (__throwRuntimeError("index out of range"), nil) : envs__1.__array[envs__1.__offset + i] = key + "=" + __internalize(jsEnv[__externalize(key, __String)], __String));
 			i = i + (1) >> 0;
@@ -3779,7 +3779,7 @@ __packages["syscall"] = (function()
 	end;
 	syscall = function(e)
 		local name, require, __deferred;
-		/* */ local __err = null; try { __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ local __err = null; try { __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		__deferred.push([(function()
 			__recover();
 		end), []]);
@@ -3815,10 +3815,10 @@ __packages["syscall"] = (function()
 		end
 		if ((trap == 4)  and  ((a1 == 1)  or  (a1 == 2))) {
 			array = a2;
-			slice = __makeSlice(sliceType, __parseInt(array.length));
+			slice = __makeSlice(sliceType, __parseInt(#array));
 			slice.__array = array;
 			printToConsole(slice);
-			_tmp__3 = ((__parseInt(array.length) >>> 0));
+			_tmp__3 = ((__parseInt(#array) >>> 0));
 			_tmp__4 = 0;
 			_tmp__5 = 0;
 			r1 = _tmp__3;
@@ -3869,7 +3869,7 @@ __packages["syscall"] = (function()
 	__pkg.Syscall6 = Syscall6;
 	BytePtrFromString = function(s)
 		local _i, _ref, array, b, i, s;
-		array = new (__global.Uint8Array)(s.length + 1 >> 0);
+		array = new (__global.Uint8Array)(#s + 1 >> 0);
 		_ref = (new sliceType(__stringToBytes(s)));
 		_i = 0;
 		while (true) {
@@ -3882,7 +3882,7 @@ __packages["syscall"] = (function()
 			array[i] = b;
 			_i++;
 		end
-		array[s.length] = 0;
+		array[#s] = 0;
 		return [((array)), __ifaceNil];
 	end;
 	__pkg.BytePtrFromString = BytePtrFromString;
@@ -4075,11 +4075,11 @@ __packages["syscall"] = (function()
 		i = 31;
 		while (true) {
 			if ( not (val >= 10)) { break; end
-			((i < 0  or  i >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = ((((_r = val % 10, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) + 48 >>> 0) << 24 >>> 24)));
+			((i < 0  or  i >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = ((((_r = val % 10, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) + 48 >>> 0) << 24 >>> 24)));
 			i = i - (1) >> 0;
 			val = (_q = val / (10), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 		end
-		((i < 0  or  i >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = (((val + 48 >>> 0) << 24 >>> 24)));
+		((i < 0  or  i >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = (((val + 48 >>> 0) << 24 >>> 24)));
 		return (__bytesToString(__subslice(new sliceType(buf), i)));
 	end;
 	Timespec.ptr.prototype.Unix = function()
@@ -4125,7 +4125,7 @@ __packages["syscall"] = (function()
 		i = 0;
 		while (true) {
 			if ( not (i < 4)) { break; end
-			(x__2 = sa.raw.Addr, ((i < 0  or  i >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = (x__1 = sa.Addr, ((i < 0  or  i >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[i]))));
+			(x__2 = sa.raw.Addr, ((i < 0  or  i >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = (x__1 = sa.Addr, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i]))));
 			i = i + (1) >> 0;
 		end
 		_array = new Uint8Array(16);
@@ -4147,7 +4147,7 @@ __packages["syscall"] = (function()
 		i = 0;
 		while (true) {
 			if ( not (i < 16)) { break; end
-			(x__2 = sa.raw.Addr, ((i < 0  or  i >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = (x__1 = sa.Addr, ((i < 0  or  i >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[i]))));
+			(x__2 = sa.raw.Addr, ((i < 0  or  i >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = (x__1 = sa.Addr, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i]))));
 			i = i + (1) >> 0;
 		end
 		_array = new Uint8Array(28);
@@ -4158,7 +4158,7 @@ __packages["syscall"] = (function()
 		local _array, _struct, _view, i, n, name, sa, x;
 		sa = this;
 		name = sa.Name;
-		n = name.length;
+		n = #name;
 		if (n >= 104  or  (n == 0)) {
 			return [0, 0, new Errno(22)];
 		end
@@ -4167,7 +4167,7 @@ __packages["syscall"] = (function()
 		i = 0;
 		while (true) {
 			if ( not (i < n)) { break; end
-			(x = sa.raw.Path, ((i < 0  or  i >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[i] = ((name.charCodeAt(i) << 24 >> 24))));
+			(x = sa.raw.Path, ((i < 0  or  i >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[i] = ((name.charCodeAt(i) << 24 >> 24))));
 			i = i + (1) >> 0;
 		end
 		_array = new Uint8Array(106);
@@ -4190,7 +4190,7 @@ __packages["syscall"] = (function()
 		i = 0;
 		while (true) {
 			if ( not (i < 12)) { break; end
-			(x__1 = sa.raw.Data, ((i < 0  or  i >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[i] = (x = sa.Data, ((i < 0  or  i >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[i]))));
+			(x__1 = sa.raw.Data, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i] = (x = sa.Data, ((i < 0  or  i >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[i]))));
 			i = i + (1) >> 0;
 		end
 		_array = new Uint8Array(20);
@@ -4215,7 +4215,7 @@ __packages["syscall"] = (function()
 			i = 0;
 			while (true) {
 				if ( not (i < 12)) { break; end
-				(x__1 = sa.Data, ((i < 0  or  i >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[i] = (x = pp.Data, ((i < 0  or  i >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[i]))));
+				(x__1 = sa.Data, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i] = (x = pp.Data, ((i < 0  or  i >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[i]))));
 				i = i + (1) >> 0;
 			end
 			return [sa, __ifaceNil];
@@ -4231,7 +4231,7 @@ __packages["syscall"] = (function()
 			i__1 = 0;
 			while (true) {
 				if ( not (i__1 < n)) { break; end
-				if ((x__2 = pp__1.Path, ((i__1 < 0  or  i__1 >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[i__1])) == 0) {
+				if ((x__2 = pp__1.Path, ((i__1 < 0  or  i__1 >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[i__1])) == 0) {
 					n = i__1;
 					break;
 				end
@@ -4250,7 +4250,7 @@ __packages["syscall"] = (function()
 			i__2 = 0;
 			while (true) {
 				if ( not (i__2 < 4)) { break; end
-				(x__4 = sa__2.Addr, ((i__2 < 0  or  i__2 >= x__4.length) ? (__throwRuntimeError("index out of range"), nil) : x__4[i__2] = (x__3 = pp__2.Addr, ((i__2 < 0  or  i__2 >= x__3.length) ? (__throwRuntimeError("index out of range"), nil) : x__3[i__2]))));
+				(x__4 = sa__2.Addr, ((i__2 < 0  or  i__2 >= x__#4) ? (__throwRuntimeError("index out of range"), nil) : x__4[i__2] = (x__3 = pp__2.Addr, ((i__2 < 0  or  i__2 >= x__#3) ? (__throwRuntimeError("index out of range"), nil) : x__3[i__2]))));
 				i__2 = i__2 + (1) >> 0;
 			end
 			return [sa__2, __ifaceNil];
@@ -4265,7 +4265,7 @@ __packages["syscall"] = (function()
 			i__3 = 0;
 			while (true) {
 				if ( not (i__3 < 16)) { break; end
-				(x__6 = sa__3.Addr, ((i__3 < 0  or  i__3 >= x__6.length) ? (__throwRuntimeError("index out of range"), nil) : x__6[i__3] = (x__5 = pp__3.Addr, ((i__3 < 0  or  i__3 >= x__5.length) ? (__throwRuntimeError("index out of range"), nil) : x__5[i__3]))));
+				(x__6 = sa__3.Addr, ((i__3 < 0  or  i__3 >= x__#6) ? (__throwRuntimeError("index out of range"), nil) : x__6[i__3] = (x__5 = pp__3.Addr, ((i__3 < 0  or  i__3 >= x__#5) ? (__throwRuntimeError("index out of range"), nil) : x__5[i__3]))));
 				i__3 = i__3 + (1) >> 0;
 			end
 			return [sa__3, __ifaceNil];
@@ -4363,7 +4363,7 @@ __packages["syscall"] = (function()
 		/* */ if ( not (__interfaceIsEqual(to, __ifaceNil))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not (__interfaceIsEqual(to, __ifaceNil))) { */ case 1:
-			_r = to.sockaddr(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = to.sockaddr(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			ptr = _tuple[0];
 			salen = _tuple[1];
@@ -4442,7 +4442,7 @@ __packages["syscall"] = (function()
 	Msghdr.prototype.SetControllen = function(h) return this.__val.SetControllen(length); end;
 	mmapper.ptr.prototype.Mmap = function(s)
 		local _key, _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, addr, b, data, err, errno, fd, flags, length, m, offset, p, prot, sl, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _key = __f._key; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; addr = __f.addr; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; fd = __f.fd; flags = __f.flags; length = __f.length; m = __f.m; offset = __f.offset; p = __f.p; prot = __f.prot; sl = __f.sl; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _key = __f._key; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; addr = __f.addr; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; fd = __f.fd; flags = __f.flags; length = __#f; m = __f.m; offset = __f.offset; p = __f.p; prot = __f.prot; sl = __f.sl; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		sl = [sl];
 		data = sliceType.nil;
 		err = __ifaceNil;
@@ -4454,7 +4454,7 @@ __packages["syscall"] = (function()
 			err = _tmp__1;
 			__s = -1; return [data, err];
 		end
-		_r = m.mmap(0, ((length >>> 0)), prot, flags, fd, offset); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = m.mmap(0, ((length >>> 0)), prot, flags, fd, offset); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		addr = _tuple[0];
 		errno = _tuple[1];
@@ -4476,12 +4476,12 @@ __packages["syscall"] = (function()
 		data = _tmp__4;
 		err = _tmp__5;
 		__s = -1; return [data, err];
-		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if ( not __curGoroutine.asleep) then return  [data, err]; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= mmapper.ptr.prototype.Mmap end; end __f._key = _key; __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.addr = addr; __f.b = b; __f.data = data; __f.err = err; __f.errno = errno; __f.fd = fd; __f.flags = flags; __f.length = length; __f.m = m; __f.offset = offset; __f.p = p; __f.prot = prot; __f.sl = sl; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  [data, err]; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= mmapper.ptr.prototype.Mmap end; end __f._key = _key; __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.addr = addr; __f.b = b; __f.data = data; __f.err = err; __f.errno = errno; __f.fd = fd; __f.flags = flags; __#f = length; __f.m = m; __f.offset = offset; __f.p = p; __f.prot = prot; __f.sl = sl; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
 	end;
 	mmapper.prototype.Mmap = function(s) return this.__val.Mmap(fd, offset, length, prot, flags); end;
 	mmapper.ptr.prototype.Munmap = function(a)
 		local _entry, _r, b, data, err, errno, m, p, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _r = __f._r; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; m = __f.m; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _r = __f._r; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; m = __f.m; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		err = __ifaceNil;
 		m = this;
 		if ((data.__length == 0)  or   not ((data.__length == data.__capacity))) {
@@ -4496,7 +4496,7 @@ __packages["syscall"] = (function()
 			err = new Errno(22);
 			__s = -1; return err;
 		end
-		_r = m.munmap(((__sliceToArray(b))), ((b.__length >>> 0))); /* */ __s = 2; case 2: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = m.munmap(((__sliceToArray(b))), ((b.__length >>> 0))); /* */ __s = 2; case 2: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		errno = _r;
 		if ( not (__interfaceIsEqual(errno, __ifaceNil))) {
 			err = errno;
@@ -4505,14 +4505,14 @@ __packages["syscall"] = (function()
 		delete m.active[ptrType__2.keyFor(p)];
 		err = __ifaceNil;
 		__s = -1; return err;
-		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if ( not __curGoroutine.asleep) then return  err; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= mmapper.ptr.prototype.Munmap end; end __f._entry = _entry; __f._r = _r; __f.b = b; __f.data = data; __f.err = err; __f.errno = errno; __f.m = m; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  err; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= mmapper.ptr.prototype.Munmap end; end __f._entry = _entry; __f._r = _r; __f.b = b; __f.data = data; __f.err = err; __f.errno = errno; __f.m = m; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
 	end;
 	mmapper.prototype.Munmap = function(a) return this.__val.Munmap(data); end;
 	Errno.prototype.Error = function()
 		local e, s;
 		e = this.__val;
 		if (0 <= ((e >> 0))  and  ((e >> 0)) < 106) {
-			s = ((e < 0  or  e >= errors__1.length) ? (__throwRuntimeError("index out of range"), nil) : errors__1[e]);
+			s = ((e < 0  or  e >= errors__#1) ? (__throwRuntimeError("index out of range"), nil) : errors__1[e]);
 			if ( not (s == "")) {
 				return s;
 			end
@@ -4611,7 +4611,7 @@ __packages["syscall"] = (function()
 		local _r, _tuple, err, fd, flags, n, p, ptr, to, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; fd = __f.fd; flags = __f.flags; n = __f.n; p = __f.p; ptr = __f.ptr; to = __f.to; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		err = __ifaceNil;
-		_r = to.sockaddr(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = to.sockaddr(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		ptr = _tuple[0];
 		n = _tuple[1];
@@ -5087,7 +5087,7 @@ __packages["github.com/gopherjs/gopherjs/nosync"] = (function()
 	local __pkg = {}, __init, Once, funcType__1, ptrType__4;
 	Once = __pkg.Once = __newType(0, __kindStruct, "nosync.Once", true, "github.com/gopherjs/gopherjs/nosync", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.doing = false;
 			this.done = false;
 			return;
@@ -5099,7 +5099,7 @@ __packages["github.com/gopherjs/gopherjs/nosync"] = (function()
 	ptrType__4 = __ptrType(Once);
 	Once.ptr.prototype.Do = function(f)
 		local f, o, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; f = __f.f; o = __f.o; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; f = __f.f; o = __f.o; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		o = [o];
 		o[0] = this;
 		if (o[0].done) {
@@ -5137,7 +5137,7 @@ __packages["time"] = (function()
 	syscall = __packages["syscall"];
 	ParseError = __pkg.ParseError = __newType(0, __kindStruct, "time.ParseError", true, "time", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Layout = "";
 			this.Value = "";
 			this.LayoutElem = "";
@@ -5153,7 +5153,7 @@ __packages["time"] = (function()
 	end);
 	Time = __pkg.Time = __newType(0, __kindStruct, "time.Time", true, "time", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.wall = new __Uint64(0, 0);
 			this.ext = new __Int64(0, 0);
 			this.loc = ptrType__2.nil;
@@ -5168,7 +5168,7 @@ __packages["time"] = (function()
 	Duration = __pkg.Duration = __newType(8, __kindInt64, "time.Duration", true, "time", true, null);
 	Location = __pkg.Location = __newType(0, __kindStruct, "time.Location", true, "time", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = "";
 			this.zone = sliceType.nil;
 			this.tx = sliceType__1.nil;
@@ -5186,7 +5186,7 @@ __packages["time"] = (function()
 	end);
 	zone = __pkg.zone = __newType(0, __kindStruct, "time.zone", true, "time", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = "";
 			this.offset = 0;
 			this.isDST = false;
@@ -5198,7 +5198,7 @@ __packages["time"] = (function()
 	end);
 	zoneTrans = __pkg.zoneTrans = __newType(0, __kindStruct, "time.zoneTrans", true, "time", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.when = new __Int64(0, 0);
 			this.index = 0;
 			this.isstd = false;
@@ -5244,7 +5244,7 @@ __packages["time"] = (function()
 	end;
 	startsWithLowerCase = function(r)
 		local c, str;
-		if (str.length == 0) {
+		if (#str == 0) {
 			return false;
 		end
 		c = str.charCodeAt(0);
@@ -5257,12 +5257,12 @@ __packages["time"] = (function()
 		suffix = "";
 		i = 0;
 		while (true) {
-			if ( not (i < layout.length)) { break; end
+			if ( not (i < #layout)) { break; end
 			c = ((layout.charCodeAt(i) >> 0));
 			_1 = c;
 			if (_1 == (74)) {
-				if (layout.length >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "Jan") {
-					if (layout.length >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "January") {
+				if (#layout >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "Jan") {
+					if (#layout >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "January") {
 						_tmp = __substring(layout, 0, i);
 						_tmp__1 = 257;
 						_tmp__2 = __substring(layout, (i + 7 >> 0));
@@ -5282,9 +5282,9 @@ __packages["time"] = (function()
 					end
 				end
 			end else if (_1 == (77)) {
-				if (layout.length >= (i + 3 >> 0)) {
+				if (#layout >= (i + 3 >> 0)) {
 					if (__substring(layout, i, (i + 3 >> 0)) == "Mon") {
-						if (layout.length >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "Monday") {
+						if (#layout >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "Monday") {
 							_tmp__6 = __substring(layout, 0, i);
 							_tmp__7 = 261;
 							_tmp__8 = __substring(layout, (i + 6 >> 0));
@@ -5314,9 +5314,9 @@ __packages["time"] = (function()
 					end
 				end
 			end else if (_1 == (48)) {
-				if (layout.length >= (i + 2 >> 0)  and  49 <= layout.charCodeAt((i + 1 >> 0))  and  layout.charCodeAt((i + 1 >> 0)) <= 54) {
+				if (#layout >= (i + 2 >> 0)  and  49 <= layout.charCodeAt((i + 1 >> 0))  and  layout.charCodeAt((i + 1 >> 0)) <= 54) {
 					_tmp__15 = __substring(layout, 0, i);
-					_tmp__16 = (x = layout.charCodeAt((i + 1 >> 0)) - 49 << 24 >>> 24, ((x < 0  or  x >= std0x.length) ? (__throwRuntimeError("index out of range"), nil) : std0x[x]));
+					_tmp__16 = (x = layout.charCodeAt((i + 1 >> 0)) - 49 << 24 >>> 24, ((x < 0  or  x >= #std0x) ? (__throwRuntimeError("index out of range"), nil) : std0x[x]));
 					_tmp__17 = __substring(layout, (i + 2 >> 0));
 					prefix = _tmp__15;
 					std = _tmp__16;
@@ -5324,7 +5324,7 @@ __packages["time"] = (function()
 					return [prefix, std, suffix];
 				end
 			end else if (_1 == (49)) {
-				if (layout.length >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 53)) {
+				if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 53)) {
 					_tmp__18 = __substring(layout, 0, i);
 					_tmp__19 = 522;
 					_tmp__20 = __substring(layout, (i + 2 >> 0));
@@ -5341,7 +5341,7 @@ __packages["time"] = (function()
 				suffix = _tmp__23;
 				return [prefix, std, suffix];
 			end else if (_1 == (50)) {
-				if (layout.length >= (i + 4 >> 0)  and  __substring(layout, i, (i + 4 >> 0)) == "2006") {
+				if (#layout >= (i + 4 >> 0)  and  __substring(layout, i, (i + 4 >> 0)) == "2006") {
 					_tmp__24 = __substring(layout, 0, i);
 					_tmp__25 = 273;
 					_tmp__26 = __substring(layout, (i + 4 >> 0));
@@ -5358,8 +5358,8 @@ __packages["time"] = (function()
 				suffix = _tmp__29;
 				return [prefix, std, suffix];
 			end else if (_1 == (95)) {
-				if (layout.length >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 50)) {
-					if (layout.length >= (i + 5 >> 0)  and  __substring(layout, (i + 1 >> 0), (i + 5 >> 0)) == "2006") {
+				if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 50)) {
+					if (#layout >= (i + 5 >> 0)  and  __substring(layout, (i + 1 >> 0), (i + 5 >> 0)) == "2006") {
 						_tmp__30 = __substring(layout, 0, (i + 1 >> 0));
 						_tmp__31 = 273;
 						_tmp__32 = __substring(layout, (i + 5 >> 0));
@@ -5401,7 +5401,7 @@ __packages["time"] = (function()
 				suffix = _tmp__44;
 				return [prefix, std, suffix];
 			end else if (_1 == (80)) {
-				if (layout.length >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 77)) {
+				if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 77)) {
 					_tmp__45 = __substring(layout, 0, i);
 					_tmp__46 = 531;
 					_tmp__47 = __substring(layout, (i + 2 >> 0));
@@ -5411,7 +5411,7 @@ __packages["time"] = (function()
 					return [prefix, std, suffix];
 				end
 			end else if (_1 == (112)) {
-				if (layout.length >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 109)) {
+				if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 109)) {
 					_tmp__48 = __substring(layout, 0, i);
 					_tmp__49 = 532;
 					_tmp__50 = __substring(layout, (i + 2 >> 0));
@@ -5421,7 +5421,7 @@ __packages["time"] = (function()
 					return [prefix, std, suffix];
 				end
 			end else if (_1 == (45)) {
-				if (layout.length >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "-070000") {
+				if (#layout >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "-070000") {
 					_tmp__51 = __substring(layout, 0, i);
 					_tmp__52 = 28;
 					_tmp__53 = __substring(layout, (i + 7 >> 0));
@@ -5430,7 +5430,7 @@ __packages["time"] = (function()
 					suffix = _tmp__53;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "-07:00:00") {
+				if (#layout >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "-07:00:00") {
 					_tmp__54 = __substring(layout, 0, i);
 					_tmp__55 = 31;
 					_tmp__56 = __substring(layout, (i + 9 >> 0));
@@ -5439,7 +5439,7 @@ __packages["time"] = (function()
 					suffix = _tmp__56;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "-0700") {
+				if (#layout >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "-0700") {
 					_tmp__57 = __substring(layout, 0, i);
 					_tmp__58 = 27;
 					_tmp__59 = __substring(layout, (i + 5 >> 0));
@@ -5448,7 +5448,7 @@ __packages["time"] = (function()
 					suffix = _tmp__59;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "-07:00") {
+				if (#layout >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "-07:00") {
 					_tmp__60 = __substring(layout, 0, i);
 					_tmp__61 = 30;
 					_tmp__62 = __substring(layout, (i + 6 >> 0));
@@ -5457,7 +5457,7 @@ __packages["time"] = (function()
 					suffix = _tmp__62;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "-07") {
+				if (#layout >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "-07") {
 					_tmp__63 = __substring(layout, 0, i);
 					_tmp__64 = 29;
 					_tmp__65 = __substring(layout, (i + 3 >> 0));
@@ -5467,7 +5467,7 @@ __packages["time"] = (function()
 					return [prefix, std, suffix];
 				end
 			end else if (_1 == (90)) {
-				if (layout.length >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "Z070000") {
+				if (#layout >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "Z070000") {
 					_tmp__66 = __substring(layout, 0, i);
 					_tmp__67 = 23;
 					_tmp__68 = __substring(layout, (i + 7 >> 0));
@@ -5476,7 +5476,7 @@ __packages["time"] = (function()
 					suffix = _tmp__68;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "Z07:00:00") {
+				if (#layout >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "Z07:00:00") {
 					_tmp__69 = __substring(layout, 0, i);
 					_tmp__70 = 26;
 					_tmp__71 = __substring(layout, (i + 9 >> 0));
@@ -5485,7 +5485,7 @@ __packages["time"] = (function()
 					suffix = _tmp__71;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "Z0700") {
+				if (#layout >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "Z0700") {
 					_tmp__72 = __substring(layout, 0, i);
 					_tmp__73 = 22;
 					_tmp__74 = __substring(layout, (i + 5 >> 0));
@@ -5494,7 +5494,7 @@ __packages["time"] = (function()
 					suffix = _tmp__74;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "Z07:00") {
+				if (#layout >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "Z07:00") {
 					_tmp__75 = __substring(layout, 0, i);
 					_tmp__76 = 25;
 					_tmp__77 = __substring(layout, (i + 6 >> 0));
@@ -5503,7 +5503,7 @@ __packages["time"] = (function()
 					suffix = _tmp__77;
 					return [prefix, std, suffix];
 				end
-				if (layout.length >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "Z07") {
+				if (#layout >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "Z07") {
 					_tmp__78 = __substring(layout, 0, i);
 					_tmp__79 = 24;
 					_tmp__80 = __substring(layout, (i + 3 >> 0));
@@ -5513,11 +5513,11 @@ __packages["time"] = (function()
 					return [prefix, std, suffix];
 				end
 			end else if (_1 == (46)) {
-				if ((i + 1 >> 0) < layout.length  and  ((layout.charCodeAt((i + 1 >> 0)) == 48)  or  (layout.charCodeAt((i + 1 >> 0)) == 57))) {
+				if ((i + 1 >> 0) < #layout  and  ((layout.charCodeAt((i + 1 >> 0)) == 48)  or  (layout.charCodeAt((i + 1 >> 0)) == 57))) {
 					ch = layout.charCodeAt((i + 1 >> 0));
 					j = i + 1 >> 0;
 					while (true) {
-						if ( not (j < layout.length  and  (layout.charCodeAt(j) == ch))) { break; end
+						if ( not (j < #layout  and  (layout.charCodeAt(j) == ch))) { break; end
 						j = j + (1) >> 0;
 					end
 					if ( not isDigit(layout, j)) {
@@ -5550,7 +5550,7 @@ __packages["time"] = (function()
 		local c1, c2, i, s1, s2;
 		i = 0;
 		while (true) {
-			if ( not (i < s1.length)) { break; end
+			if ( not (i < #s1)) { break; end
 			c1 = s1.charCodeAt(i);
 			c2 = s2.charCodeAt(i);
 			if ( not ((c1 == c2))) {
@@ -5572,8 +5572,8 @@ __packages["time"] = (function()
 			if ( not (_i < _ref.__length)) { break; end
 			i = _i;
 			v = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
-			if (val.length >= v.length  and  match(__substring(val, 0, v.length), v)) {
-				return [i, __substring(val, v.length), __ifaceNil];
+			if (#val >= #v  and  match(__substring(val, 0, #v), v)) {
+				return [i, __substring(val, #v), __ifaceNil];
 			end
 			_i++;
 		end
@@ -5592,11 +5592,11 @@ __packages["time"] = (function()
 			if ( not (u >= 10)) { break; end
 			i = i - (1) >> 0;
 			q = (_q = u / 10, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
-			((i < 0  or  i >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = ((((48 + u >>> 0) - (q * 10 >>> 0) >>> 0) << 24 >>> 24)));
+			((i < 0  or  i >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = ((((48 + u >>> 0) - (q * 10 >>> 0) >>> 0) << 24 >>> 24)));
 			u = q;
 		end
 		i = i - (1) >> 0;
-		((i < 0  or  i >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = (((48 + u >>> 0) << 24 >>> 24)));
+		((i < 0  or  i >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[i] = (((48 + u >>> 0) << 24 >>> 24)));
 		w = 20 - i >> 0;
 		while (true) {
 			if ( not (w < width)) { break; end
@@ -5643,7 +5643,7 @@ __packages["time"] = (function()
 		while (true) {
 			if ( not (start > 0)) { break; end
 			start = start - (1) >> 0;
-			((start < 0  or  start >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[start] = ((((_r = u % 10, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) + 48 >>> 0) << 24 >>> 24)));
+			((start < 0  or  start >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[start] = ((((_r = u % 10, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) + 48 >>> 0) << 24 >>> 24)));
 			u = (_q = u / (10), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 		end
 		if (n > 9) {
@@ -5651,7 +5651,7 @@ __packages["time"] = (function()
 		end
 		if (trim) {
 			while (true) {
-				if ( not (n > 0  and  ((x = n - 1 >> 0, ((x < 0  or  x >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[x])) == 48))) { break; end
+				if ( not (n > 0  and  ((x = n - 1 >> 0, ((x < 0  or  x >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[x])) == 48))) { break; end
 				n = n - (1) >> 0;
 			end
 			if (n == 0) {
@@ -5665,7 +5665,7 @@ __packages["time"] = (function()
 		local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, buf, m0, m1, m2, s, sign, t, wid, x, x__1, x__2, x__3, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; buf = __f.buf; m0 = __f.m0; m1 = __f.m1; m2 = __f.m2; s = __f.s; sign = __f.sign; t = __f.t; wid = __f.wid; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).Format("2006-01-02 15:04:05.999999999 -0700 MST"); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).Format("2006-01-02 15:04:05.999999999 -0700 MST"); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		s = _r;
 		if ( not ((x = (x__1 = t.wall, new __Uint64(x__1.__high & 2147483648, (x__1.__low & 0) >>> 0)), (x.__high == 0  and  x.__low == 0)))) {
 			m2 = ((x__2 = t.ext, new __Uint64(x__2.__high, x__2.__low)));
@@ -5704,14 +5704,14 @@ __packages["time"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; b = __f.b; buf = __f.buf; layout = __f.layout; max = __f.max; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
 		b = sliceType__3.nil;
-		max = layout.length + 10 >> 0;
+		max = #layout + 10 >> 0;
 		if (max < 64) {
 			buf = arrayType__2.zero();
 			b = __subslice(new sliceType__3(buf), 0, 0);
 		end else {
 			b = __makeSlice(sliceType__3, 0, max);
 		end
-		_r = __clone(t, Time).AppendFormat(b, layout); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).AppendFormat(b, layout); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		b = _r;
 		__s = -1; return (__bytesToString(b));
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Format end; end __f._r = _r; __f.b = b; __f.buf = buf; __f.layout = layout; __f.max = max; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -5721,7 +5721,7 @@ __packages["time"] = (function()
 		local _1, _q, _q__1, _q__2, _q__3, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _tuple, _tuple__1, _tuple__2, _tuple__3, abs, absoffset, b, day, hour, hr, hr__1, layout, m, min, month, name, offset, prefix, s, sec, std, suffix, t, y, year, zone__1, zone__2, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _q = __f._q; _q__1 = __f._q__1; _q__2 = __f._q__2; _q__3 = __f._q__3; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; abs = __f.abs; absoffset = __f.absoffset; b = __f.b; day = __f.day; hour = __f.hour; hr = __f.hr; hr__1 = __f.hr__1; layout = __f.layout; m = __f.m; min = __f.min; month = __f.month; name = __f.name; offset = __f.offset; prefix = __f.prefix; s = __f.s; sec = __f.sec; std = __f.std; suffix = __f.suffix; t = __f.t; y = __f.y; year = __f.year; zone__1 = __f.zone__1; zone__2 = __f.zone__2; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).locabs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).locabs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		name = _tuple[0];
 		offset = _tuple[1];
@@ -5889,7 +5889,7 @@ __packages["time"] = (function()
 	ParseError.prototype.Error = function() return this.__val.Error(); end;
 	isDigit = function(i)
 		local c, i, s;
-		if (s.length <= i) {
+		if (#s <= i) {
 			return false;
 		end
 		c = s.charCodeAt(i);
@@ -5911,7 +5911,7 @@ __packages["time"] = (function()
 	cutspace = function(s)
 		local s;
 		while (true) {
-			if ( not (s.length > 0  and  (s.charCodeAt(0) == 32))) { break; end
+			if ( not (#s > 0  and  (s.charCodeAt(0) == 32))) { break; end
 			s = __substring(s, 1);
 		end
 		return s;
@@ -5919,16 +5919,16 @@ __packages["time"] = (function()
 	skip = function(x)
 		local prefix, value;
 		while (true) {
-			if ( not (prefix.length > 0)) { break; end
+			if ( not (#prefix > 0)) { break; end
 			if (prefix.charCodeAt(0) == 32) {
-				if (value.length > 0  and   not ((value.charCodeAt(0) == 32))) {
+				if (#value > 0  and   not ((value.charCodeAt(0) == 32))) {
 					return [value, errBad];
 				end
 				prefix = cutspace(prefix);
 				value = cutspace(value);
 				continue;
 			end
-			if ((value.length == 0)  or   not ((value.charCodeAt(0) == prefix.charCodeAt(0)))) {
+			if ((#value == 0)  or   not ((value.charCodeAt(0) == prefix.charCodeAt(0)))) {
 				return [value, errBad];
 			end
 			prefix = __substring(prefix, 1);
@@ -5939,7 +5939,7 @@ __packages["time"] = (function()
 	Parse = function(e)
 		local _r, layout, value, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; layout = __f.layout; value = __f.value; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = parse(layout, value, __pkg.UTC, __pkg.Local); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = parse(layout, value, __pkg.UTC, __pkg.Local); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Parse end; end __f._r = _r; __f.layout = layout; __f.value = value; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -5970,7 +5970,7 @@ __packages["time"] = (function()
 			prefix = _tuple[0];
 			std = _tuple[1];
 			suffix = _tuple[2];
-			stdstr = __substring(layout, prefix.length, (layout.length - suffix.length >> 0));
+			stdstr = __substring(layout, #prefix, (#layout - #suffix >> 0));
 			_tuple__1 = skip(value, prefix);
 			value = _tuple__1[0];
 			err = _tuple__1[1];
@@ -5978,7 +5978,7 @@ __packages["time"] = (function()
 				__s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, prefix, value, "")];
 			end
 			if (std == 0) {
-				if ( not ((value.length == 0))) {
+				if ( not ((#value == 0))) {
 					__s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, "", value, ": extra text: " + value)];
 				end
 				break;
@@ -5988,7 +5988,7 @@ __packages["time"] = (function()
 			switch (0) { default:
 				_1 = std & 65535;
 				if (_1 == (274)) {
-					if (value.length < 2) {
+					if (#value < 2) {
 						err = errBad;
 						break;
 					end
@@ -6005,7 +6005,7 @@ __packages["time"] = (function()
 						year = year + (2000) >> 0;
 					end
 				end else if (_1 == (273)) {
-					if (value.length < 4  or   not isDigit(value, 0)) {
+					if (#value < 4  or   not isDigit(value, 0)) {
 						err = errBad;
 						break;
 					end
@@ -6043,7 +6043,7 @@ __packages["time"] = (function()
 					value = _tuple__8[1];
 					err = _tuple__8[2];
 				end else if ((_1 == (263))  or  (_1 == (264))  or  (_1 == (265))) {
-					if ((std == 264)  and  value.length > 0  and  (value.charCodeAt(0) == 32)) {
+					if ((std == 264)  and  #value > 0  and  (value.charCodeAt(0) == 32)) {
 						value = __substring(value, 1);
 					end
 					_tuple__9 = getnum(value, std == 265);
@@ -6086,7 +6086,7 @@ __packages["time"] = (function()
 						rangeErrString = "second";
 						break;
 					end
-					if (value.length >= 2  and  (value.charCodeAt(0) == 46)  and  isDigit(value, 1)) {
+					if (#value >= 2  and  (value.charCodeAt(0) == 46)  and  isDigit(value, 1)) {
 						_tuple__14 = nextStdChunk(layout);
 						std = _tuple__14[1];
 						std = std & (65535);
@@ -6095,7 +6095,7 @@ __packages["time"] = (function()
 						end
 						n = 2;
 						while (true) {
-							if ( not (n < value.length  and  isDigit(value, n))) { break; end
+							if ( not (n < #value  and  isDigit(value, n))) { break; end
 							n = n + (1) >> 0;
 						end
 						_tuple__15 = parseNanoseconds(value, n);
@@ -6105,7 +6105,7 @@ __packages["time"] = (function()
 						value = __substring(value, n);
 					end
 				end else if (_1 == (531)) {
-					if (value.length < 2) {
+					if (#value < 2) {
 						err = errBad;
 						break;
 					end
@@ -6122,7 +6122,7 @@ __packages["time"] = (function()
 						err = errBad;
 					end
 				end else if (_1 == (532)) {
-					if (value.length < 2) {
+					if (#value < 2) {
 						err = errBad;
 						break;
 					end
@@ -6139,7 +6139,7 @@ __packages["time"] = (function()
 						err = errBad;
 					end
 				end else if ((_1 == (22))  or  (_1 == (25))  or  (_1 == (23))  or  (_1 == (24))  or  (_1 == (26))  or  (_1 == (27))  or  (_1 == (29))  or  (_1 == (30))  or  (_1 == (28))  or  (_1 == (31))) {
-					if (((std == 22)  or  (std == 24)  or  (std == 25))  and  value.length >= 1  and  (value.charCodeAt(0) == 90)) {
+					if (((std == 22)  or  (std == 24)  or  (std == 25))  and  #value >= 1  and  (value.charCodeAt(0) == 90)) {
 						value = __substring(value, 1);
 						z = __pkg.UTC;
 						break;
@@ -6153,7 +6153,7 @@ __packages["time"] = (function()
 					min__1 = _tmp__12;
 					seconds = _tmp__13;
 					if ((std == 25)  or  (std == 30)) {
-						if (value.length < 6) {
+						if (#value < 6) {
 							err = errBad;
 							break;
 						end
@@ -6172,7 +6172,7 @@ __packages["time"] = (function()
 						seconds = _tmp__17;
 						value = _tmp__18;
 					end else if ((std == 29)  or  (std == 24)) {
-						if (value.length < 3) {
+						if (#value < 3) {
 							err = errBad;
 							break;
 						end
@@ -6187,7 +6187,7 @@ __packages["time"] = (function()
 						seconds = _tmp__22;
 						value = _tmp__23;
 					end else if ((std == 26)  or  (std == 31)) {
-						if (value.length < 9) {
+						if (#value < 9) {
 							err = errBad;
 							break;
 						end
@@ -6206,7 +6206,7 @@ __packages["time"] = (function()
 						seconds = _tmp__27;
 						value = _tmp__28;
 					end else if ((std == 23)  or  (std == 28)) {
-						if (value.length < 7) {
+						if (#value < 7) {
 							err = errBad;
 							break;
 						end
@@ -6221,7 +6221,7 @@ __packages["time"] = (function()
 						seconds = _tmp__32;
 						value = _tmp__33;
 					end else {
-						if (value.length < 5) {
+						if (#value < 5) {
 							err = errBad;
 							break;
 						end
@@ -6264,7 +6264,7 @@ __packages["time"] = (function()
 						err = errBad;
 					end
 				end else if (_1 == (21)) {
-					if (value.length >= 3  and  __substring(value, 0, 3) == "UTC") {
+					if (#value >= 3  and  __substring(value, 0, 3) == "UTC") {
 						z = __pkg.UTC;
 						value = __substring(value, 3);
 						break;
@@ -6282,7 +6282,7 @@ __packages["time"] = (function()
 					value = _tmp__43;
 				end else if (_1 == (32)) {
 					ndigit = 1 + ((std >> 16 >> 0)) >> 0;
-					if (value.length < ndigit) {
+					if (#value < ndigit) {
 						err = errBad;
 						break;
 					end
@@ -6292,12 +6292,12 @@ __packages["time"] = (function()
 					err = _tuple__20[2];
 					value = __substring(value, ndigit);
 				end else if (_1 == (33)) {
-					if (value.length < 2  or   not ((value.charCodeAt(0) == 46))  or  value.charCodeAt(1) < 48  or  57 < value.charCodeAt(1)) {
+					if (#value < 2  or   not ((value.charCodeAt(0) == 46))  or  value.charCodeAt(1) < 48  or  57 < value.charCodeAt(1)) {
 						break;
 					end
 					i = 0;
 					while (true) {
-						if ( not (i < 9  and  (i + 1 >> 0) < value.length  and  48 <= value.charCodeAt((i + 1 >> 0))  and  value.charCodeAt((i + 1 >> 0)) <= 57)) { break; end
+						if ( not (i < 9  and  (i + 1 >> 0) < #value  and  48 <= value.charCodeAt((i + 1 >> 0))  and  value.charCodeAt((i + 1 >> 0)) <= 57)) { break; end
 						i = i + (1) >> 0;
 					end
 					_tuple__21 = parseNanoseconds(value, 1 + i >> 0);
@@ -6325,7 +6325,7 @@ __packages["time"] = (function()
 		/* */ if ( not (z == ptrType__2.nil)) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not (z == ptrType__2.nil)) { */ case 1:
-			_r = Date(year, ((month >> 0)), day, hour, min, sec, nsec, z); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = Date(year, ((month >> 0)), day, hour, min, sec, nsec, z); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			__s = -1; return [_r, __ifaceNil];
 		/* end */ case 2:
 		/* */ if ( not ((zoneOffset == -1))) { __s = 4; continue; end
@@ -6359,7 +6359,7 @@ __packages["time"] = (function()
 				t__1.setLoc(local);
 				__s = -1; return [t__1, __ifaceNil];
 			end
-			if (zoneName.length > 3  and  __substring(zoneName, 0, 3) == "GMT") {
+			if (#zoneName > 3  and  __substring(zoneName, 0, 3) == "GMT") {
 				_tuple__24 = atoi(__substring(zoneName, 3));
 				offset__1 = _tuple__24[0];
 				offset__1 = __imul(offset__1, (3600));
@@ -6375,14 +6375,14 @@ __packages["time"] = (function()
 		local _1, _tmp, _tmp__1, _tmp__10, _tmp__11, _tmp__12, _tmp__13, _tmp__14, _tmp__15, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tmp__8, _tmp__9, c, length, nUpper, ok, value;
 		length = 0;
 		ok = false;
-		if (value.length < 3) {
+		if (#value < 3) {
 			_tmp = 0;
 			_tmp__1 = false;
 			length = _tmp;
 			ok = _tmp__1;
 			return [length, ok];
 		end
-		if (value.length >= 4  and  (__substring(value, 0, 4) == "ChST"  or  __substring(value, 0, 4) == "MeST")) {
+		if (#value >= 4  and  (__substring(value, 0, 4) == "ChST"  or  __substring(value, 0, 4) == "MeST")) {
 			_tmp__2 = 4;
 			_tmp__3 = true;
 			length = _tmp__2;
@@ -6401,7 +6401,7 @@ __packages["time"] = (function()
 		nUpper = 0;
 		while (true) {
 			if ( not (nUpper < 6)) { break; end
-			if (nUpper >= value.length) {
+			if (nUpper >= #value) {
 				break;
 			end
 			c = value.charCodeAt(nUpper);
@@ -6449,7 +6449,7 @@ __packages["time"] = (function()
 	parseGMT = function(e)
 		local _tuple, err, rem, sign, value, x;
 		value = __substring(value, 3);
-		if (value.length == 0) {
+		if (#value == 0) {
 			return 3;
 		end
 		sign = value.charCodeAt(0);
@@ -6469,7 +6469,7 @@ __packages["time"] = (function()
 		if ((x.__high == 0  and  x.__low == 0)  or  (x.__high < -1  or  (x.__high == -1  and  x.__low < 4294967282))  or  (0 < x.__high  or  (0 == x.__high  and  12 < x.__low))) {
 			return 3;
 		end
-		return (3 + value.length >> 0) - rem.length >> 0;
+		return (3 + #value >> 0) - #rem >> 0;
 	end;
 	parseNanoseconds = function(s)
 		local _tuple, err, i, nbytes, ns, rangeErrString, scaleDigits, value;
@@ -6506,7 +6506,7 @@ __packages["time"] = (function()
 		err = __ifaceNil;
 		i = 0;
 		while (true) {
-			if ( not (i < s.length)) { break; end
+			if ( not (i < #s)) { break; end
 			c = s.charCodeAt(i);
 			if (c < 48  or  c > 57) {
 				break;
@@ -6628,7 +6628,7 @@ __packages["time"] = (function()
 		local buf, m, n, x;
 		m = this.__val;
 		if (1 <= m  and  m <= 12) {
-			return (x = m - 1 >> 0, ((x < 0  or  x >= months.length) ? (__throwRuntimeError("index out of range"), nil) : months[x]));
+			return (x = m - 1 >> 0, ((x < 0  or  x >= #months) ? (__throwRuntimeError("index out of range"), nil) : months[x]));
 		end
 		buf = __makeSlice(sliceType__3, 20);
 		n = fmtInt(buf, (new __Uint64(0, m)));
@@ -6638,7 +6638,7 @@ __packages["time"] = (function()
 	Weekday.prototype.String = function()
 		local d;
 		d = this.__val;
-		return ((d < 0  or  d >= days.length) ? (__throwRuntimeError("index out of range"), nil) : days[d]);
+		return ((d < 0  or  d >= #days) ? (__throwRuntimeError("index out of range"), nil) : days[d]);
 	end;
 	__ptrType(Weekday).prototype.String = function() return new Weekday(this.__get()).String(); end;
 	Time.ptr.prototype.IsZero = function()
@@ -6655,7 +6655,7 @@ __packages["time"] = (function()
 		/* */ if (l == ptrType__2.nil  or  l == localLoc) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (l == ptrType__2.nil  or  l == localLoc) { */ case 1:
-			_r = l.get(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = l.get(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			l = _r;
 		/* end */ case 2:
 		sec = t.unixSec();
@@ -6689,7 +6689,7 @@ __packages["time"] = (function()
 		/* */ if (l == ptrType__2.nil  or  l == localLoc) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (l == ptrType__2.nil  or  l == localLoc) { */ case 1:
-			_r = l.get(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = l.get(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			l = _r;
 		/* end */ case 2:
 		sec = t.unixSec();
@@ -6725,7 +6725,7 @@ __packages["time"] = (function()
 		month = 0;
 		day = 0;
 		t = this;
-		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		year = _tuple[0];
 		month = _tuple[1];
@@ -6738,7 +6738,7 @@ __packages["time"] = (function()
 		local _r, _tuple, t, year, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; year = __f.year; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).date(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		year = _tuple[0];
 		__s = -1; return year;
@@ -6749,7 +6749,7 @@ __packages["time"] = (function()
 		local _r, _tuple, month, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; month = __f.month; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		month = _tuple[1];
 		__s = -1; return month;
@@ -6760,7 +6760,7 @@ __packages["time"] = (function()
 		local _r, _tuple, day, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; day = __f.day; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		day = _tuple[2];
 		__s = -1; return day;
@@ -6771,7 +6771,7 @@ __packages["time"] = (function()
 		local _r, _r__1, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = absWeekday(_r); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		__s = -1; return _r__1;
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Weekday end; end __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -6788,7 +6788,7 @@ __packages["time"] = (function()
 		year = 0;
 		week = 0;
 		t = this;
-		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		year = _tuple[0];
 		month = _tuple[1];
@@ -6826,7 +6826,7 @@ __packages["time"] = (function()
 		min = 0;
 		sec = 0;
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = absClock(_r); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		_tuple = _r__1;
 		hour = _tuple[0];
@@ -6852,7 +6852,7 @@ __packages["time"] = (function()
 		local _q, _r, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return (_q = ((__div64(_r, new __Uint64(0, 86400), true).__low >> 0)) / 3600, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Hour end; end __f._q = _q; __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -6861,7 +6861,7 @@ __packages["time"] = (function()
 		local _q, _r, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return (_q = ((__div64(_r, new __Uint64(0, 3600), true).__low >> 0)) / 60, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Minute end; end __f._q = _q; __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -6870,7 +6870,7 @@ __packages["time"] = (function()
 		local _r, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return ((__div64(_r, new __Uint64(0, 60), true).__low >> 0));
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Second end; end __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -6885,7 +6885,7 @@ __packages["time"] = (function()
 		local _r, _tuple, t, yday, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; yday = __f.yday; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).date(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).date(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		yday = _tuple[3];
 		__s = -1; return yday + 1 >> 0;
@@ -6905,20 +6905,20 @@ __packages["time"] = (function()
 		if ((u.__high < 0  or  (u.__high == 0  and  u.__low < 1000000000))) {
 			prec = 0;
 			w = w - (1) >> 0;
-			((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 115);
+			((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 115);
 			w = w - (1) >> 0;
 			if ((u.__high == 0  and  u.__low == 0)) {
 				return "0s";
 			end else if ((u.__high < 0  or  (u.__high == 0  and  u.__low < 1000))) {
 				prec = 0;
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 110);
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 110);
 			end else if ((u.__high < 0  or  (u.__high == 0  and  u.__low < 1000000))) {
 				prec = 3;
 				w = w - (1) >> 0;
 				__copyString(__subslice(new sliceType__3(buf), w), "\xC2\xB5");
 			end else {
 				prec = 6;
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 109);
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 109);
 			end
 			_tuple = fmtFrac(__subslice(new sliceType__3(buf), 0, w), u, prec);
 			w = _tuple[0];
@@ -6926,7 +6926,7 @@ __packages["time"] = (function()
 			w = fmtInt(__subslice(new sliceType__3(buf), 0, w), u);
 		end else {
 			w = w - (1) >> 0;
-			((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 115);
+			((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 115);
 			_tuple__1 = fmtFrac(__subslice(new sliceType__3(buf), 0, w), u, 9);
 			w = _tuple__1[0];
 			u = _tuple__1[1];
@@ -6934,19 +6934,19 @@ __packages["time"] = (function()
 			u = __div64(u, (new __Uint64(0, 60)), false);
 			if ((u.__high > 0  or  (u.__high == 0  and  u.__low > 0))) {
 				w = w - (1) >> 0;
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 109);
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 109);
 				w = fmtInt(__subslice(new sliceType__3(buf), 0, w), __div64(u, new __Uint64(0, 60), true));
 				u = __div64(u, (new __Uint64(0, 60)), false);
 				if ((u.__high > 0  or  (u.__high == 0  and  u.__low > 0))) {
 					w = w - (1) >> 0;
-					((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 104);
+					((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 104);
 					w = fmtInt(__subslice(new sliceType__3(buf), 0, w), u);
 				end
 			end
 		end
 		if (neg) {
 			w = w - (1) >> 0;
-			((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
+			((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
 		end
 		return (__bytesToString(__subslice(new sliceType__3(buf), w)));
 	end;
@@ -7120,7 +7120,7 @@ __packages["time"] = (function()
 		local _r, _r__1, _r__2, _tuple, _tuple__1, day, days__1, hour, min, month, months__1, sec, t, year, years, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; day = __f.day; days__1 = __f.days__1; hour = __f.hour; min = __f.min; month = __f.month; months__1 = __f.months__1; sec = __f.sec; t = __f.t; year = __f.year; years = __f.years; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).Date(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).Date(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		year = _tuple[0];
 		month = _tuple[1];
@@ -7143,7 +7143,7 @@ __packages["time"] = (function()
 		day = 0;
 		yday = 0;
 		t = this;
-		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).abs(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = absDate(_r, full); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		_tuple = _r__1;
 		year = _tuple[0];
@@ -7191,13 +7191,13 @@ __packages["time"] = (function()
 			end
 		end
 		month = (((_q = day / 31, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero")) >> 0));
-		end = (((x__11 = month + 1 >> 0, ((x__11 < 0  or  x__11 >= daysBefore.length) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x__11])) >> 0));
+		end = (((x__11 = month + 1 >> 0, ((x__11 < 0  or  x__11 >= #daysBefore) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x__11])) >> 0));
 		begin = 0;
 		if (day >= end) {
 			month = month + (1) >> 0;
 			begin = end;
 		end else {
-			begin = ((((month < 0  or  month >= daysBefore.length) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[month]) >> 0));
+			begin = ((((month < 0  or  month >= #daysBefore) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[month]) >> 0));
 		end
 		month = month + (1) >> 0;
 		day = (day - begin >> 0) + 1 >> 0;
@@ -7208,7 +7208,7 @@ __packages["time"] = (function()
 		if ((m == 2)  and  isLeap(year)) {
 			return 29;
 		end
-		return (((((m < 0  or  m >= daysBefore.length) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[m]) - (x = m - 1 >> 0, ((x < 0  or  x >= daysBefore.length) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x])) >> 0) >> 0));
+		return (((((m < 0  or  m >= #daysBefore) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[m]) - (x = m - 1 >> 0, ((x < 0  or  x >= #daysBefore) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x])) >> 0) >> 0));
 	end;
 	unixTime = function(c)
 		local nsec, sec;
@@ -7254,7 +7254,7 @@ __packages["time"] = (function()
 		name = "";
 		offset = 0;
 		t = this;
-		_r = t.loc.lookup(t.unixSec()); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.loc.lookup(t.unixSec()); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		name = _tuple[0];
 		offset = _tuple[1];
@@ -7285,7 +7285,7 @@ __packages["time"] = (function()
 			offsetMin = -1;
 			__s = 3; continue;
 		/* end else { */ case 2:
-			_r = __clone(t, Time).Zone(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = __clone(t, Time).Zone(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			offset = _tuple[1];
 			if ( not (((_r__1 = offset % 60, _r__1 == _r__1 ? _r__1 : __throwRuntimeError("integer divide by zero")) == 0))) {
@@ -7333,7 +7333,7 @@ __packages["time"] = (function()
 			t.setLoc(utcLoc);
 			__s = 3; continue;
 		/* end else { */ case 2:
-			_r = __pkg.Local.lookup(t.unixSec()); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = __pkg.Local.lookup(t.unixSec()); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			localoff = _tuple[1];
 			if (offset == localoff) {
@@ -7350,7 +7350,7 @@ __packages["time"] = (function()
 		local _r, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).MarshalBinary(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).MarshalBinary(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.GobEncode end; end __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -7359,7 +7359,7 @@ __packages["time"] = (function()
 		local _r, data__1, t, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; data__1 = __f.data__1; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = t.UnmarshalBinary(data__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.UnmarshalBinary(data__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.GobDecode end; end __f._r = _r; __f.data__1 = data__1; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -7368,7 +7368,7 @@ __packages["time"] = (function()
 		local _r, _r__1, b, t, y, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).Year(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).Year(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		y = _r;
 		if (y < 0  or  y >= 10000) {
 			__s = -1; return [sliceType__3.nil, errors.New("Time.MarshalJSON: year outside of range [0,9999]")];
@@ -7390,7 +7390,7 @@ __packages["time"] = (function()
 			__s = -1; return __ifaceNil;
 		end
 		err = __ifaceNil;
-		_r = Parse("\"2006-01-02T15:04:05Z07:00\"", (__bytesToString(data__1))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = Parse("\"2006-01-02T15:04:05Z07:00\"", (__bytesToString(data__1))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		Time.copy(t, _tuple[0]);
 		err = _tuple[1];
@@ -7402,7 +7402,7 @@ __packages["time"] = (function()
 		local _r, _r__1, b, t, y, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = __clone(t, Time).Year(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(t, Time).Year(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		y = _r;
 		if (y < 0  or  y >= 10000) {
 			__s = -1; return [sliceType__3.nil, errors.New("Time.MarshalText: year outside of range [0,9999]")];
@@ -7418,7 +7418,7 @@ __packages["time"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; data__1 = __f.data__1; err = __f.err; t = __f.t; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
 		err = __ifaceNil;
-		_r = Parse("2006-01-02T15:04:05Z07:00", (__bytesToString(data__1))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = Parse("2006-01-02T15:04:05Z07:00", (__bytesToString(data__1))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		Time.copy(t, _tuple[0]);
 		err = _tuple[1];
@@ -7499,7 +7499,7 @@ __packages["time"] = (function()
 		d = (x__6 = __mul64(new __Uint64(0, 1461), n), new __Uint64(d.__high + x__6.__high, d.__low + x__6.__low));
 		n = y;
 		d = (x__7 = __mul64(new __Uint64(0, 365), n), new __Uint64(d.__high + x__7.__high, d.__low + x__7.__low));
-		d = (x__8 = (new __Uint64(0, (x__9 = month - 1 >> 0, ((x__9 < 0  or  x__9 >= daysBefore.length) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x__9])))), new __Uint64(d.__high + x__8.__high, d.__low + x__8.__low));
+		d = (x__8 = (new __Uint64(0, (x__9 = month - 1 >> 0, ((x__9 < 0  or  x__9 >= #daysBefore) ? (__throwRuntimeError("index out of range"), nil) : daysBefore[x__9])))), new __Uint64(d.__high + x__8.__high, d.__low + x__8.__low));
 		if (isLeap(year)  and  month >= 3) {
 			d = (x__10 = new __Uint64(0, 1), new __Uint64(d.__high + x__10.__high, d.__low + x__10.__low));
 		end
@@ -7507,7 +7507,7 @@ __packages["time"] = (function()
 		abs = __mul64(d, new __Uint64(0, 86400));
 		abs = (x__12 = (new __Uint64(0, (((__imul(hour, 3600)) + (__imul(min, 60)) >> 0) + sec >> 0))), new __Uint64(abs.__high + x__12.__high, abs.__low + x__12.__low));
 		unix = (x__13 = (new __Int64(abs.__high, abs.__low)), new __Int64(x__13.__high + -2147483647, x__13.__low + 3844486912));
-		_r = loc.lookup(unix); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = loc.lookup(unix); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple__5 = _r;
 		offset = _tuple__5[1];
 		start = _tuple__5[3];
@@ -7662,7 +7662,7 @@ __packages["time"] = (function()
 		local _r, l, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; l = __f.l; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		l = this;
-		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r.name;
 		/* */ end return; end if __f == nil then  __f = { __blk= Location.ptr.prototype.String end; end __f._r = _r; __f.l = l; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -7683,7 +7683,7 @@ __packages["time"] = (function()
 		start = new __Int64(0, 0);
 		end = new __Int64(0, 0);
 		l = this;
-		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		l = _r;
 		if (l.zone.__length == 0) {
 			name = "UTC";
@@ -7791,7 +7791,7 @@ __packages["time"] = (function()
 		isDST = false;
 		ok = false;
 		l = this;
-		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = l.get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		l = _r;
 		_ref = l.zone;
 		_i = 0;
@@ -7893,7 +7893,7 @@ __packages["internal/poll"] = (function()
 	time = __packages["time"];
 	pollDesc = __pkg.pollDesc = __newType(0, __kindStruct, "poll.pollDesc", true, "internal/poll", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.closing = false;
 			return;
 		end
@@ -7901,13 +7901,13 @@ __packages["internal/poll"] = (function()
 	end);
 	TimeoutError = __pkg.TimeoutError = __newType(0, __kindStruct, "poll.TimeoutError", true, "internal/poll", true, function()
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			return;
 		end
 	end);
 	fdMutex = __pkg.fdMutex = __newType(0, __kindStruct, "poll.fdMutex", true, "internal/poll", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.state = new __Uint64(0, 0);
 			this.rsema = 0;
 			this.wsema = 0;
@@ -7919,7 +7919,7 @@ __packages["internal/poll"] = (function()
 	end);
 	FD = __pkg.FD = __newType(0, __kindStruct, "poll.FD", true, "internal/poll", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.fdmu = new fdMutex.ptr(new __Uint64(0, 0), 0, 0);
 			this.Sysfd = 0;
 			this.pd = new pollDesc.ptr(false);
@@ -8242,7 +8242,7 @@ __packages["internal/poll"] = (function()
 		/* */ if (fd.fdmu.decref()) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (fd.fdmu.decref()) { */ case 1:
-			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			__s = -1; return _r;
 		/* end */ case 2:
 		__s = -1; return __ifaceNil;
@@ -8265,7 +8265,7 @@ __packages["internal/poll"] = (function()
 		/* */ if (fd.fdmu.rwunlock(true)) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (fd.fdmu.rwunlock(true)) { */ case 1:
-			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_r;
 		/* end */ case 2:
 		__s = -1; return;
@@ -8288,7 +8288,7 @@ __packages["internal/poll"] = (function()
 		/* */ if (fd.fdmu.rwunlock(false)) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (fd.fdmu.rwunlock(false)) { */ case 1:
-			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = fd.destroy(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_r;
 		/* end */ case 2:
 		__s = -1; return;
@@ -8306,7 +8306,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.eofError = function(r) return this.__val.eofError(n, err); end;
 	FD.ptr.prototype.Fchmod = function(e)
 		local err, fd, mode, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; mode = __f.mode; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; mode = __f.mode; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8319,7 +8319,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Fchmod = function(e) return this.__val.Fchmod(mode); end;
 	FD.ptr.prototype.Fchown = function(d)
 		local err, fd, gid, uid, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; gid = __f.gid; uid = __f.uid; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; gid = __f.gid; uid = __f.uid; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8332,7 +8332,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Fchown = function(d) return this.__val.Fchown(uid, gid); end;
 	FD.ptr.prototype.Ftruncate = function(e)
 		local err, fd, size, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; size = __f.size; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; size = __f.size; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8345,7 +8345,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Ftruncate = function(e) return this.__val.Ftruncate(size); end;
 	FD.ptr.prototype.Fsync = function()
 		local err, fd, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8373,7 +8373,7 @@ __packages["internal/poll"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; fd = __f.fd; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		fd = this;
 		fd.pd.close();
-		_r = __pkg.CloseFunc(fd.Sysfd); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __pkg.CloseFunc(fd.Sysfd); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		err = _r;
 		fd.Sysfd = -1;
 		__s = -1; return err;
@@ -8388,14 +8388,14 @@ __packages["internal/poll"] = (function()
 			__s = -1; return errClosing(fd.isFile);
 		end
 		fd.pd.evict();
-		_r = fd.decref(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = fd.decref(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.Close end; end __f._r = _r; __f.fd = fd; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	FD.prototype.Close = function() return this.__val.Close(); end;
 	FD.ptr.prototype.Shutdown = function(w)
 		local err, fd, how, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; how = __f.how; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; how = __f.how; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8408,7 +8408,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Shutdown = function(w) return this.__val.Shutdown(how); end;
 	FD.ptr.prototype.Read = function(p)
 		local _tuple, err, err__1, err__2, fd, n, p, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.readLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8462,7 +8462,7 @@ __packages["internal/poll"] = (function()
 		if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
 			n = 0;
 		end
-		_r = fd.decref(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = fd.decref(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r;
 		err__1 = fd.eofError(n, err__1);
 		__s = -1; return [n, err__1];
@@ -8471,7 +8471,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Pread = function(f) return this.__val.Pread(p, off); end;
 	FD.ptr.prototype.ReadFrom = function(p)
 		local _tuple, err, err__1, err__2, fd, n, p, sa, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.readLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8505,7 +8505,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.ReadFrom = function(p) return this.__val.ReadFrom(p); end;
 	FD.ptr.prototype.ReadMsg = function(b)
 		local _tuple, err, err__1, err__2, fd, flags, n, oob, oobn, p, sa, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; flags = __f.flags; n = __f.n; oob = __f.oob; oobn = __f.oobn; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; flags = __f.flags; n = __f.n; oob = __f.oob; oobn = __f.oobn; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.readLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8540,7 +8540,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.ReadMsg = function(b) return this.__val.ReadMsg(p, oob); end;
 	FD.ptr.prototype.Write = function(p)
 		local _tuple, err, err__1, err__2, fd, max, n, nn, p, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.writeLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8585,7 +8585,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Write = function(p) return this.__val.Write(p); end;
 	FD.ptr.prototype.Pwrite = function(f)
 		local _tuple, err, err__1, fd, max, n, nn, off, p, x, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; off = __f.off; p = __f.p; x = __f.x; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; off = __f.off; p = __f.p; x = __f.x; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8620,7 +8620,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Pwrite = function(f) return this.__val.Pwrite(p, off); end;
 	FD.ptr.prototype.WriteTo = function(a)
 		local _r, err, err__1, err__2, fd, p, sa, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.writeLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8632,7 +8632,7 @@ __packages["internal/poll"] = (function()
 			__s = -1; return [0, err__1];
 		end
 		/* while (true) { */ case 1:
-			_r = syscall.Sendto(fd.Sysfd, p, 0, sa); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = syscall.Sendto(fd.Sysfd, p, 0, sa); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			err__2 = _r;
 			if (__interfaceIsEqual(err__2, new syscall.Errno(35))  and  fd.pd.pollable()) {
 				err__2 = fd.pd.waitWrite(fd.isFile);
@@ -8651,7 +8651,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.WriteTo = function(a) return this.__val.WriteTo(p, sa); end;
 	FD.ptr.prototype.WriteMsg = function(a)
 		local _r, _tuple, err, err__1, err__2, fd, n, oob, p, sa, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; oob = __f.oob; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; oob = __f.oob; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.writeLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8663,7 +8663,7 @@ __packages["internal/poll"] = (function()
 			__s = -1; return [0, 0, err__1];
 		end
 		/* while (true) { */ case 1:
-			_r = syscall.SendmsgN(fd.Sysfd, p, oob, sa, 0); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = syscall.SendmsgN(fd.Sysfd, p, oob, sa, 0); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			n = _tuple[0];
 			err__2 = _tuple[1];
@@ -8684,7 +8684,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.WriteMsg = function(a) return this.__val.WriteMsg(p, oob, sa); end;
 	FD.ptr.prototype.Accept = function()
 		local _1, _r, _tuple, err, err__1, err__2, errcall, fd, rsa, s, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; errcall = __f.errcall; fd = __f.fd; rsa = __f.rsa; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; errcall = __f.errcall; fd = __f.fd; rsa = __f.rsa; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.readLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8696,7 +8696,7 @@ __packages["internal/poll"] = (function()
 			__s = -1; return [-1, __ifaceNil, "", err__1];
 		end
 		/* while (true) { */ case 1:
-			_r = accept(fd.Sysfd); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = accept(fd.Sysfd); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			s = _tuple[0];
 			rsa = _tuple[1];
@@ -8724,7 +8724,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Accept = function() return this.__val.Accept(); end;
 	FD.ptr.prototype.Seek = function(e)
 		local err, fd, offset, whence, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; offset = __f.offset; whence = __f.whence; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; offset = __f.offset; whence = __f.whence; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8737,7 +8737,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Seek = function(e) return this.__val.Seek(offset, whence); end;
 	FD.ptr.prototype.ReadDirent = function(f)
 		local _tuple, buf, err, err__1, fd, n, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; buf = __f.buf; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; buf = __f.buf; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8765,7 +8765,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.ReadDirent = function(f) return this.__val.ReadDirent(buf); end;
 	FD.ptr.prototype.Fchdir = function()
 		local err, fd, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8778,7 +8778,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.Fchdir = function() return this.__val.Fchdir(); end;
 	FD.ptr.prototype.Fstat = function(s)
 		local err, fd, s, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8797,7 +8797,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.WaitWrite = function() return this.__val.WaitWrite(); end;
 	FD.ptr.prototype.RawControl = function(f)
 		local err, f, fd, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8811,7 +8811,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.RawControl = function(f) return this.__val.RawControl(f); end;
 	FD.ptr.prototype.RawRead = function(f)
 		local _r, err, err__1, err__2, f, fd, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.readLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8823,7 +8823,7 @@ __packages["internal/poll"] = (function()
 			__s = -1; return err__1;
 		end
 		/* while (true) { */ case 1:
-			_r = f(((fd.Sysfd >>> 0))); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = f(((fd.Sysfd >>> 0))); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			/* */ if (_r) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if (_r) { */ case 3:
@@ -8840,7 +8840,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.RawRead = function(f) return this.__val.RawRead(f); end;
 	FD.ptr.prototype.RawWrite = function(f)
 		local _r, err, err__1, err__2, f, fd, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.writeLock();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8852,7 +8852,7 @@ __packages["internal/poll"] = (function()
 			__s = -1; return err__1;
 		end
 		/* while (true) { */ case 1:
-			_r = f(((fd.Sysfd >>> 0))); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = f(((fd.Sysfd >>> 0))); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			/* */ if (_r) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if (_r) { */ case 3:
@@ -8869,7 +8869,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.RawWrite = function(f) return this.__val.RawWrite(f); end;
 	FD.ptr.prototype.SetsockoptInt = function(g)
 		local arg, err, fd, level, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8882,7 +8882,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.SetsockoptInt = function(g) return this.__val.SetsockoptInt(level, name, arg); end;
 	FD.ptr.prototype.SetsockoptInet4Addr = function(g)
 		local arg, err, fd, level, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8895,7 +8895,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.SetsockoptInet4Addr = function(g) return this.__val.SetsockoptInet4Addr(level, name, arg); end;
 	FD.ptr.prototype.SetsockoptLinger = function(l)
 		local err, fd, l, level, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; l = __f.l; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; l = __f.l; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8908,7 +8908,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.SetsockoptLinger = function(l) return this.__val.SetsockoptLinger(level, name, l); end;
 	FD.ptr.prototype.SetsockoptByte = function(g)
 		local arg, err, fd, level, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8921,7 +8921,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.SetsockoptByte = function(g) return this.__val.SetsockoptByte(level, name, arg); end;
 	FD.ptr.prototype.SetsockoptIPMreq = function(q)
 		local err, fd, level, mreq, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8934,7 +8934,7 @@ __packages["internal/poll"] = (function()
 	FD.prototype.SetsockoptIPMreq = function(q) return this.__val.SetsockoptIPMreq(level, name, mreq); end;
 	FD.ptr.prototype.SetsockoptIPv6Mreq = function(q)
 		local err, fd, level, mreq, name, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		fd = this;
 		err = fd.incref();
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8948,7 +8948,7 @@ __packages["internal/poll"] = (function()
 	accept = function(s)
 		local _r, _r__1, _tuple, err, ns, s, sa, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; err = __f.err; ns = __f.ns; s = __f.s; sa = __f.sa; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = __pkg.AcceptFunc(s); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __pkg.AcceptFunc(s); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		ns = _tuple[0];
 		sa = _tuple[1];
@@ -8972,7 +8972,7 @@ __packages["internal/poll"] = (function()
 	end;
 	FD.ptr.prototype.Writev = function(v)
 		local _i, _ref, _tuple, chunk, e0, err, err__1, err__2, fd, iovecs, maxVec, n, v, wrote, x, x__1, x__2, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _ref = __f._ref; _tuple = __f._tuple; chunk = __f.chunk; e0 = __f.e0; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; iovecs = __f.iovecs; maxVec = __f.maxVec; n = __f.n; v = __f.v; wrote = __f.wrote; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _ref = __f._ref; _tuple = __f._tuple; chunk = __f.chunk; e0 = __f.e0; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; iovecs = __f.iovecs; maxVec = __f.maxVec; n = __f.n; v = __f.v; wrote = __f.wrote; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		iovecs = [iovecs];
 		fd = this;
 		err = fd.writeLock();
@@ -9089,7 +9089,7 @@ __packages["os"] = (function()
 	time = __packages["time"];
 	PathError = __pkg.PathError = __newType(0, __kindStruct, "os.PathError", true, "os", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Op = "";
 			this.Path = "";
 			this.Err = __ifaceNil;
@@ -9101,7 +9101,7 @@ __packages["os"] = (function()
 	end);
 	SyscallError = __pkg.SyscallError = __newType(0, __kindStruct, "os.SyscallError", true, "os", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Syscall = "";
 			this.Err = __ifaceNil;
 			return;
@@ -9111,7 +9111,7 @@ __packages["os"] = (function()
 	end);
 	LinkError = __pkg.LinkError = __newType(0, __kindStruct, "os.LinkError", true, "os", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Op = "";
 			this.Old = "";
 			this.New = "";
@@ -9125,7 +9125,7 @@ __packages["os"] = (function()
 	end);
 	file = __pkg.file = __newType(0, __kindStruct, "os.file", true, "os", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.pfd = new poll.FD.ptr(new poll.fdMutex.ptr(new __Uint64(0, 0), 0, 0), 0, new poll.pollDesc.ptr(false), ptrType__12.nil, false, false, false);
 			this.name = "";
 			this.dirinfo = ptrType__1.nil;
@@ -9139,7 +9139,7 @@ __packages["os"] = (function()
 	end);
 	dirInfo = __pkg.dirInfo = __newType(0, __kindStruct, "os.dirInfo", true, "os", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.buf = sliceType__2.nil;
 			this.nbuf = 0;
 			this.bufp = 0;
@@ -9151,7 +9151,7 @@ __packages["os"] = (function()
 	end);
 	File = __pkg.File = __newType(0, __kindStruct, "os.File", true, "os", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.file = ptrType__13.nil;
 			return;
 		end
@@ -9161,7 +9161,7 @@ __packages["os"] = (function()
 	FileMode = __pkg.FileMode = __newType(4, __kindUint32, "os.FileMode", true, "os", true, null);
 	fileStat = __pkg.fileStat = __newType(0, __kindStruct, "os.fileStat", true, "os", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = "";
 			this.size = new __Int64(0, 0);
 			this.mode = 0;
@@ -9200,10 +9200,10 @@ __packages["os"] = (function()
 		process = __global.process;
 		if ( not (process == nil)) {
 			argv = process.argv;
-			__pkg.Args = __makeSlice(sliceType, (__parseInt(argv.length) - 1 >> 0));
+			__pkg.Args = __makeSlice(sliceType, (__parseInt(#argv) - 1 >> 0));
 			i = 0;
 			while (true) {
-				if ( not (i < (__parseInt(argv.length) - 1 >> 0))) { break; end
+				if ( not (i < (__parseInt(#argv) - 1 >> 0))) { break; end
 				((i < 0  or  i >= __pkg.Args.__length) ? (__throwRuntimeError("index out of range"), nil) : __pkg.Args.__array[__pkg.Args.__offset + i] = __internalize(argv[(i + 1 >> 0)], __String));
 				i = i + (1) >> 0;
 			end
@@ -9219,7 +9219,7 @@ __packages["os"] = (function()
 		if (f == ptrType.nil) {
 			__s = -1; return [sliceType__1.nil, __pkg.ErrInvalid];
 		end
-		_r = f.readdir(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.readdir(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Readdir end; end __f._r = _r; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9237,7 +9237,7 @@ __packages["os"] = (function()
 			err = _tmp__1;
 			__s = -1; return [names, err];
 		end
-		_r = f.readdirnames(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.readdirnames(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		names = _tuple[0];
 		err = _tuple[1];
@@ -9255,7 +9255,7 @@ __packages["os"] = (function()
 		if (dirname == "") {
 			dirname = ".";
 		end
-		_r = f.Readdirnames(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.Readdirnames(n); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		names = _tuple[0];
 		err = _tuple[1];
@@ -9318,7 +9318,7 @@ __packages["os"] = (function()
 			/* if (d.bufp >= d.nbuf) { */ case 3:
 				d.bufp = 0;
 				errno = __ifaceNil;
-				_r = f.file.pfd.ReadDirent(d.buf); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = f.file.pfd.ReadDirent(d.buf); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				_tuple = _r;
 				d.nbuf = _tuple[0];
 				errno = _tuple[1];
@@ -9364,7 +9364,7 @@ __packages["os"] = (function()
 		local _r, e, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		e = this;
-		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return e.Op + " " + e.Path + ": " + _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= PathError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9373,7 +9373,7 @@ __packages["os"] = (function()
 		local _r, e, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		e = this;
-		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return e.Syscall + ": " + _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= SyscallError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9430,7 +9430,7 @@ __packages["os"] = (function()
 		local _r, e, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		e = this;
-		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = e.Err.Error(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return e.Op + " " + e.Old + " " + e.New + ": " + _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= LinkError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9449,7 +9449,7 @@ __packages["os"] = (function()
 			err = _tmp__1;
 			__s = -1; return [n, err];
 		end
-		_r = f.read(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.read(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		e = _tuple[1];
@@ -9484,7 +9484,7 @@ __packages["os"] = (function()
 		end
 		/* while (true) { */ case 1:
 			/* if ( not (b.__length > 0)) { break; end */ if( not (b.__length > 0)) { __s = 2; continue; end
-			_r = f.pread(b, off); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = f.pread(b, off); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			m = _tuple[0];
 			e = _tuple[1];
@@ -9514,7 +9514,7 @@ __packages["os"] = (function()
 			err = _tmp__1;
 			__s = -1; return [n, err];
 		end
-		_r = f.write(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.write(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		e = _tuple[1];
@@ -9559,7 +9559,7 @@ __packages["os"] = (function()
 		end
 		/* while (true) { */ case 1:
 			/* if ( not (b.__length > 0)) { break; end */ if( not (b.__length > 0)) { __s = 2; continue; end
-			_r = f.pwrite(b, off); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = f.pwrite(b, off); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			_tuple = _r;
 			m = _tuple[0];
 			e = _tuple[1];
@@ -9589,7 +9589,7 @@ __packages["os"] = (function()
 			err = _tmp__1;
 			__s = -1; return [ret, err];
 		end
-		_r = f.seek(offset, whence); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.seek(offset, whence); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		r = _tuple[0];
 		e = _tuple[1];
@@ -9617,7 +9617,7 @@ __packages["os"] = (function()
 		n = 0;
 		err = __ifaceNil;
 		f = this;
-		_r = f.Write((new sliceType__2(__stringToBytes(s)))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.Write((new sliceType__2(__stringToBytes(s)))); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -9641,7 +9641,7 @@ __packages["os"] = (function()
 		local _r, f, mode, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; mode = __f.mode; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		f = this;
-		_r = f.chmod(mode); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.chmod(mode); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Chmod end; end __f._r = _r; __f.f = f; __f.mode = mode; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9672,7 +9672,7 @@ __packages["os"] = (function()
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return err;
 		end
-		_r = f.file.pfd.Fchmod(syscallMode(mode)); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Fchmod(syscallMode(mode)); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			__s = -1; return f.wrapErr("chmod", e);
@@ -9689,7 +9689,7 @@ __packages["os"] = (function()
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return err;
 		end
-		_r = f.file.pfd.Fchown(uid, gid); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Fchown(uid, gid); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			__s = -1; return f.wrapErr("chown", e);
@@ -9706,7 +9706,7 @@ __packages["os"] = (function()
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return err;
 		end
-		_r = f.file.pfd.Ftruncate(size); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Ftruncate(size); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			__s = -1; return f.wrapErr("truncate", e);
@@ -9723,7 +9723,7 @@ __packages["os"] = (function()
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return err;
 		end
-		_r = f.file.pfd.Fsync(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Fsync(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			__s = -1; return f.wrapErr("sync", e);
@@ -9740,7 +9740,7 @@ __packages["os"] = (function()
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return err;
 		end
-		_r = f.file.pfd.Fchdir(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Fchdir(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			__s = -1; return f.wrapErr("chdir", e);
@@ -9809,7 +9809,7 @@ __packages["os"] = (function()
 		if (f == ptrType.nil) {
 			__s = -1; return __pkg.ErrInvalid;
 		end
-		_r = f.file.close(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.close(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Close end; end __f._r = _r; __f.f = f; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -9822,7 +9822,7 @@ __packages["os"] = (function()
 			__s = -1; return new syscall.Errno(22);
 		end
 		err = __ifaceNil;
-		_r = file__1.pfd.Close(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = file__1.pfd.Close(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		e = _r;
 		if ( not (__interfaceIsEqual(e, __ifaceNil))) {
 			if (__interfaceIsEqual(e, poll.ErrFileClosing)) {
@@ -9841,7 +9841,7 @@ __packages["os"] = (function()
 		n = 0;
 		err = __ifaceNil;
 		f = this;
-		_r = f.file.pfd.Read(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Read(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -9860,7 +9860,7 @@ __packages["os"] = (function()
 		n = 0;
 		err = __ifaceNil;
 		f = this;
-		_r = f.file.pfd.Pread(b, off); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Pread(b, off); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -9879,7 +9879,7 @@ __packages["os"] = (function()
 		n = 0;
 		err = __ifaceNil;
 		f = this;
-		_r = f.file.pfd.Write(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Write(b); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -9898,7 +9898,7 @@ __packages["os"] = (function()
 		n = 0;
 		err = __ifaceNil;
 		f = this;
-		_r = f.file.pfd.Pwrite(b, off); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Pwrite(b, off); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -9917,7 +9917,7 @@ __packages["os"] = (function()
 		ret = new __Int64(0, 0);
 		err = __ifaceNil;
 		f = this;
-		_r = f.file.pfd.Seek(offset, whence); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Seek(offset, whence); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		ret = _tuple[0];
 		err = _tuple[1];
@@ -9939,7 +9939,7 @@ __packages["os"] = (function()
 	end;
 	basename = function(e)
 		local i, name;
-		i = name.length - 1 >> 0;
+		i = #name - 1 >> 0;
 		while (true) {
 			if ( not (i > 0  and  (name.charCodeAt(i) == 47))) { break; end
 			name = __substring(name, 0, i);
@@ -10006,7 +10006,7 @@ __packages["os"] = (function()
 			__s = -1; return [__ifaceNil, __pkg.ErrInvalid];
 		end
 		fs[0] = new fileStat.ptr("", new __Int64(0, 0), 0, new time.Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__15.nil), new syscall.Stat_t.ptr(0, 0, 0, new __Uint64(0, 0), 0, 0, 0, arrayType.zero(), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new __Int64(0, 0), new __Int64(0, 0), 0, 0, 0, 0, arrayType__3.zero()));
-		_r = f.file.pfd.Fstat(fs[0].sys); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = f.file.pfd.Fstat(fs[0].sys); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		err = _r;
 		if ( not (__interfaceIsEqual(err, __ifaceNil))) {
 			__s = -1; return [__ifaceNil, new PathError.ptr("stat", f.file.name, err)];
@@ -10040,26 +10040,26 @@ __packages["os"] = (function()
 			i = _i;
 			c = _rune[0];
 			if ( not ((((m & (((y = (((31 - i >> 0) >>> 0)), y < 32 ? (1 << y) : 0) >>> 0))) >>> 0) == 0))) {
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = ((c << 24 >>> 24)));
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = ((c << 24 >>> 24)));
 				w = w + (1) >> 0;
 			end
 			_i += _rune[1];
 		end
 		if (w == 0) {
-			((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
+			((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
 			w = w + (1) >> 0;
 		end
 		_ref__1 = "rwxrwxrwx";
 		_i__1 = 0;
 		while (true) {
-			if ( not (_i__1 < _ref__1.length)) { break; end
+			if ( not (_i__1 < _ref__#1)) { break; end
 			_rune__1 = __decodeRune(_ref__1, _i__1);
 			i__1 = _i__1;
 			c__1 = _rune__1[0];
 			if ( not ((((m & (((y__1 = (((8 - i__1 >> 0) >>> 0)), y__1 < 32 ? (1 << y__1) : 0) >>> 0))) >>> 0) == 0))) {
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = ((c__1 << 24 >>> 24)));
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = ((c__1 << 24 >>> 24)));
 			end else {
-				((w < 0  or  w >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
+				((w < 0  or  w >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[w] = 45);
 			end
 			w = w + (1) >> 0;
 			_i__1 += _rune__1[1];
@@ -10175,7 +10175,7 @@ __packages["unicode/utf8"] = (function()
 	local __pkg = {}, __init, acceptRange, first, acceptRanges, DecodeRuneInString, RuneLen, EncodeRune, RuneCount, RuneCountInString, ValidRune;
 	acceptRange = __pkg.acceptRange = __newType(0, __kindStruct, "utf8.acceptRange", true, "unicode/utf8", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.lo = 0;
 			this.hi = 0;
 			return;
@@ -10187,7 +10187,7 @@ __packages["unicode/utf8"] = (function()
 		local _tmp, _tmp__1, _tmp__10, _tmp__11, _tmp__12, _tmp__13, _tmp__14, _tmp__15, _tmp__16, _tmp__17, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tmp__8, _tmp__9, accept, mask, n, r, s, s0, s1, s2, s3, size, sz, x, x__1;
 		r = 0;
 		size = 0;
-		n = s.length;
+		n = #s;
 		if (n < 1) {
 			_tmp = 65533;
 			_tmp__1 = 0;
@@ -10196,7 +10196,7 @@ __packages["unicode/utf8"] = (function()
 			return [r, size];
 		end
 		s0 = s.charCodeAt(0);
-		x = ((s0 < 0  or  s0 >= first.length) ? (__throwRuntimeError("index out of range"), nil) : first[s0]);
+		x = ((s0 < 0  or  s0 >= #first) ? (__throwRuntimeError("index out of range"), nil) : first[s0]);
 		if (x >= 240) {
 			mask = (((x >> 0)) << 31 >> 0) >> 31 >> 0;
 			_tmp__2 = ((((s.charCodeAt(0) >> 0)) & ~mask) >> 0) | (65533 & mask);
@@ -10206,7 +10206,7 @@ __packages["unicode/utf8"] = (function()
 			return [r, size];
 		end
 		sz = (x & 7) >>> 0;
-		accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= acceptRanges.length) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
+		accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= #acceptRanges) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
 		if (n < ((sz >> 0))) {
 			_tmp__4 = 65533;
 			_tmp__5 = 1;
@@ -10324,7 +10324,7 @@ __packages["unicode/utf8"] = (function()
 				i = i + (1) >> 0;
 				continue;
 			end
-			x = ((c < 0  or  c >= first.length) ? (__throwRuntimeError("index out of range"), nil) : first[c]);
+			x = ((c < 0  or  c >= #first) ? (__throwRuntimeError("index out of range"), nil) : first[c]);
 			if (x == 241) {
 				i = i + (1) >> 0;
 				continue;
@@ -10334,7 +10334,7 @@ __packages["unicode/utf8"] = (function()
 				i = i + (1) >> 0;
 				continue;
 			end
-			accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= acceptRanges.length) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
+			accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= #acceptRanges) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
 			c__1 = (x__2 = i + 1 >> 0, ((x__2 < 0  or  x__2 >= p.__length) ? (__throwRuntimeError("index out of range"), nil) : p.__array[p.__offset + x__2]));
 			if (c__1 < accept.lo  or  accept.hi < c__1) {
 				size = 1;
@@ -10359,7 +10359,7 @@ __packages["unicode/utf8"] = (function()
 	RuneCountInString = function(s)
 		local accept, c, c__1, c__2, c__3, i, n, ns, s, size, x, x__1;
 		n = 0;
-		ns = s.length;
+		ns = #s;
 		i = 0;
 		while (true) {
 			if ( not (i < ns)) { break; end
@@ -10369,7 +10369,7 @@ __packages["unicode/utf8"] = (function()
 				n = n + (1) >> 0;
 				continue;
 			end
-			x = ((c < 0  or  c >= first.length) ? (__throwRuntimeError("index out of range"), nil) : first[c]);
+			x = ((c < 0  or  c >= #first) ? (__throwRuntimeError("index out of range"), nil) : first[c]);
 			if (x == 241) {
 				i = i + (1) >> 0;
 				n = n + (1) >> 0;
@@ -10381,7 +10381,7 @@ __packages["unicode/utf8"] = (function()
 				n = n + (1) >> 0;
 				continue;
 			end
-			accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= acceptRanges.length) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
+			accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= #acceptRanges) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
 			c__1 = s.charCodeAt((i + 1 >> 0));
 			if (c__1 < accept.lo  or  accept.hi < c__1) {
 				size = 1;
@@ -10433,7 +10433,7 @@ __packages["strconv"] = (function()
 	utf8 = __packages["unicode/utf8"];
 	decimal = __pkg.decimal = __newType(0, __kindStruct, "strconv.decimal", true, "strconv", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.d = arrayType.zero();
 			this.nd = 0;
 			this.dp = 0;
@@ -10449,7 +10449,7 @@ __packages["strconv"] = (function()
 	end);
 	leftCheat = __pkg.leftCheat = __newType(0, __kindStruct, "strconv.leftCheat", true, "strconv", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.delta = 0;
 			this.cutoff = "";
 			return;
@@ -10459,7 +10459,7 @@ __packages["strconv"] = (function()
 	end);
 	extFloat = __pkg.extFloat = __newType(0, __kindStruct, "strconv.extFloat", true, "strconv", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.mant = new __Uint64(0, 0);
 			this.exp = 0;
 			this.neg = false;
@@ -10471,7 +10471,7 @@ __packages["strconv"] = (function()
 	end);
 	floatInfo = __pkg.floatInfo = __newType(0, __kindStruct, "strconv.floatInfo", true, "strconv", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.mantbits = 0;
 			this.expbits = 0;
 			this.bias = 0;
@@ -10483,7 +10483,7 @@ __packages["strconv"] = (function()
 	end);
 	decimalSlice = __pkg.decimalSlice = __newType(0, __kindStruct, "strconv.decimalSlice", true, "strconv", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.d = sliceType__6.nil;
 			this.nd = 0;
 			this.dp = 0;
@@ -10556,7 +10556,7 @@ __packages["strconv"] = (function()
 	trim = function(a)
 		local a, x, x__1;
 		while (true) {
-			if ( not (a.nd > 0  and  ((x = a.d, x__1 = a.nd - 1 >> 0, ((x__1 < 0  or  x__1 >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[x__1])) == 48))) { break; end
+			if ( not (a.nd > 0  and  ((x = a.d, x__1 = a.nd - 1 >> 0, ((x__1 < 0  or  x__1 >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[x__1])) == 48))) { break; end
 			a.nd = a.nd - (1) >> 0;
 		end
 		if (a.nd == 0) {
@@ -10572,7 +10572,7 @@ __packages["strconv"] = (function()
 			if ( not ((v.__high > 0  or  (v.__high == 0  and  v.__low > 0)))) { break; end
 			v1 = __div64(v, new __Uint64(0, 10), false);
 			v = (x = __mul64(new __Uint64(0, 10), v1), new __Uint64(v.__high - x.__high, v.__low - x.__low));
-			((n < 0  or  n >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[n] = ((new __Uint64(v.__high + 0, v.__low + 48).__low << 24 >>> 24)));
+			((n < 0  or  n >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[n] = ((new __Uint64(v.__high + 0, v.__low + 48).__low << 24 >>> 24)));
 			n = n + (1) >> 0;
 			v = v1;
 		end
@@ -10580,7 +10580,7 @@ __packages["strconv"] = (function()
 		n = n - (1) >> 0;
 		while (true) {
 			if ( not (n >= 0)) { break; end
-			(x__1 = a.d, x__2 = a.nd, ((x__2 < 0  or  x__2 >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[x__2] = ((n < 0  or  n >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[n])));
+			(x__1 = a.d, x__2 = a.nd, ((x__2 < 0  or  x__2 >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[x__2] = ((n < 0  or  n >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[n])));
 			a.nd = a.nd + (1) >> 0;
 			n = n - (1) >> 0;
 		end
@@ -10607,7 +10607,7 @@ __packages["strconv"] = (function()
 				end
 				break;
 			end
-			c = (((x = a.d, ((r < 0  or  r >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[r])) >>> 0));
+			c = (((x = a.d, ((r < 0  or  r >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[r])) >>> 0));
 			n = ((n * 10 >>> 0) + c >>> 0) - 48 >>> 0;
 			r = r + (1) >> 0;
 		end
@@ -10615,10 +10615,10 @@ __packages["strconv"] = (function()
 		mask = (((y__2 = k, y__2 < 32 ? (1 << y__2) : 0) >>> 0)) - 1 >>> 0;
 		while (true) {
 			if ( not (r < a.nd)) { break; end
-			c__1 = (((x__1 = a.d, ((r < 0  or  r >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[r])) >>> 0));
+			c__1 = (((x__1 = a.d, ((r < 0  or  r >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[r])) >>> 0));
 			dig = (y__3 = k, y__3 < 32 ? (n >>> y__3) : 0) >>> 0;
 			n = (n & (mask)) >>> 0;
-			(x__2 = a.d, ((w < 0  or  w >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[w] = (((dig + 48 >>> 0) << 24 >>> 24))));
+			(x__2 = a.d, ((w < 0  or  w >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[w] = (((dig + 48 >>> 0) << 24 >>> 24))));
 			w = w + (1) >> 0;
 			n = ((n * 10 >>> 0) + c__1 >>> 0) - 48 >>> 0;
 			r = r + (1) >> 0;
@@ -10628,7 +10628,7 @@ __packages["strconv"] = (function()
 			dig__1 = (y__4 = k, y__4 < 32 ? (n >>> y__4) : 0) >>> 0;
 			n = (n & (mask)) >>> 0;
 			if (w < 800) {
-				(x__3 = a.d, ((w < 0  or  w >= x__3.length) ? (__throwRuntimeError("index out of range"), nil) : x__3[w] = (((dig__1 + 48 >>> 0) << 24 >>> 24))));
+				(x__3 = a.d, ((w < 0  or  w >= x__#3) ? (__throwRuntimeError("index out of range"), nil) : x__3[w] = (((dig__1 + 48 >>> 0) << 24 >>> 24))));
 				w = w + (1) >> 0;
 			end else if (dig__1 > 0) {
 				a.trunc = true;
@@ -10642,7 +10642,7 @@ __packages["strconv"] = (function()
 		local b, i, s;
 		i = 0;
 		while (true) {
-			if ( not (i < s.length)) { break; end
+			if ( not (i < #s)) { break; end
 			if (i >= b.__length) {
 				return true;
 			end
@@ -10665,12 +10665,12 @@ __packages["strconv"] = (function()
 		r = r - (1) >> 0;
 		while (true) {
 			if ( not (r >= 0)) { break; end
-			n = n + (((y = k, y < 32 ? ((((((x = a.d, ((r < 0  or  r >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[r])) >>> 0)) - 48 >>> 0)) << y) : 0) >>> 0)) >>> 0;
+			n = n + (((y = k, y < 32 ? ((((((x = a.d, ((r < 0  or  r >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[r])) >>> 0)) - 48 >>> 0)) << y) : 0) >>> 0)) >>> 0;
 			quo = (_q = n / 10, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 			rem = n - (10 * quo >>> 0) >>> 0;
 			w = w - (1) >> 0;
 			if (w < 800) {
-				(x__1 = a.d, ((w < 0  or  w >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[w] = (((rem + 48 >>> 0) << 24 >>> 24))));
+				(x__1 = a.d, ((w < 0  or  w >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[w] = (((rem + 48 >>> 0) << 24 >>> 24))));
 			end else if ( not ((rem == 0))) {
 				a.trunc = true;
 			end
@@ -10683,7 +10683,7 @@ __packages["strconv"] = (function()
 			rem__1 = n - (10 * quo__1 >>> 0) >>> 0;
 			w = w - (1) >> 0;
 			if (w < 800) {
-				(x__2 = a.d, ((w < 0  or  w >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[w] = (((rem__1 + 48 >>> 0) << 24 >>> 24))));
+				(x__2 = a.d, ((w < 0  or  w >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[w] = (((rem__1 + 48 >>> 0) << 24 >>> 24))));
 			end else if ( not ((rem__1 == 0))) {
 				a.trunc = true;
 			end
@@ -10722,13 +10722,13 @@ __packages["strconv"] = (function()
 		if (nd < 0  or  nd >= a.nd) {
 			return false;
 		end
-		if (((x = a.d, ((nd < 0  or  nd >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[nd])) == 53)  and  ((nd + 1 >> 0) == a.nd)) {
+		if (((x = a.d, ((nd < 0  or  nd >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[nd])) == 53)  and  ((nd + 1 >> 0) == a.nd)) {
 			if (a.trunc) {
 				return true;
 			end
-			return nd > 0  and   not (((_r = (((x__1 = a.d, x__2 = nd - 1 >> 0, ((x__2 < 0  or  x__2 >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[x__2])) - 48 << 24 >>> 24)) % 2, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) == 0));
+			return nd > 0  and   not (((_r = (((x__1 = a.d, x__2 = nd - 1 >> 0, ((x__2 < 0  or  x__2 >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[x__2])) - 48 << 24 >>> 24)) % 2, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) == 0));
 		end
-		return (x__3 = a.d, ((nd < 0  or  nd >= x__3.length) ? (__throwRuntimeError("index out of range"), nil) : x__3[nd])) >= 53;
+		return (x__3 = a.d, ((nd < 0  or  nd >= x__#3) ? (__throwRuntimeError("index out of range"), nil) : x__3[nd])) >= 53;
 	end;
 	decimal.ptr.prototype.Round = function(d)
 		local a, nd;
@@ -10762,9 +10762,9 @@ __packages["strconv"] = (function()
 		i = nd - 1 >> 0;
 		while (true) {
 			if ( not (i >= 0)) { break; end
-			c = (x = a.d, ((i < 0  or  i >= x.length) ? (__throwRuntimeError("index out of range"), nil) : x[i]));
+			c = (x = a.d, ((i < 0  or  i >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[i]));
 			if (c < 57) {
-				(x__2 = a.d, ((i < 0  or  i >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = ((x__1 = a.d, ((i < 0  or  i >= x__1.length) ? (__throwRuntimeError("index out of range"), nil) : x__1[i])) + (1) << 24 >>> 24)));
+				(x__2 = a.d, ((i < 0  or  i >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[i] = ((x__1 = a.d, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i])) + (1) << 24 >>> 24)));
 				a.nd = i + 1 >> 0;
 				return;
 			end
@@ -10786,7 +10786,7 @@ __packages["strconv"] = (function()
 		i = 0;
 		while (true) {
 			if ( not (i < a.dp  and  i < a.nd)) { break; end
-			n = (x = __mul64(n, new __Uint64(0, 10)), x__1 = (new __Uint64(0, ((x__2 = a.d, ((i < 0  or  i >= x__2.length) ? (__throwRuntimeError("index out of range"), nil) : x__2[i])) - 48 << 24 >>> 24))), new __Uint64(x.__high + x__1.__high, x.__low + x__1.__low));
+			n = (x = __mul64(n, new __Uint64(0, 10)), x__1 = (new __Uint64(0, ((x__2 = a.d, ((i < 0  or  i >= x__#2) ? (__throwRuntimeError("index out of range"), nil) : x__2[i])) - 48 << 24 >>> 24))), new __Uint64(x.__high + x__1.__high, x.__low + x__1.__low));
 			i = i + (1) >> 0;
 		end
 		while (true) {
@@ -10908,15 +10908,15 @@ __packages["strconv"] = (function()
 			return ok;
 		end
 		adjExp = (_r = ((exp10 - -348 >> 0)) % 8, _r == _r ? _r : __throwRuntimeError("integer divide by zero"));
-		if (adjExp < 19  and  (x = (x__1 = 19 - adjExp >> 0, ((x__1 < 0  or  x__1 >= uint64pow10.length) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__1])), (mantissa.__high < x.__high  or  (mantissa.__high == x.__high  and  mantissa.__low < x.__low)))) {
-			f.mant = __mul64(f.mant, (((adjExp < 0  or  adjExp >= uint64pow10.length) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[adjExp])));
+		if (adjExp < 19  and  (x = (x__1 = 19 - adjExp >> 0, ((x__1 < 0  or  x__1 >= #uint64pow10) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__1])), (mantissa.__high < x.__high  or  (mantissa.__high == x.__high  and  mantissa.__low < x.__low)))) {
+			f.mant = __mul64(f.mant, (((adjExp < 0  or  adjExp >= #uint64pow10) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[adjExp])));
 			f.Normalize();
 		end else {
 			f.Normalize();
-			f.Multiply(__clone(((adjExp < 0  or  adjExp >= smallPowersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : smallPowersOfTen[adjExp]), extFloat));
+			f.Multiply(__clone(((adjExp < 0  or  adjExp >= #smallPowersOfTen) ? (__throwRuntimeError("index out of range"), nil) : smallPowersOfTen[adjExp]), extFloat));
 			errors__1 = errors__1 + (4) >> 0;
 		end
-		f.Multiply(__clone(((i < 0  or  i >= powersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
+		f.Multiply(__clone(((i < 0  or  i >= #powersOfTen) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
 		if (errors__1 > 0) {
 			errors__1 = errors__1 + (1) >> 0;
 		end
@@ -10949,7 +10949,7 @@ __packages["strconv"] = (function()
 		i = (_q__1 = ((approxExp10 - -348 >> 0)) / 8, (_q__1 == _q__1  and  _q__1 ~= 1/0  and  _q__1 ~= -1/0) ? _q__1 >> 0 : __throwRuntimeError("integer divide by zero"));
 		Loop:
 		while (true) {
-			exp = (f.exp + ((i < 0  or  i >= powersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]).exp >> 0) + 64 >> 0;
+			exp = (f.exp + ((i < 0  or  i >= #powersOfTen) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]).exp >> 0) + 64 >> 0;
 			if (exp < -60) {
 				i = i + (1) >> 0;
 			end else if (exp > -32) {
@@ -10958,7 +10958,7 @@ __packages["strconv"] = (function()
 				break Loop;
 			end
 		end
-		f.Multiply(__clone(((i < 0  or  i >= powersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
+		f.Multiply(__clone(((i < 0  or  i >= #powersOfTen) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
 		_tmp = -((-348 + (__imul(i, 8)) >> 0));
 		_tmp__1 = i;
 		exp10 = _tmp;
@@ -10972,8 +10972,8 @@ __packages["strconv"] = (function()
 		_tuple = c.frexp10();
 		exp10 = _tuple[0];
 		i = _tuple[1];
-		a.Multiply(__clone(((i < 0  or  i >= powersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
-		b.Multiply(__clone(((i < 0  or  i >= powersOfTen.length) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
+		a.Multiply(__clone(((i < 0  or  i >= #powersOfTen) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
+		b.Multiply(__clone(((i < 0  or  i >= #powersOfTen) ? (__throwRuntimeError("index out of range"), nil) : powersOfTen[i]), extFloat));
 		return exp10;
 	end;
 	extFloat.ptr.prototype.FixedDecimal = function(n)
@@ -11013,7 +11013,7 @@ __packages["strconv"] = (function()
 		end
 		rest = integer;
 		if (integerDigits > needed) {
-			pow10 = (x__4 = integerDigits - needed >> 0, ((x__4 < 0  or  x__4 >= uint64pow10.length) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__4]));
+			pow10 = (x__4 = integerDigits - needed >> 0, ((x__4 < 0  or  x__4 >= #uint64pow10) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__4]));
 			integer = (_q = integer / (((pow10.__low >>> 0))), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 			rest = rest - ((__imul(integer, ((pow10.__low >>> 0))) >>> 0)) >>> 0;
 		end else {
@@ -11027,13 +11027,13 @@ __packages["strconv"] = (function()
 			v1 = (_q__1 = v / 10, (_q__1 == _q__1  and  _q__1 ~= 1/0  and  _q__1 ~= -1/0) ? _q__1 >>> 0 : __throwRuntimeError("integer divide by zero"));
 			v = v - ((__imul(10, v1) >>> 0)) >>> 0;
 			pos = pos - (1) >> 0;
-			((pos < 0  or  pos >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[pos] = (((v + 48 >>> 0) << 24 >>> 24)));
+			((pos < 0  or  pos >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[pos] = (((v + 48 >>> 0) << 24 >>> 24)));
 			v = v1;
 		end
 		i__1 = pos;
 		while (true) {
 			if ( not (i__1 < 32)) { break; end
-			(x__5 = d.d, x__6 = i__1 - pos >> 0, ((x__6 < 0  or  x__6 >= x__5.__length) ? (__throwRuntimeError("index out of range"), nil) : x__5.__array[x__5.__offset + x__6] = ((i__1 < 0  or  i__1 >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[i__1])));
+			(x__5 = d.d, x__6 = i__1 - pos >> 0, ((x__6 < 0  or  x__6 >= x__5.__length) ? (__throwRuntimeError("index out of range"), nil) : x__5.__array[x__5.__offset + x__6] = ((i__1 < 0  or  i__1 >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[i__1])));
 			i__1 = i__1 + (1) >> 0;
 		end
 		nd = 32 - pos >> 0;
@@ -11125,7 +11125,7 @@ __packages["strconv"] = (function()
 				if ( not ((v.__high > 0  or  (v.__high == 0  and  v.__low > 0)))) { break; end
 				v1 = __div64(v, new __Uint64(0, 10), false);
 				v = (x__1 = __mul64(new __Uint64(0, 10), v1), new __Uint64(v.__high - x__1.__high, v.__low - x__1.__low));
-				((n < 0  or  n >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[n] = ((new __Uint64(v.__high + 0, v.__low + 48).__low << 24 >>> 24)));
+				((n < 0  or  n >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[n] = ((new __Uint64(v.__high + 0, v.__low + 48).__low << 24 >>> 24)));
 				n = n - (1) >> 0;
 				v = v1;
 			end
@@ -11133,7 +11133,7 @@ __packages["strconv"] = (function()
 			i = 0;
 			while (true) {
 				if ( not (i < nd)) { break; end
-				(x__3 = d.d, ((i < 0  or  i >= x__3.__length) ? (__throwRuntimeError("index out of range"), nil) : x__3.__array[x__3.__offset + i] = (x__2 = (n + 1 >> 0) + i >> 0, ((x__2 < 0  or  x__2 >= buf.length) ? (__throwRuntimeError("index out of range"), nil) : buf[x__2]))));
+				(x__3 = d.d, ((i < 0  or  i >= x__3.__length) ? (__throwRuntimeError("index out of range"), nil) : x__3.__array[x__3.__offset + i] = (x__2 = (n + 1 >> 0) + i >> 0, ((x__2 < 0  or  x__2 >= #buf) ? (__throwRuntimeError("index out of range"), nil) : buf[x__2]))));
 				i = i + (1) >> 0;
 			end
 			_tmp = nd;
@@ -11184,7 +11184,7 @@ __packages["strconv"] = (function()
 		i__2 = 0;
 		while (true) {
 			if ( not (i__2 < integerDigits)) { break; end
-			pow__1 = (x__17 = (integerDigits - i__2 >> 0) - 1 >> 0, ((x__17 < 0  or  x__17 >= uint64pow10.length) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__17]));
+			pow__1 = (x__17 = (integerDigits - i__2 >> 0) - 1 >> 0, ((x__17 < 0  or  x__17 >= #uint64pow10) ? (__throwRuntimeError("index out of range"), nil) : uint64pow10[x__17]));
 			digit = (_q = integer / ((pow__1.__low >>> 0)), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 			(x__18 = d.d, ((i__2 < 0  or  i__2 >= x__18.__length) ? (__throwRuntimeError("index out of range"), nil) : x__18.__array[x__18.__offset + i__2] = (((digit + 48 >>> 0) << 24 >>> 24))));
 			integer = integer - ((__imul(digit, ((pow__1.__low >>> 0))) >>> 0)) >>> 0;
@@ -11422,12 +11422,12 @@ __packages["strconv"] = (function()
 			if ( not (i < d.nd)) { break; end
 			l = 48;
 			if (i < lower.nd) {
-				l = (x__5 = lower.d, ((i < 0  or  i >= x__5.length) ? (__throwRuntimeError("index out of range"), nil) : x__5[i]));
+				l = (x__5 = lower.d, ((i < 0  or  i >= x__#5) ? (__throwRuntimeError("index out of range"), nil) : x__5[i]));
 			end
-			m = (x__6 = d.d, ((i < 0  or  i >= x__6.length) ? (__throwRuntimeError("index out of range"), nil) : x__6[i]));
+			m = (x__6 = d.d, ((i < 0  or  i >= x__#6) ? (__throwRuntimeError("index out of range"), nil) : x__6[i]));
 			u = 48;
 			if (i < upper.nd) {
-				u = (x__7 = upper.d, ((i < 0  or  i >= x__7.length) ? (__throwRuntimeError("index out of range"), nil) : x__7[i]));
+				u = (x__7 = upper.d, ((i < 0  or  i >= x__#7) ? (__throwRuntimeError("index out of range"), nil) : x__7[i]));
 			end
 			okdown =  not ((l == m))  or  inclusive  and  ((i + 1 >> 0) == lower.nd);
 			okup =  not ((m == u))  and  (inclusive  or  (m + 1 << 24 >>> 24) < u  or  (i + 1 >> 0) < upper.nd);
@@ -11598,12 +11598,12 @@ __packages["strconv"] = (function()
 						is = (_r = us % 100, _r == _r ? _r : __throwRuntimeError("integer divide by zero")) * 2 >>> 0;
 						us = (_q = us / (100), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >>> 0 : __throwRuntimeError("integer divide by zero"));
 						i = i - (2) >> 0;
-						(x__1 = i + 1 >> 0, ((x__1 < 0  or  x__1 >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[x__1] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is + 1 >>> 0))));
-						(x__2 = i + 0 >> 0, ((x__2 < 0  or  x__2 >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[x__2] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is + 0 >>> 0))));
+						(x__1 = i + 1 >> 0, ((x__1 < 0  or  x__1 >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[x__1] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is + 1 >>> 0))));
+						(x__2 = i + 0 >> 0, ((x__2 < 0  or  x__2 >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[x__2] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is + 0 >>> 0))));
 						j = j - (1) >> 0;
 					end
 					i = i - (1) >> 0;
-					((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt(((us * 2 >>> 0) + 1 >>> 0)));
+					((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt(((us * 2 >>> 0) + 1 >>> 0)));
 					u = q;
 				end
 			end
@@ -11613,45 +11613,45 @@ __packages["strconv"] = (function()
 				is__1 = (_r__1 = us__1 % 100, _r__1 == _r__1 ? _r__1 : __throwRuntimeError("integer divide by zero")) * 2 >>> 0;
 				us__1 = (_q__1 = us__1 / (100), (_q__1 == _q__1  and  _q__1 ~= 1/0  and  _q__1 ~= -1/0) ? _q__1 >>> 0 : __throwRuntimeError("integer divide by zero"));
 				i = i - (2) >> 0;
-				(x__3 = i + 1 >> 0, ((x__3 < 0  or  x__3 >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[x__3] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__1 + 1 >>> 0))));
-				(x__4 = i + 0 >> 0, ((x__4 < 0  or  x__4 >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[x__4] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__1 + 0 >>> 0))));
+				(x__3 = i + 1 >> 0, ((x__3 < 0  or  x__3 >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[x__3] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__1 + 1 >>> 0))));
+				(x__4 = i + 0 >> 0, ((x__4 < 0  or  x__4 >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[x__4] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__1 + 0 >>> 0))));
 			end
 			is__2 = us__1 * 2 >>> 0;
 			i = i - (1) >> 0;
-			((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__2 + 1 >>> 0)));
+			((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt((is__2 + 1 >>> 0)));
 			if (us__1 >= 10) {
 				i = i - (1) >> 0;
-				((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt(is__2));
+				((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "00010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899".charCodeAt(is__2));
 			end
 		end else {
-			s__1 = ((base < 0  or  base >= shifts.length) ? (__throwRuntimeError("index out of range"), nil) : shifts[base]);
+			s__1 = ((base < 0  or  base >= #shifts) ? (__throwRuntimeError("index out of range"), nil) : shifts[base]);
 			if (s__1 > 0) {
 				b = (new __Uint64(0, base));
 				m = ((base >>> 0)) - 1 >>> 0;
 				while (true) {
 					if ( not ((u.__high > b.__high  or  (u.__high == b.__high  and  u.__low >= b.__low)))) { break; end
 					i = i - (1) >> 0;
-					((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((((u.__low >>> 0)) & m) >>> 0)));
+					((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((((u.__low >>> 0)) & m) >>> 0)));
 					u = __shiftRightUint64(u, (s__1));
 				end
 				i = i - (1) >> 0;
-				((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((u.__low >>> 0))));
+				((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((u.__low >>> 0))));
 			end else {
 				b__1 = (new __Uint64(0, base));
 				while (true) {
 					if ( not ((u.__high > b__1.__high  or  (u.__high == b__1.__high  and  u.__low >= b__1.__low)))) { break; end
 					i = i - (1) >> 0;
 					q__1 = __div64(u, b__1, false);
-					((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt((((x__5 = __mul64(q__1, b__1), new __Uint64(u.__high - x__5.__high, u.__low - x__5.__low)).__low >>> 0))));
+					((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt((((x__5 = __mul64(q__1, b__1), new __Uint64(u.__high - x__5.__high, u.__low - x__5.__low)).__low >>> 0))));
 					u = q__1;
 				end
 				i = i - (1) >> 0;
-				((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((u.__low >>> 0))));
+				((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = "0123456789abcdefghijklmnopqrstuvwxyz".charCodeAt(((u.__low >>> 0))));
 			end
 		end
 		if (neg) {
 			i = i - (1) >> 0;
-			((i < 0  or  i >= a.length) ? (__throwRuntimeError("index out of range"), nil) : a[i] = 45);
+			((i < 0  or  i >= #a) ? (__throwRuntimeError("index out of range"), nil) : a[i] = 45);
 		end
 		if (append_) {
 			d = __appendSlice(dst, __subslice(new sliceType__6(a), i));
@@ -11665,7 +11665,7 @@ __packages["strconv"] = (function()
 		buf = __append(buf, quote);
 		width = 0;
 		while (true) {
-			if ( not (s.length > 0)) { break; end
+			if ( not (#s > 0)) { break; end
 			r = ((s.charCodeAt(0) >> 0));
 			width = 1;
 			if (r >= 128) {
@@ -11786,7 +11786,7 @@ __packages["strconv"] = (function()
 	CanBackquote = function(s)
 		local _tuple, r, s, wid;
 		while (true) {
-			if ( not (s.length > 0)) { break; end
+			if ( not (#s > 0)) { break; end
 			_tuple = utf8.DecodeRuneInString(s);
 			r = _tuple[0];
 			wid = _tuple[1];
@@ -11867,7 +11867,7 @@ __packages["strconv"] = (function()
 			err = _tmp__7;
 			return [value, multibyte, tail, err];
 		end
-		if (s.length <= 1) {
+		if (#s <= 1) {
 			err = __pkg.ErrSyntax;
 			return [value, multibyte, tail, err];
 		end
@@ -11900,7 +11900,7 @@ __packages["strconv"] = (function()
 					n = 8;
 				end
 				v = 0;
-				if (s.length < n) {
+				if (#s < n) {
 					err = __pkg.ErrSyntax;
 					return [value, multibyte, tail, err];
 				end
@@ -11930,7 +11930,7 @@ __packages["strconv"] = (function()
 				multibyte = true;
 			end else if ((_1 == (48))  or  (_1 == (49))  or  (_1 == (50))  or  (_1 == (51))  or  (_1 == (52))  or  (_1 == (53))  or  (_1 == (54))  or  (_1 == (55))) {
 				v__1 = ((c__1 >> 0)) - 48 >> 0;
-				if (s.length < 2) {
+				if (#s < 2) {
 					err = __pkg.ErrSyntax;
 					return [value, multibyte, tail, err];
 				end
@@ -11970,7 +11970,7 @@ __packages["strconv"] = (function()
 	__pkg.UnquoteChar = UnquoteChar;
 	Unquote = function(s)
 		local _1, _q, _tuple, _tuple__1, buf, buf__1, c, err, i, multibyte, n, n__1, quote, r, runeTmp, s, size, ss;
-		n = s.length;
+		n = #s;
 		if (n < 2) {
 			return ["", __pkg.ErrSyntax];
 		end
@@ -11984,10 +11984,10 @@ __packages["strconv"] = (function()
 				return ["", __pkg.ErrSyntax];
 			end
 			if (contains(s, 13)) {
-				buf = __makeSlice(sliceType__6, 0, (s.length - 1 >> 0));
+				buf = __makeSlice(sliceType__6, 0, (#s - 1 >> 0));
 				i = 0;
 				while (true) {
-					if ( not (i < s.length)) { break; end
+					if ( not (i < #s)) { break; end
 					if ( not ((s.charCodeAt(i) == 13))) {
 						buf = __append(buf, s.charCodeAt(i));
 					end
@@ -12011,15 +12011,15 @@ __packages["strconv"] = (function()
 				_tuple = utf8.DecodeRuneInString(s);
 				r = _tuple[0];
 				size = _tuple[1];
-				if ((size == s.length)  and  ( not ((r == 65533))  or   not ((size == 1)))) {
+				if ((size == #s)  and  ( not ((r == 65533))  or   not ((size == 1)))) {
 					return [s, __ifaceNil];
 				end
 			end
 		end
 		runeTmp = arrayType__4.zero();
-		buf__1 = __makeSlice(sliceType__6, 0, (_q = (__imul(3, s.length)) / 2, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero")));
+		buf__1 = __makeSlice(sliceType__6, 0, (_q = (__imul(3, #s)) / 2, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero")));
 		while (true) {
-			if ( not (s.length > 0)) { break; end
+			if ( not (#s > 0)) { break; end
 			_tuple__1 = UnquoteChar(s, quote);
 			c = _tuple__1[0];
 			multibyte = _tuple__1[1];
@@ -12035,7 +12035,7 @@ __packages["strconv"] = (function()
 				n__1 = utf8.EncodeRune(new sliceType__6(runeTmp), c);
 				buf__1 = __appendSlice(buf__1, __subslice(new sliceType__6(runeTmp), 0, n__1));
 			end
-			if ((quote == 39)  and   not ((s.length == 0))) {
+			if ((quote == 39)  and   not ((#s == 0))) {
 				return ["", __pkg.ErrSyntax];
 			end
 		end
@@ -12046,7 +12046,7 @@ __packages["strconv"] = (function()
 		local c, i, s;
 		i = 0;
 		while (true) {
-			if ( not (i < s.length)) { break; end
+			if ( not (i < #s)) { break; end
 			if (s.charCodeAt(i) == c) {
 				return true;
 			end
@@ -12195,7 +12195,7 @@ __packages["reflect"] = (function()
 	utf8 = __packages["unicode/utf8"];
 	uncommonType = __pkg.uncommonType = __newType(0, __kindStruct, "reflect.uncommonType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.pkgPath = 0;
 			this.mcount = 0;
 			this.___2 = 0;
@@ -12213,7 +12213,7 @@ __packages["reflect"] = (function()
 	end);
 	funcType = __pkg.funcType = __newType(0, __kindStruct, "reflect.funcType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.inCount = 0;
 			this.outCount = 0;
@@ -12229,7 +12229,7 @@ __packages["reflect"] = (function()
 	end);
 	name = __pkg.name = __newType(0, __kindStruct, "reflect.name", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.bytes = ptrType__4.nil;
 			return;
 		end
@@ -12237,7 +12237,7 @@ __packages["reflect"] = (function()
 	end);
 	nameData = __pkg.nameData = __newType(0, __kindStruct, "reflect.nameData", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = "";
 			this.tag = "";
 			this.pkgPath = "";
@@ -12251,7 +12251,7 @@ __packages["reflect"] = (function()
 	end);
 	mapIter = __pkg.mapIter = __newType(0, __kindStruct, "reflect.mapIter", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.t = __ifaceNil;
 			this.m = null;
 			this.keys = null;
@@ -12268,7 +12268,7 @@ __packages["reflect"] = (function()
 	tflag = __pkg.tflag = __newType(1, __kindUint8, "reflect.tflag", true, "reflect", false, null);
 	rtype = __pkg.rtype = __newType(0, __kindStruct, "reflect.rtype", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.size = 0;
 			this.ptrdata = 0;
 			this.hash = 0;
@@ -12296,7 +12296,7 @@ __packages["reflect"] = (function()
 	end);
 	typeAlg = __pkg.typeAlg = __newType(0, __kindStruct, "reflect.typeAlg", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.hash = __throwNilPointerError;
 			this.equal = __throwNilPointerError;
 			return;
@@ -12306,7 +12306,7 @@ __packages["reflect"] = (function()
 	end);
 	method = __pkg.method = __newType(0, __kindStruct, "reflect.method", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = 0;
 			this.mtyp = 0;
 			this.ifn = 0;
@@ -12321,7 +12321,7 @@ __packages["reflect"] = (function()
 	ChanDir = __pkg.ChanDir = __newType(4, __kindInt, "reflect.ChanDir", true, "reflect", true, null);
 	arrayType = __pkg.arrayType = __newType(0, __kindStruct, "reflect.arrayType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.elem = ptrType__1.nil;
 			this.slice = ptrType__1.nil;
@@ -12335,7 +12335,7 @@ __packages["reflect"] = (function()
 	end);
 	chanType = __pkg.chanType = __newType(0, __kindStruct, "reflect.chanType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.elem = ptrType__1.nil;
 			this.dir = 0;
@@ -12347,7 +12347,7 @@ __packages["reflect"] = (function()
 	end);
 	imethod = __pkg.imethod = __newType(0, __kindStruct, "reflect.imethod", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = 0;
 			this.typ = 0;
 			return;
@@ -12357,7 +12357,7 @@ __packages["reflect"] = (function()
 	end);
 	interfaceType = __pkg.interfaceType = __newType(0, __kindStruct, "reflect.interfaceType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.pkgPath = new name.ptr(ptrType__4.nil);
 			this.methods = sliceType__6.nil;
@@ -12369,7 +12369,7 @@ __packages["reflect"] = (function()
 	end);
 	mapType = __pkg.mapType = __newType(0, __kindStruct, "reflect.mapType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.key = ptrType__1.nil;
 			this.elem = ptrType__1.nil;
@@ -12399,7 +12399,7 @@ __packages["reflect"] = (function()
 	end);
 	ptrType = __pkg.ptrType = __newType(0, __kindStruct, "reflect.ptrType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.elem = ptrType__1.nil;
 			return;
@@ -12409,7 +12409,7 @@ __packages["reflect"] = (function()
 	end);
 	sliceType = __pkg.sliceType = __newType(0, __kindStruct, "reflect.sliceType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.elem = ptrType__1.nil;
 			return;
@@ -12419,7 +12419,7 @@ __packages["reflect"] = (function()
 	end);
 	structField = __pkg.structField = __newType(0, __kindStruct, "reflect.structField", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.name = new name.ptr(ptrType__4.nil);
 			this.typ = ptrType__1.nil;
 			this.offsetAnon = 0;
@@ -12431,7 +12431,7 @@ __packages["reflect"] = (function()
 	end);
 	structType = __pkg.structType = __newType(0, __kindStruct, "reflect.structType", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rtype = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0);
 			this.pkgPath = new name.ptr(ptrType__4.nil);
 			this.fields = sliceType__7.nil;
@@ -12443,7 +12443,7 @@ __packages["reflect"] = (function()
 	end);
 	Method = __pkg.Method = __newType(0, __kindStruct, "reflect.Method", true, "reflect", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Name = "";
 			this.PkgPath = "";
 			this.Type = __ifaceNil;
@@ -12462,7 +12462,7 @@ __packages["reflect"] = (function()
 	textOff = __pkg.textOff = __newType(4, __kindInt32, "reflect.textOff", true, "reflect", false, null);
 	StructField = __pkg.StructField = __newType(0, __kindStruct, "reflect.StructField", true, "reflect", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Name = "";
 			this.PkgPath = "";
 			this.Type = __ifaceNil;
@@ -12483,7 +12483,7 @@ __packages["reflect"] = (function()
 	StructTag = __pkg.StructTag = __newType(8, __kindString, "reflect.StructTag", true, "reflect", true, null);
 	fieldScan = __pkg.fieldScan = __newType(0, __kindStruct, "reflect.fieldScan", true, "reflect", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.typ = ptrType__9.nil;
 			this.index = sliceType__13.nil;
 			return;
@@ -12493,7 +12493,7 @@ __packages["reflect"] = (function()
 	end);
 	Value = __pkg.Value = __newType(0, __kindStruct, "reflect.Value", true, "reflect", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.typ = ptrType__1.nil;
 			this.ptr = 0;
 			this.flag = 0;
@@ -12506,7 +12506,7 @@ __packages["reflect"] = (function()
 	flag = __pkg.flag = __newType(4, __kindUintptr, "reflect.flag", true, "reflect", false, null);
 	ValueError = __pkg.ValueError = __newType(0, __kindStruct, "reflect.ValueError", true, "reflect", true, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.Method = "";
 			this.Kind = 0;
 			return;
@@ -12583,12 +12583,12 @@ __packages["reflect"] = (function()
 			rt.jsType = typ;
 			typ.reflectType = rt;
 			methodSet = __methodSet(typ);
-			if ( not ((__parseInt(methodSet.length) == 0))  or   not  not (typ.named)) {
+			if ( not ((__parseInt(#methodSet) == 0))  or   not  not (typ.named)) {
 				rt.tflag = (rt.tflag | (1)) >>> 0;
 				if ( not  not (typ.named)) {
 					rt.tflag = (rt.tflag | (4)) >>> 0;
 				end
-				reflectMethods = __makeSlice(sliceType__5, __parseInt(methodSet.length));
+				reflectMethods = __makeSlice(sliceType__5, __parseInt(#methodSet));
 				_ref = reflectMethods;
 				_i = 0;
 				while (true) {
@@ -12598,7 +12598,7 @@ __packages["reflect"] = (function()
 					method.copy(((i < 0  or  i >= reflectMethods.__length) ? (__throwRuntimeError("index out of range"), nil) : reflectMethods.__array[reflectMethods.__offset + i]), new method.ptr(newNameOff(__clone(newName(internalStr(m.name), "", "", internalStr(m.pkg) == ""), name)), newTypeOff(reflectType(m.typ)), 0, 0));
 					_i++;
 				end
-				ut = new uncommonType.ptr(newNameOff(__clone(newName(internalStr(typ.pkg), "", "", false), name)), ((__parseInt(methodSet.length) << 16 >>> 16)), 0, 0, 0, reflectMethods);
+				ut = new uncommonType.ptr(newNameOff(__clone(newName(internalStr(typ.pkg), "", "", false), name)), ((__parseInt(#methodSet) << 16 >>> 16)), 0, 0, 0, reflectMethods);
 				_key = rt; (uncommonTypeMap  or  __throwRuntimeError("assignment to entry in nil map"))[ptrType__1.keyFor(_key)] = { k: _key, v: ut end;
 				ut.jsType = typ;
 			end
@@ -12616,7 +12616,7 @@ __packages["reflect"] = (function()
 				setKindType(rt, new chanType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), reflectType(typ.elem), ((dir >>> 0))));
 			end else if (_1 == (19)) {
 				params = typ.params;
-				in__1 = __makeSlice(sliceType__2, __parseInt(params.length));
+				in__1 = __makeSlice(sliceType__2, __parseInt(#params));
 				_ref__1 = in__1;
 				_i__1 = 0;
 				while (true) {
@@ -12626,7 +12626,7 @@ __packages["reflect"] = (function()
 					_i__1++;
 				end
 				results = typ.results;
-				out = __makeSlice(sliceType__2, __parseInt(results.length));
+				out = __makeSlice(sliceType__2, __parseInt(#results));
 				_ref__2 = out;
 				_i__2 = 0;
 				while (true) {
@@ -12635,14 +12635,14 @@ __packages["reflect"] = (function()
 					((i__2 < 0  or  i__2 >= out.__length) ? (__throwRuntimeError("index out of range"), nil) : out.__array[out.__offset + i__2] = reflectType(results[i__2]));
 					_i__2++;
 				end
-				outCount = ((__parseInt(results.length) << 16 >>> 16));
+				outCount = ((__parseInt(#results) << 16 >>> 16));
 				if ( not  not (typ.variadic)) {
 					outCount = (outCount | (32768)) >>> 0;
 				end
-				setKindType(rt, new funcType.ptr(__clone(rt, rtype), ((__parseInt(params.length) << 16 >>> 16)), outCount, in__1, out));
+				setKindType(rt, new funcType.ptr(__clone(rt, rtype), ((__parseInt(#params) << 16 >>> 16)), outCount, in__1, out));
 			end else if (_1 == (20)) {
 				methods = typ.methods;
-				imethods = __makeSlice(sliceType__6, __parseInt(methods.length));
+				imethods = __makeSlice(sliceType__6, __parseInt(#methods));
 				_ref__3 = imethods;
 				_i__3 = 0;
 				while (true) {
@@ -12661,7 +12661,7 @@ __packages["reflect"] = (function()
 				setKindType(rt, new sliceType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), reflectType(typ.elem)));
 			end else if (_1 == (25)) {
 				fields = typ.fields;
-				reflectFields = __makeSlice(sliceType__7, __parseInt(fields.length));
+				reflectFields = __makeSlice(sliceType__7, __parseInt(#fields));
 				_ref__4 = reflectFields;
 				_i__4 = 0;
 				while (true) {
@@ -12782,7 +12782,7 @@ __packages["reflect"] = (function()
 		fields = jsType(typ).fields;
 		i = 0;
 		while (true) {
-			if ( not (i < __parseInt(fields.length))) { break; end
+			if ( not (i < __parseInt(#fields))) { break; end
 			prop = __internalize(fields[i].prop, __String);
 			dst[__externalize(prop, __String)] = src[__externalize(prop, __String)];
 			i = i + (1) >> 0;
@@ -12791,7 +12791,7 @@ __packages["reflect"] = (function()
 	makeValue = function(l)
 		local _r, _r__1, _r__2, _r__3, _r__4, _r__5, _v, _v__1, fl, rt, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _v = __f._v; _v__1 = __f._v__1; fl = __f.fl; rt = __f.rt; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		rt = _r;
 		_r__1 = t.Kind(); /* */ __s = 6; case 6: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		if (_r__1 == 17) { _v__1 = true; __s = 5; continue s; end
@@ -12814,7 +12814,7 @@ __packages["reflect"] = (function()
 		local _r, _r__1, cap, len, typ, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; cap = __f.cap; len = __f.len; typ = __f.typ; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		typ = [typ];
-		_r = typ[0].Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = typ[0].Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 23))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 23))) { */ case 1:
@@ -12858,7 +12858,7 @@ __packages["reflect"] = (function()
 		if (__interfaceIsEqual(i, __ifaceNil)) {
 			__s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
 		end
-		_r = makeValue(reflectType(i.constructor), i.__val, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeValue(reflectType(i.constructor), i.__val, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= ValueOf end; end __f._r = _r; __f.i = i; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -12868,7 +12868,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _ref = __f._ref; _ref__1 = __f._ref__1; _v = __f._v; _v__1 = __f._v__1; i = __f.i; i__1 = __f.i__1; in__1 = __f.in__1; jsIn = __f.jsIn; jsOut = __f.jsOut; out = __f.out; v = __f.v; v__1 = __f.v__1; variadic = __f.variadic; x = __f.x; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		if ( not (variadic)) { _v = false; __s = 3; continue s; end
 		if (in__1.__length == 0) { _v__1 = true; __s = 4; continue s; end
-		_r = (x = in__1.__length - 1 >> 0, ((x < 0  or  x >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + x])).Kind(); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = (x = in__1.__length - 1 >> 0, ((x < 0  or  x >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + x])).Kind(); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_v__1 =  not ((_r == 23)); case 4:
 		_v = _v__1; case 3:
 		/* */ if (_v) { __s = 1; continue; end
@@ -12914,7 +12914,7 @@ __packages["reflect"] = (function()
 	Zero = function(p)
 		local _r, typ, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; typ = __f.typ; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeValue(typ, jsType(typ).zero(), 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeValue(typ, jsType(typ).zero(), 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Zero end; end __f._r = _r; __f.typ = typ; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -12933,7 +12933,7 @@ __packages["reflect"] = (function()
 	makeInt = function(t)
 		local _1, _r, bits, f, ptr, t, typ, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; bits = __f.bits; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		typ = _r;
 		ptr = unsafe_New(typ);
 		_1 = typ.Kind();
@@ -12988,7 +12988,7 @@ __packages["reflect"] = (function()
 		k = _tuple[1];
 		jsVal = val.__get();
 		et = t.Elem();
-		_r = et.Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = et.Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if (_r == 25) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (_r == 25) { */ case 1:
@@ -13018,7 +13018,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; it = __f.it; iter = __f.iter; k = __f.k; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		iter = ((it));
 		k = iter.keys[iter.i];
-		_r = iter.t.Key(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = iter.t.Key(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = PtrTo(_r); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		_r__2 = jsType(_r__1); /* */ __s = 3; case 3: if(__c) then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
 		__s = -1; return (__newDataPointer(iter.m[__externalize(__internalize(k, __String), __String)].k, _r__2));
@@ -13031,7 +13031,7 @@ __packages["reflect"] = (function()
 	end;
 	maplen = function(m)
 		local m;
-		return __parseInt(__keys(m).length);
+		return __parseInt(__keys(m)#);
 	end;
 	cvtDirect = function(p)
 		local _1, _arg, _arg__1, _arg__2, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _r__7, k, slice, srcVal, typ, v, val, __s, __r;
@@ -13040,7 +13040,7 @@ __packages["reflect"] = (function()
 		/* */ if (srcVal == jsType(v.typ).nil) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (srcVal == jsType(v.typ).nil) { */ case 1:
-			_r = makeValue(typ, jsType(typ).nil, v.flag); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = makeValue(typ, jsType(typ).nil, v.flag); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			__s = -1; return _r;
 		/* end */ case 2:
 		val = null;
@@ -13146,7 +13146,7 @@ __packages["reflect"] = (function()
 		/* */ if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
-			_r = makeMethodValue("Interface", __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = makeMethodValue("Interface", __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			v = _r;
 		/* end */ case 2:
 		if (isWrapped(v.typ)) {
@@ -13180,7 +13180,7 @@ __packages["reflect"] = (function()
 			local arguments__1, this__1;
 			return new __jsObjectPtr(fn[0].apply(rcvr[0], __externalize(arguments__1, sliceType__8)));
 		end; end)(fn, rcvr));
-		_r = __clone(v, Value).Type().common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).Type().common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return new Value.ptr(_r, (fv), (((v.flag & 96) >>> 0) | 19) >>> 0);
 		/* */ end return; end if __f == nil then  __f = { __blk= makeMethodValue end; end __f._r = _r; __f._tuple = _tuple; __f.fn = fn; __f.fv = fv; __f.op = op; __f.rcvr = rcvr; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -13207,7 +13207,7 @@ __packages["reflect"] = (function()
 			/* if ((_1 == (19))  or  (_1 == (23))  or  (_1 == (21))) { */ case 2:
 				__s = -1; return false;
 			/* end else if (_1 == (17)) { */ case 3:
-				_r = t.Elem().Comparable(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = t.Elem().Comparable(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__s = -1; return _r;
 			/* end else if (_1 == (25)) { */ case 4:
 				i = 0;
@@ -13238,7 +13238,7 @@ __packages["reflect"] = (function()
 			Method.copy(m, tt.Method(i));
 			__s = -1; return m;
 		end
-		_r = t.exportedMethods(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.exportedMethods(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		methods = _r;
 		if (i < 0  or  i >= methods.__length) {
 			__panic(new __String("reflect: Method index out of range"));
@@ -13380,7 +13380,7 @@ __packages["reflect"] = (function()
 			_tmp__1 = t.In(i);
 			xt = _tmp;
 			targ = _tmp__1;
-			_r = xt.AssignableTo(targ); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = xt.AssignableTo(targ); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			/* */ if ( not _r) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if ( not _r) { */ case 3:
@@ -13514,7 +13514,7 @@ __packages["reflect"] = (function()
 					__s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
 				end
 				typ = reflectType(val.constructor);
-				_r = makeValue(typ, val.__val, (v.flag & 96) >>> 0); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = makeValue(typ, val.__val, (v.flag & 96) >>> 0); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__s = -1; return _r;
 			/* end else if (_1 == (22)) { */ case 3:
 				if (__clone(v, Value).IsNil()) {
@@ -13569,7 +13569,7 @@ __packages["reflect"] = (function()
 			/* if ( not (jsTag[0] == "")) { */ case 3:
 				/* while (true) { */ case 5:
 					o = [o];
-					_r = __clone(v, Value).Field(0); /* */ __s = 7; case 7: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+					_r = __clone(v, Value).Field(0); /* */ __s = 7; case 7: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 					v = _r;
 					/* */ if (v.typ == jsObjectPtr) { __s = 8; continue; end
 					/* */ __s = 9; continue;
@@ -13613,7 +13613,7 @@ __packages["reflect"] = (function()
 			if ( not ( not (tag == ""))) { break; end
 			i = 0;
 			while (true) {
-				if ( not (i < tag.length  and  (tag.charCodeAt(i) == 32))) { break; end
+				if ( not (i < #tag  and  (tag.charCodeAt(i) == 32))) { break; end
 				i = i + (1) >> 0;
 			end
 			tag = __substring(tag, i);
@@ -13622,23 +13622,23 @@ __packages["reflect"] = (function()
 			end
 			i = 0;
 			while (true) {
-				if ( not (i < tag.length  and   not ((tag.charCodeAt(i) == 32))  and   not ((tag.charCodeAt(i) == 58))  and   not ((tag.charCodeAt(i) == 34)))) { break; end
+				if ( not (i < #tag  and   not ((tag.charCodeAt(i) == 32))  and   not ((tag.charCodeAt(i) == 58))  and   not ((tag.charCodeAt(i) == 34)))) { break; end
 				i = i + (1) >> 0;
 			end
-			if ((i + 1 >> 0) >= tag.length  or   not ((tag.charCodeAt(i) == 58))  or   not ((tag.charCodeAt((i + 1 >> 0)) == 34))) {
+			if ((i + 1 >> 0) >= #tag  or   not ((tag.charCodeAt(i) == 58))  or   not ((tag.charCodeAt((i + 1 >> 0)) == 34))) {
 				break;
 			end
 			name__1 = (__substring(tag, 0, i));
 			tag = __substring(tag, (i + 1 >> 0));
 			i = 1;
 			while (true) {
-				if ( not (i < tag.length  and   not ((tag.charCodeAt(i) == 34)))) { break; end
+				if ( not (i < #tag  and   not ((tag.charCodeAt(i) == 34)))) { break; end
 				if (tag.charCodeAt(i) == 92) {
 					i = i + (1) >> 0;
 				end
 				i = i + (1) >> 0;
 			end
-			if (i >= tag.length) {
+			if (i >= #tag) {
 				break;
 			end
 			qvalue = (__substring(tag, 0, (i + 1 >> 0)));
@@ -13686,7 +13686,7 @@ __packages["reflect"] = (function()
 						a[0][i[0]] = unwrapJsObject(typ[0], x);
 					end; end)(a, a__1, c, i, typ, typ__1))), fl);
 				/* end */ case 8:
-				_r = makeValue(typ[0], wrapJsObject(typ[0], a[0][i[0]]), fl); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = makeValue(typ[0], wrapJsObject(typ[0], a[0][i[0]]), fl); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__s = -1; return _r;
 			/* end else if (_1 == (23)) { */ case 3:
 				s = __clone(v, Value).object();
@@ -13713,7 +13713,7 @@ __packages["reflect"] = (function()
 				__s = -1; return _r__1;
 			/* end else if (_1 == (24)) { */ case 4:
 				str = (v.ptr).__get();
-				if (i[0] < 0  or  i[0] >= str.length) {
+				if (i[0] < 0  or  i[0] >= #str) {
 					__panic(new __String("reflect: string index out of range"));
 				end
 				fl__2 = (((v.flag & 96) >>> 0) | 8) >>> 0;
@@ -13759,13 +13759,13 @@ __packages["reflect"] = (function()
 		k = new flag(v.flag).kind();
 		_1 = k;
 		if ((_1 == (17))  or  (_1 == (24))) {
-			return __parseInt(__clone(v, Value).object().length);
+			return __parseInt(__clone(v, Value).object()#);
 		end else if (_1 == (23)) {
 			return __parseInt(__clone(v, Value).object().__length) >> 0;
 		end else if (_1 == (18)) {
-			return __parseInt(__clone(v, Value).object().__buffer.length) >> 0;
+			return __parseInt(__clone(v, Value).object().__#buffer) >> 0;
 		end else if (_1 == (21)) {
-			return __parseInt(__keys(__clone(v, Value).object()).length);
+			return __parseInt(__keys(__clone(v, Value).object())#);
 		end else {
 			__panic(new ValueError.ptr("reflect.Value.Len", k));
 		end
@@ -13802,7 +13802,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBeAssignable();
 		new flag(x.flag).mustBeExported();
-		_r = __clone(x, Value).assignTo("reflect.Set", v.typ, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(x, Value).assignTo("reflect.Set", v.typ, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		x = _r;
 		/* */ if ( not ((((v.flag & 128) >>> 0) == 0))) { __s = 2; continue; end
 		/* */ __s = 3; continue;
@@ -13839,7 +13839,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBeAssignable();
 		new flag(v.flag).mustBe(23);
-		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 8))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 8))) { */ case 1:
@@ -13924,10 +13924,10 @@ __packages["reflect"] = (function()
 				__s = 6; continue;
 			/* end else if (_1 == (24)) { */ case 4:
 				str = (v.ptr).__get();
-				if (i < 0  or  j < i  or  j > str.length) {
+				if (i < 0  or  j < i  or  j > #str) {
 					__panic(new __String("reflect.Value.Slice: string slice index out of bounds"));
 				end
-				_r = ValueOf(new __String(__substring(str, i, j))); /* */ __s = 7; case 7: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = ValueOf(new __String(__substring(str, i, j))); /* */ __s = 7; case 7: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__s = -1; return _r;
 			/* end else { */ case 5:
 				__panic(new ValueError.ptr("reflect.Value.Slice", kind));
@@ -13968,7 +13968,7 @@ __packages["reflect"] = (function()
 		if (i < 0  or  j < i  or  k < j  or  k > cap) {
 			__panic(new __String("reflect.Value.Slice3: slice index out of bounds"));
 		end
-		_r = makeValue(typ, __subslice(s, i, j, k), (v.flag & 96) >>> 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeValue(typ, __subslice(s, i, j, k), (v.flag & 96) >>> 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Slice3 end; end __f._1 = _1; __f._r = _r; __f.cap = cap; __f.i = i; __f.j = j; __f.k = k; __f.kind = kind; __f.s = s; __f.tt = tt; __f.typ = typ; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -13990,7 +13990,7 @@ __packages["reflect"] = (function()
 		if (nb) {
 			comms = __append(comms, new sliceType__8([]));
 		end
-		_r = selectHelper(new sliceType__3([comms])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = selectHelper(new sliceType__3([comms])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		selectRes = _r;
 		if (nb  and  ((__parseInt(selectRes[0]) >> 0) == 1)) {
 			_tmp = false;
@@ -14015,7 +14015,7 @@ __packages["reflect"] = (function()
 		if (nb) {
 			comms = __append(comms, new sliceType__8([]));
 		end
-		_r = selectHelper(new sliceType__3([comms])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = selectHelper(new sliceType__3([comms])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		selectRes = _r;
 		if (nb  and  ((__parseInt(selectRes[0]) >> 0) == 1)) {
 			__s = -1; return false;
@@ -14101,7 +14101,7 @@ __packages["reflect"] = (function()
 		local _i, _i__1, _r, _r__1, _ref, _ref__1, _tuple, _tuple__1, allExported, allm, found, m, m__1, methods, methodsi, name__1, name__2, t, ut, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; allExported = __f.allExported; allm = __f.allm; found = __f.found; m = __f.m; m__1 = __f.m__1; methods = __f.methods; methodsi = __f.methodsi; name__1 = __f.name__1; name__2 = __f.name__2; t = __f.t; ut = __f.ut; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		t = this;
-		_r = methodCache.Load(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = methodCache.Load(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		methodsi = _tuple[0];
 		found = _tuple[1];
@@ -14162,7 +14162,7 @@ __packages["reflect"] = (function()
 		if (((t.tflag & 1) >>> 0) == 0) {
 			__s = -1; return 0;
 		end
-		_r = t.exportedMethods(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.exportedMethods(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r.__length;
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.NumMethod end; end __f._r = _r; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14197,7 +14197,7 @@ __packages["reflect"] = (function()
 			/* */ if (__clone(pname, name).isExported()  and  __clone(pname, name).name() == name__1) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if (__clone(pname, name).isExported()  and  __clone(pname, name).name() == name__1) { */ case 3:
-				_r = t.Method(i); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = t.Method(i); /* */ __s = 5; case 5: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				_tmp__2 = __clone(_r, Method);
 				_tmp__3 = true;
 				Method.copy(m, _tmp__2);
@@ -14234,7 +14234,7 @@ __packages["reflect"] = (function()
 			return "";
 		end
 		s = t.String();
-		i = s.length - 1 >> 0;
+		i = #s - 1 >> 0;
 		while (true) {
 			if ( not (i >= 0)) { break; end
 			if (s.charCodeAt(i) == 46) {
@@ -14306,7 +14306,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: FieldByIndex of non-struct type"));
 		end
 		tt = (t.kindType);
-		_r = tt.FieldByIndex(index); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = tt.FieldByIndex(index); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByIndex end; end __f._r = _r; __f.index = index; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14319,7 +14319,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: FieldByName of non-struct type"));
 		end
 		tt = (t.kindType);
-		_r = tt.FieldByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = tt.FieldByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByName end; end __f._r = _r; __f.name__1 = name__1; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14332,7 +14332,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: FieldByNameFunc of non-struct type"));
 		end
 		tt = (t.kindType);
-		_r = tt.FieldByNameFunc(match); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = tt.FieldByNameFunc(match); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByNameFunc end; end __f._r = _r; __f.match = match; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14492,7 +14492,7 @@ __packages["reflect"] = (function()
 			if ( not ( not (tag == ""))) { break; end
 			i = 0;
 			while (true) {
-				if ( not (i < tag.length  and  (tag.charCodeAt(i) == 32))) { break; end
+				if ( not (i < #tag  and  (tag.charCodeAt(i) == 32))) { break; end
 				i = i + (1) >> 0;
 			end
 			tag = __substring(tag, i);
@@ -14501,23 +14501,23 @@ __packages["reflect"] = (function()
 			end
 			i = 0;
 			while (true) {
-				if ( not (i < tag.length  and  tag.charCodeAt(i) > 32  and   not ((tag.charCodeAt(i) == 58))  and   not ((tag.charCodeAt(i) == 34))  and   not ((tag.charCodeAt(i) == 127)))) { break; end
+				if ( not (i < #tag  and  tag.charCodeAt(i) > 32  and   not ((tag.charCodeAt(i) == 58))  and   not ((tag.charCodeAt(i) == 34))  and   not ((tag.charCodeAt(i) == 127)))) { break; end
 				i = i + (1) >> 0;
 			end
-			if ((i == 0)  or  (i + 1 >> 0) >= tag.length  or   not ((tag.charCodeAt(i) == 58))  or   not ((tag.charCodeAt((i + 1 >> 0)) == 34))) {
+			if ((i == 0)  or  (i + 1 >> 0) >= #tag  or   not ((tag.charCodeAt(i) == 58))  or   not ((tag.charCodeAt((i + 1 >> 0)) == 34))) {
 				break;
 			end
 			name__1 = (__substring(tag, 0, i));
 			tag = __substring(tag, (i + 1 >> 0));
 			i = 1;
 			while (true) {
-				if ( not (i < tag.length  and   not ((tag.charCodeAt(i) == 34)))) { break; end
+				if ( not (i < #tag  and   not ((tag.charCodeAt(i) == 34)))) { break; end
 				if (tag.charCodeAt(i) == 92) {
 					i = i + (1) >> 0;
 				end
 				i = i + (1) >> 0;
 			end
-			if (i >= tag.length) {
+			if (i >= #tag) {
 				break;
 			end
 			qvalue = (__substring(tag, 0, (i + 1 >> 0)));
@@ -14585,7 +14585,7 @@ __packages["reflect"] = (function()
 			/* */ __s = 4; continue;
 			/* if (i > 0) { */ case 3:
 				ft = f.Type;
-				_r = ft.Kind(); /* */ __s = 8; case 8: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = ft.Kind(); /* */ __s = 8; case 8: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				if ( not (_r == 22)) { _v = false; __s = 7; continue s; end
 				_r__1 = ft.Elem(); /* */ __s = 9; case 9: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 				_r__2 = _r__1.Kind(); /* */ __s = 10; case 10: if(__c) then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
@@ -14652,7 +14652,7 @@ __packages["reflect"] = (function()
 						/* */ if (ntyp.Kind() == 22) { __s = 11; continue; end
 						/* */ __s = 12; continue;
 						/* if (ntyp.Kind() == 22) { */ case 11:
-							_r = ntyp.Elem().common(); /* */ __s = 13; case 13: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+							_r = ntyp.Elem().common(); /* */ __s = 13; case 13: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 							ntyp = _r;
 						/* end */ case 12:
 					/* end */ case 10:
@@ -14742,7 +14742,7 @@ __packages["reflect"] = (function()
 		_r = t.FieldByNameFunc((function(1) return function(s)
 			local s;
 			return s == name__1[0];
-		end; end)(name__1)); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		end; end)(name__1)); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		StructField.copy(f, _tuple[0]);
 		present = _tuple[1];
@@ -14762,7 +14762,7 @@ __packages["reflect"] = (function()
 		if (__interfaceIsEqual(u, __ifaceNil)) {
 			__panic(new __String("reflect: nil type passed to Type.Implements"));
 		end
-		_r = u.Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = u.Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 20))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 20))) { */ case 1:
@@ -14780,7 +14780,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: nil type passed to Type.AssignableTo"));
 		end
 		uu = __assertType(u, ptrType__1);
-		_r = directlyAssignable(uu, t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = directlyAssignable(uu, t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r  or  implements__1(uu, t);
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.AssignableTo end; end __f._r = _r; __f.t = t; __f.u = u; __f.uu = uu; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14793,7 +14793,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: nil type passed to Type.ConvertibleTo"));
 		end
 		uu = __assertType(u, ptrType__1);
-		_r = convertOp(uu, t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = convertOp(uu, t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return  not (_r == __throwNilPointerError);
 		/* */ end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.ConvertibleTo end; end __f._r = _r; __f.t = t; __f.u = u; __f.uu = uu; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14887,7 +14887,7 @@ __packages["reflect"] = (function()
 		if ( not (T.Name() == "")  and   not (V.Name() == "")  or   not ((T.Kind() == V.Kind()))) {
 			__s = -1; return false;
 		end
-		_r = haveIdenticalUnderlyingType(T, V, true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = haveIdenticalUnderlyingType(T, V, true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= directlyAssignable end; end __f.T = T; __f.V = V; __f._r = _r; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -14897,7 +14897,7 @@ __packages["reflect"] = (function()
 		if (cmpTags) {
 			__s = -1; return __interfaceIsEqual(T, V);
 		end
-		_r = T.Name(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = T.Name(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = V.Name(); /* */ __s = 5; case 5: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		if ( not (_r == _r__1)) { _v = true; __s = 3; continue s; end
 		_r__2 = T.Kind(); /* */ __s = 6; case 6: if(__c) then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
@@ -14940,7 +14940,7 @@ __packages["reflect"] = (function()
 			/* */ __s = 9; continue;
 			/* if (_1 == (17)) { */ case 2:
 				if ( not (T.Len() == V.Len())) { _v = false; __s = 10; continue s; end
-				_r = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); /* */ __s = 11; case 11: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); /* */ __s = 11; case 11: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				_v = _r; case 10:
 				__s = -1; return _v;
 			/* end else if (_1 == (18)) { */ case 3:
@@ -15142,7 +15142,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		v = this;
 		new flag(v.flag).mustBe(23);
-		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 8))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 8))) { */ case 1:
@@ -15157,7 +15157,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		v = this;
 		new flag(v.flag).mustBe(23);
-		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 5))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 5))) { */ case 1:
@@ -15185,7 +15185,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(19);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).call("Call", in__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).call("Call", in__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Call end; end __f._r = _r; __f.in__1 = in__1; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -15196,7 +15196,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(19);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).call("CallSlice", in__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).call("CallSlice", in__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.CallSlice end; end __f._r = _r; __f.in__1 = in__1; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -15221,7 +15221,7 @@ __packages["reflect"] = (function()
 		/* */ if (index.__length == 1) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (index.__length == 1) { */ case 1:
-			_r = __clone(v, Value).Field((0 >= index.__length ? (__throwRuntimeError("index out of range"), nil) : index.__array[index.__offset + 0])); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = __clone(v, Value).Field((0 >= index.__length ? (__throwRuntimeError("index out of range"), nil) : index.__array[index.__offset + 0])); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			__s = -1; return _r;
 		/* end */ case 2:
 		new flag(v.flag).mustBe(25);
@@ -15260,7 +15260,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; name__1 = __f.name__1; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		v = this;
 		new flag(v.flag).mustBe(25);
-		_r = v.typ.FieldByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.FieldByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		f = __clone(_tuple[0], StructField);
 		ok = _tuple[1];
@@ -15278,7 +15278,7 @@ __packages["reflect"] = (function()
 		local _r, _r__1, _tuple, f, match, ok, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; match = __f.match; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		v = this;
-		_r = v.typ.FieldByNameFunc(match); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.FieldByNameFunc(match); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		f = __clone(_tuple[0], StructField);
 		ok = _tuple[1];
@@ -15339,7 +15339,7 @@ __packages["reflect"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; i = __f.i; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		i = __ifaceNil;
 		v = this;
-		_r = valueInterface(__clone(v, Value), true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = valueInterface(__clone(v, Value), true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		i = _r;
 		__s = -1; return i;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Interface end; end __f._r = _r; __f.i = i; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -15363,7 +15363,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(21);
 		tt = (v.typ.kindType);
-		_r = __clone(key, Value).assignTo("reflect.Value.MapIndex", tt.key, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(key, Value).assignTo("reflect.Value.MapIndex", tt.key, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		key = _r;
 		k = 0;
 		if ( not ((((key.flag & 128) >>> 0) == 0))) {
@@ -15408,7 +15408,7 @@ __packages["reflect"] = (function()
 		i = 0;
 		/* while (true) { */ case 1:
 			/* if ( not (i < a.__length)) { break; end */ if( not (i < a.__length)) { __s = 2; continue; end
-			_r = mapiterkey(it); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = mapiterkey(it); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			key = _r;
 			if (key == 0) {
 				/* break; */ __s = 2; continue;
@@ -15435,7 +15435,7 @@ __packages["reflect"] = (function()
 			__panic(new ValueError.ptr("reflect.Value.Method", 0));
 		end
 		if ( not ((((v.flag & 512) >>> 0) == 0))) { _v = true; __s = 3; continue s; end
-		_r = v.typ.NumMethod(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.NumMethod(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_v = ((i >>> 0)) >= ((_r >>> 0)); case 3:
 		/* */ if (_v) { __s = 1; continue; end
 		/* */ __s = 2; continue;
@@ -15462,7 +15462,7 @@ __packages["reflect"] = (function()
 		if ( not ((((v.flag & 512) >>> 0) == 0))) {
 			__s = -1; return 0;
 		end
-		_r = v.typ.NumMethod(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.NumMethod(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.NumMethod end; end __f._r = _r; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -15477,7 +15477,7 @@ __packages["reflect"] = (function()
 		if ( not ((((v.flag & 512) >>> 0) == 0))) {
 			__s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
 		end
-		_r = v.typ.MethodByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.MethodByName(name__1); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		m = __clone(_tuple[0], Method);
 		ok = _tuple[1];
@@ -15564,7 +15564,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(18);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).recv(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).recv(false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		x = _tuple[0];
 		ok = _tuple[1];
@@ -15592,7 +15592,7 @@ __packages["reflect"] = (function()
 		end else {
 			p = ((val.__ptr_ptr  or  (val.__ptr_ptr = new ptrType__15(function() return this.__target.ptr; end, function(v) this.__target.ptr = __v; end, val))));
 		end
-		_r = chanrecv(__clone(v, Value).pointer(), nb, p); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = chanrecv(__clone(v, Value).pointer(), nb, p); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		selected = _tuple[0];
 		ok = _tuple[1];
@@ -15609,7 +15609,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(18);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).send(__clone(x, Value), false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).send(__clone(x, Value), false); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r;
 		__s = -1; return;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Send end; end __f._r = _r; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -15625,7 +15625,7 @@ __packages["reflect"] = (function()
 			__panic(new __String("reflect: send on recv-only channel"));
 		end
 		new flag(x.flag).mustBeExported();
-		_r = __clone(x, Value).assignTo("reflect.Value.Send", tt.elem, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(x, Value).assignTo("reflect.Value.Send", tt.elem, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		x = _r;
 		p = 0;
 		if ( not ((((x.flag & 128) >>> 0) == 0))) {
@@ -15653,7 +15653,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBeAssignable();
 		new flag(v.flag).mustBe(23);
-		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = v.typ.Elem().Kind(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		/* */ if ( not ((_r == 5))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((_r == 5))) { */ case 1:
@@ -15723,7 +15723,7 @@ __packages["reflect"] = (function()
 		new flag(v.flag).mustBeExported();
 		new flag(key.flag).mustBeExported();
 		tt = (v.typ.kindType);
-		_r = __clone(key, Value).assignTo("reflect.Value.SetMapIndex", tt.key, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(key, Value).assignTo("reflect.Value.SetMapIndex", tt.key, 0); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		key = _r;
 		k = 0;
 		if ( not ((((key.flag & 128) >>> 0) == 0))) {
@@ -15799,7 +15799,7 @@ __packages["reflect"] = (function()
 		end else if (_1 == (24)) {
 			__s = -1; return (v.ptr).__get();
 		end
-		_r = __clone(v, Value).Type().String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).Type().String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return "<" + _r + " Value>";
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.String end; end __f._1 = _1; __f._r = _r; __f.k = k; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -15812,7 +15812,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(18);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).recv(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).recv(true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		x = _tuple[0];
 		ok = _tuple[1];
@@ -15826,7 +15826,7 @@ __packages["reflect"] = (function()
 		v = this;
 		new flag(v.flag).mustBe(18);
 		new flag(v.flag).mustBeExported();
-		_r = __clone(v, Value).send(__clone(x, Value), true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).send(__clone(x, Value), true); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.TrySend end; end __f._r = _r; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -15900,7 +15900,7 @@ __packages["reflect"] = (function()
 		end
 		ptr = unsafe_New(__assertType(typ, ptrType__1));
 		fl = 22;
-		_r = typ.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = typ.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = _r.ptrTo(); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		__s = -1; return new Value.ptr(_r__1, ptr, fl);
 		/* */ end return; end if __f == nil then  __f = { __blk= New end; end __f._r = _r; __f._r__1 = _r__1; __f.fl = fl; __f.ptr = ptr; __f.typ = typ; __f.__s = __s; __f.__r = __r; return __f;
@@ -15913,7 +15913,7 @@ __packages["reflect"] = (function()
 		/* */ if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
-			_r = makeMethodValue(context, __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = makeMethodValue(context, __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			v = _r;
 		/* end */ case 2:
 			_r__1 = directlyAssignable(dst, v.typ); /* */ __s = 8; case 8: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -15954,7 +15954,7 @@ __packages["reflect"] = (function()
 		/* */ if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
-			_r = makeMethodValue("Convert", __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = makeMethodValue("Convert", __clone(v, Value)); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			v = _r;
 		/* end */ case 2:
 		_r__1 = t.common(); /* */ __s = 4; case 4: if(__c) then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -16020,7 +16020,7 @@ __packages["reflect"] = (function()
 				__s = 8; continue;
 			/* end else if (_1 == (24)) { */ case 6:
 				if ( not (dst.Kind() == 23)) { _v = false; __s = 11; continue s; end
-				_r = dst.Elem().PkgPath(); /* */ __s = 12; case 12: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = dst.Elem().PkgPath(); /* */ __s = 12; case 12: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				_v = _r == ""; case 11:
 				/* */ if (_v) { __s = 9; continue; end
 				/* */ __s = 10; continue;
@@ -16083,7 +16083,7 @@ __packages["reflect"] = (function()
 	makeFloat = function(t)
 		local _1, _r, f, ptr, t, typ, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		typ = _r;
 		ptr = unsafe_New(typ);
 		_1 = typ.size;
@@ -16098,7 +16098,7 @@ __packages["reflect"] = (function()
 	makeComplex = function(t)
 		local _1, _r, f, ptr, t, typ, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = t.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		typ = _r;
 		ptr = unsafe_New(typ);
 		_1 = typ.size;
@@ -16113,7 +16113,7 @@ __packages["reflect"] = (function()
 	makeString = function(t)
 		local _r, _r__1, f, ret, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = __clone(_r, Value).Elem(); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		ret = _r__1;
 		__clone(ret, Value).SetString(v);
@@ -16124,7 +16124,7 @@ __packages["reflect"] = (function()
 	makeBytes = function(t)
 		local _r, _r__1, f, ret, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = __clone(_r, Value).Elem(); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		ret = _r__1;
 		__r = __clone(ret, Value).SetBytes(v); /* */ __s = 3; case 3: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
@@ -16135,7 +16135,7 @@ __packages["reflect"] = (function()
 	makeRunes = function(t)
 		local _r, _r__1, f, ret, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = New(t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = __clone(_r, Value).Elem(); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		ret = _r__1;
 		__r = __clone(ret, Value).setRunes(v); /* */ __s = 3; case 3: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
@@ -16146,70 +16146,70 @@ __packages["reflect"] = (function()
 	cvtInt = function(t)
 		local _r, t, v, x, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeInt((v.flag & 96) >>> 0, ((x = __clone(v, Value).Int(), new __Uint64(x.__high, x.__low))), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeInt((v.flag & 96) >>> 0, ((x = __clone(v, Value).Int(), new __Uint64(x.__high, x.__low))), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtInt end; end __f._r = _r; __f.t = t; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtUint = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeInt((v.flag & 96) >>> 0, __clone(v, Value).Uint(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeInt((v.flag & 96) >>> 0, __clone(v, Value).Uint(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtUint end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtFloatInt = function(t)
 		local _r, t, v, x, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeInt((v.flag & 96) >>> 0, ((x = (new __Int64(0, __clone(v, Value).Float())), new __Uint64(x.__high, x.__low))), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeInt((v.flag & 96) >>> 0, ((x = (new __Int64(0, __clone(v, Value).Float())), new __Uint64(x.__high, x.__low))), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtFloatInt end; end __f._r = _r; __f.t = t; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtFloatUint = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeInt((v.flag & 96) >>> 0, (new __Uint64(0, __clone(v, Value).Float())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeInt((v.flag & 96) >>> 0, (new __Uint64(0, __clone(v, Value).Float())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtFloatUint end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtIntFloat = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Int())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Int())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtIntFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtUintFloat = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Uint())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Uint())), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtUintFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtFloat = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeFloat((v.flag & 96) >>> 0, __clone(v, Value).Float(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeFloat((v.flag & 96) >>> 0, __clone(v, Value).Float(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtComplex = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeComplex((v.flag & 96) >>> 0, __clone(v, Value).Complex(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeComplex((v.flag & 96) >>> 0, __clone(v, Value).Complex(), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtComplex end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtIntString = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Int().__low)), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Int().__low)), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtIntString end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	cvtUintString = function(t)
 		local _r, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Uint().__low)), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Uint().__low)), t); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__s = -1; return _r;
 		/* */ end return; end if __f == nil then  __f = { __blk= cvtUintString end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
 	end;
@@ -16217,7 +16217,7 @@ __packages["reflect"] = (function()
 		local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		_arg = (v.flag & 96) >>> 0;
-		_r = __clone(v, Value).Bytes(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).Bytes(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_arg__1 = (__bytesToString(_r));
 		_arg__2 = t;
 		_r__1 = makeString(_arg, _arg__1, _arg__2); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -16228,7 +16228,7 @@ __packages["reflect"] = (function()
 		local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		_arg = (v.flag & 96) >>> 0;
-		_r = __clone(v, Value).String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_arg__1 = (new sliceType__15(__stringToBytes(_r)));
 		_arg__2 = t;
 		_r__1 = makeBytes(_arg, _arg__1, _arg__2); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -16239,7 +16239,7 @@ __packages["reflect"] = (function()
 		local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		_arg = (v.flag & 96) >>> 0;
-		_r = __clone(v, Value).runes(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).runes(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_arg__1 = (__runesToString(_r));
 		_arg__2 = t;
 		_r__1 = makeString(_arg, _arg__1, _arg__2); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -16250,7 +16250,7 @@ __packages["reflect"] = (function()
 		local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		_arg = (v.flag & 96) >>> 0;
-		_r = __clone(v, Value).String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, Value).String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_arg__1 = (new sliceType__17(__stringToRunes(_r)));
 		_arg__2 = t;
 		_r__1 = makeRunes(_arg, _arg__1, _arg__2); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -16260,7 +16260,7 @@ __packages["reflect"] = (function()
 	cvtT2I = function(p)
 		local _r, _r__1, _r__2, _r__3, _r__4, target, typ, v, x, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; target = __f.target; typ = __f.typ; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = typ.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = typ.common(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r__1 = unsafe_New(_r); /* */ __s = 2; case 2: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 		target = _r__1;
 		_r__2 = valueInterface(__clone(v, Value), false); /* */ __s = 3; case 3: if(__c) then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
@@ -16284,7 +16284,7 @@ __packages["reflect"] = (function()
 		/* */ if (__clone(v, Value).IsNil()) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (__clone(v, Value).IsNil()) { */ case 1:
-			_r = Zero(typ); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = Zero(typ); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			ret = _r;
 			ret.flag = (ret.flag | (((v.flag & 96) >>> 0))) >>> 0;
 			__s = -1; return ret;
@@ -16370,7 +16370,7 @@ __packages["fmt"] = (function()
 	utf8 = __packages["unicode/utf8"];
 	fmtFlags = __pkg.fmtFlags = __newType(0, __kindStruct, "fmt.fmtFlags", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.widPresent = false;
 			this.precPresent = false;
 			this.minus = false;
@@ -16394,7 +16394,7 @@ __packages["fmt"] = (function()
 	end);
 	fmt = __pkg.fmt = __newType(0, __kindStruct, "fmt.fmt", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.buf = ptrType__1.nil;
 			this.fmtFlags = new fmtFlags.ptr(false, false, false, false, false, false, false, false, false);
 			this.wid = 0;
@@ -16415,7 +16415,7 @@ __packages["fmt"] = (function()
 	buffer = __pkg.buffer = __newType(12, __kindSlice, "fmt.buffer", true, "fmt", false, null);
 	pp = __pkg.pp = __newType(0, __kindStruct, "fmt.pp", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.buf = buffer.nil;
 			this.arg = __ifaceNil;
 			this.value = new reflect.Value.ptr(ptrType.nil, 0, 0);
@@ -16437,7 +16437,7 @@ __packages["fmt"] = (function()
 	end);
 	scanError = __pkg.scanError = __newType(0, __kindStruct, "fmt.scanError", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.err = __ifaceNil;
 			return;
 		end
@@ -16445,7 +16445,7 @@ __packages["fmt"] = (function()
 	end);
 	ss = __pkg.ss = __newType(0, __kindStruct, "fmt.ss", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.rs = __ifaceNil;
 			this.buf = buffer.nil;
 			this.count = 0;
@@ -16461,7 +16461,7 @@ __packages["fmt"] = (function()
 	end);
 	ssave = __pkg.ssave = __newType(0, __kindStruct, "fmt.ssave", true, "fmt", false, function(_)
 		this.__val = this;
-		if (arguments.length == 0) {
+		if (#arguments == 0) {
 			this.validSave = false;
 			this.nlIsEnd = false;
 			this.nlIsSpace = false;
@@ -16758,7 +16758,7 @@ __packages["fmt"] = (function()
 		f = this;
 		length = b.__length;
 		if (b == sliceType__2.nil) {
-			length = s.length;
+			length = #s;
 		end
 		if (f.fmtFlags.precPresent  and  f.prec < length) {
 			length = f.prec;
@@ -16973,7 +16973,7 @@ __packages["fmt"] = (function()
 	newPrinter = function()
 		local _r, p, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = ppFree.Get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = ppFree.Get(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		p = __assertType(_r, ptrType__2);
 		p.panicking = false;
 		p.erroring = false;
@@ -17050,7 +17050,7 @@ __packages["fmt"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; p = __f.p; w = __f.w; x = __f.x; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		n = 0;
 		err = __ifaceNil;
-		_r = newPrinter(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = newPrinter(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		p = _r;
 		__r = p.doPrintf(format, a); /* */ __s = 2; case 2: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 		_r__1 = w.Write((x = p.buf, __subslice(new sliceType__2(x.__array), x.__offset, x.__offset + x.__length))); /* */ __s = 3; case 3: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
@@ -17067,7 +17067,7 @@ __packages["fmt"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		n = 0;
 		err = __ifaceNil;
-		_r = Fprintf(os.Stdout, format, a); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = Fprintf(os.Stdout, format, a); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		n = _tuple[0];
 		err = _tuple[1];
@@ -17078,7 +17078,7 @@ __packages["fmt"] = (function()
 	getField = function(i)
 		local _r, _r__1, i, v, val, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; i = __f.i; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
-		_r = __clone(v, reflect.Value).Field(i); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, reflect.Value).Field(i); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		val = _r;
 		/* */ if ((__clone(val, reflect.Value).Kind() == 20)  and   not __clone(val, reflect.Value).IsNil()) { __s = 2; continue; end
 		/* */ __s = 3; continue;
@@ -17134,7 +17134,7 @@ __packages["fmt"] = (function()
 			__s = -1; return;
 		end
 		(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(63);
-		_r = __clone(v, reflect.Value).Type().String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = __clone(v, reflect.Value).Type().String(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		__r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); /* */ __s = 2; case 2: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 		(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(63);
 		__s = -1; return;
@@ -17153,7 +17153,7 @@ __packages["fmt"] = (function()
 			/* */ if (__clone(p.value, reflect.Value).IsValid()) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if ( not (__interfaceIsEqual(p.arg, __ifaceNil))) { */ case 2:
-				_r = reflect.TypeOf(p.arg).String(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = reflect.TypeOf(p.arg).String(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); /* */ __s = 7; case 7: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 				(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(61);
 				__r = p.printArg(p.arg, 118); /* */ __s = 8; case 8: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
@@ -17416,7 +17416,7 @@ __packages["fmt"] = (function()
 				p.fmt.fmt_q((__bytesToString(v)));
 				__s = 8; continue;
 			/* end else { */ case 7:
-				_r = reflect.ValueOf(v); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = reflect.ValueOf(v); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__r = p.printValue(__clone(_r, reflect.Value), verb, 0); /* */ __s = 10; case 10: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 			/* end */ case 8:
 		case 1:
@@ -17450,7 +17450,7 @@ __packages["fmt"] = (function()
 				/* */ __s = 13; continue;
 				/* if (p.fmt.fmtFlags.sharpV) { */ case 12:
 					(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(40);
-					_r = __clone(value, reflect.Value).Type().String(); /* */ __s = 15; case 15: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+					_r = __clone(value, reflect.Value).Type().String(); /* */ __s = 15; case 15: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 					__r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); /* */ __s = 16; case 16: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 					(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(")(");
 					if (u == 0) {
@@ -17490,7 +17490,7 @@ __packages["fmt"] = (function()
 		/* */ if ( not (__interfaceIsEqual(err, __ifaceNil))) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if ( not (__interfaceIsEqual(err, __ifaceNil))) { */ case 1:
-			_r = reflect.ValueOf(arg); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = reflect.ValueOf(arg); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			v = _r;
 			if ((__clone(v, reflect.Value).Kind() == 22)  and  __clone(v, reflect.Value).IsNil()) {
 				(p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
@@ -17516,7 +17516,7 @@ __packages["fmt"] = (function()
 	pp.prototype.catchPanic = function(b) return this.__val.catchPanic(arg, verb); end;
 	pp.ptr.prototype.handleMethods = function(b)
 		local _1, _r, _r__1, _r__2, _ref, _tuple, _tuple__1, formatter, handled, ok, ok__1, p, stringer, v, v__1, verb, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; formatter = __f.formatter; handled = __f.handled; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; stringer = __f.stringer; v = __f.v; v__1 = __f.v__1; verb = __f.verb; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; formatter = __f.formatter; handled = __f.handled; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; stringer = __f.stringer; v = __f.v; v__1 = __f.v__1; verb = __f.verb; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
 		handled = false;
 		p = this;
 		if (p.erroring) {
@@ -17544,7 +17544,7 @@ __packages["fmt"] = (function()
 			/* if (ok__1) { */ case 7:
 				handled = true;
 				__deferred.push([__methodVal(p, "catchPanic"), [p.arg, verb]]);
-				_r = stringer.GoString(); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = stringer.GoString(); /* */ __s = 9; case 9: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__r = p.fmt.fmt_s(_r); /* */ __s = 10; case 10: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 				__s = -1; return handled;
 			/* end */ case 8:
@@ -17578,7 +17578,7 @@ __packages["fmt"] = (function()
 		/* end */ case 6:
 		handled = false;
 		__s = -1; return handled;
-		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if ( not __curGoroutine.asleep) then return  handled; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= pp.ptr.prototype.handleMethods end; end __f._1 = _1; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._ref = _ref; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.formatter = formatter; __f.handled = handled; __f.ok = ok; __f.ok__1 = ok__1; __f.p = p; __f.stringer = stringer; __f.v = v; __f.v__1 = v__1; __f.verb = verb; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  handled; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= pp.ptr.prototype.handleMethods end; end __f._1 = _1; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._ref = _ref; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.formatter = formatter; __f.handled = handled; __f.ok = ok; __f.ok__1 = ok__1; __f.p = p; __f.stringer = stringer; __f.v = v; __f.v__1 = v__1; __f.verb = verb; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
 	end;
 	pp.prototype.handleMethods = function(b) return this.__val.handleMethods(verb); end;
 	pp.ptr.prototype.printArg = function(b)
@@ -17607,7 +17607,7 @@ __packages["fmt"] = (function()
 			/* */ if (_2 == (112)) { __s = 10; continue; end
 			/* */ __s = 11; continue;
 			/* if (_2 == (84)) { */ case 9:
-				_r = reflect.TypeOf(arg).String(); /* */ __s = 12; case 12: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = reflect.TypeOf(arg).String(); /* */ __s = 12; case 12: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				__r = p.fmt.fmt_s(_r); /* */ __s = 13; case 13: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 				__s = -1; return;
 			/* end else if (_2 == (112)) { */ case 10:
@@ -17746,7 +17746,7 @@ __packages["fmt"] = (function()
 		/* */ if (depth > 0  and  __clone(value, reflect.Value).IsValid()  and  __clone(value, reflect.Value).CanInterface()) { __s = 1; continue; end
 		/* */ __s = 2; continue;
 		/* if (depth > 0  and  __clone(value, reflect.Value).IsValid()  and  __clone(value, reflect.Value).CanInterface()) { */ case 1:
-			_r = __clone(value, reflect.Value).Interface(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = __clone(value, reflect.Value).Interface(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			p.arg = _r;
 			_r__1 = p.handleMethods(verb); /* */ __s = 6; case 6: if(__c) then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
 			/* */ if (_r__1) { __s = 4; continue; end
@@ -18044,7 +18044,7 @@ __packages["fmt"] = (function()
 			/* */ if ( not isInt) { __s = 3; continue; end
 			/* */ __s = 4; continue;
 			/* if ( not isInt) { */ case 3:
-					_r = reflect.ValueOf(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum])); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+					_r = reflect.ValueOf(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum])); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 					v = _r;
 					_1 = __clone(v, reflect.Value).Kind();
 					if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) {
@@ -18076,7 +18076,7 @@ __packages["fmt"] = (function()
 		index = 0;
 		wid = 0;
 		ok = false;
-		if (format.length < 3) {
+		if (#format < 3) {
 			_tmp = 0;
 			_tmp__1 = 1;
 			_tmp__2 = false;
@@ -18087,7 +18087,7 @@ __packages["fmt"] = (function()
 		end
 		i = 1;
 		while (true) {
-			if ( not (i < format.length)) { break; end
+			if ( not (i < #format)) { break; end
 			if (format.charCodeAt(i) == 93) {
 				_tuple = parsenum(format, 1, i);
 				width = _tuple[0];
@@ -18126,7 +18126,7 @@ __packages["fmt"] = (function()
 		newi = 0;
 		found = false;
 		p = this;
-		if (format.length <= i  or   not ((format.charCodeAt(i) == 91))) {
+		if (#format <= i  or   not ((format.charCodeAt(i) == 91))) {
 			_tmp = argNum;
 			_tmp__1 = i;
 			_tmp__2 = false;
@@ -18179,7 +18179,7 @@ __packages["fmt"] = (function()
 		local _1, _i, _r, _r__1, _r__2, _ref, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, a, afterIndex, arg, argNum, c, end, format, i, i__1, lasti, p, verb, w, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; a = __f.a; afterIndex = __f.afterIndex; arg = __f.arg; argNum = __f.argNum; c = __f.c; end = __f.end; format = __f.format; i = __f.i; i__1 = __f.i__1; lasti = __f.lasti; p = __f.p; verb = __f.verb; w = __f.w; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		p = this;
-		end = format.length;
+		end = #format;
 		argNum = 0;
 		afterIndex = false;
 		p.reordered = false;
@@ -18254,7 +18254,7 @@ __packages["fmt"] = (function()
 			/* */ __s = 17; continue;
 			/* if (i < end  and  (format.charCodeAt(i) == 42)) { */ case 16:
 				i = i + (1) >> 0;
-				_r = intFromArg(a, argNum); /* */ __s = 19; case 19: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+				_r = intFromArg(a, argNum); /* */ __s = 19; case 19: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 				_tuple__1 = _r;
 				p.fmt.wid = _tuple__1[0];
 				p.fmt.fmtFlags.widPresent = _tuple__1[1];
@@ -18416,7 +18416,7 @@ __packages["fmt"] = (function()
 			err = io.EOF;
 			__s = -1; return [r, size, err];
 		end
-		_r = s.rs.ReadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = s.rs.ReadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		r = _tuple[0];
 		size = _tuple[1];
@@ -18457,7 +18457,7 @@ __packages["fmt"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		r = 0;
 		s = this;
-		_r = s.ReadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = s.ReadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_tuple = _r;
 		r = _tuple[0];
 		err = _tuple[2];
@@ -18476,7 +18476,7 @@ __packages["fmt"] = (function()
 		local _r, s, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; s = __f.s; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		s = this;
-		_r = s.rs.UnreadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = s.rs.UnreadRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r;
 		s.atEOF = false;
 		s.count = s.count - (1) >> 0;
@@ -18498,7 +18498,7 @@ __packages["fmt"] = (function()
 	ss.prototype.errorString = function(r) return this.__val.errorString(err); end;
 	ss.ptr.prototype.Token = function(f)
 		local _r, err, f, s, skipSpace, tok, __s, __deferred, __r;
-		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; s = __f.s; skipSpace = __f.skipSpace; tok = __f.tok; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);
+		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; s = __f.s; skipSpace = __f.skipSpace; tok = __f.tok; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { s: while (true) { switch (__s) { case 0: __deferred = []; __deferred.index = #__curGoroutine.deferStack; __curGoroutine.deferStack.push(__deferred);
 		err = [err];
 		tok = sliceType__2.nil;
 		err[0] = __ifaceNil;
@@ -18521,10 +18521,10 @@ __packages["fmt"] = (function()
 			f = notSpace;
 		end
 		s.buf = __subslice(s.buf, 0, 0);
-		_r = s.token(skipSpace, f); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = s.token(skipSpace, f); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		tok = _r;
 		__s = -1; return [tok, err[0]];
-		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if ( not __curGoroutine.asleep) then return  [tok, err[0]]; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= ss.ptr.prototype.Token end; end __f._r = _r; __f.err = err; __f.f = f; __f.s = s; __f.skipSpace = skipSpace; __f.tok = tok; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+		/* */ end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  [tok, err[0]]; end if(__curGoroutine.asleep) { if __f == nil then  __f = { __blk= ss.ptr.prototype.Token end; end __f._r = _r; __f.err = err; __f.f = f; __f.s = s; __f.skipSpace = skipSpace; __f.tok = tok; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
 	end;
 	ss.prototype.Token = function(f) return this.__val.Token(skipSpace, f); end;
 	isSpace = function(r)
@@ -18581,7 +18581,7 @@ __packages["fmt"] = (function()
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _v = __f._v; r = __f.r; s = __f.s; stopAtNewline = __f.stopAtNewline; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		s = this;
 		/* while (true) { */ case 1:
-			_r = s.getRune(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = s.getRune(); /* */ __s = 3; case 3: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			r = _r;
 			if (r == -1) {
 				__s = -1; return;
@@ -18628,7 +18628,7 @@ __packages["fmt"] = (function()
 			__r = s.skipSpace(false); /* */ __s = 3; case 3: if(__c) then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 		/* end */ case 2:
 		/* while (true) { */ case 4:
-			_r = s.getRune(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+			_r = s.getRune(); /* */ __s = 6; case 6: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 			r = _r;
 			if (r == -1) {
 				/* break; */ __s = 5; continue;
@@ -18667,7 +18667,7 @@ __packages["fmt"] = (function()
 		local _r, _r__1, ok, r, s, __s, __r;
 		/* */ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; ok = __f.ok; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end s: while (true) { switch (__s) { case 0:
 		s = this;
-		_r = s.getRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = s.getRune(); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		r = _r;
 		/* */ if ( not ((r == -1))) { __s = 2; continue; end
 		/* */ __s = 3; continue;
@@ -18729,7 +18729,7 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
 		a = 1;
 		b = 2;
 		c = ((a + b >> 0));
-		_r = fmt.Printf("c=%v\n", new sliceType([new __Float64(c)])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if (_r  and  _r.__blk ~= nil) then  break s; end
+		_r = fmt.Printf("c=%v\n", new sliceType([new __Float64(c)])); /* */ __s = 1; case 1: if(__c) then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
 		_r;
 		__s = -1; return;
 		/* */ end return; end if __f == nil then  __f = { __blk= main end; end __f._r = _r; __f.a = a; __f.b = b; __f.c = c; __f.__s = __s; __f.__r = __r; return __f;
@@ -18744,7 +18744,7 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
 			__r = main(); /* */ __s = 4; case 4: if(__c) then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
 			__mainFinished = true;
 		/* end */ case 3:
-		/* */ end return; end if (__f == nil) then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
+		/* */ end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
 	end;
 	__pkg.__init = __init;
 	return __pkg;
