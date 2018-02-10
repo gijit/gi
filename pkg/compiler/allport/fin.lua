@@ -18,3 +18,16 @@ function __mapAndJoinStrings(splice, arr, fun)
    end
    return table.concat(newarr, splice)
 end
+
+-- return sorted keys from table m
+__keys = function(m)
+   if type(m) ~= "table" then
+      return {}
+   end
+   local r = {}
+   for k in pairs(m) do
+      table.insert(r, k)
+   end
+   table.sort(r)
+   return r
+end
