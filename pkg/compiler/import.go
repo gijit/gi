@@ -18,7 +18,17 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
 
-	shadow_gonum_org_v1_gonum_blas "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
+	// gonum
+	shadow_blas "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
+	shadow_fd "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/diff/fd"
+	shadow_floats "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/floats"
+	shadow_graph "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/graph"
+	shadow_integrate "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/integrate"
+	shadow_lapack "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/lapack"
+	shadow_mat "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/mat"
+	shadow_optimize "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/optimize"
+	shadow_stat "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/stat"
+	shadow_unit "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/unit"
 
 	// actuals
 	"gonum.org/v1/gonum/blas"
@@ -40,7 +50,7 @@ func init() {
 	_ = ok
 }
 
-var _ = shadow_gonum_org_v1_gonum_blas.GijitShadow_InterfaceConvertTo2_Float64
+var _ = shadow_blas.GijitShadow_InterfaceConvertTo2_Float64
 var _ = fd.Backward
 var _ = floats.Add
 var _ = graph.Copy
@@ -121,6 +131,28 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
 	case "time":
 		luar.Register(ic.vm, "time", shadow_time.Pkg)
+
+		// gonum:
+	case "gonum.org/v1/gonum/blas":
+		luar.Register(ic.vm, "blas", shadow_blas.Pkg)
+	case "gonum.org/v1/gonum/fd":
+		luar.Register(ic.vm, "fd", shadow_fd.Pkg)
+	case "gonum.org/v1/gonum/floats":
+		luar.Register(ic.vm, "floats", shadow_floats.Pkg)
+	case "gonum.org/v1/gonum/graph":
+		luar.Register(ic.vm, "graph", shadow_graph.Pkg)
+	case "gonum.org/v1/gonum/integrate":
+		luar.Register(ic.vm, "integrate", shadow_integrate.Pkg)
+	case "gonum.org/v1/gonum/lapack":
+		luar.Register(ic.vm, "lapack", shadow_lapack.Pkg)
+	case "gonum.org/v1/gonum/mat":
+		luar.Register(ic.vm, "mat", shadow_mat.Pkg)
+	case "gonum.org/v1/gonum/optimize":
+		luar.Register(ic.vm, "optimize", shadow_optimize.Pkg)
+	case "gonum.org/v1/gonum/stat":
+		luar.Register(ic.vm, "stat", shadow_stat.Pkg)
+	case "gonum.org/v1/gonum/unit":
+		luar.Register(ic.vm, "unit", shadow_unit.Pkg)
 
 	default:
 		// need to run gen-gijit-shadow-import

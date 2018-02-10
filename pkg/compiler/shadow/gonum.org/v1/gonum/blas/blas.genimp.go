@@ -1,4 +1,4 @@
-package shadow_gonum_org_v1_gonum_blas
+package shadow_blas
 
 import "gonum.org/v1/gonum/blas"
 
