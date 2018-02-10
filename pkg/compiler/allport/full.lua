@@ -332,15 +332,18 @@ __pointerOfStructConversion = function(e)
   end
   local proxy = obj.__proxies[typ.__str];
   if proxy == nil then
-    local properties = {};
-    for (var i = 0; i < typ.elem.#fields; i++) {
-      (function(p)
+     local properties = {};
+     
+     local helper = function(p)
         properties[fieldProp] = {
-          get= function() return obj[fieldProp]; end,
-          set= function(e) obj[fieldProp] = value; end
-        end;
-      end)(typ.elem.fields[i].prop);
-    end
+           get= function() return obj[fieldProp]; end,
+           set= function(e) obj[fieldProp] = value; end
+        };
+     end
+     for i=0,#(typ.elem.fields)-1 do
+        helper(typ.elem.fields[i].prop);
+     end
+     
     proxy = Object.create(typ.prototype, properties);
     proxy.__val = proxy;
     obj.__proxies[typ.__str] = proxy;
@@ -379,7 +382,7 @@ __internalAppend = function(h)
       newArray = slice.__array.slice(slice.__offset, slice.__offset + slice.__length);
       #newArray = newCapacity;
       local zero = slice.constructor.elem.zero;
-      for (var i = slice.__length; i < newCapacity; i++) {
+      for i = #slice,newCapacity-1 do
         newArray[i] = zero();
       end
     end else {
@@ -18453,12 +18456,12 @@ __packages["fmt"] = (function()
       r = _tuple[0];
       size = _tuple[1];
       err = _tuple[2];
-      if (__interfaceIsEqual(err, __ifaceNil)) {
+      if __interfaceIsEqual(err, __ifaceNil) then
          s.count = s.count + (1) >> 0;
-         if (s.ssave.nlIsEnd  and  (r == 10)) {
+         if s.ssave.nlIsEnd  and  (r == 10) then
             s.atEOF = true;
          end
-      end else if (__interfaceIsEqual(err, io.EOF)) {
+      elseif __interfaceIsEqual(err, io.EOF) then
          s.atEOF = true;
       end
       __s = -1; return [r, size, err];
@@ -18470,7 +18473,7 @@ __packages["fmt"] = (function()
       wid = 0;
       ok = false;
       s = this;
-      if (s.ssave.maxWid == 1073741824) {
+      if (s.ssave.maxWid == 1073741824) then
          _tmp = 0;
          _tmp__1 = false;
          wid = _tmp;
@@ -18481,7 +18484,7 @@ __packages["fmt"] = (function()
       _tmp__3 = true;
       wid = _tmp__2;
       ok = _tmp__3;
-      return [wid, ok];
+      return {wid, ok};
    end;
    ss.prototype.Width = function() return this.__val.Width(); end;
    ss.ptr.prototype.getRune = function()
