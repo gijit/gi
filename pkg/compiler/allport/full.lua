@@ -375,8 +375,14 @@ __internalAppend = function(h)
   local newCapacity = slice.__capacity;
 
   if newLength > newCapacity then
-    newOffset = 0;
-    newCapacity = Math.max(newLength, slice.__capacity < 1024 ? slice.__capacity * 2 : Math.floor(slice.__capacity * 5 / 4));
+     local newOffset = 0;
+     local newCap
+     if slice.__capacity < 1024 then
+        newCap = slice.__capacity * 2
+     else
+        newCap = Math.floor(slice.__capacity * 5 / 4)
+     end
+     newCapacity = Math.max(newLength, newCap);
 
     if slice.__array.constructor == Array then
       newArray = slice.__array.slice(slice.__offset, slice.__offset + slice.__length);
