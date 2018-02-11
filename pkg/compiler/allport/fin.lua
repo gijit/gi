@@ -157,7 +157,7 @@ __tfunMT = {
 
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               print("tfun sees no args and we have a typ.zero() method, so invoking it")
+               --print("tfun sees no args and we have a typ.zero() method, so invoking it")
                self.tfun(newInstance, self.zero())
             else
                self.tfun(newInstance, ...)
@@ -257,6 +257,19 @@ end
 
 __Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, nil);
 __Int           = __newType( 4, __kindInt,           "int",            true, "", false, nil);
+__Int8          = __newType( 1, __kindInt8,          "int8",           true, "", false, nil);
+__Int16         = __newType( 2, __kindInt16,         "int16",          true, "", false, nil);
+__Int32         = __newType( 4, __kindInt32,         "int32",          true, "", false, nil);
+__Int64         = __newType( 8, __kindInt64,         "int64",          true, "", false, nil);
+__Uint          = __newType( 4, __kindUint,          "uint",           true, "", false, nil);
+__Uint8         = __newType( 1, __kindUint8,         "uint8",          true, "", false, nil);
+__Uint16        = __newType( 2, __kindUint16,        "uint16",         true, "", false, nil);
+__Uint32        = __newType( 4, __kindUint32,        "uint32",         true, "", false, nil);
+__Uint64        = __newType( 8, __kindUint64,        "uint64",         true, "", false, nil);
+__Uintptr       = __newType( 4, __kindUintptr,       "uintptr",        true, "", false, nil);
+__Float32       = __newType( 4, __kindFloat32,       "float32",        true, "", false, nil);
 __Float64       = __newType( 8, __kindFloat64,       "float64",        true, "", false, nil);
+__Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, nil);
+__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
 __String        = __newType( 8, __kindString,        "string",         true, "", false, nil);
-
+__UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);

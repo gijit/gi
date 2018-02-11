@@ -79,3 +79,14 @@ if sf < sg then
 end
 expectEq(x, __keys({[f]="seven", [g]="eight"}))
 
+-- basic types, zero values
+expectEq("0LL", tostring(__Int()))
+expectEq("0ULL", tostring(__Uint()))
+expectEq("0", tostring(__Float64()))
+expectEq('""', tostring(__String()))
+
+-- basic types, non-zero values
+expectEq("-43LL", tostring(__Int(-43LL)))
+expectEq("42ULL", tostring(__Uint(42ULL)))
+expectEq("0.3", tostring(__Float64(0.3)))
+expectEq('"hello world"', tostring(__String("hello world")))
