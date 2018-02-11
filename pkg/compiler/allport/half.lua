@@ -1,5 +1,32 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+__Infinity = math.huge
+
+__ctorMT = {
+   __name = "__ctorMT",
+   __call = function(the_mt, self, ...)
+      print("jea debug: __ctorMT.__call() invoked, self='",tostring(self),"', with __constructor = ",self.__constructor," and args=")
+      
+      print("in __ctorMT, start __st on ...")
+      __st({...}, "__ctorMT.dots")
+      print("in __ctorMT,   end __st on ...")
+
+      print("in __ctorMT, start __st on self")
+      __st(self, "self")
+      print("in __ctorMT,   end __st on self")
+
+      if self ~= nil and self.constructor ~= nil then
+         print("calling self.constructor!")
+         constructor(self, ...)
+      else
+         if self ~= nil then
+            print("self.__constructor was nil")
+         end
+      end
+      return self
+   end
+}
+
 -- jea: sanity check my assumption by comparing
 -- length with #a
 function __assertIsArray(a)
@@ -73,7 +100,7 @@ __flushConsole = function() end;
 __throwRuntimeError = function(...) error(...) end
 __throwNilPointerError = function()  __throwRuntimeError("invalid memory address or nil pointer dereference"); end;
 __call = function(fn, rcvr, args)  return fn(rcvr, args); end;
-__makeFunc = function(fn)  return function()  return __externalize(fn(this, new (__sliceType(__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface); end; end;
+__makeFunc = function(fn)  return function()  return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface); end; end;
 __unused = function(v) end;
 
 __mapArray = function(array, f)
@@ -495,7 +522,7 @@ end;
 __mod = function(y) return x % y; end;
 __parseInt = parseInt;
 __parseFloat = function(f)
-  if f ~= nil  and  f ~= null  and  f.constructor == Number then
+  if f ~= nil  and  f ~= nil  and  f.constructor == Number then
     return f;
   end
   return parseFloat(f);
@@ -653,15 +680,15 @@ end
 end;
 
 __divComplex = function(d)
-  local ninf = n.__real == Infinity  or  n.__real == -Infinity  or  n.__imag == Infinity  or  n.__imag == -Infinity;
-  local dinf = d.__real == Infinity  or  d.__real == -Infinity  or  d.__imag == Infinity  or  d.__imag == -Infinity;
+  local ninf = n.__real == __Infinity  or  n.__real == -__Infinity  or  n.__imag == __Infinity  or  n.__imag == -__Infinity;
+  local dinf = d.__real == __Infinity  or  d.__real == -__Infinity  or  d.__imag == __Infinity  or  d.__imag == -__Infinity;
   local nnan =  not ninf  and  (n.__real ~= n.__real  or  n.__imag ~= n.__imag);
   local dnan =  not dinf  and  (d.__real ~= d.__real  or  d.__imag ~= d.__imag);
   if(nnan  or  dnan) then
     return new n.constructor(NaN, NaN);
   end
   if ninf  and   not dinf then
-    return new n.constructor(Infinity, Infinity);
+    return new n.constructor(__Infinity, __Infinity);
   end
   if  not ninf  and  dinf then
     return new n.constructor(0, 0);
@@ -670,7 +697,7 @@ __divComplex = function(d)
     if n.__real == 0  and  n.__imag == 0 then
       return new n.constructor(NaN, NaN);
     end
-    return new n.constructor(Infinity, Infinity);
+    return new n.constructor(__Infinity, __Infinity);
   end
   local a = Math.abs(d.__real);
   local b = Math.abs(d.__imag);
@@ -713,7 +740,7 @@ __kindUnsafePointer = 26;
 
 __methodSynthesizers = {};
 __addMethodSynthesizer = function(f)
-  if __methodSynthesizers == null then
+  if __methodSynthesizers == nil then
     f();
     return;
   end
@@ -721,7 +748,7 @@ __addMethodSynthesizer = function(f)
 end;
 __synthesizeMethods = function()
   __methodSynthesizers.forEach(function(f) f(); end);
-  __methodSynthesizers = null;
+  __methodSynthesizers = nil;
 end;
 
 __ifaceKeyFor = function(x)
@@ -744,8 +771,10 @@ __idKey = function(x)
    return String(x.__id);
 end;
 
-__newType = function(size, kind, str, named, pkg, exported, constructor) 
-   local typ;
+__newType = function(size, kind, str, named, pkg, exported, constructor)
+  local typ ={};
+  setmetatable(typ, __ctorMT)
+
   if kind ==  __kindBool or
   kind == __kindInt or 
   kind == __kindInt8 or 
@@ -1080,18 +1109,18 @@ elseif kind ==  __kindArray then
   __typeIDCounter=__typeIDCounter+1;
   typ.size = size;
   typ.kind = kind;
-  typ.__str = string;
+  typ.__str = str;
   typ.named = named;
   typ.pkg = pkg;
   typ.exported = exported;
   typ.methods = {};
-  typ.methodSetCache = null;
+  typ.methodSetCache = nil;
   typ.comparable = true;
   return typ;
 end;
 
 __methodSet = function(typ)
-  if typ.methodSetCache ~= null then
+  if typ.methodSetCache ~= nil then
     return typ.methodSetCache;
   end
   local base = {};
@@ -1166,24 +1195,24 @@ __methodSet = function(typ)
   return typ.methodSetCache;
 end;
 
-__Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, null);
-__Int           = __newType( 4, __kindInt,           "int",            true, "", false, null);
-__Int8          = __newType( 1, __kindInt8,          "int8",           true, "", false, null);
-__Int16         = __newType( 2, __kindInt16,         "int16",          true, "", false, null);
-__Int32         = __newType( 4, __kindInt32,         "int32",          true, "", false, null);
-__Int64         = __newType( 8, __kindInt64,         "int64",          true, "", false, null);
-__Uint          = __newType( 4, __kindUint,          "uint",           true, "", false, null);
-__Uint8         = __newType( 1, __kindUint8,         "uint8",          true, "", false, null);
-__Uint16        = __newType( 2, __kindUint16,        "uint16",         true, "", false, null);
-__Uint32        = __newType( 4, __kindUint32,        "uint32",         true, "", false, null);
-__Uint64        = __newType( 8, __kindUint64,        "uint64",         true, "", false, null);
-__Uintptr       = __newType( 4, __kindUintptr,       "uintptr",        true, "", false, null);
-__Float32       = __newType( 4, __kindFloat32,       "float32",        true, "", false, null);
-__Float64       = __newType( 8, __kindFloat64,       "float64",        true, "", false, null);
-__Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, null);
-__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, null);
-__String        = __newType( 8, __kindString,        "string",         true, "", false, null);
-__UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, null);
+__Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, nil);
+__Int           = __newType( 4, __kindInt,           "int",            true, "", false, nil);
+__Int8          = __newType( 1, __kindInt8,          "int8",           true, "", false, nil);
+__Int16         = __newType( 2, __kindInt16,         "int16",          true, "", false, nil);
+__Int32         = __newType( 4, __kindInt32,         "int32",          true, "", false, nil);
+__Int64         = __newType( 8, __kindInt64,         "int64",          true, "", false, nil);
+__Uint          = __newType( 4, __kindUint,          "uint",           true, "", false, nil);
+__Uint8         = __newType( 1, __kindUint8,         "uint8",          true, "", false, nil);
+__Uint16        = __newType( 2, __kindUint16,        "uint16",         true, "", false, nil);
+__Uint32        = __newType( 4, __kindUint32,        "uint32",         true, "", false, nil);
+__Uint64        = __newType( 8, __kindUint64,        "uint64",         true, "", false, nil);
+__Uintptr       = __newType( 4, __kindUintptr,       "uintptr",        true, "", false, nil);
+__Float32       = __newType( 4, __kindFloat32,       "float32",        true, "", false, nil);
+__Float64       = __newType( 8, __kindFloat64,       "float64",        true, "", false, nil);
+__Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, nil);
+__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
+__String        = __newType( 8, __kindString,        "string",         true, "", false, nil);
+__UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 __nativeArray = function(elemKind)
   
@@ -1226,7 +1255,7 @@ __arrayType = function(elem, len)
   local typeKey = elem.id + "_" .. len;
   local typ = __arrayTypes[typeKey];
   if typ == nil then
-    typ = __newType(12, __kindArray, "[" .. len + "]" .. elem.__str, false, "", false, null);
+    typ = __newType(12, __kindArray, "[" .. len + "]" .. elem.__str, false, "", false, nil);
     __arrayTypes[typeKey] = typ;
     typ.init(elem, len);
   end
@@ -1239,7 +1268,7 @@ __chanType = function(elem, sendOnly, recvOnly)
   local field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
   local typ = elem[field];
   if typ == nil then
-    typ = __newType(4, __kindChan, string, false, "", false, null);
+    typ = __newType(4, __kindChan, string, false, "", false, nil);
     elem[field] = typ;
     typ.init(elem, sendOnly, recvOnly);
   end
@@ -1256,7 +1285,7 @@ __Chan = function(elem, capacity)
   this.__recvQueue = {};
   this.__closed = false;
 end;
-__chanNil = new __Chan(null, 0);
+__chanNil = new __Chan(nil, 0);
 __chanNil.__sendQueue = __chanNil.__recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
 
 __funcTypes = {};
@@ -1274,7 +1303,7 @@ __funcType = function(params, results, variadic)
       end else if #results > 1 then
       str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
     end
-    typ = __newType(4, __kindFunc, str, false, "", false, null);
+    typ = __newType(4, __kindFunc, str, false, "", false, nil);
     __funcTypes[typeKey] = typ;
     typ.init(params, results, variadic);
   end
@@ -1292,7 +1321,7 @@ __interfaceType = function(methods)
         return (m.pkg ~= "" ? m.pkg + "." : "") + m.name + m.typ.__str.substr(4);
       end).join("; ") + " end";
     end
-    typ = __newType(8, __kindInterface, string, false, "", false, null);
+    typ = __newType(8, __kindInterface, string, false, "", false, nil);
     __interfaceTypes[typeKey] = typ;
     typ.init(methods);
   end
@@ -1300,7 +1329,7 @@ __interfaceType = function(methods)
 end;
 __emptyInterface = __interfaceType({});
 __ifaceNil = {};
-__error = __newType(8, __kindInterface, "error", true, "", false, null);
+__error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init([{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, [__String], false)end]);
 
 __mapTypes = {};
@@ -1308,7 +1337,7 @@ __mapType = function(key, elem)
   local typeKey = key.id + "_" .. elem.id;
   local typ = __mapTypes[typeKey];
   if typ == nil then
-    typ = __newType(4, __kindMap, "map[" .. key.__str + "]" .. elem.__str, false, "", false, null);
+    typ = __newType(4, __kindMap, "map[" .. key.__str + "]" .. elem.__str, false, "", false, nil);
     __mapTypes[typeKey] = typ;
     typ.init(key, elem);
   end
@@ -1326,7 +1355,7 @@ end;
 __ptrType = function(elem)
   local typ = elem.ptr;
   if typ == nil then
-    typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, null);
+    typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
     elem.ptr = typ;
     typ.init(elem);
   end
@@ -1348,12 +1377,13 @@ end;
 __sliceType = function(elem)
   local typ = elem.slice;
   if typ == nil then
-    typ = __newType(12, __kindSlice, "[]" .. elem.__str, false, "", false, null);
+    typ = __newType(12, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
     elem.slice = typ;
     typ.init(elem);
   end
   return typ;
 end;
+  
 __makeSlice = function(typ, length, capacity)
   capacity = capacity  or  length;
   if length < 0  or  length > 2147483647 then
@@ -1484,13 +1514,13 @@ __getStackDepth = function()
   return __stackDepthOffset + #err.stack.split("\n");
 end;
 
-__panicStackDepth = null, __panicValue;
+__panicStackDepth = nil, __panicValue;
 __callDeferred = function(deferred, jsErr, fromPanic) 
-  if  not fromPanic  and  deferred ~= null  and  deferred.index >= __curGoroutine.#deferStack then
+  if  not fromPanic  and  deferred ~= nil  and  deferred.index >= __curGoroutine.#deferStack then
     throw jsErr;
   end
-  if jsErr ~= null then
-    local newErr = null;
+  if jsErr ~= nil then
+    local newErr = nil;
     try {
       __curGoroutine.deferStack.push(deferred);
       __panic(new __jsErrorPtr(jsErr));
@@ -1517,11 +1547,11 @@ __callDeferred = function(deferred, jsErr, fromPanic)
 
   try {
     while (true) do 
-      if deferred == null then
+      if deferred == nil then
         deferred = __curGoroutine.deferStack[__curGoroutine.#deferStack - 1];
         if deferred == nil then
           -- /* The panic reached the top of the stack. Clear it and throw it as a JavaScript error. */
-          __panicStackDepth = null;
+          __panicStackDepth = nil;
           if localPanicValue.Object instanceof Error then
             throw localPanicValue.Object;
           end
@@ -1542,7 +1572,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
       if call == nil then
         __curGoroutine.deferStack.pop();
         if localPanicValue ~= nil then
-          deferred = null;
+          deferred = nil;
           continue;
         end
         return;
@@ -1551,18 +1581,18 @@ __callDeferred = function(deferred, jsErr, fromPanic)
       if r  and  r.__blk ~= nil then
         deferred.push([r.__blk, {}, r]);
         if fromPanic then
-          throw null;
+          throw nil;
         end
         return;
       end
 
-      if localPanicValue ~= nil  and  __panicStackDepth == null then
-        throw null; -- /* error was recovered */
+      if localPanicValue ~= nil  and  __panicStackDepth == nil then
+        throw nil; -- /* error was recovered */
       end
     end
   end finally {
     if (localPanicValue ~= nil) {
-      if (__panicStackDepth ~= null) {
+      if (__panicStackDepth ~= nil) {
         __curGoroutine.panicStack.push(localPanicValue);
       end
       __panicStackDepth = outerPanicStackDepth;
@@ -1574,13 +1604,13 @@ end;
 
 __panic = function(value)
   __curGoroutine.panicStack.push(value);
-  __callDeferred(null, null, true);
+  __callDeferred(nil, nil, true);
 end;
 __recover = function()
-  if __panicStackDepth == null  or  (__panicStackDepth ~= nil  and  __panicStackDepth ~= __getStackDepth() - 2) then
+  if __panicStackDepth == nil  or  (__panicStackDepth ~= nil  and  __panicStackDepth ~= __getStackDepth() - 2) then
     return __ifaceNil;
   end
-  __panicStackDepth = null;
+  __panicStackDepth = nil;
   return __panicValue;
 end;
 __throw = function(err) throw err; end;
@@ -1899,7 +1929,7 @@ __externalize = function(v, t)
   elseif sw ==  __kindInterface then 
 
     if v == __ifaceNil then
-      return null;
+      return nil;
     end
     if v.constructor == __jsObjectPtr then
       return v.__val.object;
@@ -1918,7 +1948,7 @@ __externalize = function(v, t)
   elseif sw ==  __kindPtr then 
 
     if v == t.nil then
-      return null;
+      return nil;
     end
     return __externalize(v.__get(), t.elem);
 
@@ -2006,7 +2036,7 @@ end;
 __externalizeFunction = function(v, t, passThis)
 
   if v == __throwNilPointerError then
-    return null;
+    return nil;
   end
 
   if v.__externalizeWrapper == nil then
@@ -2055,7 +2085,7 @@ __internalize = function(v, t, recv)
   end
   local timePkg = __packages["time"];
   if timePkg ~= nil  and  t == timePkg.Time then
-    if  not (v ~= null  and  v ~= nil  and  v.constructor == Date) then
+    if  not (v ~= nil  and  v ~= nil  and  v.constructor == Date) then
       __throwRuntimeError("cannot internalize time.Time from " .. type(v) .. ", must be Date");
     end
     return timePkg.Unix(new __Int64(0, 0), new __Int64(0, v.getTime() * 1000000));
@@ -2123,7 +2153,7 @@ __internalize = function(v, t, recv)
     if #t.methods ~= 0 then
       __throwRuntimeError("cannot internalize " .. t.__str);
     end
-    if v == null then
+    if v == nil then
       return __ifaceNil;
     end
     if v == nil then
