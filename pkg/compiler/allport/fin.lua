@@ -216,7 +216,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
   elseif kind ==  __kindPtr then
      
-    typ = constructor  or  function(getter, setter, target)
+    typ.tfun = constructor  or  function(this, getter, setter, target)
       this.__get = getter;
       this.__set = setter;
       this.__target = target;
