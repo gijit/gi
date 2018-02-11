@@ -2077,7 +2077,7 @@ __internalize = function(v)
     end;
   elseif sw == __kindInterface then
     if #t.methods ~= 0 then
-      __throwRuntimeError("cannot internalize " + t.__str);
+      __throwRuntimeError("cannot internalize " .. t.__str);
     end
     if v == null then
       return __ifaceNil;
@@ -2192,7 +2192,7 @@ __internalize = function(v)
       return o;
     end
   end
-  __throwRuntimeError("cannot internalize " + t.__str);
+  __throwRuntimeError("cannot internalize " .. t.__str);
 end;
 
 -- /* __isASCII reports whether string s contains only ASCII characters. */
@@ -2942,9 +2942,9 @@ elseif __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  an
    end;
    newEntry = function(i)
       local i, i__24ptr;
-      return new entry.ptr(((i__24ptr  or  (i__24ptr = new ptrType__3(function() return i; end, function(v) i = __v; end)))));
+      return new entry.ptr(((i__24ptr  or  (i__24ptr = new ptrType__3(function() return i; end, function(__v) i = __v; end)))));
    end;
-   Map.ptr.prototype.Load = function(y)
+   Map.ptr.prototype.Load = function(key)
       local _entry, _entry__1, _entry__2, _tmp, _tmp__1, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, e, key, m, ok, read, value, __s, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; e = __f.e; key = __f.key; m = __f.m; ok = __f.ok; read = __f.read; value = __f.value; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
@@ -2998,7 +2998,7 @@ elseif __s == 1 then
       value = __ifaceNil;
       ok = false;
       e = this;
-      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
       if (p == 0  or  p == expunged) {
          _tmp = __ifaceNil;
          _tmp__1 = false;
@@ -3024,7 +3024,7 @@ elseif __s == 1 then
       _tuple__1 = (_entry = read.m[__emptyInterface.keyFor(key)], _entry ~= nil ? [_entry.v, true] : [ptrType__4.nil, false]);
       e = _tuple__1[0];
       ok = _tuple__1[1];
-      if (ok  and  e.tryStore((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, value))))) {
+      if (ok  and  e.tryStore((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(__v) this.__target[0] = __v; end, value))))) {
          __s = -1; return;
       end
       __r = m.mu.Lock(); 
@@ -3038,13 +3038,13 @@ elseif __s == 1 then
          if (e__1.unexpungeLocked()) {
             _key = key; (m.dirty  or  __throwRuntimeError("assignment to entry in nil map"))[__emptyInterface.keyFor(_key)] = { k: _key, v: e__1 end;
          end
-         e__1.storeLocked((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, value))));
+         e__1.storeLocked((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(__v) this.__target[0] = __v; end, value))));
       end else {
          _tuple__4 = (_entry__2 = m.dirty[__emptyInterface.keyFor(key)], _entry__2 ~= nil ? [_entry__2.v, true] : [ptrType__4.nil, false]);
          e__2 = _tuple__4[0];
          ok__2 = _tuple__4[1];
          if (ok__2) {
-            e__2.storeLocked((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, value))));
+            e__2.storeLocked((value.__ptr  or  (value.__ptr = new ptrType__3(function() return this.__target[0]; end, function(__v) this.__target[0] = __v; end, value))));
          end else {
             if ( not read.amended) {
                m.dirtyLocked();
@@ -3063,15 +3063,15 @@ elseif __s == 1 then
    entry.ptr.prototype.tryStore = function(i)
       local e, i, p;
       e = this;
-      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
       if (p == expunged) {
          return false;
       end
       while (true) do 
-         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), p, (i))) {
+         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), p, (i))) {
             return true;
          end
-         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
          if (p == expunged) {
             return false;
          end
@@ -3082,14 +3082,14 @@ elseif __s == 1 then
       local e, wasExpunged;
       wasExpunged = false;
       e = this;
-      wasExpunged = atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), expunged, 0);
+      wasExpunged = atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), expunged, 0);
       return wasExpunged;
    end;
    entry.prototype.unexpungeLocked = function() return this.__val.unexpungeLocked(); end;
    entry.ptr.prototype.storeLocked = function(i)
       local e, i;
       e = this;
-      atomic.StorePointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), (i));
+      atomic.StorePointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), (i));
    end;
    entry.prototype.storeLocked = function(i) return this.__val.storeLocked(i); end;
    Map.ptr.prototype.LoadOrStore = function(e)
@@ -3169,7 +3169,7 @@ elseif __s == 1 then
       loaded = false;
       ok = false;
       e = this;
-      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
       if (p == expunged) {
          _tmp = __ifaceNil;
          _tmp__1 = false;
@@ -3190,7 +3190,7 @@ elseif __s == 1 then
       end
       ic = i;
       while (true) do 
-         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), 0, ((ic__24ptr  or  (ic__24ptr = new ptrType__3(function() return ic; end, function(v) ic = __v; end)))))) {
+         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), 0, ((ic__24ptr  or  (ic__24ptr = new ptrType__3(function() return ic; end, function(__v) ic = __v; end)))))) {
             _tmp__6 = i;
             _tmp__7 = false;
             _tmp__8 = true;
@@ -3199,7 +3199,7 @@ elseif __s == 1 then
             ok = _tmp__8;
             return {actual, loaded, ok};
          end
-         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
          if (p == expunged) {
             _tmp__9 = __ifaceNil;
             _tmp__10 = false;
@@ -3262,12 +3262,12 @@ elseif __s == 1 then
       hadValue = false;
       e = this;
       while (true) do 
-         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
          if (p == 0  or  p == expunged) {
             hadValue = false;
             return hadValue;
          end
-         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), p, 0)) {
+         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), p, 0)) {
             hadValue = true;
             return hadValue;
          end
@@ -3382,14 +3382,14 @@ elseif __s == 1 then
       local e, isExpunged, p;
       isExpunged = false;
       e = this;
-      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+      p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
       while (true) do 
          if ( not (p == 0)) { break; end
-         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))), 0, expunged)) {
+         if (atomic.CompareAndSwapPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))), 0, expunged)) {
             isExpunged = true;
             return isExpunged;
          end
-         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
+         p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(__v) this.__target.p = __v; end, e))));
       end
       isExpunged = p == expunged;
       return isExpunged;
@@ -3400,7 +3400,7 @@ elseif __s == 1 then
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; awoke = __f.awoke; delta = __f.delta; iter = __f.iter; m = __f.m; new__1 = __f.new__1; old = __f.old; queueLifo = __f.queueLifo; starving = __f.starving; waitStartTime = __f.waitStartTime; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = this;
-      if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), 0, 1)) {
+      if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), 0, 1)) {
          if (false) {
             race.Acquire((m));
          end
@@ -3417,7 +3417,7 @@ elseif __s == 1 then
          
  __s = 4; continue;
          -- /* if (((old & 5) == 1)  and  runtime_canSpin(iter)) { */ if __s == 3 then 
-            if ( not awoke  and  ((old & 2) == 0)  and   not (((old >> 3 >> 0) == 0))  and  atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, old | 2)) {
+            if ( not awoke  and  ((old & 2) == 0)  and   not (((old >> 3 >> 0) == 0))  and  atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), old, old | 2)) {
                awoke = true;
             end
             runtime_doSpin();
@@ -3442,10 +3442,10 @@ elseif __s == 1 then
             new__1 = (new__1 & ~(2)) >> 0;
          end
          
- if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { __s = 5; continue; end
+ if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), old, new__1)) { __s = 5; continue; end
          
  __s = 6; continue;
-         -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 5 then 
+         -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 5 then 
             if ((old & 5) == 0) {
                -- /* break; */ __s = 2; continue;
             end
@@ -3453,7 +3453,7 @@ elseif __s == 1 then
             if ((waitStartTime.__high == 0  and  waitStartTime.__low == 0)) {
                waitStartTime = runtime_nanotime();
             end
-            __r = runtime_SemacquireMutex((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), queueLifo); 
+            __r = runtime_SemacquireMutex((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(__v) this.__target.sema = __v; end, m))), queueLifo); 
  __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             starving = starving  or  (x = (x__1 = runtime_nanotime(), new __Int64(x__1.__high - waitStartTime.__high, x__1.__low - waitStartTime.__low)), (x.__high > 0  or  (x.__high == 0  and  x.__low > 1000000)));
             old = m.state;
@@ -3465,7 +3465,7 @@ elseif __s == 1 then
                if ( not starving  or  ((old >> 3 >> 0) == 1)) {
                   delta = delta - (4) >> 0;
                end
-               atomic.AddInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), delta);
+               atomic.AddInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), delta);
                -- /* break; */ __s = 2; continue;
             end
             awoke = true;
@@ -3492,7 +3492,7 @@ elseif __s == 1 then
          __unused(m.state);
          race.Release((m));
       end
-      new__1 = atomic.AddInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), -1);
+      new__1 = atomic.AddInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), -1);
       if ((((new__1 + 1 >> 0)) & 1) == 0) {
          __panic(new __String("sync: unlock of unlocked mutex"));
       end
@@ -3508,11 +3508,11 @@ elseif __s == 1 then
             end
             new__1 = ((old - 8 >> 0)) | 2;
             
- if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { __s = 6; continue; end
+ if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), old, new__1)) { __s = 6; continue; end
             
  __s = 7; continue;
-            -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 6 then 
-               __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), false); 
+            -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 6 then 
+               __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(__v) this.__target.sema = __v; end, m))), false); 
  __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                __s = -1; return;
             -- /* end */ if __s == 7 then 
@@ -3520,7 +3520,7 @@ elseif __s == 1 then
          -- /* end */ __s = 4; continue; if __s == 5 then 
          __s = 3; continue;
       -- /* end else { */ if __s == 2 then 
-         __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), true); 
+         __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(__v) this.__target.sema = __v; end, m))), true); 
  __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       -- /* end */ if __s == 3 then 
       __s = -1; return;
@@ -4411,7 +4411,7 @@ __packages["syscall"] = (function()
       end
       sa.raw.Len = 16;
       sa.raw.Family = 2;
-      p = (((x = sa.raw, (x.__ptr_Port  or  (x.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(v) this.__target.Port = __v; end, x))))));
+      p = (((x = sa.raw, (x.__ptr_Port  or  (x.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(__v) this.__target.Port = __v; end, x))))));
       p.nilCheck, p[0] = (((sa.Port >> 8 >> 0) << 24 >>> 24));
       p.nilCheck, p[1] = ((sa.Port << 24 >>> 24));
       i = 0;
@@ -4432,7 +4432,7 @@ __packages["syscall"] = (function()
       end
       sa.raw.Len = 28;
       sa.raw.Family = 30;
-      p = (((x = sa.raw, (x.__ptr_Port  or  (x.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(v) this.__target.Port = __v; end, x))))));
+      p = (((x = sa.raw, (x.__ptr_Port  or  (x.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(__v) this.__target.Port = __v; end, x))))));
       p.nilCheck, p[0] = (((sa.Port >> 8 >> 0) << 24 >>> 24));
       p.nilCheck, p[1] = ((sa.Port << 24 >>> 24));
       sa.raw.Scope_id = sa.ZoneId;
@@ -4537,7 +4537,7 @@ __packages["syscall"] = (function()
          pp__2 = ((_array__4 = (_array__5), _struct__4 = new RawSockaddrInet4.ptr(0, 0, 0, arrayType__1.zero(), arrayType__6.zero()), _view__4 = new DataView(_array__4.buffer, _array__4.byteOffset), _struct__4.Len = _view__4.getUint8(0, true), _struct__4.Family = _view__4.getUint8(1, true), _struct__4.Port = _view__4.getUint16(2, true), _struct__4.Addr = new (__nativeArray(__kindUint8))(_array__4.buffer, __min(_array__4.byteOffset + 4, _array__4.buffer.byteLength)), _struct__4.Zero = new (__nativeArray(__kindInt8))(_array__4.buffer, __min(_array__4.byteOffset + 8, _array__4.buffer.byteLength)), _struct__4));
          _struct__5 = rsa, _view__5 = new DataView(_array__5.buffer, _array__5.byteOffset), _struct__5.Addr.Len = _view__5.getUint8(0, true), _struct__5.Addr.Family = _view__5.getUint8(1, true), _struct__5.Addr.Data = new (__nativeArray(__kindInt8))(_array__5.buffer, __min(_array__5.byteOffset + 2, _array__5.buffer.byteLength)), _struct__5.Pad = new (__nativeArray(__kindInt8))(_array__5.buffer, __min(_array__5.byteOffset + 16, _array__5.buffer.byteLength));
          sa__2 = new SockaddrInet4.ptr(0, arrayType__1.zero(), new RawSockaddrInet4.ptr(0, 0, 0, arrayType__1.zero(), arrayType__6.zero()));
-         p = (((pp__2.__ptr_Port  or  (pp__2.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(v) this.__target.Port = __v; end, pp__2)))));
+         p = (((pp__2.__ptr_Port  or  (pp__2.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(__v) this.__target.Port = __v; end, pp__2)))));
          sa__2.Port = ((((p.nilCheck, p[0]) >> 0)) << 8 >> 0) + (((p.nilCheck, p[1]) >> 0)) >> 0;
          i__2 = 0;
          while (true) do 
@@ -4551,7 +4551,7 @@ __packages["syscall"] = (function()
          pp__3 = ((_array__6 = (_array__7), _struct__6 = new RawSockaddrInet6.ptr(0, 0, 0, 0, arrayType.zero(), 0), _view__6 = new DataView(_array__6.buffer, _array__6.byteOffset), _struct__6.Len = _view__6.getUint8(0, true), _struct__6.Family = _view__6.getUint8(1, true), _struct__6.Port = _view__6.getUint16(2, true), _struct__6.Flowinfo = _view__6.getUint32(4, true), _struct__6.Addr = new (__nativeArray(__kindUint8))(_array__6.buffer, __min(_array__6.byteOffset + 8, _array__6.buffer.byteLength)), _struct__6.Scope_id = _view__6.getUint32(24, true), _struct__6));
          _struct__7 = rsa, _view__7 = new DataView(_array__7.buffer, _array__7.byteOffset), _struct__7.Addr.Len = _view__7.getUint8(0, true), _struct__7.Addr.Family = _view__7.getUint8(1, true), _struct__7.Addr.Data = new (__nativeArray(__kindInt8))(_array__7.buffer, __min(_array__7.byteOffset + 2, _array__7.buffer.byteLength)), _struct__7.Pad = new (__nativeArray(__kindInt8))(_array__7.buffer, __min(_array__7.byteOffset + 16, _array__7.buffer.byteLength));
          sa__3 = new SockaddrInet6.ptr(0, 0, arrayType.zero(), new RawSockaddrInet6.ptr(0, 0, 0, 0, arrayType.zero(), 0));
-         p__1 = (((pp__3.__ptr_Port  or  (pp__3.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(v) this.__target.Port = __v; end, pp__3)))));
+         p__1 = (((pp__3.__ptr_Port  or  (pp__3.__ptr_Port = new ptrType__16(function() return this.__target.Port; end, function(__v) this.__target.Port = __v; end, pp__3)))));
          sa__3.Port = ((((p__1.nilCheck, p__1[0]) >> 0)) << 8 >> 0) + (((p__1.nilCheck, p__1[1]) >> 0)) >> 0;
          sa__3.ZoneId = pp__3.Scope_id;
          i__3 = 0;
@@ -4571,7 +4571,7 @@ __packages["syscall"] = (function()
       err = __ifaceNil;
       rsa = new RawSockaddrAny.ptr(new RawSockaddr.ptr(0, 0, arrayType__4.zero()), arrayType__5.zero());
       len = 108;
-      _tuple = accept(fd, rsa, (len__24ptr  or  (len__24ptr = new ptrType__17(function() return len; end, function(v) len = __v; end))));
+      _tuple = accept(fd, rsa, (len__24ptr  or  (len__24ptr = new ptrType__17(function() return len; end, function(__v) len = __v; end))));
       nfd = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -4618,7 +4618,7 @@ __packages["syscall"] = (function()
       dummy = 0;
       if (oob.__length > 0) {
          if (p.__length == 0) {
-            iov.Base = (dummy__24ptr  or  (dummy__24ptr = new ptrType__2(function() return dummy; end, function(v) dummy = __v; end)));
+            iov.Base = (dummy__24ptr  or  (dummy__24ptr = new ptrType__2(function() return dummy; end, function(__v) dummy = __v; end)));
             iov.SetLen(1);
          end
          msg.Control = ((__sliceToArray(oob)));
@@ -4683,7 +4683,7 @@ __packages["syscall"] = (function()
       dummy[0] = 0;
       if (oob.__length > 0) {
          if (p.__length == 0) {
-            iov[0].Base = (dummy.__ptr  or  (dummy.__ptr = new ptrType__2(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, dummy)));
+            iov[0].Base = (dummy.__ptr  or  (dummy.__ptr = new ptrType__2(function() return this.__target[0]; end, function(__v) this.__target[0] = __v; end, dummy)));
             iov[0].SetLen(1);
          end
          msg[0].Control = ((__sliceToArray(oob)));
@@ -4863,7 +4863,7 @@ __packages["syscall"] = (function()
             race.WriteRange((__sliceToArray(p)), n);
          end
          if (__interfaceIsEqual(err, __ifaceNil)) {
-            race.Acquire(((ioSync__24ptr  or  (ioSync__24ptr = new ptrType__20(function() return ioSync; end, function(v) ioSync = __v; end)))));
+            race.Acquire(((ioSync__24ptr  or  (ioSync__24ptr = new ptrType__20(function() return ioSync; end, function(__v) ioSync = __v; end)))));
          end
       end
       if (false  and  n > 0) {
@@ -4877,7 +4877,7 @@ __packages["syscall"] = (function()
       n = 0;
       err = __ifaceNil;
       if (false) {
-         race.ReleaseMerge(((ioSync__24ptr  or  (ioSync__24ptr = new ptrType__20(function() return ioSync; end, function(v) ioSync = __v; end)))));
+         race.ReleaseMerge(((ioSync__24ptr  or  (ioSync__24ptr = new ptrType__20(function() return ioSync; end, function(__v) ioSync = __v; end)))));
       end
       _tuple = write(fd, p);
       n = _tuple[0];
@@ -4898,7 +4898,7 @@ __packages["syscall"] = (function()
       err = __ifaceNil;
       rsa = new RawSockaddrAny.ptr(new RawSockaddr.ptr(0, 0, arrayType__4.zero()), arrayType__5.zero());
       len = 108;
-      _tuple = recvfrom(fd, p, flags, rsa, (len__24ptr  or  (len__24ptr = new ptrType__17(function() return len; end, function(v) len = __v; end))));
+      _tuple = recvfrom(fd, p, flags, rsa, (len__24ptr  or  (len__24ptr = new ptrType__17(function() return len; end, function(__v) len = __v; end))));
       n = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -4936,7 +4936,7 @@ __packages["syscall"] = (function()
    SetsockoptByte = function(e)
       local err, fd, level, opt, value, value__24ptr;
       err = __ifaceNil;
-      err = setsockopt(fd, level, opt, ((value__24ptr  or  (value__24ptr = new ptrType__2(function() return value; end, function(v) value = __v; end)))), 1);
+      err = setsockopt(fd, level, opt, ((value__24ptr  or  (value__24ptr = new ptrType__2(function() return value; end, function(__v) value = __v; end)))), 1);
       return err;
    end;
    __pkg.SetsockoptByte = SetsockoptByte;
@@ -4944,7 +4944,7 @@ __packages["syscall"] = (function()
       local err, fd, level, n, n__24ptr, opt, value;
       err = __ifaceNil;
       n = ((value >> 0));
-      err = setsockopt(fd, level, opt, ((n__24ptr  or  (n__24ptr = new ptrType__21(function() return n; end, function(v) n = __v; end)))), 4);
+      err = setsockopt(fd, level, opt, ((n__24ptr  or  (n__24ptr = new ptrType__21(function() return n; end, function(__v) n = __v; end)))), 4);
       return err;
    end;
    __pkg.SetsockoptInt = SetsockoptInt;
@@ -7383,7 +7383,7 @@ __packages["time"] = (function()
       nv = _tmp__1;
       return {nw, nv};
    end;
-   fmtInt = function(v)
+   fmtInt = function(buf, v)
       local buf, v, w;
       w = buf.__length;
       if ((v.__high == 0  and  v.__low == 0)) {
@@ -8557,7 +8557,7 @@ __packages["internal/poll"] = (function()
       local mu, new__1, old, x, x__1;
       mu = this;
       while (true) do 
-         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))));
+         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))));
          if ( not ((x = new __Uint64(old.__high & 0, (old.__low & 1) >>> 0), (x.__high == 0  and  x.__low == 0)))) {
             return false;
          end
@@ -8565,7 +8565,7 @@ __packages["internal/poll"] = (function()
          if ((x__1 = new __Uint64(new__1.__high & 0, (new__1.__low & 8388600) >>> 0), (x__1.__high == 0  and  x__1.__low == 0))) {
             __panic(new __String("inconsistent poll.fdMutex"));
          end
-         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))), old, new__1)) {
+         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))), old, new__1)) {
             return true;
          end
       end
@@ -8575,7 +8575,7 @@ __packages["internal/poll"] = (function()
       local mu, new__1, old, x, x__1, x__2, x__3, x__4, x__5, x__6, x__7;
       mu = this;
       while (true) do 
-         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))));
+         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))));
          if ( not ((x = new __Uint64(old.__high & 0, (old.__low & 1) >>> 0), (x.__high == 0  and  x.__low == 0)))) {
             return false;
          end
@@ -8584,16 +8584,16 @@ __packages["internal/poll"] = (function()
             __panic(new __String("inconsistent poll.fdMutex"));
          end
          new__1 = (x__3 = new __Uint64(2147483647, 4286578688), new __Uint64(new__1.__high & ~x__3.__high, (new__1.__low & ~x__3.__low) >>> 0));
-         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))), old, new__1)) {
+         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))), old, new__1)) {
             while (true) do 
                if ( not ( not ((x__4 = new __Uint64(old.__high & 2047, (old.__low & 4286578688) >>> 0), (x__4.__high == 0  and  x__4.__low == 0))))) { break; end
                old = (x__5 = new __Uint64(0, 8388608), new __Uint64(old.__high - x__5.__high, old.__low - x__5.__low));
-               runtime_Semrelease((mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(v) this.__target.rsema = __v; end, mu))));
+               runtime_Semrelease((mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(__v) this.__target.rsema = __v; end, mu))));
             end
             while (true) do 
                if ( not ( not ((x__6 = new __Uint64(old.__high & 2147481600, (old.__low & 0) >>> 0), (x__6.__high == 0  and  x__6.__low == 0))))) { break; end
                old = (x__7 = new __Uint64(2048, 0), new __Uint64(old.__high - x__7.__high, old.__low - x__7.__low));
-               runtime_Semrelease((mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(v) this.__target.wsema = __v; end, mu))));
+               runtime_Semrelease((mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(__v) this.__target.wsema = __v; end, mu))));
             end
             return true;
          end
@@ -8604,12 +8604,12 @@ __packages["internal/poll"] = (function()
       local mu, new__1, old, x, x__1;
       mu = this;
       while (true) do 
-         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))));
+         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))));
          if ((x = new __Uint64(old.__high & 0, (old.__low & 8388600) >>> 0), (x.__high == 0  and  x.__low == 0))) {
             __panic(new __String("inconsistent poll.fdMutex"));
          end
          new__1 = new __Uint64(old.__high - 0, old.__low - 8);
-         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))), old, new__1)) {
+         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))), old, new__1)) {
             return (x__1 = new __Uint64(new__1.__high & 0, (new__1.__low & 8388601) >>> 0), (x__1.__high == 0  and  x__1.__low == 1));
          end
       end
@@ -8629,15 +8629,15 @@ __packages["internal/poll"] = (function()
          mutexBit = new __Uint64(0, 2);
          mutexWait = new __Uint64(0, 8388608);
          mutexMask = new __Uint64(2047, 4286578688);
-         mutexSema = (mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(v) this.__target.rsema = __v; end, mu)));
+         mutexSema = (mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(__v) this.__target.rsema = __v; end, mu)));
       end else {
          mutexBit = new __Uint64(0, 4);
          mutexWait = new __Uint64(2048, 0);
          mutexMask = new __Uint64(2147481600, 0);
-         mutexSema = (mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(v) this.__target.wsema = __v; end, mu)));
+         mutexSema = (mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(__v) this.__target.wsema = __v; end, mu)));
       end
       while (true) do 
-         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))));
+         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))));
          if ( not ((x = new __Uint64(old.__high & 0, (old.__low & 1) >>> 0), (x.__high == 0  and  x.__low == 0)))) {
             return false;
          end
@@ -8653,7 +8653,7 @@ __packages["internal/poll"] = (function()
                __panic(new __String("inconsistent poll.fdMutex"));
             end
          end
-         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))), old, new__1)) {
+         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))), old, new__1)) {
             if ((x__5 = new __Uint64(old.__high & mutexBit.__high, (old.__low & mutexBit.__low) >>> 0), (x__5.__high == 0  and  x__5.__low == 0))) {
                return true;
             end
@@ -8676,15 +8676,15 @@ __packages["internal/poll"] = (function()
          mutexBit = new __Uint64(0, 2);
          mutexWait = new __Uint64(0, 8388608);
          mutexMask = new __Uint64(2047, 4286578688);
-         mutexSema = (mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(v) this.__target.rsema = __v; end, mu)));
+         mutexSema = (mu.__ptr_rsema  or  (mu.__ptr_rsema = new ptrType__1(function() return this.__target.rsema; end, function(__v) this.__target.rsema = __v; end, mu)));
       end else {
          mutexBit = new __Uint64(0, 4);
          mutexWait = new __Uint64(2048, 0);
          mutexMask = new __Uint64(2147481600, 0);
-         mutexSema = (mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(v) this.__target.wsema = __v; end, mu)));
+         mutexSema = (mu.__ptr_wsema  or  (mu.__ptr_wsema = new ptrType__1(function() return this.__target.wsema; end, function(__v) this.__target.wsema = __v; end, mu)));
       end
       while (true) do 
-         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))));
+         old = atomic.LoadUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))));
          if ((x = new __Uint64(old.__high & mutexBit.__high, (old.__low & mutexBit.__low) >>> 0), (x.__high == 0  and  x.__low == 0))  or  (x__1 = new __Uint64(old.__high & 0, (old.__low & 8388600) >>> 0), (x__1.__high == 0  and  x__1.__low == 0))) {
             __panic(new __String("inconsistent poll.fdMutex"));
          end
@@ -8692,7 +8692,7 @@ __packages["internal/poll"] = (function()
          if ( not ((x__3 = new __Uint64(old.__high & mutexMask.__high, (old.__low & mutexMask.__low) >>> 0), (x__3.__high == 0  and  x__3.__low == 0)))) {
             new__1 = (x__4 = mutexWait, new __Uint64(new__1.__high - x__4.__high, new__1.__low - x__4.__low));
          end
-         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(v) this.__target.state = __v; end, mu))), old, new__1)) {
+         if (atomic.CompareAndSwapUint64((mu.__ptr_state  or  (mu.__ptr_state = new ptrType(function() return this.__target.state; end, function(__v) this.__target.state = __v; end, mu))), old, new__1)) {
             if ( not ((x__5 = new __Uint64(old.__high & mutexMask.__high, (old.__low & mutexMask.__low) >>> 0), (x__5.__high == 0  and  x__5.__low == 0)))) {
                runtime_Semrelease(mutexSema);
             end
@@ -9591,7 +9591,7 @@ __packages["internal/poll"] = (function()
          if (iovecs[0].__length == 0) {
             -- /* break; */ __s = 2; continue;
          end
-         fd.iovecs = (iovecs.__ptr  or  (iovecs.__ptr = new ptrType__2(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, iovecs)));
+         fd.iovecs = (iovecs.__ptr  or  (iovecs.__ptr = new ptrType__2(function() return this.__target[0]; end, function(__v) this.__target[0] = __v; end, iovecs)));
          _tuple = syscall.Syscall(121, ((fd.Sysfd >>> 0)), ((__sliceToArray(iovecs[0]))), ((iovecs[0].__length >>> 0)));
          wrote = _tuple[0];
          e0 = _tuple[2];
@@ -19703,8 +19703,8 @@ __packages["fmt"] = (function()
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteRune(verb);
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("(MISSING)");
    end;
-   pp.prototype.missingArg = function(b) return this.__val.missingArg(verb); end;
-   pp.ptr.prototype.doPrintf = function(a)
+   pp.prototype.missingArg = function(verb) return this.__val.missingArg(verb); end;
+   pp.ptr.prototype.doPrintf = function(format, a)
       local _1, _i, _r, _r__1, _r__2, _ref, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, a, afterIndex, arg, argNum, c, end, format, i, i__1, lasti, p, verb, w, __s, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; a = __f.a; afterIndex = __f.afterIndex; arg = __f.arg; argNum = __f.argNum; c = __f.c; end = __f.end; format = __f.format; i = __f.i; i__1 = __f.i__1; lasti = __f.lasti; p = __f.p; verb = __f.verb; w = __f.w; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
@@ -19723,7 +19723,7 @@ __packages["fmt"] = (function()
             i = i + (1) >> 0;
          end
          if (i > lasti) {
-            (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(__substring(format, lasti, i));
+            (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString(__substring(format, lasti, i));
          end
          if (i >= end) {
             -- /* break; */ __s = 2; continue;
@@ -19850,7 +19850,7 @@ __packages["fmt"] = (function()
                   p.fmt.fmtFlags.precPresent = false;
                end
                if ( not p.fmt.fmtFlags.precPresent) {
-                  (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("% not (BADPREC)");
+                  (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString("% not (BADPREC)");
                end
                afterIndex = false;
                __s = 24; continue;
@@ -19872,7 +19872,7 @@ __packages["fmt"] = (function()
             afterIndex = _tuple__6[2];
          end
          if (i >= end) {
-            (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("% not (NOVERB)");
+            (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString("% not (NOVERB)");
             -- /* break; */ __s = 2; continue;
          end
          _tuple__7 = utf8.DecodeRuneInString(__substring(format, i));
@@ -19890,7 +19890,7 @@ __packages["fmt"] = (function()
             
  __s = 31; continue;
             -- /* if ((verb == 37)) { */ if __s == 27 then 
-               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(37);
+               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteByte(37);
                __s = 32; continue;
             -- /* end else if ( not p.goodArgNum) { */ if __s == 28 then 
                p.badArgNum(verb);
@@ -19920,7 +19920,7 @@ __packages["fmt"] = (function()
  __s = 36; continue;
       -- /* if ( not p.reordered  and  argNum < a.__length) { */ if __s == 35 then 
          p.fmt.clearflags();
-         (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("% not (EXTRA ");
+         (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString("% not (EXTRA ");
          _ref = __subslice(a, argNum);
          _i = 0;
          -- /* while (true) do  */ if __s == 37 then 
@@ -19928,34 +19928,34 @@ __packages["fmt"] = (function()
             i__1 = _i;
             arg = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
             if (i__1 > 0) {
-               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(", ");
+               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString(", ");
             end
             
  if (__interfaceIsEqual(arg, __ifaceNil)) { __s = 39; continue; end
             
  __s = 40; continue;
             -- /* if (__interfaceIsEqual(arg, __ifaceNil)) { */ if __s == 39 then 
-               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
+               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString("<nil>");
                __s = 41; continue;
             -- /* end else { */ if __s == 40 then 
                _r__2 = reflect.TypeOf(arg).__str(); 
  __s = 42; if __s == 42 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
-               __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__2); 
+               __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteString(_r__2); 
  __s = 43; if __s == 43 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(61);
+               (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteByte(61);
                __r = p.printArg(arg, 118); 
  __s = 44; if __s == 44 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             -- /* end */ if __s == 41 then 
             _i=_i+1;
          -- /* end */ __s = 37; continue; if __s == 38 then 
-         (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(41);
+         (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, p))).WriteByte(41);
       -- /* end */ if __s == 36 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.doPrintf end; end __f._1 = _1; __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._ref = _ref; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f._tuple__5 = _tuple__5; __f._tuple__6 = _tuple__6; __f._tuple__7 = _tuple__7; __f.a = a; __f.afterIndex = afterIndex; __f.arg = arg; __f.argNum = argNum; __f.c = c; __f.end = end; __f.format = format; __f.i = i; __f.i__1 = i__1; __f.lasti = lasti; __f.p = p; __f.verb = verb; __f.w = w; __f.__s = __s; __f.__r = __r; return __f;
    end;
-   pp.prototype.doPrintf = function(a) return this.__val.doPrintf(format, a); end;
-   ss.ptr.prototype.Read = function(f)
+   pp.prototype.doPrintf = function(format, a) return this.__val.doPrintf(format, a); end;
+   ss.ptr.prototype.Read = function(buf)
       local _tmp, _tmp__1, buf, err, n, s;
       n = 0;
       err = __ifaceNil;
@@ -20055,13 +20055,13 @@ __packages["fmt"] = (function()
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.UnreadRune end; end __f._r = _r; __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
    end;
    ss.prototype.UnreadRune = function() return this.__val.UnreadRune(); end;
-   ss.ptr.prototype.error = function(r)
+   ss.ptr.prototype.error = function(err)
       local err, s, x;
       s = this;
       __panic((x = new scanError.ptr(err), new x.constructor.elem(x)));
    end;
    ss.prototype.error = function(err) return this.__val.error(err); end;
-   ss.ptr.prototype.errorString = function(r)
+   ss.ptr.prototype.errorString = function(err)
       local err, s, x;
       s = this;
       __panic((x = new scanError.ptr(errors.New(err)), new x.constructor.elem(x)));
@@ -20075,7 +20075,7 @@ __packages["fmt"] = (function()
       tok = sliceType__2.nil;
       err[0] = __ifaceNil;
       s = this;
-      __deferred.push({(function(r) return function()
+      __deferred.push({(function(err) return function()
          local _tuple, e, ok, se;
          e = __recover();
          if not (__interfaceIsEqual(e, __ifaceNil)) then
@@ -20138,7 +20138,7 @@ __packages["fmt"] = (function()
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.SkipSpace end; end __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
    end;
    ss.prototype.SkipSpace = function() return this.__val.SkipSpace(); end;
-   ss.ptr.prototype.free = function(d)
+   ss.ptr.prototype.free = function(oldd)
       local old, s;
       s = this;
       if (old.validSave) {
@@ -20205,8 +20205,8 @@ __packages["fmt"] = (function()
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.skipSpace end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._v = _v; __f.r = r; __f.s = s; __f.stopAtNewline = stopAtNewline; __f.__s = __s; __f.__r = __r; return __f;
    end;
-   ss.prototype.skipSpace = function(e) return this.__val.skipSpace(stopAtNewline); end;
-   ss.ptr.prototype.token = function(f)
+   ss.prototype.skipSpace = function(stopAtNewline) return this.__val.skipSpace(stopAtNewline); end;
+   ss.ptr.prototype.token = function(skipSpace, f)
       local _r, _r__1, _r__2, f, r, s, skipSpace, x, __s, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; f = __f.f; r = __f.r; s = __f.s; skipSpace = __f.skipSpace; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
@@ -20238,14 +20238,14 @@ __packages["fmt"] = (function()
             _r__2;
             -- /* break; */ __s = 5; continue;
          -- /* end */ if __s == 8 then 
-         (s.__ptr_buf  or  (s.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, s))).WriteRune(r);
+         (s.__ptr_buf  or  (s.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(__v) this.__target.buf = __v; end, s))).WriteRune(r);
       -- /* end */ __s = 4; continue; if __s == 5 then 
       __s = -1; return (x = s.buf, __subslice(new sliceType__2(x.__array), x.__offset, x.__offset + x.__length));
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.token end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f.f = f; __f.r = r; __f.s = s; __f.skipSpace = skipSpace; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
-   ss.prototype.token = function(f) return this.__val.token(skipSpace, f); end;
-   indexRune = function(r)
+   ss.prototype.token = function(skipSpace, f) return this.__val.token(skipSpace, f); end;
+   indexRune = function(s, r)
       local _i, _ref, _rune, c, i, r, s;
       _ref = s;
       _i = 0;
@@ -20261,7 +20261,7 @@ __packages["fmt"] = (function()
       end
       return -1;
    end;
-   ss.ptr.prototype.peek = function(k)
+   ss.ptr.prototype.peek = function(ok)
       local _r, _r__1, ok, r, s, __s, __r;
       
  __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; ok = __f.ok; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
