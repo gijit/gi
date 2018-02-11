@@ -2,25 +2,25 @@ dofile '../math.lua' -- for __max, __min, __truncateToInt
 
 __Infinity = math.huge
 
-__ctorMT = {
-   __name = "__ctorMT",
+__tfunMT = {
+   __name = "__tfunMT",
    __call = function(the_mt, self, ...)
-      print("jea debug: __ctorMT.__call() invoked, self='",tostring(self),"', with __constructor = ",self.__constructor," and args=")
+      print("jea debug: __tfunMT.__call() invoked, self='",tostring(self),"', with tfun = ",self.tfun" and args=")
       
-      print("in __ctorMT, start __st on ...")
-      __st({...}, "__ctorMT.dots")
-      print("in __ctorMT,   end __st on ...")
+      print("in __tfunMT, start __st on ...")
+      __st({...}, "__tfunMT.dots")
+      print("in __tfunMT,   end __st on ...")
 
-      print("in __ctorMT, start __st on self")
+      print("in __tfunMT, start __st on self")
       __st(self, "self")
-      print("in __ctorMT,   end __st on self")
+      print("in __tfunMT,   end __st on self")
 
-      if self ~= nil and self.constructor ~= nil then
-         print("calling self.constructor!")
-         constructor(self, ...)
+      if self ~= nil and self.tfun ~= nil then
+         print("calling tfun! -- let constructors set metatables on instances if they wish to.")
+         self.tfun({}, ...)
       else
          if self ~= nil then
-            print("self.__constructor was nil")
+            print("self.tfun was nil")
          end
       end
       return self
@@ -773,7 +773,7 @@ end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
   local typ ={};
-  setmetatable(typ, __ctorMT)
+  setmetatable(typ, __tfunMT)
 
   if kind ==  __kindBool or
   kind == __kindInt or 
@@ -787,65 +787,65 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   kind == __kindUintptr or 
   kind == __kindUnsafePointer then
      
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __identity;
-    break;
+    
 
   elseif kind == __kindString then
      
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = function(x) return "_" .. x; end;
-    break;
+    
 
   elseif kind == __kindFloat32 or
   kind == __kindFloat64 then
        
-       typ = function(v) this.__val = v; end;
+       typ.tfun = function(this, v) this.__val = v; end;
        typ.wrapped = true;
        typ.keyFor = function(x) return __floatKey(x); end;
-       break;
+       
 
   elseif kind ==  __kindInt64 then 
-    typ = function(high, low)
+    typ.tfun = function(this, high, low)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >> 0;
       this.__low = low >>> 0;
       this.__val = this;
     end;
     typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
-    break;
+    
 
   elseif kind ==  __kindUint64 then 
-    typ = function(high, low)
+    typ.tfun = function(this, high, low)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >>> 0;
       this.__low = low >>> 0;
       this.__val = this;
     end;
     typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
-    break;
+    
 
   elseif kind ==  __kindComplex64 then 
-    typ = function(real, imag)
+    typ.tfun = function(this, real, imag)
       this.__real = __fround(real);
       this.__imag = __fround(imag);
       this.__val = this;
     end;
     typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
-    break;
+    
 
   elseif kind ==  __kindComplex128 then 
-    typ = function(real, imag)
+    typ.tfun = function(this, real, imag)
       this.__real = real;
       this.__imag = imag;
       this.__val = this;
     end;
     typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
-    break;
+    
 
 elseif kind ==  __kindArray then
 
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
       this.__get = function() return array; end;
@@ -877,10 +877,10 @@ elseif kind ==  __kindArray then
       typ.ptr.init(typ);
       Object.defineProperty(typ.ptr.nil, "nilCheck", { get= __throwNilPointerError end);
     end;
-    break;
+    
 
   elseif kind ==  __kindChan then 
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __idKey;
     typ.init = function(elem, sendOnly, recvOnly)
@@ -888,10 +888,10 @@ elseif kind ==  __kindArray then
       typ.sendOnly = sendOnly;
       typ.recvOnly = recvOnly;
     end;
-    break;
+    
 
   elseif kind ==  __kindFunc then 
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.init = function(params, results, variadic)
       typ.params = params;
@@ -899,7 +899,7 @@ elseif kind ==  __kindArray then
       typ.variadic = variadic;
       typ.comparable = false;
     end;
-    break;
+    
 
   elseif kind ==  __kindInterface then 
      typ = { implementedBy= {}, missingMethodFor= {} };
@@ -910,17 +910,17 @@ elseif kind ==  __kindArray then
         __ifaceNil[m.prop] = __throwNilPointerError;
       end);
     end;
-    break;
+    
 
   elseif kind ==  __kindMap then 
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.init = function(key, elem)
       typ.key = key;
       typ.elem = elem;
       typ.comparable = false;
     end;
-    break;
+    
 
   elseif kind ==  __kindPtr then 
     typ = constructor  or  function(getter, setter, target)
@@ -935,10 +935,10 @@ elseif kind ==  __kindArray then
       typ.wrapped = (elem.kind == __kindArray);
       typ.nil = new typ(__throwNilPointerError, __throwNilPointerError);
     end;
-    break;
+    
 
   elseif kind ==  __kindSlice then 
-    typ = function(array)
+    typ.tfun = function(this, array)
       if array.constructor ~= typ.nativeArray then
         array = new typ.nativeArray(array);
       end
@@ -954,11 +954,11 @@ elseif kind ==  __kindArray then
       typ.nativeArray = __nativeArray(elem.kind);
       typ.nil = new typ({});
     end;
-    break;
+    
 
     elseif kind ==  __kindStruct then
        
-    typ = function(v) this.__val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
@@ -1028,7 +1028,7 @@ elseif kind ==  __kindArray then
         end);
       end);
     end;
-    break;
+    
 
   else
      __panic("invalid kind: " .. tostring(kind));
@@ -1037,7 +1037,7 @@ elseif kind ==  __kindArray then
   if kind == __kindBool or
   kind ==__kindMap then
     typ.zero = function() return false; end;
-    break;
+    
 
   elseif kind == __kindInt or
   kind ==  __kindInt8 or
@@ -1052,11 +1052,11 @@ elseif kind ==  __kindArray then
   kind ==  __kindFloat32 or
   kind ==  __kindFloat64 then
     typ.zero = function() return 0; end;
-    break;
+    
 
  elseif kind ==  __kindString then
     typ.zero = function() return ""; end;
-    break;
+    
 
   elseif k ==  __kindInt64 or
   kind == __kindUint64 or
@@ -1064,24 +1064,24 @@ elseif kind ==  __kindArray then
   kind == __kindComplex128 then
     local zero = new typ(0, 0);
     typ.zero = function() return zero; end;
-    break;
+    
 
   elseif kind == __kindPtr or
   kind == __kindSlice then
     typ.zero = function() return typ.nil; end;
-    break;
+    
 
     elseif kind == __kindChan:
     typ.zero = function() return __chanNil; end;
-    break;
+    
 
   elseif kind == __kindFunc then
     typ.zero = function() return __throwNilPointerError; end;
-    break;
+    
 
   elseif kind == __kindInterface then
     typ.zero = function() return __ifaceNil; end;
-    break;
+    
 
   elseif kind == __kindArray then
     typ.zero = function()
@@ -1095,11 +1095,11 @@ elseif kind ==  __kindArray then
       end
       return array;
     end;
-    break;
+    
 
   elseif kind == __kindStruct then
     typ.zero = function() return new typ.ptr(); end;
-    break;
+    
 
   else
     __panic(new __String("invalid kind: " .. kind));
@@ -1171,11 +1171,11 @@ __methodSet = function(typ)
                next.push({typ=ty, indirect= e.indirect  or  fIsPtr});
             end;
          end;
-         break;
+         
 
       elseif knd == __kindInterface then
         mset = mset.concat(e.typ.methods);
-        break;
+        
       end
     end);
 
