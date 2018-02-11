@@ -185,10 +185,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   kind == __kindInt8 or 
   kind == __kindInt16 or 
   kind == __kindInt32 or 
+  kind == __kindInt64 or 
   kind == __kindUint or 
   kind == __kindUint8 or 
   kind == __kindUint16 or 
   kind == __kindUint32 or 
+  kind == __kindUint64 or 
   kind == __kindUintptr or 
   kind == __kindUnsafePointer then
      
@@ -295,7 +297,17 @@ __Uint64        = __newType( 8, __kindUint64,        "uint64",         true, "",
 __Uintptr       = __newType( 8, __kindUintptr,       "uintptr",        true, "", false, nil);
 __Float32       = __newType( 8, __kindFloat32,       "float32",        true, "", false, nil);
 __Float64       = __newType( 8, __kindFloat64,       "float64",        true, "", false, nil);
-__Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, nil);
-__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
+--__Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, nil);
+--__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
 __String        = __newType(16, __kindString,        "string",         true, "", false, nil);
-__UnsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+--__UnsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+
+__ptrType = function(elem)
+  local typ = elem.ptr;
+  if typ == nil then
+    typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
+    elem.ptr = typ;
+    typ.init(elem);
+  end
+  return typ;
+end;
