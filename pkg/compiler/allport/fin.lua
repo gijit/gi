@@ -128,6 +128,9 @@ end
 
 __basicTypeMT = {
    __tostring = function(self, ...)
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
+      end
       return tostring(self.__val)
    end
 }
@@ -148,9 +151,18 @@ __tfunMT = {
 
       local newInstance = {}
       setmetatable(newInstance, __basicTypeMT)
-      if self ~= nil and self.tfun ~= nil then
-         --print("calling tfun! -- let constructors set metatables if they wish to.")
-         self.tfun(newInstance, ...)
+      if self ~= nil then
+         if self.tfun ~= nil then
+            --print("calling tfun! -- let constructors set metatables if they wish to.")
+
+            -- get zero value if no args
+            if #{...} == 0 and self.zero ~= nil then
+               print("tfun sees no args and we have a typ.zero() method, so invoking it")
+               self.tfun(newInstance, self.zero())
+            else
+               self.tfun(newInstance, ...)
+            end
+         end
       else
          if self ~= nil then
             --print("self.tfun was nil")
@@ -199,6 +211,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
        typ.keyFor = function(x) return __floatKey(x); end;
   end
 
+  -- set zero() method
   if kind == __kindBool or
   kind ==__kindMap then
     typ.zero = function() return false; end;
@@ -207,18 +220,24 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   kind ==  __kindInt8 or
   kind ==  __kindInt16 or
   kind ==  __kindInt32 or
-  kind ==  __kindUint or
+  kind ==  __kindInt64 then
+     typ.zero = function() return 0LL; end;
+     
+  elseif kind ==  __kindUint or
   kind ==  __kindUint8  or
   kind ==  __kindUint16 or
   kind ==  __kindUint32 or
+  kind ==  __kindUint64 or
   kind ==  __kindUintptr or
-  kind ==  __kindUnsafePointer or
-  kind ==  __kindFloat32 or
-  kind ==  __kindFloat64 then
-    typ.zero = function() return 0; end;
+  kind ==  __kindUnsafePointer then
+     typ.zero = function() return 0ULL; end;
 
- elseif kind ==  __kindString then
-    typ.zero = function() return ""; end;
+  elseif   kind ==  __kindFloat32 or
+  kind ==  __kindFloat64 then
+     typ.zero = function() return 0; end;
+     
+  elseif kind ==  __kindString then
+     typ.zero = function() return ""; end;
   end
 
   typ.id = __typeIDCounter;
