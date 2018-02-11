@@ -1,5 +1,7 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+-- jea: sanity check my assumption by comparing
+-- length with #a
 function __assertIsArray(a)
    local n = 0
    for k,v in pairs(a) do
@@ -1371,18 +1373,30 @@ __makeSlice = function(typ, length, capacity)
   return slice;
 end;
 
+function field2strHelper(f)
+   local tag = ""
+   if f.tag ~= "" then
+   tag = tag
+   -- TODO, translate from js, instead of the above tag = tag:
+   -- seems to be escaping backslashes, then escaping double quotes.
+   -- tag = " \"" .. f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") .. "\""
+   end
+   return f.name .. " " .. f.typ.__str .. tag
+end
+
 __structTypes = {};
 __structType = function(pkgPath, fields)
-  local typeKey = __mapArray(fields, function(f) return f.name + "," .. f.typ.id + "," .. f.tag; end).join("_");
+  local typeKey = __mapArray(fields, function(f) return f.name .. "," .. f.typ.id .. "," .. f.tag; end).join("_");
   local typ = __structTypes[typeKey];
   if typ == nil then
-    local string = "struct { " .. __mapArray(fields, function(f)
-      return f.name + " " .. f.typ.__str + (f.tag ~= "" ? (" \"" .. f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"") : "");
-    end).join("; ") + " end";
+    local str
     if #fields == 0 then
-      string = "struct {}";
+       str = "struct {}";
+    else
+       str = "struct { " .. __mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
     end
-    typ = __newType(0, __kindStruct, string, false, "", false, function()
+       
+    typ = __newType(0, __kindStruct, str, false, "", false, function()
       this.__val = this;
       for i = 0, #fields-1 do
         local f = fields[i];
@@ -1456,7 +1470,7 @@ __getStackDepth = function()
   if err.stack == nil then
     return nil;
   end
-  return __stackDepthOffset + err.stack.split("\n")#;
+  return __stackDepthOffset + #err.stack.split("\n");
 end;
 
 __panicStackDepth = null, __panicValue;
@@ -2223,6 +2237,10 @@ __isASCII = function(s)
   end
   return true;
 end;
+
+-- packages were here.
+
+-- at end of file, after all the packages.
 
 __synthesizeMethods();
 __mainPkg = __packages["github.com/gijit/gi/pkg/compiler/tmp"];
