@@ -508,10 +508,10 @@ end;
 
 __floatKey = function(f)
   if f ~= f then
-    __idCounter=__idCounter+1;
-    return "NaN__" + __idCounter;
+     __idCounter=__idCounter+1;
+    return "NaN__" .. tostring(__idCounter);
   end
-  return String(f);
+  return tostring(f);
 end;
 
 __flatten64 = function(x)
@@ -735,7 +735,7 @@ __idKey = function(x)
    return String(x.__id);
 end;
 
-__newType = function(size, kind, string, named, pkg, exported, constructor) 
+__newType = function(size, kind, str, named, pkg, exported, constructor) 
    local typ;
   if kind ==  __kindBool or
   kind == __kindInt or 
@@ -758,7 +758,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
      
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.keyFor = function(x) return "_" + x; end;
+    typ.keyFor = function(x) return "_" .. x; end;
     break;
 
   elseif kind == __kindFloat32 or
@@ -775,7 +775,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       this.__low = low >>> 0;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__high + "_" + x.__low; end;
+    typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
     break;
 
   elseif kind ==  __kindUint64 then 
@@ -784,7 +784,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       this.__low = low >>> 0;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__high + "_" + x.__low; end;
+    typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
     break;
 
   elseif kind ==  __kindComplex64 then 
@@ -793,7 +793,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       this.__imag = __fround(imag);
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__real + "_" + x.__imag; end;
+    typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
     break;
 
   elseif kind ==  __kindComplex128 then 
@@ -802,13 +802,13 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       this.__imag = imag;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__real + "_" + x.__imag; end;
+    typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
     break;
 
   elseif kind ==  __kindArray then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.ptr = __newType(4, __kindPtr, "*" + string, false, "", false, function(y)
+    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
       this.__get = function() return array; end;
       this.__set = function(v) typ.copy(this, v); end;
       this.__val = array;
@@ -819,7 +819,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       typ.comparable = elem.comparable;
       typ.keyFor = function(x)
         return Array.prototype.join.call(__mapArray(x, function(e)
-          return String(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
+          return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
         end), "_");
       end;
       typ.copy = function(c)
@@ -911,7 +911,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
        
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.ptr = __newType(4, __kindPtr, "*" + string, false, pkg, exported, constructor);
+    typ.ptr = __newType(4, __kindPtr, "*" + str, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
     typ.ptr.prototype.__get = function() return this; end;
     typ.ptr.prototype.__set = function(v) typ.copy(this, v); end;
@@ -926,7 +926,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
       typ.keyFor = function(x)
         local val = x.__val;
         return __mapArray(fields, function(f)
-          return String(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
+          return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
         end).join("_");
       end;
       typ.copy = function(c)
@@ -982,7 +982,7 @@ __newType = function(size, kind, string, named, pkg, exported, constructor)
     break;
 
   else
-    __panic(new __String("invalid kind: " + kind));
+     __panic("invalid kind: " .. tostring(kind));
   end
 
   if kind == __kindBool or
@@ -1417,7 +1417,7 @@ __assertType = function(e)
 
   if  not ok then
     if returnTuple then
-      return [typ.zero(), false];
+      return {typ.zero(), false};
     end
     __panic(new __packages["runtime"].TypeAssertionError.ptr("", (value == __ifaceNil ? "" : value.constructor.__str), typ.__str, missingMethod));
   end
@@ -1662,10 +1662,10 @@ __recv = function(n)
   end
   local bufferedValue = chan.__buffer.shift();
   if bufferedValue ~= nil then
-    return [bufferedValue, true];
+    return {bufferedValue, true};
   end
   if chan.__closed then
-    return [chan.__elem.zero(), false];
+    return {chan.__elem.zero(), false};
   end
 
   local thisGoroutine = __curGoroutine;
@@ -1734,14 +1734,14 @@ __select = function(comms)
     local comm = comms[selection];
     local ncomm = #comm
     if ncomm == 0 then -- default
-      return [selection];
+      return {selection};
 
     elseif ncomm == 1 then -- recv
-      return [selection, __recv(comm[0])];
+      return {selection, __recv(comm[0])};
 
     elseif ncomm == 2 then -- send
       __send(comm[0], comm[1]);
-      return [selection];
+      return {selection};
 
     end
   end
@@ -2364,16 +2364,32 @@ __packages["github.com/gopherjs/gopherjs/js"] = (function()
    Error.init("", [{prop= "Object", name= "Object", anonymous= true, exported= true, typ= ptrType, tag= ""end]);
    __init = function()
       __pkg.__init = function()end;
-      
- 
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end 
+      local __f
+      local __c = false
+      local __s = 0, 
+      local __r; 
+      if this ~= nil and this.__blk ~= nil then 
+          __f = this; 
+          __c = true; 
+          __s = __f.__s; 
+          __r = __f.__r; 
+      end 
 
-::s:: while (true) do  switch (__s) { case 0:
-      init();
-      
- 
-      end return; end if __f == nil then __f = { __blk= __init}; end __f.__s = __s; __f.__r = __r; return __f;
-   end;
+::s:: 
+
+while (true) do  
+      if __s == 0 then
+         init();
+      end 
+      return; 
+end 
+if __f == nil then 
+   __f = { __blk= __init}; 
+end 
+__f.__s = __s; 
+__f.__r = __r; 
+return __f;
+    end;
    __pkg.__init = __init;
    return __pkg;
 end)();
@@ -2383,13 +2399,30 @@ __packages["runtime/internal/sys"] = (function()
       __pkg.__init = function()end;
       
 
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
-      
- 
-      end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
-   end;
-   __pkg.__init = __init;
-   return __pkg;
+      local __f
+      local __c = false
+      local __s = 0
+      local __r
+      if this ~= nil and this.__blk ~= nil then
+            __f = this; 
+            __c = true; 
+            __s = __f.__s; 
+            __r = __f.__r; 
+      end 
+
+::s:: 
+
+while (true) do  
+   if __s == 0 then
+    end 
+return; 
+end 
+
+if __f == nil then 
+    __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
+    end;
+    __pkg.__init = __init;
+    return __pkg;
 end)();
 __packages["runtime"] = (function()
    local __pkg = {}, __init, js, sys, TypeAssertionError, errorString, ptrType__4, init, Goexit, SetFinalizer, KeepAlive, throw__1;
@@ -2475,18 +2508,31 @@ __packages["runtime"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end 
+
+::s:: 
+
+while (true) do  
+
+      if __s == 0 then
       __r = js.__init(); 
  
-      __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
+      __s = 1; elseif __s ==  1 then if __c then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
       __r = sys.__init(); 
       
  
-      __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
+      __s = 2; elseif __s ==  2 then if __c then __c = false; __r = __r.__blk(); end if __r  and  __r.__blk ~= nil then break s; end
       init();
       
  
-      end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
+      end 
+return; 
+end 
+if __f == nil then  
+   __f = { __blk= __init }; 
+end; 
+__f.__s = __s; __f.__r = __r; 
+return __f;
    end;
    __pkg.__init = __init;
    return __pkg;
@@ -2519,7 +2565,7 @@ __packages["errors"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  
       end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
@@ -2553,7 +2599,7 @@ __packages["internal/race"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -2661,9 +2707,9 @@ __packages["sync/atomic"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = js.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; elseif __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       
  end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -2790,24 +2836,25 @@ __packages["sync"] = (function()
    Pool.ptr.prototype.Get = function()
       local _r, p, x, x__1, x__2, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       
  if (p.store.__length == 0) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (p.store.__length == 0) { */ case 1:
+      -- /* if (p.store.__length == 0) { */ 
+elseif __s == 1 then 
          
  if ( not (p.New == __throwNilPointerError)) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if ( not (p.New == __throwNilPointerError)) { */ case 3:
+         -- /* if ( not (p.New == __throwNilPointerError)) { */ if __s == 3 then 
             _r = p.New(); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __s = -1; return _r;
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          __s = -1; return __ifaceNil;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       x__2 = (x = p.store, x__1 = p.store.__length - 1 >> 0, ((x__1 < 0  or  x__1 >= x.__length) ? (__throwRuntimeError("index out of range"), nil) : x.__array[x.__offset + x__1]));
       p.store = __subslice(p.store, 0, (p.store.__length - 1 >> 0));
       __s = -1; return x__2;
@@ -2830,18 +2877,21 @@ __packages["sync"] = (function()
    runtime_Semacquire = function(s)
       local _entry, _key, _r, ch, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _key = __f._key; _r = __f._r; ch = __f.ch; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _key = __f._key; _r = __f._r; ch = __f.ch; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  if (s.__get() == 0) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (s.__get() == 0) { */ case 1:
+
+
+      -- /* if (s.__get() == 0) { */ 
+elseif __s == 1 then
          ch = new __Chan(__Bool, 0);
          _key = s; (semWaiters  or  __throwRuntimeError("assignment to entry in nil map"))[ptrType__1.keyFor(_key)] = { k= _key, v= __append((_entry = semWaiters[ptrType__1.keyFor(s)], _entry ~= nil ? _entry.v : sliceType__1.nil), ch) end;
          _r = __recv(ch); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _r[0];
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       s.__set(s.__get() - (1) >>> 0);
       __s = -1; return;
       
@@ -2850,9 +2900,10 @@ __packages["sync"] = (function()
    runtime_SemacquireMutex = function(o)
       local lifo, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; lifo = __f.lifo; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; lifo = __f.lifo; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = runtime_Semacquire(s); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; 
+elseif __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= runtime_SemacquireMutex end; end __f.lifo = lifo; __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
@@ -2860,7 +2911,7 @@ __packages["sync"] = (function()
    runtime_Semrelease = function(f)
       local _entry, _key, ch, handoff, s, w, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _key = __f._key; ch = __f.ch; handoff = __f.handoff; s = __f.s; w = __f.w; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _key = __f._key; ch = __f.ch; handoff = __f.handoff; s = __f.s; w = __f.w; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s.__set(s.__get() + (1) >>> 0);
       w = (_entry = semWaiters[ptrType__1.keyFor(s)], _entry ~= nil ? _entry.v : sliceType__1.nil);
       if (w.__length == 0) {
@@ -2873,7 +2924,8 @@ __packages["sync"] = (function()
          delete semWaiters[ptrType__1.keyFor(s)];
       end
       __r = __send(ch, true); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; 
+elseif __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= runtime_Semrelease}; end __f._entry = _entry; __f._key = _key; __f.ch = ch; __f.handoff = handoff; __f.s = s; __f.w = w; __f.__s = __s; __f.__r = __r; return __f;
@@ -2895,7 +2947,7 @@ __packages["sync"] = (function()
    Map.ptr.prototype.Load = function(y)
       local _entry, _entry__1, _entry__2, _tmp, _tmp__1, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, e, key, m, ok, read, value, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; e = __f.e; key = __f.key; m = __f.m; ok = __f.ok; read = __f.read; value = __f.value; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; e = __f.e; key = __f.key; m = __f.m; ok = __f.ok; read = __f.read; value = __f.value; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       value = __ifaceNil;
       ok = false;
       m = this;
@@ -2908,9 +2960,10 @@ __packages["sync"] = (function()
  if ( not ok  and  read.amended) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ok  and  read.amended) { */ case 1:
+      -- /* if ( not ok  and  read.amended) { */ 
+elseif __s == 1 then 
          __r = m.mu.Lock(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          _tuple__2 = __assertType(m.read.Load(), readOnly, true);
          readOnly.copy(read, _tuple__2[0]);
          _tuple__3 = (_entry__1 = read.m[__emptyInterface.keyFor(key)], _entry__1 ~= nil ? [_entry__1.v, true] : [ptrType__4.nil, false]);
@@ -2923,19 +2976,19 @@ __packages["sync"] = (function()
             m.missLocked();
          end
          __r = m.mu.Unlock(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 2:
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 2 then 
       if ( not ok) {
          _tmp = __ifaceNil;
          _tmp__1 = false;
          value = _tmp;
          ok = _tmp__1;
-         __s = -1; return [value, ok];
+         __s = -1; return {value, ok};
       end
       _tuple__5 = e.load();
       value = _tuple__5[0];
       ok = _tuple__5[1];
-      __s = -1; return [value, ok];
+      __s = -1; return {value, ok};
       
  end return; end if __f == nil then  __f = { __blk= Map.ptr.prototype.Load }; end __f._entry = _entry; __f._entry__1 = _entry__1; __f._entry__2 = _entry__2; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f._tuple__5 = _tuple__5; __f.e = e; __f.key = key; __f.m = m; __f.ok = ok; __f.read = read; __f.value = value; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -2951,19 +3004,19 @@ __packages["sync"] = (function()
          _tmp__1 = false;
          value = _tmp;
          ok = _tmp__1;
-         return [value, ok];
+         return {value, ok};
       end
       _tmp__2 = (p).__get();
       _tmp__3 = true;
       value = _tmp__2;
       ok = _tmp__3;
-      return [value, ok];
+      return {value, ok};
    end;
    entry.prototype.load = function() return this.__val.load(); end;
    Map.ptr.prototype.Store = function(e)
       local _entry, _entry__1, _entry__2, _key, _key__1, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, e, e__1, e__2, key, m, ok, ok__1, ok__2, read, value, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _key = __f._key; _key__1 = __f._key__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; e = __f.e; e__1 = __f.e__1; e__2 = __f.e__2; key = __f.key; m = __f.m; ok = __f.ok; ok__1 = __f.ok__1; ok__2 = __f.ok__2; read = __f.read; value = __f.value; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _key = __f._key; _key__1 = __f._key__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; e = __f.e; e__1 = __f.e__1; e__2 = __f.e__2; key = __f.key; m = __f.m; ok = __f.ok; ok__1 = __f.ok__1; ok__2 = __f.ok__2; read = __f.read; value = __f.value; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       value = [value];
       m = this;
       _tuple = __assertType(m.read.Load(), readOnly, true);
@@ -2975,7 +3028,7 @@ __packages["sync"] = (function()
          __s = -1; return;
       end
       __r = m.mu.Lock(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       _tuple__2 = __assertType(m.read.Load(), readOnly, true);
       readOnly.copy(read, _tuple__2[0]);
       _tuple__3 = (_entry__1 = read.m[__emptyInterface.keyFor(key)], _entry__1 ~= nil ? [_entry__1.v, true] : [ptrType__4.nil, false]);
@@ -3001,7 +3054,7 @@ __packages["sync"] = (function()
          end
       end
       __r = m.mu.Unlock(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= Map.ptr.prototype.Store end; end __f._entry = _entry; __f._entry__1 = _entry__1; __f._entry__2 = _entry__2; __f._key = _key; __f._key__1 = _key__1; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f.e = e; __f.e__1 = e__1; __f.e__2 = e__2; __f.key = key; __f.m = m; __f.ok = ok; __f.ok__1 = ok__1; __f.ok__2 = ok__2; __f.read = read; __f.value = value; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -3042,7 +3095,7 @@ __packages["sync"] = (function()
    Map.ptr.prototype.LoadOrStore = function(e)
       local _entry, _entry__1, _entry__2, _key, _key__1, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, actual, actual__1, e, e__1, e__2, key, loaded, loaded__1, m, ok, ok__1, ok__2, ok__3, read, value, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _key = __f._key; _key__1 = __f._key__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; actual = __f.actual; actual__1 = __f.actual__1; e = __f.e; e__1 = __f.e__1; e__2 = __f.e__2; key = __f.key; loaded = __f.loaded; loaded__1 = __f.loaded__1; m = __f.m; ok = __f.ok; ok__1 = __f.ok__1; ok__2 = __f.ok__2; ok__3 = __f.ok__3; read = __f.read; value = __f.value; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _key = __f._key; _key__1 = __f._key__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; actual = __f.actual; actual__1 = __f.actual__1; e = __f.e; e__1 = __f.e__1; e__2 = __f.e__2; key = __f.key; loaded = __f.loaded; loaded__1 = __f.loaded__1; m = __f.m; ok = __f.ok; ok__1 = __f.ok__1; ok__2 = __f.ok__2; ok__3 = __f.ok__3; read = __f.read; value = __f.value; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       actual = __ifaceNil;
       loaded = false;
       m = this;
@@ -3061,11 +3114,11 @@ __packages["sync"] = (function()
             _tmp__1 = loaded__1;
             actual = _tmp;
             loaded = _tmp__1;
-            __s = -1; return [actual, loaded];
+            __s = -1; return {actual, loaded};
          end
       end
       __r = m.mu.Lock(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       _tuple__3 = __assertType(m.read.Load(), readOnly, true);
       readOnly.copy(read, _tuple__3[0]);
       _tuple__4 = (_entry__1 = read.m[__emptyInterface.keyFor(key)], _entry__1 ~= nil ? [_entry__1.v, true] : [ptrType__4.nil, false]);
@@ -3100,12 +3153,12 @@ __packages["sync"] = (function()
          end
       end
       __r = m.mu.Unlock(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       _tmp__4 = actual;
       _tmp__5 = loaded;
       actual = _tmp__4;
       loaded = _tmp__5;
-      __s = -1; return [actual, loaded];
+      __s = -1; return {actual, loaded};
       
  end return; end if __f == nil then  __f = { __blk= Map.ptr.prototype.LoadOrStore end; end __f._entry = _entry; __f._entry__1 = _entry__1; __f._entry__2 = _entry__2; __f._key = _key; __f._key__1 = _key__1; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f._tuple__5 = _tuple__5; __f._tuple__6 = _tuple__6; __f._tuple__7 = _tuple__7; __f.actual = actual; __f.actual__1 = actual__1; __f.e = e; __f.e__1 = e__1; __f.e__2 = e__2; __f.key = key; __f.loaded = loaded; __f.loaded__1 = loaded__1; __f.m = m; __f.ok = ok; __f.ok__1 = ok__1; __f.ok__2 = ok__2; __f.ok__3 = ok__3; __f.read = read; __f.value = value; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -3124,7 +3177,7 @@ __packages["sync"] = (function()
          actual = _tmp;
          loaded = _tmp__1;
          ok = _tmp__2;
-         return [actual, loaded, ok];
+         return {actual, loaded, ok};
       end
       if ( not (p == 0)) {
          _tmp__3 = (p).__get();
@@ -3133,7 +3186,7 @@ __packages["sync"] = (function()
          actual = _tmp__3;
          loaded = _tmp__4;
          ok = _tmp__5;
-         return [actual, loaded, ok];
+         return {actual, loaded, ok};
       end
       ic = i;
       while (true) do 
@@ -3144,7 +3197,7 @@ __packages["sync"] = (function()
             actual = _tmp__6;
             loaded = _tmp__7;
             ok = _tmp__8;
-            return [actual, loaded, ok];
+            return {actual, loaded, ok};
          end
          p = atomic.LoadPointer((e.__ptr_p  or  (e.__ptr_p = new ptrType__5(function() return this.__target.p; end, function(v) this.__target.p = __v; end, e))));
          if (p == expunged) {
@@ -3154,7 +3207,7 @@ __packages["sync"] = (function()
             actual = _tmp__9;
             loaded = _tmp__10;
             ok = _tmp__11;
-            return [actual, loaded, ok];
+            return {actual, loaded, ok};
          end
          if ( not (p == 0)) {
             _tmp__12 = (p).__get();
@@ -3163,7 +3216,7 @@ __packages["sync"] = (function()
             actual = _tmp__12;
             loaded = _tmp__13;
             ok = _tmp__14;
-            return [actual, loaded, ok];
+            return {actual, loaded, ok};
          end
       end
    end;
@@ -3171,7 +3224,7 @@ __packages["sync"] = (function()
    Map.ptr.prototype.Delete = function(y)
       local _entry, _entry__1, _tuple, _tuple__1, _tuple__2, _tuple__3, e, key, m, ok, read, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; e = __f.e; key = __f.key; m = __f.m; ok = __f.ok; read = __f.read; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; e = __f.e; key = __f.key; m = __f.m; ok = __f.ok; read = __f.read; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = this;
       _tuple = __assertType(m.read.Load(), readOnly, true);
       read = __clone(_tuple[0], readOnly);
@@ -3182,9 +3235,9 @@ __packages["sync"] = (function()
  if ( not ok  and  read.amended) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ok  and  read.amended) { */ case 1:
+      -- /* if ( not ok  and  read.amended) { */ if __s == 1 then 
          __r = m.mu.Lock(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          _tuple__2 = __assertType(m.read.Load(), readOnly, true);
          readOnly.copy(read, _tuple__2[0]);
          _tuple__3 = (_entry__1 = read.m[__emptyInterface.keyFor(key)], _entry__1 ~= nil ? [_entry__1.v, true] : [ptrType__4.nil, false]);
@@ -3194,8 +3247,8 @@ __packages["sync"] = (function()
             delete m.dirty[__emptyInterface.keyFor(key)];
          end
          __r = m.mu.Unlock(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 2:
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 2 then 
       if (ok) {
          e.delete__();
       end
@@ -3224,7 +3277,7 @@ __packages["sync"] = (function()
    Map.ptr.prototype.Range = function(f)
       local _entry, _i, _keys, _r, _ref, _tuple, _tuple__1, _tuple__2, e, f, k, m, ok, read, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _i = __f._i; _keys = __f._keys; _r = __f._r; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; e = __f.e; f = __f.f; k = __f.k; m = __f.m; ok = __f.ok; read = __f.read; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _i = __f._i; _keys = __f._keys; _r = __f._r; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; e = __f.e; f = __f.f; k = __f.k; m = __f.m; ok = __f.ok; read = __f.read; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = this;
       _tuple = __assertType(m.read.Load(), readOnly, true);
       read = __clone(_tuple[0], readOnly);
@@ -3232,9 +3285,9 @@ __packages["sync"] = (function()
  if (read.amended) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (read.amended) { */ case 1:
+      -- /* if (read.amended) { */ if __s == 1 then 
          __r = m.mu.Lock(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          _tuple__1 = __assertType(m.read.Load(), readOnly, true);
          readOnly.copy(read, _tuple__1[0]);
          if (read.amended) {
@@ -3244,12 +3297,12 @@ __packages["sync"] = (function()
             m.misses = 0;
          end
          __r = m.mu.Unlock(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 2:
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 2 then 
       _ref = read.m;
       _i = 0;
       _keys = __keys(_ref);
-      -- /* while (true) do  */ case 5:
+      -- /* while (true) do  */ if __s == 5 then 
          -- /* if ( not (_i < _#keys)) then  break; end */ if( not (_i < _#keys)) { __s = 6; continue; end
          _entry = _ref[_keys[_i]];
          if (_entry == nil) {
@@ -3265,21 +3318,21 @@ __packages["sync"] = (function()
  if not ok then __s = 7; continue; end
          
  __s = 8; continue;
-         -- /* if ( not ok) { */ case 7:
+         -- /* if ( not ok) { */ if __s == 7 then 
             _i=_i+1;
             -- /* continue; */ __s = 5; continue;
-         -- /* end */ case 8:
+         -- /* end */ if __s == 8 then 
          _r = f(k, v); 
- __s = 11; case 11: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          
  if not _r then __s = 9; continue; end
          
  __s = 10; continue;
-         -- /* if not _r then */ case 9:
+         -- /* if not _r then */ if __s == 9 then 
             -- /* break; */ __s = 6; continue;
-         -- /* end */ case 10:
+         -- /* end */ if __s == 10 then 
          _i=_i+1;
-      -- /* end */ __s = 5; continue; case 6:
+      -- /* end */ __s = 5; continue; if __s == 6 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= Map.ptr.prototype.Range }; end __f._entry = _entry; __f._i = _i; __f._keys = _keys; __f._r = _r; __f._ref = _ref; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f.e = e; __f.f = f; __f.k = k; __f.m = m; __f.ok = ok; __f.read = read; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -3345,7 +3398,7 @@ __packages["sync"] = (function()
    Mutex.ptr.prototype.Lock = function()
       local awoke, delta, iter, m, new__1, old, queueLifo, starving, waitStartTime, x, x__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; awoke = __f.awoke; delta = __f.delta; iter = __f.iter; m = __f.m; new__1 = __f.new__1; old = __f.old; queueLifo = __f.queueLifo; starving = __f.starving; waitStartTime = __f.waitStartTime; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; awoke = __f.awoke; delta = __f.delta; iter = __f.iter; m = __f.m; new__1 = __f.new__1; old = __f.old; queueLifo = __f.queueLifo; starving = __f.starving; waitStartTime = __f.waitStartTime; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = this;
       if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), 0, 1)) {
          if (false) {
@@ -3358,12 +3411,12 @@ __packages["sync"] = (function()
       awoke = false;
       iter = 0;
       old = m.state;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          
  if (((old & 5) == 1)  and  runtime_canSpin(iter)) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (((old & 5) == 1)  and  runtime_canSpin(iter)) { */ case 3:
+         -- /* if (((old & 5) == 1)  and  runtime_canSpin(iter)) { */ if __s == 3 then 
             if ( not awoke  and  ((old & 2) == 0)  and   not (((old >> 3 >> 0) == 0))  and  atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, old | 2)) {
                awoke = true;
             end
@@ -3371,7 +3424,7 @@ __packages["sync"] = (function()
             iter = iter + (1) >> 0;
             old = m.state;
             -- /* continue; */ __s = 1; continue;
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          new__1 = old;
          if ((old & 4) == 0) {
             new__1 = new__1 | (1);
@@ -3392,7 +3445,7 @@ __packages["sync"] = (function()
  if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { __s = 5; continue; end
          
  __s = 6; continue;
-         -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ case 5:
+         -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 5 then 
             if ((old & 5) == 0) {
                -- /* break; */ __s = 2; continue;
             end
@@ -3401,7 +3454,7 @@ __packages["sync"] = (function()
                waitStartTime = runtime_nanotime();
             end
             __r = runtime_SemacquireMutex((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), queueLifo); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             starving = starving  or  (x = (x__1 = runtime_nanotime(), new __Int64(x__1.__high - waitStartTime.__high, x__1.__low - waitStartTime.__low)), (x.__high > 0  or  (x.__high == 0  and  x.__low > 1000000)));
             old = m.state;
             if ( not (((old & 4) == 0))) {
@@ -3418,10 +3471,10 @@ __packages["sync"] = (function()
             awoke = true;
             iter = 0;
             __s = 7; continue;
-         -- /* end else { */ case 6:
+         -- /* end else { */ if __s == 6 then 
             old = m.state;
-         -- /* end */ case 7:
-      -- /* end */ __s = 1; continue; case 2:
+         -- /* end */ if __s == 7 then 
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       if (false) {
          race.Acquire((m));
       end
@@ -3433,7 +3486,7 @@ __packages["sync"] = (function()
    Mutex.ptr.prototype.Unlock = function()
       local m, new__1, old, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; m = __f.m; new__1 = __f.new__1; old = __f.old; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; m = __f.m; new__1 = __f.new__1; old = __f.old; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = this;
       if (false) {
          __unused(m.state);
@@ -3447,9 +3500,9 @@ __packages["sync"] = (function()
  if ((new__1 & 4) == 0) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ((new__1 & 4) == 0) { */ case 1:
+      -- /* if ((new__1 & 4) == 0) { */ if __s == 1 then 
          old = new__1;
-         -- /* while (true) do  */ case 4:
+         -- /* while (true) do  */ if __s == 4 then 
             if (((old >> 3 >> 0) == 0)  or   not (((old & 7) == 0))) {
                __s = -1; return;
             end
@@ -3458,18 +3511,18 @@ __packages["sync"] = (function()
  if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { __s = 6; continue; end
             
  __s = 7; continue;
-            -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ case 6:
+            -- /* if (atomic.CompareAndSwapInt32((m.__ptr_state  or  (m.__ptr_state = new ptrType__6(function() return this.__target.state; end, function(v) this.__target.state = __v; end, m))), old, new__1)) { */ if __s == 6 then 
                __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), false); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                __s = -1; return;
-            -- /* end */ case 7:
+            -- /* end */ if __s == 7 then 
             old = m.state;
-         -- /* end */ __s = 4; continue; case 5:
+         -- /* end */ __s = 4; continue; if __s == 5 then 
          __s = 3; continue;
-      -- /* end else { */ case 2:
+      -- /* end else { */ if __s == 2 then 
          __r = runtime_Semrelease((m.__ptr_sema  or  (m.__ptr_sema = new ptrType__1(function() return this.__target.sema; end, function(v) this.__target.sema = __v; end, m))), true); 
- __s = 9; case 9: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 3:
+ __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 3 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= Mutex.ptr.prototype.Unlock end; end __f.m = m; __f.new__1 = new__1; __f.old = old; __f.__s = __s; __f.__r = __r; return __f;
@@ -3538,15 +3591,15 @@ __packages["sync"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = js.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = race.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = runtime.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = atomic.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       allPools = sliceType.nil;
       semWaiters = {};
       expunged = (new Uint8Array(8));
@@ -3568,11 +3621,11 @@ __packages["io"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = sync.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __pkg.ErrShortWrite = errors.New("short write");
       __pkg.ErrShortBuffer = errors.New("short buffer");
       __pkg.EOF = errors.New("EOF");
@@ -3617,9 +3670,9 @@ __packages["math"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = js.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       buf = new structType.ptr(arrayType.zero(), arrayType__1.zero(), arrayType__2.zero());
       math = __global.Math;
       init();
@@ -4050,7 +4103,7 @@ __packages["syscall"] = (function()
          r1 = _tmp;
          r2 = _tmp__1;
          err = _tmp__2;
-         return [r1, r2, err];
+         return {r1, r2, err};
       end
       if ((trap == 4)  and  ((a1 == 1)  or  (a1 == 2))) {
          array = a2;
@@ -4063,7 +4116,7 @@ __packages["syscall"] = (function()
          r1 = _tmp__3;
          r2 = _tmp__4;
          err = _tmp__5;
-         return [r1, r2, err];
+         return {r1, r2, err};
       end
       if (trap == 1) {
          runtime.Goexit();
@@ -4075,7 +4128,7 @@ __packages["syscall"] = (function()
       r1 = _tmp__6;
       r2 = _tmp__7;
       err = _tmp__8;
-      return [r1, r2, err];
+      return {r1, r2, err};
    end;
    __pkg.Syscall = Syscall;
    Syscall6 = function(6)
@@ -4092,7 +4145,7 @@ __packages["syscall"] = (function()
          r1 = _tmp;
          r2 = _tmp__1;
          err = _tmp__2;
-         return [r1, r2, err];
+         return {r1, r2, err};
       end
       if ( not ((trap == 202))) {
          printWarning();
@@ -4103,7 +4156,7 @@ __packages["syscall"] = (function()
       r1 = _tmp__3;
       r2 = _tmp__4;
       err = _tmp__5;
-      return [r1, r2, err];
+      return {r1, r2, err};
    end;
    __pkg.Syscall6 = Syscall6;
    BytePtrFromString = function(s)
@@ -4116,13 +4169,13 @@ __packages["syscall"] = (function()
          i = _i;
          b = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
          if (b == 0) {
-            return [ptrType__2.nil, new Errno(22)];
+            return {ptrType__2.nil, new Errno(22)};
          end
          array[i] = b;
          _i=_i+1;
       end
       array[#s] = 0;
-      return [((array)), __ifaceNil];
+      return {((array)), __ifaceNil};
    end;
    __pkg.BytePtrFromString = BytePtrFromString;
    readInt = function(e)
@@ -4134,20 +4187,20 @@ __packages["syscall"] = (function()
          _tmp__1 = false;
          u = _tmp;
          ok = _tmp__1;
-         return [u, ok];
+         return {u, ok};
       end
       if (false) {
          _tmp__2 = readIntBE(__subslice(b, off), size);
          _tmp__3 = true;
          u = _tmp__2;
          ok = _tmp__3;
-         return [u, ok];
+         return {u, ok};
       end
       _tmp__4 = readIntLE(__subslice(b, off), size);
       _tmp__5 = true;
       u = _tmp__4;
       ok = _tmp__5;
-      return [u, ok];
+      return {u, ok};
    end;
    readIntBE = function(e)
       local _1, b, size, x, x__1, x__10, x__11, x__12, x__13, x__14, x__15, x__16, x__17, x__18, x__19, x__2, x__20, x__21, x__3, x__4, x__5, x__6, x__7, x__8, x__9;
@@ -4204,7 +4257,7 @@ __packages["syscall"] = (function()
             consumed = _tmp;
             count = _tmp__1;
             newnames = _tmp__2;
-            return [consumed, count, newnames];
+            return {consumed, count, newnames};
          end
          rec = __subslice(buf, 0, __flatten64(reclen));
          buf = __subslice(buf, __flatten64(reclen));
@@ -4249,7 +4302,7 @@ __packages["syscall"] = (function()
       consumed = _tmp__3;
       count = _tmp__4;
       newnames = _tmp__5;
-      return [consumed, count, newnames];
+      return {consumed, count, newnames};
    end;
    __pkg.ParseDirent = ParseDirent;
    CloseOnExec = function(d)
@@ -4330,7 +4383,7 @@ __packages["syscall"] = (function()
       _tmp__1 = (ts.Nsec);
       sec = _tmp;
       nsec = _tmp__1;
-      return [sec, nsec];
+      return {sec, nsec};
    end;
    Timespec.prototype.Unix = function() return this.__val.Unix(); end;
    Timespec.ptr.prototype.Nano = function()
@@ -4347,14 +4400,14 @@ __packages["syscall"] = (function()
       _tuple = Getdirentries(fd, buf, base);
       n = _tuple[0];
       err = _tuple[1];
-      return [n, err];
+      return {n, err};
    end;
    __pkg.ReadDirent = ReadDirent;
    SockaddrInet4.ptr.prototype.sockaddr = function()
       local _array, _struct, _view, i, p, sa, x, x__1, x__2;
       sa = this;
       if (sa.Port < 0  or  sa.Port > 65535) {
-         return [0, 0, new Errno(22)];
+         return {0, 0, new Errno(22)};
       end
       sa.raw.Len = 16;
       sa.raw.Family = 2;
@@ -4368,14 +4421,14 @@ __packages["syscall"] = (function()
          i = i + (1) >> 0;
       end
       _array = new Uint8Array(16);
-      return [(_array), ((sa.raw.Len >>> 0)), __ifaceNil];
+      return {(_array), ((sa.raw.Len >>> 0)), __ifaceNil};
    end;
    SockaddrInet4.prototype.sockaddr = function() return this.__val.sockaddr(); end;
    SockaddrInet6.ptr.prototype.sockaddr = function()
       local _array, _struct, _view, i, p, sa, x, x__1, x__2;
       sa = this;
       if (sa.Port < 0  or  sa.Port > 65535) {
-         return [0, 0, new Errno(22)];
+         return {0, 0, new Errno(22)};
       end
       sa.raw.Len = 28;
       sa.raw.Family = 30;
@@ -4390,7 +4443,7 @@ __packages["syscall"] = (function()
          i = i + (1) >> 0;
       end
       _array = new Uint8Array(28);
-      return [(_array), ((sa.raw.Len >>> 0)), __ifaceNil];
+      return {(_array), ((sa.raw.Len >>> 0)), __ifaceNil};
    end;
    SockaddrInet6.prototype.sockaddr = function() return this.__val.sockaddr(); end;
    SockaddrUnix.ptr.prototype.sockaddr = function()
@@ -4399,7 +4452,7 @@ __packages["syscall"] = (function()
       name = sa.Name;
       n = #name;
       if (n >= 104  or  (n == 0)) {
-         return [0, 0, new Errno(22)];
+         return {0, 0, new Errno(22)};
       end
       sa.raw.Len = (((3 + n >> 0) << 24 >>> 24));
       sa.raw.Family = 1;
@@ -4410,14 +4463,14 @@ __packages["syscall"] = (function()
          i = i + (1) >> 0;
       end
       _array = new Uint8Array(106);
-      return [(_array), ((sa.raw.Len >>> 0)), __ifaceNil];
+      return {(_array), ((sa.raw.Len >>> 0)), __ifaceNil};
    end;
    SockaddrUnix.prototype.sockaddr = function() return this.__val.sockaddr(); end;
    SockaddrDatalink.ptr.prototype.sockaddr = function()
       local _array, _struct, _view, i, sa, x, x__1;
       sa = this;
       if (sa.Index == 0) {
-         return [0, 0, new Errno(22)];
+         return {0, 0, new Errno(22)};
       end
       sa.raw.Len = sa.Len;
       sa.raw.Family = 18;
@@ -4433,7 +4486,7 @@ __packages["syscall"] = (function()
          i = i + (1) >> 0;
       end
       _array = new Uint8Array(20);
-      return [(_array), 20, __ifaceNil];
+      return {(_array), 20, __ifaceNil};
    end;
    SockaddrDatalink.prototype.sockaddr = function() return this.__val.sockaddr(); end;
    anyToSockaddr = function(a)
@@ -4457,13 +4510,13 @@ __packages["syscall"] = (function()
             (x__1 = sa.Data, ((i < 0  or  i >= x__#1) ? (__throwRuntimeError("index out of range"), nil) : x__1[i] = (x = pp.Data, ((i < 0  or  i >= #x) ? (__throwRuntimeError("index out of range"), nil) : x[i]))));
             i = i + (1) >> 0;
          end
-         return [sa, __ifaceNil];
+         return {sa, __ifaceNil};
       end else if (_1 == (1)) {
          _array__3 = new Uint8Array(108);
          pp__1 = ((_array__2 = (_array__3), _struct__2 = new RawSockaddrUnix.ptr(0, 0, arrayType__11.zero()), _view__2 = new DataView(_array__2.buffer, _array__2.byteOffset), _struct__2.Len = _view__2.getUint8(0, true), _struct__2.Family = _view__2.getUint8(1, true), _struct__2.Path = new (__nativeArray(__kindInt8))(_array__2.buffer, __min(_array__2.byteOffset + 2, _array__2.buffer.byteLength)), _struct__2));
          _struct__3 = rsa, _view__3 = new DataView(_array__3.buffer, _array__3.byteOffset), _struct__3.Addr.Len = _view__3.getUint8(0, true), _struct__3.Addr.Family = _view__3.getUint8(1, true), _struct__3.Addr.Data = new (__nativeArray(__kindInt8))(_array__3.buffer, __min(_array__3.byteOffset + 2, _array__3.buffer.byteLength)), _struct__3.Pad = new (__nativeArray(__kindInt8))(_array__3.buffer, __min(_array__3.byteOffset + 16, _array__3.buffer.byteLength));
          if (pp__1.Len < 2  or  pp__1.Len > 106) {
-            return [__ifaceNil, new Errno(22)];
+            return {__ifaceNil, new Errno(22)};
          end
          sa__1 = new SockaddrUnix.ptr("", new RawSockaddrUnix.ptr(0, 0, arrayType__11.zero()));
          n = ((pp__1.Len >> 0)) - 2 >> 0;
@@ -4478,7 +4531,7 @@ __packages["syscall"] = (function()
          end
          bytes = __subslice(new sliceType(((__sliceToArray(new sliceType(pp__1.Path))))), 0, n);
          sa__1.Name = (__bytesToString(bytes));
-         return [sa__1, __ifaceNil];
+         return {sa__1, __ifaceNil};
       end else if (_1 == (2)) {
          _array__5 = new Uint8Array(108);
          pp__2 = ((_array__4 = (_array__5), _struct__4 = new RawSockaddrInet4.ptr(0, 0, 0, arrayType__1.zero(), arrayType__6.zero()), _view__4 = new DataView(_array__4.buffer, _array__4.byteOffset), _struct__4.Len = _view__4.getUint8(0, true), _struct__4.Family = _view__4.getUint8(1, true), _struct__4.Port = _view__4.getUint16(2, true), _struct__4.Addr = new (__nativeArray(__kindUint8))(_array__4.buffer, __min(_array__4.byteOffset + 4, _array__4.buffer.byteLength)), _struct__4.Zero = new (__nativeArray(__kindInt8))(_array__4.buffer, __min(_array__4.byteOffset + 8, _array__4.buffer.byteLength)), _struct__4));
@@ -4492,7 +4545,7 @@ __packages["syscall"] = (function()
             (x__4 = sa__2.Addr, ((i__2 < 0  or  i__2 >= x__#4) ? (__throwRuntimeError("index out of range"), nil) : x__4[i__2] = (x__3 = pp__2.Addr, ((i__2 < 0  or  i__2 >= x__#3) ? (__throwRuntimeError("index out of range"), nil) : x__3[i__2]))));
             i__2 = i__2 + (1) >> 0;
          end
-         return [sa__2, __ifaceNil];
+         return {sa__2, __ifaceNil};
       end else if (_1 == (30)) {
          _array__7 = new Uint8Array(108);
          pp__3 = ((_array__6 = (_array__7), _struct__6 = new RawSockaddrInet6.ptr(0, 0, 0, 0, arrayType.zero(), 0), _view__6 = new DataView(_array__6.buffer, _array__6.byteOffset), _struct__6.Len = _view__6.getUint8(0, true), _struct__6.Family = _view__6.getUint8(1, true), _struct__6.Port = _view__6.getUint16(2, true), _struct__6.Flowinfo = _view__6.getUint32(4, true), _struct__6.Addr = new (__nativeArray(__kindUint8))(_array__6.buffer, __min(_array__6.byteOffset + 8, _array__6.buffer.byteLength)), _struct__6.Scope_id = _view__6.getUint32(24, true), _struct__6));
@@ -4507,9 +4560,9 @@ __packages["syscall"] = (function()
             (x__6 = sa__3.Addr, ((i__3 < 0  or  i__3 >= x__#6) ? (__throwRuntimeError("index out of range"), nil) : x__6[i__3] = (x__5 = pp__3.Addr, ((i__3 < 0  or  i__3 >= x__#5) ? (__throwRuntimeError("index out of range"), nil) : x__5[i__3]))));
             i__3 = i__3 + (1) >> 0;
          end
-         return [sa__3, __ifaceNil];
+         return {sa__3, __ifaceNil};
       end
-      return [__ifaceNil, new Errno(47)];
+      return {__ifaceNil, new Errno(47)};
    end;
    Accept = function(d)
       local _tmp, _tmp__1, _tmp__2, _tuple, _tuple__1, err, fd, len, len__24ptr, nfd, rsa, sa;
@@ -4522,7 +4575,7 @@ __packages["syscall"] = (function()
       nfd = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         return [nfd, sa, err];
+         return {nfd, sa, err};
       end
       if (true  and  (len == 0)) {
          Close(nfd);
@@ -4532,7 +4585,7 @@ __packages["syscall"] = (function()
          nfd = _tmp;
          sa = _tmp__1;
          err = _tmp__2;
-         return [nfd, sa, err];
+         return {nfd, sa, err};
       end
       _tuple__1 = anyToSockaddr(rsa);
       sa = _tuple__1[0];
@@ -4541,7 +4594,7 @@ __packages["syscall"] = (function()
          Close(nfd);
          nfd = 0;
       end
-      return [nfd, sa, err];
+      return {nfd, sa, err};
    end;
    __pkg.Accept = Accept;
    Recvmsg = function(s)
@@ -4577,7 +4630,7 @@ __packages["syscall"] = (function()
       n = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         return [n, oobn, recvflags, from, err];
+         return {n, oobn, recvflags, from, err};
       end
       oobn = ((msg.Controllen >> 0));
       recvflags = ((msg.Flags >> 0));
@@ -4586,13 +4639,13 @@ __packages["syscall"] = (function()
          from = _tuple__1[0];
          err = _tuple__1[1];
       end
-      return [n, oobn, recvflags, from, err];
+      return {n, oobn, recvflags, from, err};
    end;
    __pkg.Recvmsg = Recvmsg;
    SendmsgN = function(s)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, _tuple__1, dummy, err, fd, flags, iov, msg, n, oob, p, ptr, salen, to, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; dummy = __f.dummy; err = __f.err; fd = __f.fd; flags = __f.flags; iov = __f.iov; msg = __f.msg; n = __f.n; oob = __f.oob; p = __f.p; ptr = __f.ptr; salen = __f.salen; to = __f.to; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; dummy = __f.dummy; err = __f.err; fd = __f.fd; flags = __f.flags; iov = __f.iov; msg = __f.msg; n = __f.n; oob = __f.oob; p = __f.p; ptr = __f.ptr; salen = __f.salen; to = __f.to; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       dummy = [dummy];
       iov = [iov];
       msg = [msg];
@@ -4604,9 +4657,9 @@ __packages["syscall"] = (function()
  if ( not (__interfaceIsEqual(to, __ifaceNil))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not (__interfaceIsEqual(to, __ifaceNil))) { */ case 1:
+      -- /* if ( not (__interfaceIsEqual(to, __ifaceNil))) { */ if __s == 1 then 
          _r = to.sockaddr(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          ptr = _tuple[0];
          salen = _tuple[1];
@@ -4616,9 +4669,9 @@ __packages["syscall"] = (function()
             _tmp__1 = err;
             n = _tmp;
             err = _tmp__1;
-            __s = -1; return [n, err];
+            __s = -1; return {n, err};
          end
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       msg[0] = new Msghdr.ptr(ptrType__2.nil, 0, arrayType__1.zero(), ptrType__18.nil, 0, arrayType__1.zero(), ptrType__2.nil, 0, 0);
       msg[0].Name = ((ptr));
       msg[0].Namelen = ((salen >>> 0));
@@ -4646,7 +4699,7 @@ __packages["syscall"] = (function()
          _tmp__3 = err;
          n = _tmp__2;
          err = _tmp__3;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
       if (oob.__length > 0  and  (p.__length == 0)) {
          n = 0;
@@ -4655,7 +4708,7 @@ __packages["syscall"] = (function()
       _tmp__5 = __ifaceNil;
       n = _tmp__4;
       err = _tmp__5;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= SendmsgN end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.dummy = dummy; __f.err = err; __f.fd = fd; __f.flags = flags; __f.iov = iov; __f.msg = msg; __f.n = n; __f.oob = oob; __f.p = p; __f.ptr = ptr; __f.salen = salen; __f.to = to; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -4687,7 +4740,7 @@ __packages["syscall"] = (function()
    mmapper.ptr.prototype.Mmap = function(s)
       local _key, _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, addr, b, data, err, errno, fd, flags, length, m, offset, p, prot, sl, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _key = __f._key; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; addr = __f.addr; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; fd = __f.fd; flags = __f.flags; length = __#f; m = __f.m; offset = __f.offset; p = __f.p; prot = __f.prot; sl = __f.sl; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _key = __f._key; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; addr = __f.addr; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; fd = __f.fd; flags = __f.flags; length = __#f; m = __f.m; offset = __f.offset; p = __f.p; prot = __f.prot; sl = __f.sl; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       sl = [sl];
       data = sliceType.nil;
       err = __ifaceNil;
@@ -4697,10 +4750,10 @@ __packages["syscall"] = (function()
          _tmp__1 = new Errno(22);
          data = _tmp;
          err = _tmp__1;
-         __s = -1; return [data, err];
+         __s = -1; return {data, err};
       end
       _r = m.mmap(0, ((length >>> 0)), prot, flags, fd, offset); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       addr = _tuple[0];
       errno = _tuple[1];
@@ -4709,20 +4762,20 @@ __packages["syscall"] = (function()
          _tmp__3 = errno;
          data = _tmp__2;
          err = _tmp__3;
-         __s = -1; return [data, err];
+         __s = -1; return {data, err};
       end
       sl[0] = new structType.ptr(addr, length, length);
       b = sl[0];
       p = __indexPtr(b.__array, b.__offset + (b.__capacity - 1 >> 0), ptrType__2);
       __r = m.Mutex.Lock(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __deferred.push([__methodVal(m.Mutex, "Unlock"), []]);
       _key = p; (m.active  or  __throwRuntimeError("assignment to entry in nil map"))[ptrType__2.keyFor(_key)] = { k: _key, v: b end;
       _tmp__4 = b;
       _tmp__5 = __ifaceNil;
       data = _tmp__4;
       err = _tmp__5;
-      __s = -1; return [data, err];
+      __s = -1; return {data, err};
       
  end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  [data, err]; end if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= mmapper.ptr.prototype.Mmap end; end __f._key = _key; __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.addr = addr; __f.b = b; __f.data = data; __f.err = err; __f.errno = errno; __f.fd = fd; __f.flags = flags; __#f = length; __f.m = m; __f.offset = offset; __f.p = p; __f.prot = prot; __f.sl = sl; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
@@ -4730,7 +4783,7 @@ __packages["syscall"] = (function()
    mmapper.ptr.prototype.Munmap = function(a)
       local _entry, _r, b, data, err, errno, m, p, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _r = __f._r; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; m = __f.m; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _r = __f._r; b = __f.b; data = __f.data; err = __f.err; errno = __f.errno; m = __f.m; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       err = __ifaceNil;
       m = this;
       if ((data.__length == 0)  or   not ((data.__length == data.__capacity))) {
@@ -4739,7 +4792,7 @@ __packages["syscall"] = (function()
       end
       p = __indexPtr(data.__array, data.__offset + (data.__capacity - 1 >> 0), ptrType__2);
       __r = m.Mutex.Lock(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __deferred.push([__methodVal(m.Mutex, "Unlock"), []]);
       b = (_entry = m.active[ptrType__2.keyFor(p)], _entry ~= nil ? _entry.v : sliceType.nil);
       if (b == sliceType.nil  or   not (__indexPtr(b.__array, b.__offset + 0, ptrType__2) == __indexPtr(data.__array, data.__offset + 0, ptrType__2))) {
@@ -4747,7 +4800,7 @@ __packages["syscall"] = (function()
          __s = -1; return err;
       end
       _r = m.munmap(((__sliceToArray(b))), ((b.__length >>> 0))); 
- __s = 2; case 2: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       errno = _r;
       if ( not (__interfaceIsEqual(errno, __ifaceNil))) {
          err = errno;
@@ -4816,7 +4869,7 @@ __packages["syscall"] = (function()
       if (false  and  n > 0) {
          msanWrite((__sliceToArray(p)), n);
       end
-      return [n, err];
+      return {n, err};
    end;
    __pkg.Read = Read;
    Write = function(p)
@@ -4835,7 +4888,7 @@ __packages["syscall"] = (function()
       if (false  and  n > 0) {
          msanRead((__sliceToArray(p)), n);
       end
-      return [n, err];
+      return {n, err};
    end;
    __pkg.Write = Write;
    Recvfrom = function(s)
@@ -4849,23 +4902,23 @@ __packages["syscall"] = (function()
       n = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         return [n, from, err];
+         return {n, from, err};
       end
       if ( not ((rsa.Addr.Family == 0))) {
          _tuple__1 = anyToSockaddr(rsa);
          from = _tuple__1[0];
          err = _tuple__1[1];
       end
-      return [n, from, err];
+      return {n, from, err};
    end;
    __pkg.Recvfrom = Recvfrom;
    Sendto = function(o)
       local _r, _tuple, err, fd, flags, n, p, ptr, to, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; fd = __f.fd; flags = __f.flags; n = __f.n; p = __f.p; ptr = __f.ptr; to = __f.to; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; fd = __f.fd; flags = __f.flags; n = __f.n; p = __f.p; ptr = __f.ptr; to = __f.to; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       err = __ifaceNil;
       _r = to.sockaddr(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       ptr = _tuple[0];
       n = _tuple[1];
@@ -4942,7 +4995,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [fd, err];
+      return {fd, err};
    end;
    setsockopt = function(n)
       local _tuple, e1, err, level, name, s, val, vallen;
@@ -4984,7 +5037,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    sendto = function(n)
       local _p0, _tuple, addrlen, buf, e1, err, flags, s, to;
@@ -5015,7 +5068,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    sendmsg = function(s)
       local _array, _struct, _tuple, _view, e1, err, flags, msg, n, r0, s;
@@ -5030,7 +5083,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    fcntl = function(g)
       local _tuple, arg, cmd, e1, err, fd, r0, val;
@@ -5043,7 +5096,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [val, err];
+      return {val, err};
    end;
    Close = function(d)
       local _tuple, e1, err, fd;
@@ -5141,7 +5194,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    __pkg.Getdirentries = Getdirentries;
    Lstat = function(t)
@@ -5181,7 +5234,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    __pkg.Pread = Pread;
    Pwrite = function(t)
@@ -5201,7 +5254,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    __pkg.Pwrite = Pwrite;
    read = function(p)
@@ -5221,7 +5274,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    Seek = function(e)
       local _tuple, e1, err, fd, newoffset, offset, r0, whence;
@@ -5234,7 +5287,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [newoffset, err];
+      return {newoffset, err};
    end;
    __pkg.Seek = Seek;
    write = function(p)
@@ -5254,7 +5307,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [n, err];
+      return {n, err};
    end;
    mmap = function(s)
       local _tuple, addr, e1, err, fd, flag, length, pos, prot, r0, ret;
@@ -5267,7 +5320,7 @@ __packages["syscall"] = (function()
       if ( not ((e1 == 0))) {
          err = errnoErr(e1);
       end
-      return [ret, err];
+      return {ret, err};
    end;
    munmap = function(h)
       local _tuple, addr, e1, err, length;
@@ -5311,17 +5364,17 @@ __packages["syscall"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = js.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = race.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = runtime.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = sync.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       lineBuffer = sliceType.nil;
       syscallModule = null;
       freebsdConfArch = "";
@@ -5363,7 +5416,7 @@ __packages["github.com/gopherjs/gopherjs/nosync"] = (function()
    Once.ptr.prototype.Do = function(f)
       local f, o, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; f = __f.f; o = __f.o; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; f = __f.f; o = __f.o; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       o = [o];
       o[0] = this;
       if (o[0].done) {
@@ -5378,7 +5431,7 @@ __packages["github.com/gopherjs/gopherjs/nosync"] = (function()
          o[0].done = true;
       end; end)(o), []]);
       __r = f(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= Once.ptr.prototype.Do end; end __f.f = f; __f.o = o; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
@@ -5390,7 +5443,7 @@ __packages["github.com/gopherjs/gopherjs/nosync"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -5511,7 +5564,7 @@ __packages["time"] = (function()
       local c, s;
       return __parseInt(s.indexOf(__global.__str.fromCharCode(c))) >> 0;
    end;
-   startsWithLowerCase = function(r)
+   startsWithLowerif __s == = function(r)
       local c, str;
       if (#str == 0) {
          return false;
@@ -5538,7 +5591,7 @@ __packages["time"] = (function()
                   prefix = _tmp;
                   std = _tmp__1;
                   suffix = _tmp__2;
-                  return [prefix, std, suffix];
+                  return {prefix, std, suffix};
                end
                if ( not startsWithLowerCase(__substring(layout, (i + 3 >> 0)))) {
                   _tmp__3 = __substring(layout, 0, i);
@@ -5547,7 +5600,7 @@ __packages["time"] = (function()
                   prefix = _tmp__3;
                   std = _tmp__4;
                   suffix = _tmp__5;
-                  return [prefix, std, suffix];
+                  return {prefix, std, suffix};
                end
             end
          end else if (_1 == (77)) {
@@ -5560,7 +5613,7 @@ __packages["time"] = (function()
                      prefix = _tmp__6;
                      std = _tmp__7;
                      suffix = _tmp__8;
-                     return [prefix, std, suffix];
+                     return {prefix, std, suffix};
                   end
                   if ( not startsWithLowerCase(__substring(layout, (i + 3 >> 0)))) {
                      _tmp__9 = __substring(layout, 0, i);
@@ -5569,7 +5622,7 @@ __packages["time"] = (function()
                      prefix = _tmp__9;
                      std = _tmp__10;
                      suffix = _tmp__11;
-                     return [prefix, std, suffix];
+                     return {prefix, std, suffix};
                   end
                end
                if (__substring(layout, i, (i + 3 >> 0)) == "MST") {
@@ -5579,18 +5632,18 @@ __packages["time"] = (function()
                   prefix = _tmp__12;
                   std = _tmp__13;
                   suffix = _tmp__14;
-                  return [prefix, std, suffix];
+                  return {prefix, std, suffix};
                end
             end
          end else if (_1 == (48)) {
             if (#layout >= (i + 2 >> 0)  and  49 <= layout.charCodeAt((i + 1 >> 0))  and  layout.charCodeAt((i + 1 >> 0)) <= 54) {
                _tmp__15 = __substring(layout, 0, i);
-               _tmp__16 = (x = layout.charCodeAt((i + 1 >> 0)) - 49 << 24 >>> 24, ((x < 0  or  x >= #std0x) ? (__throwRuntimeError("index out of range"), nil) : std0x[x]));
+               _tmp__16 = (x = layout.charCodeAt((i + 1 >> 0)) - 49 << 24 >>> 24, ((x < 0  or  x >= #std0x) ? (__throwRuntimeError("index out of range"), nil)  then  std0x[x]));
                _tmp__17 = __substring(layout, (i + 2 >> 0));
                prefix = _tmp__15;
                std = _tmp__16;
                suffix = _tmp__17;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (49)) {
             if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 53)) {
@@ -5600,7 +5653,7 @@ __packages["time"] = (function()
                prefix = _tmp__18;
                std = _tmp__19;
                suffix = _tmp__20;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             _tmp__21 = __substring(layout, 0, i);
             _tmp__22 = 259;
@@ -5608,7 +5661,7 @@ __packages["time"] = (function()
             prefix = _tmp__21;
             std = _tmp__22;
             suffix = _tmp__23;
-            return [prefix, std, suffix];
+            return {prefix, std, suffix};
          end else if (_1 == (50)) {
             if (#layout >= (i + 4 >> 0)  and  __substring(layout, i, (i + 4 >> 0)) == "2006") {
                _tmp__24 = __substring(layout, 0, i);
@@ -5617,7 +5670,7 @@ __packages["time"] = (function()
                prefix = _tmp__24;
                std = _tmp__25;
                suffix = _tmp__26;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             _tmp__27 = __substring(layout, 0, i);
             _tmp__28 = 263;
@@ -5625,7 +5678,7 @@ __packages["time"] = (function()
             prefix = _tmp__27;
             std = _tmp__28;
             suffix = _tmp__29;
-            return [prefix, std, suffix];
+            return {prefix, std, suffix};
          end else if (_1 == (95)) {
             if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 50)) {
                if (#layout >= (i + 5 >> 0)  and  __substring(layout, (i + 1 >> 0), (i + 5 >> 0)) == "2006") {
@@ -5635,7 +5688,7 @@ __packages["time"] = (function()
                   prefix = _tmp__30;
                   std = _tmp__31;
                   suffix = _tmp__32;
-                  return [prefix, std, suffix];
+                  return {prefix, std, suffix};
                end
                _tmp__33 = __substring(layout, 0, i);
                _tmp__34 = 264;
@@ -5643,7 +5696,7 @@ __packages["time"] = (function()
                prefix = _tmp__33;
                std = _tmp__34;
                suffix = _tmp__35;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (51)) {
             _tmp__36 = __substring(layout, 0, i);
@@ -5652,7 +5705,7 @@ __packages["time"] = (function()
             prefix = _tmp__36;
             std = _tmp__37;
             suffix = _tmp__38;
-            return [prefix, std, suffix];
+            return {prefix, std, suffix};
          end else if (_1 == (52)) {
             _tmp__39 = __substring(layout, 0, i);
             _tmp__40 = 525;
@@ -5660,7 +5713,7 @@ __packages["time"] = (function()
             prefix = _tmp__39;
             std = _tmp__40;
             suffix = _tmp__41;
-            return [prefix, std, suffix];
+            return {prefix, std, suffix};
          end else if (_1 == (53)) {
             _tmp__42 = __substring(layout, 0, i);
             _tmp__43 = 527;
@@ -5668,7 +5721,7 @@ __packages["time"] = (function()
             prefix = _tmp__42;
             std = _tmp__43;
             suffix = _tmp__44;
-            return [prefix, std, suffix];
+            return {prefix, std, suffix};
          end else if (_1 == (80)) {
             if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 77)) {
                _tmp__45 = __substring(layout, 0, i);
@@ -5677,7 +5730,7 @@ __packages["time"] = (function()
                prefix = _tmp__45;
                std = _tmp__46;
                suffix = _tmp__47;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (112)) {
             if (#layout >= (i + 2 >> 0)  and  (layout.charCodeAt((i + 1 >> 0)) == 109)) {
@@ -5687,7 +5740,7 @@ __packages["time"] = (function()
                prefix = _tmp__48;
                std = _tmp__49;
                suffix = _tmp__50;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (45)) {
             if (#layout >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "-070000") {
@@ -5697,7 +5750,7 @@ __packages["time"] = (function()
                prefix = _tmp__51;
                std = _tmp__52;
                suffix = _tmp__53;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "-07:00:00") {
                _tmp__54 = __substring(layout, 0, i);
@@ -5706,7 +5759,7 @@ __packages["time"] = (function()
                prefix = _tmp__54;
                std = _tmp__55;
                suffix = _tmp__56;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "-0700") {
                _tmp__57 = __substring(layout, 0, i);
@@ -5715,7 +5768,7 @@ __packages["time"] = (function()
                prefix = _tmp__57;
                std = _tmp__58;
                suffix = _tmp__59;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "-07:00") {
                _tmp__60 = __substring(layout, 0, i);
@@ -5724,7 +5777,7 @@ __packages["time"] = (function()
                prefix = _tmp__60;
                std = _tmp__61;
                suffix = _tmp__62;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "-07") {
                _tmp__63 = __substring(layout, 0, i);
@@ -5733,7 +5786,7 @@ __packages["time"] = (function()
                prefix = _tmp__63;
                std = _tmp__64;
                suffix = _tmp__65;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (90)) {
             if (#layout >= (i + 7 >> 0)  and  __substring(layout, i, (i + 7 >> 0)) == "Z070000") {
@@ -5743,7 +5796,7 @@ __packages["time"] = (function()
                prefix = _tmp__66;
                std = _tmp__67;
                suffix = _tmp__68;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 9 >> 0)  and  __substring(layout, i, (i + 9 >> 0)) == "Z07:00:00") {
                _tmp__69 = __substring(layout, 0, i);
@@ -5752,7 +5805,7 @@ __packages["time"] = (function()
                prefix = _tmp__69;
                std = _tmp__70;
                suffix = _tmp__71;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 5 >> 0)  and  __substring(layout, i, (i + 5 >> 0)) == "Z0700") {
                _tmp__72 = __substring(layout, 0, i);
@@ -5761,7 +5814,7 @@ __packages["time"] = (function()
                prefix = _tmp__72;
                std = _tmp__73;
                suffix = _tmp__74;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 6 >> 0)  and  __substring(layout, i, (i + 6 >> 0)) == "Z07:00") {
                _tmp__75 = __substring(layout, 0, i);
@@ -5770,7 +5823,7 @@ __packages["time"] = (function()
                prefix = _tmp__75;
                std = _tmp__76;
                suffix = _tmp__77;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
             if (#layout >= (i + 3 >> 0)  and  __substring(layout, i, (i + 3 >> 0)) == "Z07") {
                _tmp__78 = __substring(layout, 0, i);
@@ -5779,7 +5832,7 @@ __packages["time"] = (function()
                prefix = _tmp__78;
                std = _tmp__79;
                suffix = _tmp__80;
-               return [prefix, std, suffix];
+               return {prefix, std, suffix};
             end
          end else if (_1 == (46)) {
             if ((i + 1 >> 0) < #layout  and  ((layout.charCodeAt((i + 1 >> 0)) == 48)  or  (layout.charCodeAt((i + 1 >> 0)) == 57))) {
@@ -5801,7 +5854,7 @@ __packages["time"] = (function()
                   prefix = _tmp__81;
                   std = _tmp__82;
                   suffix = _tmp__83;
-                  return [prefix, std, suffix];
+                  return {prefix, std, suffix};
                end
             end
          end
@@ -5813,7 +5866,7 @@ __packages["time"] = (function()
       prefix = _tmp__84;
       std = _tmp__85;
       suffix = _tmp__86;
-      return [prefix, std, suffix];
+      return {prefix, std, suffix};
    end;
    match = function(2)
       local c1, c2, i, s1, s2;
@@ -5842,11 +5895,11 @@ __packages["time"] = (function()
          i = _i;
          v = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
          if (#val >= #v  and  match(__substring(val, 0, #v), v)) {
-            return [i, __substring(val, #v), __ifaceNil];
+            return {i, __substring(val, #v), __ifaceNil};
          end
          _i=_i+1;
       end
-      return [-1, val, errBad];
+      return {-1, val, errBad};
    end;
    appendInt = function(h)
       local _q, b, buf, i, q, u, w, width, x;
@@ -5893,7 +5946,7 @@ __packages["time"] = (function()
          _tmp__1 = atoiError;
          x = _tmp;
          err = _tmp__1;
-         return [x, err];
+         return {x, err};
       end
       if (neg) {
          x = -x;
@@ -5902,7 +5955,7 @@ __packages["time"] = (function()
       _tmp__3 = __ifaceNil;
       x = _tmp__2;
       err = _tmp__3;
-      return [x, err];
+      return {x, err};
    end;
    formatNano = function(m)
       local _q, _r, b, buf, n, nanosec, start, trim, u, x;
@@ -5933,10 +5986,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.__str = function()
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, buf, m0, m1, m2, s, sign, t, wid, x, x__1, x__2, x__3, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; buf = __f.buf; m0 = __f.m0; m1 = __f.m1; m2 = __f.m2; s = __f.s; sign = __f.sign; t = __f.t; wid = __f.wid; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; buf = __f.buf; m0 = __f.m0; m1 = __f.m1; m2 = __f.m2; s = __f.s; sign = __f.sign; t = __f.t; wid = __f.wid; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).Format("2006-01-02 15:04:05.999999999 -0700 MST"); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       s = _r;
       if ( not ((x = (x__1 = t.wall, new __Uint64(x__1.__high & 2147483648, (x__1.__low & 0) >>> 0)), (x.__high == 0  and  x.__low == 0)))) {
          m2 = ((x__2 = t.ext, new __Uint64(x__2.__high, x__2.__low)));
@@ -5974,7 +6027,7 @@ __packages["time"] = (function()
    Time.ptr.prototype.Format = function(t)
       local _r, b, buf, layout, max, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; b = __f.b; buf = __f.buf; layout = __f.layout; max = __f.max; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; b = __f.b; buf = __f.buf; layout = __f.layout; max = __f.max; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       b = sliceType__3.nil;
       max = #layout + 10 >> 0;
@@ -5985,7 +6038,7 @@ __packages["time"] = (function()
          b = __makeSlice(sliceType__3, 0, max);
       end
       _r = __clone(t, Time).AppendFormat(b, layout); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       b = _r;
       __s = -1; return (__bytesToString(b));
       
@@ -5995,10 +6048,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.AppendFormat = function(t)
       local _1, _q, _q__1, _q__2, _q__3, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _tuple, _tuple__1, _tuple__2, _tuple__3, abs, absoffset, b, day, hour, hr, hr__1, layout, m, min, month, name, offset, prefix, s, sec, std, suffix, t, y, year, zone__1, zone__2, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _q = __f._q; _q__1 = __f._q__1; _q__2 = __f._q__2; _q__3 = __f._q__3; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; abs = __f.abs; absoffset = __f.absoffset; b = __f.b; day = __f.day; hour = __f.hour; hr = __f.hr; hr__1 = __f.hr__1; layout = __f.layout; m = __f.m; min = __f.min; month = __f.month; name = __f.name; offset = __f.offset; prefix = __f.prefix; s = __f.s; sec = __f.sec; std = __f.std; suffix = __f.suffix; t = __f.t; y = __f.y; year = __f.year; zone__1 = __f.zone__1; zone__2 = __f.zone__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _q = __f._q; _q__1 = __f._q__1; _q__2 = __f._q__2; _q__3 = __f._q__3; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; abs = __f.abs; absoffset = __f.absoffset; b = __f.b; day = __f.day; hour = __f.hour; hr = __f.hr; hr__1 = __f.hr__1; layout = __f.layout; m = __f.m; min = __f.min; month = __f.month; name = __f.name; offset = __f.offset; prefix = __f.prefix; s = __f.s; sec = __f.sec; std = __f.std; suffix = __f.suffix; t = __f.t; y = __f.y; year = __f.year; zone__1 = __f.zone__1; zone__2 = __f.zone__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).locabs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       name = _tuple[0];
       offset = _tuple[1];
@@ -6034,7 +6087,7 @@ __packages["time"] = (function()
             min = _tuple__3[1];
             sec = _tuple__3[2];
          end
-         switch (0) { default:
+         do
             _1 = std & 65535;
             if (_1 == (274)) {
                y = year;
@@ -6176,15 +6229,15 @@ __packages["time"] = (function()
    getnum = function(d)
       local fixed, s;
       if ( not isDigit(s, 0)) {
-         return [0, s, errBad];
+         return {0, s, errBad};
       end
       if ( not isDigit(s, 1)) {
          if (fixed) {
-            return [0, s, errBad];
+            return {0, s, errBad};
          end
-         return [(((s.charCodeAt(0) - 48 << 24 >>> 24) >> 0)), __substring(s, 1), __ifaceNil];
+         return {(((s.charCodeAt(0) - 48 << 24 >>> 24) >> 0)), __substring(s, 1), __ifaceNil};
       end
-      return [(__imul((((s.charCodeAt(0) - 48 << 24 >>> 24) >> 0)), 10)) + (((s.charCodeAt(1) - 48 << 24 >>> 24) >> 0)) >> 0, __substring(s, 2), __ifaceNil];
+      return {(__imul((((s.charCodeAt(0) - 48 << 24 >>> 24) >> 0)), 10)) + (((s.charCodeAt(1) - 48 << 24 >>> 24) >> 0)) >> 0, __substring(s, 2), __ifaceNil};
    end;
    cutspace = function(s)
       local s;
@@ -6200,26 +6253,26 @@ __packages["time"] = (function()
          if ( not (#prefix > 0)) { break; end
          if (prefix.charCodeAt(0) == 32) {
             if (#value > 0  and   not ((value.charCodeAt(0) == 32))) {
-               return [value, errBad];
+               return {value, errBad};
             end
             prefix = cutspace(prefix);
             value = cutspace(value);
             continue;
          end
          if ((#value == 0)  or   not ((value.charCodeAt(0) == prefix.charCodeAt(0)))) {
-            return [value, errBad];
+            return {value, errBad};
          end
          prefix = __substring(prefix, 1);
          value = __substring(value, 1);
       end
-      return [value, __ifaceNil];
+      return {value, __ifaceNil};
    end;
    Parse = function(e)
       local _r, layout, value, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; layout = __f.layout; value = __f.value; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; layout = __f.layout; value = __f.value; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = parse(layout, value, __pkg.UTC, __pkg.Local); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Parse end; end __f._r = _r; __f.layout = layout; __f.value = value; __f.__s = __s; __f.__r = __r; return __f;
@@ -6228,7 +6281,7 @@ __packages["time"] = (function()
    parse = function(l)
       local _1, _2, _3, _4, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _tmp, _tmp__1, _tmp__10, _tmp__11, _tmp__12, _tmp__13, _tmp__14, _tmp__15, _tmp__16, _tmp__17, _tmp__18, _tmp__19, _tmp__2, _tmp__20, _tmp__21, _tmp__22, _tmp__23, _tmp__24, _tmp__25, _tmp__26, _tmp__27, _tmp__28, _tmp__29, _tmp__3, _tmp__30, _tmp__31, _tmp__32, _tmp__33, _tmp__34, _tmp__35, _tmp__36, _tmp__37, _tmp__38, _tmp__39, _tmp__4, _tmp__40, _tmp__41, _tmp__42, _tmp__43, _tmp__5, _tmp__6, _tmp__7, _tmp__8, _tmp__9, _tuple, _tuple__1, _tuple__10, _tuple__11, _tuple__12, _tuple__13, _tuple__14, _tuple__15, _tuple__16, _tuple__17, _tuple__18, _tuple__19, _tuple__2, _tuple__20, _tuple__21, _tuple__22, _tuple__23, _tuple__24, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, _tuple__8, _tuple__9, alayout, amSet, avalue, day, defaultLocation, err, hour, hour__1, hr, i, layout, local, min, min__1, mm, month, n, n__1, name, ndigit, nsec, offset, offset__1, ok, ok__1, p, pmSet, prefix, rangeErrString, sec, seconds, sign, ss, std, stdstr, suffix, t, t__1, value, x, x__1, year, z, zoneName, zoneOffset, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__10 = __f._tmp__10; _tmp__11 = __f._tmp__11; _tmp__12 = __f._tmp__12; _tmp__13 = __f._tmp__13; _tmp__14 = __f._tmp__14; _tmp__15 = __f._tmp__15; _tmp__16 = __f._tmp__16; _tmp__17 = __f._tmp__17; _tmp__18 = __f._tmp__18; _tmp__19 = __f._tmp__19; _tmp__2 = __f._tmp__2; _tmp__20 = __f._tmp__20; _tmp__21 = __f._tmp__21; _tmp__22 = __f._tmp__22; _tmp__23 = __f._tmp__23; _tmp__24 = __f._tmp__24; _tmp__25 = __f._tmp__25; _tmp__26 = __f._tmp__26; _tmp__27 = __f._tmp__27; _tmp__28 = __f._tmp__28; _tmp__29 = __f._tmp__29; _tmp__3 = __f._tmp__3; _tmp__30 = __f._tmp__30; _tmp__31 = __f._tmp__31; _tmp__32 = __f._tmp__32; _tmp__33 = __f._tmp__33; _tmp__34 = __f._tmp__34; _tmp__35 = __f._tmp__35; _tmp__36 = __f._tmp__36; _tmp__37 = __f._tmp__37; _tmp__38 = __f._tmp__38; _tmp__39 = __f._tmp__39; _tmp__4 = __f._tmp__4; _tmp__40 = __f._tmp__40; _tmp__41 = __f._tmp__41; _tmp__42 = __f._tmp__42; _tmp__43 = __f._tmp__43; _tmp__5 = __f._tmp__5; _tmp__6 = __f._tmp__6; _tmp__7 = __f._tmp__7; _tmp__8 = __f._tmp__8; _tmp__9 = __f._tmp__9; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__10 = __f._tuple__10; _tuple__11 = __f._tuple__11; _tuple__12 = __f._tuple__12; _tuple__13 = __f._tuple__13; _tuple__14 = __f._tuple__14; _tuple__15 = __f._tuple__15; _tuple__16 = __f._tuple__16; _tuple__17 = __f._tuple__17; _tuple__18 = __f._tuple__18; _tuple__19 = __f._tuple__19; _tuple__2 = __f._tuple__2; _tuple__20 = __f._tuple__20; _tuple__21 = __f._tuple__21; _tuple__22 = __f._tuple__22; _tuple__23 = __f._tuple__23; _tuple__24 = __f._tuple__24; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; _tuple__8 = __f._tuple__8; _tuple__9 = __f._tuple__9; alayout = __f.alayout; amSet = __f.amSet; avalue = __f.avalue; day = __f.day; defaultLocation = __f.defaultLocation; err = __f.err; hour = __f.hour; hour__1 = __f.hour__1; hr = __f.hr; i = __f.i; layout = __f.layout; local = __f.local; min = __f.min; min__1 = __f.min__1; mm = __f.mm; month = __f.month; n = __f.n; n__1 = __f.n__1; name = __f.name; ndigit = __f.ndigit; nsec = __f.nsec; offset = __f.offset; offset__1 = __f.offset__1; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; pmSet = __f.pmSet; prefix = __f.prefix; rangeErrString = __f.rangeErrString; sec = __f.sec; seconds = __f.seconds; sign = __f.sign; ss = __f.ss; std = __f.std; stdstr = __f.stdstr; suffix = __f.suffix; t = __f.t; t__1 = __f.t__1; value = __f.value; x = __f.x; x__1 = __f.x__1; year = __f.year; z = __f.z; zoneName = __f.zoneName; zoneOffset = __f.zoneOffset; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__10 = __f._tmp__10; _tmp__11 = __f._tmp__11; _tmp__12 = __f._tmp__12; _tmp__13 = __f._tmp__13; _tmp__14 = __f._tmp__14; _tmp__15 = __f._tmp__15; _tmp__16 = __f._tmp__16; _tmp__17 = __f._tmp__17; _tmp__18 = __f._tmp__18; _tmp__19 = __f._tmp__19; _tmp__2 = __f._tmp__2; _tmp__20 = __f._tmp__20; _tmp__21 = __f._tmp__21; _tmp__22 = __f._tmp__22; _tmp__23 = __f._tmp__23; _tmp__24 = __f._tmp__24; _tmp__25 = __f._tmp__25; _tmp__26 = __f._tmp__26; _tmp__27 = __f._tmp__27; _tmp__28 = __f._tmp__28; _tmp__29 = __f._tmp__29; _tmp__3 = __f._tmp__3; _tmp__30 = __f._tmp__30; _tmp__31 = __f._tmp__31; _tmp__32 = __f._tmp__32; _tmp__33 = __f._tmp__33; _tmp__34 = __f._tmp__34; _tmp__35 = __f._tmp__35; _tmp__36 = __f._tmp__36; _tmp__37 = __f._tmp__37; _tmp__38 = __f._tmp__38; _tmp__39 = __f._tmp__39; _tmp__4 = __f._tmp__4; _tmp__40 = __f._tmp__40; _tmp__41 = __f._tmp__41; _tmp__42 = __f._tmp__42; _tmp__43 = __f._tmp__43; _tmp__5 = __f._tmp__5; _tmp__6 = __f._tmp__6; _tmp__7 = __f._tmp__7; _tmp__8 = __f._tmp__8; _tmp__9 = __f._tmp__9; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__10 = __f._tuple__10; _tuple__11 = __f._tuple__11; _tuple__12 = __f._tuple__12; _tuple__13 = __f._tuple__13; _tuple__14 = __f._tuple__14; _tuple__15 = __f._tuple__15; _tuple__16 = __f._tuple__16; _tuple__17 = __f._tuple__17; _tuple__18 = __f._tuple__18; _tuple__19 = __f._tuple__19; _tuple__2 = __f._tuple__2; _tuple__20 = __f._tuple__20; _tuple__21 = __f._tuple__21; _tuple__22 = __f._tuple__22; _tuple__23 = __f._tuple__23; _tuple__24 = __f._tuple__24; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; _tuple__8 = __f._tuple__8; _tuple__9 = __f._tuple__9; alayout = __f.alayout; amSet = __f.amSet; avalue = __f.avalue; day = __f.day; defaultLocation = __f.defaultLocation; err = __f.err; hour = __f.hour; hour__1 = __f.hour__1; hr = __f.hr; i = __f.i; layout = __f.layout; local = __f.local; min = __f.min; min__1 = __f.min__1; mm = __f.mm; month = __f.month; n = __f.n; n__1 = __f.n__1; name = __f.name; ndigit = __f.ndigit; nsec = __f.nsec; offset = __f.offset; offset__1 = __f.offset__1; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; pmSet = __f.pmSet; prefix = __f.prefix; rangeErrString = __f.rangeErrString; sec = __f.sec; seconds = __f.seconds; sign = __f.sign; ss = __f.ss; std = __f.std; stdstr = __f.stdstr; suffix = __f.suffix; t = __f.t; t__1 = __f.t__1; value = __f.value; x = __f.x; x__1 = __f.x__1; year = __f.year; z = __f.z; zoneName = __f.zoneName; zoneOffset = __f.zoneOffset; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _tmp = layout;
       _tmp__1 = value;
       alayout = _tmp;
@@ -6257,17 +6310,17 @@ __packages["time"] = (function()
          value = _tuple__1[0];
          err = _tuple__1[1];
          if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-            __s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, prefix, value, "")];
+            __s = -1; return {new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, prefix, value, "")};
          end
          if (std == 0) {
             if ( not ((#value == 0))) {
-               __s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, "", value, ": extra text: " + value)];
+               __s = -1; return {new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, "", value, ": extra text: " + value)};
             end
             break;
          end
          layout = suffix;
          p = "";
-         switch (0) { default:
+         do
             _1 = std & 65535;
             if (_1 == (274)) {
                if (#value < 2) {
@@ -6590,10 +6643,10 @@ __packages["time"] = (function()
             end
          end
          if ( not (rangeErrString == "")) {
-            __s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, stdstr, value, ": " + rangeErrString + " out of range")];
+            __s = -1; return {new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, stdstr, value, ": " + rangeErrString + " out of range")};
          end
          if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-            __s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, stdstr, value, "")];
+            __s = -1; return {new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, stdstr, value, "")};
          end
       end
       if (pmSet  and  hour < 12) {
@@ -6602,55 +6655,55 @@ __packages["time"] = (function()
          hour = 0;
       end
       if (day < 1  or  day > daysIn(((month >> 0)), year)) {
-         __s = -1; return [new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, "", value, ": day out of range")];
+         __s = -1; return {new Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__2.nil), new ParseError.ptr(alayout, avalue, "", value, ": day out of range")};
       end
       
  if ( not (z == ptrType__2.nil)) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not (z == ptrType__2.nil)) { */ case 1:
+      -- /* if ( not (z == ptrType__2.nil)) { */ if __s == 1 then 
          _r = Date(year, ((month >> 0)), day, hour, min, sec, nsec, z); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
-         __s = -1; return [_r, __ifaceNil];
-      -- /* end */ case 2:
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+         __s = -1; return {_r, __ifaceNil};
+      -- /* end */ if __s == 2 then 
       
  if ( not ((zoneOffset == -1))) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if ( not ((zoneOffset == -1))) { */ case 4:
+      -- /* if ( not ((zoneOffset == -1))) { */ if __s == 4 then 
          _r__1 = Date(year, ((month >> 0)), day, hour, min, sec, nsec, __pkg.UTC); 
- __s = 6; case 6: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          t = __clone(_r__1, Time);
          t.addSec((x = (new __Int64(0, zoneOffset)), new __Int64(-x.__high, -x.__low)));
          _r__2 = local.lookup(t.unixSec()); 
- __s = 7; case 7: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
          _tuple__22 = _r__2;
          name = _tuple__22[0];
          offset = _tuple__22[1];
          if ((offset == zoneOffset)  and  (zoneName == ""  or  name == zoneName)) {
             t.setLoc(local);
-            __s = -1; return [t, __ifaceNil];
+            __s = -1; return {t, __ifaceNil};
          end
          t.setLoc(FixedZone(zoneName, zoneOffset));
-         __s = -1; return [t, __ifaceNil];
-      -- /* end */ case 5:
+         __s = -1; return {t, __ifaceNil};
+      -- /* end */ if __s == 5 then 
       
  if ( not (zoneName == "")) { __s = 8; continue; end
       
  __s = 9; continue;
-      -- /* if ( not (zoneName == "")) { */ case 8:
+      -- /* if ( not (zoneName == "")) { */ if __s == 8 then 
          _r__3 = Date(year, ((month >> 0)), day, hour, min, sec, nsec, __pkg.UTC); 
- __s = 10; case 10: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
          t__1 = __clone(_r__3, Time);
          _r__4 = local.lookupName(zoneName, t__1.unixSec()); 
- __s = 11; case 11: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
          _tuple__23 = _r__4;
          offset__1 = _tuple__23[0];
          ok__1 = _tuple__23[2];
          if (ok__1) {
             t__1.addSec((x__1 = (new __Int64(0, offset__1)), new __Int64(-x__1.__high, -x__1.__low)));
             t__1.setLoc(local);
-            __s = -1; return [t__1, __ifaceNil];
+            __s = -1; return {t__1, __ifaceNil};
          end
          if (#zoneName > 3  and  __substring(zoneName, 0, 3) == "GMT") {
             _tuple__24 = atoi(__substring(zoneName, 3));
@@ -6658,11 +6711,11 @@ __packages["time"] = (function()
             offset__1 = __imul(offset__1, (3600));
          end
          t__1.setLoc(FixedZone(zoneName, offset__1));
-         __s = -1; return [t__1, __ifaceNil];
-      -- /* end */ case 9:
+         __s = -1; return {t__1, __ifaceNil};
+      -- /* end */ if __s == 9 then 
       _r__5 = Date(year, ((month >> 0)), day, hour, min, sec, nsec, defaultLocation); 
- __s = 12; case 12: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
-      __s = -1; return [_r__5, __ifaceNil];
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+      __s = -1; return {_r__5, __ifaceNil};
       
  end return; end if __f == nil then  __f = { __blk= parse end; end __f._1 = _1; __f._2 = _2; __f._3 = _3; __f._4 = _4; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__10 = _tmp__10; __f._tmp__11 = _tmp__11; __f._tmp__12 = _tmp__12; __f._tmp__13 = _tmp__13; __f._tmp__14 = _tmp__14; __f._tmp__15 = _tmp__15; __f._tmp__16 = _tmp__16; __f._tmp__17 = _tmp__17; __f._tmp__18 = _tmp__18; __f._tmp__19 = _tmp__19; __f._tmp__2 = _tmp__2; __f._tmp__20 = _tmp__20; __f._tmp__21 = _tmp__21; __f._tmp__22 = _tmp__22; __f._tmp__23 = _tmp__23; __f._tmp__24 = _tmp__24; __f._tmp__25 = _tmp__25; __f._tmp__26 = _tmp__26; __f._tmp__27 = _tmp__27; __f._tmp__28 = _tmp__28; __f._tmp__29 = _tmp__29; __f._tmp__3 = _tmp__3; __f._tmp__30 = _tmp__30; __f._tmp__31 = _tmp__31; __f._tmp__32 = _tmp__32; __f._tmp__33 = _tmp__33; __f._tmp__34 = _tmp__34; __f._tmp__35 = _tmp__35; __f._tmp__36 = _tmp__36; __f._tmp__37 = _tmp__37; __f._tmp__38 = _tmp__38; __f._tmp__39 = _tmp__39; __f._tmp__4 = _tmp__4; __f._tmp__40 = _tmp__40; __f._tmp__41 = _tmp__41; __f._tmp__42 = _tmp__42; __f._tmp__43 = _tmp__43; __f._tmp__5 = _tmp__5; __f._tmp__6 = _tmp__6; __f._tmp__7 = _tmp__7; __f._tmp__8 = _tmp__8; __f._tmp__9 = _tmp__9; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__10 = _tuple__10; __f._tuple__11 = _tuple__11; __f._tuple__12 = _tuple__12; __f._tuple__13 = _tuple__13; __f._tuple__14 = _tuple__14; __f._tuple__15 = _tuple__15; __f._tuple__16 = _tuple__16; __f._tuple__17 = _tuple__17; __f._tuple__18 = _tuple__18; __f._tuple__19 = _tuple__19; __f._tuple__2 = _tuple__2; __f._tuple__20 = _tuple__20; __f._tuple__21 = _tuple__21; __f._tuple__22 = _tuple__22; __f._tuple__23 = _tuple__23; __f._tuple__24 = _tuple__24; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f._tuple__5 = _tuple__5; __f._tuple__6 = _tuple__6; __f._tuple__7 = _tuple__7; __f._tuple__8 = _tuple__8; __f._tuple__9 = _tuple__9; __f.alayout = alayout; __f.amSet = amSet; __f.avalue = avalue; __f.day = day; __f.defaultLocation = defaultLocation; __f.err = err; __f.hour = hour; __f.hour__1 = hour__1; __f.hr = hr; __f.i = i; __f.layout = layout; __f.local = local; __f.min = min; __f.min__1 = min__1; __f.mm = mm; __f.month = month; __f.n = n; __f.n__1 = n__1; __f.name = name; __f.ndigit = ndigit; __f.nsec = nsec; __f.offset = offset; __f.offset__1 = offset__1; __f.ok = ok; __f.ok__1 = ok__1; __f.p = p; __f.pmSet = pmSet; __f.prefix = prefix; __f.rangeErrString = rangeErrString; __f.sec = sec; __f.seconds = seconds; __f.sign = sign; __f.ss = ss; __f.std = std; __f.stdstr = stdstr; __f.suffix = suffix; __f.t = t; __f.t__1 = t__1; __f.value = value; __f.x = x; __f.x__1 = x__1; __f.year = year; __f.z = z; __f.zoneName = zoneName; __f.zoneOffset = zoneOffset; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -6675,14 +6728,14 @@ __packages["time"] = (function()
          _tmp__1 = false;
          length = _tmp;
          ok = _tmp__1;
-         return [length, ok];
+         return {length, ok};
       end
       if (#value >= 4  and  (__substring(value, 0, 4) == "ChST"  or  __substring(value, 0, 4) == "MeST")) {
          _tmp__2 = 4;
          _tmp__3 = true;
          length = _tmp__2;
          ok = _tmp__3;
-         return [length, ok];
+         return {length, ok};
       end
       if (__substring(value, 0, 3) == "GMT") {
          length = parseGMT(value);
@@ -6690,7 +6743,7 @@ __packages["time"] = (function()
          _tmp__5 = true;
          length = _tmp__4;
          ok = _tmp__5;
-         return [length, ok];
+         return {length, ok};
       end
       nUpper = 0;
       nUpper = 0;
@@ -6711,14 +6764,14 @@ __packages["time"] = (function()
          _tmp__7 = false;
          length = _tmp__6;
          ok = _tmp__7;
-         return [length, ok];
+         return {length, ok};
       end else if (_1 == (5)) {
          if (value.charCodeAt(4) == 84) {
             _tmp__8 = 5;
             _tmp__9 = true;
             length = _tmp__8;
             ok = _tmp__9;
-            return [length, ok];
+            return {length, ok};
          end
       end else if (_1 == (4)) {
          if ((value.charCodeAt(3) == 84)  or  __substring(value, 0, 4) == "WITA") {
@@ -6726,20 +6779,20 @@ __packages["time"] = (function()
             _tmp__11 = true;
             length = _tmp__10;
             ok = _tmp__11;
-            return [length, ok];
+            return {length, ok};
          end
       end else if (_1 == (3)) {
          _tmp__12 = 3;
          _tmp__13 = true;
          length = _tmp__12;
          ok = _tmp__13;
-         return [length, ok];
+         return {length, ok};
       end
       _tmp__14 = 0;
       _tmp__15 = false;
       length = _tmp__14;
       ok = _tmp__15;
-      return [length, ok];
+      return {length, ok};
    end;
    parseGMT = function(e)
       local _tuple, err, rem, sign, value, x;
@@ -6773,17 +6826,17 @@ __packages["time"] = (function()
       err = __ifaceNil;
       if ( not ((value.charCodeAt(0) == 46))) {
          err = errBad;
-         return [ns, rangeErrString, err];
+         return {ns, rangeErrString, err};
       end
       _tuple = atoi(__substring(value, 1, nbytes));
       ns = _tuple[0];
       err = _tuple[1];
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         return [ns, rangeErrString, err];
+         return {ns, rangeErrString, err};
       end
       if (ns < 0  or  1000000000 <= ns) {
          rangeErrString = "fractional second";
-         return [ns, rangeErrString, err];
+         return {ns, rangeErrString, err};
       end
       scaleDigits = 10 - nbytes >> 0;
       i = 0;
@@ -6792,7 +6845,7 @@ __packages["time"] = (function()
          ns = __imul(ns, (10));
          i = i + (1) >> 0;
       end
-      return [ns, rangeErrString, err];
+      return {ns, rangeErrString, err};
    end;
    leadingInt = function(s)
       local _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tmp__8, c, err, i, rem, s, x, x__1, x__2, x__3;
@@ -6813,7 +6866,7 @@ __packages["time"] = (function()
             x = _tmp;
             rem = _tmp__1;
             err = _tmp__2;
-            return [x, rem, err];
+            return {x, rem, err};
          end
          x = (x__1 = (x__2 = __mul64(x, new __Int64(0, 10)), x__3 = (new __Int64(0, c)), new __Int64(x__2.__high + x__3.__high, x__2.__low + x__3.__low)), new __Int64(x__1.__high - 0, x__1.__low - 48));
          if ((x.__high < 0  or  (x.__high == 0  and  x.__low < 0))) {
@@ -6823,7 +6876,7 @@ __packages["time"] = (function()
             x = _tmp__3;
             rem = _tmp__4;
             err = _tmp__5;
-            return [x, rem, err];
+            return {x, rem, err};
          end
          i = i + (1) >> 0;
       end
@@ -6833,7 +6886,7 @@ __packages["time"] = (function()
       x = _tmp__6;
       rem = _tmp__7;
       err = _tmp__8;
-      return [x, rem, err];
+      return {x, rem, err};
    end;
    Time.ptr.prototype.nsec = function()
       local t, x;
@@ -6945,39 +6998,39 @@ __packages["time"] = (function()
    Time.ptr.prototype.abs = function()
       local _r, _r__1, _tuple, l, offset, sec, t, x, x__1, x__2, x__3, x__4, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; l = __f.l; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; l = __f.l; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       l = t.loc;
       
  if (l == ptrType__2.nil  or  l == localLoc) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (l == ptrType__2.nil  or  l == localLoc) { */ case 1:
+      -- /* if (l == ptrType__2.nil  or  l == localLoc) { */ if __s == 1 then 
          _r = l.get(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          l = _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       sec = t.unixSec();
       
  if ( not (l == utcLoc)) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if ( not (l == utcLoc)) { */ case 4:
+      -- /* if ( not (l == utcLoc)) { */ if __s == 4 then 
          
  if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { __s = 6; continue; end
          
  __s = 7; continue;
-         -- /* if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { */ case 6:
+         -- /* if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { */ if __s == 6 then 
             sec = (x__2 = (new __Int64(0, l.cacheZone.offset)), new __Int64(sec.__high + x__2.__high, sec.__low + x__2.__low));
             __s = 8; continue;
-         -- /* end else { */ case 7:
+         -- /* end else { */ if __s == 7 then 
             _r__1 = l.lookup(sec); 
- __s = 9; case 9: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             _tuple = _r__1;
             offset = _tuple[1];
             sec = (x__3 = (new __Int64(0, offset)), new __Int64(sec.__high + x__3.__high, sec.__low + x__3.__low));
-         -- /* end */ case 8:
-      -- /* end */ case 5:
+         -- /* end */ if __s == 8 then 
+      -- /* end */ if __s == 5 then 
       __s = -1; return ((x__4 = new __Int64(sec.__high + 2147483646, sec.__low + 450480384), new __Uint64(x__4.__high, x__4.__low)));
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.abs end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.l = l; __f.offset = offset; __f.sec = sec; __f.t = t; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.x__3 = x__3; __f.x__4 = x__4; __f.__s = __s; __f.__r = __r; return __f;
@@ -6986,7 +7039,7 @@ __packages["time"] = (function()
    Time.ptr.prototype.locabs = function()
       local _r, _r__1, _tuple, abs, l, name, offset, sec, t, x, x__1, x__2, x__3, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; abs = __f.abs; l = __f.l; name = __f.name; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; abs = __f.abs; l = __f.l; name = __f.name; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       name = "";
       offset = 0;
       abs = new __Uint64(0, 0);
@@ -6996,39 +7049,39 @@ __packages["time"] = (function()
  if (l == ptrType__2.nil  or  l == localLoc) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (l == ptrType__2.nil  or  l == localLoc) { */ case 1:
+      -- /* if (l == ptrType__2.nil  or  l == localLoc) { */ if __s == 1 then 
          _r = l.get(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          l = _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       sec = t.unixSec();
       
  if ( not (l == utcLoc)) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if ( not (l == utcLoc)) { */ case 4:
+      -- /* if ( not (l == utcLoc)) { */ if __s == 4 then 
          
  if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { __s = 7; continue; end
          
  __s = 8; continue;
-         -- /* if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { */ case 7:
+         -- /* if ( not (l.cacheZone == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) { */ if __s == 7 then 
             name = l.cacheZone.name;
             offset = l.cacheZone.offset;
             __s = 9; continue;
-         -- /* end else { */ case 8:
+         -- /* end else { */ if __s == 8 then 
             _r__1 = l.lookup(sec); 
- __s = 10; case 10: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             _tuple = _r__1;
             name = _tuple[0];
             offset = _tuple[1];
-         -- /* end */ case 9:
+         -- /* end */ if __s == 9 then 
          sec = (x__2 = (new __Int64(0, offset)), new __Int64(sec.__high + x__2.__high, sec.__low + x__2.__low));
          __s = 6; continue;
-      -- /* end else { */ case 5:
+      -- /* end else { */ if __s == 5 then 
          name = "UTC";
-      -- /* end */ case 6:
+      -- /* end */ if __s == 6 then 
       abs = ((x__3 = new __Int64(sec.__high + 2147483646, sec.__low + 450480384), new __Uint64(x__3.__high, x__3.__low)));
-      __s = -1; return [name, offset, abs];
+      __s = -1; return {name, offset, abs};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.locabs end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.abs = abs; __f.l = l; __f.name = name; __f.offset = offset; __f.sec = sec; __f.t = t; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.x__3 = x__3; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7036,18 +7089,18 @@ __packages["time"] = (function()
    Time.ptr.prototype.Date = function()
       local _r, _tuple, day, month, t, year, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; day = __f.day; month = __f.month; t = __f.t; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; day = __f.day; month = __f.month; t = __f.t; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       year = 0;
       month = 0;
       day = 0;
       t = this;
       _r = __clone(t, Time).date(true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       year = _tuple[0];
       month = _tuple[1];
       day = _tuple[2];
-      __s = -1; return [year, month, day];
+      __s = -1; return {year, month, day};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Date end; end __f._r = _r; __f._tuple = _tuple; __f.day = day; __f.month = month; __f.t = t; __f.year = year; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7055,10 +7108,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.Year = function()
       local _r, _tuple, t, year, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).date(false); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       year = _tuple[0];
       __s = -1; return year;
@@ -7069,10 +7122,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.Month = function()
       local _r, _tuple, month, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; month = __f.month; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; month = __f.month; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).date(true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       month = _tuple[1];
       __s = -1; return month;
@@ -7083,10 +7136,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.Day = function()
       local _r, _tuple, day, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; day = __f.day; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; day = __f.day; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).date(true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       day = _tuple[2];
       __s = -1; return day;
@@ -7097,12 +7150,12 @@ __packages["time"] = (function()
    Time.ptr.prototype.Weekday = function()
       local _r, _r__1, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = absWeekday(_r); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Weekday end; end __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7116,19 +7169,19 @@ __packages["time"] = (function()
    Time.ptr.prototype.ISOWeek = function()
       local _q, _r, _r__1, _r__2, _r__3, _r__4, _tuple, day, dec31wday, jan1wday, month, t, wday, week, yday, year, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _tuple = __f._tuple; day = __f.day; dec31wday = __f.dec31wday; jan1wday = __f.jan1wday; month = __f.month; t = __f.t; wday = __f.wday; week = __f.week; yday = __f.yday; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _tuple = __f._tuple; day = __f.day; dec31wday = __f.dec31wday; jan1wday = __f.jan1wday; month = __f.month; t = __f.t; wday = __f.wday; week = __f.week; yday = __f.yday; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       year = 0;
       week = 0;
       t = this;
       _r = __clone(t, Time).date(true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       year = _tuple[0];
       month = _tuple[1];
       day = _tuple[2];
       yday = _tuple[3];
       _r__2 = __clone(t, Time).Weekday(); 
- __s = 2; case 2: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       wday = (_r__1 = (((_r__2 + 6 >> 0) >> 0)) % 7, _r__1 == _r__1 ? _r__1 : __throwRuntimeError("integer divide by zero"));
       week = (_q = (((yday - wday >> 0) + 7 >> 0)) / 7, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
       jan1wday = (_r__3 = (((wday - yday >> 0) + 371 >> 0)) % 7, _r__3 == _r__3 ? _r__3 : __throwRuntimeError("integer divide by zero"));
@@ -7149,7 +7202,7 @@ __packages["time"] = (function()
             week = 1;
          end
       end
-      __s = -1; return [year, week];
+      __s = -1; return {year, week};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.ISOWeek end; end __f._q = _q; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._tuple = _tuple; __f.day = day; __f.dec31wday = dec31wday; __f.jan1wday = jan1wday; __f.month = month; __f.t = t; __f.wday = wday; __f.week = week; __f.yday = yday; __f.year = year; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7157,20 +7210,20 @@ __packages["time"] = (function()
    Time.ptr.prototype.Clock = function()
       local _r, _r__1, _tuple, hour, min, sec, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; hour = __f.hour; min = __f.min; sec = __f.sec; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; hour = __f.hour; min = __f.min; sec = __f.sec; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       hour = 0;
       min = 0;
       sec = 0;
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = absClock(_r); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _tuple = _r__1;
       hour = _tuple[0];
       min = _tuple[1];
       sec = _tuple[2];
-      __s = -1; return [hour, min, sec];
+      __s = -1; return {hour, min, sec};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Clock end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.hour = hour; __f.min = min; __f.sec = sec; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7185,15 +7238,15 @@ __packages["time"] = (function()
       sec = sec - ((__imul(hour, 3600))) >> 0;
       min = (_q__1 = sec / 60, (_q__1 == _q__1  and  _q__1 ~= 1/0  and  _q__1 ~= -1/0) ? _q__1 >> 0 : __throwRuntimeError("integer divide by zero"));
       sec = sec - ((__imul(min, 60))) >> 0;
-      return [hour, min, sec];
+      return {hour, min, sec};
    end;
    Time.ptr.prototype.Hour = function()
       local _q, _r, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return (_q = ((__div64(_r, new __Uint64(0, 86400), true).__low >> 0)) / 3600, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Hour end; end __f._q = _q; __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7202,10 +7255,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.Minute = function()
       local _q, _r, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return (_q = ((__div64(_r, new __Uint64(0, 3600), true).__low >> 0)) / 60, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Minute end; end __f._q = _q; __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7214,10 +7267,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.Second = function()
       local _r, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return ((__div64(_r, new __Uint64(0, 60), true).__low >> 0));
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Second end; end __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7232,10 +7285,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.YearDay = function()
       local _r, _tuple, t, yday, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; yday = __f.yday; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; t = __f.t; yday = __f.yday; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).date(false); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       yday = _tuple[3];
       __s = -1; return yday + 1 >> 0;
@@ -7328,7 +7381,7 @@ __packages["time"] = (function()
       _tmp__1 = v;
       nw = _tmp;
       nv = _tmp__1;
-      return [nw, nv];
+      return {nw, nv};
    end;
    fmtInt = function(v)
       local buf, v, w;
@@ -7470,22 +7523,22 @@ __packages["time"] = (function()
    Time.ptr.prototype.AddDate = function(1)
       local _r, _r__1, _r__2, _tuple, _tuple__1, day, days__1, hour, min, month, months__1, sec, t, year, years, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; day = __f.day; days__1 = __f.days__1; hour = __f.hour; min = __f.min; month = __f.month; months__1 = __f.months__1; sec = __f.sec; t = __f.t; year = __f.year; years = __f.years; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; day = __f.day; days__1 = __f.days__1; hour = __f.hour; min = __f.min; month = __f.month; months__1 = __f.months__1; sec = __f.sec; t = __f.t; year = __f.year; years = __f.years; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).Date(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       year = _tuple[0];
       month = _tuple[1];
       day = _tuple[2];
       _r__1 = __clone(t, Time).Clock(); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _tuple__1 = _r__1;
       hour = _tuple__1[0];
       min = _tuple__1[1];
       sec = _tuple__1[2];
       _r__2 = Date(year + years >> 0, month + ((months__1 >> 0)) >> 0, day + days__1 >> 0, hour, min, sec, ((t.nsec() >> 0)), __clone(t, Time).Location()); 
- __s = 3; case 3: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       __s = -1; return _r__2;
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.AddDate end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.day = day; __f.days__1 = days__1; __f.hour = hour; __f.min = min; __f.month = month; __f.months__1 = months__1; __f.sec = sec; __f.t = t; __f.year = year; __f.years = years; __f.__s = __s; __f.__r = __r; return __f;
@@ -7494,22 +7547,22 @@ __packages["time"] = (function()
    Time.ptr.prototype.date = function(l)
       local _r, _r__1, _tuple, day, full, month, t, yday, year, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; day = __f.day; full = __f.full; month = __f.month; t = __f.t; yday = __f.yday; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; day = __f.day; full = __f.full; month = __f.month; t = __f.t; yday = __f.yday; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       year = 0;
       month = 0;
       day = 0;
       yday = 0;
       t = this;
       _r = __clone(t, Time).abs(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = absDate(_r, full); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _tuple = _r__1;
       year = _tuple[0];
       month = _tuple[1];
       day = _tuple[2];
       yday = _tuple[3];
-      __s = -1; return [year, month, day, yday];
+      __s = -1; return {year, month, day, yday};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.date end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.day = day; __f.full = full; __f.month = month; __f.t = t; __f.yday = yday; __f.year = year; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7538,7 +7591,7 @@ __packages["time"] = (function()
       year = (((x__9 = (x__10 = (new __Int64(y.__high, y.__low)), new __Int64(x__10.__high + -69, x__10.__low + 4075721025)), x__9.__low + ((x__9.__high >> 31) * 4294967296)) >> 0));
       yday = ((d.__low >> 0));
       if ( not full) {
-         return [year, month, day, yday];
+         return {year, month, day, yday};
       end
       day = yday;
       if (isLeap(year)) {
@@ -7547,7 +7600,7 @@ __packages["time"] = (function()
          end else if ((day == 59)) {
             month = 2;
             day = 29;
-            return [year, month, day, yday];
+            return {year, month, day, yday};
          end
       end
       month = (((_q = day / 31, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero")) >> 0));
@@ -7561,7 +7614,7 @@ __packages["time"] = (function()
       end
       month = month + (1) >> 0;
       day = (day - begin >> 0) + 1 >> 0;
-      return [year, month, day, yday];
+      return {year, month, day, yday};
    end;
    daysIn = function(r)
       local m, x, year;
@@ -7611,16 +7664,16 @@ __packages["time"] = (function()
    Time.ptr.prototype.Zone = function()
       local _r, _tuple, name, offset, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; name = __f.name; offset = __f.offset; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; name = __f.name; offset = __f.offset; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       name = "";
       offset = 0;
       t = this;
       _r = t.loc.lookup(t.unixSec()); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       name = _tuple[0];
       offset = _tuple[1];
-      __s = -1; return [name, offset];
+      __s = -1; return {name, offset};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.Zone end; end __f._r = _r; __f._tuple = _tuple; __f.name = name; __f.offset = offset; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7640,34 +7693,34 @@ __packages["time"] = (function()
    Time.ptr.prototype.MarshalBinary = function()
       local _q, _r, _r__1, _tuple, enc, nsec, offset, offsetMin, sec, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; enc = __f.enc; nsec = __f.nsec; offset = __f.offset; offsetMin = __f.offsetMin; sec = __f.sec; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; enc = __f.enc; nsec = __f.nsec; offset = __f.offset; offsetMin = __f.offsetMin; sec = __f.sec; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       offsetMin = 0;
       
  if (__clone(t, Time).Location() == __pkg.UTC) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (__clone(t, Time).Location() == __pkg.UTC) { */ case 1:
+      -- /* if (__clone(t, Time).Location() == __pkg.UTC) { */ if __s == 1 then 
          offsetMin = -1;
          __s = 3; continue;
-      -- /* end else { */ case 2:
+      -- /* end else { */ if __s == 2 then 
          _r = __clone(t, Time).Zone(); 
- __s = 4; case 4: if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          offset = _tuple[1];
          if ( not (((_r__1 = offset % 60, _r__1 == _r__1 ? _r__1 : __throwRuntimeError("integer divide by zero")) == 0))) {
-            __s = -1; return [sliceType__3.nil, errors.New("Time.MarshalBinary: zone offset has fractional minute")];
+            __s = -1; return {sliceType__3.nil, errors.New("Time.MarshalBinary: zone offset has fractional minute")};
          end
          offset = (_q = offset / (60), (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero"));
          if (offset < -32768  or  (offset == -1)  or  offset > 32767) {
-            __s = -1; return [sliceType__3.nil, errors.New("Time.MarshalBinary: unexpected zone offset")];
+            __s = -1; return {sliceType__3.nil, errors.New("Time.MarshalBinary: unexpected zone offset")};
          end
          offsetMin = ((offset << 16 >> 16));
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       sec = t.sec();
       nsec = t.nsec();
       enc = new sliceType__3([1, ((__shiftRightInt64(sec, 56).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 48).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 40).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 32).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 24).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 16).__low << 24 >>> 24)), ((__shiftRightInt64(sec, 8).__low << 24 >>> 24)), ((sec.__low << 24 >>> 24)), (((nsec >> 24 >> 0) << 24 >>> 24)), (((nsec >> 16 >> 0) << 24 >>> 24)), (((nsec >> 8 >> 0) << 24 >>> 24)), ((nsec << 24 >>> 24)), (((offsetMin >> 8 << 16 >> 16) << 24 >>> 24)), ((offsetMin << 24 >>> 24))]);
-      __s = -1; return [enc, __ifaceNil];
+      __s = -1; return {enc, __ifaceNil};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.MarshalBinary end; end __f._q = _q; __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.enc = enc; __f.nsec = nsec; __f.offset = offset; __f.offsetMin = offsetMin; __f.sec = sec; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7675,7 +7728,7 @@ __packages["time"] = (function()
    Time.ptr.prototype.UnmarshalBinary = function(1)
       local _r, _tuple, buf, data__1, localoff, nsec, offset, sec, t, x, x__1, x__10, x__11, x__12, x__13, x__2, x__3, x__4, x__5, x__6, x__7, x__8, x__9, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; buf = __f.buf; data__1 = __f.data__1; localoff = __f.localoff; nsec = __f.nsec; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__13 = __f.x__13; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; buf = __f.buf; data__1 = __f.data__1; localoff = __f.localoff; nsec = __f.nsec; offset = __f.offset; sec = __f.sec; t = __f.t; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__13 = __f.x__13; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       buf = data__1;
       if (buf.__length == 0) {
@@ -7700,12 +7753,12 @@ __packages["time"] = (function()
  if (offset == -60) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (offset == -60) { */ case 1:
+      -- /* if (offset == -60) { */ if __s == 1 then 
          t.setLoc(utcLoc);
          __s = 3; continue;
-      -- /* end else { */ case 2:
+      -- /* end else { */ if __s == 2 then 
          _r = __pkg.Local.lookup(t.unixSec()); 
- __s = 4; case 4: if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          localoff = _tuple[1];
          if (offset == localoff) {
@@ -7713,7 +7766,7 @@ __packages["time"] = (function()
          end else {
             t.setLoc(FixedZone("", offset));
          end
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       __s = -1; return __ifaceNil;
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.UnmarshalBinary end; end __f._r = _r; __f._tuple = _tuple; __f.buf = buf; __f.data__1 = data__1; __f.localoff = localoff; __f.nsec = nsec; __f.offset = offset; __f.sec = sec; __f.t = t; __f.x = x; __f.x__1 = x__1; __f.x__10 = x__10; __f.x__11 = x__11; __f.x__12 = x__12; __f.x__13 = x__13; __f.x__2 = x__2; __f.x__3 = x__3; __f.x__4 = x__4; __f.x__5 = x__5; __f.x__6 = x__6; __f.x__7 = x__7; __f.x__8 = x__8; __f.x__9 = x__9; __f.__s = __s; __f.__r = __r; return __f;
@@ -7722,10 +7775,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.GobEncode = function()
       local _r, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).MarshalBinary(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.GobEncode end; end __f._r = _r; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7734,10 +7787,10 @@ __packages["time"] = (function()
    Time.ptr.prototype.GobDecode = function(1)
       local _r, data__1, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; data__1 = __f.data__1; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; data__1 = __f.data__1; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = t.UnmarshalBinary(data__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.GobDecode end; end __f._r = _r; __f.data__1 = data__1; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -7746,21 +7799,21 @@ __packages["time"] = (function()
    Time.ptr.prototype.MarshalJSON = function()
       local _r, _r__1, b, t, y, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).Year(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       y = _r;
       if (y < 0  or  y >= 10000) {
-         __s = -1; return [sliceType__3.nil, errors.New("Time.MarshalJSON: year outside of range [0,9999]")];
+         __s = -1; return {sliceType__3.nil, errors.New("Time.MarshalJSON: year outside of range [0,9999}")];
       end
       b = __makeSlice(sliceType__3, 0, 37);
       b = __append(b, 34);
       _r__1 = __clone(t, Time).AppendFormat(b, "2006-01-02T15:04:05.999999999Z07:00"); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       b = _r__1;
       b = __append(b, 34);
-      __s = -1; return [b, __ifaceNil];
+      __s = -1; return {b, __ifaceNil};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.MarshalJSON end; end __f._r = _r; __f._r__1 = _r__1; __f.b = b; __f.t = t; __f.y = y; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7768,14 +7821,14 @@ __packages["time"] = (function()
    Time.ptr.prototype.UnmarshalJSON = function(1)
       local _r, _tuple, data__1, err, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; data__1 = __f.data__1; err = __f.err; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; data__1 = __f.data__1; err = __f.err; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if ((__bytesToString(data__1)) == "null") {
          __s = -1; return __ifaceNil;
       end
       err = __ifaceNil;
       _r = Parse("\"2006-01-02T15:04:05Z07:00\"", (__bytesToString(data__1))); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       Time.copy(t, _tuple[0]);
       err = _tuple[1];
@@ -7787,18 +7840,18 @@ __packages["time"] = (function()
    Time.ptr.prototype.MarshalText = function()
       local _r, _r__1, b, t, y, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; b = __f.b; t = __f.t; y = __f.y; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = __clone(t, Time).Year(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       y = _r;
       if (y < 0  or  y >= 10000) {
-         __s = -1; return [sliceType__3.nil, errors.New("Time.MarshalText: year outside of range [0,9999]")];
+         __s = -1; return {sliceType__3.nil, errors.New("Time.MarshalText: year outside of range [0,9999}")];
       end
       b = __makeSlice(sliceType__3, 0, 35);
       _r__1 = __clone(t, Time).AppendFormat(b, "2006-01-02T15:04:05.999999999Z07:00"); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
-      __s = -1; return [_r__1, __ifaceNil];
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+      __s = -1; return {_r__1, __ifaceNil};
       
  end return; end if __f == nil then  __f = { __blk= Time.ptr.prototype.MarshalText end; end __f._r = _r; __f._r__1 = _r__1; __f.b = b; __f.t = t; __f.y = y; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -7806,11 +7859,11 @@ __packages["time"] = (function()
    Time.ptr.prototype.UnmarshalText = function(1)
       local _r, _tuple, data__1, err, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; data__1 = __f.data__1; err = __f.err; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; data__1 = __f.data__1; err = __f.err; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       err = __ifaceNil;
       _r = Parse("2006-01-02T15:04:05Z07:00", (__bytesToString(data__1))); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       Time.copy(t, _tuple[0]);
       err = _tuple[1];
@@ -7855,12 +7908,12 @@ __packages["time"] = (function()
       _tmp__1 = lo;
       nhi = _tmp;
       nlo = _tmp__1;
-      return [nhi, nlo];
+      return {nhi, nlo};
    end;
    Date = function(c)
       local _r, _r__1, _r__2, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, abs, d, day, end, hour, loc, m, min, month, n, nsec, offset, sec, start, t, unix, utc, x, x__1, x__10, x__11, x__12, x__13, x__14, x__15, x__2, x__3, x__4, x__5, x__6, x__7, x__8, x__9, y, year, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; abs = __f.abs; d = __f.d; day = __f.day; end = __f.end; hour = __f.hour; loc = __f.loc; m = __f.m; min = __f.min; month = __f.month; n = __f.n; nsec = __f.nsec; offset = __f.offset; sec = __f.sec; start = __f.start; t = __f.t; unix = __f.unix; utc = __f.utc; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__13 = __f.x__13; x__14 = __f.x__14; x__15 = __f.x__15; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; y = __f.y; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; abs = __f.abs; d = __f.d; day = __f.day; end = __f.end; hour = __f.hour; loc = __f.loc; m = __f.m; min = __f.min; month = __f.month; n = __f.n; nsec = __f.nsec; offset = __f.offset; sec = __f.sec; start = __f.start; t = __f.t; unix = __f.unix; utc = __f.utc; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__13 = __f.x__13; x__14 = __f.x__14; x__15 = __f.x__15; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; y = __f.y; year = __f.year; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (loc == ptrType__2.nil) {
          __panic(new __String("time: missing Location in call to Date"));
       end
@@ -7902,7 +7955,7 @@ __packages["time"] = (function()
       abs = (x__12 = (new __Uint64(0, (((__imul(hour, 3600)) + (__imul(min, 60)) >> 0) + sec >> 0))), new __Uint64(abs.__high + x__12.__high, abs.__low + x__12.__low));
       unix = (x__13 = (new __Int64(abs.__high, abs.__low)), new __Int64(x__13.__high + -2147483647, x__13.__low + 3844486912));
       _r = loc.lookup(unix); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple__5 = _r;
       offset = _tuple__5[1];
       start = _tuple__5[3];
@@ -7911,7 +7964,7 @@ __packages["time"] = (function()
  if ( not ((offset == 0))) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if ( not ((offset == 0))) { */ case 2:
+      -- /* if ( not ((offset == 0))) { */ if __s == 2 then 
             utc = (x__14 = (new __Int64(0, offset)), new __Int64(unix.__high - x__14.__high, unix.__low - x__14.__low));
             
  if ((utc.__high < start.__high  or  (utc.__high == start.__high  and  utc.__low < start.__low))) { __s = 5; continue; end
@@ -7919,21 +7972,21 @@ __packages["time"] = (function()
  if ((utc.__high > end.__high  or  (utc.__high == end.__high  and  utc.__low >= end.__low))) { __s = 6; continue; end
             
  __s = 7; continue;
-            -- /* if ((utc.__high < start.__high  or  (utc.__high == start.__high  and  utc.__low < start.__low))) { */ case 5:
+            -- /* if ((utc.__high < start.__high  or  (utc.__high == start.__high  and  utc.__low < start.__low))) { */ if __s == 5 then 
                _r__1 = loc.lookup(new __Int64(start.__high - 0, start.__low - 1)); 
- __s = 8; case 8: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                _tuple__6 = _r__1;
                offset = _tuple__6[1];
                __s = 7; continue;
-            -- /* end else if ((utc.__high > end.__high  or  (utc.__high == end.__high  and  utc.__low >= end.__low))) { */ case 6:
+            -- /* end else if ((utc.__high > end.__high  or  (utc.__high == end.__high  and  utc.__low >= end.__low))) { */ if __s == 6 then 
                _r__2 = loc.lookup(end); 
- __s = 9; case 9: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
                _tuple__7 = _r__2;
                offset = _tuple__7[1];
-            -- /* end */ case 7:
-         case 4:
+            -- /* end */ if __s == 7 then 
+         if __s == 4 then 
          unix = (x__15 = (new __Int64(0, offset)), new __Int64(unix.__high - x__15.__high, unix.__low - x__15.__low));
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       t = __clone(unixTime(unix, ((nsec >> 0))), Time);
       t.setLoc(loc);
       __s = -1; return t;
@@ -8043,12 +8096,12 @@ __packages["time"] = (function()
          qmod2 = (qmod2 ^ (1)) >> 0;
          r = new Duration(d.__high - r.__high, d.__low - r.__low);
       end
-      return [qmod2, r];
+      return {qmod2, r};
    end;
    Location.ptr.prototype.get = function()
       local l, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; l = __f.l; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; l = __f.l; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       l = this;
       if (l == ptrType__2.nil) {
          __s = -1; return utcLoc;
@@ -8057,10 +8110,10 @@ __packages["time"] = (function()
  if (l == localLoc) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (l == localLoc) { */ case 1:
+      -- /* if (l == localLoc) { */ if __s == 1 then 
          __r = localOnce.Do(initLocal); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 2:
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 2 then 
       __s = -1; return l;
       
  end return; end if __f == nil then  __f = { __blk= Location.ptr.prototype.get end; end __f.l = l; __f.__s = __s; __f.__r = __r; return __f;
@@ -8069,10 +8122,10 @@ __packages["time"] = (function()
    Location.ptr.prototype.__str = function()
       local _r, l, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; l = __f.l; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; l = __f.l; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       l = this;
       _r = l.get(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r.name;
       
  end return; end if __f == nil then  __f = { __blk= Location.ptr.prototype.__str end; end __f._r = _r; __f.l = l; __f.__s = __s; __f.__r = __r; return __f;
@@ -8088,7 +8141,7 @@ __packages["time"] = (function()
    Location.ptr.prototype.lookup = function(c)
       local _q, _r, end, hi, isDST, l, lim, lo, m, name, offset, sec, start, tx, x, x__1, x__2, x__3, x__4, x__5, x__6, x__7, x__8, zone__1, zone__2, zone__3, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; end = __f.end; hi = __f.hi; isDST = __f.isDST; l = __f.l; lim = __f.lim; lo = __f.lo; m = __f.m; name = __f.name; offset = __f.offset; sec = __f.sec; start = __f.start; tx = __f.tx; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; zone__1 = __f.zone__1; zone__2 = __f.zone__2; zone__3 = __f.zone__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _q = __f._q; _r = __f._r; end = __f.end; hi = __f.hi; isDST = __f.isDST; l = __f.l; lim = __f.lim; lo = __f.lo; m = __f.m; name = __f.name; offset = __f.offset; sec = __f.sec; start = __f.start; tx = __f.tx; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; zone__1 = __f.zone__1; zone__2 = __f.zone__2; zone__3 = __f.zone__3; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       name = "";
       offset = 0;
       isDST = false;
@@ -8096,7 +8149,7 @@ __packages["time"] = (function()
       end = new __Int64(0, 0);
       l = this;
       _r = l.get(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       l = _r;
       if (l.zone.__length == 0) {
          name = "UTC";
@@ -8104,7 +8157,7 @@ __packages["time"] = (function()
          isDST = false;
          start = new __Int64(-2147483648, 0);
          end = new __Int64(2147483647, 4294967295);
-         __s = -1; return [name, offset, isDST, start, end];
+         __s = -1; return {name, offset, isDST, start, end};
       end
       zone__1 = l.cacheZone;
       if ( not (zone__1 == ptrType.nil)  and  (x = l.cacheStart, (x.__high < sec.__high  or  (x.__high == sec.__high  and  x.__low <= sec.__low)))  and  (x__1 = l.cacheEnd, (sec.__high < x__1.__high  or  (sec.__high == x__1.__high  and  sec.__low < x__1.__low)))) {
@@ -8113,7 +8166,7 @@ __packages["time"] = (function()
          isDST = zone__1.isDST;
          start = l.cacheStart;
          end = l.cacheEnd;
-         __s = -1; return [name, offset, isDST, start, end];
+         __s = -1; return {name, offset, isDST, start, end};
       end
       if ((l.tx.__length == 0)  or  (x__2 = (x__3 = l.tx, (0 >= x__3.__length ? (__throwRuntimeError("index out of range"), nil) : x__3.__array[x__3.__offset + 0])).when, (sec.__high < x__2.__high  or  (sec.__high == x__2.__high  and  sec.__low < x__2.__low)))) {
          zone__2 = (x__4 = l.zone, x__5 = l.lookupFirstZone(), ((x__5 < 0  or  x__5 >= x__4.__length) ? (__throwRuntimeError("index out of range"), nil) : x__4.__array[x__4.__offset + x__5]));
@@ -8126,7 +8179,7 @@ __packages["time"] = (function()
          end else {
             end = new __Int64(2147483647, 4294967295);
          end
-         __s = -1; return [name, offset, isDST, start, end];
+         __s = -1; return {name, offset, isDST, start, end};
       end
       tx = l.tx;
       end = new __Int64(2147483647, 4294967295);
@@ -8148,7 +8201,7 @@ __packages["time"] = (function()
       offset = zone__3.offset;
       isDST = zone__3.isDST;
       start = ((lo < 0  or  lo >= tx.__length) ? (__throwRuntimeError("index out of range"), nil) : tx.__array[tx.__offset + lo]).when;
-      __s = -1; return [name, offset, isDST, start, end];
+      __s = -1; return {name, offset, isDST, start, end};
       
  end return; end if __f == nil then  __f = { __blk= Location.ptr.prototype.lookup end; end __f._q = _q; __f._r = _r; __f.end = end; __f.hi = hi; __f.isDST = isDST; __f.l = l; __f.lim = lim; __f.lo = lo; __f.m = m; __f.name = name; __f.offset = offset; __f.sec = sec; __f.start = start; __f.tx = tx; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.x__3 = x__3; __f.x__4 = x__4; __f.x__5 = x__5; __f.x__6 = x__6; __f.x__7 = x__7; __f.x__8 = x__8; __f.zone__1 = zone__1; __f.zone__2 = zone__2; __f.zone__3 = zone__3; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -8201,17 +8254,17 @@ __packages["time"] = (function()
    Location.ptr.prototype.lookupName = function(x)
       local _i, _i__1, _r, _r__1, _ref, _ref__1, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, i, i__1, isDST, isDST__1, l, nam, name, offset, offset__1, ok, unix, x, x__1, x__2, zone__1, zone__2, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; i = __f.i; i__1 = __f.i__1; isDST = __f.isDST; isDST__1 = __f.isDST__1; l = __f.l; nam = __f.nam; name = __f.name; offset = __f.offset; offset__1 = __f.offset__1; ok = __f.ok; unix = __f.unix; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; zone__1 = __f.zone__1; zone__2 = __f.zone__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; i = __f.i; i__1 = __f.i__1; isDST = __f.isDST; isDST__1 = __f.isDST__1; l = __f.l; nam = __f.nam; name = __f.name; offset = __f.offset; offset__1 = __f.offset__1; ok = __f.ok; unix = __f.unix; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; zone__1 = __f.zone__1; zone__2 = __f.zone__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       offset = 0;
       isDST = false;
       ok = false;
       l = this;
       _r = l.get(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       l = _r;
       _ref = l.zone;
       _i = 0;
-      -- /* while (true) do  */ case 2:
+      -- /* while (true) do  */ if __s == 2 then 
          -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 3; continue; end
          i = _i;
          zone__1 = (x = l.zone, ((i < 0  or  i >= x.__length) ? (__throwRuntimeError("index out of range"), nil) : x.__array[x.__offset + i]));
@@ -8219,9 +8272,9 @@ __packages["time"] = (function()
  if (zone__1.name == name) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if (zone__1.name == name) { */ case 4:
+         -- /* if (zone__1.name == name) { */ if __s == 4 then 
             _r__1 = l.lookup((x__1 = (new __Int64(0, zone__1.offset)), new __Int64(unix.__high - x__1.__high, unix.__low - x__1.__low))); 
- __s = 6; case 6: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             _tuple = _r__1;
             nam = _tuple[0];
             offset__1 = _tuple[1];
@@ -8233,11 +8286,11 @@ __packages["time"] = (function()
                offset = _tmp;
                isDST = _tmp__1;
                ok = _tmp__2;
-               __s = -1; return [offset, isDST, ok];
+               __s = -1; return {offset, isDST, ok};
             end
-         -- /* end */ case 5:
+         -- /* end */ if __s == 5 then 
          _i=_i+1;
-      -- /* end */ __s = 2; continue; case 3:
+      -- /* end */ __s = 2; continue; if __s == 3 then 
       _ref__1 = l.zone;
       _i__1 = 0;
       while (true) do 
@@ -8251,11 +8304,11 @@ __packages["time"] = (function()
             offset = _tmp__3;
             isDST = _tmp__4;
             ok = _tmp__5;
-            __s = -1; return [offset, isDST, ok];
+            __s = -1; return {offset, isDST, ok};
          end
          _i__1=_i__1+1;
       end
-      __s = -1; return [offset, isDST, ok];
+      __s = -1; return {offset, isDST, ok};
       
  end return; end if __f == nil then  __f = { __blk= Location.ptr.prototype.lookupName end; end __f._i = _i; __f._i__1 = _i__1; __f._r = _r; __f._r__1 = _r__1; __f._ref = _ref; __f._ref__1 = _ref__1; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.i = i; __f.i__1 = i__1; __f.isDST = isDST; __f.isDST__1 = isDST__1; __f.l = l; __f.nam = nam; __f.name = name; __f.offset = offset; __f.offset__1 = offset__1; __f.ok = ok; __f.unix = unix; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.zone__1 = zone__1; __f.zone__2 = zone__2; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -8276,17 +8329,17 @@ __packages["time"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = js.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = nosync.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = runtime.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = syscall.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       localLoc = new Location.ptr("", sliceType.nil, sliceType__1.nil, new __Int64(0, 0), new __Int64(0, 0), ptrType.nil);
       localOnce = new nosync.Once.ptr(false, false);
       std0x = __toNativeArray(__kindInt, [260, 265, 524, 526, 528, 274]);
@@ -8666,17 +8719,17 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.decref = function()
       local _r, fd, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       
  if (fd.fdmu.decref()) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (fd.fdmu.decref()) { */ case 1:
+      -- /* if (fd.fdmu.decref()) { */ if __s == 1 then 
          _r = fd.destroy(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          __s = -1; return _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return __ifaceNil;
       
  end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.decref end; end __f._r = _r; __f.fd = fd; __f.__s = __s; __f.__r = __r; return __f;
@@ -8694,17 +8747,17 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.readUnlock = function()
       local _r, fd, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       
  if (fd.fdmu.rwunlock(true)) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (fd.fdmu.rwunlock(true)) { */ case 1:
+      -- /* if (fd.fdmu.rwunlock(true)) { */ if __s == 1 then 
          _r = fd.destroy(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.readUnlock end; end __f._r = _r; __f.fd = fd; __f.__s = __s; __f.__r = __r; return __f;
@@ -8722,17 +8775,17 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.writeUnlock = function()
       local _r, fd, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       
  if (fd.fdmu.rwunlock(false)) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (fd.fdmu.rwunlock(false)) { */ case 1:
+      -- /* if (fd.fdmu.rwunlock(false)) { */ if __s == 1 then 
          _r = fd.destroy(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.writeUnlock end; end __f._r = _r; __f.fd = fd; __f.__s = __s; __f.__r = __r; return __f;
@@ -8750,7 +8803,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Fchmod = function(e)
       local err, fd, mode, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; mode = __f.mode; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; mode = __f.mode; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8765,7 +8818,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Fchown = function(d)
       local err, fd, gid, uid, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; gid = __f.gid; uid = __f.uid; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; gid = __f.gid; uid = __f.uid; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8780,7 +8833,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Ftruncate = function(e)
       local err, fd, size, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; size = __f.size; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; size = __f.size; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8795,7 +8848,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Fsync = function()
       local err, fd, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8822,11 +8875,11 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.destroy = function()
       local _r, err, fd, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       fd.pd.close();
       _r = __pkg.CloseFunc(fd.Sysfd); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       err = _r;
       fd.Sysfd = -1;
       __s = -1; return err;
@@ -8837,14 +8890,14 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Close = function()
       local _r, fd, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; fd = __f.fd; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       if ( not fd.fdmu.increfAndClose()) {
          __s = -1; return errClosing(fd.isFile);
       end
       fd.pd.evict();
       _r = fd.decref(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.Close end; end __f._r = _r; __f.fd = fd; __f.__s = __s; __f.__r = __r; return __f;
@@ -8853,7 +8906,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Shutdown = function(w)
       local err, fd, how, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; how = __f.how; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; how = __f.how; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -8868,19 +8921,19 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Read = function(p)
       local _tuple, err, err__1, err__2, fd, n, p, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.readLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       __deferred.push([__methodVal(fd, "readUnlock"), []]);
       if (p.__length == 0) {
-         __s = -1; return [0, __ifaceNil];
+         __s = -1; return {0, __ifaceNil};
       end
       err__1 = fd.pd.prepareRead(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, err__1];
+         __s = -1; return {0, err__1};
       end
       if (fd.IsStream  and  p.__length > 1073741824) {
          p = __subslice(p, 0, 1073741824);
@@ -8899,21 +8952,21 @@ __packages["internal/poll"] = (function()
             end
          end
          err__2 = fd.eofError(n, err__2);
-         __s = -1; return [n, err__2];
+         __s = -1; return {n, err__2};
       end
-      __s = -1; return [0, __ifaceNil];
+      __s = -1; return {0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Read end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Read end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Read = function(p) return this.__val.Read(p); end;
    FD.ptr.prototype.Pread = function(f)
       local _r, _tuple, err, err__1, fd, n, off, p, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; off = __f.off; p = __f.p; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; off = __f.off; p = __f.p; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       if (fd.IsStream  and  p.__length > 1073741824) {
          p = __subslice(p, 0, 1073741824);
@@ -8925,10 +8978,10 @@ __packages["internal/poll"] = (function()
          n = 0;
       end
       _r = fd.decref(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r;
       err__1 = fd.eofError(n, err__1);
-      __s = -1; return [n, err__1];
+      __s = -1; return {n, err__1};
       
  end return; end if __f == nil then  __f = { __blk= FD.ptr.prototype.Pread end; end __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.fd = fd; __f.n = n; __f.off = off; __f.p = p; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -8936,16 +8989,16 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.ReadFrom = function(p)
       local _tuple, err, err__1, err__2, fd, n, p, sa, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.readLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, __ifaceNil, err];
+         __s = -1; return {0, __ifaceNil, err};
       end
       __deferred.push([__methodVal(fd, "readUnlock"), []]);
       err__1 = fd.pd.prepareRead(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, __ifaceNil, err__1];
+         __s = -1; return {0, __ifaceNil, err__1};
       end
       while (true) do 
          _tuple = syscall.Recvfrom(fd.Sysfd, p, 0);
@@ -8962,26 +9015,26 @@ __packages["internal/poll"] = (function()
             end
          end
          err__2 = fd.eofError(n, err__2);
-         __s = -1; return [n, sa, err__2];
+         __s = -1; return {n, sa, err__2};
       end
-      __s = -1; return [0, __ifaceNil, __ifaceNil];
+      __s = -1; return {0, __ifaceNil, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadFrom end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadFrom end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.ReadFrom = function(p) return this.__val.ReadFrom(p); end;
    FD.ptr.prototype.ReadMsg = function(b)
       local _tuple, err, err__1, err__2, fd, flags, n, oob, oobn, p, sa, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; flags = __f.flags; n = __f.n; oob = __f.oob; oobn = __f.oobn; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; flags = __f.flags; n = __f.n; oob = __f.oob; oobn = __f.oobn; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.readLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, 0, 0, __ifaceNil, err];
+         __s = -1; return {0, 0, 0, __ifaceNil, err};
       end
       __deferred.push([__methodVal(fd, "readUnlock"), []]);
       err__1 = fd.pd.prepareRead(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, 0, 0, __ifaceNil, err__1];
+         __s = -1; return {0, 0, 0, __ifaceNil, err__1};
       end
       while (true) do 
          _tuple = syscall.Recvmsg(fd.Sysfd, p, oob, 0);
@@ -8999,26 +9052,26 @@ __packages["internal/poll"] = (function()
             end
          end
          err__2 = fd.eofError(n, err__2);
-         __s = -1; return [n, oobn, flags, sa, err__2];
+         __s = -1; return {n, oobn, flags, sa, err__2};
       end
-      __s = -1; return [0, 0, 0, __ifaceNil, __ifaceNil];
+      __s = -1; return {0, 0, 0, __ifaceNil, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, 0, 0, __ifaceNil, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadMsg end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.flags = flags; __f.n = n; __f.oob = oob; __f.oobn = oobn; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, 0, 0, __ifaceNil, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadMsg end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.flags = flags; __f.n = n; __f.oob = oob; __f.oobn = oobn; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.ReadMsg = function(b) return this.__val.ReadMsg(p, oob); end;
    FD.ptr.prototype.Write = function(p)
       local _tuple, err, err__1, err__2, fd, max, n, nn, p, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; p = __f.p; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.writeLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       __deferred.push([__methodVal(fd, "writeUnlock"), []]);
       err__1 = fd.pd.prepareWrite(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, err__1];
+         __s = -1; return {0, err__1};
       end
       nn = 0;
       while (true) do 
@@ -9033,7 +9086,7 @@ __packages["internal/poll"] = (function()
             nn = nn + (n) >> 0;
          end
          if (nn == p.__length) {
-            __s = -1; return [nn, err__2];
+            __s = -1; return {nn, err__2};
          end
          if (__interfaceIsEqual(err__2, new syscall.Errno(35))  and  fd.pd.pollable()) {
             err__2 = fd.pd.waitWrite(fd.isFile);
@@ -9042,25 +9095,25 @@ __packages["internal/poll"] = (function()
             end
          end
          if ( not (__interfaceIsEqual(err__2, __ifaceNil))) {
-            __s = -1; return [nn, err__2];
+            __s = -1; return {nn, err__2};
          end
          if (n == 0) {
-            __s = -1; return [nn, io.ErrUnexpectedEOF];
+            __s = -1; return {nn, io.ErrUnexpectedEOF};
          end
       end
-      __s = -1; return [0, __ifaceNil];
+      __s = -1; return {0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Write end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.max = max; __f.n = n; __f.nn = nn; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Write end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.max = max; __f.n = n; __f.nn = nn; __f.p = p; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Write = function(p) return this.__val.Write(p); end;
    FD.ptr.prototype.Pwrite = function(f)
       local _tuple, err, err__1, fd, max, n, nn, off, p, x, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; off = __f.off; p = __f.p; x = __f.x; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; fd = __f.fd; max = __f.max; n = __f.n; nn = __f.nn; off = __f.off; p = __f.p; x = __f.x; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       __deferred.push([__methodVal(fd, "decref"), []]);
       nn = 0;
@@ -9076,37 +9129,37 @@ __packages["internal/poll"] = (function()
             nn = nn + (n) >> 0;
          end
          if (nn == p.__length) {
-            __s = -1; return [nn, err__1];
+            __s = -1; return {nn, err__1};
          end
          if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-            __s = -1; return [nn, err__1];
+            __s = -1; return {nn, err__1};
          end
          if (n == 0) {
-            __s = -1; return [nn, io.ErrUnexpectedEOF];
+            __s = -1; return {nn, io.ErrUnexpectedEOF};
          end
       end
-      __s = -1; return [0, __ifaceNil];
+      __s = -1; return {0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Pwrite end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.fd = fd; __f.max = max; __f.n = n; __f.nn = nn; __f.off = off; __f.p = p; __f.x = x; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Pwrite end; end __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.fd = fd; __f.max = max; __f.n = n; __f.nn = nn; __f.off = off; __f.p = p; __f.x = x; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Pwrite = function(f) return this.__val.Pwrite(p, off); end;
    FD.ptr.prototype.WriteTo = function(a)
       local _r, err, err__1, err__2, fd, p, sa, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.writeLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       __deferred.push([__methodVal(fd, "writeUnlock"), []]);
       err__1 = fd.pd.prepareWrite(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, err__1];
+         __s = -1; return {0, err__1};
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = syscall.Sendto(fd.Sysfd, p, 0, sa); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          err__2 = _r;
          if (__interfaceIsEqual(err__2, new syscall.Errno(35))  and  fd.pd.pollable()) {
             err__2 = fd.pd.waitWrite(fd.isFile);
@@ -9115,32 +9168,32 @@ __packages["internal/poll"] = (function()
             end
          end
          if ( not (__interfaceIsEqual(err__2, __ifaceNil))) {
-            __s = -1; return [0, err__2];
+            __s = -1; return {0, err__2};
          end
-         __s = -1; return [p.__length, __ifaceNil];
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [0, __ifaceNil];
+         __s = -1; return {p.__length, __ifaceNil};
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.WriteTo end; end __f._r = _r; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.WriteTo end; end __f._r = _r; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.WriteTo = function(a) return this.__val.WriteTo(p, sa); end;
    FD.ptr.prototype.WriteMsg = function(a)
       local _r, _tuple, err, err__1, err__2, fd, n, oob, p, sa, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; oob = __f.oob; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; n = __f.n; oob = __f.oob; p = __f.p; sa = __f.sa; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.writeLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, 0, err];
+         __s = -1; return {0, 0, err};
       end
       __deferred.push([__methodVal(fd, "writeUnlock"), []]);
       err__1 = fd.pd.prepareWrite(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [0, 0, err__1];
+         __s = -1; return {0, 0, err__1};
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = syscall.SendmsgN(fd.Sysfd, p, oob, sa, 0); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          n = _tuple[0];
          err__2 = _tuple[1];
@@ -9151,39 +9204,39 @@ __packages["internal/poll"] = (function()
             end
          end
          if ( not (__interfaceIsEqual(err__2, __ifaceNil))) {
-            __s = -1; return [n, 0, err__2];
+            __s = -1; return {n, 0, err__2};
          end
-         __s = -1; return [n, oob.__length, err__2];
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [0, 0, __ifaceNil];
+         __s = -1; return {n, oob.__length, err__2};
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {0, 0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, 0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.WriteMsg end; end __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.oob = oob; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, 0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.WriteMsg end; end __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.n = n; __f.oob = oob; __f.p = p; __f.sa = sa; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.WriteMsg = function(a) return this.__val.WriteMsg(p, oob, sa); end;
    FD.ptr.prototype.Accept = function()
       local _1, _r, _tuple, err, err__1, err__2, errcall, fd, rsa, s, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; errcall = __f.errcall; fd = __f.fd; rsa = __f.rsa; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; errcall = __f.errcall; fd = __f.fd; rsa = __f.rsa; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.readLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [-1, __ifaceNil, "", err];
+         __s = -1; return {-1, __ifaceNil, "", err};
       end
       __deferred.push([__methodVal(fd, "readUnlock"), []]);
       err__1 = fd.pd.prepareRead(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [-1, __ifaceNil, "", err__1];
+         __s = -1; return {-1, __ifaceNil, "", err__1};
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = accept(fd.Sysfd); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          s = _tuple[0];
          rsa = _tuple[1];
          errcall = _tuple[2];
          err__2 = _tuple[3];
          if (__interfaceIsEqual(err__2, __ifaceNil)) {
-            __s = -1; return [s, rsa, "", err__2];
+            __s = -1; return {s, rsa, "", err__2};
          end
          _1 = err__2;
          if (__interfaceIsEqual(_1, new syscall.Errno((35)))) {
@@ -9196,36 +9249,36 @@ __packages["internal/poll"] = (function()
          end else if (__interfaceIsEqual(_1, new syscall.Errno((53)))) {
             -- /* continue; */ __s = 1; continue;
          end
-         __s = -1; return [-1, __ifaceNil, errcall, err__2];
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [0, __ifaceNil, "", __ifaceNil];
+         __s = -1; return {-1, __ifaceNil, errcall, err__2};
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {0, __ifaceNil, "", __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil, "", __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Accept end; end __f._1 = _1; __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.errcall = errcall; __f.fd = fd; __f.rsa = rsa; __f.s = s; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil, "", __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Accept end; end __f._1 = _1; __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.errcall = errcall; __f.fd = fd; __f.rsa = rsa; __f.s = s; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Accept = function() return this.__val.Accept(); end;
    FD.ptr.prototype.Seek = function(e)
       local err, fd, offset, whence, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; offset = __f.offset; whence = __f.whence; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; offset = __f.offset; whence = __f.whence; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [new __Int64(0, 0), err];
+         __s = -1; return {new __Int64(0, 0), err};
       end
       __deferred.push([__methodVal(fd, "decref"), []]);
       __s = -1; return syscall.Seek(fd.Sysfd, offset, whence);
       
- end return; end end catch(err) { __err = err; __s = -1; return [new __Int64(0, 0), __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Seek end; end __f.err = err; __f.fd = fd; __f.offset = offset; __f.whence = whence; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {new __Int64(0, 0), __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Seek end; end __f.err = err; __f.fd = fd; __f.offset = offset; __f.whence = whence; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Seek = function(e) return this.__val.Seek(offset, whence); end;
    FD.ptr.prototype.ReadDirent = function(f)
       local _tuple, buf, err, err__1, fd, n, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; buf = __f.buf; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _tuple = __f._tuple; buf = __f.buf; err = __f.err; err__1 = __f.err__1; fd = __f.fd; n = __f.n; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [0, err];
+         __s = -1; return {0, err};
       end
       __deferred.push([__methodVal(fd, "decref"), []]);
       while (true) do 
@@ -9241,17 +9294,17 @@ __packages["internal/poll"] = (function()
                end
             end
          end
-         __s = -1; return [n, err__1];
+         __s = -1; return {n, err__1};
       end
-      __s = -1; return [0, __ifaceNil];
+      __s = -1; return {0, __ifaceNil};
       
- end return; end end catch(err) { __err = err; __s = -1; return [0, __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadDirent end; end __f._tuple = _tuple; __f.buf = buf; __f.err = err; __f.err__1 = err__1; __f.fd = fd; __f.n = n; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {0, __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.ReadDirent end; end __f._tuple = _tuple; __f.buf = buf; __f.err = err; __f.err__1 = err__1; __f.fd = fd; __f.n = n; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.ReadDirent = function(f) return this.__val.ReadDirent(buf); end;
    FD.ptr.prototype.Fchdir = function()
       local err, fd, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9266,7 +9319,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.Fstat = function(s)
       local err, fd, s, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; s = __f.s; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9287,7 +9340,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.RawControl = function(f)
       local err, f, fd, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9295,7 +9348,7 @@ __packages["internal/poll"] = (function()
       end
       __deferred.push([__methodVal(fd, "decref"), []]);
       __r = f(((fd.Sysfd >>> 0))); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return __ifaceNil;
       
  end return; end end catch(err) { __err = err; __s = -1; return __ifaceNil; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.RawControl end; end __f.err = err; __f.f = f; __f.fd = fd; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
@@ -9304,7 +9357,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.RawRead = function(f)
       local _r, err, err__1, err__2, f, fd, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.readLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9315,21 +9368,21 @@ __packages["internal/poll"] = (function()
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
          __s = -1; return err__1;
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = f(((fd.Sysfd >>> 0))); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          
  if (_r) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (_r) { */ case 3:
+         -- /* if (_r) { */ if __s == 3 then 
             __s = -1; return __ifaceNil;
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          err__2 = fd.pd.waitRead(fd.isFile);
          if ( not (__interfaceIsEqual(err__2, __ifaceNil))) {
             __s = -1; return err__2;
          end
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       __s = -1; return __ifaceNil;
       
  end return; end end catch(err) { __err = err; __s = -1; return __ifaceNil; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.RawRead end; end __f._r = _r; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.f = f; __f.fd = fd; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
@@ -9338,7 +9391,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.RawWrite = function(f)
       local _r, err, err__1, err__2, f, fd, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; f = __f.f; fd = __f.fd; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.writeLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9349,21 +9402,21 @@ __packages["internal/poll"] = (function()
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
          __s = -1; return err__1;
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = f(((fd.Sysfd >>> 0))); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          
  if (_r) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (_r) { */ case 3:
+         -- /* if (_r) { */ if __s == 3 then 
             __s = -1; return __ifaceNil;
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          err__2 = fd.pd.waitWrite(fd.isFile);
          if ( not (__interfaceIsEqual(err__2, __ifaceNil))) {
             __s = -1; return err__2;
          end
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       __s = -1; return __ifaceNil;
       
  end return; end end catch(err) { __err = err; __s = -1; return __ifaceNil; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.RawWrite end; end __f._r = _r; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.f = f; __f.fd = fd; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
@@ -9372,7 +9425,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptInt = function(g)
       local arg, err, fd, level, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9387,7 +9440,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptInet4Addr = function(g)
       local arg, err, fd, level, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9402,7 +9455,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptLinger = function(l)
       local err, fd, l, level, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; l = __f.l; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; l = __f.l; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9417,7 +9470,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptByte = function(g)
       local arg, err, fd, level, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; arg = __f.arg; err = __f.err; fd = __f.fd; level = __f.level; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9432,7 +9485,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptIPMreq = function(q)
       local err, fd, level, mreq, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9447,7 +9500,7 @@ __packages["internal/poll"] = (function()
    FD.ptr.prototype.SetsockoptIPv6Mreq = function(q)
       local err, fd, level, mreq, name, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; err = __f.err; fd = __f.fd; level = __f.level; mreq = __f.mreq; name = __f.name; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       fd = this;
       err = fd.incref();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
@@ -9462,9 +9515,9 @@ __packages["internal/poll"] = (function()
    accept = function(s)
       local _r, _r__1, _tuple, err, ns, s, sa, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; err = __f.err; ns = __f.ns; s = __f.s; sa = __f.sa; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; err = __f.err; ns = __f.ns; s = __f.s; sa = __f.sa; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = __pkg.AcceptFunc(s); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       ns = _tuple[0];
       sa = _tuple[1];
@@ -9473,37 +9526,37 @@ __packages["internal/poll"] = (function()
          syscall.CloseOnExec(ns);
       end
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [-1, __ifaceNil, "accept", err];
+         __s = -1; return {-1, __ifaceNil, "accept", err};
       end
       err = syscall.SetNonblock(ns, true);
       
  if ( not (__interfaceIsEqual(err, __ifaceNil))) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if ( not (__interfaceIsEqual(err, __ifaceNil))) { */ case 2:
+      -- /* if ( not (__interfaceIsEqual(err, __ifaceNil))) { */ if __s == 2 then 
          _r__1 = __pkg.CloseFunc(ns); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          _r__1;
-         __s = -1; return [-1, __ifaceNil, "setnonblock", err];
-      -- /* end */ case 3:
-      __s = -1; return [ns, sa, "", __ifaceNil];
+         __s = -1; return {-1, __ifaceNil, "setnonblock", err};
+      -- /* end */ if __s == 3 then 
+      __s = -1; return {ns, sa, "", __ifaceNil};
       
  end return; end if __f == nil then  __f = { __blk= accept end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.err = err; __f.ns = ns; __f.s = s; __f.sa = sa; __f.__s = __s; __f.__r = __r; return __f;
    end;
    FD.ptr.prototype.Writev = function(v)
       local _i, _ref, _tuple, chunk, e0, err, err__1, err__2, fd, iovecs, maxVec, n, v, wrote, x, x__1, x__2, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _ref = __f._ref; _tuple = __f._tuple; chunk = __f.chunk; e0 = __f.e0; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; iovecs = __f.iovecs; maxVec = __f.maxVec; n = __f.n; v = __f.v; wrote = __f.wrote; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _ref = __f._ref; _tuple = __f._tuple; chunk = __f.chunk; e0 = __f.e0; err = __f.err; err__1 = __f.err__1; err__2 = __f.err__2; fd = __f.fd; iovecs = __f.iovecs; maxVec = __f.maxVec; n = __f.n; v = __f.v; wrote = __f.wrote; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       iovecs = [iovecs];
       fd = this;
       err = fd.writeLock();
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [new __Int64(0, 0), err];
+         __s = -1; return {new __Int64(0, 0), err};
       end
       __deferred.push([__methodVal(fd, "writeUnlock"), []]);
       err__1 = fd.pd.prepareWrite(fd.isFile);
       if ( not (__interfaceIsEqual(err__1, __ifaceNil))) {
-         __s = -1; return [new __Int64(0, 0), err__1];
+         __s = -1; return {new __Int64(0, 0), err__1};
       end
       iovecs[0] = sliceType.nil;
       if ( not (fd.iovecs == ptrType__2.nil)) {
@@ -9512,12 +9565,12 @@ __packages["internal/poll"] = (function()
       maxVec = 1024;
       n = new __Int64(0, 0);
       err__2 = __ifaceNil;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (v.__get().__length > 0)) { break; end */ if( not (v.__get().__length > 0)) { __s = 2; continue; end
          iovecs[0] = __subslice(iovecs[0], 0, 0);
          _ref = v.__get();
          _i = 0;
-         -- /* while (true) do  */ case 3:
+         -- /* while (true) do  */ if __s == 3 then 
             -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 4; continue; end
             chunk = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
             if (chunk.__length == 0) {
@@ -9534,7 +9587,7 @@ __packages["internal/poll"] = (function()
                -- /* break; */ __s = 4; continue;
             end
             _i=_i+1;
-         -- /* end */ __s = 3; continue; case 4:
+         -- /* end */ __s = 3; continue; if __s == 4 then 
          if (iovecs[0].__length == 0) {
             -- /* break; */ __s = 2; continue;
          end
@@ -9546,7 +9599,7 @@ __packages["internal/poll"] = (function()
             wrote = 0;
          end
          __r = __pkg.TestHookDidWritev(((wrote >> 0))); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          n = (x__2 = (new __Int64(0, wrote.constructor == Number ? wrote : 1)), new __Int64(n.__high + x__2.__high, n.__low + x__2.__low));
          consume(v, (new __Int64(0, wrote.constructor == Number ? wrote : 1)));
          if (e0 == 35) {
@@ -9564,10 +9617,10 @@ __packages["internal/poll"] = (function()
             err__2 = io.ErrUnexpectedEOF;
             -- /* break; */ __s = 2; continue;
          end
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [n, err__2];
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {n, err__2};
       
- end return; end end catch(err) { __err = err; __s = -1; return [new __Int64(0, 0), __ifaceNil]; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Writev end; end __f._i = _i; __f._ref = _ref; __f._tuple = _tuple; __f.chunk = chunk; __f.e0 = e0; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.iovecs = iovecs; __f.maxVec = maxVec; __f.n = n; __f.v = v; __f.wrote = wrote; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
+ end return; end end catch(err) { __err = err; __s = -1; return {new __Int64(0, 0), __ifaceNil}; end finally { __callDeferred(__deferred, __err); if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= FD.ptr.prototype.Writev end; end __f._i = _i; __f._ref = _ref; __f._tuple = _tuple; __f.chunk = chunk; __f.e0 = e0; __f.err = err; __f.err__1 = err__1; __f.err__2 = err__2; __f.fd = fd; __f.iovecs = iovecs; __f.maxVec = maxVec; __f.n = n; __f.v = v; __f.wrote = wrote; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
    FD.prototype.Writev = function(v) return this.__val.Writev(v); end;
    ptrType__5.methods = [{prop: "init", name: "init", pkg: "internal/poll", typ: __funcType([ptrType__4], [__error], false)end, {prop: "close", name: "close", pkg: "internal/poll", typ: __funcType([], [], false)end, {prop: "evict", name: "evict", pkg: "internal/poll", typ: __funcType([], [], false)end, {prop: "prepare", name: "prepare", pkg: "internal/poll", typ: __funcType([__Int, __Bool], [__error], false)end, {prop: "prepareRead", name: "prepareRead", pkg: "internal/poll", typ: __funcType([__Bool], [__error], false)end, {prop: "prepareWrite", name: "prepareWrite", pkg: "internal/poll", typ: __funcType([__Bool], [__error], false)end, {prop: "wait", name: "wait", pkg: "internal/poll", typ: __funcType([__Int, __Bool], [__error], false)end, {prop: "waitRead", name: "waitRead", pkg: "internal/poll", typ: __funcType([__Bool], [__error], false)end, {prop: "waitWrite", name: "waitWrite", pkg: "internal/poll", typ: __funcType([__Bool], [__error], false)end, {prop: "waitCanceled", name: "waitCanceled", pkg: "internal/poll", typ: __funcType([__Int], [], false)end, {prop: "pollable", name: "pollable", pkg: "internal/poll", typ: __funcType([], [__Bool], false)end];
@@ -9582,17 +9635,17 @@ __packages["internal/poll"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = io.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = atomic.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = syscall.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = time.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __pkg.ErrNetClosing = errors.New("use of closed network connection");
       __pkg.ErrFileClosing = errors.New("use of closed file");
       __pkg.ErrTimeout = new TimeoutError.ptr();
@@ -9746,13 +9799,13 @@ __packages["os"] = (function()
    File.ptr.prototype.Readdir = function(n)
       local _r, f, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       if (f == ptrType.nil) {
-         __s = -1; return [sliceType__1.nil, __pkg.ErrInvalid];
+         __s = -1; return {sliceType__1.nil, __pkg.ErrInvalid};
       end
       _r = f.readdir(n); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Readdir end; end __f._r = _r; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
@@ -9761,7 +9814,7 @@ __packages["os"] = (function()
    File.ptr.prototype.Readdirnames = function(n)
       local _r, _tmp, _tmp__1, _tuple, err, f, n, names, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; err = __f.err; f = __f.f; n = __f.n; names = __f.names; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; err = __f.err; f = __f.f; n = __f.n; names = __f.names; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       names = sliceType.nil;
       err = __ifaceNil;
       f = this;
@@ -9770,14 +9823,14 @@ __packages["os"] = (function()
          _tmp__1 = __pkg.ErrInvalid;
          names = _tmp;
          err = _tmp__1;
-         __s = -1; return [names, err];
+         __s = -1; return {names, err};
       end
       _r = f.readdirnames(n); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       names = _tuple[0];
       err = _tuple[1];
-      __s = -1; return [names, err];
+      __s = -1; return {names, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Readdirnames end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.err = err; __f.f = f; __f.n = n; __f.names = names; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -9785,7 +9838,7 @@ __packages["os"] = (function()
    File.ptr.prototype.readdir = function(n)
       local _i, _r, _r__1, _ref, _tmp, _tmp__1, _tmp__2, _tmp__3, _tuple, _tuple__1, dirname, err, f, fi, filename, fip, lerr, n, names, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; dirname = __f.dirname; err = __f.err; f = __f.f; fi = __f.fi; filename = __f.filename; fip = __f.fip; lerr = __f.lerr; n = __f.n; names = __f.names; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; dirname = __f.dirname; err = __f.err; f = __f.f; fi = __f.fi; filename = __f.filename; fip = __f.fip; lerr = __f.lerr; n = __f.n; names = __f.names; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fi = sliceType__1.nil;
       err = __ifaceNil;
       f = this;
@@ -9794,18 +9847,18 @@ __packages["os"] = (function()
          dirname = ".";
       end
       _r = f.Readdirnames(n); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       names = _tuple[0];
       err = _tuple[1];
       fi = __makeSlice(sliceType__1, 0, names.__length);
       _ref = names;
       _i = 0;
-      -- /* while (true) do  */ case 2:
+      -- /* while (true) do  */ if __s == 2 then 
          -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 3; continue; end
          filename = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
          _r__1 = lstat(dirname + "/" + filename); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          _tuple__1 = _r__1;
          fip = _tuple__1[0];
          lerr = _tuple__1[1];
@@ -9818,11 +9871,11 @@ __packages["os"] = (function()
             _tmp__1 = lerr;
             fi = _tmp;
             err = _tmp__1;
-            __s = -1; return [fi, err];
+            __s = -1; return {fi, err};
          end
          fi = __append(fi, fip);
          _i=_i+1;
-      -- /* end */ __s = 2; continue; case 3:
+      -- /* end */ __s = 2; continue; if __s == 3 then 
       if ((fi.__length == 0)  and  __interfaceIsEqual(err, __ifaceNil)  and  n > 0) {
          err = io.EOF;
       end
@@ -9830,7 +9883,7 @@ __packages["os"] = (function()
       _tmp__3 = err;
       fi = _tmp__2;
       err = _tmp__3;
-      __s = -1; return [fi, err];
+      __s = -1; return {fi, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.readdir end; end __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._ref = _ref; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.dirname = dirname; __f.err = err; __f.f = f; __f.fi = fi; __f.filename = filename; __f.fip = fip; __f.lerr = lerr; __f.n = n; __f.names = names; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -9838,7 +9891,7 @@ __packages["os"] = (function()
    File.ptr.prototype.readdirnames = function(n)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tuple, _tuple__1, d, err, errno, f, n, names, nb, nc, size, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tmp__6 = __f._tmp__6; _tmp__7 = __f._tmp__7; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; d = __f.d; err = __f.err; errno = __f.errno; f = __f.f; n = __f.n; names = __f.names; nb = __f.nb; nc = __f.nc; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tmp__6 = __f._tmp__6; _tmp__7 = __f._tmp__7; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; d = __f.d; err = __f.err; errno = __f.errno; f = __f.f; n = __f.n; names = __f.names; nb = __f.nb; nc = __f.nc; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       names = sliceType.nil;
       err = __ifaceNil;
       f = this;
@@ -9853,17 +9906,17 @@ __packages["os"] = (function()
          n = -1;
       end
       names = __makeSlice(sliceType, 0, size);
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not ( not ((n == 0)))) { break; end */ if( not ( not ((n == 0)))) { __s = 2; continue; end
          
  if (d.bufp >= d.nbuf) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (d.bufp >= d.nbuf) { */ case 3:
+         -- /* if (d.bufp >= d.nbuf) { */ if __s == 3 then 
             d.bufp = 0;
             errno = __ifaceNil;
             _r = f.file.pfd.ReadDirent(d.buf); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             _tuple = _r;
             d.nbuf = _tuple[0];
             errno = _tuple[1];
@@ -9873,12 +9926,12 @@ __packages["os"] = (function()
                _tmp__1 = wrapSyscallError("readdirent", errno);
                names = _tmp;
                err = _tmp__1;
-               __s = -1; return [names, err];
+               __s = -1; return {names, err};
             end
             if (d.nbuf <= 0) {
                -- /* break; */ __s = 2; continue;
             end
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          _tmp__2 = 0;
          _tmp__3 = 0;
          nb = _tmp__2;
@@ -9889,19 +9942,19 @@ __packages["os"] = (function()
          names = _tuple__1[2];
          d.bufp = d.bufp + (nb) >> 0;
          n = n - (nc) >> 0;
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       if (n >= 0  and  (names.__length == 0)) {
          _tmp__4 = names;
          _tmp__5 = io.EOF;
          names = _tmp__4;
          err = _tmp__5;
-         __s = -1; return [names, err];
+         __s = -1; return {names, err};
       end
       _tmp__6 = names;
       _tmp__7 = __ifaceNil;
       names = _tmp__6;
       err = _tmp__7;
-      __s = -1; return [names, err];
+      __s = -1; return {names, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.readdirnames end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tmp__6 = _tmp__6; __f._tmp__7 = _tmp__7; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f.d = d; __f.err = err; __f.errno = errno; __f.f = f; __f.n = n; __f.names = names; __f.nb = nb; __f.nc = nc; __f.size = size; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -9909,10 +9962,10 @@ __packages["os"] = (function()
    PathError.ptr.prototype.Error = function()
       local _r, e, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       e = this;
       _r = e.Err.Error(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return e.Op + " " + e.Path + ": " + _r;
       
  end return; end if __f == nil then  __f = { __blk= PathError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
@@ -9921,10 +9974,10 @@ __packages["os"] = (function()
    SyscallError.ptr.prototype.Error = function()
       local _r, e, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       e = this;
       _r = e.Err.Error(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return e.Syscall + ": " + _r;
       
  end return; end if __f == nil then  __f = { __blk= SyscallError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
@@ -9981,10 +10034,10 @@ __packages["os"] = (function()
    LinkError.ptr.prototype.Error = function()
       local _r, e, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       e = this;
       _r = e.Err.Error(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return e.Op + " " + e.Old + " " + e.New + ": " + _r;
       
  end return; end if __f == nil then  __f = { __blk= LinkError.ptr.prototype.Error end; end __f._r = _r; __f.e = e; __f.__s = __s; __f.__r = __r; return __f;
@@ -9993,7 +10046,7 @@ __packages["os"] = (function()
    File.ptr.prototype.Read = function(b)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tuple, b, e, err, err__1, f, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
@@ -10003,10 +10056,10 @@ __packages["os"] = (function()
          _tmp__1 = err__1;
          n = _tmp;
          err = _tmp__1;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
       _r = f.read(b); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       e = _tuple[1];
@@ -10014,7 +10067,7 @@ __packages["os"] = (function()
       _tmp__3 = f.wrapErr("read", e);
       n = _tmp__2;
       err = _tmp__3;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Read end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tuple = _tuple; __f.b = b; __f.e = e; __f.err = err; __f.err__1 = err__1; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10022,7 +10075,7 @@ __packages["os"] = (function()
    File.ptr.prototype.ReadAt = function(f)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tuple, b, e, err, err__1, f, m, n, off, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; m = __f.m; n = __f.n; off = __f.off; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; m = __f.m; n = __f.n; off = __f.off; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
@@ -10032,19 +10085,19 @@ __packages["os"] = (function()
          _tmp__1 = err__1;
          n = _tmp;
          err = _tmp__1;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
       if ((off.__high < 0  or  (off.__high == 0  and  off.__low < 0))) {
          _tmp__2 = 0;
          _tmp__3 = new PathError.ptr("readat", f.file.name, errors.New("negative offset"));
          n = _tmp__2;
          err = _tmp__3;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (b.__length > 0)) { break; end */ if( not (b.__length > 0)) { __s = 2; continue; end
          _r = f.pread(b, off); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          m = _tuple[0];
          e = _tuple[1];
@@ -10055,8 +10108,8 @@ __packages["os"] = (function()
          n = n + (m) >> 0;
          b = __subslice(b, m);
          off = (x = (new __Int64(0, m)), new __Int64(off.__high + x.__high, off.__low + x.__low));
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [n, err];
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.ReadAt end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tuple = _tuple; __f.b = b; __f.e = e; __f.err = err; __f.err__1 = err__1; __f.f = f; __f.m = m; __f.n = n; __f.off = off; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10064,7 +10117,7 @@ __packages["os"] = (function()
    File.ptr.prototype.Write = function(b)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tuple, b, e, err, err__1, f, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
@@ -10074,10 +10127,10 @@ __packages["os"] = (function()
          _tmp__1 = err__1;
          n = _tmp;
          err = _tmp__1;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
       _r = f.write(b); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       e = _tuple[1];
@@ -10095,7 +10148,7 @@ __packages["os"] = (function()
       _tmp__3 = err;
       n = _tmp__2;
       err = _tmp__3;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Write end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tuple = _tuple; __f.b = b; __f.e = e; __f.err = err; __f.err__1 = err__1; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10103,7 +10156,7 @@ __packages["os"] = (function()
    File.ptr.prototype.WriteAt = function(f)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tuple, b, e, err, err__1, f, m, n, off, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; m = __f.m; n = __f.n; off = __f.off; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tuple = __f._tuple; b = __f.b; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; m = __f.m; n = __f.n; off = __f.off; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
@@ -10113,19 +10166,19 @@ __packages["os"] = (function()
          _tmp__1 = err__1;
          n = _tmp;
          err = _tmp__1;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
       if ((off.__high < 0  or  (off.__high == 0  and  off.__low < 0))) {
          _tmp__2 = 0;
          _tmp__3 = new PathError.ptr("writeat", f.file.name, errors.New("negative offset"));
          n = _tmp__2;
          err = _tmp__3;
-         __s = -1; return [n, err];
+         __s = -1; return {n, err};
       end
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (b.__length > 0)) { break; end */ if( not (b.__length > 0)) { __s = 2; continue; end
          _r = f.pwrite(b, off); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          _tuple = _r;
          m = _tuple[0];
          e = _tuple[1];
@@ -10136,8 +10189,8 @@ __packages["os"] = (function()
          n = n + (m) >> 0;
          b = __subslice(b, m);
          off = (x = (new __Int64(0, m)), new __Int64(off.__high + x.__high, off.__low + x.__low));
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [n, err];
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.WriteAt end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tuple = _tuple; __f.b = b; __f.e = e; __f.err = err; __f.err__1 = err__1; __f.f = f; __f.m = m; __f.n = n; __f.off = off; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10145,7 +10198,7 @@ __packages["os"] = (function()
    File.ptr.prototype.Seek = function(e)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, e, err, err__1, f, offset, r, ret, whence, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; offset = __f.offset; r = __f.r; ret = __f.ret; whence = __f.whence; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; e = __f.e; err = __f.err; err__1 = __f.err__1; f = __f.f; offset = __f.offset; r = __f.r; ret = __f.ret; whence = __f.whence; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       ret = new __Int64(0, 0);
       err = __ifaceNil;
       f = this;
@@ -10155,10 +10208,10 @@ __packages["os"] = (function()
          _tmp__1 = err__1;
          ret = _tmp;
          err = _tmp__1;
-         __s = -1; return [ret, err];
+         __s = -1; return {ret, err};
       end
       _r = f.seek(offset, whence); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       r = _tuple[0];
       e = _tuple[1];
@@ -10170,13 +10223,13 @@ __packages["os"] = (function()
          _tmp__3 = f.wrapErr("seek", e);
          ret = _tmp__2;
          err = _tmp__3;
-         __s = -1; return [ret, err];
+         __s = -1; return {ret, err};
       end
       _tmp__4 = r;
       _tmp__5 = __ifaceNil;
       ret = _tmp__4;
       err = _tmp__5;
-      __s = -1; return [ret, err];
+      __s = -1; return {ret, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Seek end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.e = e; __f.err = err; __f.err__1 = err__1; __f.f = f; __f.offset = offset; __f.r = r; __f.ret = ret; __f.whence = whence; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10184,16 +10237,16 @@ __packages["os"] = (function()
    File.ptr.prototype.WriteString = function(s)
       local _r, _tuple, err, f, n, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; f = __f.f; n = __f.n; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; f = __f.f; n = __f.n; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
       _r = f.Write((new sliceType__2(__stringToBytes(s)))); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.WriteString end; end __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.f = f; __f.n = n; __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10213,10 +10266,10 @@ __packages["os"] = (function()
    File.ptr.prototype.Chmod = function(e)
       local _r, f, mode, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; mode = __f.mode; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; mode = __f.mode; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       _r = f.chmod(mode); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Chmod end; end __f._r = _r; __f.f = f; __f.mode = mode; __f.__s = __s; __f.__r = __r; return __f;
@@ -10243,14 +10296,14 @@ __packages["os"] = (function()
    File.ptr.prototype.chmod = function(e)
       local _r, e, err, f, mode, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; mode = __f.mode; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; mode = __f.mode; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       err = f.checkValid("chmod");
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
          __s = -1; return err;
       end
       _r = f.file.pfd.Fchmod(syscallMode(mode)); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          __s = -1; return f.wrapErr("chmod", e);
@@ -10263,14 +10316,14 @@ __packages["os"] = (function()
    File.ptr.prototype.Chown = function(d)
       local _r, e, err, f, gid, uid, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; gid = __f.gid; uid = __f.uid; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; gid = __f.gid; uid = __f.uid; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       err = f.checkValid("chown");
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
          __s = -1; return err;
       end
       _r = f.file.pfd.Fchown(uid, gid); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          __s = -1; return f.wrapErr("chown", e);
@@ -10283,14 +10336,14 @@ __packages["os"] = (function()
    File.ptr.prototype.Truncate = function(e)
       local _r, e, err, f, size, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       err = f.checkValid("truncate");
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
          __s = -1; return err;
       end
       _r = f.file.pfd.Ftruncate(size); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          __s = -1; return f.wrapErr("truncate", e);
@@ -10303,14 +10356,14 @@ __packages["os"] = (function()
    File.ptr.prototype.Sync = function()
       local _r, e, err, f, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       err = f.checkValid("sync");
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
          __s = -1; return err;
       end
       _r = f.file.pfd.Fsync(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          __s = -1; return f.wrapErr("sync", e);
@@ -10323,14 +10376,14 @@ __packages["os"] = (function()
    File.ptr.prototype.Chdir = function()
       local _r, e, err, f, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       err = f.checkValid("chdir");
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
          __s = -1; return err;
       end
       _r = f.file.pfd.Fchdir(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          __s = -1; return f.wrapErr("chdir", e);
@@ -10396,13 +10449,13 @@ __packages["os"] = (function()
    File.ptr.prototype.Close = function()
       local _r, f, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; f = __f.f; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = this;
       if (f == ptrType.nil) {
          __s = -1; return __pkg.ErrInvalid;
       end
       _r = f.file.close(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Close end; end __f._r = _r; __f.f = f; __f.__s = __s; __f.__r = __r; return __f;
@@ -10411,14 +10464,14 @@ __packages["os"] = (function()
    file.ptr.prototype.close = function()
       local _r, e, err, file__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; file__1 = __f.file__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; e = __f.e; err = __f.err; file__1 = __f.file__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       file__1 = this;
       if (file__1 == ptrType__13.nil) {
          __s = -1; return new syscall.Errno(22);
       end
       err = __ifaceNil;
       _r = file__1.pfd.Close(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       e = _r;
       if ( not (__interfaceIsEqual(e, __ifaceNil))) {
          if (__interfaceIsEqual(e, poll.ErrFileClosing)) {
@@ -10435,12 +10488,12 @@ __packages["os"] = (function()
    File.ptr.prototype.read = function(b)
       local _r, _tmp, _tmp__1, _tuple, b, err, f, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
       _r = f.file.pfd.Read(b); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
@@ -10449,7 +10502,7 @@ __packages["os"] = (function()
       _tmp__1 = err;
       n = _tmp;
       err = _tmp__1;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.read end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.b = b; __f.err = err; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10457,12 +10510,12 @@ __packages["os"] = (function()
    File.ptr.prototype.pread = function(f)
       local _r, _tmp, _tmp__1, _tuple, b, err, f, n, off, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; off = __f.off; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; off = __f.off; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
       _r = f.file.pfd.Pread(b, off); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
@@ -10471,7 +10524,7 @@ __packages["os"] = (function()
       _tmp__1 = err;
       n = _tmp;
       err = _tmp__1;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.pread end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.b = b; __f.err = err; __f.f = f; __f.n = n; __f.off = off; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10479,12 +10532,12 @@ __packages["os"] = (function()
    File.ptr.prototype.write = function(b)
       local _r, _tmp, _tmp__1, _tuple, b, err, f, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
       _r = f.file.pfd.Write(b); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
@@ -10493,7 +10546,7 @@ __packages["os"] = (function()
       _tmp__1 = err;
       n = _tmp;
       err = _tmp__1;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.write end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.b = b; __f.err = err; __f.f = f; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10501,12 +10554,12 @@ __packages["os"] = (function()
    File.ptr.prototype.pwrite = function(f)
       local _r, _tmp, _tmp__1, _tuple, b, err, f, n, off, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; off = __f.off; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; b = __f.b; err = __f.err; f = __f.f; n = __f.n; off = __f.off; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       f = this;
       _r = f.file.pfd.Pwrite(b, off); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
@@ -10515,7 +10568,7 @@ __packages["os"] = (function()
       _tmp__1 = err;
       n = _tmp;
       err = _tmp__1;
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.pwrite end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.b = b; __f.err = err; __f.f = f; __f.n = n; __f.off = off; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10523,12 +10576,12 @@ __packages["os"] = (function()
    File.ptr.prototype.seek = function(e)
       local _r, _tmp, _tmp__1, _tuple, err, f, offset, ret, whence, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; err = __f.err; f = __f.f; offset = __f.offset; ret = __f.ret; whence = __f.whence; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; err = __f.err; f = __f.f; offset = __f.offset; ret = __f.ret; whence = __f.whence; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       ret = new __Int64(0, 0);
       err = __ifaceNil;
       f = this;
       _r = f.file.pfd.Seek(offset, whence); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       ret = _tuple[0];
       err = _tuple[1];
@@ -10537,7 +10590,7 @@ __packages["os"] = (function()
       _tmp__1 = err;
       ret = _tmp;
       err = _tmp__1;
-      __s = -1; return [ret, err];
+      __s = -1; return {ret, err};
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.seek end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.err = err; __f.f = f; __f.offset = offset; __f.ret = ret; __f.whence = whence; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10612,21 +10665,21 @@ __packages["os"] = (function()
    File.ptr.prototype.Stat = function()
       local _r, err, f, fs, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; fs = __f.fs; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; fs = __f.fs; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fs = [fs];
       f = this;
       if (f == ptrType.nil) {
-         __s = -1; return [__ifaceNil, __pkg.ErrInvalid];
+         __s = -1; return {__ifaceNil, __pkg.ErrInvalid};
       end
       fs[0] = new fileStat.ptr("", new __Int64(0, 0), 0, new time.Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__15.nil), new syscall.Stat_t.ptr(0, 0, 0, new __Uint64(0, 0), 0, 0, 0, arrayType.zero(), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new __Int64(0, 0), new __Int64(0, 0), 0, 0, 0, 0, arrayType__3.zero()));
       _r = f.file.pfd.Fstat(fs[0].sys); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       err = _r;
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         __s = -1; return [__ifaceNil, new PathError.ptr("stat", f.file.name, err)];
+         __s = -1; return {__ifaceNil, new PathError.ptr("stat", f.file.name, err)};
       end
       fillFileStatFromSys(fs[0], f.file.name);
-      __s = -1; return [fs[0], __ifaceNil];
+      __s = -1; return {fs[0}, __ifaceNil];
       
  end return; end if __f == nil then  __f = { __blk= File.ptr.prototype.Stat end; end __f._r = _r; __f.err = err; __f.f = f; __f.fs = fs; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -10636,10 +10689,10 @@ __packages["os"] = (function()
       fs = new fileStat.ptr("", new __Int64(0, 0), 0, new time.Time.ptr(new __Uint64(0, 0), new __Int64(0, 0), ptrType__15.nil), new syscall.Stat_t.ptr(0, 0, 0, new __Uint64(0, 0), 0, 0, 0, arrayType.zero(), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new syscall.Timespec.ptr(new __Int64(0, 0), new __Int64(0, 0)), new __Int64(0, 0), new __Int64(0, 0), 0, 0, 0, 0, arrayType__3.zero()));
       err = syscall.Lstat(name, fs.sys);
       if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-         return [__ifaceNil, new PathError.ptr("lstat", name, err)];
+         return {__ifaceNil, new PathError.ptr("lstat", name, err)};
       end
       fillFileStatFromSys(fs, name);
-      return [fs, __ifaceNil];
+      return {fs, __ifaceNil};
    end;
    __pkg.Lstat = Lstat;
    FileMode.prototype.__str = function()
@@ -10755,25 +10808,25 @@ __packages["os"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = js.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = poll.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = io.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = runtime.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = sync.__init(); 
- __s = 6; case 6: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = atomic.__init(); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = syscall.__init(); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = time.__init(); 
- __s = 9; case 9: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __pkg.Args = sliceType.nil;
       __pkg.ErrInvalid = errors.New("invalid argument");
       __pkg.ErrPermission = errors.New("permission denied");
@@ -10820,7 +10873,7 @@ __packages["unicode/utf8"] = (function()
          _tmp__1 = 0;
          r = _tmp;
          size = _tmp__1;
-         return [r, size];
+         return {r, size};
       end
       s0 = s.charCodeAt(0);
       x = ((s0 < 0  or  s0 >= #first) ? (__throwRuntimeError("index out of range"), nil) : first[s0]);
@@ -10830,7 +10883,7 @@ __packages["unicode/utf8"] = (function()
          _tmp__3 = 1;
          r = _tmp__2;
          size = _tmp__3;
-         return [r, size];
+         return {r, size};
       end
       sz = (x & 7) >>> 0;
       accept = __clone((x__1 = x >>> 4 << 24 >>> 24, ((x__1 < 0  or  x__1 >= #acceptRanges) ? (__throwRuntimeError("index out of range"), nil) : acceptRanges[x__1])), acceptRange);
@@ -10839,7 +10892,7 @@ __packages["unicode/utf8"] = (function()
          _tmp__5 = 1;
          r = _tmp__4;
          size = _tmp__5;
-         return [r, size];
+         return {r, size};
       end
       s1 = s.charCodeAt(1);
       if (s1 < accept.lo  or  accept.hi < s1) {
@@ -10847,14 +10900,14 @@ __packages["unicode/utf8"] = (function()
          _tmp__7 = 1;
          r = _tmp__6;
          size = _tmp__7;
-         return [r, size];
+         return {r, size};
       end
       if (sz == 2) {
          _tmp__8 = (((((s0 & 31) >>> 0) >> 0)) << 6 >> 0) | ((((s1 & 63) >>> 0) >> 0));
          _tmp__9 = 2;
          r = _tmp__8;
          size = _tmp__9;
-         return [r, size];
+         return {r, size};
       end
       s2 = s.charCodeAt(2);
       if (s2 < 128  or  191 < s2) {
@@ -10862,14 +10915,14 @@ __packages["unicode/utf8"] = (function()
          _tmp__11 = 1;
          r = _tmp__10;
          size = _tmp__11;
-         return [r, size];
+         return {r, size};
       end
       if (sz == 3) {
          _tmp__12 = ((((((s0 & 15) >>> 0) >> 0)) << 12 >> 0) | (((((s1 & 63) >>> 0) >> 0)) << 6 >> 0)) | ((((s2 & 63) >>> 0) >> 0));
          _tmp__13 = 3;
          r = _tmp__12;
          size = _tmp__13;
-         return [r, size];
+         return {r, size};
       end
       s3 = s.charCodeAt(3);
       if (s3 < 128  or  191 < s3) {
@@ -10877,13 +10930,13 @@ __packages["unicode/utf8"] = (function()
          _tmp__15 = 1;
          r = _tmp__14;
          size = _tmp__15;
-         return [r, size];
+         return {r, size};
       end
       _tmp__16 = (((((((s0 & 7) >>> 0) >> 0)) << 18 >> 0) | (((((s1 & 63) >>> 0) >> 0)) << 12 >> 0)) | (((((s2 & 63) >>> 0) >> 0)) << 6 >> 0)) | ((((s3 & 63) >>> 0) >> 0));
       _tmp__17 = 4;
       r = _tmp__16;
       size = _tmp__17;
-      return [r, size];
+      return {r, size};
    end;
    __pkg.DecodeRuneInString = DecodeRuneInString;
    RuneLen = function(r)
@@ -11047,7 +11100,7 @@ __packages["unicode/utf8"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       first = __toNativeArray(__kindUint8, [240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 240, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 19, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 35, 3, 3, 52, 4, 4, 4, 68, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241, 241]);
       acceptRanges = __toNativeArray(__kindStruct, [new acceptRange.ptr(128, 191), new acceptRange.ptr(160, 191), new acceptRange.ptr(128, 159), new acceptRange.ptr(144, 191), new acceptRange.ptr(128, 143)]);
       
@@ -11445,7 +11498,7 @@ __packages["strconv"] = (function()
          _tmp__1 = __clone(f, extFloat);
          extFloat.copy(lower, _tmp);
          extFloat.copy(upper, _tmp__1);
-         return [lower, upper];
+         return {lower, upper};
       end
       expBiased = exp - flt.bias >> 0;
       extFloat.copy(upper, new extFloat.ptr((x__1 = __mul64(new __Uint64(0, 2), f.mant), new __Uint64(x__1.__high + 0, x__1.__low + 1)), f.exp - 1 >> 0, f.neg));
@@ -11454,7 +11507,7 @@ __packages["strconv"] = (function()
       end else {
          extFloat.copy(lower, new extFloat.ptr((x__4 = __mul64(new __Uint64(0, 4), f.mant), new __Uint64(x__4.__high - 0, x__4.__low - 1)), f.exp - 2 >> 0, f.neg));
       end
-      return [lower, upper];
+      return {lower, upper};
    end;
    extFloat.prototype.AssignComputeBounds = function(t) return this.__val.AssignComputeBounds(mant, exp, neg, flt); end;
    extFloat.ptr.prototype.Normalize = function()
@@ -11593,7 +11646,7 @@ __packages["strconv"] = (function()
       _tmp__1 = i;
       exp10 = _tmp;
       index = _tmp__1;
-      return [exp10, index];
+      return {exp10, index};
    end;
    extFloat.prototype.frexp10 = function() return this.__val.frexp10(); end;
    frexp10Many = function(c)
@@ -12285,10 +12338,10 @@ __packages["strconv"] = (function()
       end
       if (append_) {
          d = __appendSlice(dst, __subslice(new sliceType__6(a), i));
-         return [d, s];
+         return {d, s};
       end
       s = (__bytesToString(__subslice(new sliceType__6(a), i)));
-      return [d, s];
+      return {d, s};
    end;
    appendQuotedWith = function(y)
       local ASCIIonly, _tuple, buf, graphicOnly, quote, r, s, width;
@@ -12447,21 +12500,21 @@ __packages["strconv"] = (function()
          _tmp__1 = true;
          v = _tmp;
          ok = _tmp__1;
-         return [v, ok];
+         return {v, ok};
       end else if (97 <= c  and  c <= 102) {
          _tmp__2 = (c - 97 >> 0) + 10 >> 0;
          _tmp__3 = true;
          v = _tmp__2;
          ok = _tmp__3;
-         return [v, ok];
+         return {v, ok};
       end else if (65 <= c  and  c <= 70) {
          _tmp__4 = (c - 65 >> 0) + 10 >> 0;
          _tmp__5 = true;
          v = _tmp__4;
          ok = _tmp__5;
-         return [v, ok];
+         return {v, ok};
       end
-      return [v, ok];
+      return {v, ok};
    end;
    UnquoteChar = function(e)
       local _1, _2, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tuple, _tuple__1, c, c__1, err, j, j__1, multibyte, n, ok, quote, r, s, size, tail, v, v__1, value, x, x__1;
@@ -12472,7 +12525,7 @@ __packages["strconv"] = (function()
       c = s.charCodeAt(0);
       if ((c == quote)  and  ((quote == 39)  or  (quote == 34))) {
          err = __pkg.ErrSyntax;
-         return [value, multibyte, tail, err];
+         return {value, multibyte, tail, err};
       end else if (c >= 128) {
          _tuple = utf8.DecodeRuneInString(s);
          r = _tuple[0];
@@ -12485,7 +12538,7 @@ __packages["strconv"] = (function()
          multibyte = _tmp__1;
          tail = _tmp__2;
          err = _tmp__3;
-         return [value, multibyte, tail, err];
+         return {value, multibyte, tail, err};
       end else if ( not ((c == 92))) {
          _tmp__4 = ((s.charCodeAt(0) >> 0));
          _tmp__5 = false;
@@ -12495,15 +12548,15 @@ __packages["strconv"] = (function()
          multibyte = _tmp__5;
          tail = _tmp__6;
          err = _tmp__7;
-         return [value, multibyte, tail, err];
+         return {value, multibyte, tail, err};
       end
       if (#s <= 1) {
          err = __pkg.ErrSyntax;
-         return [value, multibyte, tail, err];
+         return {value, multibyte, tail, err};
       end
       c__1 = s.charCodeAt(1);
       s = __substring(s, 2);
-      switch (0) { default:
+      do
          _1 = c__1;
          if (_1 == (97)) {
             value = 7;
@@ -12532,7 +12585,7 @@ __packages["strconv"] = (function()
             v = 0;
             if (#s < n) {
                err = __pkg.ErrSyntax;
-               return [value, multibyte, tail, err];
+               return {value, multibyte, tail, err};
             end
             j = 0;
             while (true) do 
@@ -12542,7 +12595,7 @@ __packages["strconv"] = (function()
                ok = _tuple__1[1];
                if ( not ok) {
                   err = __pkg.ErrSyntax;
-                  return [value, multibyte, tail, err];
+                  return {value, multibyte, tail, err};
                end
                v = (v << 4 >> 0) | x;
                j = j + (1) >> 0;
@@ -12554,7 +12607,7 @@ __packages["strconv"] = (function()
             end
             if (v > 1114111) {
                err = __pkg.ErrSyntax;
-               return [value, multibyte, tail, err];
+               return {value, multibyte, tail, err};
             end
             value = v;
             multibyte = true;
@@ -12562,7 +12615,7 @@ __packages["strconv"] = (function()
             v__1 = ((c__1 >> 0)) - 48 >> 0;
             if (#s < 2) {
                err = __pkg.ErrSyntax;
-               return [value, multibyte, tail, err];
+               return {value, multibyte, tail, err};
             end
             j__1 = 0;
             while (true) do 
@@ -12570,7 +12623,7 @@ __packages["strconv"] = (function()
                x__1 = ((s.charCodeAt(j__1) >> 0)) - 48 >> 0;
                if (x__1 < 0  or  x__1 > 7) {
                   err = __pkg.ErrSyntax;
-                  return [value, multibyte, tail, err];
+                  return {value, multibyte, tail, err};
                end
                v__1 = ((v__1 << 3 >> 0)) | x__1;
                j__1 = j__1 + (1) >> 0;
@@ -12578,7 +12631,7 @@ __packages["strconv"] = (function()
             s = __substring(s, 2);
             if (v__1 > 255) {
                err = __pkg.ErrSyntax;
-               return [value, multibyte, tail, err];
+               return {value, multibyte, tail, err};
             end
             value = v__1;
          end else if (_1 == (92)) {
@@ -12586,32 +12639,32 @@ __packages["strconv"] = (function()
          end else if ((_1 == (39))  or  (_1 == (34))) {
             if ( not ((c__1 == quote))) {
                err = __pkg.ErrSyntax;
-               return [value, multibyte, tail, err];
+               return {value, multibyte, tail, err};
             end
             value = ((c__1 >> 0));
          end else {
             err = __pkg.ErrSyntax;
-            return [value, multibyte, tail, err];
+            return {value, multibyte, tail, err};
          end
       end
       tail = s;
-      return [value, multibyte, tail, err];
+      return {value, multibyte, tail, err};
    end;
    __pkg.UnquoteChar = UnquoteChar;
    Unquote = function(s)
       local _1, _q, _tuple, _tuple__1, buf, buf__1, c, err, i, multibyte, n, n__1, quote, r, runeTmp, s, size, ss;
       n = #s;
       if (n < 2) {
-         return ["", __pkg.ErrSyntax];
+         return {"", __pkg.ErrSyntax};
       end
       quote = s.charCodeAt(0);
       if ( not ((quote == s.charCodeAt((n - 1 >> 0))))) {
-         return ["", __pkg.ErrSyntax];
+         return {"", __pkg.ErrSyntax};
       end
       s = __substring(s, 1, (n - 1 >> 0));
       if (quote == 96) {
          if (contains(s, 96)) {
-            return ["", __pkg.ErrSyntax];
+            return {"", __pkg.ErrSyntax};
          end
          if (contains(s, 13)) {
             buf = __makeSlice(sliceType__6, 0, (#s - 1 >> 0));
@@ -12623,26 +12676,26 @@ __packages["strconv"] = (function()
                end
                i = i + (1) >> 0;
             end
-            return [(__bytesToString(buf)), __ifaceNil];
+            return {(__bytesToString(buf)), __ifaceNil};
          end
-         return [s, __ifaceNil];
+         return {s, __ifaceNil};
       end
       if ( not ((quote == 34))  and   not ((quote == 39))) {
-         return ["", __pkg.ErrSyntax];
+         return {"", __pkg.ErrSyntax};
       end
       if (contains(s, 10)) {
-         return ["", __pkg.ErrSyntax];
+         return {"", __pkg.ErrSyntax};
       end
       if ( not contains(s, 92)  and   not contains(s, quote)) {
          _1 = quote;
          if (_1 == (34)) {
-            return [s, __ifaceNil];
+            return {s, __ifaceNil};
          end else if (_1 == (39)) {
             _tuple = utf8.DecodeRuneInString(s);
             r = _tuple[0];
             size = _tuple[1];
             if ((size == #s)  and  ( not ((r == 65533))  or   not ((size == 1)))) {
-               return [s, __ifaceNil];
+               return {s, __ifaceNil};
             end
          end
       end
@@ -12656,7 +12709,7 @@ __packages["strconv"] = (function()
          ss = _tuple__1[2];
          err = _tuple__1[3];
          if ( not (__interfaceIsEqual(err, __ifaceNil))) {
-            return ["", err];
+            return {"", err};
          end
          s = ss;
          if (c < 128  or   not multibyte) {
@@ -12666,10 +12719,10 @@ __packages["strconv"] = (function()
             buf__1 = __appendSlice(buf__1, __subslice(new sliceType__6(runeTmp), 0, n__1));
          end
          if ((quote == 39)  and   not ((#s == 0))) {
-            return ["", __pkg.ErrSyntax];
+            return {"", __pkg.ErrSyntax};
          end
       end
-      return [(__bytesToString(buf__1)), __ifaceNil];
+      return {(__bytesToString(buf__1)), __ifaceNil};
    end;
    __pkg.Unquote = Unquote;
    contains = function(c)
@@ -12781,13 +12834,13 @@ __packages["strconv"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = math.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = utf8.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       optimize = true;
       __pkg.ErrRange = errors.New("value out of range");
       __pkg.ErrSyntax = errors.New("invalid syntax");
@@ -12815,7 +12868,7 @@ __packages["unicode"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -13190,36 +13243,36 @@ __packages["reflect"] = (function()
    init = function()
       local used, x, x__1, x__10, x__11, x__12, x__2, x__3, x__4, x__5, x__6, x__7, x__8, x__9, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; used = __f.used; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; used = __f.used; x = __f.x; x__1 = __f.x__1; x__10 = __f.x__10; x__11 = __f.x__11; x__12 = __f.x__12; x__2 = __f.x__2; x__3 = __f.x__3; x__4 = __f.x__4; x__5 = __f.x__5; x__6 = __f.x__6; x__7 = __f.x__7; x__8 = __f.x__8; x__9 = __f.x__9; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       used = (function(i)
          local i;
       end);
       __r = used((x = new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), new x.constructor.elem(x))); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__1 = new uncommonType.ptr(0, 0, 0, 0, 0, sliceType__5.nil), new x__1.constructor.elem(x__1))); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__2 = new method.ptr(0, 0, 0, 0), new x__2.constructor.elem(x__2))); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__3 = new arrayType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), ptrType__1.nil, ptrType__1.nil, 0), new x__3.constructor.elem(x__3))); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__4 = new chanType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), ptrType__1.nil, 0), new x__4.constructor.elem(x__4))); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__5 = new funcType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), 0, 0, sliceType__2.nil, sliceType__2.nil), new x__5.constructor.elem(x__5))); 
- __s = 6; case 6: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__6 = new interfaceType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), new name.ptr(ptrType__4.nil), sliceType__6.nil), new x__6.constructor.elem(x__6))); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__7 = new mapType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), ptrType__1.nil, ptrType__1.nil, ptrType__1.nil, ptrType__1.nil, 0, 0, 0, 0, 0, false, false), new x__7.constructor.elem(x__7))); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__8 = new ptrType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), ptrType__1.nil), new x__8.constructor.elem(x__8))); 
- __s = 9; case 9: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__9 = new sliceType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), ptrType__1.nil), new x__9.constructor.elem(x__9))); 
- __s = 10; case 10: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__10 = new structType.ptr(new rtype.ptr(0, 0, 0, 0, 0, 0, 0, ptrType__3.nil, ptrType__4.nil, 0, 0), new name.ptr(ptrType__4.nil), sliceType__7.nil), new x__10.constructor.elem(x__10))); 
- __s = 11; case 11: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__11 = new imethod.ptr(0, 0), new x__11.constructor.elem(x__11))); 
- __s = 12; case 12: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = used((x__12 = new structField.ptr(new name.ptr(ptrType__4.nil), ptrType__1.nil, 0), new x__12.constructor.elem(x__12))); 
- __s = 13; case 13: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 13; if __s == 13 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       initialized = true;
       uint8Type = __assertType(TypeOf(new __Uint8(0)), ptrType__1);
       __s = -1; return;
@@ -13445,31 +13498,31 @@ __packages["reflect"] = (function()
    makeValue = function(l)
       local _r, _r__1, _r__2, _r__3, _r__4, _r__5, _v, _v__1, fl, rt, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _v = __f._v; _v__1 = __f._v__1; fl = __f.fl; rt = __f.rt; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _v = __f._v; _v__1 = __f._v__1; fl = __f.fl; rt = __f.rt; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = t.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       rt = _r;
       _r__1 = t.Kind(); 
- __s = 6; case 6: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       if (_r__1 == 17) { _v__1 = true; __s = 5; continue s; end
       _r__2 = t.Kind(); 
- __s = 7; case 7: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
-      _v__1 = _r__2 == 25; case 5:
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+      _v__1 = _r__2 == 25; if __s == 5 then 
       if (_v__1) { _v = true; __s = 4; continue s; end
       _r__3 = t.Kind(); 
- __s = 8; case 8: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
-      _v = _r__3 == 22; case 4:
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+      _v = _r__3 == 22; if __s == 4 then 
       
  if (_v) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if (_v) { */ case 2:
+      -- /* if (_v) { */ if __s == 2 then 
          _r__4 = t.Kind(); 
- __s = 9; case 9: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
          __s = -1; return new Value.ptr(rt, (v), (fl | ((_r__4 >>> 0))) >>> 0);
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       _r__5 = t.Kind(); 
- __s = 10; case 10: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
       __s = -1; return new Value.ptr(rt, (__newDataPointer(v, jsType(rt.ptrTo()))), (((fl | ((_r__5 >>> 0))) >>> 0) | 128) >>> 0);
       
  end return; end if __f == nil then  __f = { __blk= makeValue end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._v = _v; __f._v__1 = _v__1; __f.fl = fl; __f.rt = rt; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -13477,17 +13530,17 @@ __packages["reflect"] = (function()
    MakeSlice = function(p)
       local _r, _r__1, cap, len, typ, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; cap = __f.cap; len = __f.len; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; cap = __f.cap; len = __f.len; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       typ = [typ];
       _r = typ[0].Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 23))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 23))) { */ case 1:
+      -- /* if ( not ((_r == 23))) { */ if __s == 1 then 
          __panic(new __String("reflect.MakeSlice of non-slice type"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       if (len < 0) {
          __panic(new __String("reflect.MakeSlice: negative len"));
       end
@@ -13500,16 +13553,16 @@ __packages["reflect"] = (function()
       _r__1 = makeValue(typ[0], __makeSlice(jsType(typ[0]), len, cap, (function(p) return function __b() {
          local _r__1, _r__2, __s, __r;
          
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r__1 = __f._r__1; _r__2 = __f._r__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r__1 = __f._r__1; _r__2 = __f._r__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
          _r__1 = typ[0].Elem(); 
- __s = 1; case 1: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          _r__2 = jsType(_r__1); 
- __s = 2; case 2: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
          __s = -1; return _r__2.zero();
          
  end return; end if __f == nil then  __f = { __blk= __b end; end __f._r__1 = _r__1; __f._r__2 = _r__2; __f.__s = __s; __f.__r = __r; return __f;
       end; end)(typ)), 0); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= MakeSlice end; end __f._r = _r; __f._r__1 = _r__1; __f.cap = cap; __f.len = len; __f.typ = typ; __f.__s = __s; __f.__r = __r; return __f;
@@ -13529,12 +13582,12 @@ __packages["reflect"] = (function()
    ValueOf = function(i)
       local _r, i, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; i = __f.i; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; i = __f.i; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (__interfaceIsEqual(i, __ifaceNil)) {
          __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       end
       _r = makeValue(reflectType(i.constructor), i.__val, 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= ValueOf end; end __f._r = _r; __f.i = i; __f.__s = __s; __f.__r = __r; return __f;
@@ -13543,20 +13596,20 @@ __packages["reflect"] = (function()
    FuncOf = function(c)
       local _i, _i__1, _r, _ref, _ref__1, _v, _v__1, i, i__1, in__1, jsIn, jsOut, out, v, v__1, variadic, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _ref = __f._ref; _ref__1 = __f._ref__1; _v = __f._v; _v__1 = __f._v__1; i = __f.i; i__1 = __f.i__1; in__1 = __f.in__1; jsIn = __f.jsIn; jsOut = __f.jsOut; out = __f.out; v = __f.v; v__1 = __f.v__1; variadic = __f.variadic; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _ref = __f._ref; _ref__1 = __f._ref__1; _v = __f._v; _v__1 = __f._v__1; i = __f.i; i__1 = __f.i__1; in__1 = __f.in__1; jsIn = __f.jsIn; jsOut = __f.jsOut; out = __f.out; v = __f.v; v__1 = __f.v__1; variadic = __f.variadic; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if ( not (variadic)) { _v = false; __s = 3; continue s; end
       if (in__1.__length == 0) { _v__1 = true; __s = 4; continue s; end
       _r = (x = in__1.__length - 1 >> 0, ((x < 0  or  x >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + x])).Kind(); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
-      _v__1 =  not ((_r == 23)); case 4:
-      _v = _v__1; case 3:
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+      _v__1 =  not ((_r == 23)); if __s == 4 then 
+      _v = _v__1; if __s == 3 then 
       
  if (_v) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (_v) { */ case 1:
+      -- /* if (_v) { */ if __s == 1 then 
          __panic(new __String("reflect.FuncOf: last arg of variadic func must be slice"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       jsIn = __makeSlice(sliceType__8, in__1.__length);
       _ref = in__1;
       _i = 0;
@@ -13596,9 +13649,9 @@ __packages["reflect"] = (function()
    Zero = function(p)
       local _r, typ, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeValue(typ, jsType(typ).zero(), 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Zero end; end __f._r = _r; __f.typ = typ; __f.__s = __s; __f.__r = __r; return __f;
@@ -13618,9 +13671,9 @@ __packages["reflect"] = (function()
    makeInt = function(t)
       local _1, _r, bits, f, ptr, t, typ, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; bits = __f.bits; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; bits = __f.bits; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = t.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       typ = _r;
       ptr = unsafe_New(typ);
       _1 = typ.Kind();
@@ -13656,7 +13709,7 @@ __packages["reflect"] = (function()
          kv = kv.__get();
       end
       k = __internalize(jsType(t.Key()).keyFor(kv), __String);
-      return [kv, k];
+      return {kv, k};
    end;
    mapaccess = function(y)
       local _tuple, entry, k, key, m, t;
@@ -13671,23 +13724,23 @@ __packages["reflect"] = (function()
    mapassign = function(l)
       local _r, _tuple, entry, et, jsVal, k, key, kv, m, newVal, t, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; entry = __f.entry; et = __f.et; jsVal = __f.jsVal; k = __f.k; key = __f.key; kv = __f.kv; m = __f.m; newVal = __f.newVal; t = __f.t; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; entry = __f.entry; et = __f.et; jsVal = __f.jsVal; k = __f.k; key = __f.key; kv = __f.kv; m = __f.m; newVal = __f.newVal; t = __f.t; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _tuple = keyFor(t, key);
       kv = _tuple[0];
       k = _tuple[1];
       jsVal = val.__get();
       et = t.Elem();
       _r = et.Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if (_r == 25) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (_r == 25) { */ case 1:
+      -- /* if (_r == 25) { */ if __s == 1 then 
          newVal = jsType(et).zero();
          copyStruct(newVal, jsVal, et);
          jsVal = newVal;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       entry = new (__global.Object)();
       entry.k = kv;
       entry.v = jsVal;
@@ -13709,15 +13762,15 @@ __packages["reflect"] = (function()
    mapiterkey = function(t)
       local _r, _r__1, _r__2, it, iter, k, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; it = __f.it; iter = __f.iter; k = __f.k; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; it = __f.it; iter = __f.iter; k = __f.k; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       iter = ((it));
       k = iter.keys[iter.i];
       _r = iter.t.Key(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = PtrTo(_r); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _r__2 = jsType(_r__1); 
- __s = 3; case 3: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       __s = -1; return (__newDataPointer(iter.m[__externalize(__internalize(k, __String), __String)].k, _r__2));
       
  end return; end if __f == nil then  __f = { __blk= mapiterkey end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f.it = it; __f.iter = iter; __f.k = k; __f.__s = __s; __f.__r = __r; return __f;
@@ -13734,20 +13787,20 @@ __packages["reflect"] = (function()
    cvtDirect = function(p)
       local _1, _arg, _arg__1, _arg__2, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _r__7, k, slice, srcVal, typ, v, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; k = __f.k; slice = __f.slice; srcVal = __f.srcVal; typ = __f.typ; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; k = __f.k; slice = __f.slice; srcVal = __f.srcVal; typ = __f.typ; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       srcVal = __clone(v, Value).object();
       
  if (srcVal == jsType(v.typ).nil) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (srcVal == jsType(v.typ).nil) { */ case 1:
+      -- /* if (srcVal == jsType(v.typ).nil) { */ if __s == 1 then 
          _r = makeValue(typ, jsType(typ).nil, v.flag); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          __s = -1; return _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       val = null;
          _r__1 = typ.Kind(); 
- __s = 5; case 5: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          k = _r__1;
          _1 = k;
          
@@ -13760,60 +13813,60 @@ __packages["reflect"] = (function()
  if ((_1 == (17))  or  (_1 == (1))  or  (_1 == (18))  or  (_1 == (19))  or  (_1 == (20))  or  (_1 == (21))  or  (_1 == (24))) { __s = 9; continue; end
          
  __s = 10; continue;
-         -- /* if (_1 == (23)) { */ case 6:
+         -- /* if (_1 == (23)) { */ if __s == 6 then 
             slice = new (jsType(typ))(srcVal.__array);
             slice.__offset = srcVal.__offset;
             slice.__length = srcVal.__length;
             slice.__capacity = srcVal.__capacity;
             val = __newDataPointer(slice, jsType(PtrTo(typ)));
             __s = 11; continue;
-         -- /* end else if (_1 == (22)) { */ case 7:
+         -- /* end else if (_1 == (22)) { */ if __s == 7 then 
             _r__2 = typ.Elem(); 
- __s = 14; case 14: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 14; if __s == 14 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             _r__3 = _r__2.Kind(); 
- __s = 15; case 15: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 15; if __s == 15 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
             
  if (_r__3 == 25) { __s = 12; continue; end
             
  __s = 13; continue;
-            -- /* if (_r__3 == 25) { */ case 12:
+            -- /* if (_r__3 == 25) { */ if __s == 12 then 
                _r__4 = typ.Elem(); 
- __s = 18; case 18: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 18; if __s == 18 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
                
  if (__interfaceIsEqual(_r__4, v.typ.Elem())) { __s = 16; continue; end
                
  __s = 17; continue;
-               -- /* if (__interfaceIsEqual(_r__4, v.typ.Elem())) { */ case 16:
+               -- /* if (__interfaceIsEqual(_r__4, v.typ.Elem())) { */ if __s == 16 then 
                   val = srcVal;
                   -- /* break; */ __s = 4; continue;
-               -- /* end */ case 17:
+               -- /* end */ if __s == 17 then 
                val = new (jsType(typ))();
                _arg = val;
                _arg__1 = srcVal;
                _r__5 = typ.Elem(); 
- __s = 19; case 19: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 19; if __s == 19 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
                _arg__2 = _r__5;
                __r = copyStruct(_arg, _arg__1, _arg__2); 
- __s = 20; case 20: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 20; if __s == 20 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                -- /* break; */ __s = 4; continue;
-            -- /* end */ case 13:
+            -- /* end */ if __s == 13 then 
             val = new (jsType(typ))(srcVal.__get, srcVal.__set);
             __s = 11; continue;
-         -- /* end else if (_1 == (25)) { */ case 8:
+         -- /* end else if (_1 == (25)) { */ if __s == 8 then 
             val = new (jsType(typ).ptr)();
             copyStruct(val, srcVal, typ);
             __s = 11; continue;
-         -- /* end else if ((_1 == (17))  or  (_1 == (1))  or  (_1 == (18))  or  (_1 == (19))  or  (_1 == (20))  or  (_1 == (21))  or  (_1 == (24))) { */ case 9:
+         -- /* end else if ((_1 == (17))  or  (_1 == (1))  or  (_1 == (18))  or  (_1 == (19))  or  (_1 == (20))  or  (_1 == (21))  or  (_1 == (24))) { */ if __s == 9 then 
             val = v.ptr;
             __s = 11; continue;
-         -- /* end else { */ case 10:
+         -- /* end else { */ if __s == 10 then 
             __panic(new ValueError.ptr("reflect.Convert", k));
-         -- /* end */ case 11:
-      case 4:
+         -- /* end */ if __s == 11 then 
+      if __s == 4 then 
       _r__6 = typ.common(); 
- __s = 21; case 21: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+ __s = 21; if __s == 21 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
       _r__7 = typ.Kind(); 
- __s = 22; case 22: if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
+ __s = 22; if __s == 22 then  if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
       __s = -1; return new Value.ptr(_r__6, (val), (((v.flag & 224) >>> 0) | ((_r__7 >>> 0))) >>> 0);
       
  end return; end if __f == nil then  __f = { __blk= cvtDirect end; end __f._1 = _1; __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._r__6 = _r__6; __f._r__7 = _r__7; __f.k = k; __f.slice = slice; __f.srcVal = srcVal; __f.typ = typ; __f.v = v; __f.val = val; __f.__s = __s; __f.__r = __r; return __f;
@@ -13852,12 +13905,12 @@ __packages["reflect"] = (function()
          rcvr = new (jsType(v.typ))(rcvr);
       end
       fn = (rcvr[__externalize(prop, __String)]);
-      return [___38, t, fn];
+      return {___38, t, fn};
    end;
    valueInterface = function(e)
       local _r, safe, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; safe = __f.safe; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; safe = __f.safe; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (v.flag == 0) {
          __panic(new ValueError.ptr("reflect.Value.Interface", 0));
       end
@@ -13868,11 +13921,11 @@ __packages["reflect"] = (function()
  if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
+      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ if __s == 1 then 
          _r = makeMethodValue("Interface", __clone(v, Value)); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          v = _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       if (isWrapped(v.typ)) {
          __s = -1; return ((new (jsType(v.typ))(__clone(v, Value).object())));
       end
@@ -13890,7 +13943,7 @@ __packages["reflect"] = (function()
    makeMethodValue = function(v)
       local _r, _tuple, fn, fv, op, rcvr, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; fn = __f.fn; fv = __f.fv; op = __f.op; rcvr = __f.rcvr; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; fn = __f.fn; fv = __f.fv; op = __f.op; rcvr = __f.rcvr; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       fn = [fn];
       rcvr = [rcvr];
       if (((v.flag & 512) >>> 0) == 0) {
@@ -13907,7 +13960,7 @@ __packages["reflect"] = (function()
          return new __jsObjectPtr(fn[0].apply(rcvr[0], __externalize(arguments__1, sliceType__8)));
       end; end)(fn, rcvr));
       _r = __clone(v, Value).Type().common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return new Value.ptr(_r, (fv), (((v.flag & 96) >>> 0) | 19) >>> 0);
       
  end return; end if __f == nil then  __f = { __blk= makeMethodValue end; end __f._r = _r; __f._tuple = _tuple; __f.fn = fn; __f.fv = fv; __f.op = op; __f.rcvr = rcvr; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -13926,7 +13979,7 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.Comparable = function()
       local _1, _r, _r__1, i, t, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; i = __f.i; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; i = __f.i; t = __f.t; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
          _1 = t.Kind();
          
@@ -13937,29 +13990,29 @@ __packages["reflect"] = (function()
  if (_1 == (25)) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if ((_1 == (19))  or  (_1 == (23))  or  (_1 == (21))) { */ case 2:
+         -- /* if ((_1 == (19))  or  (_1 == (23))  or  (_1 == (21))) { */ if __s == 2 then 
             __s = -1; return false;
-         -- /* end else if (_1 == (17)) { */ case 3:
+         -- /* end else if (_1 == (17)) { */ if __s == 3 then 
             _r = t.Elem().Comparable(); 
- __s = 6; case 6: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __s = -1; return _r;
-         -- /* end else if (_1 == (25)) { */ case 4:
+         -- /* end else if (_1 == (25)) { */ if __s == 4 then 
             i = 0;
-            -- /* while (true) do  */ case 7:
+            -- /* while (true) do  */ if __s == 7 then 
                -- /* if ( not (i < t.NumField())) { break; end */ if( not (i < t.NumField())) { __s = 8; continue; end
                _r__1 = t.Field(i).Type.Comparable(); 
- __s = 11; case 11: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                
  if ( not _r__1) { __s = 9; continue; end
                
  __s = 10; continue;
-               -- /* if ( not _r__1) { */ case 9:
+               -- /* if ( not _r__1) { */ if __s == 9 then 
                   __s = -1; return false;
-               -- /* end */ case 10:
+               -- /* end */ if __s == 10 then 
                i = i + (1) >> 0;
-            -- /* end */ __s = 7; continue; case 8:
-         -- /* end */ case 5:
-      case 1:
+            -- /* end */ __s = 7; continue; if __s == 8 then 
+         -- /* end */ if __s == 5 then 
+      if __s == 1 then 
       __s = -1; return true;
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.Comparable end; end __f._1 = _1; __f._r = _r; __f._r__1 = _r__1; __f.i = i; __f.t = t; __f.__s = __s; __f.__r = __r; return __f;
@@ -13968,7 +14021,7 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.Method = function(i)
       local _i, _i__1, _r, _r__1, _ref, _ref__1, arg, fl, fn, ft, i, in__1, m, methods, mt, mtyp, out, p, pname, prop, ret, t, tt, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; arg = __f.arg; fl = __f.fl; fn = __f.fn; ft = __f.ft; i = __f.i; in__1 = __f.in__1; m = __f.m; methods = __f.methods; mt = __f.mt; mtyp = __f.mtyp; out = __f.out; p = __f.p; pname = __f.pname; prop = __f.prop; ret = __f.ret; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; arg = __f.arg; fl = __f.fl; fn = __f.fn; ft = __f.ft; i = __f.i; in__1 = __f.in__1; m = __f.m; methods = __f.methods; mt = __f.mt; mtyp = __f.mtyp; out = __f.out; p = __f.p; pname = __f.pname; prop = __f.prop; ret = __f.ret; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       prop = [prop];
       m = new Method.ptr("", "", __ifaceNil, new Value.ptr(ptrType__1.nil, 0, 0), 0);
       t = this;
@@ -13978,7 +14031,7 @@ __packages["reflect"] = (function()
          __s = -1; return m;
       end
       _r = t.exportedMethods(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       methods = _r;
       if (i < 0  or  i >= methods.__length) {
          __panic(new __String("reflect: Method index out of range"));
@@ -14009,7 +14062,7 @@ __packages["reflect"] = (function()
          _i__1=_i__1+1;
       end
       _r__1 = FuncOf(in__1, out, ft.rtype.IsVariadic()); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) then break s ; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) then break s ; end
       mt = _r__1;
       m.Type = mt;
       prop[0] = __internalize(__methodSet(t.jsType)[i].prop, __String);
@@ -14066,7 +14119,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.call = function(1)
       local _1, _arg, _arg__1, _arg__2, _arg__3, _i, _i__1, _i__2, _r, _r__1, _r__10, _r__11, _r__12, _r__13, _r__14, _r__15, _r__2, _r__3, _r__4, _r__5, _r__6, _r__7, _r__8, _r__9, _ref, _ref__1, _ref__2, _tmp, _tmp__1, _tuple, arg, argsArray, elem, fn, i, i__1, i__2, i__3, in__1, isSlice, m, n, nin, nout, op, origIn, rcvr, results, ret, slice, t, targ, v, x, x__1, x__2, xt, xt__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _arg__3 = __f._arg__3; _i = __f._i; _i__1 = __f._i__1; _i__2 = __f._i__2; _r = __f._r; _r__1 = __f._r__1; _r__10 = __f._r__10; _r__11 = __f._r__11; _r__12 = __f._r__12; _r__13 = __f._r__13; _r__14 = __f._r__14; _r__15 = __f._r__15; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _r__9 = __f._r__9; _ref = __f._ref; _ref__1 = __f._ref__1; _ref__2 = __f._ref__2; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; arg = __f.arg; argsArray = __f.argsArray; elem = __f.elem; fn = __f.fn; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; i__3 = __f.i__3; in__1 = __f.in__1; isSlice = __f.isSlice; m = __f.m; n = __f.n; nin = __f.nin; nout = __f.nout; op = __f.op; origIn = __f.origIn; rcvr = __f.rcvr; results = __f.results; ret = __f.ret; slice = __f.slice; t = __f.t; targ = __f.targ; v = __f.v; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; xt = __f.xt; xt__1 = __f.xt__1; __s = __f.__s; __r = __f.__r; end ::::s::: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _arg__3 = __f._arg__3; _i = __f._i; _i__1 = __f._i__1; _i__2 = __f._i__2; _r = __f._r; _r__1 = __f._r__1; _r__10 = __f._r__10; _r__11 = __f._r__11; _r__12 = __f._r__12; _r__13 = __f._r__13; _r__14 = __f._r__14; _r__15 = __f._r__15; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _r__9 = __f._r__9; _ref = __f._ref; _ref__1 = __f._ref__1; _ref__2 = __f._ref__2; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; arg = __f.arg; argsArray = __f.argsArray; elem = __f.elem; fn = __f.fn; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; i__3 = __f.i__3; in__1 = __f.in__1; isSlice = __f.isSlice; m = __f.m; n = __f.n; nin = __f.nin; nout = __f.nout; op = __f.op; origIn = __f.origIn; rcvr = __f.rcvr; results = __f.results; ret = __f.ret; slice = __f.slice; t = __f.t; targ = __f.targ; v = __f.v; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; xt = __f.xt; xt__1 = __f.xt__1; __s = __f.__s; __r = __f.__r; end ::::s::: while (true) do  if __s == 0 then 
       v = this;
       t = ptrType__1.nil;
       fn = 0;
@@ -14121,68 +14174,68 @@ __packages["reflect"] = (function()
          _i=_i+1;
       end
       i = 0;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (i < n)) { break; end */ if( not (i < n)) { __s = 2; continue; end
          _tmp = __clone(((i < 0  or  i >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + i]), Value).Type();
          _tmp__1 = t.In(i);
          xt = _tmp;
          targ = _tmp__1;
          _r = xt.AssignableTo(targ); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          
  if ( not _r) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if ( not _r) { */ case 3:
+         -- /* if ( not _r) { */ if __s == 3 then 
             _r__1 = xt.__str(); 
- __s = 6; case 6: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             _r__2 = targ.__str(); 
- __s = 7; case 7: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             __panic(new __String("reflect: " + op + " using " + _r__1 + " as type " + _r__2));
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          i = i + (1) >> 0;
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       
  if ( not isSlice  and  t.IsVariadic()) { __s = 8; continue; end
       
  __s = 9; continue;
-      -- /* if ( not isSlice  and  t.IsVariadic()) { */ case 8:
+      -- /* if ( not isSlice  and  t.IsVariadic()) { */ if __s == 8 then 
          m = in__1.__length - n >> 0;
          _r__3 = MakeSlice(t.In(n), m, m); 
- __s = 10; case 10: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
          slice = _r__3;
          _r__4 = t.In(n).Elem(); 
- __s = 11; case 11: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
          elem = _r__4;
          i__1 = 0;
-         -- /* while (true) do  */ case 12:
+         -- /* while (true) do  */ if __s == 12 then 
             -- /* if ( not (i__1 < m)) { break; end */ if( not (i__1 < m)) { __s = 13; continue; end
             x__2 = (x__1 = n + i__1 >> 0, ((x__1 < 0  or  x__1 >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + x__1]));
             xt__1 = __clone(x__2, Value).Type();
             _r__5 = xt__1.AssignableTo(elem); 
- __s = 16; case 16: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 16; if __s == 16 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
             
  if ( not _r__5) { __s = 14; continue; end
             
  __s = 15; continue;
-            -- /* if ( not _r__5) { */ case 14:
+            -- /* if ( not _r__5) { */ if __s == 14 then 
                _r__6 = xt__1.__str(); 
- __s = 17; case 17: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+ __s = 17; if __s == 17 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
                _r__7 = elem.__str(); 
- __s = 18; case 18: if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
+ __s = 18; if __s == 18 then  if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
                __panic(new __String("reflect: cannot use " + _r__6 + " as type " + _r__7 + " in " + op));
-            -- /* end */ case 15:
+            -- /* end */ if __s == 15 then 
             _r__8 = __clone(slice, Value).Index(i__1); 
- __s = 19; case 19: if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
+ __s = 19; if __s == 19 then  if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
             __r = __clone(_r__8, Value).Set(__clone(x__2, Value)); 
- __s = 20; case 20: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 20; if __s == 20 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             i__1 = i__1 + (1) >> 0;
-         -- /* end */ __s = 12; continue; case 13:
+         -- /* end */ __s = 12; continue; if __s == 13 then 
          origIn = in__1;
          in__1 = __makeSlice(sliceType__9, (n + 1 >> 0));
          __copySlice(__subslice(in__1, 0, n), origIn);
          ((n < 0  or  n >= in__1.__length) ? (__throwRuntimeError("index out of range"), nil) : in__1.__array[in__1.__offset + n] = slice);
-      -- /* end */ case 9:
+      -- /* end */ if __s == 9 then 
       nin = in__1.__length;
       if ( not ((nin == t.NumIn()))) {
          __panic(new __String("reflect.Value.Call: wrong argument count"));
@@ -14191,27 +14244,27 @@ __packages["reflect"] = (function()
       argsArray = new (__global.Array)(t.NumIn());
       _ref__1 = in__1;
       _i__1 = 0;
-      -- /* while (true) do  */ case 21:
+      -- /* while (true) do  */ if __s == 21 then 
          -- /* if ( not (_i__1 < _ref__1.__length)) { break; end */ if( not (_i__1 < _ref__1.__length)) { __s = 22; continue; end
          i__2 = _i__1;
          arg = ((_i__1 < 0  or  _i__1 >= _ref__1.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref__1.__array[_ref__1.__offset + _i__1]);
          _arg = t.In(i__2);
          _r__9 = t.In(i__2).common(); 
- __s = 23; case 23: if __c then __c = false; _r__9 = _r__9.__blk(); end if (_r__9  and  _r__9.__blk ~= nil) { break s; end
+ __s = 23; if __s == 23 then  if __c then __c = false; _r__9 = _r__9.__blk(); end if (_r__9  and  _r__9.__blk ~= nil) { break s; end
          _arg__1 = _r__9;
          _arg__2 = 0;
          _r__10 = __clone(arg, Value).assignTo("reflect.Value.Call", _arg__1, _arg__2); 
- __s = 24; case 24: if __c then __c = false; _r__10 = _r__10.__blk(); end if (_r__10  and  _r__10.__blk ~= nil) { break s; end
+ __s = 24; if __s == 24 then  if __c then __c = false; _r__10 = _r__10.__blk(); end if (_r__10  and  _r__10.__blk ~= nil) { break s; end
          _r__11 = __clone(_r__10, Value).object(); 
- __s = 25; case 25: if __c then __c = false; _r__11 = _r__11.__blk(); end if (_r__11  and  _r__11.__blk ~= nil) { break s; end
+ __s = 25; if __s == 25 then  if __c then __c = false; _r__11 = _r__11.__blk(); end if (_r__11  and  _r__11.__blk ~= nil) { break s; end
          _arg__3 = _r__11;
          _r__12 = unwrapJsObject(_arg, _arg__3); 
- __s = 26; case 26: if __c then __c = false; _r__12 = _r__12.__blk(); end if (_r__12  and  _r__12.__blk ~= nil) { break s; end
+ __s = 26; if __s == 26 then  if __c then __c = false; _r__12 = _r__12.__blk(); end if (_r__12  and  _r__12.__blk ~= nil) { break s; end
          argsArray[i__2] = _r__12;
          _i__1=_i__1+1;
-      -- /* end */ __s = 21; continue; case 22:
+      -- /* end */ __s = 21; continue; if __s == 22 then 
       _r__13 = callHelper(new sliceType__3([new __jsObjectPtr(fn), new __jsObjectPtr(rcvr), new __jsObjectPtr(argsArray)])); 
- __s = 27; case 27: if __c then __c = false; _r__13 = _r__13.__blk(); end if (_r__13  and  _r__13.__blk ~= nil) { break s; end
+ __s = 27; if __s == 27 then  if __c then __c = false; _r__13 = _r__13.__blk(); end if (_r__13  and  _r__13.__blk ~= nil) { break s; end
       results = _r__13;
          _1 = nout;
          
@@ -14220,27 +14273,27 @@ __packages["reflect"] = (function()
  if (_1 == (1)) { __s = 30; continue; end
          
  __s = 31; continue;
-         -- /* if (_1 == (0)) { */ case 29:
+         -- /* if (_1 == (0)) { */ if __s == 29 then 
             __s = -1; return sliceType__9.nil;
-         -- /* end else if (_1 == (1)) { */ case 30:
+         -- /* end else if (_1 == (1)) { */ if __s == 30 then 
             _r__14 = makeValue(t.Out(0), wrapJsObject(t.Out(0), results), 0); 
- __s = 33; case 33: if __c then __c = false; _r__14 = _r__14.__blk(); end if (_r__14  and  _r__14.__blk ~= nil) { break s; end
+ __s = 33; if __s == 33 then  if __c then __c = false; _r__14 = _r__14.__blk(); end if (_r__14  and  _r__14.__blk ~= nil) { break s; end
             __s = -1; return new sliceType__9([__clone(_r__14, Value)]);
-         -- /* end else { */ case 31:
+         -- /* end else { */ if __s == 31 then 
             ret = __makeSlice(sliceType__9, nout);
             _ref__2 = ret;
             _i__2 = 0;
-            -- /* while (true) do  */ case 34:
+            -- /* while (true) do  */ if __s == 34 then 
                -- /* if ( not (_i__2 < _ref__2.__length)) { break; end */ if( not (_i__2 < _ref__2.__length)) { __s = 35; continue; end
                i__3 = _i__2;
                _r__15 = makeValue(t.Out(i__3), wrapJsObject(t.Out(i__3), results[i__3]), 0); 
- __s = 36; case 36: if __c then __c = false; _r__15 = _r__15.__blk(); end if (_r__15  and  _r__15.__blk ~= nil) { break s; end
+ __s = 36; if __s == 36 then  if __c then __c = false; _r__15 = _r__15.__blk(); end if (_r__15  and  _r__15.__blk ~= nil) { break s; end
                ((i__3 < 0  or  i__3 >= ret.__length) ? (__throwRuntimeError("index out of range"), nil) : ret.__array[ret.__offset + i__3] = _r__15);
                _i__2=_i__2+1;
-            -- /* end */ __s = 34; continue; case 35:
+            -- /* end */ __s = 34; continue; if __s == 35 then 
             __s = -1; return ret;
-         -- /* end */ case 32:
-      case 28:
+         -- /* end */ if __s == 32 then 
+      if __s == 28 then 
       __s = -1; return sliceType__9.nil;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.call end; end __f._1 = _1; __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._arg__3 = _arg__3; __f._i = _i; __f._i__1 = _i__1; __f._i__2 = _i__2; __f._r = _r; __f._r__1 = _r__1; __f._r__10 = _r__10; __f._r__11 = _r__11; __f._r__12 = _r__12; __f._r__13 = _r__13; __f._r__14 = _r__14; __f._r__15 = _r__15; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._r__6 = _r__6; __f._r__7 = _r__7; __f._r__8 = _r__8; __f._r__9 = _r__9; __f._ref = _ref; __f._ref__1 = _ref__1; __f._ref__2 = _ref__2; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.arg = arg; __f.argsArray = argsArray; __f.elem = elem; __f.fn = fn; __f.i = i; __f.i__1 = i__1; __f.i__2 = i__2; __f.i__3 = i__3; __f.in__1 = in__1; __f.isSlice = isSlice; __f.m = m; __f.n = n; __f.nin = nin; __f.nout = nout; __f.op = op; __f.origIn = origIn; __f.rcvr = rcvr; __f.results = results; __f.ret = ret; __f.slice = slice; __f.t = t; __f.targ = targ; __f.v = v; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.xt = xt; __f.xt__1 = xt__1; __f.__s = __s; __f.__r = __r; return __f;
@@ -14276,7 +14329,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Elem = function()
       local _1, _r, fl, k, tt, typ, v, val, val__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; fl = __f.fl; k = __f.k; tt = __f.tt; typ = __f.typ; v = __f.v; val = __f.val; val__1 = __f.val__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; fl = __f.fl; k = __f.k; tt = __f.tt; typ = __f.typ; v = __f.v; val = __f.val; val__1 = __f.val__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
          k = new flag(v.flag).kind();
          _1 = k;
@@ -14286,16 +14339,16 @@ __packages["reflect"] = (function()
  if (_1 == (22)) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (_1 == (20)) { */ case 2:
+         -- /* if (_1 == (20)) { */ if __s == 2 then 
             val = __clone(v, Value).object();
             if (val == __ifaceNil) {
                __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
             end
             typ = reflectType(val.constructor);
             _r = makeValue(typ, val.__val, (v.flag & 96) >>> 0); 
- __s = 6; case 6: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __s = -1; return _r;
-         -- /* end else if (_1 == (22)) { */ case 3:
+         -- /* end else if (_1 == (22)) { */ if __s == 3 then 
             if (__clone(v, Value).IsNil()) {
                __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
             end
@@ -14304,10 +14357,10 @@ __packages["reflect"] = (function()
             fl = (((((v.flag & 96) >>> 0) | 128) >>> 0) | 256) >>> 0;
             fl = (fl | (((tt.elem.Kind() >>> 0)))) >>> 0;
             __s = -1; return new Value.ptr(tt.elem, (wrapJsObject(tt.elem, val__1)), fl);
-         -- /* end else { */ case 4:
+         -- /* end else { */ if __s == 4 then 
             __panic(new ValueError.ptr("reflect.Value.Elem", k));
-         -- /* end */ case 5:
-      case 1:
+         -- /* end */ if __s == 5 then 
+      if __s == 1 then 
       __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Elem end; end __f._1 = _1; __f._r = _r; __f.fl = fl; __f.k = k; __f.tt = tt; __f.typ = typ; __f.v = v; __f.val = val; __f.val__1 = val__1; __f.__s = __s; __f.__r = __r; return __f;
@@ -14316,7 +14369,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Field = function(i)
       local _r, _r__1, _r__2, field, fl, i, jsTag, o, prop, s, tag, tt, typ, v, x, x__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; field = __f.field; fl = __f.fl; i = __f.i; jsTag = __f.jsTag; o = __f.o; prop = __f.prop; s = __f.s; tag = __f.tag; tt = __f.tt; typ = __f.typ; v = __f.v; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; field = __f.field; fl = __f.fl; i = __f.i; jsTag = __f.jsTag; o = __f.o; prop = __f.prop; s = __f.s; tag = __f.tag; tt = __f.tt; typ = __f.typ; v = __f.v; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       jsTag = [jsTag];
       prop = [prop];
       s = [s];
@@ -14345,23 +14398,23 @@ __packages["reflect"] = (function()
  if ( not (tag == "")  and   not ((i == 0))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not (tag == "")  and   not ((i == 0))) { */ case 1:
+      -- /* if ( not (tag == "")  and   not ((i == 0))) { */ if __s == 1 then 
          jsTag[0] = getJsTag(tag);
          
  if ( not (jsTag[0] == "")) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if ( not (jsTag[0] == "")) { */ case 3:
-            -- /* while (true) do  */ case 5:
+         -- /* if ( not (jsTag[0] == "")) { */ if __s == 3 then 
+            -- /* while (true) do  */ if __s == 5 then 
                o = [o];
                _r = __clone(v, Value).Field(0); 
- __s = 7; case 7: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
                v = _r;
                
  if (v.typ == jsObjectPtr) { __s = 8; continue; end
                
  __s = 9; continue;
-               -- /* if (v.typ == jsObjectPtr) { */ case 8:
+               -- /* if (v.typ == jsObjectPtr) { */ if __s == 8 then 
                   o[0] = __clone(v, Value).object().object;
                   __s = -1; return new Value.ptr(typ[0], (new (jsType(PtrTo(typ[0])))((function(p) return function()
                      return __internalize(o[0][__externalize(jsTag[0], __String)], jsType(typ[0]));
@@ -14369,34 +14422,34 @@ __packages["reflect"] = (function()
                      local x__2;
                      o[0][__externalize(jsTag[0], __String)] = __externalize(x__2, jsType(typ[0]));
                   end; end)(jsTag, o, prop, s, typ))), fl);
-               -- /* end */ case 9:
+               -- /* end */ if __s == 9 then 
                
  if (v.typ.Kind() == 22) { __s = 10; continue; end
                
  __s = 11; continue;
-               -- /* if (v.typ.Kind() == 22) { */ case 10:
+               -- /* if (v.typ.Kind() == 22) { */ if __s == 10 then 
                   _r__1 = __clone(v, Value).Elem(); 
- __s = 12; case 12: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                   v = _r__1;
-               -- /* end */ case 11:
-            -- /* end */ __s = 5; continue; case 6:
-         -- /* end */ case 4:
-      -- /* end */ case 2:
+               -- /* end */ if __s == 11 then 
+            -- /* end */ __s = 5; continue; if __s == 6 then 
+         -- /* end */ if __s == 4 then 
+      -- /* end */ if __s == 2 then 
       s[0] = v.ptr;
       
  if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { __s = 13; continue; end
       
  __s = 14; continue;
-      -- /* if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { */ case 13:
+      -- /* if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { */ if __s == 13 then 
          __s = -1; return new Value.ptr(typ[0], (new (jsType(PtrTo(typ[0])))((function(p) return function()
             return wrapJsObject(typ[0], s[0][__externalize(prop[0], __String)]);
          end; end)(jsTag, prop, s, typ), (function(p) return function(2)
             local x__2;
             s[0][__externalize(prop[0], __String)] = unwrapJsObject(typ[0], x__2);
          end; end)(jsTag, prop, s, typ))), fl);
-      -- /* end */ case 14:
+      -- /* end */ if __s == 14 then 
       _r__2 = makeValue(typ[0], wrapJsObject(typ[0], s[0][__externalize(prop[0], __String)]), fl); 
- __s = 15; case 15: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 15; if __s == 15 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       __s = -1; return _r__2;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Field end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f.field = field; __f.fl = fl; __f.i = i; __f.jsTag = jsTag; __f.o = o; __f.prop = prop; __f.s = s; __f.tag = tag; __f.tt = tt; __f.typ = typ; __f.v = v; __f.x = x; __f.x__1 = x__1; __f.__s = __s; __f.__r = __r; return __f;
@@ -14449,7 +14502,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Index = function(i)
       local _1, _r, _r__1, a, a__1, c, fl, fl__1, fl__2, i, k, s, str, tt, tt__1, typ, typ__1, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; a = __f.a; a__1 = __f.a__1; c = __f.c; fl = __f.fl; fl__1 = __f.fl__1; fl__2 = __f.fl__2; i = __f.i; k = __f.k; s = __f.s; str = __f.str; tt = __f.tt; tt__1 = __f.tt__1; typ = __f.typ; typ__1 = __f.typ__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; a = __f.a; a__1 = __f.a__1; c = __f.c; fl = __f.fl; fl__1 = __f.fl__1; fl__2 = __f.fl__2; i = __f.i; k = __f.k; s = __f.s; str = __f.str; tt = __f.tt; tt__1 = __f.tt__1; typ = __f.typ; typ__1 = __f.typ__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       a = [a];
       a__1 = [a__1];
       c = [c];
@@ -14467,7 +14520,7 @@ __packages["reflect"] = (function()
  if (_1 == (24)) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if (_1 == (17)) { */ case 2:
+         -- /* if (_1 == (17)) { */ if __s == 2 then 
             tt = (v.typ.kindType);
             if (i[0] < 0  or  i[0] > ((tt.len >> 0))) {
                __panic(new __String("reflect: array index out of range"));
@@ -14480,18 +14533,18 @@ __packages["reflect"] = (function()
  if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { __s = 7; continue; end
             
  __s = 8; continue;
-            -- /* if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { */ case 7:
+            -- /* if ( not ((((fl & 128) >>> 0) == 0))  and   not ((typ[0].Kind() == 17))  and   not ((typ[0].Kind() == 25))) { */ if __s == 7 then 
                __s = -1; return new Value.ptr(typ[0], (new (jsType(PtrTo(typ[0])))((function(1) return function()
                   return wrapJsObject(typ[0], a[0][i[0]]);
                end; end)(a, a__1, c, i, typ, typ__1), (function(1) return function(x)
                   local x;
                   a[0][i[0]] = unwrapJsObject(typ[0], x);
                end; end)(a, a__1, c, i, typ, typ__1))), fl);
-            -- /* end */ case 8:
+            -- /* end */ if __s == 8 then 
             _r = makeValue(typ[0], wrapJsObject(typ[0], a[0][i[0]]), fl); 
- __s = 9; case 9: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __s = -1; return _r;
-         -- /* end else if (_1 == (23)) { */ case 3:
+         -- /* end else if (_1 == (23)) { */ if __s == 3 then 
             s = __clone(v, Value).object();
             if (i[0] < 0  or  i[0] >= (__parseInt(s.__length) >> 0)) {
                __panic(new __String("reflect: slice index out of range"));
@@ -14506,18 +14559,18 @@ __packages["reflect"] = (function()
  if ( not ((((fl__1 & 128) >>> 0) == 0))  and   not ((typ__1[0].Kind() == 17))  and   not ((typ__1[0].Kind() == 25))) { __s = 10; continue; end
             
  __s = 11; continue;
-            -- /* if ( not ((((fl__1 & 128) >>> 0) == 0))  and   not ((typ__1[0].Kind() == 17))  and   not ((typ__1[0].Kind() == 25))) { */ case 10:
+            -- /* if ( not ((((fl__1 & 128) >>> 0) == 0))  and   not ((typ__1[0].Kind() == 17))  and   not ((typ__1[0].Kind() == 25))) { */ if __s == 10 then 
                __s = -1; return new Value.ptr(typ__1[0], (new (jsType(PtrTo(typ__1[0])))((function(1) return function()
                   return wrapJsObject(typ__1[0], a__1[0][i[0]]);
                end; end)(a, a__1, c, i, typ, typ__1), (function(1) return function(x)
                   local x;
                   a__1[0][i[0]] = unwrapJsObject(typ__1[0], x);
                end; end)(a, a__1, c, i, typ, typ__1))), fl__1);
-            -- /* end */ case 11:
+            -- /* end */ if __s == 11 then 
             _r__1 = makeValue(typ__1[0], wrapJsObject(typ__1[0], a__1[0][i[0]]), fl__1); 
- __s = 12; case 12: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             __s = -1; return _r__1;
-         -- /* end else if (_1 == (24)) { */ case 4:
+         -- /* end else if (_1 == (24)) { */ if __s == 4 then 
             str = (v.ptr).__get();
             if (i[0] < 0  or  i[0] >= #str) {
                __panic(new __String("reflect: string index out of range"));
@@ -14525,10 +14578,10 @@ __packages["reflect"] = (function()
             fl__2 = (((v.flag & 96) >>> 0) | 8) >>> 0;
             c[0] = str.charCodeAt(i[0]);
             __s = -1; return new Value.ptr(uint8Type, ((c.__ptr  or  (c.__ptr = new ptrType__4(function() return this.__target[0]; end, function(v) this.__target[0] = __v; end, c)))), (fl__2 | 128) >>> 0);
-         -- /* end else { */ case 5:
+         -- /* end else { */ if __s == 5 then 
             __panic(new ValueError.ptr("reflect.Value.Index", k));
-         -- /* end */ case 6:
-      case 1:
+         -- /* end */ if __s == 6 then 
+      if __s == 1 then 
       __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Index end; end __f._1 = _1; __f._r = _r; __f._r__1 = _r__1; __f.a = a; __f.a__1 = a__1; __f.c = c; __f.fl = fl; __f.fl__1 = fl__1; __f.fl__2 = fl__2; __f.i = i; __f.k = k; __f.s = s; __f.str = str; __f.tt = tt; __f.tt__1 = tt__1; __f.typ = typ; __f.typ__1 = typ__1; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -14606,18 +14659,18 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Set = function(x)
       local _1, _r, _r__1, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBeAssignable();
       new flag(x.flag).mustBeExported();
       _r = __clone(x, Value).assignTo("reflect.Set", v.typ, 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       x = _r;
       
  if ( not ((((v.flag & 128) >>> 0) == 0))) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if ( not ((((v.flag & 128) >>> 0) == 0))) { */ case 2:
+      -- /* if ( not ((((v.flag & 128) >>> 0) == 0))) { */ if __s == 2 then 
             _1 = v.typ.Kind();
             
  if (_1 == (17)) { __s = 5; continue; end
@@ -14627,23 +14680,23 @@ __packages["reflect"] = (function()
  if (_1 == (25)) { __s = 7; continue; end
             
  __s = 8; continue;
-            -- /* if (_1 == (17)) { */ case 5:
+            -- /* if (_1 == (17)) { */ if __s == 5 then 
                jsType(v.typ).copy(v.ptr, x.ptr);
                __s = 9; continue;
-            -- /* end else if (_1 == (20)) { */ case 6:
+            -- /* end else if (_1 == (20)) { */ if __s == 6 then 
                _r__1 = valueInterface(__clone(x, Value), false); 
- __s = 10; case 10: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                v.ptr.__set(_r__1);
                __s = 9; continue;
-            -- /* end else if (_1 == (25)) { */ case 7:
+            -- /* end else if (_1 == (25)) { */ if __s == 7 then 
                copyStruct(v.ptr, x.ptr, v.typ);
                __s = 9; continue;
-            -- /* end else { */ case 8:
+            -- /* end else { */ if __s == 8 then 
                v.ptr.__set(__clone(x, Value).object());
-            -- /* end */ case 9:
-         case 4:
+            -- /* end */ if __s == 9 then 
+         if __s == 4 then 
          __s = -1; return;
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       v.ptr = x.ptr;
       __s = -1; return;
       
@@ -14653,35 +14706,35 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.SetBytes = function(x)
       local _r, _r__1, _v, slice, typedSlice, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _v = __f._v; slice = __f.slice; typedSlice = __f.typedSlice; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _v = __f._v; slice = __f.slice; typedSlice = __f.typedSlice; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBeAssignable();
       new flag(v.flag).mustBe(23);
       _r = v.typ.Elem().Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 8))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 8))) { */ case 1:
+      -- /* if ( not ((_r == 8))) { */ if __s == 1 then 
          __panic(new __String("reflect.Value.SetBytes of non-byte slice"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       slice = x;
       if ( not (v.typ.Name() == "")) { _v = true; __s = 6; continue s; end
       _r__1 = v.typ.Elem().Name(); 
- __s = 7; case 7: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
-      _v =  not (_r__1 == ""); case 6:
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+      _v =  not (_r__1 == ""); if __s == 6 then 
       
  if (_v) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if (_v) { */ case 4:
+      -- /* if (_v) { */ if __s == 4 then 
          typedSlice = new (jsType(v.typ))(slice.__array);
          typedSlice.__offset = slice.__offset;
          typedSlice.__length = slice.__length;
          typedSlice.__capacity = slice.__capacity;
          slice = typedSlice;
-      -- /* end */ case 5:
+      -- /* end */ if __s == 5 then 
       v.ptr.__set(slice);
       __s = -1; return;
       
@@ -14723,7 +14776,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Slice = function(j)
       local _1, _r, _r__1, cap, i, j, kind, s, str, tt, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; cap = __f.cap; i = __f.i; j = __f.j; kind = __f.kind; s = __f.s; str = __f.str; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; cap = __f.cap; i = __f.i; j = __f.j; kind = __f.kind; s = __f.s; str = __f.str; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       cap = 0;
       typ = __ifaceNil;
@@ -14738,7 +14791,7 @@ __packages["reflect"] = (function()
  if (_1 == (24)) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if (_1 == (17)) { */ case 2:
+         -- /* if (_1 == (17)) { */ if __s == 2 then 
             if (((v.flag & 256) >>> 0) == 0) {
                __panic(new __String("reflect.Value.Slice: slice of unaddressable array"));
             end
@@ -14747,28 +14800,28 @@ __packages["reflect"] = (function()
             typ = SliceOf(tt.elem);
             s = new (jsType(typ))(__clone(v, Value).object());
             __s = 6; continue;
-         -- /* end else if (_1 == (23)) { */ case 3:
+         -- /* end else if (_1 == (23)) { */ if __s == 3 then 
             typ = v.typ;
             s = __clone(v, Value).object();
             cap = __parseInt(s.__capacity) >> 0;
             __s = 6; continue;
-         -- /* end else if (_1 == (24)) { */ case 4:
+         -- /* end else if (_1 == (24)) { */ if __s == 4 then 
             str = (v.ptr).__get();
             if (i < 0  or  j < i  or  j > #str) {
                __panic(new __String("reflect.Value.Slice: string slice index out of bounds"));
             end
             _r = ValueOf(new __String(__substring(str, i, j))); 
- __s = 7; case 7: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __s = -1; return _r;
-         -- /* end else { */ case 5:
+         -- /* end else { */ if __s == 5 then 
             __panic(new ValueError.ptr("reflect.Value.Slice", kind));
-         -- /* end */ case 6:
-      case 1:
+         -- /* end */ if __s == 6 then 
+      if __s == 1 then 
       if (i < 0  or  j < i  or  j > cap) {
          __panic(new __String("reflect.Value.Slice: slice index out of bounds"));
       end
       _r__1 = makeValue(typ, __subslice(s, i, j), (v.flag & 96) >>> 0); 
- __s = 8; case 8: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Slice end; end __f._1 = _1; __f._r = _r; __f._r__1 = _r__1; __f.cap = cap; __f.i = i; __f.j = j; __f.kind = kind; __f.s = s; __f.str = str; __f.tt = tt; __f.typ = typ; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -14777,7 +14830,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Slice3 = function(k)
       local _1, _r, cap, i, j, k, kind, s, tt, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; cap = __f.cap; i = __f.i; j = __f.j; k = __f.k; kind = __f.kind; s = __f.s; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; cap = __f.cap; i = __f.i; j = __f.j; k = __f.k; kind = __f.kind; s = __f.s; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       cap = 0;
       typ = __ifaceNil;
@@ -14803,7 +14856,7 @@ __packages["reflect"] = (function()
          __panic(new __String("reflect.Value.Slice3: slice index out of bounds"));
       end
       _r = makeValue(typ, __subslice(s, i, j, k), (v.flag & 96) >>> 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Slice3 end; end __f._1 = _1; __f._r = _r; __f.cap = cap; __f.i = i; __f.j = j; __f.k = k; __f.kind = kind; __f.s = s; __f.tt = tt; __f.typ = typ; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -14820,7 +14873,7 @@ __packages["reflect"] = (function()
    chanrecv = function(l)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, ch, comms, nb, received, recvRes, selectRes, selected, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; ch = __f.ch; comms = __f.comms; nb = __f.nb; received = __f.received; recvRes = __f.recvRes; selectRes = __f.selectRes; selected = __f.selected; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; ch = __f.ch; comms = __f.comms; nb = __f.nb; received = __f.received; recvRes = __f.recvRes; selectRes = __f.selectRes; selected = __f.selected; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       selected = false;
       received = false;
       comms = new sliceType__11([new sliceType__8([ch])]);
@@ -14828,14 +14881,14 @@ __packages["reflect"] = (function()
          comms = __append(comms, new sliceType__8([]));
       end
       _r = selectHelper(new sliceType__3([comms])); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       selectRes = _r;
       if (nb  and  ((__parseInt(selectRes[0]) >> 0) == 1)) {
          _tmp = false;
          _tmp__1 = false;
          selected = _tmp;
          received = _tmp__1;
-         __s = -1; return [selected, received];
+         __s = -1; return {selected, received};
       end
       recvRes = selectRes[1];
       val.__set(recvRes[0]);
@@ -14843,20 +14896,20 @@ __packages["reflect"] = (function()
       _tmp__3 =  not  not (recvRes[1]);
       selected = _tmp__2;
       received = _tmp__3;
-      __s = -1; return [selected, received];
+      __s = -1; return {selected, received};
       
  end return; end if __f == nil then  __f = { __blk= chanrecv end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f.ch = ch; __f.comms = comms; __f.nb = nb; __f.received = received; __f.recvRes = recvRes; __f.selectRes = selectRes; __f.selected = selected; __f.val = val; __f.__s = __s; __f.__r = __r; return __f;
    end;
    chansend = function(b)
       local _r, ch, comms, nb, selectRes, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; ch = __f.ch; comms = __f.comms; nb = __f.nb; selectRes = __f.selectRes; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; ch = __f.ch; comms = __f.comms; nb = __f.nb; selectRes = __f.selectRes; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       comms = new sliceType__11([new sliceType__8([ch, val.__get()])]);
       if (nb) {
          comms = __append(comms, new sliceType__8([]));
       end
       _r = selectHelper(new sliceType__3([comms])); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       selectRes = _r;
       if (nb  and  ((__parseInt(selectRes[0]) >> 0) == 1)) {
          __s = -1; return false;
@@ -14942,10 +14995,10 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.exportedMethods = function()
       local _i, _i__1, _r, _r__1, _ref, _ref__1, _tuple, _tuple__1, allExported, allm, found, m, m__1, methods, methodsi, name__1, name__2, t, ut, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; allExported = __f.allExported; allm = __f.allm; found = __f.found; m = __f.m; m__1 = __f.m__1; methods = __f.methods; methodsi = __f.methodsi; name__1 = __f.name__1; name__2 = __f.name__2; t = __f.t; ut = __f.ut; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; allExported = __f.allExported; allm = __f.allm; found = __f.found; m = __f.m; m__1 = __f.m__1; methods = __f.methods; methodsi = __f.methodsi; name__1 = __f.name__1; name__2 = __f.name__2; t = __f.t; ut = __f.ut; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       _r = methodCache.Load(t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       methodsi = _tuple[0];
       found = _tuple[1];
@@ -14989,7 +15042,7 @@ __packages["reflect"] = (function()
          methods = __subslice(methods, 0, methods.__length, methods.__length);
       end
       _r__1 = methodCache.LoadOrStore(t, methods); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _tuple__1 = _r__1;
       methodsi = _tuple__1[0];
       __s = -1; return __assertType(methodsi, sliceType__5);
@@ -15000,7 +15053,7 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.NumMethod = function()
       local _r, t, tt, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if (t.Kind() == 20) {
          tt = (t.kindType);
@@ -15010,7 +15063,7 @@ __packages["reflect"] = (function()
          __s = -1; return 0;
       end
       _r = t.exportedMethods(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r.__length;
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.NumMethod end; end __f._r = _r; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
@@ -15019,7 +15072,7 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.MethodByName = function(1)
       local _r, _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tuple, i, m, name__1, ok, p, pname, t, tt, ut, utmethods, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; i = __f.i; m = __f.m; name__1 = __f.name__1; ok = __f.ok; p = __f.p; pname = __f.pname; t = __f.t; tt = __f.tt; ut = __f.ut; utmethods = __f.utmethods; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; _tmp__4 = __f._tmp__4; _tmp__5 = __f._tmp__5; _tuple = __f._tuple; i = __f.i; m = __f.m; name__1 = __f.name__1; ok = __f.ok; p = __f.p; pname = __f.pname; t = __f.t; tt = __f.tt; ut = __f.ut; utmethods = __f.utmethods; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       m = new Method.ptr("", "", __ifaceNil, new Value.ptr(ptrType__1.nil, 0, 0), 0);
       ok = false;
       t = this;
@@ -15028,7 +15081,7 @@ __packages["reflect"] = (function()
          _tuple = tt.MethodByName(name__1);
          Method.copy(m, _tuple[0]);
          ok = _tuple[1];
-         __s = -1; return [m, ok];
+         __s = -1; return {m, ok};
       end
       ut = t.uncommon();
       if (ut == ptrType__5.nil) {
@@ -15036,11 +15089,11 @@ __packages["reflect"] = (function()
          _tmp__1 = false;
          Method.copy(m, _tmp);
          ok = _tmp__1;
-         __s = -1; return [m, ok];
+         __s = -1; return {m, ok};
       end
       utmethods = ut.methods();
       i = 0;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (i < ((ut.mcount >> 0)))) { break; end */ if( not (i < ((ut.mcount >> 0)))) { __s = 2; continue; end
          p = __clone(((i < 0  or  i >= utmethods.__length) ? (__throwRuntimeError("index out of range"), nil) : utmethods.__array[utmethods.__offset + i]), method);
          pname = __clone(t.nameOff(p.name), name);
@@ -15048,22 +15101,22 @@ __packages["reflect"] = (function()
  if (__clone(pname, name).isExported()  and  __clone(pname, name).name() == name__1) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (__clone(pname, name).isExported()  and  __clone(pname, name).name() == name__1) { */ case 3:
+         -- /* if (__clone(pname, name).isExported()  and  __clone(pname, name).name() == name__1) { */ if __s == 3 then 
             _r = t.Method(i); 
- __s = 5; case 5: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             _tmp__2 = __clone(_r, Method);
             _tmp__3 = true;
             Method.copy(m, _tmp__2);
             ok = _tmp__3;
-            __s = -1; return [m, ok];
-         -- /* end */ case 4:
+            __s = -1; return {m, ok};
+         -- /* end */ if __s == 4 then 
          i = i + (1) >> 0;
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       _tmp__4 = new Method.ptr("", "", __ifaceNil, new Value.ptr(ptrType__1.nil, 0, 0), 0);
       _tmp__5 = false;
       Method.copy(m, _tmp__4);
       ok = _tmp__5;
-      __s = -1; return [m, ok];
+      __s = -1; return {m, ok};
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.MethodByName end; end __f._r = _r; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f._tmp__4 = _tmp__4; __f._tmp__5 = _tmp__5; __f._tuple = _tuple; __f.i = i; __f.m = m; __f.name__1 = name__1; __f.ok = ok; __f.p = p; __f.pname = pname; __f.t = t; __f.tt = tt; __f.ut = ut; __f.utmethods = utmethods; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -15155,14 +15208,14 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.FieldByIndex = function(x)
       local _r, index, t, tt, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; index = __f.index; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; index = __f.index; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if ( not ((t.Kind() == 25))) {
          __panic(new __String("reflect: FieldByIndex of non-struct type"));
       end
       tt = (t.kindType);
       _r = tt.FieldByIndex(index); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByIndex end; end __f._r = _r; __f.index = index; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
@@ -15171,14 +15224,14 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.FieldByName = function(1)
       local _r, name__1, t, tt, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; name__1 = __f.name__1; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; name__1 = __f.name__1; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if ( not ((t.Kind() == 25))) {
          __panic(new __String("reflect: FieldByName of non-struct type"));
       end
       tt = (t.kindType);
       _r = tt.FieldByName(name__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByName end; end __f._r = _r; __f.name__1 = name__1; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
@@ -15187,14 +15240,14 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.FieldByNameFunc = function(h)
       local _r, match, t, tt, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; match = __f.match; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; match = __f.match; t = __f.t; tt = __f.tt; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if ( not ((t.Kind() == 25))) {
          __panic(new __String("reflect: FieldByNameFunc of non-struct type"));
       end
       tt = (t.kindType);
       _r = tt.FieldByNameFunc(match); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.FieldByNameFunc end; end __f._r = _r; __f.match = match; __f.t = t; __f.tt = tt; __f.__s = __s; __f.__r = __r; return __f;
@@ -15317,7 +15370,7 @@ __packages["reflect"] = (function()
       ok = false;
       t = this;
       if (t == ptrType__7.nil) {
-         return [m, ok];
+         return {m, ok};
       end
       p = ptrType__8.nil;
       _ref = t.methods;
@@ -15331,11 +15384,11 @@ __packages["reflect"] = (function()
             _tmp__1 = true;
             Method.copy(m, _tmp);
             ok = _tmp__1;
-            return [m, ok];
+            return {m, ok};
          end
          _i=_i+1;
       end
-      return [m, ok];
+      return {m, ok};
    end;
    interfaceType.prototype.MethodByName = function(1) return this.__val.MethodByName(name__1); end;
    StructTag.prototype.Get = function(y)
@@ -15396,14 +15449,14 @@ __packages["reflect"] = (function()
             _tmp__1 = true;
             value = _tmp;
             ok = _tmp__1;
-            return [value, ok];
+            return {value, ok};
          end
       end
       _tmp__2 = "";
       _tmp__3 = false;
       value = _tmp__2;
       ok = _tmp__3;
-      return [value, ok];
+      return {value, ok};
    end;
    __ptrType(StructTag).prototype.Lookup = function(y) return new StructTag(this.__get()).Lookup(key); end;
    structType.ptr.prototype.Field = function(i)
@@ -15435,13 +15488,13 @@ __packages["reflect"] = (function()
    structType.ptr.prototype.FieldByIndex = function(x)
       local _i, _r, _r__1, _r__2, _r__3, _r__4, _ref, _v, f, ft, i, index, t, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _ref = __f._ref; _v = __f._v; f = __f.f; ft = __f.ft; i = __f.i; index = __f.index; t = __f.t; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _ref = __f._ref; _v = __f._v; f = __f.f; ft = __f.ft; i = __f.i; index = __f.index; t = __f.t; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       f = new StructField.ptr("", "", __ifaceNil, "", 0, sliceType__13.nil, false);
       t = this;
       f.Type = toType(t.rtype);
       _ref = index;
       _i = 0;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 2; continue; end
          i = _i;
          x = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
@@ -15449,32 +15502,32 @@ __packages["reflect"] = (function()
  if (i > 0) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if (i > 0) { */ case 3:
+         -- /* if (i > 0) { */ if __s == 3 then 
             ft = f.Type;
             _r = ft.Kind(); 
- __s = 8; case 8: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             if ( not (_r == 22)) { _v = false; __s = 7; continue s; end
             _r__1 = ft.Elem(); 
- __s = 9; case 9: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             _r__2 = _r__1.Kind(); 
- __s = 10; case 10: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
-            _v = _r__2 == 25; case 7:
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+            _v = _r__2 == 25; if __s == 7 then 
             
  if (_v) { __s = 5; continue; end
             
  __s = 6; continue;
-            -- /* if (_v) { */ case 5:
+            -- /* if (_v) { */ if __s == 5 then 
                _r__3 = ft.Elem(); 
- __s = 11; case 11: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
                ft = _r__3;
-            -- /* end */ case 6:
+            -- /* end */ if __s == 6 then 
             f.Type = ft;
-         -- /* end */ case 4:
+         -- /* end */ if __s == 4 then 
          _r__4 = f.Type.Field(x); 
- __s = 12; case 12: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
          StructField.copy(f, _r__4);
          _i=_i+1;
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       __s = -1; return f;
       
  end return; end if __f == nil then  __f = { __blk= structType.ptr.prototype.FieldByIndex end; end __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._ref = _ref; __f._v = _v; __f.f = f; __f.ft = ft; __f.i = i; __f.index = index; __f.t = t; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -15483,7 +15536,7 @@ __packages["reflect"] = (function()
    structType.ptr.prototype.FieldByNameFunc = function(h)
       local _entry, _entry__1, _entry__2, _entry__3, _i, _i__1, _key, _key__1, _key__2, _key__3, _r, _r__1, _ref, _ref__1, _tmp, _tmp__1, _tmp__2, _tmp__3, count, current, f, fname, i, index, match, next, nextCount, ntyp, ok, result, scan, styp, t, t__1, visited, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _entry__3 = __f._entry__3; _i = __f._i; _i__1 = __f._i__1; _key = __f._key; _key__1 = __f._key__1; _key__2 = __f._key__2; _key__3 = __f._key__3; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; count = __f.count; current = __f.current; f = __f.f; fname = __f.fname; i = __f.i; index = __f.index; match = __f.match; next = __f.next; nextCount = __f.nextCount; ntyp = __f.ntyp; ok = __f.ok; result = __f.result; scan = __f.scan; styp = __f.styp; t = __f.t; t__1 = __f.t__1; visited = __f.visited; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _entry = __f._entry; _entry__1 = __f._entry__1; _entry__2 = __f._entry__2; _entry__3 = __f._entry__3; _i = __f._i; _i__1 = __f._i__1; _key = __f._key; _key__1 = __f._key__1; _key__2 = __f._key__2; _key__3 = __f._key__3; _r = __f._r; _r__1 = __f._r__1; _ref = __f._ref; _ref__1 = __f._ref__1; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tmp__2 = __f._tmp__2; _tmp__3 = __f._tmp__3; count = __f.count; current = __f.current; f = __f.f; fname = __f.fname; i = __f.i; index = __f.index; match = __f.match; next = __f.next; nextCount = __f.nextCount; ntyp = __f.ntyp; ok = __f.ok; result = __f.result; scan = __f.scan; styp = __f.styp; t = __f.t; t__1 = __f.t__1; visited = __f.visited; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       result = new StructField.ptr("", "", __ifaceNil, "", 0, sliceType__13.nil, false);
       ok = false;
       t = this;
@@ -15491,7 +15544,7 @@ __packages["reflect"] = (function()
       next = new sliceType__14([new fieldScan.ptr(t, sliceType__13.nil)]);
       nextCount = false;
       visited = __makeMap(ptrType__9.keyFor, []);
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (next.__length > 0)) { break; end */ if( not (next.__length > 0)) { __s = 2; continue; end
          _tmp = next;
          _tmp__1 = __subslice(current, 0, 0);
@@ -15501,7 +15554,7 @@ __packages["reflect"] = (function()
          nextCount = false;
          _ref = current;
          _i = 0;
-         -- /* while (true) do  */ case 3:
+         -- /* while (true) do  */ if __s == 3 then 
             -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 4; continue; end
             scan = __clone(((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]), fieldScan);
             t__1 = scan.typ;
@@ -15509,14 +15562,14 @@ __packages["reflect"] = (function()
  if ((_entry = visited[ptrType__9.keyFor(t__1)], _entry ~= nil ? _entry.v : false)) { __s = 5; continue; end
             
  __s = 6; continue;
-            -- /* if ((_entry = visited[ptrType__9.keyFor(t__1)], _entry ~= nil ? _entry.v : false)) { */ case 5:
+            -- /* if ((_entry = visited[ptrType__9.keyFor(t__1)], _entry ~= nil ? _entry.v : false)) { */ if __s == 5 then 
                _i=_i+1;
                -- /* continue; */ __s = 3; continue;
-            -- /* end */ case 6:
+            -- /* end */ if __s == 6 then 
             _key = t__1; (visited  or  __throwRuntimeError("assignment to entry in nil map"))[ptrType__9.keyFor(_key)] = { k: _key, v: true end;
             _ref__1 = t__1.fields;
             _i__1 = 0;
-            -- /* while (true) do  */ case 7:
+            -- /* while (true) do  */ if __s == 7 then 
                -- /* if ( not (_i__1 < _ref__1.__length)) { break; end */ if( not (_i__1 < _ref__1.__length)) { __s = 8; continue; end
                i = _i__1;
                f = (x = t__1.fields, ((i < 0  or  i >= x.__length) ? (__throwRuntimeError("index out of range"), nil) : x.__array[x.__offset + i]));
@@ -15526,31 +15579,31 @@ __packages["reflect"] = (function()
  if (f.anon()) { __s = 9; continue; end
                
  __s = 10; continue;
-               -- /* if (f.anon()) { */ case 9:
+               -- /* if (f.anon()) { */ if __s == 9 then 
                   ntyp = f.typ;
                   
  if (ntyp.Kind() == 22) { __s = 11; continue; end
                   
  __s = 12; continue;
-                  -- /* if (ntyp.Kind() == 22) { */ case 11:
+                  -- /* if (ntyp.Kind() == 22) { */ if __s == 11 then 
                      _r = ntyp.Elem().common(); 
- __s = 13; case 13: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 13; if __s == 13 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
                      ntyp = _r;
-                  -- /* end */ case 12:
-               -- /* end */ case 10:
+                  -- /* end */ if __s == 12 then 
+               -- /* end */ if __s == 10 then 
                _r__1 = match(fname); 
- __s = 16; case 16: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 16; if __s == 16 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                
  if (_r__1) { __s = 14; continue; end
                
  __s = 15; continue;
-               -- /* if (_r__1) { */ case 14:
+               -- /* if (_r__1) { */ if __s == 14 then 
                   if ((_entry__1 = count[ptrType__9.keyFor(t__1)], _entry__1 ~= nil ? _entry__1.v : 0) > 1  or  ok) {
                      _tmp__2 = new StructField.ptr("", "", __ifaceNil, "", 0, sliceType__13.nil, false);
                      _tmp__3 = false;
                      StructField.copy(result, _tmp__2);
                      ok = _tmp__3;
-                     __s = -1; return [result, ok];
+                     __s = -1; return {result, ok};
                   end
                   StructField.copy(result, t__1.Field(i));
                   result.Index = sliceType__13.nil;
@@ -15559,7 +15612,7 @@ __packages["reflect"] = (function()
                   ok = true;
                   _i__1=_i__1+1;
                   -- /* continue; */ __s = 7; continue;
-               -- /* end */ case 15:
+               -- /* end */ if __s == 15 then 
                if (ok  or  ntyp == ptrType__1.nil  or   not ((ntyp.Kind() == 25))) {
                   _i__1=_i__1+1;
                   -- /* continue; */ __s = 7; continue;
@@ -15582,14 +15635,14 @@ __packages["reflect"] = (function()
                index = __append(index, i);
                next = __append(next, new fieldScan.ptr(styp, index));
                _i__1=_i__1+1;
-            -- /* end */ __s = 7; continue; case 8:
+            -- /* end */ __s = 7; continue; if __s == 8 then 
             _i=_i+1;
-         -- /* end */ __s = 3; continue; case 4:
+         -- /* end */ __s = 3; continue; if __s == 4 then 
          if (ok) {
             -- /* break; */ __s = 2; continue;
          end
-      -- /* end */ __s = 1; continue; case 2:
-      __s = -1; return [result, ok];
+      -- /* end */ __s = 1; continue; if __s == 2 then 
+      __s = -1; return {result, ok};
       
  end return; end if __f == nil then  __f = { __blk= structType.ptr.prototype.FieldByNameFunc end; end __f._entry = _entry; __f._entry__1 = _entry__1; __f._entry__2 = _entry__2; __f._entry__3 = _entry__3; __f._i = _i; __f._i__1 = _i__1; __f._key = _key; __f._key__1 = _key__1; __f._key__2 = _key__2; __f._key__3 = _key__3; __f._r = _r; __f._r__1 = _r__1; __f._ref = _ref; __f._ref__1 = _ref__1; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tmp__2 = _tmp__2; __f._tmp__3 = _tmp__3; __f.count = count; __f.current = current; __f.f = f; __f.fname = fname; __f.i = i; __f.index = index; __f.match = match; __f.next = next; __f.nextCount = nextCount; __f.ntyp = ntyp; __f.ok = ok; __f.result = result; __f.scan = scan; __f.styp = styp; __f.t = t; __f.t__1 = t__1; __f.visited = visited; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -15597,7 +15650,7 @@ __packages["reflect"] = (function()
    structType.ptr.prototype.FieldByName = function(1)
       local _i, _r, _ref, _tmp, _tmp__1, _tuple, f, hasAnon, i, name__1, present, t, tf, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _ref = __f._ref; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; f = __f.f; hasAnon = __f.hasAnon; i = __f.i; name__1 = __f.name__1; present = __f.present; t = __f.t; tf = __f.tf; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _ref = __f._ref; _tmp = __f._tmp; _tmp__1 = __f._tmp__1; _tuple = __f._tuple; f = __f.f; hasAnon = __f.hasAnon; i = __f.i; name__1 = __f.name__1; present = __f.present; t = __f.t; tf = __f.tf; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       name__1 = [name__1];
       f = new StructField.ptr("", "", __ifaceNil, "", 0, sliceType__13.nil, false);
       present = false;
@@ -15615,7 +15668,7 @@ __packages["reflect"] = (function()
                _tmp__1 = true;
                StructField.copy(f, _tmp);
                present = _tmp__1;
-               __s = -1; return [f, present];
+               __s = -1; return {f, present};
             end
             if (tf.anon()) {
                hasAnon = true;
@@ -15624,17 +15677,17 @@ __packages["reflect"] = (function()
          end
       end
       if ( not hasAnon) {
-         __s = -1; return [f, present];
+         __s = -1; return {f, present};
       end
       _r = t.FieldByNameFunc((function(1) return function(s)
          local s;
          return s == name__1[0];
       end; end)(name__1)); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       StructField.copy(f, _tuple[0]);
       present = _tuple[1];
-      __s = -1; return [f, present];
+      __s = -1; return {f, present};
       
  end return; end if __f == nil then  __f = { __blk= structType.ptr.prototype.FieldByName end; end __f._i = _i; __f._r = _r; __f._ref = _ref; __f._tmp = _tmp; __f._tmp__1 = _tmp__1; __f._tuple = _tuple; __f.f = f; __f.hasAnon = hasAnon; __f.i = i; __f.name__1 = name__1; __f.present = present; __f.t = t; __f.tf = tf; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -15647,20 +15700,20 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.Implements = function(u)
       local _r, t, u, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if (__interfaceIsEqual(u, __ifaceNil)) {
          __panic(new __String("reflect: nil type passed to Type.Implements"));
       end
       _r = u.Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 20))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 20))) { */ case 1:
+      -- /* if ( not ((_r == 20))) { */ if __s == 1 then 
          __panic(new __String("reflect: non-interface type passed to Type.Implements"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return implements__1(__assertType(u, ptrType__1), t);
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.Implements end; end __f._r = _r; __f.t = t; __f.u = u; __f.__s = __s; __f.__r = __r; return __f;
@@ -15669,14 +15722,14 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.AssignableTo = function(u)
       local _r, t, u, uu, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; uu = __f.uu; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; uu = __f.uu; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if (__interfaceIsEqual(u, __ifaceNil)) {
          __panic(new __String("reflect: nil type passed to Type.AssignableTo"));
       end
       uu = __assertType(u, ptrType__1);
       _r = directlyAssignable(uu, t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r  or  implements__1(uu, t);
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.AssignableTo end; end __f._r = _r; __f.t = t; __f.u = u; __f.uu = uu; __f.__s = __s; __f.__r = __r; return __f;
@@ -15685,14 +15738,14 @@ __packages["reflect"] = (function()
    rtype.ptr.prototype.ConvertibleTo = function(u)
       local _r, t, u, uu, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; uu = __f.uu; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; u = __f.u; uu = __f.uu; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       t = this;
       if (__interfaceIsEqual(u, __ifaceNil)) {
          __panic(new __String("reflect: nil type passed to Type.ConvertibleTo"));
       end
       uu = __assertType(u, ptrType__1);
       _r = convertOp(uu, t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return  not (_r == __throwNilPointerError);
       
  end return; end if __f == nil then  __f = { __blk= rtype.ptr.prototype.ConvertibleTo end; end __f._r = _r; __f.t = t; __f.u = u; __f.uu = uu; __f.__s = __s; __f.__r = __r; return __f;
@@ -15781,7 +15834,7 @@ __packages["reflect"] = (function()
    directlyAssignable = function(V)
       local T, V, _r, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _r = __f._r; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _r = __f._r; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (T == V) {
          __s = -1; return true;
       end
@@ -15789,7 +15842,7 @@ __packages["reflect"] = (function()
          __s = -1; return false;
       end
       _r = haveIdenticalUnderlyingType(T, V, true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= directlyAssignable end; end __f.T = T; __f.V = V; __f._r = _r; __f.__s = __s; __f.__r = __r; return __f;
@@ -15797,35 +15850,35 @@ __packages["reflect"] = (function()
    haveIdenticalType = function(s)
       local T, V, _arg, _arg__1, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _v, cmpTags, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _arg = __f._arg; _arg__1 = __f._arg__1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _v = __f._v; cmpTags = __f.cmpTags; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _arg = __f._arg; _arg__1 = __f._arg__1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _v = __f._v; cmpTags = __f.cmpTags; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (cmpTags) {
          __s = -1; return __interfaceIsEqual(T, V);
       end
       _r = T.Name(); 
- __s = 4; case 4: if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = V.Name(); 
- __s = 5; case 5: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       if ( not (_r == _r__1)) { _v = true; __s = 3; continue s; end
       _r__2 = T.Kind(); 
- __s = 6; case 6: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       _r__3 = V.Kind(); 
- __s = 7; case 7: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
-      _v =  not ((_r__2 == _r__3)); case 3:
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+      _v =  not ((_r__2 == _r__3)); if __s == 3 then 
       
  if (_v) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (_v) { */ case 1:
+      -- /* if (_v) { */ if __s == 1 then 
          __s = -1; return false;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       _r__4 = T.common(); 
- __s = 8; case 8: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
       _arg = _r__4;
       _r__5 = V.common(); 
- __s = 9; case 9: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
       _arg__1 = _r__5;
       _r__6 = haveIdenticalUnderlyingType(_arg, _arg__1, false); 
- __s = 10; case 10: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
       __s = -1; return _r__6;
       
  end return; end if __f == nil then  __f = { __blk= haveIdenticalType end; end __f.T = T; __f.V = V; __f._arg = _arg; __f._arg__1 = _arg__1; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._r__6 = _r__6; __f._v = _v; __f.cmpTags = cmpTags; __f.__s = __s; __f.__r = __r; return __f;
@@ -15833,7 +15886,7 @@ __packages["reflect"] = (function()
    haveIdenticalUnderlyingType = function(s)
       local T, V, _1, _i, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _r__7, _r__8, _ref, _v, _v__1, _v__2, _v__3, cmpTags, i, i__1, i__2, kind, t, t__1, t__2, tf, tp, v, v__1, v__2, vf, vp, x, x__1, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _ref = __f._ref; _v = __f._v; _v__1 = __f._v__1; _v__2 = __f._v__2; _v__3 = __f._v__3; cmpTags = __f.cmpTags; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; kind = __f.kind; t = __f.t; t__1 = __f.t__1; t__2 = __f.t__2; tf = __f.tf; tp = __f.tp; v = __f.v; v__1 = __f.v__1; v__2 = __f.v__2; vf = __f.vf; vp = __f.vp; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; T = __f.T; V = __f.V; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _ref = __f._ref; _v = __f._v; _v__1 = __f._v__1; _v__2 = __f._v__2; _v__3 = __f._v__3; cmpTags = __f.cmpTags; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; kind = __f.kind; t = __f.t; t__1 = __f.t__1; t__2 = __f.t__2; tf = __f.tf; tp = __f.tp; v = __f.v; v__1 = __f.v__1; v__2 = __f.v__2; vf = __f.vf; vp = __f.vp; x = __f.x; x__1 = __f.x__1; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (T == V) {
          __s = -1; return true;
       end
@@ -15861,84 +15914,84 @@ __packages["reflect"] = (function()
  if (_1 == (25)) { __s = 8; continue; end
          
  __s = 9; continue;
-         -- /* if (_1 == (17)) { */ case 2:
+         -- /* if (_1 == (17)) { */ if __s == 2 then 
             if ( not (T.Len() == V.Len())) { _v = false; __s = 10; continue s; end
             _r = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); 
- __s = 11; case 11: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
-            _v = _r; case 10:
+ __s = 11; if __s == 11 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+            _v = _r; if __s == 10 then 
             __s = -1; return _v;
-         -- /* end else if (_1 == (18)) { */ case 3:
+         -- /* end else if (_1 == (18)) { */ if __s == 3 then 
             if ( not (V.ChanDir() == 3)) { _v__1 = false; __s = 14; continue s; end
             _r__1 = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); 
- __s = 15; case 15: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
-            _v__1 = _r__1; case 14:
+ __s = 15; if __s == 15 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+            _v__1 = _r__1; if __s == 14 then 
             
  if (_v__1) { __s = 12; continue; end
             
  __s = 13; continue;
-            -- /* if (_v__1) { */ case 12:
+            -- /* if (_v__1) { */ if __s == 12 then 
                __s = -1; return true;
-            -- /* end */ case 13:
+            -- /* end */ if __s == 13 then 
             if ( not (V.ChanDir() == T.ChanDir())) { _v__2 = false; __s = 16; continue s; end
             _r__2 = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); 
- __s = 17; case 17: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
-            _v__2 = _r__2; case 16:
+ __s = 17; if __s == 17 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+            _v__2 = _r__2; if __s == 16 then 
             __s = -1; return _v__2;
-         -- /* end else if (_1 == (19)) { */ case 4:
+         -- /* end else if (_1 == (19)) { */ if __s == 4 then 
             t = (T.kindType);
             v = (V.kindType);
             if ( not ((t.outCount == v.outCount))  or   not ((t.inCount == v.inCount))) {
                __s = -1; return false;
             end
             i = 0;
-            -- /* while (true) do  */ case 18:
+            -- /* while (true) do  */ if __s == 18 then 
                -- /* if ( not (i < t.rtype.NumIn())) { break; end */ if( not (i < t.rtype.NumIn())) { __s = 19; continue; end
                _r__3 = haveIdenticalType(t.rtype.In(i), v.rtype.In(i), cmpTags); 
- __s = 22; case 22: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 22; if __s == 22 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
                
  if ( not _r__3) { __s = 20; continue; end
                
  __s = 21; continue;
-               -- /* if ( not _r__3) { */ case 20:
+               -- /* if ( not _r__3) { */ if __s == 20 then 
                   __s = -1; return false;
-               -- /* end */ case 21:
+               -- /* end */ if __s == 21 then 
                i = i + (1) >> 0;
-            -- /* end */ __s = 18; continue; case 19:
+            -- /* end */ __s = 18; continue; if __s == 19 then 
             i__1 = 0;
-            -- /* while (true) do  */ case 23:
+            -- /* while (true) do  */ if __s == 23 then 
                -- /* if ( not (i__1 < t.rtype.NumOut())) { break; end */ if( not (i__1 < t.rtype.NumOut())) { __s = 24; continue; end
                _r__4 = haveIdenticalType(t.rtype.Out(i__1), v.rtype.Out(i__1), cmpTags); 
- __s = 27; case 27: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 27; if __s == 27 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
                
  if ( not _r__4) { __s = 25; continue; end
                
  __s = 26; continue;
-               -- /* if ( not _r__4) { */ case 25:
+               -- /* if ( not _r__4) { */ if __s == 25 then 
                   __s = -1; return false;
-               -- /* end */ case 26:
+               -- /* end */ if __s == 26 then 
                i__1 = i__1 + (1) >> 0;
-            -- /* end */ __s = 23; continue; case 24:
+            -- /* end */ __s = 23; continue; if __s == 24 then 
             __s = -1; return true;
-         -- /* end else if (_1 == (20)) { */ case 5:
+         -- /* end else if (_1 == (20)) { */ if __s == 5 then 
             t__1 = (T.kindType);
             v__1 = (V.kindType);
             if ((t__1.methods.__length == 0)  and  (v__1.methods.__length == 0)) {
                __s = -1; return true;
             end
             __s = -1; return false;
-         -- /* end else if (_1 == (21)) { */ case 6:
+         -- /* end else if (_1 == (21)) { */ if __s == 6 then 
             _r__5 = haveIdenticalType(T.Key(), V.Key(), cmpTags); 
- __s = 29; case 29: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 29; if __s == 29 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
             if ( not (_r__5)) { _v__3 = false; __s = 28; continue s; end
             _r__6 = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); 
- __s = 30; case 30: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
-            _v__3 = _r__6; case 28:
+ __s = 30; if __s == 30 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+            _v__3 = _r__6; if __s == 28 then 
             __s = -1; return _v__3;
-         -- /* end else if ((_1 == (22))  or  (_1 == (23))) { */ case 7:
+         -- /* end else if ((_1 == (22))  or  (_1 == (23))) { */ if __s == 7 then 
             _r__7 = haveIdenticalType(T.Elem(), V.Elem(), cmpTags); 
- __s = 31; case 31: if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
+ __s = 31; if __s == 31 then  if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
             __s = -1; return _r__7;
-         -- /* end else if (_1 == (25)) { */ case 8:
+         -- /* end else if (_1 == (25)) { */ if __s == 8 then 
             t__2 = (T.kindType);
             v__2 = (V.kindType);
             if ( not ((t__2.fields.__length == v__2.fields.__length))) {
@@ -15946,7 +15999,7 @@ __packages["reflect"] = (function()
             end
             _ref = t__2.fields;
             _i = 0;
-            -- /* while (true) do  */ case 32:
+            -- /* while (true) do  */ if __s == 32 then 
                -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 33; continue; end
                i__2 = _i;
                tf = (x = t__2.fields, ((i__2 < 0  or  i__2 >= x.__length) ? (__throwRuntimeError("index out of range"), nil) : x.__array[x.__offset + i__2]));
@@ -15955,14 +16008,14 @@ __packages["reflect"] = (function()
                   __s = -1; return false;
                end
                _r__8 = haveIdenticalType(tf.typ, vf.typ, cmpTags); 
- __s = 36; case 36: if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
+ __s = 36; if __s == 36 then  if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
                
  if ( not _r__8) { __s = 34; continue; end
                
  __s = 35; continue;
-               -- /* if ( not _r__8) { */ case 34:
+               -- /* if ( not _r__8) { */ if __s == 34 then 
                   __s = -1; return false;
-               -- /* end */ case 35:
+               -- /* end */ if __s == 35 then 
                if (cmpTags  and   not (__clone(tf.name, name).tag() == __clone(vf.name, name).tag())) {
                   __s = -1; return false;
                end
@@ -15983,10 +16036,10 @@ __packages["reflect"] = (function()
                   end
                end
                _i=_i+1;
-            -- /* end */ __s = 32; continue; case 33:
+            -- /* end */ __s = 32; continue; if __s == 33 then 
             __s = -1; return true;
-         -- /* end */ case 9:
-      case 1:
+         -- /* end */ if __s == 9 then 
+      if __s == 1 then 
       __s = -1; return false;
       
  end return; end if __f == nil then  __f = { __blk= haveIdenticalUnderlyingType end; end __f.T = T; __f.V = V; __f._1 = _1; __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._r__6 = _r__6; __f._r__7 = _r__7; __f._r__8 = _r__8; __f._ref = _ref; __f._v = _v; __f._v__1 = _v__1; __f._v__2 = _v__2; __f._v__3 = _v__3; __f.cmpTags = cmpTags; __f.i = i; __f.i__1 = i__1; __f.i__2 = i__2; __f.kind = kind; __f.t = t; __f.t__1 = t__1; __f.t__2 = t__2; __f.tf = tf; __f.tp = tp; __f.v = v; __f.v__1 = v__1; __f.v__2 = v__2; __f.vf = vf; __f.vp = vp; __f.x = x; __f.x__1 = x__1; __f.__s = __s; __f.__r = __r; return __f;
@@ -16081,18 +16134,18 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Bytes = function()
       local _r, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(23);
       _r = v.typ.Elem().Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 8))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 8))) { */ case 1:
+      -- /* if ( not ((_r == 8))) { */ if __s == 1 then 
          __panic(new __String("reflect.Value.Bytes of non-byte slice"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return (v.ptr).__get();
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Bytes end; end __f._r = _r; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16101,18 +16154,18 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.runes = function()
       local _r, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(23);
       _r = v.typ.Elem().Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 5))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 5))) { */ case 1:
+      -- /* if ( not ((_r == 5))) { */ if __s == 1 then 
          __panic(new __String("reflect.Value.Bytes of non-rune slice"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return (v.ptr).__get();
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.runes end; end __f._r = _r; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16133,12 +16186,12 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Call = function(1)
       local _r, in__1, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; in__1 = __f.in__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; in__1 = __f.in__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(19);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).call("Call", in__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Call end; end __f._r = _r; __f.in__1 = in__1; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16147,12 +16200,12 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.CallSlice = function(1)
       local _r, in__1, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; in__1 = __f.in__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; in__1 = __f.in__1; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(19);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).call("CallSlice", in__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.CallSlice end; end __f._r = _r; __f.in__1 = in__1; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16174,21 +16227,21 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.FieldByIndex = function(x)
       local _i, _r, _r__1, _r__2, _r__3, _ref, _v, i, index, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _ref = __f._ref; _v = __f._v; i = __f.i; index = __f.index; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _ref = __f._ref; _v = __f._v; i = __f.i; index = __f.index; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       
  if (index.__length == 1) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (index.__length == 1) { */ case 1:
+      -- /* if (index.__length == 1) { */ if __s == 1 then 
          _r = __clone(v, Value).Field((0 >= index.__length ? (__throwRuntimeError("index out of range"), nil) : index.__array[index.__offset + 0])); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          __s = -1; return _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       new flag(v.flag).mustBe(25);
       _ref = index;
       _i = 0;
-      -- /* while (true) do  */ case 4:
+      -- /* while (true) do  */ if __s == 4 then 
          -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 5; continue; end
          i = _i;
          x = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
@@ -16196,29 +16249,29 @@ __packages["reflect"] = (function()
  if (i > 0) { __s = 6; continue; end
          
  __s = 7; continue;
-         -- /* if (i > 0) { */ case 6:
+         -- /* if (i > 0) { */ if __s == 6 then 
             if ( not (__clone(v, Value).Kind() == 22)) { _v = false; __s = 10; continue s; end
             _r__1 = v.typ.Elem().Kind(); 
- __s = 11; case 11: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
-            _v = _r__1 == 25; case 10:
+ __s = 11; if __s == 11 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+            _v = _r__1 == 25; if __s == 10 then 
             
  if (_v) { __s = 8; continue; end
             
  __s = 9; continue;
-            -- /* if (_v) { */ case 8:
+            -- /* if (_v) { */ if __s == 8 then 
                if (__clone(v, Value).IsNil()) {
                   __panic(new __String("reflect: indirection through nil pointer to embedded struct"));
                end
                _r__2 = __clone(v, Value).Elem(); 
- __s = 12; case 12: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
                v = _r__2;
-            -- /* end */ case 9:
-         -- /* end */ case 7:
+            -- /* end */ if __s == 9 then 
+         -- /* end */ if __s == 7 then 
          _r__3 = __clone(v, Value).Field(x); 
- __s = 13; case 13: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 13; if __s == 13 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
          v = _r__3;
          _i=_i+1;
-      -- /* end */ __s = 4; continue; case 5:
+      -- /* end */ __s = 4; continue; if __s == 5 then 
       __s = -1; return v;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.FieldByIndex end; end __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._ref = _ref; __f._v = _v; __f.i = i; __f.index = index; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -16227,11 +16280,11 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.FieldByName = function(1)
       local _r, _r__1, _tuple, f, name__1, ok, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; name__1 = __f.name__1; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; name__1 = __f.name__1; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(25);
       _r = v.typ.FieldByName(name__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       f = __clone(_tuple[0], StructField);
       ok = _tuple[1];
@@ -16239,11 +16292,11 @@ __packages["reflect"] = (function()
  if (ok) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if (ok) { */ case 2:
+      -- /* if (ok) { */ if __s == 2 then 
          _r__1 = __clone(v, Value).FieldByIndex(f.Index); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          __s = -1; return _r__1;
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.FieldByName end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.f = f; __f.name__1 = name__1; __f.ok = ok; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16252,10 +16305,10 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.FieldByNameFunc = function(h)
       local _r, _r__1, _tuple, f, match, ok, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; match = __f.match; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; f = __f.f; match = __f.match; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       _r = v.typ.FieldByNameFunc(match); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       f = __clone(_tuple[0], StructField);
       ok = _tuple[1];
@@ -16263,11 +16316,11 @@ __packages["reflect"] = (function()
  if (ok) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if (ok) { */ case 2:
+      -- /* if (ok) { */ if __s == 2 then 
          _r__1 = __clone(v, Value).FieldByIndex(f.Index); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          __s = -1; return _r__1;
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.FieldByNameFunc end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.f = f; __f.match = match; __f.ok = ok; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16318,11 +16371,11 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Interface = function()
       local _r, i, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; i = __f.i; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; i = __f.i; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       i = __ifaceNil;
       v = this;
       _r = valueInterface(__clone(v, Value), true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       i = _r;
       __s = -1; return i;
       
@@ -16344,12 +16397,12 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.MapIndex = function(y)
       local _r, c, e, fl, k, key, tt, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; c = __f.c; e = __f.e; fl = __f.fl; k = __f.k; key = __f.key; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; c = __f.c; e = __f.e; fl = __f.fl; k = __f.k; key = __f.key; tt = __f.tt; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(21);
       tt = (v.typ.kindType);
       _r = __clone(key, Value).assignTo("reflect.Value.MapIndex", tt.key, 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       key = _r;
       k = 0;
       if ( not ((((key.flag & 128) >>> 0) == 0))) {
@@ -16379,7 +16432,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.MapKeys = function()
       local _r, a, c, fl, i, it, key, keyType, m, mlen, tt, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; a = __f.a; c = __f.c; fl = __f.fl; i = __f.i; it = __f.it; key = __f.key; keyType = __f.keyType; m = __f.m; mlen = __f.mlen; tt = __f.tt; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; a = __f.a; c = __f.c; fl = __f.fl; i = __f.i; it = __f.it; key = __f.key; keyType = __f.keyType; m = __f.m; mlen = __f.mlen; tt = __f.tt; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(21);
       tt = (v.typ.kindType);
@@ -16394,10 +16447,10 @@ __packages["reflect"] = (function()
       a = __makeSlice(sliceType__9, mlen);
       i = 0;
       i = 0;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (i < a.__length)) { break; end */ if( not (i < a.__length)) { __s = 2; continue; end
          _r = mapiterkey(it); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          key = _r;
          if (key == 0) {
             -- /* break; */ __s = 2; continue;
@@ -16411,7 +16464,7 @@ __packages["reflect"] = (function()
          end
          mapiternext(it);
          i = i + (1) >> 0;
-      -- /* end */ __s = 1; continue; case 2:
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       __s = -1; return __subslice(a, 0, i);
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.MapKeys end; end __f._r = _r; __f.a = a; __f.c = c; __f.fl = fl; __f.i = i; __f.it = it; __f.key = key; __f.keyType = keyType; __f.m = m; __f.mlen = mlen; __f.tt = tt; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16420,22 +16473,22 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Method = function(i)
       local _r, _v, fl, i, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _v = __f._v; fl = __f.fl; i = __f.i; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _v = __f._v; fl = __f.fl; i = __f.i; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       if (v.typ == ptrType__1.nil) {
          __panic(new ValueError.ptr("reflect.Value.Method", 0));
       end
       if ( not ((((v.flag & 512) >>> 0) == 0))) { _v = true; __s = 3; continue s; end
       _r = v.typ.NumMethod(); 
- __s = 4; case 4: if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
-      _v = ((i >>> 0)) >= ((_r >>> 0)); case 3:
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+      _v = ((i >>> 0)) >= ((_r >>> 0)); if __s == 3 then 
       
  if (_v) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (_v) { */ case 1:
+      -- /* if (_v) { */ if __s == 1 then 
          __panic(new __String("reflect: Method index out of range"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       if ((v.typ.Kind() == 20)  and  __clone(v, Value).IsNil()) {
          __panic(new __String("reflect: Method on nil interface value"));
       end
@@ -16450,7 +16503,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.NumMethod = function()
       local _r, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       if (v.typ == ptrType__1.nil) {
          __panic(new ValueError.ptr("reflect.Value.NumMethod", 0));
@@ -16459,7 +16512,7 @@ __packages["reflect"] = (function()
          __s = -1; return 0;
       end
       _r = v.typ.NumMethod(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.NumMethod end; end __f._r = _r; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16468,7 +16521,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.MethodByName = function(1)
       local _r, _r__1, _tuple, m, name__1, ok, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; m = __f.m; name__1 = __f.name__1; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; m = __f.m; name__1 = __f.name__1; ok = __f.ok; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       if (v.typ == ptrType__1.nil) {
          __panic(new ValueError.ptr("reflect.Value.MethodByName", 0));
@@ -16477,7 +16530,7 @@ __packages["reflect"] = (function()
          __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       end
       _r = v.typ.MethodByName(name__1); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       m = __clone(_tuple[0], Method);
       ok = _tuple[1];
@@ -16485,7 +16538,7 @@ __packages["reflect"] = (function()
          __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       end
       _r__1 = __clone(v, Value).Method(m.Index); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.MethodByName end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.m = m; __f.name__1 = name__1; __f.ok = ok; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16561,18 +16614,18 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Recv = function()
       local _r, _tuple, ok, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; ok = __f.ok; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; ok = __f.ok; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       x = new Value.ptr(ptrType__1.nil, 0, 0);
       ok = false;
       v = this;
       new flag(v.flag).mustBe(18);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).recv(false); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       x = _tuple[0];
       ok = _tuple[1];
-      __s = -1; return [x, ok];
+      __s = -1; return {x, ok};
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Recv end; end __f._r = _r; __f._tuple = _tuple; __f.ok = ok; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -16580,7 +16633,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.recv = function(b)
       local _r, _tuple, nb, ok, p, selected, t, tt, v, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; nb = __f.nb; ok = __f.ok; p = __f.p; selected = __f.selected; t = __f.t; tt = __f.tt; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; nb = __f.nb; ok = __f.ok; p = __f.p; selected = __f.selected; t = __f.t; tt = __f.tt; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       val = new Value.ptr(ptrType__1.nil, 0, 0);
       ok = false;
       v = this;
@@ -16599,14 +16652,14 @@ __packages["reflect"] = (function()
          p = ((val.__ptr_ptr  or  (val.__ptr_ptr = new ptrType__15(function() return this.__target.ptr; end, function(v) this.__target.ptr = __v; end, val))));
       end
       _r = chanrecv(__clone(v, Value).pointer(), nb, p); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       selected = _tuple[0];
       ok = _tuple[1];
       if ( not selected) {
          val = new Value.ptr(ptrType__1.nil, 0, 0);
       end
-      __s = -1; return [val, ok];
+      __s = -1; return {val, ok};
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.recv end; end __f._r = _r; __f._tuple = _tuple; __f.nb = nb; __f.ok = ok; __f.p = p; __f.selected = selected; __f.t = t; __f.tt = tt; __f.v = v; __f.val = val; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -16614,12 +16667,12 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Send = function(x)
       local _r, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(18);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).send(__clone(x, Value), false); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r;
       __s = -1; return;
       
@@ -16629,7 +16682,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.send = function(b)
       local _r, _r__1, nb, p, selected, tt, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; nb = __f.nb; p = __f.p; selected = __f.selected; tt = __f.tt; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; nb = __f.nb; p = __f.p; selected = __f.selected; tt = __f.tt; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       selected = false;
       v = this;
       tt = (v.typ.kindType);
@@ -16638,7 +16691,7 @@ __packages["reflect"] = (function()
       end
       new flag(x.flag).mustBeExported();
       _r = __clone(x, Value).assignTo("reflect.Value.Send", tt.elem, 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       x = _r;
       p = 0;
       if ( not ((((x.flag & 128) >>> 0) == 0))) {
@@ -16647,7 +16700,7 @@ __packages["reflect"] = (function()
          p = ((x.__ptr_ptr  or  (x.__ptr_ptr = new ptrType__15(function() return this.__target.ptr; end, function(v) this.__target.ptr = __v; end, x))));
       end
       _r__1 = chansend(__clone(v, Value).pointer(), p, nb); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       selected = _r__1;
       __s = -1; return selected;
       
@@ -16665,19 +16718,19 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.setRunes = function(x)
       local _r, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBeAssignable();
       new flag(v.flag).mustBe(23);
       _r = v.typ.Elem().Kind(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       
  if ( not ((_r == 5))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((_r == 5))) { */ case 1:
+      -- /* if ( not ((_r == 5))) { */ if __s == 1 then 
          __panic(new __String("reflect.Value.setRunes of non-rune slice"));
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       (v.ptr).__set(x);
       __s = -1; return;
       
@@ -16738,14 +16791,14 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.SetMapIndex = function(l)
       local _r, _r__1, e, k, key, tt, v, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; e = __f.e; k = __f.k; key = __f.key; tt = __f.tt; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; e = __f.e; k = __f.k; key = __f.key; tt = __f.tt; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(21);
       new flag(v.flag).mustBeExported();
       new flag(key.flag).mustBeExported();
       tt = (v.typ.kindType);
       _r = __clone(key, Value).assignTo("reflect.Value.SetMapIndex", tt.key, 0); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       key = _r;
       k = 0;
       if ( not ((((key.flag & 128) >>> 0) == 0))) {
@@ -16759,7 +16812,7 @@ __packages["reflect"] = (function()
       end
       new flag(val.flag).mustBeExported();
       _r__1 = __clone(val, Value).assignTo("reflect.Value.SetMapIndex", tt.elem, 0); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       val = _r__1;
       e = 0;
       if ( not ((((val.flag & 128) >>> 0) == 0))) {
@@ -16768,7 +16821,7 @@ __packages["reflect"] = (function()
          e = ((val.__ptr_ptr  or  (val.__ptr_ptr = new ptrType__15(function() return this.__target.ptr; end, function(v) this.__target.ptr = __v; end, val))));
       end
       __r = mapassign(v.typ, __clone(v, Value).pointer(), k, e); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.SetMapIndex end; end __f._r = _r; __f._r__1 = _r__1; __f.e = e; __f.k = k; __f.key = key; __f.tt = tt; __f.v = v; __f.val = val; __f.__s = __s; __f.__r = __r; return __f;
@@ -16816,7 +16869,7 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.__str = function()
       local _1, _r, k, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; k = __f.k; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; k = __f.k; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       k = new flag(v.flag).kind();
       _1 = k;
@@ -16826,7 +16879,7 @@ __packages["reflect"] = (function()
          __s = -1; return (v.ptr).__get();
       end
       _r = __clone(v, Value).Type().__str(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return "<" + _r + " Value>";
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.__str end; end __f._1 = _1; __f._r = _r; __f.k = k; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -16835,18 +16888,18 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.TryRecv = function()
       local _r, _tuple, ok, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; ok = __f.ok; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; ok = __f.ok; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       x = new Value.ptr(ptrType__1.nil, 0, 0);
       ok = false;
       v = this;
       new flag(v.flag).mustBe(18);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).recv(true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       x = _tuple[0];
       ok = _tuple[1];
-      __s = -1; return [x, ok];
+      __s = -1; return {x, ok};
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.TryRecv end; end __f._r = _r; __f._tuple = _tuple; __f.ok = ok; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -16854,12 +16907,12 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.TrySend = function(x)
       local _r, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       new flag(v.flag).mustBe(18);
       new flag(v.flag).mustBeExported();
       _r = __clone(v, Value).send(__clone(x, Value), true); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.TrySend end; end __f._r = _r; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -16929,16 +16982,16 @@ __packages["reflect"] = (function()
    New = function(p)
       local _r, _r__1, fl, ptr, typ, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; fl = __f.fl; ptr = __f.ptr; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; fl = __f.fl; ptr = __f.ptr; typ = __f.typ; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       if (__interfaceIsEqual(typ, __ifaceNil)) {
          __panic(new __String("reflect: New(nil)"));
       end
       ptr = unsafe_New(__assertType(typ, ptrType__1));
       fl = 22;
       _r = typ.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = _r.ptrTo(); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return new Value.ptr(_r__1, ptr, fl);
       
  end return; end if __f == nil then  __f = { __blk= New end; end __f._r = _r; __f._r__1 = _r__1; __f.fl = fl; __f.ptr = ptr; __f.typ = typ; __f.__s = __s; __f.__r = __r; return __f;
@@ -16947,51 +17000,51 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.assignTo = function(t)
       local _r, _r__1, _r__2, _r__3, context, dst, fl, target, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; context = __f.context; dst = __f.dst; fl = __f.fl; target = __f.target; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; context = __f.context; dst = __f.dst; fl = __f.fl; target = __f.target; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       
  if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
+      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ if __s == 1 then 
          _r = makeMethodValue(context, __clone(v, Value)); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          v = _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
          _r__1 = directlyAssignable(dst, v.typ); 
- __s = 8; case 8: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          
  if (_r__1) { __s = 5; continue; end
          
  if (implements__1(dst, v.typ)) { __s = 6; continue; end
          
  __s = 7; continue;
-         -- /* if (_r__1) { */ case 5:
+         -- /* if (_r__1) { */ if __s == 5 then 
             fl = (v.flag & 480) >>> 0;
             fl = (fl | (((dst.Kind() >>> 0)))) >>> 0;
             __s = -1; return new Value.ptr(dst, v.ptr, fl);
-         -- /* end else if (implements__1(dst, v.typ)) { */ case 6:
+         -- /* end else if (implements__1(dst, v.typ)) { */ if __s == 6 then 
             if (target == 0) {
                target = unsafe_New(dst);
             end
             _r__2 = valueInterface(__clone(v, Value), false); 
- __s = 9; case 9: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             x = _r__2;
             _r__3 = dst.NumMethod(); 
- __s = 13; case 13: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 13; if __s == 13 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
             
  if (_r__3 == 0) { __s = 10; continue; end
             
  __s = 11; continue;
-            -- /* if (_r__3 == 0) { */ case 10:
+            -- /* if (_r__3 == 0) { */ if __s == 10 then 
                (target).__set(x);
                __s = 12; continue;
-            -- /* end else { */ case 11:
+            -- /* end else { */ if __s == 11 then 
                ifaceE2I(dst, x, target);
-            -- /* end */ case 12:
+            -- /* end */ if __s == 12 then 
             __s = -1; return new Value.ptr(dst, target, 148);
-         -- /* end */ case 7:
-      case 4:
+         -- /* end */ if __s == 7 then 
+      if __s == 4 then 
       __panic(new __String(context + ": value of type " + v.typ.__str() + " is not assignable to type " + dst.__str()));
       __s = -1; return new Value.ptr(ptrType__1.nil, 0, 0);
       
@@ -17001,33 +17054,33 @@ __packages["reflect"] = (function()
    Value.ptr.prototype.Convert = function(t)
       local _r, _r__1, _r__2, _r__3, _r__4, op, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; op = __f.op; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; op = __f.op; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       v = this;
       
  if ( not ((((v.flag & 512) >>> 0) == 0))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ case 1:
+      -- /* if ( not ((((v.flag & 512) >>> 0) == 0))) { */ if __s == 1 then 
          _r = makeMethodValue("Convert", __clone(v, Value)); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          v = _r;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       _r__1 = t.common(); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _r__2 = convertOp(_r__1, v.typ); 
- __s = 5; case 5: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       op = _r__2;
       
  if (op == __throwNilPointerError) { __s = 6; continue; end
       
  __s = 7; continue;
-      -- /* if (op == __throwNilPointerError) { */ case 6:
+      -- /* if (op == __throwNilPointerError) { */ if __s == 6 then 
          _r__3 = t.__str(); 
- __s = 8; case 8: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
          __panic(new __String("reflect.Value.Convert: value of type " + v.typ.__str() + " cannot be converted to type " + _r__3));
-      -- /* end */ case 7:
+      -- /* end */ if __s == 7 then 
       _r__4 = op(__clone(v, Value), t); 
- __s = 9; case 9: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
       __s = -1; return _r__4;
       
  end return; end if __f == nil then  __f = { __blk= Value.ptr.prototype.Convert end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f.op = op; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17036,7 +17089,7 @@ __packages["reflect"] = (function()
    convertOp = function(c)
       local _1, _2, _3, _4, _5, _6, _7, _arg, _arg__1, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _r__6, _r__7, _v, _v__1, _v__2, dst, src, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _5 = __f._5; _6 = __f._6; _7 = __f._7; _arg = __f._arg; _arg__1 = __f._arg__1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _v = __f._v; _v__1 = __f._v__1; _v__2 = __f._v__2; dst = __f.dst; src = __f.src; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _5 = __f._5; _6 = __f._6; _7 = __f._7; _arg = __f._arg; _arg__1 = __f._arg__1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _v = __f._v; _v__1 = __f._v__1; _v__2 = __f._v__2; dst = __f.dst; src = __f.src; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
          _1 = src.Kind();
          
  if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) { __s = 2; continue; end
@@ -17052,7 +17105,7 @@ __packages["reflect"] = (function()
  if (_1 == (23)) { __s = 7; continue; end
          
  __s = 8; continue;
-         -- /* if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) { */ case 2:
+         -- /* if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) { */ if __s == 2 then 
             _2 = dst.Kind();
             if ((_2 == (2))  or  (_2 == (3))  or  (_2 == (4))  or  (_2 == (5))  or  (_2 == (6))  or  (_2 == (7))  or  (_2 == (8))  or  (_2 == (9))  or  (_2 == (10))  or  (_2 == (11))  or  (_2 == (12))) {
                __s = -1; return cvtInt;
@@ -17062,7 +17115,7 @@ __packages["reflect"] = (function()
                __s = -1; return cvtIntString;
             end
             __s = 8; continue;
-         -- /* end else if ((_1 == (7))  or  (_1 == (8))  or  (_1 == (9))  or  (_1 == (10))  or  (_1 == (11))  or  (_1 == (12))) { */ case 3:
+         -- /* end else if ((_1 == (7))  or  (_1 == (8))  or  (_1 == (9))  or  (_1 == (10))  or  (_1 == (11))  or  (_1 == (12))) { */ if __s == 3 then 
             _3 = dst.Kind();
             if ((_3 == (2))  or  (_3 == (3))  or  (_3 == (4))  or  (_3 == (5))  or  (_3 == (6))  or  (_3 == (7))  or  (_3 == (8))  or  (_3 == (9))  or  (_3 == (10))  or  (_3 == (11))  or  (_3 == (12))) {
                __s = -1; return cvtUint;
@@ -17072,7 +17125,7 @@ __packages["reflect"] = (function()
                __s = -1; return cvtUintString;
             end
             __s = 8; continue;
-         -- /* end else if ((_1 == (13))  or  (_1 == (14))) { */ case 4:
+         -- /* end else if ((_1 == (13))  or  (_1 == (14))) { */ if __s == 4 then 
             _4 = dst.Kind();
             if ((_4 == (2))  or  (_4 == (3))  or  (_4 == (4))  or  (_4 == (5))  or  (_4 == (6))) {
                __s = -1; return cvtFloatInt;
@@ -17082,81 +17135,81 @@ __packages["reflect"] = (function()
                __s = -1; return cvtFloat;
             end
             __s = 8; continue;
-         -- /* end else if ((_1 == (15))  or  (_1 == (16))) { */ case 5:
+         -- /* end else if ((_1 == (15))  or  (_1 == (16))) { */ if __s == 5 then 
             _5 = dst.Kind();
             if ((_5 == (15))  or  (_5 == (16))) {
                __s = -1; return cvtComplex;
             end
             __s = 8; continue;
-         -- /* end else if (_1 == (24)) { */ case 6:
+         -- /* end else if (_1 == (24)) { */ if __s == 6 then 
             if ( not (dst.Kind() == 23)) { _v = false; __s = 11; continue s; end
             _r = dst.Elem().PkgPath(); 
- __s = 12; case 12: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
-            _v = _r == ""; case 11:
+ __s = 12; if __s == 12 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+            _v = _r == ""; if __s == 11 then 
             
  if (_v) { __s = 9; continue; end
             
  __s = 10; continue;
-            -- /* if (_v) { */ case 9:
+            -- /* if (_v) { */ if __s == 9 then 
                   _r__1 = dst.Elem().Kind(); 
- __s = 14; case 14: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 14; if __s == 14 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                   _6 = _r__1;
                   if (_6 == (8)) {
                      __s = -1; return cvtStringBytes;
                   end else if (_6 == (5)) {
                      __s = -1; return cvtStringRunes;
                   end
-               case 13:
-            -- /* end */ case 10:
+               if __s == 13 then 
+            -- /* end */ if __s == 10 then 
             __s = 8; continue;
-         -- /* end else if (_1 == (23)) { */ case 7:
+         -- /* end else if (_1 == (23)) { */ if __s == 7 then 
             if ( not (dst.Kind() == 24)) { _v__1 = false; __s = 17; continue s; end
             _r__2 = src.Elem().PkgPath(); 
- __s = 18; case 18: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
-            _v__1 = _r__2 == ""; case 17:
+ __s = 18; if __s == 18 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+            _v__1 = _r__2 == ""; if __s == 17 then 
             
  if (_v__1) { __s = 15; continue; end
             
  __s = 16; continue;
-            -- /* if (_v__1) { */ case 15:
+            -- /* if (_v__1) { */ if __s == 15 then 
                   _r__3 = src.Elem().Kind(); 
- __s = 20; case 20: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 20; if __s == 20 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
                   _7 = _r__3;
                   if (_7 == (8)) {
                      __s = -1; return cvtBytesString;
                   end else if (_7 == (5)) {
                      __s = -1; return cvtRunesString;
                   end
-               case 19:
-            -- /* end */ case 16:
-         -- /* end */ case 8:
-      case 1:
+               if __s == 19 then 
+            -- /* end */ if __s == 16 then 
+         -- /* end */ if __s == 8 then 
+      if __s == 1 then 
       _r__4 = haveIdenticalUnderlyingType(dst, src, false); 
- __s = 23; case 23: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 23; if __s == 23 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
       
  if (_r__4) { __s = 21; continue; end
       
  __s = 22; continue;
-      -- /* if (_r__4) { */ case 21:
+      -- /* if (_r__4) { */ if __s == 21 then 
          __s = -1; return cvtDirect;
-      -- /* end */ case 22:
+      -- /* end */ if __s == 22 then 
       if ( not ((dst.Kind() == 22)  and  dst.Name() == ""  and  (src.Kind() == 22)  and  src.Name() == "")) { _v__2 = false; __s = 26; continue s; end
       _r__5 = dst.Elem().common(); 
- __s = 27; case 27: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 27; if __s == 27 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
       _arg = _r__5;
       _r__6 = src.Elem().common(); 
- __s = 28; case 28: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+ __s = 28; if __s == 28 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
       _arg__1 = _r__6;
       _r__7 = haveIdenticalUnderlyingType(_arg, _arg__1, false); 
- __s = 29; case 29: if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
-      _v__2 = _r__7; case 26:
+ __s = 29; if __s == 29 then  if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
+      _v__2 = _r__7; if __s == 26 then 
       
  if (_v__2) { __s = 24; continue; end
       
  __s = 25; continue;
-      -- /* if (_v__2) { */ case 24:
+      -- /* if (_v__2) { */ if __s == 24 then 
          __s = -1; return cvtDirect;
-      -- /* end */ case 25:
+      -- /* end */ if __s == 25 then 
       if (implements__1(dst, src)) {
          if (src.Kind() == 20) {
             __s = -1; return cvtI2I;
@@ -17170,9 +17223,9 @@ __packages["reflect"] = (function()
    makeFloat = function(t)
       local _1, _r, f, ptr, t, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = t.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       typ = _r;
       ptr = unsafe_New(typ);
       _1 = typ.size;
@@ -17188,9 +17241,9 @@ __packages["reflect"] = (function()
    makeComplex = function(t)
       local _1, _r, f, ptr, t, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; f = __f.f; ptr = __f.ptr; t = __f.t; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = t.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       typ = _r;
       ptr = unsafe_New(typ);
       _1 = typ.size;
@@ -17206,11 +17259,11 @@ __packages["reflect"] = (function()
    makeString = function(t)
       local _r, _r__1, f, ret, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = New(t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = __clone(_r, Value).Elem(); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       ret = _r__1;
       __clone(ret, Value).SetString(v);
       ret.flag = (((ret.flag & ~256) >>> 0) | f) >>> 0;
@@ -17221,14 +17274,14 @@ __packages["reflect"] = (function()
    makeBytes = function(t)
       local _r, _r__1, f, ret, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = New(t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = __clone(_r, Value).Elem(); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       ret = _r__1;
       __r = __clone(ret, Value).SetBytes(v); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       ret.flag = (((ret.flag & ~256) >>> 0) | f) >>> 0;
       __s = -1; return ret;
       
@@ -17237,14 +17290,14 @@ __packages["reflect"] = (function()
    makeRunes = function(t)
       local _r, _r__1, f, ret, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; f = __f.f; ret = __f.ret; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = New(t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = __clone(_r, Value).Elem(); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       ret = _r__1;
       __r = __clone(ret, Value).setRunes(v); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       ret.flag = (((ret.flag & ~256) >>> 0) | f) >>> 0;
       __s = -1; return ret;
       
@@ -17253,9 +17306,9 @@ __packages["reflect"] = (function()
    cvtInt = function(t)
       local _r, t, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeInt((v.flag & 96) >>> 0, ((x = __clone(v, Value).Int(), new __Uint64(x.__high, x.__low))), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtInt end; end __f._r = _r; __f.t = t; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -17263,9 +17316,9 @@ __packages["reflect"] = (function()
    cvtUint = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeInt((v.flag & 96) >>> 0, __clone(v, Value).Uint(), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtUint end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17273,9 +17326,9 @@ __packages["reflect"] = (function()
    cvtFloatInt = function(t)
       local _r, t, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeInt((v.flag & 96) >>> 0, ((x = (new __Int64(0, __clone(v, Value).Float())), new __Uint64(x.__high, x.__low))), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtFloatInt end; end __f._r = _r; __f.t = t; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -17283,9 +17336,9 @@ __packages["reflect"] = (function()
    cvtFloatUint = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeInt((v.flag & 96) >>> 0, (new __Uint64(0, __clone(v, Value).Float())), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtFloatUint end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17293,9 +17346,9 @@ __packages["reflect"] = (function()
    cvtIntFloat = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Int())), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtIntFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17303,9 +17356,9 @@ __packages["reflect"] = (function()
    cvtUintFloat = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeFloat((v.flag & 96) >>> 0, (__flatten64(__clone(v, Value).Uint())), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtUintFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17313,9 +17366,9 @@ __packages["reflect"] = (function()
    cvtFloat = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeFloat((v.flag & 96) >>> 0, __clone(v, Value).Float(), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtFloat end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17323,9 +17376,9 @@ __packages["reflect"] = (function()
    cvtComplex = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeComplex((v.flag & 96) >>> 0, __clone(v, Value).Complex(), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtComplex end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17333,9 +17386,9 @@ __packages["reflect"] = (function()
    cvtIntString = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Int().__low)), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtIntString end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17343,9 +17396,9 @@ __packages["reflect"] = (function()
    cvtUintString = function(t)
       local _r, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = makeString((v.flag & 96) >>> 0, (__encodeRune(__clone(v, Value).Uint().__low)), t); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __s = -1; return _r;
       
  end return; end if __f == nil then  __f = { __blk= cvtUintString end; end __f._r = _r; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17353,14 +17406,14 @@ __packages["reflect"] = (function()
    cvtBytesString = function(t)
       local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _arg = (v.flag & 96) >>> 0;
       _r = __clone(v, Value).Bytes(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _arg__1 = (__bytesToString(_r));
       _arg__2 = t;
       _r__1 = makeString(_arg, _arg__1, _arg__2); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= cvtBytesString end; end __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17368,14 +17421,14 @@ __packages["reflect"] = (function()
    cvtStringBytes = function(t)
       local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _arg = (v.flag & 96) >>> 0;
       _r = __clone(v, Value).__str(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _arg__1 = (new sliceType__15(__stringToBytes(_r)));
       _arg__2 = t;
       _r__1 = makeBytes(_arg, _arg__1, _arg__2); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= cvtStringBytes end; end __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17383,14 +17436,14 @@ __packages["reflect"] = (function()
    cvtRunesString = function(t)
       local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _arg = (v.flag & 96) >>> 0;
       _r = __clone(v, Value).runes(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _arg__1 = (__runesToString(_r));
       _arg__2 = t;
       _r__1 = makeString(_arg, _arg__1, _arg__2); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= cvtRunesString end; end __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17398,14 +17451,14 @@ __packages["reflect"] = (function()
    cvtStringRunes = function(t)
       local _arg, _arg__1, _arg__2, _r, _r__1, t, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _r = __f._r; _r__1 = __f._r__1; t = __f.t; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _arg = (v.flag & 96) >>> 0;
       _r = __clone(v, Value).__str(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _arg__1 = (new sliceType__17(__stringToRunes(_r)));
       _arg__2 = t;
       _r__1 = makeRunes(_arg, _arg__1, _arg__2); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       __s = -1; return _r__1;
       
  end return; end if __f == nil then  __f = { __blk= cvtStringRunes end; end __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._r = _r; __f._r__1 = _r__1; __f.t = t; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17413,29 +17466,29 @@ __packages["reflect"] = (function()
    cvtT2I = function(p)
       local _r, _r__1, _r__2, _r__3, _r__4, target, typ, v, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; target = __f.target; typ = __f.typ; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; target = __f.target; typ = __f.typ; v = __f.v; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = typ.common(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r__1 = unsafe_New(_r); 
- __s = 2; case 2: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       target = _r__1;
       _r__2 = valueInterface(__clone(v, Value), false); 
- __s = 3; case 3: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       x = _r__2;
       _r__3 = typ.NumMethod(); 
- __s = 7; case 7: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
       
  if (_r__3 == 0) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if (_r__3 == 0) { */ case 4:
+      -- /* if (_r__3 == 0) { */ if __s == 4 then 
          (target).__set(x);
          __s = 6; continue;
-      -- /* end else { */ case 5:
+      -- /* end else { */ if __s == 5 then 
          ifaceE2I(__assertType(typ, ptrType__1), x, target);
-      -- /* end */ case 6:
+      -- /* end */ if __s == 6 then 
       _r__4 = typ.common(); 
- __s = 8; case 8: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
       __s = -1; return new Value.ptr(_r__4, target, (((((v.flag & 96) >>> 0) | 128) >>> 0) | 20) >>> 0);
       
  end return; end if __f == nil then  __f = { __blk= cvtT2I end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f.target = target; __f.typ = typ; __f.v = v; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -17443,22 +17496,22 @@ __packages["reflect"] = (function()
    cvtI2I = function(p)
       local _r, _r__1, _r__2, ret, typ, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; ret = __f.ret; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; ret = __f.ret; typ = __f.typ; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       
  if (__clone(v, Value).IsNil()) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (__clone(v, Value).IsNil()) { */ case 1:
+      -- /* if (__clone(v, Value).IsNil()) { */ if __s == 1 then 
          _r = Zero(typ); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          ret = _r;
          ret.flag = (ret.flag | (((v.flag & 96) >>> 0))) >>> 0;
          __s = -1; return ret;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       _r__1 = __clone(v, Value).Elem(); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _r__2 = cvtT2I(__clone(_r__1, Value), typ); 
- __s = 5; case 5: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
       __s = -1; return _r__2;
       
  end return; end if __f == nil then  __f = { __blk= cvtI2I end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f.ret = ret; __f.typ = typ; __f.v = v; __f.__s = __s; __f.__r = __r; return __f;
@@ -17503,23 +17556,23 @@ __packages["reflect"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = js.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = math.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = runtime.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = strconv.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = sync.__init(); 
- __s = 6; case 6: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = unicode.__init(); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = utf8.__init(); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       nameOffList = sliceType__1.nil;
       typeOffList = sliceType__2.nil;
       methodCache = new sync.Map.ptr(new sync.Mutex.ptr(0, 0), new __packages["sync/atomic"].Value.ptr(new __packages["sync/atomic"].noCopy.ptr(), __ifaceNil), false, 0);
@@ -17532,7 +17585,7 @@ __packages["reflect"] = (function()
       kindNames = new sliceType__4(["invalid", "bool", "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "float32", "float64", "complex64", "complex128", "array", "chan", "func", "interface", "map", "ptr", "slice", "string", "struct", "unsafe.Pointer"]);
       uint8Type = __assertType(TypeOf(new __Uint8(0)), ptrType__1);
       __r = init(); 
- __s = 9; case 9: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       
  end return; end if __f == nil then  __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -18154,9 +18207,9 @@ __packages["fmt"] = (function()
    newPrinter = function()
       local _r, p, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = ppFree.Get(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       p = __assertType(_r, ptrType__2);
       p.panicking = false;
       p.erroring = false;
@@ -18183,7 +18236,7 @@ __packages["fmt"] = (function()
       _tmp__1 = p.fmt.fmtFlags.widPresent;
       wid = _tmp;
       ok = _tmp__1;
-      return [wid, ok];
+      return {wid, ok};
    end;
    pp.prototype.Width = function() return this.__val.Width(); end;
    pp.ptr.prototype.Precision = function()
@@ -18195,7 +18248,7 @@ __packages["fmt"] = (function()
       _tmp__1 = p.fmt.fmtFlags.precPresent;
       prec = _tmp;
       ok = _tmp__1;
-      return [prec, ok];
+      return {prec, ok};
    end;
    pp.prototype.Precision = function() return this.__val.Precision(); end;
    pp.ptr.prototype.Flag = function(b)
@@ -18226,27 +18279,27 @@ __packages["fmt"] = (function()
       _tmp__1 = __ifaceNil;
       ret = _tmp;
       err = _tmp__1;
-      return [ret, err];
+      return {ret, err};
    end;
    pp.prototype.Write = function(b) return this.__val.Write(b); end;
    Fprintf = function(a)
       local _r, _r__1, _tuple, a, err, format, n, p, w, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; p = __f.p; w = __f.w; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; p = __f.p; w = __f.w; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       _r = newPrinter(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       p = _r;
       __r = p.doPrintf(format, a); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       _r__1 = w.Write((x = p.buf, __subslice(new sliceType__2(x.__array), x.__offset, x.__offset + x.__length))); 
- __s = 3; case 3: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
       _tuple = _r__1;
       n = _tuple[0];
       err = _tuple[1];
       p.free();
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= Fprintf end; end __f._r = _r; __f._r__1 = _r__1; __f._tuple = _tuple; __f.a = a; __f.err = err; __f.format = format; __f.n = n; __f.p = p; __f.w = w; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -18254,15 +18307,15 @@ __packages["fmt"] = (function()
    Printf = function(a)
       local _r, _tuple, a, err, format, n, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; a = __f.a; err = __f.err; format = __f.format; n = __f.n; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       n = 0;
       err = __ifaceNil;
       _r = Fprintf(os.Stdout, format, a); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       n = _tuple[0];
       err = _tuple[1];
-      __s = -1; return [n, err];
+      __s = -1; return {n, err};
       
  end return; end if __f == nil then  __f = { __blk= Printf end; end __f._r = _r; __f._tuple = _tuple; __f.a = a; __f.err = err; __f.format = format; __f.n = n; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -18270,19 +18323,19 @@ __packages["fmt"] = (function()
    getField = function(i)
       local _r, _r__1, i, v, val, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; i = __f.i; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; i = __f.i; v = __f.v; val = __f.val; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       _r = __clone(v, reflect.Value).Field(i); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       val = _r;
       
  if ((__clone(val, reflect.Value).Kind() == 20)  and   not __clone(val, reflect.Value).IsNil()) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if ((__clone(val, reflect.Value).Kind() == 20)  and   not __clone(val, reflect.Value).IsNil()) { */ case 2:
+      -- /* if ((__clone(val, reflect.Value).Kind() == 20)  and   not __clone(val, reflect.Value).IsNil()) { */ if __s == 2 then 
          _r__1 = __clone(val, reflect.Value).Elem(); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          val = _r__1;
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       __s = -1; return val;
       
  end return; end if __f == nil then  __f = { __blk= getField end; end __f._r = _r; __f._r__1 = _r__1; __f.i = i; __f.v = v; __f.val = val; __f.__s = __s; __f.__r = __r; return __f;
@@ -18303,7 +18356,7 @@ __packages["fmt"] = (function()
          num = _tmp;
          isnum = _tmp__1;
          newi = _tmp__2;
-         return [num, isnum, newi];
+         return {num, isnum, newi};
       end
       newi = start;
       while (true) do 
@@ -18315,18 +18368,18 @@ __packages["fmt"] = (function()
             num = _tmp__3;
             isnum = _tmp__4;
             newi = _tmp__5;
-            return [num, isnum, newi];
+            return {num, isnum, newi};
          end
          num = (__imul(num, 10)) + (((s.charCodeAt(newi) - 48 << 24 >>> 24) >> 0)) >> 0;
          isnum = true;
          newi = newi + (1) >> 0;
       end
-      return [num, isnum, newi];
+      return {num, isnum, newi};
    end;
    pp.ptr.prototype.unknownType = function(v)
       local _r, p, v, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; p = __f.p; v = __f.v; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       if ( not __clone(v, reflect.Value).IsValid()) {
          (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
@@ -18334,9 +18387,9 @@ __packages["fmt"] = (function()
       end
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(63);
       _r = __clone(v, reflect.Value).Type().__str(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(63);
       __s = -1; return;
       
@@ -18346,7 +18399,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.badVerb = function(b)
       local _r, _r__1, p, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; p = __f.p; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; p = __f.p; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       p.erroring = true;
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("% not ");
@@ -18358,28 +18411,28 @@ __packages["fmt"] = (function()
  if (__clone(p.value, reflect.Value).IsValid()) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if ( not (__interfaceIsEqual(p.arg, __ifaceNil))) { */ case 2:
+         -- /* if ( not (__interfaceIsEqual(p.arg, __ifaceNil))) { */ if __s == 2 then 
             _r = reflect.TypeOf(p.arg).__str(); 
- __s = 6; case 6: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(61);
             __r = p.printArg(p.arg, 118); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 5; continue;
-         -- /* end else if (__clone(p.value, reflect.Value).IsValid()) { */ case 3:
+         -- /* end else if (__clone(p.value, reflect.Value).IsValid()) { */ if __s == 3 then 
             _r__1 = __clone(p.value, reflect.Value).Type().__str(); 
- __s = 9; case 9: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__1); 
- __s = 10; case 10: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(61);
             __r = p.printValue(__clone(p.value, reflect.Value), 118, 0); 
- __s = 11; case 11: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 11; if __s == 11 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 5; continue;
-         -- /* end else { */ case 4:
+         -- /* end else { */ if __s == 4 then 
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
-         -- /* end */ case 5:
-      case 1:
+         -- /* end */ if __s == 5 then 
+      if __s == 1 then 
       (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(41);
       p.erroring = false;
       __s = -1; return;
@@ -18390,21 +18443,21 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtBool = function(b)
       local _1, p, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
  if ((_1 == (116))  or  (_1 == (118))) { __s = 2; continue; end
          
  __s = 3; continue;
-         -- /* if ((_1 == (116))  or  (_1 == (118))) { */ case 2:
+         -- /* if ((_1 == (116))  or  (_1 == (118))) { */ if __s == 2 then 
             p.fmt.fmt_boolean(v);
             __s = 4; continue;
-         -- /* end else { */ case 3:
+         -- /* end else { */ if __s == 3 then 
             __r = p.badVerb(verb); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 4:
-      case 1:
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 4 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtBool end; end __f._1 = _1; __f.p = p; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18422,7 +18475,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtInteger = function(b)
       local _1, isSigned, p, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; isSigned = __f.isSigned; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; isSigned = __f.isSigned; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
@@ -18445,52 +18498,52 @@ __packages["fmt"] = (function()
  if (_1 == (85)) { __s = 10; continue; end
          
  __s = 11; continue;
-         -- /* if (_1 == (118)) { */ case 2:
+         -- /* if (_1 == (118)) { */ if __s == 2 then 
             if (p.fmt.fmtFlags.sharpV  and   not isSigned) {
                p.fmt0x64(v, true);
             end else {
                p.fmt.fmt_integer(v, 10, isSigned, "0123456789abcdefx");
             end
             __s = 12; continue;
-         -- /* end else if (_1 == (100)) { */ case 3:
+         -- /* end else if (_1 == (100)) { */ if __s == 3 then 
             p.fmt.fmt_integer(v, 10, isSigned, "0123456789abcdefx");
             __s = 12; continue;
-         -- /* end else if (_1 == (98)) { */ case 4:
+         -- /* end else if (_1 == (98)) { */ if __s == 4 then 
             p.fmt.fmt_integer(v, 2, isSigned, "0123456789abcdefx");
             __s = 12; continue;
-         -- /* end else if (_1 == (111)) { */ case 5:
+         -- /* end else if (_1 == (111)) { */ if __s == 5 then 
             p.fmt.fmt_integer(v, 8, isSigned, "0123456789abcdefx");
             __s = 12; continue;
-         -- /* end else if (_1 == (120)) { */ case 6:
+         -- /* end else if (_1 == (120)) { */ if __s == 6 then 
             p.fmt.fmt_integer(v, 16, isSigned, "0123456789abcdefx");
             __s = 12; continue;
-         -- /* end else if (_1 == (88)) { */ case 7:
+         -- /* end else if (_1 == (88)) { */ if __s == 7 then 
             p.fmt.fmt_integer(v, 16, isSigned, "0123456789ABCDEFX");
             __s = 12; continue;
-         -- /* end else if (_1 == (99)) { */ case 8:
+         -- /* end else if (_1 == (99)) { */ if __s == 8 then 
             p.fmt.fmt_c(v);
             __s = 12; continue;
-         -- /* end else if (_1 == (113)) { */ case 9:
+         -- /* end else if (_1 == (113)) { */ if __s == 9 then 
             
  if ((v.__high < 0  or  (v.__high == 0  and  v.__low <= 1114111))) { __s = 13; continue; end
             
  __s = 14; continue;
-            -- /* if ((v.__high < 0  or  (v.__high == 0  and  v.__low <= 1114111))) { */ case 13:
+            -- /* if ((v.__high < 0  or  (v.__high == 0  and  v.__low <= 1114111))) { */ if __s == 13 then 
                p.fmt.fmt_qc(v);
                __s = 15; continue;
-            -- /* end else { */ case 14:
+            -- /* end else { */ if __s == 14 then 
                __r = p.badVerb(verb); 
- __s = 16; case 16: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-            -- /* end */ case 15:
+ __s = 16; if __s == 16 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+            -- /* end */ if __s == 15 then 
             __s = 12; continue;
-         -- /* end else if (_1 == (85)) { */ case 10:
+         -- /* end else if (_1 == (85)) { */ if __s == 10 then 
             p.fmt.fmt_unicode(v);
             __s = 12; continue;
-         -- /* end else { */ case 11:
+         -- /* end else { */ if __s == 11 then 
             __r = p.badVerb(verb); 
- __s = 17; case 17: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 12:
-      case 1:
+ __s = 17; if __s == 17 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 12 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtInteger end; end __f._1 = _1; __f.isSigned = isSigned; __f.p = p; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18499,7 +18552,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtFloat = function(b)
       local _1, p, size, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; size = __f.size; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; size = __f.size; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
@@ -18512,23 +18565,23 @@ __packages["fmt"] = (function()
  if (_1 == (70)) { __s = 5; continue; end
          
  __s = 6; continue;
-         -- /* if (_1 == (118)) { */ case 2:
+         -- /* if (_1 == (118)) { */ if __s == 2 then 
             p.fmt.fmt_float(v, size, 103, -1);
             __s = 7; continue;
-         -- /* end else if ((_1 == (98))  or  (_1 == (103))  or  (_1 == (71))) { */ case 3:
+         -- /* end else if ((_1 == (98))  or  (_1 == (103))  or  (_1 == (71))) { */ if __s == 3 then 
             p.fmt.fmt_float(v, size, verb, -1);
             __s = 7; continue;
-         -- /* end else if ((_1 == (102))  or  (_1 == (101))  or  (_1 == (69))) { */ case 4:
+         -- /* end else if ((_1 == (102))  or  (_1 == (101))  or  (_1 == (69))) { */ if __s == 4 then 
             p.fmt.fmt_float(v, size, verb, 6);
             __s = 7; continue;
-         -- /* end else if (_1 == (70)) { */ case 5:
+         -- /* end else if (_1 == (70)) { */ if __s == 5 then 
             p.fmt.fmt_float(v, size, 102, 6);
             __s = 7; continue;
-         -- /* end else { */ case 6:
+         -- /* end else { */ if __s == 6 then 
             __r = p.badVerb(verb); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 7:
-      case 1:
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 7 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtFloat end; end __f._1 = _1; __f.p = p; __f.size = size; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18537,29 +18590,29 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtComplex = function(b)
       local _1, _q, _q__1, oldPlus, p, size, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _q = __f._q; _q__1 = __f._q__1; oldPlus = __f.oldPlus; p = __f.p; size = __f.size; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _q = __f._q; _q__1 = __f._q__1; oldPlus = __f.oldPlus; p = __f.p; size = __f.size; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
  if ((_1 == (118))  or  (_1 == (98))  or  (_1 == (103))  or  (_1 == (71))  or  (_1 == (102))  or  (_1 == (70))  or  (_1 == (101))  or  (_1 == (69))) { __s = 2; continue; end
          
  __s = 3; continue;
-         -- /* if ((_1 == (118))  or  (_1 == (98))  or  (_1 == (103))  or  (_1 == (71))  or  (_1 == (102))  or  (_1 == (70))  or  (_1 == (101))  or  (_1 == (69))) { */ case 2:
+         -- /* if ((_1 == (118))  or  (_1 == (98))  or  (_1 == (103))  or  (_1 == (71))  or  (_1 == (102))  or  (_1 == (70))  or  (_1 == (101))  or  (_1 == (69))) { */ if __s == 2 then 
             oldPlus = p.fmt.fmtFlags.plus;
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(40);
             __r = p.fmtFloat(v.__real, (_q = size / 2, (_q == _q  and  _q ~= 1/0  and  _q ~= -1/0) ? _q >> 0 : __throwRuntimeError("integer divide by zero")), verb); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             p.fmt.fmtFlags.plus = true;
             __r = p.fmtFloat(v.__imag, (_q__1 = size / 2, (_q__1 == _q__1  and  _q__1 ~= 1/0  and  _q__1 ~= -1/0) ? _q__1 >> 0 : __throwRuntimeError("integer divide by zero")), verb); 
- __s = 6; case 6: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("i)");
             p.fmt.fmtFlags.plus = oldPlus;
             __s = 4; continue;
-         -- /* end else { */ case 3:
+         -- /* end else { */ if __s == 3 then 
             __r = p.badVerb(verb); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 4:
-      case 1:
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 4 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtComplex end; end __f._1 = _1; __f._q = _q; __f._q__1 = _q__1; __f.oldPlus = oldPlus; __f.p = p; __f.size = size; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18568,7 +18621,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtString = function(b)
       local _1, p, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
@@ -18583,30 +18636,30 @@ __packages["fmt"] = (function()
  if (_1 == (113)) { __s = 6; continue; end
          
  __s = 7; continue;
-         -- /* if (_1 == (118)) { */ case 2:
+         -- /* if (_1 == (118)) { */ if __s == 2 then 
             if (p.fmt.fmtFlags.sharpV) {
                p.fmt.fmt_q(v);
             end else {
                p.fmt.fmt_s(v);
             end
             __s = 8; continue;
-         -- /* end else if (_1 == (115)) { */ case 3:
+         -- /* end else if (_1 == (115)) { */ if __s == 3 then 
             p.fmt.fmt_s(v);
             __s = 8; continue;
-         -- /* end else if (_1 == (120)) { */ case 4:
+         -- /* end else if (_1 == (120)) { */ if __s == 4 then 
             p.fmt.fmt_sx(v, "0123456789abcdefx");
             __s = 8; continue;
-         -- /* end else if (_1 == (88)) { */ case 5:
+         -- /* end else if (_1 == (88)) { */ if __s == 5 then 
             p.fmt.fmt_sx(v, "0123456789ABCDEFX");
             __s = 8; continue;
-         -- /* end else if (_1 == (113)) { */ case 6:
+         -- /* end else if (_1 == (113)) { */ if __s == 6 then 
             p.fmt.fmt_q(v);
             __s = 8; continue;
-         -- /* end else { */ case 7:
+         -- /* end else { */ if __s == 7 then 
             __r = p.badVerb(verb); 
- __s = 9; case 9: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 8:
-      case 1:
+ __s = 9; if __s == 9 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 8 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtString end; end __f._1 = _1; __f.p = p; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18615,7 +18668,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtBytes = function(g)
       local _1, _i, _i__1, _r, _ref, _ref__1, c, c__1, i, i__1, p, typeString, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _ref = __f._ref; _ref__1 = __f._ref__1; c = __f.c; c__1 = __f.c__1; i = __f.i; i__1 = __f.i__1; p = __f.p; typeString = __f.typeString; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _ref = __f._ref; _ref__1 = __f._ref__1; c = __f.c; c__1 = __f.c__1; i = __f.i; i__1 = __f.i__1; p = __f.p; typeString = __f.typeString; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
          _1 = verb;
          
@@ -18630,7 +18683,7 @@ __packages["fmt"] = (function()
  if (_1 == (113)) { __s = 6; continue; end
          
  __s = 7; continue;
-         -- /* if ((_1 == (118))  or  (_1 == (100))) { */ case 2:
+         -- /* if ((_1 == (118))  or  (_1 == (100))) { */ if __s == 2 then 
             if (p.fmt.fmtFlags.sharpV) {
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(typeString);
                if (v == sliceType__2.nil) {
@@ -18668,25 +18721,25 @@ __packages["fmt"] = (function()
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(93);
             end
             __s = 8; continue;
-         -- /* end else if (_1 == (115)) { */ case 3:
+         -- /* end else if (_1 == (115)) { */ if __s == 3 then 
             p.fmt.fmt_s((__bytesToString(v)));
             __s = 8; continue;
-         -- /* end else if (_1 == (120)) { */ case 4:
+         -- /* end else if (_1 == (120)) { */ if __s == 4 then 
             p.fmt.fmt_bx(v, "0123456789abcdefx");
             __s = 8; continue;
-         -- /* end else if (_1 == (88)) { */ case 5:
+         -- /* end else if (_1 == (88)) { */ if __s == 5 then 
             p.fmt.fmt_bx(v, "0123456789ABCDEFX");
             __s = 8; continue;
-         -- /* end else if (_1 == (113)) { */ case 6:
+         -- /* end else if (_1 == (113)) { */ if __s == 6 then 
             p.fmt.fmt_q((__bytesToString(v)));
             __s = 8; continue;
-         -- /* end else { */ case 7:
+         -- /* end else { */ if __s == 7 then 
             _r = reflect.ValueOf(v); 
- __s = 9; case 9: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __r = p.printValue(__clone(_r, reflect.Value), verb, 0); 
- __s = 10; case 10: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 8:
-      case 1:
+ __s = 10; if __s == 10 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 8 then 
+      if __s == 1 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtBytes end; end __f._1 = _1; __f._i = _i; __f._i__1 = _i__1; __f._r = _r; __f._ref = _ref; __f._ref__1 = _ref__1; __f.c = c; __f.c__1 = c__1; __f.i = i; __f.i__1 = i__1; __f.p = p; __f.typeString = typeString; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18695,7 +18748,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.fmtPointer = function(b)
       local _1, _2, _r, p, u, value, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _r = __f._r; p = __f.p; u = __f.u; value = __f.value; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _r = __f._r; p = __f.p; u = __f.u; value = __f.value; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       u = 0;
          _1 = __clone(value, reflect.Value).Kind();
@@ -18703,15 +18756,15 @@ __packages["fmt"] = (function()
  if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (21))  or  (_1 == (22))  or  (_1 == (23))  or  (_1 == (26))) { __s = 2; continue; end
          
  __s = 3; continue;
-         -- /* if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (21))  or  (_1 == (22))  or  (_1 == (23))  or  (_1 == (26))) { */ case 2:
+         -- /* if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (21))  or  (_1 == (22))  or  (_1 == (23))  or  (_1 == (26))) { */ if __s == 2 then 
             u = __clone(value, reflect.Value).Pointer();
             __s = 4; continue;
-         -- /* end else { */ case 3:
+         -- /* end else { */ if __s == 3 then 
             __r = p.badVerb(verb); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = -1; return;
-         -- /* end */ case 4:
-      case 1:
+         -- /* end */ if __s == 4 then 
+      if __s == 1 then 
          _2 = verb;
          
  if (_2 == (118)) { __s = 7; continue; end
@@ -18721,17 +18774,17 @@ __packages["fmt"] = (function()
  if ((_2 == (98))  or  (_2 == (111))  or  (_2 == (100))  or  (_2 == (120))  or  (_2 == (88))) { __s = 9; continue; end
          
  __s = 10; continue;
-         -- /* if (_2 == (118)) { */ case 7:
+         -- /* if (_2 == (118)) { */ if __s == 7 then 
             
  if (p.fmt.fmtFlags.sharpV) { __s = 12; continue; end
             
  __s = 13; continue;
-            -- /* if (p.fmt.fmtFlags.sharpV) { */ case 12:
+            -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 12 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(40);
                _r = __clone(value, reflect.Value).Type().__str(); 
- __s = 15; case 15: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 15; if __s == 15 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
                __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r); 
- __s = 16; case 16: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 16; if __s == 16 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(")(");
                if (u == 0) {
                   (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("nil");
@@ -18740,26 +18793,26 @@ __packages["fmt"] = (function()
                end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(41);
                __s = 14; continue;
-            -- /* end else { */ case 13:
+            -- /* end else { */ if __s == 13 then 
                if (u == 0) {
                   p.fmt.padString("<nil>");
                end else {
                   p.fmt0x64((new __Uint64(0, u.constructor == Number ? u : 1)),  not p.fmt.fmtFlags.sharp);
                end
-            -- /* end */ case 14:
+            -- /* end */ if __s == 14 then 
             __s = 11; continue;
-         -- /* end else if (_2 == (112)) { */ case 8:
+         -- /* end else if (_2 == (112)) { */ if __s == 8 then 
             p.fmt0x64((new __Uint64(0, u.constructor == Number ? u : 1)),  not p.fmt.fmtFlags.sharp);
             __s = 11; continue;
-         -- /* end else if ((_2 == (98))  or  (_2 == (111))  or  (_2 == (100))  or  (_2 == (120))  or  (_2 == (88))) { */ case 9:
+         -- /* end else if ((_2 == (98))  or  (_2 == (111))  or  (_2 == (100))  or  (_2 == (120))  or  (_2 == (88))) { */ if __s == 9 then 
             __r = p.fmtInteger((new __Uint64(0, u.constructor == Number ? u : 1)), false, verb); 
- __s = 17; case 17: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 17; if __s == 17 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 11; continue;
-         -- /* end else { */ case 10:
+         -- /* end else { */ if __s == 10 then 
             __r = p.badVerb(verb); 
- __s = 18; case 18: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 11:
-      case 6:
+ __s = 18; if __s == 18 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 11 then 
+      if __s == 6 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.fmtPointer end; end __f._1 = _1; __f._2 = _2; __f._r = _r; __f.p = p; __f.u = u; __f.value = value; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18768,16 +18821,16 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.catchPanic = function(b)
       local _r, arg, err, oldFlags, p, v, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; arg = __f.arg; err = __f.err; oldFlags = __f.oldFlags; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; arg = __f.arg; err = __f.err; oldFlags = __f.oldFlags; p = __f.p; v = __f.v; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       err = __recover();
       
  if ( not (__interfaceIsEqual(err, __ifaceNil))) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if ( not (__interfaceIsEqual(err, __ifaceNil))) { */ case 1:
+      -- /* if ( not (__interfaceIsEqual(err, __ifaceNil))) { */ if __s == 1 then 
          _r = reflect.ValueOf(arg); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          v = _r;
          if ((__clone(v, reflect.Value).Kind() == 22)  and  __clone(v, reflect.Value).IsNil()) {
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
@@ -18793,11 +18846,11 @@ __packages["fmt"] = (function()
          (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("(PANIC=");
          p.panicking = true;
          __r = p.printArg(err, 118); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          p.panicking = false;
          (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(41);
          fmtFlags.copy(p.fmt.fmtFlags, oldFlags);
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.catchPanic end; end __f._r = _r; __f.arg = arg; __f.err = err; __f.oldFlags = oldFlags; __f.p = p; __f.v = v; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -18806,7 +18859,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.handleMethods = function(b)
       local _1, _r, _r__1, _r__2, _ref, _tuple, _tuple__1, formatter, handled, ok, ok__1, p, stringer, v, v__1, verb, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; formatter = __f.formatter; handled = __f.handled; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; stringer = __f.__strer; v = __f.v; v__1 = __f.v__1; verb = __f.verb; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; formatter = __f.formatter; handled = __f.handled; ok = __f.ok; ok__1 = __f.ok__1; p = __f.p; stringer = __f.__strer; v = __f.v; v__1 = __f.v__1; verb = __f.verb; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = __curGoroutine.#deferStack; __curGoroutine.deferStack.push(__deferred);
       handled = false;
       p = this;
       if (p.erroring) {
@@ -18819,18 +18872,18 @@ __packages["fmt"] = (function()
  if (ok) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (ok) { */ case 1:
+      -- /* if (ok) { */ if __s == 1 then 
          handled = true;
          __deferred.push([__methodVal(p, "catchPanic"), [p.arg, verb]]);
          __r = formatter.Format(p, verb); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = -1; return handled;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
       
  if (p.fmt.fmtFlags.sharpV) { __s = 4; continue; end
       
  __s = 5; continue;
-      -- /* if (p.fmt.fmtFlags.sharpV) { */ case 4:
+      -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 4 then 
          _tuple__1 = __assertType(p.arg, GoStringer, true);
          stringer = _tuple__1[0];
          ok__1 = _tuple__1[1];
@@ -18838,23 +18891,23 @@ __packages["fmt"] = (function()
  if (ok__1) { __s = 7; continue; end
          
  __s = 8; continue;
-         -- /* if (ok__1) { */ case 7:
+         -- /* if (ok__1) { */ if __s == 7 then 
             handled = true;
             __deferred.push([__methodVal(p, "catchPanic"), [p.arg, verb]]);
             _r = stringer.GoString(); 
- __s = 9; case 9: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __r = p.fmt.fmt_s(_r); 
- __s = 10; case 10: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = -1; return handled;
-         -- /* end */ case 8:
+         -- /* end */ if __s == 8 then 
          __s = 6; continue;
-      -- /* end else { */ case 5:
+      -- /* end else { */ if __s == 5 then 
             _1 = verb;
             
  if ((_1 == (118))  or  (_1 == (115))  or  (_1 == (120))  or  (_1 == (88))  or  (_1 == (113))) { __s = 12; continue; end
             
  __s = 13; continue;
-            -- /* if ((_1 == (118))  or  (_1 == (115))  or  (_1 == (120))  or  (_1 == (88))  or  (_1 == (113))) { */ case 12:
+            -- /* if ((_1 == (118))  or  (_1 == (115))  or  (_1 == (120))  or  (_1 == (88))  or  (_1 == (113))) { */ if __s == 12 then 
                _ref = p.arg;
                
  if (__assertType(_ref, __error, true)[1]) { __s = 14; continue; end
@@ -18862,28 +18915,28 @@ __packages["fmt"] = (function()
  if (__assertType(_ref, Stringer, true)[1]) { __s = 15; continue; end
                
  __s = 16; continue;
-               -- /* if (__assertType(_ref, __error, true)[1]) { */ case 14:
+               -- /* if (__assertType(_ref, __error, true)[1]) { */ if __s == 14 then 
                   v = _ref;
                   handled = true;
                   __deferred.push([__methodVal(p, "catchPanic"), [p.arg, verb]]);
                   _r__1 = v.Error(); 
- __s = 17; case 17: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 17; if __s == 17 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                   __r = p.fmtString(_r__1, verb); 
- __s = 18; case 18: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 18; if __s == 18 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                   __s = -1; return handled;
-               -- /* end else if (__assertType(_ref, Stringer, true)[1]) { */ case 15:
+               -- /* end else if (__assertType(_ref, Stringer, true)[1]) { */ if __s == 15 then 
                   v__1 = _ref;
                   handled = true;
                   __deferred.push([__methodVal(p, "catchPanic"), [p.arg, verb]]);
                   _r__2 = v__1.__str(); 
- __s = 19; case 19: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 19; if __s == 19 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
                   __r = p.fmtString(_r__2, verb); 
- __s = 20; case 20: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 20; if __s == 20 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                   __s = -1; return handled;
-               -- /* end */ case 16:
-            -- /* end */ case 13:
-         case 11:
-      -- /* end */ case 6:
+               -- /* end */ if __s == 16 then 
+            -- /* end */ if __s == 13 then 
+         if __s == 11 then 
+      -- /* end */ if __s == 6 then 
       handled = false;
       __s = -1; return handled;
       
@@ -18893,7 +18946,7 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.printArg = function(b)
       local _1, _2, _r, _r__1, _r__2, _r__3, _r__4, _r__5, _ref, arg, f, f__1, f__10, f__11, f__12, f__13, f__14, f__15, f__16, f__17, f__18, f__19, f__2, f__3, f__4, f__5, f__6, f__7, f__8, f__9, p, verb, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _ref = __f._ref; arg = __f.arg; f = __f.f; f__1 = __f.f__1; f__10 = __f.f__10; f__11 = __f.f__11; f__12 = __f.f__12; f__13 = __f.f__13; f__14 = __f.f__14; f__15 = __f.f__15; f__16 = __f.f__16; f__17 = __f.f__17; f__18 = __f.f__18; f__19 = __f.f__19; f__2 = __f.f__2; f__3 = __f.f__3; f__4 = __f.f__4; f__5 = __f.f__5; f__6 = __f.f__6; f__7 = __f.f__7; f__8 = __f.f__8; f__9 = __f.f__9; p = __f.p; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _ref = __f._ref; arg = __f.arg; f = __f.f; f__1 = __f.f__1; f__10 = __f.f__10; f__11 = __f.f__11; f__12 = __f.f__12; f__13 = __f.f__13; f__14 = __f.f__14; f__15 = __f.f__15; f__16 = __f.f__16; f__17 = __f.f__17; f__18 = __f.f__18; f__19 = __f.f__19; f__2 = __f.f__2; f__3 = __f.f__3; f__4 = __f.f__4; f__5 = __f.f__5; f__6 = __f.f__6; f__7 = __f.f__7; f__8 = __f.f__8; f__9 = __f.f__9; p = __f.p; verb = __f.verb; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       p.arg = arg;
       p.value = new reflect.Value.ptr(ptrType.nil, 0, 0);
@@ -18901,22 +18954,22 @@ __packages["fmt"] = (function()
  if (__interfaceIsEqual(arg, __ifaceNil)) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (__interfaceIsEqual(arg, __ifaceNil)) { */ case 1:
+      -- /* if (__interfaceIsEqual(arg, __ifaceNil)) { */ if __s == 1 then 
             _1 = verb;
             
  if ((_1 == (84))  or  (_1 == (118))) { __s = 4; continue; end
             
  __s = 5; continue;
-            -- /* if ((_1 == (84))  or  (_1 == (118))) { */ case 4:
+            -- /* if ((_1 == (84))  or  (_1 == (118))) { */ if __s == 4 then 
                p.fmt.padString("<nil>");
                __s = 6; continue;
-            -- /* end else { */ case 5:
+            -- /* end else { */ if __s == 5 then 
                __r = p.badVerb(verb); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-            -- /* end */ case 6:
-         case 3:
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+            -- /* end */ if __s == 6 then 
+         if __s == 3 then 
          __s = -1; return;
-      -- /* end */ case 2:
+      -- /* end */ if __s == 2 then 
          _2 = verb;
          
  if (_2 == (84)) { __s = 9; continue; end
@@ -18924,20 +18977,20 @@ __packages["fmt"] = (function()
  if (_2 == (112)) { __s = 10; continue; end
          
  __s = 11; continue;
-         -- /* if (_2 == (84)) { */ case 9:
+         -- /* if (_2 == (84)) { */ if __s == 9 then 
             _r = reflect.TypeOf(arg).__str(); 
- __s = 12; case 12: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             __r = p.fmt.fmt_s(_r); 
- __s = 13; case 13: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 13; if __s == 13 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = -1; return;
-         -- /* end else if (_2 == (112)) { */ case 10:
+         -- /* end else if (_2 == (112)) { */ if __s == 10 then 
             _r__1 = reflect.ValueOf(arg); 
- __s = 14; case 14: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 14; if __s == 14 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
             __r = p.fmtPointer(__clone(_r__1, reflect.Value), 112); 
- __s = 15; case 15: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 15; if __s == 15 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = -1; return;
-         -- /* end */ case 11:
-      case 8:
+         -- /* end */ if __s == 11 then 
+      if __s == 8 then 
       _ref = arg;
       
  if (__assertType(_ref, __Bool, true)[1]) { __s = 16; continue; end
@@ -18979,134 +19032,134 @@ __packages["fmt"] = (function()
  if (__assertType(_ref, reflect.Value, true)[1]) { __s = 34; continue; end
       
  __s = 35; continue;
-      -- /* if (__assertType(_ref, __Bool, true)[1]) { */ case 16:
+      -- /* if (__assertType(_ref, __Bool, true)[1]) { */ if __s == 16 then 
          f = _ref.__val;
          __r = p.fmtBool(f, verb); 
- __s = 37; case 37: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 37; if __s == 37 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Float32, true)[1]) { */ case 17:
+      -- /* end else if (__assertType(_ref, __Float32, true)[1]) { */ if __s == 17 then 
          f__1 = _ref.__val;
          __r = p.fmtFloat((f__1), 32, verb); 
- __s = 38; case 38: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 38; if __s == 38 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Float64, true)[1]) { */ case 18:
+      -- /* end else if (__assertType(_ref, __Float64, true)[1]) { */ if __s == 18 then 
          f__2 = _ref.__val;
          __r = p.fmtFloat(f__2, 64, verb); 
- __s = 39; case 39: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 39; if __s == 39 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Complex64, true)[1]) { */ case 19:
+      -- /* end else if (__assertType(_ref, __Complex64, true)[1]) { */ if __s == 19 then 
          f__3 = _ref.__val;
          __r = p.fmtComplex((new __Complex128(f__3.__real, f__3.__imag)), 64, verb); 
- __s = 40; case 40: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 40; if __s == 40 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Complex128, true)[1]) { */ case 20:
+      -- /* end else if (__assertType(_ref, __Complex128, true)[1]) { */ if __s == 20 then 
          f__4 = _ref.__val;
          __r = p.fmtComplex(f__4, 128, verb); 
- __s = 41; case 41: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 41; if __s == 41 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Int, true)[1]) { */ case 21:
+      -- /* end else if (__assertType(_ref, __Int, true)[1]) { */ if __s == 21 then 
          f__5 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__5)), true, verb); 
- __s = 42; case 42: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 42; if __s == 42 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Int8, true)[1]) { */ case 22:
+      -- /* end else if (__assertType(_ref, __Int8, true)[1]) { */ if __s == 22 then 
          f__6 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__6)), true, verb); 
- __s = 43; case 43: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 43; if __s == 43 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Int16, true)[1]) { */ case 23:
+      -- /* end else if (__assertType(_ref, __Int16, true)[1]) { */ if __s == 23 then 
          f__7 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__7)), true, verb); 
- __s = 44; case 44: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 44; if __s == 44 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Int32, true)[1]) { */ case 24:
+      -- /* end else if (__assertType(_ref, __Int32, true)[1]) { */ if __s == 24 then 
          f__8 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__8)), true, verb); 
- __s = 45; case 45: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 45; if __s == 45 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Int64, true)[1]) { */ case 25:
+      -- /* end else if (__assertType(_ref, __Int64, true)[1]) { */ if __s == 25 then 
          f__9 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(f__9.__high, f__9.__low)), true, verb); 
- __s = 46; case 46: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 46; if __s == 46 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uint, true)[1]) { */ case 26:
+      -- /* end else if (__assertType(_ref, __Uint, true)[1]) { */ if __s == 26 then 
          f__10 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__10)), false, verb); 
- __s = 47; case 47: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 47; if __s == 47 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uint8, true)[1]) { */ case 27:
+      -- /* end else if (__assertType(_ref, __Uint8, true)[1]) { */ if __s == 27 then 
          f__11 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__11)), false, verb); 
- __s = 48; case 48: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 48; if __s == 48 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uint16, true)[1]) { */ case 28:
+      -- /* end else if (__assertType(_ref, __Uint16, true)[1]) { */ if __s == 28 then 
          f__12 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__12)), false, verb); 
- __s = 49; case 49: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 49; if __s == 49 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uint32, true)[1]) { */ case 29:
+      -- /* end else if (__assertType(_ref, __Uint32, true)[1]) { */ if __s == 29 then 
          f__13 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__13)), false, verb); 
- __s = 50; case 50: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 50; if __s == 50 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uint64, true)[1]) { */ case 30:
+      -- /* end else if (__assertType(_ref, __Uint64, true)[1]) { */ if __s == 30 then 
          f__14 = _ref.__val;
          __r = p.fmtInteger(f__14, false, verb); 
- __s = 51; case 51: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 51; if __s == 51 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __Uintptr, true)[1]) { */ case 31:
+      -- /* end else if (__assertType(_ref, __Uintptr, true)[1]) { */ if __s == 31 then 
          f__15 = _ref.__val;
          __r = p.fmtInteger((new __Uint64(0, f__15.constructor == Number ? f__15 : 1)), false, verb); 
- __s = 52; case 52: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 52; if __s == 52 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, __String, true)[1]) { */ case 32:
+      -- /* end else if (__assertType(_ref, __String, true)[1]) { */ if __s == 32 then 
          f__16 = _ref.__val;
          __r = p.fmtString(f__16, verb); 
- __s = 53; case 53: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 53; if __s == 53 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, sliceType__2, true)[1]) { */ case 33:
+      -- /* end else if (__assertType(_ref, sliceType__2, true)[1]) { */ if __s == 33 then 
          f__17 = _ref.__val;
          __r = p.fmtBytes(f__17, verb, "[]byte"); 
- __s = 54; case 54: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 54; if __s == 54 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else if (__assertType(_ref, reflect.Value, true)[1]) { */ case 34:
+      -- /* end else if (__assertType(_ref, reflect.Value, true)[1]) { */ if __s == 34 then 
          f__18 = _ref.__val;
          
  if (__clone(f__18, reflect.Value).IsValid()  and  __clone(f__18, reflect.Value).CanInterface()) { __s = 55; continue; end
          
  __s = 56; continue;
-         -- /* if (__clone(f__18, reflect.Value).IsValid()  and  __clone(f__18, reflect.Value).CanInterface()) { */ case 55:
+         -- /* if (__clone(f__18, reflect.Value).IsValid()  and  __clone(f__18, reflect.Value).CanInterface()) { */ if __s == 55 then 
             _r__2 = __clone(f__18, reflect.Value).Interface(); 
- __s = 57; case 57: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 57; if __s == 57 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             p.arg = _r__2;
             _r__3 = p.handleMethods(verb); 
- __s = 60; case 60: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 60; if __s == 60 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
             
  if (_r__3) { __s = 58; continue; end
             
  __s = 59; continue;
-            -- /* if (_r__3) { */ case 58:
+            -- /* if (_r__3) { */ if __s == 58 then 
                __s = -1; return;
-            -- /* end */ case 59:
-         -- /* end */ case 56:
+            -- /* end */ if __s == 59 then 
+         -- /* end */ if __s == 56 then 
          __r = p.printValue(__clone(f__18, reflect.Value), verb, 0); 
- __s = 61; case 61: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 61; if __s == 61 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __s = 36; continue;
-      -- /* end else { */ case 35:
+      -- /* end else { */ if __s == 35 then 
          f__19 = _ref;
          _r__4 = p.handleMethods(verb); 
- __s = 64; case 64: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 64; if __s == 64 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
          
  if ( not _r__4) { __s = 62; continue; end
          
  __s = 63; continue;
-         -- /* if ( not _r__4) { */ case 62:
+         -- /* if ( not _r__4) { */ if __s == 62 then 
             _r__5 = reflect.ValueOf(f__19); 
- __s = 65; case 65: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 65; if __s == 65 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
             __r = p.printValue(__clone(_r__5, reflect.Value), verb, 0); 
- __s = 66; case 66: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 63:
-      -- /* end */ case 36:
+ __s = 66; if __s == 66 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 63 then 
+      -- /* end */ if __s == 36 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.printArg end; end __f._1 = _1; __f._2 = _2; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._ref = _ref; __f.arg = arg; __f.f = f; __f.f__1 = f__1; __f.f__10 = f__10; __f.f__11 = f__11; __f.f__12 = f__12; __f.f__13 = f__13; __f.f__14 = f__14; __f.f__15 = f__15; __f.f__16 = f__16; __f.f__17 = f__17; __f.f__18 = f__18; __f.f__19 = f__19; __f.f__2 = f__2; __f.f__3 = f__3; __f.f__4 = f__4; __f.f__5 = f__5; __f.f__6 = f__6; __f.f__7 = f__7; __f.f__8 = f__8; __f.f__9 = f__9; __f.p = p; __f.verb = verb; __f.__s = __s; __f.__r = __r; return __f;
@@ -19115,26 +19168,26 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.printValue = function(h)
       local _1, _2, _3, _4, _arg, _arg__1, _arg__2, _i, _i__1, _r, _r__1, _r__10, _r__11, _r__12, _r__13, _r__14, _r__15, _r__16, _r__17, _r__18, _r__19, _r__2, _r__20, _r__21, _r__22, _r__3, _r__4, _r__5, _r__6, _r__7, _r__8, _r__9, _ref, _ref__1, a, bytes, depth, f, i, i__1, i__2, i__3, i__4, key, keys, name, p, t, value, value__1, verb, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _r__10 = __f._r__10; _r__11 = __f._r__11; _r__12 = __f._r__12; _r__13 = __f._r__13; _r__14 = __f._r__14; _r__15 = __f._r__15; _r__16 = __f._r__16; _r__17 = __f._r__17; _r__18 = __f._r__18; _r__19 = __f._r__19; _r__2 = __f._r__2; _r__20 = __f._r__20; _r__21 = __f._r__21; _r__22 = __f._r__22; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _r__9 = __f._r__9; _ref = __f._ref; _ref__1 = __f._ref__1; a = __f.a; bytes = __f.bytes; depth = __f.depth; f = __f.f; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; i__3 = __f.i__3; i__4 = __f.i__4; key = __f.key; keys = __f.keys; name = __f.name; p = __f.p; t = __f.t; value = __f.value; value__1 = __f.value__1; verb = __f.verb; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _2 = __f._2; _3 = __f._3; _4 = __f._4; _arg = __f._arg; _arg__1 = __f._arg__1; _arg__2 = __f._arg__2; _i = __f._i; _i__1 = __f._i__1; _r = __f._r; _r__1 = __f._r__1; _r__10 = __f._r__10; _r__11 = __f._r__11; _r__12 = __f._r__12; _r__13 = __f._r__13; _r__14 = __f._r__14; _r__15 = __f._r__15; _r__16 = __f._r__16; _r__17 = __f._r__17; _r__18 = __f._r__18; _r__19 = __f._r__19; _r__2 = __f._r__2; _r__20 = __f._r__20; _r__21 = __f._r__21; _r__22 = __f._r__22; _r__3 = __f._r__3; _r__4 = __f._r__4; _r__5 = __f._r__5; _r__6 = __f._r__6; _r__7 = __f._r__7; _r__8 = __f._r__8; _r__9 = __f._r__9; _ref = __f._ref; _ref__1 = __f._ref__1; a = __f.a; bytes = __f.bytes; depth = __f.depth; f = __f.f; i = __f.i; i__1 = __f.i__1; i__2 = __f.i__2; i__3 = __f.i__3; i__4 = __f.i__4; key = __f.key; keys = __f.keys; name = __f.name; p = __f.p; t = __f.t; value = __f.value; value__1 = __f.value__1; verb = __f.verb; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       
  if (depth > 0  and  __clone(value, reflect.Value).IsValid()  and  __clone(value, reflect.Value).CanInterface()) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (depth > 0  and  __clone(value, reflect.Value).IsValid()  and  __clone(value, reflect.Value).CanInterface()) { */ case 1:
+      -- /* if (depth > 0  and  __clone(value, reflect.Value).IsValid()  and  __clone(value, reflect.Value).CanInterface()) { */ if __s == 1 then 
          _r = __clone(value, reflect.Value).Interface(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          p.arg = _r;
          _r__1 = p.handleMethods(verb); 
- __s = 6; case 6: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          
  if (_r__1) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if (_r__1) { */ case 4:
+         -- /* if (_r__1) { */ if __s == 4 then 
             __s = -1; return;
-         -- /* end */ case 5:
-      -- /* end */ case 2:
+         -- /* end */ if __s == 5 then 
+      -- /* end */ if __s == 2 then 
       p.arg = __ifaceNil;
       p.value = value;
          f = value;
@@ -19171,89 +19224,89 @@ __packages["fmt"] = (function()
  if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (26))) { __s = 22; continue; end
          
  __s = 23; continue;
-         -- /* if (_1 == (0)) { */ case 8:
+         -- /* if (_1 == (0)) { */ if __s == 8 then 
             
  if (depth == 0) { __s = 25; continue; end
             
  __s = 26; continue;
-            -- /* if (depth == 0) { */ case 25:
+            -- /* if (depth == 0) { */ if __s == 25 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<invalid reflect.Value>");
                __s = 27; continue;
-            -- /* end else { */ case 26:
+            -- /* end else { */ if __s == 26 then 
                   _2 = verb;
                   
  if (_2 == (118)) { __s = 29; continue; end
                   
  __s = 30; continue;
-                  -- /* if (_2 == (118)) { */ case 29:
+                  -- /* if (_2 == (118)) { */ if __s == 29 then 
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
                      __s = 31; continue;
-                  -- /* end else { */ case 30:
+                  -- /* end else { */ if __s == 30 then 
                      __r = p.badVerb(verb); 
- __s = 32; case 32: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-                  -- /* end */ case 31:
-               case 28:
-            -- /* end */ case 27:
+ __s = 32; if __s == 32 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+                  -- /* end */ if __s == 31 then 
+               if __s == 28 then 
+            -- /* end */ if __s == 27 then 
             __s = 24; continue;
-         -- /* end else if (_1 == (1)) { */ case 9:
+         -- /* end else if (_1 == (1)) { */ if __s == 9 then 
             __r = p.fmtBool(__clone(f, reflect.Value).Bool(), verb); 
- __s = 33; case 33: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 33; if __s == 33 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) { */ case 10:
+         -- /* end else if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) { */ if __s == 10 then 
             __r = p.fmtInteger(((x = __clone(f, reflect.Value).Int(), new __Uint64(x.__high, x.__low))), true, verb); 
- __s = 34; case 34: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 34; if __s == 34 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if ((_1 == (7))  or  (_1 == (8))  or  (_1 == (9))  or  (_1 == (10))  or  (_1 == (11))  or  (_1 == (12))) { */ case 11:
+         -- /* end else if ((_1 == (7))  or  (_1 == (8))  or  (_1 == (9))  or  (_1 == (10))  or  (_1 == (11))  or  (_1 == (12))) { */ if __s == 11 then 
             __r = p.fmtInteger(__clone(f, reflect.Value).Uint(), false, verb); 
- __s = 35; case 35: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 35; if __s == 35 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (13)) { */ case 12:
+         -- /* end else if (_1 == (13)) { */ if __s == 12 then 
             __r = p.fmtFloat(__clone(f, reflect.Value).Float(), 32, verb); 
- __s = 36; case 36: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 36; if __s == 36 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (14)) { */ case 13:
+         -- /* end else if (_1 == (14)) { */ if __s == 13 then 
             __r = p.fmtFloat(__clone(f, reflect.Value).Float(), 64, verb); 
- __s = 37; case 37: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 37; if __s == 37 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (15)) { */ case 14:
+         -- /* end else if (_1 == (15)) { */ if __s == 14 then 
             __r = p.fmtComplex(__clone(f, reflect.Value).Complex(), 64, verb); 
- __s = 38; case 38: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 38; if __s == 38 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (16)) { */ case 15:
+         -- /* end else if (_1 == (16)) { */ if __s == 15 then 
             __r = p.fmtComplex(__clone(f, reflect.Value).Complex(), 128, verb); 
- __s = 39; case 39: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 39; if __s == 39 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (24)) { */ case 16:
+         -- /* end else if (_1 == (24)) { */ if __s == 16 then 
             _r__2 = __clone(f, reflect.Value).__str(); 
- __s = 40; case 40: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 40; if __s == 40 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             __r = p.fmtString(_r__2, verb); 
- __s = 41; case 41: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 41; if __s == 41 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if (_1 == (21)) { */ case 17:
+         -- /* end else if (_1 == (21)) { */ if __s == 17 then 
             
  if (p.fmt.fmtFlags.sharpV) { __s = 42; continue; end
             
  __s = 43; continue;
-            -- /* if (p.fmt.fmtFlags.sharpV) { */ case 42:
+            -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 42 then 
                _r__3 = __clone(f, reflect.Value).Type().__str(); 
- __s = 45; case 45: if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
+ __s = 45; if __s == 45 then  if __c then __c = false; _r__3 = _r__3.__blk(); end if (_r__3  and  _r__3.__blk ~= nil) { break s; end
                __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__3); 
- __s = 46; case 46: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 46; if __s == 46 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                if (__clone(f, reflect.Value).IsNil()) {
                   (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("(nil)");
                   __s = -1; return;
                end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(123);
                __s = 44; continue;
-            -- /* end else { */ case 43:
+            -- /* end else { */ if __s == 43 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("map[");
-            -- /* end */ case 44:
+            -- /* end */ if __s == 44 then 
             _r__4 = __clone(f, reflect.Value).MapKeys(); 
- __s = 47; case 47: if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
+ __s = 47; if __s == 47 then  if __c then __c = false; _r__4 = _r__4.__blk(); end if (_r__4  and  _r__4.__blk ~= nil) { break s; end
             keys = _r__4;
             _ref = keys;
             _i = 0;
-            -- /* while (true) do  */ case 48:
+            -- /* while (true) do  */ if __s == 48 then 
                -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 49; continue; end
                i = _i;
                key = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
@@ -19265,34 +19318,34 @@ __packages["fmt"] = (function()
                   end
                end
                __r = p.printValue(__clone(key, reflect.Value), verb, depth + 1 >> 0); 
- __s = 50; case 50: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 50; if __s == 50 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(58);
                _r__5 = __clone(f, reflect.Value).MapIndex(__clone(key, reflect.Value)); 
- __s = 51; case 51: if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
+ __s = 51; if __s == 51 then  if __c then __c = false; _r__5 = _r__5.__blk(); end if (_r__5  and  _r__5.__blk ~= nil) { break s; end
                __r = p.printValue(__clone(_r__5, reflect.Value), verb, depth + 1 >> 0); 
- __s = 52; case 52: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 52; if __s == 52 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                _i=_i+1;
-            -- /* end */ __s = 48; continue; case 49:
+            -- /* end */ __s = 48; continue; if __s == 49 then 
             if (p.fmt.fmtFlags.sharpV) {
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(125);
             end else {
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(93);
             end
             __s = 24; continue;
-         -- /* end else if (_1 == (25)) { */ case 18:
+         -- /* end else if (_1 == (25)) { */ if __s == 18 then 
             
  if (p.fmt.fmtFlags.sharpV) { __s = 53; continue; end
             
  __s = 54; continue;
-            -- /* if (p.fmt.fmtFlags.sharpV) { */ case 53:
+            -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 53 then 
                _r__6 = __clone(f, reflect.Value).Type().__str(); 
- __s = 55; case 55: if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
+ __s = 55; if __s == 55 then  if __c then __c = false; _r__6 = _r__6.__blk(); end if (_r__6  and  _r__6.__blk ~= nil) { break s; end
                __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__6); 
- __s = 56; case 56: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-            -- /* end */ case 54:
+ __s = 56; if __s == 56 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+            -- /* end */ if __s == 54 then 
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(123);
             i__1 = 0;
-            -- /* while (true) do  */ case 57:
+            -- /* while (true) do  */ if __s == 57 then 
                -- /* if ( not (i__1 < __clone(f, reflect.Value).NumField())) { break; end */ if( not (i__1 < __clone(f, reflect.Value).NumField())) { __s = 58; continue; end
                if (i__1 > 0) {
                   if (p.fmt.fmtFlags.sharpV) {
@@ -19305,69 +19358,69 @@ __packages["fmt"] = (function()
  if (p.fmt.fmtFlags.plusV  or  p.fmt.fmtFlags.sharpV) { __s = 59; continue; end
                
  __s = 60; continue;
-               -- /* if (p.fmt.fmtFlags.plusV  or  p.fmt.fmtFlags.sharpV) { */ case 59:
+               -- /* if (p.fmt.fmtFlags.plusV  or  p.fmt.fmtFlags.sharpV) { */ if __s == 59 then 
                   _r__7 = __clone(f, reflect.Value).Type().Field(i__1); 
- __s = 61; case 61: if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
+ __s = 61; if __s == 61 then  if __c then __c = false; _r__7 = _r__7.__blk(); end if (_r__7  and  _r__7.__blk ~= nil) { break s; end
                   name = _r__7.Name;
                   if ( not (name == "")) {
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(name);
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(58);
                   end
-               -- /* end */ case 60:
+               -- /* end */ if __s == 60 then 
                _r__8 = getField(__clone(f, reflect.Value), i__1); 
- __s = 62; case 62: if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
+ __s = 62; if __s == 62 then  if __c then __c = false; _r__8 = _r__8.__blk(); end if (_r__8  and  _r__8.__blk ~= nil) { break s; end
                __r = p.printValue(__clone(_r__8, reflect.Value), verb, depth + 1 >> 0); 
- __s = 63; case 63: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 63; if __s == 63 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                i__1 = i__1 + (1) >> 0;
-            -- /* end */ __s = 57; continue; case 58:
+            -- /* end */ __s = 57; continue; if __s == 58 then 
             (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(125);
             __s = 24; continue;
-         -- /* end else if (_1 == (20)) { */ case 19:
+         -- /* end else if (_1 == (20)) { */ if __s == 19 then 
             _r__9 = __clone(f, reflect.Value).Elem(); 
- __s = 64; case 64: if __c then __c = false; _r__9 = _r__9.__blk(); end if (_r__9  and  _r__9.__blk ~= nil) { break s; end
+ __s = 64; if __s == 64 then  if __c then __c = false; _r__9 = _r__9.__blk(); end if (_r__9  and  _r__9.__blk ~= nil) { break s; end
             value__1 = _r__9;
             
  if ( not __clone(value__1, reflect.Value).IsValid()) { __s = 65; continue; end
             
  __s = 66; continue;
-            -- /* if ( not __clone(value__1, reflect.Value).IsValid()) { */ case 65:
+            -- /* if ( not __clone(value__1, reflect.Value).IsValid()) { */ if __s == 65 then 
                
  if (p.fmt.fmtFlags.sharpV) { __s = 68; continue; end
                
  __s = 69; continue;
-               -- /* if (p.fmt.fmtFlags.sharpV) { */ case 68:
+               -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 68 then 
                   _r__10 = __clone(f, reflect.Value).Type().__str(); 
- __s = 71; case 71: if __c then __c = false; _r__10 = _r__10.__blk(); end if (_r__10  and  _r__10.__blk ~= nil) { break s; end
+ __s = 71; if __s == 71 then  if __c then __c = false; _r__10 = _r__10.__blk(); end if (_r__10  and  _r__10.__blk ~= nil) { break s; end
                   __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__10); 
- __s = 72; case 72: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 72; if __s == 72 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                   (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("(nil)");
                   __s = 70; continue;
-               -- /* end else { */ case 69:
+               -- /* end else { */ if __s == 69 then 
                   (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
-               -- /* end */ case 70:
+               -- /* end */ if __s == 70 then 
                __s = 67; continue;
-            -- /* end else { */ case 66:
+            -- /* end else { */ if __s == 66 then 
                __r = p.printValue(__clone(value__1, reflect.Value), verb, depth + 1 >> 0); 
- __s = 73; case 73: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-            -- /* end */ case 67:
+ __s = 73; if __s == 73 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+            -- /* end */ if __s == 67 then 
             __s = 24; continue;
-         -- /* end else if ((_1 == (17))  or  (_1 == (23))) { */ case 20:
+         -- /* end else if ((_1 == (17))  or  (_1 == (23))) { */ if __s == 20 then 
                _3 = verb;
                
  if ((_3 == (115))  or  (_3 == (113))  or  (_3 == (120))  or  (_3 == (88))) { __s = 75; continue; end
                
  __s = 76; continue;
-               -- /* if ((_3 == (115))  or  (_3 == (113))  or  (_3 == (120))  or  (_3 == (88))) { */ case 75:
+               -- /* if ((_3 == (115))  or  (_3 == (113))  or  (_3 == (120))  or  (_3 == (88))) { */ if __s == 75 then 
                   t = __clone(f, reflect.Value).Type();
                   _r__11 = t.Elem(); 
- __s = 79; case 79: if __c then __c = false; _r__11 = _r__11.__blk(); end if (_r__11  and  _r__11.__blk ~= nil) { break s; end
+ __s = 79; if __s == 79 then  if __c then __c = false; _r__11 = _r__11.__blk(); end if (_r__11  and  _r__11.__blk ~= nil) { break s; end
                   _r__12 = _r__11.Kind(); 
- __s = 80; case 80: if __c then __c = false; _r__12 = _r__12.__blk(); end if (_r__12  and  _r__12.__blk ~= nil) { break s; end
+ __s = 80; if __s == 80 then  if __c then __c = false; _r__12 = _r__12.__blk(); end if (_r__12  and  _r__12.__blk ~= nil) { break s; end
                   
  if (_r__12 == 8) { __s = 77; continue; end
                   
  __s = 78; continue;
-                  -- /* if (_r__12 == 8) { */ case 77:
+                  -- /* if (_r__12 == 8) { */ if __s == 77 then 
                      bytes = sliceType__2.nil;
                      
  if (__clone(f, reflect.Value).Kind() == 23) { __s = 81; continue; end
@@ -19375,123 +19428,123 @@ __packages["fmt"] = (function()
  if (__clone(f, reflect.Value).CanAddr()) { __s = 82; continue; end
                      
  __s = 83; continue;
-                     -- /* if (__clone(f, reflect.Value).Kind() == 23) { */ case 81:
+                     -- /* if (__clone(f, reflect.Value).Kind() == 23) { */ if __s == 81 then 
                         _r__13 = __clone(f, reflect.Value).Bytes(); 
- __s = 85; case 85: if __c then __c = false; _r__13 = _r__13.__blk(); end if (_r__13  and  _r__13.__blk ~= nil) { break s; end
+ __s = 85; if __s == 85 then  if __c then __c = false; _r__13 = _r__13.__blk(); end if (_r__13  and  _r__13.__blk ~= nil) { break s; end
                         bytes = _r__13;
                         __s = 84; continue;
-                     -- /* end else if (__clone(f, reflect.Value).CanAddr()) { */ case 82:
+                     -- /* end else if (__clone(f, reflect.Value).CanAddr()) { */ if __s == 82 then 
                         _r__14 = __clone(f, reflect.Value).Slice(0, __clone(f, reflect.Value).Len()); 
- __s = 86; case 86: if __c then __c = false; _r__14 = _r__14.__blk(); end if (_r__14  and  _r__14.__blk ~= nil) { break s; end
+ __s = 86; if __s == 86 then  if __c then __c = false; _r__14 = _r__14.__blk(); end if (_r__14  and  _r__14.__blk ~= nil) { break s; end
                         _r__15 = __clone(_r__14, reflect.Value).Bytes(); 
- __s = 87; case 87: if __c then __c = false; _r__15 = _r__15.__blk(); end if (_r__15  and  _r__15.__blk ~= nil) { break s; end
+ __s = 87; if __s == 87 then  if __c then __c = false; _r__15 = _r__15.__blk(); end if (_r__15  and  _r__15.__blk ~= nil) { break s; end
                         bytes = _r__15;
                         __s = 84; continue;
-                     -- /* end else { */ case 83:
+                     -- /* end else { */ if __s == 83 then 
                         bytes = __makeSlice(sliceType__2, __clone(f, reflect.Value).Len());
                         _ref__1 = bytes;
                         _i__1 = 0;
-                        -- /* while (true) do  */ case 88:
+                        -- /* while (true) do  */ if __s == 88 then 
                            -- /* if ( not (_i__1 < _ref__1.__length)) { break; end */ if( not (_i__1 < _ref__1.__length)) { __s = 89; continue; end
                            i__2 = _i__1;
                            _r__16 = __clone(f, reflect.Value).Index(i__2); 
- __s = 90; case 90: if __c then __c = false; _r__16 = _r__16.__blk(); end if (_r__16  and  _r__16.__blk ~= nil) { break s; end
+ __s = 90; if __s == 90 then  if __c then __c = false; _r__16 = _r__16.__blk(); end if (_r__16  and  _r__16.__blk ~= nil) { break s; end
                            _r__17 = __clone(_r__16, reflect.Value).Uint(); 
- __s = 91; case 91: if __c then __c = false; _r__17 = _r__17.__blk(); end if (_r__17  and  _r__17.__blk ~= nil) { break s; end
+ __s = 91; if __s == 91 then  if __c then __c = false; _r__17 = _r__17.__blk(); end if (_r__17  and  _r__17.__blk ~= nil) { break s; end
                            ((i__2 < 0  or  i__2 >= bytes.__length) ? (__throwRuntimeError("index out of range"), nil) : bytes.__array[bytes.__offset + i__2] = ((_r__17.__low << 24 >>> 24)));
                            _i__1=_i__1+1;
-                        -- /* end */ __s = 88; continue; case 89:
-                     -- /* end */ case 84:
+                        -- /* end */ __s = 88; continue; if __s == 89 then 
+                     -- /* end */ if __s == 84 then 
                      _arg = bytes;
                      _arg__1 = verb;
                      _r__18 = t.__str(); 
- __s = 92; case 92: if __c then __c = false; _r__18 = _r__18.__blk(); end if (_r__18  and  _r__18.__blk ~= nil) { break s; end
+ __s = 92; if __s == 92 then  if __c then __c = false; _r__18 = _r__18.__blk(); end if (_r__18  and  _r__18.__blk ~= nil) { break s; end
                      _arg__2 = _r__18;
                      __r = p.fmtBytes(_arg, _arg__1, _arg__2); 
- __s = 93; case 93: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 93; if __s == 93 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                      __s = -1; return;
-                  -- /* end */ case 78:
-               -- /* end */ case 76:
-            case 74:
+                  -- /* end */ if __s == 78 then 
+               -- /* end */ if __s == 76 then 
+            if __s == 74 then 
             
  if (p.fmt.fmtFlags.sharpV) { __s = 94; continue; end
             
  __s = 95; continue;
-            -- /* if (p.fmt.fmtFlags.sharpV) { */ case 94:
+            -- /* if (p.fmt.fmtFlags.sharpV) { */ if __s == 94 then 
                _r__19 = __clone(f, reflect.Value).Type().__str(); 
- __s = 97; case 97: if __c then __c = false; _r__19 = _r__19.__blk(); end if (_r__19  and  _r__19.__blk ~= nil) { break s; end
+ __s = 97; if __s == 97 then  if __c then __c = false; _r__19 = _r__19.__blk(); end if (_r__19  and  _r__19.__blk ~= nil) { break s; end
                __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__19); 
- __s = 98; case 98: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 98; if __s == 98 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                if ((__clone(f, reflect.Value).Kind() == 23)  and  __clone(f, reflect.Value).IsNil()) {
                   (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("(nil)");
                   __s = -1; return;
                end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(123);
                i__3 = 0;
-               -- /* while (true) do  */ case 99:
+               -- /* while (true) do  */ if __s == 99 then 
                   -- /* if ( not (i__3 < __clone(f, reflect.Value).Len())) { break; end */ if( not (i__3 < __clone(f, reflect.Value).Len())) { __s = 100; continue; end
                   if (i__3 > 0) {
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(", ");
                   end
                   _r__20 = __clone(f, reflect.Value).Index(i__3); 
- __s = 101; case 101: if __c then __c = false; _r__20 = _r__20.__blk(); end if (_r__20  and  _r__20.__blk ~= nil) { break s; end
+ __s = 101; if __s == 101 then  if __c then __c = false; _r__20 = _r__20.__blk(); end if (_r__20  and  _r__20.__blk ~= nil) { break s; end
                   __r = p.printValue(__clone(_r__20, reflect.Value), verb, depth + 1 >> 0); 
- __s = 102; case 102: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 102; if __s == 102 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                   i__3 = i__3 + (1) >> 0;
-               -- /* end */ __s = 99; continue; case 100:
+               -- /* end */ __s = 99; continue; if __s == 100 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(125);
                __s = 96; continue;
-            -- /* end else { */ case 95:
+            -- /* end else { */ if __s == 95 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(91);
                i__4 = 0;
-               -- /* while (true) do  */ case 103:
+               -- /* while (true) do  */ if __s == 103 then 
                   -- /* if ( not (i__4 < __clone(f, reflect.Value).Len())) { break; end */ if( not (i__4 < __clone(f, reflect.Value).Len())) { __s = 104; continue; end
                   if (i__4 > 0) {
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(32);
                   end
                   _r__21 = __clone(f, reflect.Value).Index(i__4); 
- __s = 105; case 105: if __c then __c = false; _r__21 = _r__21.__blk(); end if (_r__21  and  _r__21.__blk ~= nil) { break s; end
+ __s = 105; if __s == 105 then  if __c then __c = false; _r__21 = _r__21.__blk(); end if (_r__21  and  _r__21.__blk ~= nil) { break s; end
                   __r = p.printValue(__clone(_r__21, reflect.Value), verb, depth + 1 >> 0); 
- __s = 106; case 106: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 106; if __s == 106 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                   i__4 = i__4 + (1) >> 0;
-               -- /* end */ __s = 103; continue; case 104:
+               -- /* end */ __s = 103; continue; if __s == 104 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(93);
-            -- /* end */ case 96:
+            -- /* end */ if __s == 96 then 
             __s = 24; continue;
-         -- /* end else if (_1 == (22)) { */ case 21:
+         -- /* end else if (_1 == (22)) { */ if __s == 21 then 
             
  if ((depth == 0)  and   not ((__clone(f, reflect.Value).Pointer() == 0))) { __s = 107; continue; end
             
  __s = 108; continue;
-            -- /* if ((depth == 0)  and   not ((__clone(f, reflect.Value).Pointer() == 0))) { */ case 107:
+            -- /* if ((depth == 0)  and   not ((__clone(f, reflect.Value).Pointer() == 0))) { */ if __s == 107 then 
                   _r__22 = __clone(f, reflect.Value).Elem(); 
- __s = 110; case 110: if __c then __c = false; _r__22 = _r__22.__blk(); end if (_r__22  and  _r__22.__blk ~= nil) { break s; end
+ __s = 110; if __s == 110 then  if __c then __c = false; _r__22 = _r__22.__blk(); end if (_r__22  and  _r__22.__blk ~= nil) { break s; end
                   a = _r__22;
                   _4 = __clone(a, reflect.Value).Kind();
                   
  if ((_4 == (17))  or  (_4 == (23))  or  (_4 == (25))  or  (_4 == (21))) { __s = 111; continue; end
                   
  __s = 112; continue;
-                  -- /* if ((_4 == (17))  or  (_4 == (23))  or  (_4 == (25))  or  (_4 == (21))) { */ case 111:
+                  -- /* if ((_4 == (17))  or  (_4 == (23))  or  (_4 == (25))  or  (_4 == (21))) { */ if __s == 111 then 
                      (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(38);
                      __r = p.printValue(__clone(a, reflect.Value), verb, depth + 1 >> 0); 
- __s = 113; case 113: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 113; if __s == 113 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                      __s = -1; return;
-                  -- /* end */ case 112:
-               case 109:
-            -- /* end */ case 108:
+                  -- /* end */ if __s == 112 then 
+               if __s == 109 then 
+            -- /* end */ if __s == 108 then 
             __r = p.fmtPointer(__clone(f, reflect.Value), verb); 
- __s = 114; case 114: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 114; if __s == 114 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (26))) { */ case 22:
+         -- /* end else if ((_1 == (18))  or  (_1 == (19))  or  (_1 == (26))) { */ if __s == 22 then 
             __r = p.fmtPointer(__clone(f, reflect.Value), verb); 
- __s = 115; case 115: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 115; if __s == 115 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
             __s = 24; continue;
-         -- /* end else { */ case 23:
+         -- /* end else { */ if __s == 23 then 
             __r = p.unknownType(__clone(f, reflect.Value)); 
- __s = 116; case 116: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-         -- /* end */ case 24:
-      case 7:
+ __s = 116; if __s == 116 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+         -- /* end */ if __s == 24 then 
+      if __s == 7 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.printValue end; end __f._1 = _1; __f._2 = _2; __f._3 = _3; __f._4 = _4; __f._arg = _arg; __f._arg__1 = _arg__1; __f._arg__2 = _arg__2; __f._i = _i; __f._i__1 = _i__1; __f._r = _r; __f._r__1 = _r__1; __f._r__10 = _r__10; __f._r__11 = _r__11; __f._r__12 = _r__12; __f._r__13 = _r__13; __f._r__14 = _r__14; __f._r__15 = _r__15; __f._r__16 = _r__16; __f._r__17 = _r__17; __f._r__18 = _r__18; __f._r__19 = _r__19; __f._r__2 = _r__2; __f._r__20 = _r__20; __f._r__21 = _r__21; __f._r__22 = _r__22; __f._r__3 = _r__3; __f._r__4 = _r__4; __f._r__5 = _r__5; __f._r__6 = _r__6; __f._r__7 = _r__7; __f._r__8 = _r__8; __f._r__9 = _r__9; __f._ref = _ref; __f._ref__1 = _ref__1; __f.a = a; __f.bytes = bytes; __f.depth = depth; __f.f = f; __f.i = i; __f.i__1 = i__1; __f.i__2 = i__2; __f.i__3 = i__3; __f.i__4 = i__4; __f.key = key; __f.keys = keys; __f.name = name; __f.p = p; __f.t = t; __f.value = value; __f.value__1 = value__1; __f.verb = verb; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -19500,7 +19553,7 @@ __packages["fmt"] = (function()
    intFromArg = function(m)
       local _1, _r, _tuple, a, argNum, isInt, n, n__1, newArgNum, num, v, x, x__1, x__2, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; a = __f.a; argNum = __f.argNum; isInt = __f.isInt; n = __f.n; n__1 = __f.n__1; newArgNum = __f.newArgNum; num = __f.num; v = __f.v; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _r = __f._r; _tuple = __f._tuple; a = __f.a; argNum = __f.argNum; isInt = __f.isInt; n = __f.n; n__1 = __f.n__1; newArgNum = __f.newArgNum; num = __f.num; v = __f.v; x = __f.x; x__1 = __f.x__1; x__2 = __f.x__2; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       num = 0;
       isInt = false;
       newArgNum = 0;
@@ -19509,7 +19562,7 @@ __packages["fmt"] = (function()
  if (argNum < a.__length) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (argNum < a.__length) { */ case 1:
+      -- /* if (argNum < a.__length) { */ if __s == 1 then 
          _tuple = __assertType(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum]), __Int, true);
          num = _tuple[0];
          isInt = _tuple[1];
@@ -19517,9 +19570,9 @@ __packages["fmt"] = (function()
  if ( not isInt) { __s = 3; continue; end
          
  __s = 4; continue;
-         -- /* if ( not isInt) { */ case 3:
+         -- /* if ( not isInt) { */ if __s == 3 then 
                _r = reflect.ValueOf(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum])); 
- __s = 6; case 6: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
                v = _r;
                _1 = __clone(v, reflect.Value).Kind();
                if ((_1 == (2))  or  (_1 == (3))  or  (_1 == (4))  or  (_1 == (5))  or  (_1 == (6))) {
@@ -19535,15 +19588,15 @@ __packages["fmt"] = (function()
                      isInt = true;
                   end
                end
-            case 5:
-         -- /* end */ case 4:
+            if __s == 5 then 
+         -- /* end */ if __s == 4 then 
          newArgNum = argNum + 1 >> 0;
          if (tooLarge(num)) {
             num = 0;
             isInt = false;
          end
-      -- /* end */ case 2:
-      __s = -1; return [num, isInt, newArgNum];
+      -- /* end */ if __s == 2 then 
+      __s = -1; return {num, isInt, newArgNum};
       
  end return; end if __f == nil then  __f = { __blk= intFromArg end; end __f._1 = _1; __f._r = _r; __f._tuple = _tuple; __f.a = a; __f.argNum = argNum; __f.isInt = isInt; __f.n = n; __f.n__1 = n__1; __f.newArgNum = newArgNum; __f.num = num; __f.v = v; __f.x = x; __f.x__1 = x__1; __f.x__2 = x__2; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -19559,7 +19612,7 @@ __packages["fmt"] = (function()
          index = _tmp;
          wid = _tmp__1;
          ok = _tmp__2;
-         return [index, wid, ok];
+         return {index, wid, ok};
       end
       i = 1;
       while (true) do 
@@ -19576,7 +19629,7 @@ __packages["fmt"] = (function()
                index = _tmp__3;
                wid = _tmp__4;
                ok = _tmp__5;
-               return [index, wid, ok];
+               return {index, wid, ok};
             end
             _tmp__6 = width - 1 >> 0;
             _tmp__7 = i + 1 >> 0;
@@ -19584,7 +19637,7 @@ __packages["fmt"] = (function()
             index = _tmp__6;
             wid = _tmp__7;
             ok = _tmp__8;
-            return [index, wid, ok];
+            return {index, wid, ok};
          end
          i = i + (1) >> 0;
       end
@@ -19594,7 +19647,7 @@ __packages["fmt"] = (function()
       index = _tmp__9;
       wid = _tmp__10;
       ok = _tmp__11;
-      return [index, wid, ok];
+      return {index, wid, ok};
    end;
    pp.ptr.prototype.argNumber = function(s)
       local _tmp, _tmp__1, _tmp__2, _tmp__3, _tmp__4, _tmp__5, _tmp__6, _tmp__7, _tmp__8, _tuple, argNum, format, found, i, index, newArgNum, newi, numArgs, ok, p, wid;
@@ -19609,7 +19662,7 @@ __packages["fmt"] = (function()
          newArgNum = _tmp;
          newi = _tmp__1;
          found = _tmp__2;
-         return [newArgNum, newi, found];
+         return {newArgNum, newi, found};
       end
       p.reordered = true;
       _tuple = parseArgNumber(__substring(format, i));
@@ -19623,7 +19676,7 @@ __packages["fmt"] = (function()
          newArgNum = _tmp__3;
          newi = _tmp__4;
          found = _tmp__5;
-         return [newArgNum, newi, found];
+         return {newArgNum, newi, found};
       end
       p.goodArgNum = false;
       _tmp__6 = argNum;
@@ -19632,7 +19685,7 @@ __packages["fmt"] = (function()
       newArgNum = _tmp__6;
       newi = _tmp__7;
       found = _tmp__8;
-      return [newArgNum, newi, found];
+      return {newArgNum, newi, found};
    end;
    pp.prototype.argNumber = function(s) return this.__val.argNumber(argNum, format, i, numArgs); end;
    pp.ptr.prototype.badArgNum = function(b)
@@ -19654,14 +19707,14 @@ __packages["fmt"] = (function()
    pp.ptr.prototype.doPrintf = function(a)
       local _1, _i, _r, _r__1, _r__2, _ref, _tuple, _tuple__1, _tuple__2, _tuple__3, _tuple__4, _tuple__5, _tuple__6, _tuple__7, a, afterIndex, arg, argNum, c, end, format, i, i__1, lasti, p, verb, w, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; a = __f.a; afterIndex = __f.afterIndex; arg = __f.arg; argNum = __f.argNum; c = __f.c; end = __f.end; format = __f.format; i = __f.i; i__1 = __f.i__1; lasti = __f.lasti; p = __f.p; verb = __f.verb; w = __f.w; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _1 = __f._1; _i = __f._i; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _ref = __f._ref; _tuple = __f._tuple; _tuple__1 = __f._tuple__1; _tuple__2 = __f._tuple__2; _tuple__3 = __f._tuple__3; _tuple__4 = __f._tuple__4; _tuple__5 = __f._tuple__5; _tuple__6 = __f._tuple__6; _tuple__7 = __f._tuple__7; a = __f.a; afterIndex = __f.afterIndex; arg = __f.arg; argNum = __f.argNum; c = __f.c; end = __f.end; format = __f.format; i = __f.i; i__1 = __f.i__1; lasti = __f.lasti; p = __f.p; verb = __f.verb; w = __f.w; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       p = this;
       end = #format;
       argNum = 0;
       afterIndex = false;
       p.reordered = false;
       i = 0;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          -- /* if ( not (i < end)) { break; end */ if( not (i < end)) { __s = 2; continue; end
          p.goodArgNum = true;
          lasti = i;
@@ -19677,7 +19730,7 @@ __packages["fmt"] = (function()
          end
          i = i + (1) >> 0;
          p.fmt.clearflags();
-         -- /* while (true) do  */ case 3:
+         -- /* while (true) do  */ if __s == 3 then 
             -- /* if ( not (i < end)) { break; end */ if( not (i < end)) { __s = 4; continue; end
             c = format.charCodeAt(i);
                _1 = c;
@@ -19693,28 +19746,28 @@ __packages["fmt"] = (function()
  if (_1 == (32)) { __s = 10; continue; end
                
  __s = 11; continue;
-               -- /* if (_1 == (35)) { */ case 6:
+               -- /* if (_1 == (35)) { */ if __s == 6 then 
                   p.fmt.fmtFlags.sharp = true;
                   __s = 12; continue;
-               -- /* end else if (_1 == (48)) { */ case 7:
+               -- /* end else if (_1 == (48)) { */ if __s == 7 then 
                   p.fmt.fmtFlags.zero =  not p.fmt.fmtFlags.minus;
                   __s = 12; continue;
-               -- /* end else if (_1 == (43)) { */ case 8:
+               -- /* end else if (_1 == (43)) { */ if __s == 8 then 
                   p.fmt.fmtFlags.plus = true;
                   __s = 12; continue;
-               -- /* end else if (_1 == (45)) { */ case 9:
+               -- /* end else if (_1 == (45)) { */ if __s == 9 then 
                   p.fmt.fmtFlags.minus = true;
                   p.fmt.fmtFlags.zero = false;
                   __s = 12; continue;
-               -- /* end else if (_1 == (32)) { */ case 10:
+               -- /* end else if (_1 == (32)) { */ if __s == 10 then 
                   p.fmt.fmtFlags.space = true;
                   __s = 12; continue;
-               -- /* end else { */ case 11:
+               -- /* end else { */ if __s == 11 then 
                   
  if (97 <= c  and  c <= 122  and  argNum < a.__length) { __s = 13; continue; end
                   
  __s = 14; continue;
-                  -- /* if (97 <= c  and  c <= 122  and  argNum < a.__length) { */ case 13:
+                  -- /* if (97 <= c  and  c <= 122  and  argNum < a.__length) { */ if __s == 13 then 
                      if (c == 118) {
                         p.fmt.fmtFlags.sharpV = p.fmt.fmtFlags.sharp;
                         p.fmt.fmtFlags.sharp = false;
@@ -19722,16 +19775,16 @@ __packages["fmt"] = (function()
                         p.fmt.fmtFlags.plus = false;
                      end
                      __r = p.printArg(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum]), ((c >> 0))); 
- __s = 15; case 15: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 15; if __s == 15 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                      argNum = argNum + (1) >> 0;
                      i = i + (1) >> 0;
                      -- /* continue formatLoop; */ __s = 1; continue s;
-                  -- /* end */ case 14:
+                  -- /* end */ if __s == 14 then 
                   -- /* break simpleFormat; */ __s = 4; continue s;
-               -- /* end */ case 12:
-            case 5:
+               -- /* end */ if __s == 12 then 
+            if __s == 5 then 
             i = i + (1) >> 0;
-         -- /* end */ __s = 3; continue; case 4:
+         -- /* end */ __s = 3; continue; if __s == 4 then 
          _tuple = p.argNumber(argNum, format, i, a.__length);
          argNum = _tuple[0];
          i = _tuple[1];
@@ -19740,10 +19793,10 @@ __packages["fmt"] = (function()
  if (i < end  and  (format.charCodeAt(i) == 42)) { __s = 16; continue; end
          
  __s = 17; continue;
-         -- /* if (i < end  and  (format.charCodeAt(i) == 42)) { */ case 16:
+         -- /* if (i < end  and  (format.charCodeAt(i) == 42)) { */ if __s == 16 then 
             i = i + (1) >> 0;
             _r = intFromArg(a, argNum); 
- __s = 19; case 19: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 19; if __s == 19 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
             _tuple__1 = _r;
             p.fmt.wid = _tuple__1[0];
             p.fmt.fmtFlags.widPresent = _tuple__1[1];
@@ -19758,7 +19811,7 @@ __packages["fmt"] = (function()
             end
             afterIndex = false;
             __s = 18; continue;
-         -- /* end else { */ case 17:
+         -- /* end else { */ if __s == 17 then 
             _tuple__2 = parsenum(format, i, end);
             p.fmt.wid = _tuple__2[0];
             p.fmt.fmtFlags.widPresent = _tuple__2[1];
@@ -19766,12 +19819,12 @@ __packages["fmt"] = (function()
             if (afterIndex  and  p.fmt.fmtFlags.widPresent) {
                p.goodArgNum = false;
             end
-         -- /* end */ case 18:
+         -- /* end */ if __s == 18 then 
          
  if ((i + 1 >> 0) < end  and  (format.charCodeAt(i) == 46)) { __s = 20; continue; end
          
  __s = 21; continue;
-         -- /* if ((i + 1 >> 0) < end  and  (format.charCodeAt(i) == 46)) { */ case 20:
+         -- /* if ((i + 1 >> 0) < end  and  (format.charCodeAt(i) == 46)) { */ if __s == 20 then 
             i = i + (1) >> 0;
             if (afterIndex) {
                p.goodArgNum = false;
@@ -19784,10 +19837,10 @@ __packages["fmt"] = (function()
  if (i < end  and  (format.charCodeAt(i) == 42)) { __s = 22; continue; end
             
  __s = 23; continue;
-            -- /* if (i < end  and  (format.charCodeAt(i) == 42)) { */ case 22:
+            -- /* if (i < end  and  (format.charCodeAt(i) == 42)) { */ if __s == 22 then 
                i = i + (1) >> 0;
                _r__1 = intFromArg(a, argNum); 
- __s = 25; case 25: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 25; if __s == 25 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
                _tuple__4 = _r__1;
                p.fmt.prec = _tuple__4[0];
                p.fmt.fmtFlags.precPresent = _tuple__4[1];
@@ -19801,7 +19854,7 @@ __packages["fmt"] = (function()
                end
                afterIndex = false;
                __s = 24; continue;
-            -- /* end else { */ case 23:
+            -- /* end else { */ if __s == 23 then 
                _tuple__5 = parsenum(format, i, end);
                p.fmt.prec = _tuple__5[0];
                p.fmt.fmtFlags.precPresent = _tuple__5[1];
@@ -19810,8 +19863,8 @@ __packages["fmt"] = (function()
                   p.fmt.prec = 0;
                   p.fmt.fmtFlags.precPresent = true;
                end
-            -- /* end */ case 24:
-         -- /* end */ case 21:
+            -- /* end */ if __s == 24 then 
+         -- /* end */ if __s == 21 then 
          if ( not afterIndex) {
             _tuple__6 = p.argNumber(argNum, format, i, a.__length);
             argNum = _tuple__6[0];
@@ -19836,41 +19889,41 @@ __packages["fmt"] = (function()
  if ((verb == 118)) { __s = 30; continue; end
             
  __s = 31; continue;
-            -- /* if ((verb == 37)) { */ case 27:
+            -- /* if ((verb == 37)) { */ if __s == 27 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(37);
                __s = 32; continue;
-            -- /* end else if ( not p.goodArgNum) { */ case 28:
+            -- /* end else if ( not p.goodArgNum) { */ if __s == 28 then 
                p.badArgNum(verb);
                __s = 32; continue;
-            -- /* end else if (argNum >= a.__length) { */ case 29:
+            -- /* end else if (argNum >= a.__length) { */ if __s == 29 then 
                p.missingArg(verb);
                __s = 32; continue;
-            -- /* end else if ((verb == 118)) { */ case 30:
+            -- /* end else if ((verb == 118)) { */ if __s == 30 then 
                p.fmt.fmtFlags.sharpV = p.fmt.fmtFlags.sharp;
                p.fmt.fmtFlags.sharp = false;
                p.fmt.fmtFlags.plusV = p.fmt.fmtFlags.plus;
                p.fmt.fmtFlags.plus = false;
                __r = p.printArg(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum]), verb); 
- __s = 33; case 33: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 33; if __s == 33 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                argNum = argNum + (1) >> 0;
                __s = 32; continue;
-            -- /* end else { */ case 31:
+            -- /* end else { */ if __s == 31 then 
                __r = p.printArg(((argNum < 0  or  argNum >= a.__length) ? (__throwRuntimeError("index out of range"), nil) : a.__array[a.__offset + argNum]), verb); 
- __s = 34; case 34: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 34; if __s == 34 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                argNum = argNum + (1) >> 0;
-            -- /* end */ case 32:
-         case 26:
-      -- /* end */ __s = 1; continue; case 2:
+            -- /* end */ if __s == 32 then 
+         if __s == 26 then 
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       
  if ( not p.reordered  and  argNum < a.__length) { __s = 35; continue; end
       
  __s = 36; continue;
-      -- /* if ( not p.reordered  and  argNum < a.__length) { */ case 35:
+      -- /* if ( not p.reordered  and  argNum < a.__length) { */ if __s == 35 then 
          p.fmt.clearflags();
          (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("% not (EXTRA ");
          _ref = __subslice(a, argNum);
          _i = 0;
-         -- /* while (true) do  */ case 37:
+         -- /* while (true) do  */ if __s == 37 then 
             -- /* if ( not (_i < _ref.__length)) { break; end */ if( not (_i < _ref.__length)) { __s = 38; continue; end
             i__1 = _i;
             arg = ((_i < 0  or  _i >= _ref.__length) ? (__throwRuntimeError("index out of range"), nil) : _ref.__array[_ref.__offset + _i]);
@@ -19881,22 +19934,22 @@ __packages["fmt"] = (function()
  if (__interfaceIsEqual(arg, __ifaceNil)) { __s = 39; continue; end
             
  __s = 40; continue;
-            -- /* if (__interfaceIsEqual(arg, __ifaceNil)) { */ case 39:
+            -- /* if (__interfaceIsEqual(arg, __ifaceNil)) { */ if __s == 39 then 
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString("<nil>");
                __s = 41; continue;
-            -- /* end else { */ case 40:
+            -- /* end else { */ if __s == 40 then 
                _r__2 = reflect.TypeOf(arg).__str(); 
- __s = 42; case 42: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 42; if __s == 42 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
                __r = (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteString(_r__2); 
- __s = 43; case 43: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 43; if __s == 43 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
                (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(61);
                __r = p.printArg(arg, 118); 
- __s = 44; case 44: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-            -- /* end */ case 41:
+ __s = 44; if __s == 44 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+            -- /* end */ if __s == 41 then 
             _i=_i+1;
-         -- /* end */ __s = 37; continue; case 38:
+         -- /* end */ __s = 37; continue; if __s == 38 then 
          (p.__ptr_buf  or  (p.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, p))).WriteByte(41);
-      -- /* end */ case 36:
+      -- /* end */ if __s == 36 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= pp.ptr.prototype.doPrintf end; end __f._1 = _1; __f._i = _i; __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._ref = _ref; __f._tuple = _tuple; __f._tuple__1 = _tuple__1; __f._tuple__2 = _tuple__2; __f._tuple__3 = _tuple__3; __f._tuple__4 = _tuple__4; __f._tuple__5 = _tuple__5; __f._tuple__6 = _tuple__6; __f._tuple__7 = _tuple__7; __f.a = a; __f.afterIndex = afterIndex; __f.arg = arg; __f.argNum = argNum; __f.c = c; __f.end = end; __f.format = format; __f.i = i; __f.i__1 = i__1; __f.lasti = lasti; __f.p = p; __f.verb = verb; __f.w = w; __f.__s = __s; __f.__r = __r; return __f;
@@ -19911,23 +19964,23 @@ __packages["fmt"] = (function()
       _tmp__1 = errors.New("ScanState's Read should not be called. Use ReadRune");
       n = _tmp;
       err = _tmp__1;
-      return [n, err];
+      return {n, err};
    end;
    ss.prototype.Read = function(buf) return this.__val.Read(buf); end;
    ss.ptr.prototype.ReadRune = function()
       local _r, _tuple, err, r, s, size, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; r = __f.r; s = __f.s; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; r = __f.r; s = __f.s; size = __f.size; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       r = 0;
       size = 0;
       err = __ifaceNil;
       s = this;
       if (s.atEOF  or  s.count >= s.ssave.argLimit) {
          err = io.EOF;
-         __s = -1; return [r, size, err];
+         __s = -1; return {r, size, err};
       end
       _r = s.rs.ReadRune(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       r = _tuple[0];
       size = _tuple[1];
@@ -19940,7 +19993,7 @@ __packages["fmt"] = (function()
       elseif __interfaceIsEqual(err, io.EOF) then
          s.atEOF = true;
       end
-      __s = -1; return [r, size, err];
+      __s = -1; return {r, size, err};
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.ReadRune end; end __f._r = _r; __f._tuple = _tuple; __f.err = err; __f.r = r; __f.s = s; __f.size = size; __f.__s = __s; __f.__r = __r; return __f;
    end;
@@ -19955,7 +20008,7 @@ __packages["fmt"] = (function()
          _tmp__1 = false;
          wid = _tmp;
          ok = _tmp__1;
-         return [wid, ok];
+         return {wid, ok};
       end
       _tmp__2 = s.ssave.maxWid;
       _tmp__3 = true;
@@ -19967,11 +20020,11 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.getRune = function()
       local _r, _tuple, err, r, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _tuple = __f._tuple; err = __f.err; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       r = 0;
       s = this;
       _r = s.ReadRune(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _tuple = _r;
       r = _tuple[0];
       err = _tuple[2];
@@ -19990,10 +20043,10 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.UnreadRune = function()
       local _r, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s = this;
       _r = s.rs.UnreadRune(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r;
       s.atEOF = false;
       s.count = s.count - (1) >> 0;
@@ -20017,7 +20070,7 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.Token = function(skipSpace, f)
       local _r, err, f, s, skipSpace, tok, __s, __deferred, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; s = __f.s; skipSpace = __f.skipSpace; tok = __f.tok; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  switch (__s) { case 0: __deferred = []; __deferred.index = #__curGoroutine.deferStack; __curGoroutine.deferStack.push(__deferred);
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; err = __f.err; f = __f.f; s = __f.s; skipSpace = __f.skipSpace; tok = __f.tok; __s = __f.__s; __deferred = __f.__deferred; __r = __f.__r; end local __err = null; try { ::s:: while (true) do  if __s == 0 then  __deferred = []; __deferred.index = #__curGoroutine.deferStack; __curGoroutine.deferStack.push(__deferred);
       err = [err];
       tok = sliceType__2.nil;
       err[0] = __ifaceNil;
@@ -20041,9 +20094,9 @@ __packages["fmt"] = (function()
       end
       s.buf = __subslice(s.buf, 0, 0);
       _r = s.token(skipSpace, f); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       tok = _r;
-      __s = -1; return [tok, err[0]];
+      __s = -1; return {tok, err[0]};
       
  end return; end end catch(err) { __err = err; __s = -1; end finally { __callDeferred(__deferred, __err); if  not __curGoroutine.asleep then return  [tok, err[0]]; end if __curGoroutine.asleep then  if __f == nil then  __f = { __blk= ss.ptr.prototype.Token end; end __f._r = _r; __f.err = err; __f.f = f; __f.s = s; __f.skipSpace = skipSpace; __f.tok = tok; __f.__s = __s; __f.__deferred = __deferred; __f.__r = __r; return __f; end end
    end;
@@ -20076,10 +20129,10 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.SkipSpace = function()
       local s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s = this;
       __r = s.skipSpace(false); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.SkipSpace end; end __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
@@ -20103,31 +20156,31 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.skipSpace = function(stopAtNewline)
       local _r, _r__1, _r__2, _v, r, s, stopAtNewline, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _v = __f._v; r = __f.r; s = __f.s; stopAtNewline = __f.stopAtNewline; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; _v = __f._v; r = __f.r; s = __f.s; stopAtNewline = __f.stopAtNewline; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s = this;
-      -- /* while (true) do  */ case 1:
+      -- /* while (true) do  */ if __s == 1 then 
          _r = s.getRune(); 
- __s = 3; case 3: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          r = _r;
          if (r == -1) {
             __s = -1; return;
          end
          if ( not (r == 13)) { _v = false; __s = 6; continue s; end
          _r__1 = s.peek("\n"); 
- __s = 7; case 7: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
-         _v = _r__1; case 6:
+ __s = 7; if __s == 7 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+         _v = _r__1; if __s == 6 then 
          
  if (_v) { __s = 4; continue; end
          
  __s = 5; continue;
-         -- /* if (_v) { */ case 4:
+         -- /* if (_v) { */ if __s == 4 then 
             -- /* continue; */ __s = 1; continue;
-         -- /* end */ case 5:
+         -- /* end */ if __s == 5 then 
          
  if (r == 10) { __s = 8; continue; end
          
  __s = 9; continue;
-         -- /* if (r == 10) { */ case 8:
+         -- /* if (r == 10) { */ if __s == 8 then 
             if (stopAtNewline) {
                -- /* break; */ __s = 2; continue;
             end
@@ -20136,18 +20189,18 @@ __packages["fmt"] = (function()
             end
             s.errorString("unexpected newline");
             __s = -1; return;
-         -- /* end */ case 9:
+         -- /* end */ if __s == 9 then 
          
  if ( not isSpace(r)) { __s = 10; continue; end
          
  __s = 11; continue;
-         -- /* if ( not isSpace(r)) { */ case 10:
+         -- /* if ( not isSpace(r)) { */ if __s == 10 then 
             _r__2 = s.UnreadRune(); 
- __s = 12; case 12: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 12; if __s == 12 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             _r__2;
             -- /* break; */ __s = 2; continue;
-         -- /* end */ case 11:
-      -- /* end */ __s = 1; continue; case 2:
+         -- /* end */ if __s == 11 then 
+      -- /* end */ __s = 1; continue; if __s == 2 then 
       __s = -1; return;
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.skipSpace end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f._v = _v; __f.r = r; __f.s = s; __f.stopAtNewline = stopAtNewline; __f.__s = __s; __f.__r = __r; return __f;
@@ -20156,37 +20209,37 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.token = function(f)
       local _r, _r__1, _r__2, f, r, s, skipSpace, x, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; f = __f.f; r = __f.r; s = __f.s; skipSpace = __f.skipSpace; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; _r__2 = __f._r__2; f = __f.f; r = __f.r; s = __f.s; skipSpace = __f.skipSpace; x = __f.x; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s = this;
       
  if (skipSpace) { __s = 1; continue; end
       
  __s = 2; continue;
-      -- /* if (skipSpace) { */ case 1:
+      -- /* if (skipSpace) { */ if __s == 1 then 
          __r = s.skipSpace(false); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
-      -- /* end */ case 2:
-      -- /* while (true) do  */ case 4:
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      -- /* end */ if __s == 2 then 
+      -- /* while (true) do  */ if __s == 4 then 
          _r = s.getRune(); 
- __s = 6; case 6: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
          r = _r;
          if (r == -1) {
             -- /* break; */ __s = 5; continue;
          end
          _r__1 = f(r); 
- __s = 9; case 9: if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 9; if __s == 9 then  if __c then __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          
  if ( not _r__1) { __s = 7; continue; end
          
  __s = 8; continue;
-         -- /* if ( not _r__1) { */ case 7:
+         -- /* if ( not _r__1) { */ if __s == 7 then 
             _r__2 = s.UnreadRune(); 
- __s = 10; case 10: if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
+ __s = 10; if __s == 10 then  if __c then __c = false; _r__2 = _r__2.__blk(); end if _r__2  and  _r__2.__blk ~= nil then break s; end
             _r__2;
             -- /* break; */ __s = 5; continue;
-         -- /* end */ case 8:
+         -- /* end */ if __s == 8 then 
          (s.__ptr_buf  or  (s.__ptr_buf = new ptrType__1(function() return this.__target.buf; end, function(v) this.__target.buf = __v; end, s))).WriteRune(r);
-      -- /* end */ __s = 4; continue; case 5:
+      -- /* end */ __s = 4; continue; if __s == 5 then 
       __s = -1; return (x = s.buf, __subslice(new sliceType__2(x.__array), x.__offset, x.__offset + x.__length));
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.token end; end __f._r = _r; __f._r__1 = _r__1; __f._r__2 = _r__2; __f.f = f; __f.r = r; __f.s = s; __f.skipSpace = skipSpace; __f.x = x; __f.__s = __s; __f.__r = __r; return __f;
@@ -20211,20 +20264,20 @@ __packages["fmt"] = (function()
    ss.ptr.prototype.peek = function(k)
       local _r, _r__1, ok, r, s, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; ok = __f.ok; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; _r__1 = __f._r__1; ok = __f.ok; r = __f.r; s = __f.s; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       s = this;
       _r = s.getRune(); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       r = _r;
       
  if ( not ((r == -1))) { __s = 2; continue; end
       
  __s = 3; continue;
-      -- /* if ( not ((r == -1))) { */ case 2:
+      -- /* if ( not ((r == -1))) { */ if __s == 2 then 
          _r__1 = s.UnreadRune(); 
- __s = 4; case 4: if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; _r__1 = _r__1.__blk(); end if (_r__1  and  _r__1.__blk ~= nil) { break s; end
          _r__1;
-      -- /* end */ case 3:
+      -- /* end */ if __s == 3 then 
       __s = -1; return indexRune(ok, r) >= 0;
       
  end return; end if __f == nil then  __f = { __blk= ss.ptr.prototype.peek end; end __f._r = _r; __f._r__1 = _r__1; __f.ok = ok; __f.r = r; __f.s = s; __f.__s = __s; __f.__r = __r; return __f;
@@ -20249,23 +20302,23 @@ __packages["fmt"] = (function()
       __pkg.__init = function()end;
       
  
-      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+      local __f, __c = false, __s = 0, __r; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       __r = errors.__init(); 
- __s = 1; case 1: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = io.__init(); 
- __s = 2; case 2: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 2; if __s == 2 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = math.__init(); 
- __s = 3; case 3: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 3; if __s == 3 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = os.__init(); 
- __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = reflect.__init(); 
- __s = 5; case 5: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 5; if __s == 5 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = strconv.__init(); 
- __s = 6; case 6: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 6; if __s == 6 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = sync.__init(); 
- __s = 7; case 7: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 7; if __s == 7 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       __r = utf8.__init(); 
- __s = 8; case 8: if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+ __s = 8; if __s == 8 then  if __c then __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
       ppFree = new sync.Pool.ptr(0, 0, sliceType.nil, (function()
          return new pp.ptr(buffer.nil, __ifaceNil, new reflect.Value.ptr(ptrType.nil, 0, 0), new fmt.ptr(ptrType__1.nil, new fmtFlags.ptr(false, false, false, false, false, false, false, false, false), 0, 0, arrayType.zero()), false, false, false, false);
       end));
@@ -20288,12 +20341,12 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
    main = function()
       local _r, a, b, c, __s, __r;
       
- __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; a = __f.a; b = __f.b; c = __f.c; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  switch (__s) { case 0:
+ __s = 0; local __f, __c = false; if this ~= nil and this.__blk ~= nil then  __f = this; __c = true; _r = __f._r; a = __f.a; b = __f.b; c = __f.c; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do  if __s == 0 then 
       a = 1;
       b = 2;
       c = ((a + b >> 0));
       _r = fmt.Printf("c=%v\n", new sliceType([new __Float64(c)])); 
- __s = 1; case 1: if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
+ __s = 1; if __s == 1 then  if __c then __c = false; _r = _r.__blk(); end if _r  and  _r.__blk ~= nil then  break s; end
       _r;
       __s = -1; return;
       
@@ -20314,11 +20367,11 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
       end 
 ::s:: 
      while (true) do  
-         switch (__s) { 
-           case 0:
+          
+           if __s == 0 then 
             __r = fmt.__init(); 
             __s = 1; 
-           case 1: 
+           if __s == 1 then  
               if __c then 
                  __c = false;
                   __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
@@ -20329,13 +20382,13 @@ __packages["github.com/gijit/gi/pkg/compiler/tmp"] = (function()
  
       __s = 3; continue;
       -- /* if __pkg == __mainPkg then  */ 
-      case 2:
+      if __s == 2 then 
          __r = main(); 
  
-      __s = 4; case 4: if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
+      __s = 4; if __s == 4 then  if __c then  __c = false; __r = __r.__blk(); end if __r  and __r.__blk ~= nil then  break s; end
          __mainFinished = true;
       -- /* end */
-      case 3:
+      if __s == 3 then 
       
       end return; end if __f == nil then __f = { __blk= __init }; end; __f.__s = __s; __f.__r = __r; return __f;
    end;
