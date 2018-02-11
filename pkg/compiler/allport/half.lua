@@ -875,7 +875,7 @@ elseif kind ==  __kindArray then
         __copyArray(dst, src, 0, 0, #src, elem);
       end;
       typ.ptr.init(typ);
-      Object.defineProperty(typ.ptr.nil, "nilCheck", { get= __throwNilPointerError end);
+      Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
     end;
     
 
@@ -922,7 +922,8 @@ elseif kind ==  __kindArray then
     end;
     
 
-  elseif kind ==  __kindPtr then 
+  elseif kind ==  __kindPtr then
+
     typ = constructor  or  function(getter, setter, target)
       this.__get = getter;
       this.__set = setter;
@@ -933,14 +934,14 @@ elseif kind ==  __kindArray then
     typ.init = function(elem)
       typ.elem = elem;
       typ.wrapped = (elem.kind == __kindArray);
-      typ.nil = new typ(__throwNilPointerError, __throwNilPointerError);
+      typ.__nil = new typ(__throwNilPointerError, __throwNilPointerError);
     end;
     
 
-  elseif kind ==  __kindSlice then 
+  elseif kind ==  __kindSlice then
     typ.tfun = function(this, array)
       if array.constructor ~= typ.nativeArray then
-        array = new typ.nativeArray(array);
+         array = new typ.nativeArray(array);
       end
       this.__array = array;
       this.__offset = 0;
@@ -952,7 +953,7 @@ elseif kind ==  __kindArray then
       typ.elem = elem;
       typ.comparable = false;
       typ.nativeArray = __nativeArray(elem.kind);
-      typ.nil = new typ({});
+      typ.__nil = new typ({});
     end;
     
 
@@ -998,8 +999,8 @@ elseif kind ==  __kindArray then
       fields.forEach(function(f)
             properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
       end);
-      typ.ptr.nil = Object.create(constructor.prototype, properties);
-      typ.ptr.nil.__val = typ.ptr.nil;
+      typ.ptr.__nil = Object.create(constructor.prototype, properties);
+      typ.ptr.__nil.__val = typ.ptr.__nil;
       -- /* methods for embedded fields */
       __addMethodSynthesizer(function()
         local synthesizeMethod = function(target, m, f)
@@ -1038,7 +1039,6 @@ elseif kind ==  __kindArray then
   kind ==__kindMap then
     typ.zero = function() return false; end;
     
-
   elseif kind == __kindInt or
   kind ==  __kindInt8 or
   kind ==  __kindInt16 or
@@ -1053,11 +1053,9 @@ elseif kind ==  __kindArray then
   kind ==  __kindFloat64 then
     typ.zero = function() return 0; end;
     
-
- elseif kind ==  __kindString then
+  elseif kind ==  __kindString then
     typ.zero = function() return ""; end;
     
-
   elseif k ==  __kindInt64 or
   kind == __kindUint64 or
   kind == __kindComplex64 or
@@ -1068,7 +1066,7 @@ elseif kind ==  __kindArray then
 
   elseif kind == __kindPtr or
   kind == __kindSlice then
-    typ.zero = function() return typ.nil; end;
+    typ.zero = function() return typ.__nil; end;
     
 
     elseif kind == __kindChan:
@@ -1102,7 +1100,7 @@ elseif kind ==  __kindArray then
     
 
   else
-    __panic(new __String("invalid kind: " .. kind));
+    __panic(__String("invalid kind: " .. tostring(kind)));
   end
 
   typ.id = __typeIDCounter;
@@ -1947,7 +1945,7 @@ __externalize = function(v, t)
     return m;
   elseif sw ==  __kindPtr then 
 
-    if v == t.nil then
+    if v == t.__nil then
       return nil;
     end
     return __externalize(v.__get(), t.elem);
@@ -1998,7 +1996,7 @@ __externalize = function(v, t)
       end
       local sw2 = t.kind
       if sw2 == __kindPtr then
-        if v == t.nil then
+        if v == t.__nil then
           return noJsObject;
         end
         return searchJsObject(v.__get(), t.elem);

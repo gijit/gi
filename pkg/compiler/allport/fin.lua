@@ -26,6 +26,8 @@ __kindString = 24;
 __kindStruct = 25;
 __kindUnsafePointer = 26;
 
+__throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
+
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
 function __st(t, name, indent, quiet, methods_desc, seen)
@@ -209,6 +211,24 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
        typ.tfun = function(this, v) this.__val = v; end;
        typ.wrapped = true;
        typ.keyFor = function(x) return __floatKey(x); end;
+
+  elseif kind ==  __kindPtr then
+     
+    typ = constructor  or  function(getter, setter, target)
+      this.__get = getter;
+      this.__set = setter;
+      this.__target = target;
+      this.__val = this;
+    end;
+    typ.keyFor = __idKey;
+    typ.init = function(elem)
+      typ.elem = elem;
+      typ.wrapped = (elem.kind == __kindArray);
+      typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
+    end;
+
+  else
+     error("invalid kind: " .. tostring(kind));
   end
 
   -- set zero() method
@@ -238,6 +258,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      
   elseif kind ==  __kindString then
      typ.zero = function() return ""; end;
+
+  elseif kind == __kindPtr or
+  kind == __kindSlice then
+     
+    typ.zero = function() return typ.__nil; end;
+         
   end
 
   typ.id = __typeIDCounter;
@@ -256,20 +282,20 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 end
 
 __Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, nil);
-__Int           = __newType( 4, __kindInt,           "int",            true, "", false, nil);
+__Int           = __newType( 8, __kindInt,           "int",            true, "", false, nil);
 __Int8          = __newType( 1, __kindInt8,          "int8",           true, "", false, nil);
 __Int16         = __newType( 2, __kindInt16,         "int16",          true, "", false, nil);
 __Int32         = __newType( 4, __kindInt32,         "int32",          true, "", false, nil);
 __Int64         = __newType( 8, __kindInt64,         "int64",          true, "", false, nil);
-__Uint          = __newType( 4, __kindUint,          "uint",           true, "", false, nil);
+__Uint          = __newType( 8, __kindUint,          "uint",           true, "", false, nil);
 __Uint8         = __newType( 1, __kindUint8,         "uint8",          true, "", false, nil);
 __Uint16        = __newType( 2, __kindUint16,        "uint16",         true, "", false, nil);
 __Uint32        = __newType( 4, __kindUint32,        "uint32",         true, "", false, nil);
 __Uint64        = __newType( 8, __kindUint64,        "uint64",         true, "", false, nil);
-__Uintptr       = __newType( 4, __kindUintptr,       "uintptr",        true, "", false, nil);
-__Float32       = __newType( 4, __kindFloat32,       "float32",        true, "", false, nil);
+__Uintptr       = __newType( 8, __kindUintptr,       "uintptr",        true, "", false, nil);
+__Float32       = __newType( 8, __kindFloat32,       "float32",        true, "", false, nil);
 __Float64       = __newType( 8, __kindFloat64,       "float64",        true, "", false, nil);
 __Complex64     = __newType( 8, __kindComplex64,     "complex64",      true, "", false, nil);
 __Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
-__String        = __newType( 8, __kindString,        "string",         true, "", false, nil);
-__UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+__String        = __newType(16, __kindString,        "string",         true, "", false, nil);
+__UnsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
