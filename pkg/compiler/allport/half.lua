@@ -74,12 +74,19 @@ __call = function(fn, rcvr, args)  return fn(rcvr, args); end;
 __makeFunc = function(fn)  return function()  return __externalize(fn(this, new (__sliceType(__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface); end; end;
 __unused = function(v) end;
 
-__mapArray = function(array, f) 
-  local newArray = new array.constructor(#array);
-  for i = 0; #array-1 do
-    newArray[i] = f(array[i]);
-  end
-  return newArray;
+__mapArray = function(array, f)
+   local newarr = {}
+   -- handle a zero argument, if present.
+   local bump = 0
+   local zval = arr[0]
+   if zval ~= nil then
+      bump = 1
+      newarr[1] = fun(zval)
+   end
+   for i,v in ipairs(arr) do
+      newarr[i+bump] = fun(v)
+   end
+   return newarr
 end;
 
 __methodVal = function(recv, name) 
@@ -770,7 +777,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
        break;
 
   elseif kind ==  __kindInt64 then 
-    typ = function(w)
+    typ = function(high, low)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >> 0;
       this.__low = low >>> 0;
       this.__val = this;
@@ -779,7 +786,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind ==  __kindUint64 then 
-    typ = function(w)
+    typ = function(high, low)
       this.__high = (high + Math.floor(Math.ceil(low) / 4294967296)) >>> 0;
       this.__low = low >>> 0;
       this.__val = this;
@@ -788,7 +795,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind ==  __kindComplex64 then 
-    typ = function(g)
+    typ = function(real, imag)
       this.__real = __fround(real);
       this.__imag = __fround(imag);
       this.__val = this;
@@ -797,7 +804,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind ==  __kindComplex128 then 
-    typ = function(g)
+    typ = function(real, imag)
       this.__real = real;
       this.__imag = imag;
       this.__val = this;
@@ -805,7 +812,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
     break;
 
-  elseif kind ==  __kindArray then 
+elseif kind ==  __kindArray then
+
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
@@ -813,16 +821,26 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__set = function(v) typ.copy(this, v); end;
       this.__val = array;
     end);
-    typ.init = function(n)
+    typ.init = function(elem, len)
       typ.elem = elem;
       typ.len = len;
       typ.comparable = elem.comparable;
       typ.keyFor = function(x)
-        return Array.prototype.join.call(__mapArray(x, function(e)
-          return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
-        end), "_");
-      end;
-      typ.copy = function(c)
+
+      typ.keyFor = function(x)
+          local ma = __mapArray(x, function(e)
+               return tostring(elem.keyFor(e))
+            end)
+            return table.concat(ma, "_")
+         end
+
+      --typ.keyFor = function(x)
+        --return Array.prototype.join.call(__mapArray(x, function(e)
+        --  return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
+        --end), "_");
+      --end;
+
+      typ.copy = function(dst, src)
         __copyArray(dst, src, 0, 0, #src, elem);
       end;
       typ.ptr.init(typ);
@@ -834,7 +852,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __idKey;
-    typ.init = function(y)
+    typ.init = function(elem, sendOnly, recvOnly)
       typ.elem = elem;
       typ.sendOnly = sendOnly;
       typ.recvOnly = recvOnly;
@@ -844,7 +862,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   elseif kind ==  __kindFunc then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.init = function(c)
+    typ.init = function(params, results, variadic)
       typ.params = params;
       typ.results = results;
       typ.variadic = variadic;
@@ -855,7 +873,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   elseif kind ==  __kindInterface then 
      typ = { implementedBy= {}, missingMethodFor= {} };
     typ.keyFor = __ifaceKeyFor;
-    typ.init = function(s)
+    typ.init = function(methods)
       typ.methods = methods;
       methods.forEach(function(m)
         __ifaceNil[m.prop] = __throwNilPointerError;
@@ -866,7 +884,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   elseif kind ==  __kindMap then 
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.init = function(m)
+    typ.init = function(key, elem)
       typ.key = key;
       typ.elem = elem;
       typ.comparable = false;
@@ -874,14 +892,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind ==  __kindPtr then 
-    typ = constructor  or  function(t)
+    typ = constructor  or  function(getter, setter, target)
       this.__get = getter;
       this.__set = setter;
       this.__target = target;
       this.__val = this;
     end;
     typ.keyFor = __idKey;
-    typ.init = function(m)
+    typ.init = function(elem)
       typ.elem = elem;
       typ.wrapped = (elem.kind == __kindArray);
       typ.nil = new typ(__throwNilPointerError, __throwNilPointerError);
@@ -889,7 +907,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   elseif kind ==  __kindSlice then 
-    typ = function(y)
+    typ = function(array)
       if array.constructor ~= typ.nativeArray then
         array = new typ.nativeArray(array);
       end
@@ -899,7 +917,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__capacity = #array;
       this.__val = this;
     end;
-    typ.init = function(m)
+    typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
       typ.nativeArray = __nativeArray(elem.kind);
@@ -911,11 +929,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
        
     typ = function(v) this.__val = v; end;
     typ.wrapped = true;
-    typ.ptr = __newType(4, __kindPtr, "*" + str, false, pkg, exported, constructor);
+    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, constructor);
     typ.ptr.elem = typ;
     typ.ptr.prototype.__get = function() return this; end;
     typ.ptr.prototype.__set = function(v) typ.copy(this, v); end;
-    typ.init = function(s)
+    typ.init = function(pkgPath, fields)
       typ.pkgPath = pkgPath;
       typ.fields = fields;
       fields.forEach(function(f)
@@ -929,7 +947,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
           return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
         end).join("_");
       end;
-      typ.copy = function(c)
+      typ.copy = function(dst, src)
          for i=0,#fields-1 do
             local f = fields[i];
             local sw2 = f.typ.kind
@@ -953,7 +971,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.ptr.nil.__val = typ.ptr.nil;
       -- /* methods for embedded fields */
       __addMethodSynthesizer(function()
-        local synthesizeMethod = function(f)
+        local synthesizeMethod = function(target, m, f)
           if target.prototype[m.prop] ~= nil then return; end
           target.prototype[m.prop] = function()
             local v = this.__val[f.prop];
@@ -1053,7 +1071,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     break;
 
   else
-    __panic(new __String("invalid kind: " + kind));
+    __panic(new __String("invalid kind: " .. kind));
   end
 
   typ.id = __typeIDCounter;
@@ -1103,6 +1121,7 @@ __methodSet = function(typ)
         end
       end
 
+      -- switch e.typ.kind
       local knd = e.typ.kind
       if knd == __kindStruct then
 
@@ -1139,7 +1158,7 @@ __methodSet = function(typ)
   end
 
   typ.methodSetCache = {};
-  Object.keys(base).sort().forEach(function(e)
+  Object.keys(base).sort().forEach(function(name)
     typ.methodSetCache.push(base[name]);
   end);
   return typ.methodSetCache;
@@ -1201,11 +1220,11 @@ __toNativeArray = function(elemKind, array)
   return new nativeArray(array);
 end;
 __arrayTypes = {};
-__arrayType = function(n)
-  local typeKey = elem.id + "_" + len;
+__arrayType = function(elem, len)
+  local typeKey = elem.id + "_" .. len;
   local typ = __arrayTypes[typeKey];
   if typ == nil then
-    typ = __newType(12, __kindArray, "[" + len + "]" + elem.__str, false, "", false, null);
+    typ = __newType(12, __kindArray, "[" .. len + "]" .. elem.__str, false, "", false, null);
     __arrayTypes[typeKey] = typ;
     typ.init(elem, len);
   end
@@ -1214,7 +1233,7 @@ end;
 
 __chanType = function(elem, sendOnly, recvOnly)
    
-  local string = (recvOnly ? "<-" : "") + "chan" + (sendOnly ? "<- " : " ") + elem.__str;
+  local string = (recvOnly ? "<-" : "") + "chan" .. (sendOnly ? "<- " : " ") + elem.__str;
   local field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
   local typ = elem[field];
   if typ == nil then
@@ -1224,7 +1243,7 @@ __chanType = function(elem, sendOnly, recvOnly)
   end
   return typ;
 end;
-__Chan = function(y)
+__Chan = function(elem, capacity)
   if capacity < 0  or  capacity > 2147483647 then
     __throwRuntimeError("makechan: size out of range");
   end
@@ -1239,21 +1258,21 @@ __chanNil = new __Chan(null, 0);
 __chanNil.__sendQueue = __chanNil.__recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
 
 __funcTypes = {};
-__funcType = function(c)
-  local typeKey = __mapArray(params, function(p) return p.id; end).join(",") + "_" + __mapArray(results, function(r) return r.id; end).join(",") + "_" + variadic;
+__funcType = function(params, results, variadic)
+  local typeKey = __mapAndJoinStrings(",", params, function(p) return p.id; end) .. "_" .. __mapAndJoinStrings(",", results, function(r) return r.id; end) .. "_" .. variadic;
   local typ = __funcTypes[typeKey];
   if typ == nil then
     local paramTypes = __mapArray(params, function(p) return p.__str; end);
     if variadic then
-      paramTypes[#paramTypes - 1] = "..." + paramTypes[#paramTypes - 1].substr(2);
+      paramTypes[#paramTypes - 1] = "..." .. paramTypes[#paramTypes - 1].substr(2);
     end
-    local string = "func(" + paramTypes.join(", ") + ")";
+    local string = "func(" .. table.concat(paramTypes, ", ") .. ")";
     if #results == 1 then
-      string += " " + results[0].__str;
-    end else if #results > 1 then
-      string += " (" + __mapArray(results, function(r) return r.__str; end).join(", ") + ")";
+      str = str .. " " .. results[0].__str;
+      end else if #results > 1 then
+      str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
     end
-    typ = __newType(4, __kindFunc, string, false, "", false, null);
+    typ = __newType(4, __kindFunc, str, false, "", false, null);
     __funcTypes[typeKey] = typ;
     typ.init(params, results, variadic);
   end
@@ -1261,13 +1280,13 @@ __funcType = function(c)
 end;
 
 __interfaceTypes = {};
-__interfaceType = function(s)
-  local typeKey = __mapArray(methods, function(m) return m.pkg + "," + m.name + "," + m.typ.id; end).join("_");
+__interfaceType = function(methods)
+  local typeKey = __mapArray(methods, function(m) return m.pkg + "," .. m.name + "," .. m.typ.id; end).join("_");
   local typ = __interfaceTypes[typeKey];
   if typ == nil then
     local string = "interface {}";
     if #methods ~= 0 then
-      string = "interface { " + __mapArray(methods, function(m)
+      string = "interface { " .. __mapArray(methods, function(m)
         return (m.pkg ~= "" ? m.pkg + "." : "") + m.name + m.typ.__str.substr(4);
       end).join("; ") + " end";
     end
@@ -1283,17 +1302,17 @@ __error = __newType(8, __kindInterface, "error", true, "", false, null);
 __error.init([{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, [__String], false)end]);
 
 __mapTypes = {};
-__mapType = function(m)
-  local typeKey = key.id + "_" + elem.id;
+__mapType = function(key, elem)
+  local typeKey = key.id + "_" .. elem.id;
   local typ = __mapTypes[typeKey];
   if typ == nil then
-    typ = __newType(4, __kindMap, "map[" + key.__str + "]" + elem.__str, false, "", false, null);
+    typ = __newType(4, __kindMap, "map[" .. key.__str + "]" .. elem.__str, false, "", false, null);
     __mapTypes[typeKey] = typ;
     typ.init(key, elem);
   end
   return typ;
 end;
-__makeMap = function(s)
+__makeMap = function(keyForFunc, entries)
    local m = {};
    for i =0,#entries-1 do
     local e = entries[i];
@@ -1302,38 +1321,38 @@ __makeMap = function(s)
   return m;
 end;
 
-__ptrType = function(m)
+__ptrType = function(elem)
   local typ = elem.ptr;
   if typ == nil then
-    typ = __newType(4, __kindPtr, "*" + elem.__str, false, "", elem.exported, null);
+    typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, null);
     elem.ptr = typ;
     typ.init(elem);
   end
   return typ;
 end;
 
-__newDataPointer = function(r)
+__newDataPointer = function(data, constructor)
   if constructor.elem.kind == __kindStruct then
     return data;
   end
   return new constructor(function() return data; end, function(v) data = v; end);
 end;
 
-__indexPtr = function(r)
+__indexPtr = function(array, index, constructor)
   array.__ptr = array.__ptr  or  {};
   return array.__ptr[index]  or  (array.__ptr[index] = new constructor(function() return array[index]; end, function(v) array[index] = v; end));
 end;
 
-__sliceType = function(m)
+__sliceType = function(elem)
   local typ = elem.slice;
   if typ == nil then
-    typ = __newType(12, __kindSlice, "[]" + elem.__str, false, "", false, null);
+    typ = __newType(12, __kindSlice, "[]" .. elem.__str, false, "", false, null);
     elem.slice = typ;
     typ.init(elem);
   end
   return typ;
 end;
-__makeSlice = function(y)
+__makeSlice = function(typ, length, capacity)
   capacity = capacity  or  length;
   if length < 0  or  length > 2147483647 then
     __throwRuntimeError("makeslice: len out of range");
@@ -1353,12 +1372,12 @@ __makeSlice = function(y)
 end;
 
 __structTypes = {};
-__structType = function(s)
-  local typeKey = __mapArray(fields, function(f) return f.name + "," + f.typ.id + "," + f.tag; end).join("_");
+__structType = function(pkgPath, fields)
+  local typeKey = __mapArray(fields, function(f) return f.name + "," .. f.typ.id + "," .. f.tag; end).join("_");
   local typ = __structTypes[typeKey];
   if typ == nil then
-    local string = "struct { " + __mapArray(fields, function(f)
-      return f.name + " " + f.typ.__str + (f.tag ~= "" ? (" \"" + f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"") : "");
+    local string = "struct { " .. __mapArray(fields, function(f)
+      return f.name + " " .. f.typ.__str + (f.tag ~= "" ? (" \"" .. f.tag.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"") : "");
     end).join("; ") + " end";
     if #fields == 0 then
       string = "struct {}";
@@ -1377,7 +1396,7 @@ __structType = function(s)
   return typ;
 end;
 
-__assertType = function(e)
+__assertType = function(value, type, returnTuple)
   local isInterface = (typ.kind == __kindInterface), ok, missingMethod = "";
   if value == __ifaceNil then
     ok = false;
@@ -1441,7 +1460,7 @@ __getStackDepth = function()
 end;
 
 __panicStackDepth = null, __panicValue;
-__callDeferred = function(c)
+__callDeferred = function(deferred, jsErr, fromPanic) 
   if  not fromPanic  and  deferred ~= null  and  deferred.index >= __curGoroutine.#deferStack then
     throw jsErr;
   end
@@ -1528,7 +1547,7 @@ __callDeferred = function(c)
   end
 end;
 
-__panic = function(e)
+__panic = function(value)
   __curGoroutine.panicStack.push(value);
   __callDeferred(null, null, true);
 end;
@@ -1539,12 +1558,12 @@ __recover = function()
   __panicStackDepth = null;
   return __panicValue;
 end;
-__throw = function(r) throw err; end;
+__throw = function(err) throw err; end;
 
 __noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
 __curGoroutine = __noGoroutine, __totalGoroutines = 0, __awakeGoroutines = 0, __checkForDeadlock = true;
 __mainFinished = false;
-__go = function(s)
+__go = function(fun, args)
   __totalGoroutines=__totalGoroutines+1;
   __awakeGoroutines=__awakeGoroutines+1;
   local __goroutine = function()
@@ -1599,7 +1618,7 @@ __runScheduled = function()
   end
 end;
 
-__schedule = function(e)
+__schedule = function(goroutine)
   if goroutine.asleep then
     goroutine.asleep = false;
     __awakeGoroutines=__awakeGoroutines+1;
@@ -1610,7 +1629,7 @@ __schedule = function(e)
   end
 end;
 
-__setTimeout = function(t)
+__setTimeout = function(f, t)
   __awakeGoroutines=__awakeGoroutines+1;
   return setTimeout(function()
     __awakeGoroutines=__awakeGoroutines-1;
@@ -1625,7 +1644,7 @@ __block = function()
   __curGoroutine.asleep = true;
 end;
 
-__send = function(e)
+__send = function(chan, value)
   if chan.__closed then
     __throwRuntimeError("send on closed channel");
   end
@@ -1641,7 +1660,7 @@ __send = function(e)
 
   local thisGoroutine = __curGoroutine;
   local closedDuringSend;
-  chan.__sendQueue.push(function(d)
+  chan.__sendQueue.push(function(closed)
     closedDuringSend = closed;
     __schedule(thisGoroutine);
     return value;
@@ -1655,7 +1674,7 @@ __send = function(e)
     end
   end;
 end;
-__recv = function(n)
+__recv = function(chan)
   local queuedSend = chan.__sendQueue.shift();
   if queuedSend ~= nil then
     chan.__buffer.push(queuedSend(false));
@@ -1678,7 +1697,7 @@ __recv = function(n)
   __block();
   return f;
 end;
-__close = function(n)
+__close = function(chan)
   if chan.__closed then
     __throwRuntimeError("close of closed channel");
   end
@@ -1766,7 +1785,7 @@ __select = function(comms)
       local comm = comms[i];
       local ncomm = #comm
       if ncomm == 1 then -- recv
-        local queueEntry = function(e)
+        local queueEntry = function(value)
           f.selection = [i, value];
           removeFromQueues();
           __schedule(thisGoroutine);
@@ -1817,7 +1836,7 @@ __needsExternalization = function(t)
   end
 end;
 
-__externalize = function(v, t, passThis)
+__externalize = function(v, t)
   if t == __jsObjectPtr then
     return v;
   end
@@ -1918,7 +1937,7 @@ __externalize = function(v, t, passThis)
     end
 
     local noJsObject = {};
-    local searchJsObject = function(t)
+    local searchJsObject = function(v, t)
       if t == __jsObjectPtr then
         return v;
       end
@@ -1999,7 +2018,7 @@ __externalizeFunction = function(v, t, passThis)
   return v.__externalizeWrapper;
 end;
 
-__internalize = function(v)
+__internalize = function(v, t, recv)
   if t == __jsObjectPtr then
     return v;
   end
@@ -2012,7 +2031,7 @@ __internalize = function(v)
   local timePkg = __packages["time"];
   if timePkg ~= nil  and  t == timePkg.Time then
     if  not (v ~= null  and  v ~= nil  and  v.constructor == Date) then
-      __throwRuntimeError("cannot internalize time.Time from " + typeof v + ", must be Date");
+      __throwRuntimeError("cannot internalize time.Time from " .. type(v) .. ", must be Date");
     end
     return timePkg.Unix(new __Int64(0, 0), new __Int64(0, v.getTime() * 1000000));
   end
