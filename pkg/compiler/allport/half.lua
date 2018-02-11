@@ -1384,9 +1384,14 @@ function field2strHelper(f)
    return f.name .. " " .. f.typ.__str .. tag
 end
 
+function typeKeyHelper(f)
+   return f.name .. "," .. f.typ.id .. "," .. f.tag;
+end
+
 __structTypes = {};
 __structType = function(pkgPath, fields)
-  local typeKey = __mapArray(fields, function(f) return f.name .. "," .. f.typ.id .. "," .. f.tag; end).join("_");
+  local typeKey = __mapAndJoinStrings("_", fields, typeKeyHelper)
+
   local typ = __structTypes[typeKey];
   if typ == nil then
     local str
@@ -1397,12 +1402,18 @@ __structType = function(pkgPath, fields)
     end
        
     typ = __newType(0, __kindStruct, str, false, "", false, function()
+      local this = {}
       this.__val = this;
       for i = 0, #fields-1 do
         local f = fields[i];
         local arg = arguments[i];
-        this[f.prop] = arg ~= nil ? arg : f.typ.zero();
-      end
+        if arg ~= nil then
+           this[f.prop] = arg
+        else
+           this[f.prop] = t.typ.zero();
+        end
+     end
+     return this
     end);
     __structTypes[typeKey] = typ;
     typ.init(pkgPath, fields);
