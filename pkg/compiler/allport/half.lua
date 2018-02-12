@@ -1675,35 +1675,38 @@ __go = function(fun, args)
   __totalGoroutines=__totalGoroutines+1;
   __awakeGoroutines=__awakeGoroutines+1;
   local __goroutine = function()
-    try {
-      __curGoroutine = __goroutine;
-      local r = fun.apply(nil, args);
-      if r  and  r.__blk ~= nil then
-        fun = function() return r.__blk(); end;
-        args = {};
-        return;
-      end
-      __goroutine.exit = true;
-    end catch (err) {
-      if  not __goroutine.exit then
-        throw err;
-      end
-    end finally {
-      __curGoroutine = __noGoroutine;
-      if (__goroutine.exit) then -- /* also set by runtime.Goexit() */
+     --try
+     local ok, err = pcall(function()
+                        __curGoroutine = __goroutine;
+                        local r = fun(nil, args);
+                        if r  and  r.__blk ~= nil then
+                           fun = function() return r.__blk(); end;
+                           args = {};
+                           return;
+                        end
+                        __goroutine.exit = true;
+     end)
+     -- finally
+     __curGoroutine = __noGoroutine;
+     if __goroutine.exit then -- /* also set by runtime.Goexit() */
         __totalGoroutines=__totalGoroutines-1;
         __goroutine.asleep = true;
-      end
-      if __goroutine.asleep then
+     end
+     if __goroutine.asleep then
         __awakeGoroutines=__awakeGoroutines-1;
         if  not __mainFinished  and  __awakeGoroutines == 0  and  __checkForDeadlock then
-          console.error("fatal error: all goroutines are asleep - deadlock not ");
-          if __global.process ~= nil then
-            __global.process.exit(2);
-          end
+           error("fatal error: all goroutines are asleep - deadlock!");
+           if __global.process ~= nil then
+              __global.process.exit(2);
+           end
         end
-      end
-    end
+     end
+     -- catch(err)
+     if not ok then
+        if not __goroutine.exit then
+           error err;
+        end
+     end
   end;
   __goroutine.asleep = false;
   __goroutine.exit = false;
