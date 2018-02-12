@@ -20,6 +20,13 @@ special installation instructions for go1.9.4 below.
 Actually we recommend avoiding go1.9.4. It is pretty broken/borked.
 Use go1.9.3 and wait for go1.9.5 before upgrading.
 
+The installation instructions are now slightly different, so
+that all actual building is done under make.
+~~~
+$ go get -d github.com/gijit/gi/cmd/gi
+$ cd $GOPATH/src/github.com/gijit/gi && make install
+~~~
+
 overview
 -------
 In the form of Q & A:
