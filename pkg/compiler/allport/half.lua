@@ -874,8 +874,17 @@ elseif kind ==  __kindArray then
         __copyArray(dst, src, 0, 0, #src, elem);
       end;
       typ.ptr.init(typ);
-      --  By default, values added using Object.defineProperty() are immutable.
-      --?? Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+      -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
+      -- jea: what seems odd is that the state of the pointer is
+      -- here defined on the type itself, and not on the particular instance of the
+      -- pointer. But perhaps this is javascript's prototypal inheritence in action.
+      --
+      -- gopherjs uses them in comma expressions. example, condensed:
+      --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
+      --
+      -- Since comma expressions are well supported in Lua, let
+      -- implement the nil check in a different manner.
+      -- ?? Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
     end;
     
 
