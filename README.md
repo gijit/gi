@@ -644,6 +644,8 @@ linux-only DLL loading system, so we remain portable/more
 cross-platform compatible.
 
 Interfaces are not yet implemented, and so are not yet imported.
+Update: interfaces are represented in the imports, but
+are not well tested. Please file issues as you find them.
 
 2018 Jan 27 update
 -------
