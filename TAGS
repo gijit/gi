@@ -3,6 +3,79 @@ cmd/gi/lua.help.lua,50
 function locals(11,378
 function upvalues(30,808
 
+pkg/compiler/_templates/defer.lua,17
+function f(3,14
+
+pkg/compiler/_templates/deferinit.lua,18
+function ts(4,75
+
+pkg/compiler/_templates/flow1.lua,17
+function f(8,72
+
+pkg/compiler/_templates/flow10.lua,69
+function deeper(21,302
+function intermed(45,914
+function f(50,954
+
+pkg/compiler/_templates/flow11.lua,19
+function f(15,140
+
+pkg/compiler/_templates/flow2.lua,17
+function f(9,73
+
+pkg/compiler/_templates/flow3.lua,17
+function f(8,72
+
+pkg/compiler/_templates/flow4.lua,17
+function f(7,71
+
+pkg/compiler/_templates/flow5.lua,17
+function f(8,72
+
+pkg/compiler/_templates/flow6.lua,17
+function f(8,72
+
+pkg/compiler/_templates/flow7.lua,43
+function deeper(12,130
+function f(29,446
+
+pkg/compiler/_templates/flow8.lua,69
+function deeper(13,131
+function intermed(28,445
+function f(34,486
+
+pkg/compiler/_templates/flow9.lua,17
+function f(7,40
+
+pkg/compiler/_templates/luadefer1_defer_panic_a_new_val.lua,17
+function f(3,14
+
+pkg/compiler/_templates/luadefer2_defer_error_a_new_val.lua,17
+function f(3,14
+
+pkg/compiler/_templates/new.defer.lua,17
+function f(3,14
+
+pkg/compiler/_templates/q.lua,106
+function stack:new(3,12
+function stack:pop(7,51
+function stack:push(16,178
+function stack:show(20,228
+
+pkg/compiler/_templates/q2.lua,106
+function stack.new(4,13
+function stack.pop(8,52
+function stack.push(17,183
+function stack.show(21,239
+
+pkg/compiler/_templates/recursive.xpcall.defer.lua,17
+function f(3,14
+
+pkg/compiler/_templates/test.lua,78
+local function dofuss(5,77
+local function w_(9,120
+local function w(11,166
+
 pkg/compiler/array.lua,133
 function __gi_NewArray(96,2880
 function __gi_clone2(134,3792
@@ -34,102 +107,30 @@ function __copySlice(286,8007
 function __subslice(328,9200
 function __gi_makeSlice(352,9916
 
-pkg/compiler/struct.lua,810
+pkg/compiler/struct.lua,843
 function starToAsterisk(50,1168
 function __gi_createNewPointer(94,2350
 function __st(144,3414
 function __show_methods_desc(206,4816
-function __structPrinter(244,5883
-function __ifacePrinter(274,6718
-function __reg:RegisterStruct(312,7752
-function __reg:RegisterInterface(347,8886
-function __reg:IsInterface(375,9654
-function __reg:GetInterfaceMethods(380,9756
-function __reg:GetPointeeMethodset(385,9859
-function __reg:NewInstance(412,10736
-function __reg:RemoveMethod(434,11284
-function __reg:AddMethod(466,12234
-function __gi_methodVal(499,13177
-function __gi_count_methods(526,13962
-function __gi_assertType(565,15103
-function __gi_NewType(933,25362
-function __ptrType(1546,46945
-function __gi_mapArray(1596,48336
-function __mapFuncOverTable(1614,48811
-function __arrayType(1804,54929
-
-pkg/compiler/templates/defer.lua,17
-function f(3,14
-
-pkg/compiler/templates/deferinit.lua,18
-function ts(4,75
-
-pkg/compiler/templates/flow1.lua,17
-function f(8,72
-
-pkg/compiler/templates/flow10.lua,69
-function deeper(21,302
-function intermed(45,914
-function f(50,954
-
-pkg/compiler/templates/flow11.lua,19
-function f(15,140
-
-pkg/compiler/templates/flow2.lua,17
-function f(9,73
-
-pkg/compiler/templates/flow3.lua,17
-function f(8,72
-
-pkg/compiler/templates/flow4.lua,17
-function f(7,71
-
-pkg/compiler/templates/flow5.lua,17
-function f(8,72
-
-pkg/compiler/templates/flow6.lua,17
-function f(8,72
-
-pkg/compiler/templates/flow7.lua,43
-function deeper(12,130
-function f(29,446
-
-pkg/compiler/templates/flow8.lua,69
-function deeper(13,131
-function intermed(28,445
-function f(34,486
-
-pkg/compiler/templates/flow9.lua,17
-function f(7,40
-
-pkg/compiler/templates/luadefer1_defer_panic_a_new_val.lua,17
-function f(3,14
-
-pkg/compiler/templates/luadefer2_defer_error_a_new_val.lua,17
-function f(3,14
-
-pkg/compiler/templates/new.defer.lua,17
-function f(3,14
-
-pkg/compiler/templates/q.lua,106
-function stack:new(3,12
-function stack:pop(7,51
-function stack:push(16,178
-function stack:show(20,228
-
-pkg/compiler/templates/q2.lua,106
-function stack.new(4,13
-function stack.pop(8,52
-function stack.push(17,183
-function stack.show(21,239
-
-pkg/compiler/templates/recursive.xpcall.defer.lua,17
-function f(3,14
-
-pkg/compiler/templates/test.lua,78
-local function dofuss(5,77
-local function w_(9,120
-local function w(11,166
+function __structPrinter(245,5884
+function __ifacePrinter(275,6719
+function __reg:RegisterStruct(313,7753
+function __reg:RegisterInterface(348,8887
+function __reg:IsInterface(376,9655
+function __reg:GetInterfaceMethods(381,9757
+function __reg:GetPointeeMethodset(386,9860
+function __reg:NewInstance(413,10737
+function __reg:RemoveMethod(435,11285
+function __reg:AddMethod(467,12235
+function __gi_methodVal(500,13178
+function __gi_count_methods(527,13963
+function __gi_assertType(566,15104
+function __gi_NewType(934,25363
+function __ptrType(1552,47116
+function __gi_mapArray(1602,48507
+function __mapFuncOverTable(1620,48982
+function __sliceType(1773,54509
+function __arrayType(1856,56286
 
 pkg/compiler/tmp/hah.lua,33
 function __gi_count_methods(1,0
@@ -615,14 +616,6 @@ pkg/compiler/tmp/s.lua,0
 
 pkg/compiler/tmp/m.lua,0
 
-pkg/compiler/templates/s.lua,0
-
-pkg/compiler/templates/rexp.lua,0
-
-pkg/compiler/templates/repcall.lua,0
-
-pkg/compiler/templates/r.lua,0
-
 pkg/compiler/snippet/snoopy.lua,0
 
 pkg/compiler/ptr.lua,0
@@ -630,3 +623,11 @@ pkg/compiler/ptr.lua,0
 pkg/compiler/math.lua,0
 
 pkg/compiler/int64.lua,0
+
+pkg/compiler/_templates/s.lua,0
+
+pkg/compiler/_templates/rexp.lua,0
+
+pkg/compiler/_templates/repcall.lua,0
+
+pkg/compiler/_templates/r.lua,0

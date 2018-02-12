@@ -1,10 +1,12 @@
 .PHONY: tags
 
 install:
-	export CGO_LDFLAGS_ALLOW=".*\.a$"; cd cmd/gi && make onetime && make install
+	git branch --set-upstream-to=origin/master
+	CGO_LDFLAGS_ALLOW='.*\.a$$' go get -t -d -u ./pkg/... ./cmd/... && cd cmd/gi && make onetime && make install
 
 minimal:
-	export CGO_LDFLAGS_ALLOW=".*\.a$"; cd cmd/gi && make install
+minimal:
+	cd cmd/gi && make install
 
 tags:
 	find . -name "*.[chCH]" -o -name "*.lua" -print | etags -

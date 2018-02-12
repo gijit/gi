@@ -9,6 +9,17 @@ ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
 "go interpreter".
 
+most recent status
+------------------
+
+2018 Feb 12 update
+------------------
+Release v0.9.12 works under both go1.9.4 and go1.9.3, but see the
+special installation instructions for go1.9.4 below.
+
+Actually we recommend avoiding go1.9.4. It is pretty broken/borked.
+Use go1.9.3 and wait for go1.9.5 before upgrading.
+
 overview
 -------
 In the form of Q & A:
@@ -194,7 +205,9 @@ status
 
 2018 Feb 12 update
 ------------------
-v0.9.12 is confirmed to work under both go1.9.4 and go1.9.3.
+v0.9.12 works under both go1.9.4 and go1.9.3. See the
+special installation instructions for go1.9.4 below.
+Actually we recommend avoiding go1.9.4, its pretty borked.
 
 2018 Feb 09 update
 ------------------
@@ -966,9 +979,26 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 Needs go1.9 or later. Works on Mac OSX and Linux. On windows: theoretically it should work on windows, I have not worked out what flags are needed. One will need to install a C compiler on windows and work out the right compiler flags to make CGO build and link LuaJIT into the Go `gi` binary.
 
+# special note on installing under the borked go1.9.4:
+
+Very important: if you must build with go1.9.4 (1.9.4 is a very borked release with respect to CGO projects; we recommend you avoid it. go1.9.5 will fix the most glaring problems; see https://github.com/golang/go/issues/23749 and just use go1.9.3, it works fine. Should you masochistically attempt to use go1.9.4, poor soul, then prior to building, you must add
 ~~~
-$ go get -t -u -v github.com/gijit/gi/...
-$ cd $GOPATH/src/github.com/gijit/gi && make
+export CGO_LDFLAGS_ALLOW='.*\.a$'
+~~~
+to your ~/.bashrc or equivalent, and restart your shell before building, so that `CGO_LDFLAGS_ALLOW` is defined in your environment prior to building.
+
+Verify that `CGO_LDFLAGS_ALLOW` has been set before proceeding (only under the not-recommended go1.9.4):
+~~~
+$ env | grep CGO_LDFLAGS_ALLOW
+CGO_LDFLAGS_ALLOW=.*\.a$
+$
+~~~
+If you don't see `CGO_LDFLAGS_ALLOW` defined as the above, then fix your environment first.
+
+Then, (or just start here for go1.9.3) to install:
+~~~
+$ go get -d github.com/gijit/gi/cmd/gi
+$ cd $GOPATH/src/github.com/gijit/gi && make install
 $
 $ ... wait for gi build to finish, it builds LuaJIT
 $     using C, so it takes ~ 20 seconds to install `gi`.
