@@ -138,22 +138,22 @@ __keys = function(m)
    return r
 end
 
-__valueBasicTypeMT = {
-   __name = "__valueBasicTypeMT",
+__valueBasicMT = {
+   __name = "__valueBasicMT",
    __tostring = function(self, ...)
-      --print("__tostring called from __valueBasicTypeMT")
+      --print("__tostring called from __valueBasicMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
       if self ~= nil and self.__val ~= nil then
-         print("__valueBasicTypeMT.__tostring called, with self.__val set.")
+         print("__valueBasicMT.__tostring called, with self.__val set.")
          if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.__val == this; avoid inf loop>"
          end
          --return tostring(self.__val)
       end
-      if getmetatable(self.__val) == __valueBasicTypeMT then
+      if getmetatable(self.__val) == __valueBasicMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
       else
@@ -163,21 +163,21 @@ __valueBasicTypeMT = {
 }
 
 
-__tfunMT = {
-   __name = "__tfunMT",
+__tfunBasicMT = {
+   __name = "__tfunBasicMT",
    __call = function(self, ...)
-      print("jea debug: __tfunMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       
-      --print("in __tfunMT, start __st on ...")
-      --__st({...}, "__tfunMT.dots")
-      --print("in __tfunMT,   end __st on ...")
+      --print("in __tfunBasicMT, start __st on ...")
+      --__st({...}, "__tfunBasicMT.dots")
+      --print("in __tfunBasicMT,   end __st on ...")
 
-      --print("in __tfunMT, start __st on self")
+      --print("in __tfunBasicMT, start __st on self")
       --__st(self, "self")
-      --print("in __tfunMT,   end __st on self")
+      --print("in __tfunBasicMT,   end __st on self")
 
       local newInstance = {}
-      setmetatable(newInstance, __valueBasicTypeMT)
+      setmetatable(newInstance, __valueBasicMT)
       if self ~= nil then
          if self.tfun ~= nil then
             print("calling tfun! -- let constructors set metatables if they wish to.")
@@ -203,7 +203,7 @@ __typeIDCounter = 0;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
   local typ ={};
-  setmetatable(typ, __tfunMT)
+  setmetatable(typ, __tfunBasicMT)
 
   if kind ==  __kindBool or
   kind == __kindInt or 
@@ -381,3 +381,51 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
     dst[dstOffset + i] = src[srcOffset + i];
   end
 end;
+
+-- __basicValue2kind: identify type of basic value
+
+dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
+__ffi = require("ffi")
+
+function __basicValue2kind(v)
+
+   local ty = type(v)
+   if ty == "cdata" then
+      local cty = __ffi.typeof(v)
+      if cty == int64 then
+         return __kindInt
+      elseif cty == int8 then
+         return __kindInt8
+      elseif cty == int16 then
+         return __kindInt16
+      elseif cty == int32 then
+         return __kindInt32
+      elseif cty == int64 then
+         return __kindInt64
+      elseif cty == uint then
+         return __kindUint
+      elseif cty == uint8 then
+         return __kindUint8
+      elseif cty == uint16 then
+         return __kindUint16
+      elseif cty == uint32 then
+         return __kindUint32
+      elseif cty == uint64 then
+         return __kindUint64
+      elseif cty == float32 then
+         return __kindFloat32
+      elseif cty == float64 then
+         return __kindFloat64         
+      else
+         error("__basicValue2kind: unhandled cdata cty: '"..tostring(cty).."'")
+      end      
+   elseif ty == "boolean" then
+      return __kindBool;
+   elseif ty == "number" then
+      return __kindFloat64
+   elseif ty == "string" then
+      return __kindString
+   end
+   error("__basicValue2kind: unhandled ty: '"..ty.."'")   
+end
+

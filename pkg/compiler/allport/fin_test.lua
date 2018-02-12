@@ -98,3 +98,38 @@ ptrType = __ptrType(__Int)
 
 b = ptrType(function() return a; end, function(__v) a = __v; end, a);                                                                                                             
                                          
+expectEq(__basicValue2kind("hi"), __kindString)
+expectEq(__basicValue2kind(""), __kindString)
+expectEq(__basicValue2kind(true), __kindBool)
+expectEq(__basicValue2kind(false), __kindBool)
+
+expectEq(__basicValue2kind(1LL), __kindInt)
+expectEq(__basicValue2kind(-1LL), __kindInt)
+expectEq(__basicValue2kind(int8(-3)), __kindInt8)
+expectEq(__basicValue2kind(int8(3)), __kindInt8)
+expectEq(__basicValue2kind(int16(0)), __kindInt16)
+expectEq(__basicValue2kind(int16(-1)), __kindInt16)
+expectEq(__basicValue2kind(int32(1)), __kindInt32)
+expectEq(__basicValue2kind(int32(-1)), __kindInt32)
+
+-- can't distinguish __kindInt from __kindInt64
+expectEq(__basicValue2kind(int64(1LL)), __kindInt)
+expectEq(__basicValue2kind(int64(-1LL)), __kindInt)
+
+expectEq(__basicValue2kind(uint(1)), __kindUint)
+expectEq(__basicValue2kind(uint(-1)), __kindUint)
+expectEq(__basicValue2kind(uint8(-3)), __kindUint8)
+expectEq(__basicValue2kind(uint8(3)), __kindUint8)
+expectEq(__basicValue2kind(uint16(0)), __kindUint16)
+expectEq(__basicValue2kind(uint16(-1)), __kindUint16)
+expectEq(__basicValue2kind(uint32(1)), __kindUint32)
+expectEq(__basicValue2kind(uint32(-1)), __kindUint32)
+
+-- can't distinguish __kindUint from __kindUint64
+expectEq(__basicValue2kind(uint64(1)), __kindUint)
+expectEq(__basicValue2kind(uint64(-1)), __kindUint)
+
+expectEq(__basicValue2kind(float32(-1.0)), __kindFloat32)
+expectEq(__basicValue2kind(float64(-1.0)), __kindFloat64)
+
+
