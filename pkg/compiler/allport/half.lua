@@ -130,33 +130,51 @@ __methodVal = function(recv, name)
   end
   local method = recv[name];
   f = function() 
-    __stackDepthOffset = __stackDepthOffset-1;
-    try {
-      return method.apply(recv, arguments);
-    } finally {
-      __stackDepthOffset=__stackDepthOffset+1;
-    end
+     __stackDepthOffset = __stackDepthOffset-1;
+     -- try
+     local res = {pcall(function()
+           return recv[method](arguments);
+     end)}
+        -- finally
+     __stackDepthOffset=__stackDepthOffset+1;
+     -- no catch, so either re-throw or return results
+     local ok, err = unpack(res)
+     if not ok then
+        -- rethrow
+        error err
+     end
+     -- return results (without the ok/not first value)
+     return table.remove(res, 1)
   end;
   vals[name] = f;
   return f;
 end;
 
 __methodExpr = function(typ, name) 
-  local method = typ.prototype[name];
-  if method.__expr == nil then
-    method.__expr = function() 
-       __stackDepthOffset=__stackDepthOffset-1;
-       try {
-        if typ.wrapped then
-          arguments[0] = new typ(arguments[0]);
-        end
-        return Function.call.apply(method, arguments);
-      } finally {
-          __stackDepthOffset=__stackDepthOffset+1;
-      end
-    end;
-  end
-  return method.__expr;
+   local method = typ.prototype[name];
+   if method.__expr == nil then
+      method.__expr = function() 
+         __stackDepthOffset=__stackDepthOffset-1;
+
+         -- try
+         local res ={pcall(
+            function()
+               if typ.wrapped then
+                  arguments[0] = typ(arguments[0]);
+               end
+               return method(arguments);
+         end)}
+         local ok, threw = unpack(res)
+         -- finally
+         __stackDepthOffset=__stackDepthOffset+1;
+         -- no catch, so rethrow any exception
+         if not ok then
+            error threw
+         end
+         return table.remove(res, 1)
+      end;
+   end
+   return method.__expr;
 end;
 
 __ifaceMethodExprs = {};
@@ -164,12 +182,22 @@ __ifaceMethodExpr = function(name)
   local expr = __ifaceMethodExprs["_"  ..  name];
   if expr == nil then
     expr = __ifaceMethodExprs["_"  ..  name] = function()
-      __stackDepthOffset = __stackDepthOffset-1;
-      try {
-        return Function.call.apply(arguments[0][name], arguments);
-      } finally {
-         __stackDepthOffset = __stackDepthOffset+1;
-      end
+       __stackDepthOffset = __stackDepthOffset-1;
+       -- try
+       local res = {pcall(
+          function()
+             return Function.call.apply(arguments[0][name], arguments);
+       end)}
+       -- finally
+       __stackDepthOffset = __stackDepthOffset+1;
+       -- no catch
+       local ok, threw = unpack(res)
+       if not ok then
+          error threw
+       else
+          -- non-panic return from pcall
+          return table.remove(res, 1)
+       end       
     end;
   end
   return expr;
@@ -1532,21 +1560,29 @@ __callDeferred = function(deferred, jsErr, fromPanic)
     throw jsErr;
   end
   if jsErr ~= nil then
-    local newErr = nil;
-    try {
-      __curGoroutine.deferStack.push(deferred);
-      __panic(new __jsErrorPtr(jsErr));
-    end catch (err) {
-      newErr = err;
-    end
-    __curGoroutine.deferStack.pop();
-    __callDeferred(deferred, newErr);
-    return;
+     local newErr = nil;
+
+       -- try
+     local res = {pcall(
+                     function()
+                        __curGoroutine.deferStack.push(deferred);
+                        __panic(new __jsErrorPtr(jsErr));
+     end)}
+     
+     -- catch
+     local ok, err = unpack(res)
+     if not ok then
+        newErr = err;
+     end
+
+     __curGoroutine.deferStack.pop();
+     __callDeferred(deferred, newErr);
+     return;
   end
   if __curGoroutine.asleep then
-    return;
+     return;
   end
-
+  
   __stackDepthOffset = __stackDepthOffset-1;
   local outerPanicStackDepth = __panicStackDepth;
   local outerPanicValue = __panicValue;
@@ -1557,7 +1593,9 @@ __callDeferred = function(deferred, jsErr, fromPanic)
     __panicValue = localPanicValue;
   end
 
-  try {
+  -- try
+  local res = {pcall(function()
+
     while (true) do 
       if deferred == nil then
         deferred = __curGoroutine.deferStack[__curGoroutine.#deferStack - 1];
@@ -1565,7 +1603,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
           -- /* The panic reached the top of the stack. Clear it and throw it as a JavaScript error. */
           __panicStackDepth = nil;
           if localPanicValue.Object instanceof Error then
-            throw localPanicValue.Object;
+            error localPanicValue.Object;
           end
           local msg;
           if localPanicValue.constructor == __String then
@@ -1577,7 +1615,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
           end else then
             msg = localPanicValue;
           end
-          throw new Error(msg);
+          error Error(msg);
         end
       end
       local call = deferred.pop();
@@ -1600,18 +1638,21 @@ __callDeferred = function(deferred, jsErr, fromPanic)
 
       if localPanicValue ~= nil  and  __panicStackDepth == nil then
         throw nil; -- /* error was recovered */
+        end
       end
-    end
-  end finally {
+end)}
+
+    -- finally 
     if (localPanicValue ~= nil) {
-      if (__panicStackDepth ~= nil) {
-        __curGoroutine.panicStack.push(localPanicValue);
-      end
-      __panicStackDepth = outerPanicStackDepth;
-      __panicValue = outerPanicValue;
+       if (__panicStackDepth ~= nil) {
+          __curGoroutine.panicStack.push(localPanicValue);
+       end
+       __panicStackDepth = outerPanicStackDepth;
+       __panicValue = outerPanicValue;
+       end
+       __stackDepthOffset = __stackDepthOffset+1;
     end
-    __stackDepthOffset = __stackDepthOffset+1;
-  end
+   -- end finally
 end;
 
 __panic = function(value)
@@ -1673,16 +1714,18 @@ end;
 
 __scheduled = {};
 __runScheduled = function()
-  try {
-    local r;
-    while ((r = __scheduled.shift()) ~= nil) {
-      r();
-    end
-  end finally {
-    if __#scheduled > 0 then
+   -- try
+   local res = {pcall(
+                   function()
+                      local r;
+                      while ((r = __scheduled.shift()) ~= nil) do
+                         r();
+                      end
+   end)}
+   -- finally
+   if __#scheduled > 0 then
       setTimeout(__runScheduled, 0);
-    end
-  end
+   end
 end;
 
 __schedule = function(goroutine)

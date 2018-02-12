@@ -209,7 +209,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   kind == __kindUint64 or 
   kind == __kindUintptr or 
   kind == __kindUnsafePointer then
-     
+
+     -- jea: I observe that
+     -- primitives have: this.__val ~= v; and are the types are
+     -- distinguished with typ.wrapped = true; versus
+     -- all table based values, that have: this.__val == this;
+     -- and no .wrapped field.
+     --
     typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __identity;
@@ -238,7 +244,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
            this.__get = getter;
            this.__set = setter;
            this.__target = target;
-           this.__val = this;
+           this.__val = this; -- seems to indicate a table enclosed (wrapped?) object.
         end;
      typ.keyFor = __idKey;
      typ.init = function(elem)
