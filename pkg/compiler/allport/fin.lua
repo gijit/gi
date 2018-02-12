@@ -129,7 +129,7 @@ __keys = function(m)
 end
 
 __basicTypeMT = {
-   __tostring = function(self, ...)
+   __tostringDisabled = function(self, ...)
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -141,7 +141,7 @@ __basicTypeMT = {
 __tfunMT = {
    __name = "__tfunMT",
    __call = function(self, ...)
-      --print("jea debug: __tfunMT.__call() invoked, self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      print("jea debug: __tfunMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       
       --print("in __tfunMT, start __st on ...")
       --__st({...}, "__tfunMT.dots")
@@ -155,7 +155,7 @@ __tfunMT = {
       setmetatable(newInstance, __basicTypeMT)
       if self ~= nil then
          if self.tfun ~= nil then
-            --print("calling tfun! -- let constructors set metatables if they wish to.")
+            print("calling tfun! -- let constructors set metatables if they wish to.")
 
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
@@ -216,23 +216,24 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
   elseif kind ==  __kindPtr then
      
-    typ.tfun = constructor  or  function(this, getter, setter, target)
-      this.__get = getter;
-      this.__set = setter;
-      this.__target = target;
-      this.__val = this;
-    end;
-    typ.keyFor = __idKey;
-    typ.init = function(elem)
-      typ.elem = elem;
-      typ.wrapped = (elem.kind == __kindArray);
-      typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
-    end;
-
+     typ.tfun = constructor  or  function(this, getter, setter, target)
+        print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' target = '"..tostring(target).."'")
+        this.__get = getter;
+        this.__set = setter;
+        this.__target = target;
+        this.__val = this;
+                                 end;
+     typ.keyFor = __idKey;
+     typ.init = function(elem)
+        typ.elem = elem;
+        typ.wrapped = (elem.kind == __kindArray);
+        typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
+     end;
+     
   else
      error("invalid kind: " .. tostring(kind));
   end
-
+  
   -- set zero() method
   if kind == __kindBool or
   kind ==__kindMap then

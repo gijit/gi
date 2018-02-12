@@ -50,18 +50,9 @@ Is it a very manual process? [5]
 Thanks for working on this important project!
 ~Christopher Sebastian
 ~~~
-My reply:
+My reply, condensed:
 ~~~
-Thank you for the compliment and questions, Christopher.
-
-[0]. No, at least, not yet.  The README is fairly
-extensive however. I would start by reading it
-in full. The open (and closed) issues on github also provide
-a sense of the work done to date, and that still TODO.
-
-Perhaps the answer to [1] just below will help illustrate.
-
-[1]. No, that's not quite right. Let me clarify:
+[0] Overview/how does the system work? How is `gijit` differ from GopherJS?
 
 a) GopherJS does:  Go source  ->  Javascript source.
 
@@ -82,8 +73,8 @@ if required for mutually recursive definitions)
 is translated and evaluated. These can be
 multiple lines, but as soon as the
 gc syntax front-end tells us we have a
-complete expression, we translate
-and evaluate it.
+complete expression/statement/declaration, then
+we immediately translate and evaluate it.
 
 Yes, the semantics will be subtly different.
 If you've used R/python/matlab
@@ -211,10 +202,10 @@ Actually we recommend avoiding go1.9.4, its pretty borked.
 
 2018 Feb 09 update
 ------------------
-v0.9.11 allows building under go1.9.4 and
-moves the gi infrastructure back to a known good point.
+v0.9.11 allows building under go1.9.4.
 
-v0.9.9 restores building under go1.9.3.
+v0.9.9 restores building under go1.9.3 after attempts
+to get go1.9.4 to work messed up the build.
 
 v0.9.7 attempted to build under the newly release go1.9.4,
 but failed to do so and has been replaced.
