@@ -635,6 +635,13 @@ that the package's exported functions will be available
 to the REPL at runtime, after import. The "regexp" and "os"
 shadow packages provide examples of how to do this.
 
+As an example of shadwoing the io/ioutil package, we ran:
+~~~
+$ gen-gijit-shadow-import io/ioutil
+writing to odir '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/shadow/io/ioutil'
+$ 
+~~~
+
 While shadowing (sandboxing) does
 not allow arbitrary imports to be called from inside
 the `gi` without prior preparation, this is
