@@ -192,6 +192,10 @@ in general) like a glove.
 status
 ------
 
+2018 Feb 12 update
+------------------
+v0.9.12 is confirmed to work under both go1.9.4 and go1.9.3.
+
 2018 Feb 09 update
 ------------------
 v0.9.11 allows building under go1.9.4 and

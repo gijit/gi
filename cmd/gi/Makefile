@@ -6,7 +6,7 @@ all:
 
 
 onetime: gitversion
-	export CGO_LDFLAGS_ALLOW=".*\.a"; cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
+	export CGO_LDFLAGS_ALLOW=".*\.a$"; cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make
 
 # This how we want to name the binary output
 BINARY=gi
@@ -30,7 +30,7 @@ OBJS=$(SRCS:.go=.o)
 
 
 build:
-	export CGO_LDFLAGS_ALLOW=".*\.a"; go build ${LDFLAGS_gi} -o gi
+	export CGO_LDFLAGS_ALLOW=".*\.a$"; go build ${LDFLAGS_gi} -o gi
 
 
 install:
