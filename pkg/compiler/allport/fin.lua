@@ -138,13 +138,22 @@ __keys = function(m)
    return r
 end
 
-__basicTypeMT = {
+__valueBasicTypeMT = {
+   __name = "__valueBasicTypeMT",
    __tostring = function(self, ...)
-      --print("__tostring called from __basicTypeMT")
+      --print("__tostring called from __valueBasicTypeMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
-      if getmetatable(self.__val) == __basicTypeMT then
+      if self ~= nil and self.__val ~= nil then
+         print("__valueBasicTypeMT.__tostring called, with self.__val set.")
+         if self.__val == self then
+            -- not a basic value, but a pointer, array, slice, or struct.
+            return "<this.__val == this; avoid inf loop>"
+         end
+         --return tostring(self.__val)
+      end
+      if getmetatable(self.__val) == __valueBasicTypeMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
       else
@@ -168,7 +177,7 @@ __tfunMT = {
       --print("in __tfunMT,   end __st on self")
 
       local newInstance = {}
-      setmetatable(newInstance, __basicTypeMT)
+      setmetatable(newInstance, __valueBasicTypeMT)
       if self ~= nil then
          if self.tfun ~= nil then
             print("calling tfun! -- let constructors set metatables if they wish to.")
@@ -240,11 +249,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      
      typ.tfun = constructor  or
         function(this, getter, setter, target)
-           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' target = '"..tostring(target).."'")
+           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' setter='"..tostring(setter).."target = '"..tostring(target).."'")
            this.__get = getter;
            this.__set = setter;
            this.__target = target;
-           this.__val = this; -- seems to indicate a table enclosed (wrapped?) object.
+           this.__val = this; -- seems to indicate a non-primitive value.
         end;
      typ.keyFor = __idKey;
      typ.init = function(elem)

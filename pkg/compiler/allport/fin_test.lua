@@ -91,12 +91,10 @@ expectEq("42ULL", tostring(__Uint(42ULL)))
 expectEq("-0.3", tostring(__Float64(-0.3)))
 expectEq('"hello world"', tostring(__String("hello world")))
 
-c = __Float64(4.5)
+a = __Int(4)
 
--- d := &c  -- gets translated as two parts:
-ptrType = __ptrType(__Float64)
--- d = (c.$ptr || (c.$ptr = new ptrType(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, c)));
+-- b := &a  -- gets translated as two parts:
+ptrType = __ptrType(__Int)
 
-d = ptrType(function(this) return this.__target[0]; end, function(this, __v) this.__target[0] = __v; end, c)
-                                                                                                             
+b = ptrType(function() return a; end, function(__v) a = __v; end, a);                                                                                                             
                                          

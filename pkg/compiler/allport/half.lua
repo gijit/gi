@@ -1666,7 +1666,7 @@ __recover = function()
   __panicStackDepth = nil;
   return __panicValue;
 end;
-__throw = function(err) throw err; end;
+__throw = function(err) error err; end;
 
 __noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
 __curGoroutine = __noGoroutine, __totalGoroutines = 0, __awakeGoroutines = 0, __checkForDeadlock = true;
