@@ -614,6 +614,9 @@ In release v0.7.6, taking a slice of an array works.
 
 2018 Jan 28 update
 -------
+
+# binary imports
+
 In release v0.7.5, we added the ability for the `gi` REPL
 to import "regexp" and "os". More generally, we added
 the general ability

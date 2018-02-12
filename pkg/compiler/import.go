@@ -12,6 +12,10 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/bytes"
 	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
 	"github.com/gijit/gi/pkg/compiler/shadow/io"
+
+	shadow_ioutil "github.com/gijit/gi/pkg/compiler/shadow/io/ioutil"
+	"io/ioutil"
+
 	"github.com/gijit/gi/pkg/compiler/shadow/math"
 	shadow_math_rand "github.com/gijit/gi/pkg/compiler/shadow/math/rand"
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
@@ -50,6 +54,7 @@ func init() {
 	_ = ok
 }
 
+var _ = ioutil.Discard
 var _ = shadow_blas.GijitShadow_InterfaceConvertTo2_Float64
 var _ = fd.Backward
 var _ = floats.Add
@@ -131,6 +136,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
 	case "time":
 		luar.Register(ic.vm, "time", shadow_time.Pkg)
+	case "io/ioutil":
+		luar.Register(ic.vm, "ioutil", shadow_ioutil.Pkg)
 
 		// gonum:
 	case "gonum.org/v1/gonum/blas":
