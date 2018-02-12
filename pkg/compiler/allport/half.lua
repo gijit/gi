@@ -24,7 +24,12 @@ __tfunMT = {
          end
       end
       return self
-   end
+end
+
+--from the __newType for __kindStruct:
+--typ.ptr.prototype.__get = function() return this; end;
+--typ.ptr.prototype.__set = function(v) typ.copy(this, v); end;
+
 }
 
 -- jea: sanity check my assumption by comparing
@@ -884,7 +889,7 @@ elseif kind ==  __kindArray then
       --
       -- Since comma expressions are not (efficiently) supported in Lua, let
       -- implement the nil check in a different manner.
-      -- ?? Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+      -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
     end;
     
 
