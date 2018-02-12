@@ -882,7 +882,7 @@ elseif kind ==  __kindArray then
       -- gopherjs uses them in comma expressions. example, condensed:
       --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
       --
-      -- Since comma expressions are well supported in Lua, let
+      -- Since comma expressions are not (efficiently) supported in Lua, let
       -- implement the nil check in a different manner.
       -- ?? Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
     end;
