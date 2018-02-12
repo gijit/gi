@@ -981,7 +981,7 @@ Needs go1.9 or later. Works on Mac OSX and Linux. On windows: theoretically it s
 
 # special note on installing under the borked go1.9.4:
 
-Very important: if you must build with go1.9.4 (1.9.4 is a very borked release with respect to CGO projects; we recommend you avoid it. go1.9.5 will fix the most glaring problems; see https://github.com/golang/go/issues/23749 and just use go1.9.3, it works fine. Should you masochistically attempt to use go1.9.4, poor soul, then prior to building, you must add
+Very important: if you want to build with go1.9.4, well, just don't. go1.9.4 is a very borked release with respect to CGO projects; we recommend you avoid it. go1.9.5 will fix the most glaring problems; see https://github.com/golang/go/issues/23749 and just use go1.9.3, it works fine. Should you masochistically attempt to use go1.9.4, poor soul, then prior to building, you must add
 ~~~
 export CGO_LDFLAGS_ALLOW='.*\.a$'
 ~~~
