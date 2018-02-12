@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"path/filepath"
+
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/types"
 )
@@ -15,6 +17,7 @@ import (
 func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error {
 	var pkg *types.Package
 
+	base := filepath.Base(residentPkg)
 	imp := importer.Default()
 	imp2, ok := imp.(types.ImporterFrom)
 	if !ok {
@@ -41,7 +44,7 @@ import "%s"
 
 var Pkg = make(map[string]interface{})
 func init() {
-`, residentPkg, importPath)
+`, base, importPath)
 
 	scope := pkg.Scope()
 	nms := scope.Names()
