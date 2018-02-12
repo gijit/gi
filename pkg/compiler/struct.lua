@@ -167,6 +167,12 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       end
       return s
    end   
+
+   -- get address, avoiding infinite loop of self-calls.
+   local mt = getmetatable(t)
+   setmetatable(t, nil)
+   local addr = tostring(t) 
+   setmetatable(t, mt)
    
    local k = 0
    local name = name or ""
@@ -176,7 +182,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    end
    local indent = indent or 0
    local pre = string.rep(" ", 4*indent)..namec
-   local s = pre .. "============================ "..tostring(t).."\n"
+   local s = pre .. "============================ "..addr.."\n"
    for i,v in pairs(t) do
       k=k+1
       local vals = ""
@@ -192,7 +198,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       s = pre.."<empty table>"
    end
 
-   local mt = getmetatable(t)
+   --local mt = getmetatable(t)
    if mt ~= nil then
       s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
    end

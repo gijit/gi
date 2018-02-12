@@ -66,12 +66,10 @@ end
 __global ={};
 __module ={};
 
-if __global == nil  or  __global.Array == nil then
-   error __new( Error("no global object found"));
-end
-if typeof module ~= "nil" then
-  __module = module;
-end
+-- TODO: jea, needed?
+--if module ~= nil then
+--  __module = module;
+--end
 
 __packages = {}
 __idCounter = 0;
@@ -196,7 +194,7 @@ __substring = function(h)
   return str.substring(low, high);
 end;
 
-__sliceToArray = function(e)
+__sliceToArray = function(slice)
   if slice.__array.constructor ~= Array then
     return slice.__array.subarray(slice.__offset, slice.__offset + slice.__length);
   end
@@ -338,7 +336,8 @@ __copySlice = function(c)
   return n;
 end;
 
-__copyArray = function(m)
+__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
+
   if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
     return;
   end
@@ -847,7 +846,7 @@ elseif kind ==  __kindArray then
 
     typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
-    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
+    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
       this.__get = function() return array; end;
       this.__set = function(v) typ.copy(this, v); end;
       this.__val = array;
@@ -875,7 +874,8 @@ elseif kind ==  __kindArray then
         __copyArray(dst, src, 0, 0, #src, elem);
       end;
       typ.ptr.init(typ);
-      Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+      --  By default, values added using Object.defineProperty() are immutable.
+      --?? Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
     end;
     
 

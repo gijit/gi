@@ -1,3 +1,6 @@
+dofile '../math.lua' -- for __max, __min, __truncateToInt
+
+__Infinity = math.huge
 
 __kindBool = 1;
 __kindInt = 2;
@@ -56,6 +59,12 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       end
       return s
    end   
+
+   -- get address, avoiding infinite loop of self-calls.
+   local mt = getmetatable(t)
+   setmetatable(t, nil)
+   local addr = tostring(t) 
+   setmetatable(t, mt)
    
    local k = 0
    local name = name or ""
@@ -65,7 +74,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    end
    local indent = indent or 0
    local pre = string.rep(" ", 4*indent)..namec
-   local s = pre .. "============================ "..tostring(t).."\n"
+   local s = pre .. "============================ "..addr.."\n"
    for i,v in pairs(t) do
       k=k+1
       local vals = ""
@@ -81,7 +90,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       s = pre.."<empty table>"
    end
 
-   local mt = getmetatable(t)
+   --local mt = getmetatable(t)
    if mt ~= nil then
       s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
    end
@@ -90,6 +99,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    end
    return s
 end
+
 
 -- apply fun to each element of the array arr,
 -- then concatenate them together with splice in
@@ -129,11 +139,17 @@ __keys = function(m)
 end
 
 __basicTypeMT = {
-   __tostringDisabled = function(self, ...)
+   __tostring = function(self, ...)
+      --print("__tostring called from __basicTypeMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
-      return tostring(self.__val)
+      if getmetatable(self.__val) == __basicTypeMT then
+         --print("avoid infinite loop")
+         return "<avoid inf loop>"
+      else
+         return tostring(self.__val)
+      end
    end
 }
 
@@ -216,13 +232,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
   elseif kind ==  __kindPtr then
      
-     typ.tfun = constructor  or  function(this, getter, setter, target)
-        print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' target = '"..tostring(target).."'")
-        this.__get = getter;
-        this.__set = setter;
-        this.__target = target;
-        this.__val = this;
-                                 end;
+     typ.tfun = constructor  or
+        function(this, getter, setter, target)
+           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' target = '"..tostring(target).."'")
+           this.__get = getter;
+           this.__set = setter;
+           this.__target = target;
+           this.__val = this;
+        end;
      typ.keyFor = __idKey;
      typ.init = function(elem)
         typ.elem = elem;
@@ -311,4 +328,41 @@ __ptrType = function(elem)
     typ.init(elem);
   end
   return typ;
+end;
+
+__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
+   
+  if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
+    return;
+  end
+
+  if src.subarray then
+    dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
+    return;
+  end
+
+  local sw = elem.kind
+  if sw == __kindArray or sw == __kindStruct then
+     
+    if dst == src  and  dstOffset > srcOffset then
+      for i = n-1,0,-1 do
+        elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+      end
+      return;
+    end
+    for i = 0,n-1 do
+      elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+    end
+    return;
+  end
+
+  if dst == src  and  dstOffset > srcOffset then
+    for i = n-1,0,-1 do
+      dst[dstOffset + i] = src[srcOffset + i];
+    end
+    return;
+  end
+  for i = 0,n-1 do
+    dst[dstOffset + i] = src[srcOffset + i];
+  end
 end;
