@@ -61,7 +61,7 @@ __decodeRune = function(str, pos)
   end
 
   if c0 < 0xF8 then
-    local r = bit.bor(bit.bor(bit.bor(bit.lshift(bit.band(c0, 0x07),18), bit.lshift(bit.band(c1, 0x3F), 12)), bit.lshift(bit.band(c2, 0x3F), 6), bit.band(c3, 0x3F)));
+    local r = __bit.bor(__bit.bor(__bit.bor(__bit.lshift(__bit.band(c0, 0x07),18), __bit.lshift(__bit.band(c1, 0x3F), 12)), __bit.lshift(__bit.band(c2, 0x3F), 6), __bit.band(c3, 0x3F)));
 
     if r <= 0xFFFF  or  0x10FFFF < r then
       return {0xFFFD, 1};
@@ -80,12 +80,12 @@ __encodeRune = function(r)
     return String.fromCharCode(r);
   end
   if r <= 0x7FF then
-    return String.fromCharCode(bit.bor(0xC0, bit.arshift(r,6)), bit.bor(0x80, bit.band(r, 0x3F)));
+    return String.fromCharCode(__bit.bor(0xC0, __bit.arshift(r,6)), __bit.bor(0x80, __bit.band(r, 0x3F)));
   end
   if r <= 0xFFFF then
-   return String.fromCharCode(bit.bor(0xE0, bit.arshift(r,12)), bit.bor(0x80, (bit.band(bit.arshift(r,6), 0x3F))), bit.bor(0x80, bit.band(r, 0x3F)));
+   return String.fromCharCode(__bit.bor(0xE0, __bit.arshift(r,12)), __bit.bor(0x80, (__bit.band(__bit.arshift(r,6), 0x3F))), __bit.bor(0x80, __bit.band(r, 0x3F)));
   end
-   return String.fromCharCode(bit.bor(0xF0, bit.arshift(r, 18)), bit.bor(0x80, bit.band(bit.arshift(r,12),0x3F)), bit.bor(0x80, bit.band(bit.arshift(r,6), 0x3F)), bit.bor(0x80, bit.band(r, 0x3F)));
+   return String.fromCharCode(__bit.bor(0xF0, __bit.arshift(r, 18)), __bit.bor(0x80, __bit.band(__bit.arshift(r,12),0x3F)), __bit.bor(0x80, __bit.band(__bit.arshift(r,6), 0x3F)), __bit.bor(0x80, __bit.band(r, 0x3F)));
 end;
 
 --]]
