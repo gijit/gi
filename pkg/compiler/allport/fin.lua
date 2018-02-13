@@ -10,63 +10,6 @@ __packages = {}
 __idCounter = 0;
 
 
-__equal = function(a, b, typ)
-  if typ == __jsObjectPtr then
-    return a == b;
-  end
-
-  local sw = typ.kind
-  if sw == __kindComplex64 or
-  sw == __kindComplex128 then
-     return a.__real == b.__real  and  a.__imag == b.__imag;
-     
-  elseif sw == __kindInt64 or
-         sw == __kindUint64 then 
-     return a.__high == b.__high  and  a.__low == b.__low;
-     
-  elseif sw == __kindArray then 
-    if #a ~= #b then
-      return false;
-    end
-    for i=0,#a-1 do
-      if  not __equal(a[i], b[i], typ.elem) then
-        return false;
-      end
-    end
-    return true;
-    
-  elseif sw == __kindStruct then
-     
-    for i = 0,#(typ.fields)-1 do
-      local f = typ.fields[i];
-      if  not __equal(a[f.prop], b[f.prop], f.typ) then
-        return false;
-      end
-    end
-    return true;
-  elseif sw == __kindInterface then 
-    return __interfaceIsEqual(a, b);
-  else
-    return a == b;
-  end
-end;
-
-__interfaceIsEqual = function(b)
-  if a == __ifaceNil  or  b == __ifaceNil then
-    return a == b;
-  end
-  if a.constructor ~= b.constructor then
-    return false;
-  end
-  if a.constructor == __jsObjectPtr then
-    return a.object == b.object;
-  end
-  if  not a.constructor.comparable then
-    __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
-  end
-  return __equal(a.__val, b.__val, a.constructor);
-end;
-
 __mod = function(y) return x % y; end;
 __parseInt = parseInt;
 __parseFloat = function(f)
@@ -1236,3 +1179,135 @@ __structType = function(pkgPath, fields)
    return typ;
 end;
 
+
+__equal = function(a, b, typ)
+  if typ == __jsObjectPtr then
+    return a == b;
+  end
+
+  local sw = typ.kind
+  if sw == __kindComplex64 or
+  sw == __kindComplex128 then
+     return a.__real == b.__real  and  a.__imag == b.__imag;
+     
+  elseif sw == __kindInt64 or
+         sw == __kindUint64 then 
+     return a.__high == b.__high  and  a.__low == b.__low;
+     
+  elseif sw == __kindArray then 
+    if #a ~= #b then
+      return false;
+    end
+    for i=0,#a-1 do
+      if  not __equal(a[i], b[i], typ.elem) then
+        return false;
+      end
+    end
+    return true;
+    
+  elseif sw == __kindStruct then
+     
+    for i = 0,#(typ.fields)-1 do
+      local f = typ.fields[i];
+      if  not __equal(a[f.prop], b[f.prop], f.typ) then
+        return false;
+      end
+    end
+    return true;
+  elseif sw == __kindInterface then 
+    return __interfaceIsEqual(a, b);
+  else
+    return a == b;
+  end
+end;
+
+__interfaceIsEqual = function(b)
+  if a == __ifaceNil  or  b == __ifaceNil then
+    return a == b;
+  end
+  if a.constructor ~= b.constructor then
+    return false;
+  end
+  if a.constructor == __jsObjectPtr then
+    return a.object == b.object;
+  end
+  if  not a.constructor.comparable then
+    __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
+  end
+  return __equal(a.__val, b.__val, a.constructor);
+end;
+
+
+__assertType = function(value, typ, returnTuple)
+
+   local isInterface = (typ.kind == __kindInterface)
+   local ok
+   local missingMethod = "";
+   if value == __ifaceNil then
+      ok = false;
+   elseif  not isInterface then
+      ok = value.constructor == typ;
+   else
+      local valueTypeString = value.constructor.__str;
+      ok = typ.implementedBy[valueTypeString];
+      if ok == nil then
+         ok = true;
+         local valueMethodSet = __methodSet(value.constructor);
+         local interfaceMethods = typ.methods;
+         for i = 0,#interfaceMethods-1 do
+            
+            local tm = interfaceMethods[i];
+            local found = false;
+            for j = 0,#valueMethodSet-1 do
+               
+               local vm = valueMethodSet[j];
+               if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
+                  found = true;
+                  break;
+               end
+            end
+            if  not found then
+               ok = false;
+               typ.missingMethodFor[valueTypeString] = tm.name;
+               break;
+            end
+         end
+         typ.implementedBy[valueTypeString] = ok;
+      end
+      if  not ok then
+         missingMethod = typ.missingMethodFor[valueTypeString];
+      end
+   end
+   
+   if  not ok then
+      if returnTuple then
+         return {typ.zero(), false};
+      end
+      local msg = ""
+      if value ~= __ifaceNil then
+         msg = value.constructor.__str
+      end
+      --__panic(__packages["runtime"].TypeAssertionError.ptr("", msg, typ.__str, missingMethod));
+      error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")
+   end
+   
+   if  not isInterface then
+      value = value.__val;
+   end
+   if typ == __jsObjectPtr then
+      value = value.object;
+   end
+   if returnTuple then
+      return {value, true}
+   end
+   return value;
+end;
+
+__stackDepthOffset = 0;
+__getStackDepth = function()
+  local err = new Error();
+  if err.stack == nil then
+    return nil;
+  end
+  return __stackDepthOffset + #err.stack.split("\n");
+end;
