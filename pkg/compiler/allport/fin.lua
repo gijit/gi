@@ -759,3 +759,52 @@ __internalAppend = function(slice, array, offset, length)
   newSlice.__capacity = newCapacity;
   return newSlice;
 end;
+
+
+
+function field2strHelper(f)
+   local tag = ""
+   if f.tag ~= "" then
+      tag = string.gsub(f.tag, "\\", "\\\\")
+      tag = string.gsub(tag, "\"", "\\\"")
+   end
+   return f.name .. " " .. f.typ.__str .. tag
+end
+
+function typeKeyHelper(f)
+   return f.name .. "," .. f.typ.id .. "," .. f.tag;
+end
+
+__structTypes = {};
+__structType = function(pkgPath, fields)
+  local typeKey = __mapAndJoinStrings("_", fields, typeKeyHelper)
+
+  local typ = __structTypes[typeKey];
+  if typ == nil then
+    local str
+    if #fields == 0 then
+       str = "struct {}";
+    else
+       str = "struct { " .. __mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
+    end
+       
+    typ = __newType(0, __kindStruct, str, false, "", false, function()
+      local this = {}
+      this.__val = this;
+      for i = 0, #fields-1 do
+        local f = fields[i];
+        local arg = arguments[i];
+        if arg ~= nil then
+           this[f.prop] = arg
+        else
+           this[f.prop] = t.typ.zero();
+        end
+     end
+     return this
+    end);
+    __structTypes[typeKey] = typ;
+    typ.init(pkgPath, fields);
+  end
+  return typ;
+end;
+
