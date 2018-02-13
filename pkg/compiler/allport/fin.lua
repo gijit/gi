@@ -698,11 +698,58 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end;
       -- end __kindArray
 
+   
+  elseif kind ==  __kindChan then
+     
+    typ.tfun = function(this, v) this.__val = v; end;
+    typ.wrapped = true;
+    typ.keyFor = __idKey;
+    typ.init = function(elem, sendOnly, recvOnly)
+      typ.elem = elem;
+      typ.sendOnly = sendOnly;
+      typ.recvOnly = recvOnly;
+    end;
+    
+
+  elseif kind ==  __kindFunc then 
+
+     typ.tfun = function(this, v) this.__val = v; end;
+     typ.wrapped = true;
+     typ.init = function(params, results, variadic)
+        typ.params = params;
+        typ.results = results;
+        typ.variadic = variadic;
+        typ.comparable = false;
+     end;
+    
+
+  elseif kind ==  __kindInterface then 
+
+     typ = { implementedBy= {}, missingMethodFor= {} };
+     typ.keyFor = __ifaceKeyFor;
+     typ.init = function(methods)
+        typ.methods = methods;
+        methods.forEach(function(m)
+              __ifaceNil[m.prop] = __throwNilPointerError;
+        end);
+     end;
+     
+     
+   elseif kind ==  __kindMap then 
+      
+      typ.tfun = function(this, v) this.__val = v; end;
+      typ.wrapped = true;
+      typ.init = function(key, elem)
+         typ.key = key;
+         typ.elem = elem;
+         typ.comparable = false;
+      end;
+      
    elseif kind ==  __kindStruct then
       
       typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
-
+      
       local ctor = function(this, ...)
          this.__get = function() return this; end;
          this.__set = function(v) typ.copy(this, v); end;
