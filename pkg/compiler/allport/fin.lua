@@ -321,7 +321,42 @@ function __newAnyArrayValue(elem, len)
    return array;
 end
 
+
+__methodSynthesizers = {};
+__addMethodSynthesizer = function(f)
+   if __methodSynthesizers == nil then
+      f();
+      return;
+   end
+   table.insert(__methodSynthesizers, f);
+end;
+
+__synthesizeMethods = function()
+   for i,f in ipairs(__methodSynthesizers) do
+      f();
+   end
+   __methodSynthesizers = nil;
+end;
+
+__ifaceKeyFor = function(x)
+  if x == __ifaceNil then
+    return 'nil';
+  end
+  local c = x.constructor;
+  return c.__str .. '__' .. c.keyFor(x.__val);
+end;
+
+__identity = function(x) return x; end;
+
 __typeIDCounter = 0;
+
+__idKey = function(x)
+   if x.__id == nil then
+      __idCounter=__idCounter+1;
+      x.__id = __idCounter;
+   end
+   return String(x.__id);
+end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
    local typ ={};
@@ -454,22 +489,29 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
-      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, constructor);
+
+      local ctor = function(this, ...)
+         this.__get = function() return this; end;
+         this.__set = function(v) typ.copy(this, v); end;
+         constructor(this, ...);
+      end
+      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
+      -- __newType sets typ.comparable = true
+      
       typ.ptr.elem = typ;
-      typ.ptr.prototype.__get = function() return this; end;
-      typ.ptr.prototype.__set = function(v) typ.copy(this, v); end;
       typ.init = function(pkgPath, fields)
          typ.pkgPath = pkgPath;
          typ.fields = fields;
-         fields.forEach(function(f)
-               if  not f.typ.comparable then
-                  typ.comparable = false;
-               end
-         end);
+         for i,f in ipairs(fields) do
+            if not f.typ.comparable then
+               typ.comparable = false;
+               break;
+            end
+         end
          typ.keyFor = function(x)
             local val = x.__val;
             return __mapAndJoinStrings("_", fields, function(f)
-                                          return string.gsub(tostring(f.typ.keyFor(val[f.prop])), , "\\", "\\\\")
+                                          return string.gsub(tostring(f.typ.keyFor(val[f.prop])), "\\", "\\\\")
             end)
          end;
          typ.copy = function(dst, src)
@@ -480,19 +522,20 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                if sw2 == __kindArray or
                sw2 ==  __kindStruct then 
                   f.typ.copy(dst[f.prop], src[f.prop]);
-                  continue;
                else
                   dst[f.prop] = src[f.prop];
-                  continue;
                end
             end
          end;
          -- /* nil value */
          local properties = {};
-         fields.forEach(function(f)
-               properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
-         end);
-         typ.ptr.__nil = Object.create(constructor.prototype, properties);
+         for i,f in ipairs(fields) do
+            properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
+         end;
+         typ.ptr.__nil = {} -- Object.create(constructor.prototype, properties);
+         --if constructor ~= nil then
+         --   constructor(typ.ptr.__nil)
+         --end
          typ.ptr.__nil.__val = typ.ptr.__nil;
          -- /* methods for embedded fields */
          __addMethodSynthesizer(function()
@@ -501,25 +544,27 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                   target.prototype[m.prop] = function()
                      local v = this.__val[f.prop];
                      if f.typ == __jsObjectPtr then
-                        v = new __jsObjectPtr(v);
+                        v = __jsObjectPtr(v);
                      end
                      if v.__val == nil then
-                        v = new f.typ(v);
+                        local w = {}
+                        f.typ(w, v);
+                        v = w
                      end
-                     return v[m.prop].apply(v, arguments);
+                     return v[m.prop](v, arguments);
                   end;
                end;
-               fields.forEach(function(f)
-                     if f.anonymous then
-                        __methodSet(f.typ).forEach(function(m)
-                              synthesizeMethod(typ, m, f);
-                              synthesizeMethod(typ.ptr, m, f);
-                                                  end);
-                        __methodSet(__ptrType(f.typ)).forEach(function(m)
-                              synthesizeMethod(typ.ptr, m, f);
-                                                             end);
-                     end
-               end);
+               for i,f in ipairs(fields) do
+                  if f.anonymous then
+                     __methodSet(f.typ).forEach(function(m)
+                           synthesizeMethod(typ, m, f);
+                           synthesizeMethod(typ.ptr, m, f);
+                                               end);
+                     __methodSet(__ptrType(f.typ)).forEach(function(m)
+                           synthesizeMethod(typ.ptr, m, f);
+                                                          end);
+                  end
+               end;
          end);
       end;
       
@@ -567,9 +612,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end;
 
    elseif kind == __kindStruct then
-      typ.zero = function() return new typ.ptr(); end;
-      
-      
+      typ.zero = function()
+         return typ.ptr();
+      end;      
    end
 
    typ.id = __typeIDCounter;
