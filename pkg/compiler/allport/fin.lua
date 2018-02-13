@@ -278,7 +278,7 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       --print(debug.traceback())
       
       --print("in __tfunBasicMT, start __st on ...")
@@ -293,7 +293,7 @@ __tfunBasicMT = {
       setmetatable(newInstance, __valueBasicMT)
       if self ~= nil then
          if self.tfun ~= nil then
-            print("calling tfun! -- let constructors set metatables if they wish to.")
+            --print("calling tfun! -- let constructors set metatables if they wish to.")
 
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
@@ -371,7 +371,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = constructor  or
          function(this, getter, setter, target)
-            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+            --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             this.__get = getter;
             this.__set = setter;
             this.__target = target;
@@ -391,12 +391,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__offset = 0;
          this.__length = __lenz(array);
          this.__capacity = this.__length;
-         print("jea debug: slice tfun set __length to ", this.__length)
-         print("jea debug: slice tfun set __capacity to ", this.__capacity)
-         print("jea debug: slice tfun sees array: ")
-         for i,v in pairs(array) do
-            print("array["..tostring(i).."] = ", v)
-         end
+         --print("jea debug: slice tfun set __length to ", this.__length)
+         --print("jea debug: slice tfun set __capacity to ", this.__capacity)
+         --print("jea debug: slice tfun sees array: ")
+         --for i,v in pairs(array) do
+         --   print("array["..tostring(i).."] = ", v)
+         --end
             
          this.__val = this;
          this.__constructor = typ
@@ -411,7 +411,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindArray then
 
       typ.tfun = function(this, v)
-         print("in tfun ctor function for __kindArray")
+         --print("in tfun ctor function for __kindArray")
          this.__val = v;
          setmetatable(this, __valueArrayMT)
       end;

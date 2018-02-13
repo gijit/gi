@@ -189,3 +189,4 @@ expectEq(#ap, 4)
 
 -- structs
 
+structType = __structType("main", {{prop= "uint32array", name= "uint32array", anonymous= false, exported= false, typ= arrayType, tag= ""}});
