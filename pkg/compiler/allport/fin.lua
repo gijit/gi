@@ -244,6 +244,15 @@ __tfunBasicMT = {
    end
 }
 
+
+function __newAnyArrayValue(elem, len)
+   local array = {}
+   for i =0, len -1 do
+      array[i]= elem.zero();
+   end
+   return array;
+end
+
 __typeIDCounter = 0;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
@@ -404,16 +413,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   elseif kind == __kindArray then
 
      typ.zero = function()
-       --local arrayClass = __nativeArray(typ.elem.kind);
-       --if arrayClass ~= Array then
-       --   return new arrayClass(typ.len);
-       --end
-       --local array = new Array(typ.len);
-       local array = {} -- new Array(typ.len);
-       for i =0, typ.len -1 do
-          table.insert(array, typ.elem.zero());
-       end
-       return array;
+        return __newAnyArrayValue(typ.elem, typ.len)
      end;
      
   end
@@ -451,6 +451,7 @@ __Float64       = __newType( 8, __kindFloat64,       "float64",        true, "",
 --__Complex128    = __newType(16, __kindComplex128,    "complex128",     true, "", false, nil);
 __String        = __newType(16, __kindString,        "string",         true, "", false, nil);
 --__UnsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+
 
 __ptrType = function(elem)
   local typ = elem.ptr;

@@ -982,7 +982,6 @@ elseif kind ==  __kindArray then
     typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
-      --typ.nativeArray = __nativeArray(elem.kind);
       typ.nativeArray = __nativeArray(elem.kind);
       typ.__nil = typ({});
     end;
@@ -1245,32 +1244,34 @@ __String        = __newType( 8, __kindString,        "string",         true, "",
 __UnsafePointer = __newType( 4, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 __nativeArray = function(elemKind)
-  
-  if elemKind ==  __kindInt then 
-    return Int32Array;
-  elseif elemKind ==  __kindInt8 then 
-    return Int8Array;
-  elseif elemKind ==  __kindInt16 then 
-    return Int16Array;
-  elseif elemKind ==  __kindInt32 then 
-    return Int32Array;
-  elseif elemKind ==  __kindUint then 
-    return Uint32Array;
-  elseif elemKind ==  __kindUint8 then 
-    return Uint8Array;
-  elseif elemKind ==  __kindUint16 then 
-    return Uint16Array;
-  elseif elemKind ==  __kindUint32 then 
-    return Uint32Array;
-  elseif elemKind ==  __kindUintptr then 
-    return Uint32Array;
-  elseif elemKind ==  __kindFloat32 then 
-    return Float32Array;
-  elseif elemKind ==  __kindFloat64 then 
-    return Float64Array;
-  else
-    return Array;
-  end
+
+   if false then
+      if elemKind ==  __kindInt then 
+         return Int32Array; -- in js, a builtin typed array
+      elseif elemKind ==  __kindInt8 then 
+         return Int8Array;
+      elseif elemKind ==  __kindInt16 then 
+         return Int16Array;
+      elseif elemKind ==  __kindInt32 then 
+         return Int32Array;
+      elseif elemKind ==  __kindUint then 
+         return Uint32Array;
+      elseif elemKind ==  __kindUint8 then 
+         return Uint8Array;
+      elseif elemKind ==  __kindUint16 then 
+         return Uint16Array;
+      elseif elemKind ==  __kindUint32 then 
+         return Uint32Array;
+      elseif elemKind ==  __kindUintptr then 
+         return Uint32Array;
+      elseif elemKind ==  __kindFloat32 then 
+         return Float32Array;
+      elseif elemKind ==  __kindFloat64 then 
+         return Float64Array;
+      else
+         return Array;
+      end
+   end
 end;
 
 __toNativeArray = function(elemKind, array)
@@ -1421,15 +1422,15 @@ __indexPtr = function(array, index, constructor)
 end;
 
 __sliceType = function(elem)
-  local typ = elem.slice;
-  if typ == nil then
-    typ = __newType(12, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
-    elem.slice = typ;
-    typ.init(elem);
-  end
-  return typ;
+   local typ = elem.slice;
+   if typ == nil then
+      typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
+      elem.slice = typ;
+      typ.init(elem);
+   end
+   return typ;
 end;
-  
+
 __makeSlice = function(typ, length, capacity)
   capacity = capacity  or  length;
   if length < 0  or  length > 9007199254740992 then -- 2^53
