@@ -159,7 +159,7 @@ __valueBasicMT = {
          return '"'..self.__val..'"'
       end
       if self ~= nil and self.__val ~= nil then
-         print("__valueBasicMT.__tostring called, with self.__val set.")
+         --print("__valueBasicMT.__tostring called, with self.__val set.")
          if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.__val == this; avoid inf loop>"
@@ -179,8 +179,8 @@ __valueArrayMT = {
    __name = "__valueArrayMT",
    
    __newindex = function(t, k, v)
-      print("__valueArrayMT.__newindex called, t is:")
-      __st(t)
+      --print("__valueArrayMT.__newindex called, t is:")
+      --__st(t)
 
       if k < 0 or k >= #t then
          error "read of array error: access out-of-bounds"
@@ -190,7 +190,7 @@ __valueArrayMT = {
    end,
    
    __index = function(t, k)
-      print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      --print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
       --__st(t.__val)
       if k < 0 or k >= #t then
          error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
@@ -209,7 +209,7 @@ __valueArrayMT = {
          return '"'..self.__val..'"'
       end
       if self ~= nil and self.__val ~= nil then
-         print("__valueArrayMT.__tostring called, with self.__val set.")
+         --print("__valueArrayMT.__tostring called, with self.__val set.")
          if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.__val == this; avoid inf loop>"
@@ -229,8 +229,8 @@ __valueSliceMT = {
    __name = "__valueSliceMT",
    
    __newindex = function(t, k, v)
-      print("__valueSliceMT.__newindex called, t is:")
-      __st(t)
+      --print("__valueSliceMT.__newindex called, t is:")
+      --__st(t)
       local w = t.__offset + k
       if k < 0 or k >= t.__capacity then
          error "slice error: write out-of-bounds"
@@ -258,7 +258,7 @@ __valueSliceMT = {
          return '"'..self.__val..'"'
       end
       if self ~= nil and self.__val ~= nil then
-         print("__valueSliceMT.__tostring called, with self.__val set.")
+         --print("__valueSliceMT.__tostring called, with self.__val set.")
          if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.__val == this; avoid inf loop>"
@@ -553,11 +553,11 @@ __arrayType = function(elem, len)
 end;
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
-   print("__copyArray has dst:")
-   __st(dst)
-   print("__copyArray has src:")
-   __st(src)
+   --print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
+   --print("__copyArray has dst:")
+   --__st(dst)
+   --print("__copyArray has src:")
+   --__st(src)
    
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
@@ -750,7 +750,7 @@ __internalAppend = function(slice, array, offset, length)
 
   __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
   --print("jea debug, __internalAppend, after copying over array:")
-  __st(newArray)
+  --__st(newArray)
 
   local newSlice ={}
   slice.__constructor.tfun(newSlice, newArray);
