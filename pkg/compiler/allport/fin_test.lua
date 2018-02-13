@@ -175,17 +175,16 @@ expectEq(s2[2], 45LL)
 expectEq(m, 3)
 
 s0[0]=100LL
-s0[1]=101LL
-s2[0]=102LL
-s2[1]=103LL
-s2[2]=104LL
+s2[0]=101LL
+s2[1]=102LL
+s2[2]=103LL
 
 ap = __appendSlice(s0, s2)
 expectEq(ap[0], 100LL)
 expectEq(ap[1], 101LL)
 expectEq(ap[2], 102LL)
 expectEq(ap[3], 103LL)
-expectEq(ap[4], 104LL)
+expectEq(#ap, 4LL)
 
 
 -- structs
