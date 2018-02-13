@@ -150,6 +150,8 @@ expectEq(a[1], 32LL)
 expectEq(#a, 2LL)
 
 b = arrayType()
+a[0]=5LL
 arrayType.copy(b, a)
 
+expectEq(b[0], 5LL)
 expectEq(b[1], 32LL)

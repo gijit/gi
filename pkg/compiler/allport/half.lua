@@ -220,18 +220,23 @@ __subslice = function(x)
   return s;
 end;
 
-__substring = function(h)
+__substring = function(str, low, high)
   if low < 0  or  high < low  or  high > #str then
-    __throwRuntimeError("slice bounds out of range");
+    __throwRuntimeError("string slice bounds out of range");
   end
-  return str.substring(low, high);
+  return string.sub(str, low+1, high); -- high is inclusive, so no +1 needed.
 end;
 
 __sliceToArray = function(slice)
-  if slice.__array.constructor ~= Array then
-    return slice.__array.subarray(slice.__offset, slice.__offset + slice.__length);
-  end
-  return slice.__array.slice(slice.__offset, slice.__offset + slice.__length);
+   local cp = {}
+   if slice.__length > 0 then
+      local k = 0
+      for i = slice.__offset, slice.__offset + slice.__length -1 do
+         cp[k] = slice.array[i]
+         k=k+1
+      end
+   end
+   return cp
 end;
 
 __decodeRune = function(s)

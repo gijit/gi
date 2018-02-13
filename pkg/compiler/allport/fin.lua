@@ -468,15 +468,12 @@ __arrayType = function(elem, len)
 end;
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   
-  if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
-    return;
-  end
+   print("__copyArray called with n = ", n)
 
-  if src.subarray then
-     dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
-     return;
-  end
+   n = tonumber(n)
+   if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
+      return;
+   end
 
   local sw = elem.kind
   if sw == __kindArray or sw == __kindStruct then
