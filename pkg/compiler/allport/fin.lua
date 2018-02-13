@@ -35,6 +35,14 @@ __kindUnsafePointer = 26;
 
 __throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
 
+function __arrayLenWithZero(array)      
+   local n = #array
+   if array[0] ~= nil then
+      n=n+1
+   end
+   return n
+end
+
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
 function __st(t, name, indent, quiet, methods_desc, seen)
@@ -191,12 +199,7 @@ __valueArrayMT = {
    end,
 
    __len = function(t)
-      
-      local n = #t.__val
-      if t.__val[0] ~= nil then
-         n=n+1
-      end
-      return int(n)
+      return int(__arrayLenWithZero(t.__val))
    end,
    
    __tostring = function(self, ...)
@@ -385,10 +388,17 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, array)
          this.__array = array;
          this.__offset = 0;
-         this.__length = #array;
-         this.__capacity = this.__length
+         this.__length = __arrayLenWithZero(array);
+         this.__capacity = this.__length;
+         print("jea debug: slice tfun set __length to ", this.__length)
+         print("jea debug: slice tfun set __capacity to ", this.__capacity)
+         print("jea debug: slice tfun sees array: ")
+         for i,v in pairs(array) do
+            print("array["..tostring(i).."] = ", v)
+         end
+            
          this.__val = this;
-         this.__constructor = typ.tfun
+         this.__constructor = typ
          setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
@@ -658,7 +668,7 @@ __subslice = function(slice, low, high, max)
    end
    
    local s = {}
-   slice.__constructor(s, slice.__array);
+   slice.__constructor.tfun(s, slice.__array);
    s.__offset = slice.__offset + low;
    s.__length = slice.__length - low;
    s.__capacity = slice.__capacity - low;
@@ -670,3 +680,10 @@ __subslice = function(slice, low, high, max)
    end
    return s;
 end;
+
+__copySlice = function(dst, src)
+   local n = __min(src.__length, dst.__length);
+   __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
+   return n;
+end;
+

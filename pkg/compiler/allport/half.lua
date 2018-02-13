@@ -358,7 +358,7 @@ __stringToRunes = function(r)
   return array.subarray(0, j);
 end;
 
-__runesToString = function(e)
+__runesToString = function(slice)
   if slice.__length == 0 then
     return "";
   end
@@ -369,7 +369,7 @@ __runesToString = function(e)
   return str;
 end;
 
-__copyString = function(c)
+__copyString = function(dst, src)
   local n = __min(#src, dst.__length);
   for i = 0,n-1 do
     dst.__array[dst.__offset + i] = src.charCodeAt(i);
@@ -377,7 +377,7 @@ __copyString = function(c)
   return n;
 end;
 
-__copySlice = function(c)
+__copySlice = function(dst, src)
   local n = __min(src.__length, dst.__length);
   __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.constructor.elem);
   return n;

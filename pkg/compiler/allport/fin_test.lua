@@ -169,5 +169,10 @@ expectEq(s0[0], 45LL)
 
 -- copy, append
 
+s2 = __makeSlice(slcInt, 3)
+m = __copySlice(s2, sl)
+expectEq(s2[2], 45LL)
+expectEq(m, 3)
+
 -- structs
 
