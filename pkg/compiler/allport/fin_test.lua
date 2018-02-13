@@ -174,5 +174,7 @@ m = __copySlice(s2, sl)
 expectEq(s2[2], 45LL)
 expectEq(m, 3)
 
+ap = __appendSlice()
+
 -- structs
 

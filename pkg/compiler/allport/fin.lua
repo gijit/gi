@@ -35,7 +35,8 @@ __kindUnsafePointer = 26;
 
 __throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
 
-function __arrayLenWithZero(array)      
+-- length of array, counting [0] if present.
+function __lenz(array)      
    local n = #array
    if array[0] ~= nil then
       n=n+1
@@ -199,7 +200,7 @@ __valueArrayMT = {
    end,
 
    __len = function(t)
-      return int(__arrayLenWithZero(t.__val))
+      return int(__lenz(t.__val))
    end,
    
    __tostring = function(self, ...)
@@ -388,7 +389,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, array)
          this.__array = array;
          this.__offset = 0;
-         this.__length = __arrayLenWithZero(array);
+         this.__length = __lenz(array);
          this.__capacity = this.__length;
          print("jea debug: slice tfun set __length to ", this.__length)
          print("jea debug: slice tfun set __capacity to ", this.__capacity)
@@ -687,3 +688,58 @@ __copySlice = function(dst, src)
    return n;
 end;
 
+
+__append = function(...)
+   local arguments = {...}
+   local slice = arguments[1]
+   return __internalAppend(slice, arguments, 1, #arguments - 1);
+end;
+
+__appendSlice = function(slice, toAppend)
+   if type(toAppend) == "string" then
+      local bytes = __stringToBytes(toAppend);
+      return __internalAppend(slice, bytes, 0, #bytes);
+   end
+   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
+end;
+
+__internalAppend = function(slice, array, offset, length)
+  if length == 0 then
+    return slice;
+  end
+
+  local newArray = slice.__array;
+  local newOffset = slice.__offset;
+  local newLength = slice.__length + length;
+  local newCapacity = slice.__capacity;
+  local elem = slice.__constructor.elem;
+
+  if newLength > newCapacity then
+     local newOffset = 0;
+     local tmpCap
+     if slice.__capacity < 1024 then
+        tmpCap = slice.__capacity * 2
+     else
+        tmpCap = __truncateToInt(slice.__capacity * 5 / 4)
+     end
+     newCapacity = __max(newLength, tmpCap);
+
+     newArray = __newAnyArrayValue(elem, newCapacity)
+     local w = slice.__offset
+     for i = 0,slice.__length do
+        newArray[i] = slice.__array[i + w]
+     end
+     for i = #slice,newCapacity-1 do
+        newArray[i] = zero();
+     end
+  end
+
+  __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
+
+  local newSlice ={}
+  slice.__constructor.tfun(newSlice, newArray);
+  newSlice.__offset = newOffset;
+  newSlice.__length = newLength;
+  newSlice.__capacity = newCapacity;
+  return newSlice;
+end;

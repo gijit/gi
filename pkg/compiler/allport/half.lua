@@ -449,12 +449,14 @@ __pointerOfStructConversion = function(obj, typ)
   return proxy;
 end;
 
-__append = function(slice)
-  return __internalAppend(slice, arguments, 1, #arguments - 1);
+__append = function(...)
+   local arguments = {...}
+   local slice = arguments[1]
+   return __internalAppend(slice, arguments, 1, #arguments - 1);
 end;
 
 __appendSlice = function(slice, toAppend)
-  if toAppend.constructor == String then
+   if type(toAppend) == "string" then
     local bytes = __stringToBytes(toAppend);
     return __internalAppend(slice, bytes, 0, #bytes);
   end
