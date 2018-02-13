@@ -1,6 +1,6 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
-dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
+dofile '../int64.lua'
 __ffi = require("ffi")
 __bit =require("bit")
 
