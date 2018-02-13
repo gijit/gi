@@ -184,7 +184,7 @@ expectEq(ap[0], 100LL)
 expectEq(ap[1], 101LL)
 expectEq(ap[2], 102LL)
 expectEq(ap[3], 103LL)
-expectEq(#ap, 4LL)
+expectEq(#ap, 4)
 
 
 -- structs

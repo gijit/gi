@@ -554,7 +554,11 @@ end;
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
-
+   print("__copyArray has dst:")
+   __st(dst)
+   print("__copyArray has src:")
+   __st(src)
+   
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
       return;
@@ -722,7 +726,7 @@ __internalAppend = function(slice, array, offset, length)
   local elem = slice.__constructor.elem;
 
   if newLength > newCapacity then
-     local newOffset = 0;
+     newOffset = 0;
      local tmpCap
      if slice.__capacity < 1024 then
         tmpCap = slice.__capacity * 2
@@ -739,6 +743,8 @@ __internalAppend = function(slice, array, offset, length)
      print("jea debug, __internalAppend, after copy of first part")
      __st(newArray)
   end
+
+  print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
 
   __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
   print("jea debug, __internalAppend, after copying over array:")
