@@ -164,3 +164,5 @@ slcInt = __sliceType(__Int)
 sl = __makeSlice(slcInt, 3, 4)
 
 s0 = __subslice(sl, 2)
+sl[2] = 45LL
+expectEq(s0[0], 45LL)

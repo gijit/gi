@@ -228,20 +228,20 @@ __valueSliceMT = {
       print("__valueSliceMT.__newindex called, t is:")
       __st(t)
       local w = t.__offset + k
-      if w < 0 or w >= t.__capacity then
+      if k < 0 or k >= t.__capacity then
          error "slice error: write out-of-bounds"
       end
-      t.__array[t.__offset+k] = v
+      t.__array[w] = v
    end,
    
    __index = function(t, k)
       --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
       --__st(t.__val)
       local w = t.__offset + k
-      if w < 0 or w >= t.__capacity then
+      if k < 0 or k >= t.__capacity then
          error "slice error: access out-of-bounds"
       end
-      return t.__array[t.__offset+k]
+      return t.__array[w]
    end,
 
    __len = function(t)
