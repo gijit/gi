@@ -91,12 +91,7 @@ expectEq("42ULL", tostring(__Uint(42ULL)))
 expectEq("-0.3", tostring(__Float64(-0.3)))
 expectEq('"hello world"', tostring(__String("hello world")))
 
-a = __Int(4)
-
--- b := &a  -- gets translated as two parts:
-ptrType = __ptrType(__Int)
-
-b = ptrType(function() return a; end, function(__v) a = __v; end, a);                                                                                                             
+                                                                                   
                                          
 expectEq(__basicValue2kind("hi"), __kindString)
 expectEq(__basicValue2kind(""), __kindString)
@@ -113,6 +108,7 @@ expectEq(__basicValue2kind(int32(1)), __kindInt32)
 expectEq(__basicValue2kind(int32(-1)), __kindInt32)
 
 -- can't distinguish __kindInt from __kindInt64
+-- they are both ctype<int64_t>
 expectEq(__basicValue2kind(int64(1LL)), __kindInt)
 expectEq(__basicValue2kind(int64(-1LL)), __kindInt)
 
@@ -126,10 +122,20 @@ expectEq(__basicValue2kind(uint32(1)), __kindUint32)
 expectEq(__basicValue2kind(uint32(-1)), __kindUint32)
 
 -- can't distinguish __kindUint from __kindUint64
+-- they are both ctype<uint64_t>
 expectEq(__basicValue2kind(uint64(1)), __kindUint)
 expectEq(__basicValue2kind(uint64(-1)), __kindUint)
 
 expectEq(__basicValue2kind(float32(-1.0)), __kindFloat32)
 expectEq(__basicValue2kind(float64(-1.0)), __kindFloat64)
 
+
+-- pointers
+
+a = __Int(4)
+
+-- b := &a  -- gets translated as two parts:
+ptrType = __ptrType(__Int)
+
+b = ptrType(function() return a; end, function(__v) a = __v; end, a);
 

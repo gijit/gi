@@ -1,5 +1,10 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
+__ffi = require("ffi")
+
+
+
 __Infinity = math.huge
 
 __kindBool = 1;
@@ -383,9 +388,6 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
 end;
 
 -- __basicValue2kind: identify type of basic value
-
-dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
-__ffi = require("ffi")
 
 function __basicValue2kind(v)
 

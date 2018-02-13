@@ -6,8 +6,8 @@ local ffi = require("ffi")
 int = ffi.typeof(0LL)
 uint=ffi.typeof(0ULL)
 
-int64=ffi.typeof(0LL)
-uint64=ffi.typeof(0ULL)
+int64=ffi.typeof("int64_t")
+uint64=ffi.typeof("uint64_t")
 
 int32 = ffi.typeof("int32_t")
 uint32 = ffi.typeof("uint32_t")
