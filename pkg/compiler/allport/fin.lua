@@ -303,58 +303,6 @@ end;
 
 --
 
-__stringToBytes = function(r)
-  local array = new Uint8Array(#str);
-  for i = 0,#str-1 do
-    array[i] = str.charCodeAt(i);
-  end
-  return array;
-end;
-
---
-
-__bytesToString = function(e)
-  if #slice == 0 then
-    return "";
-  end
-  local str = "";
-  for i = 0,#slice-1,10000 do
-    str = str .. String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
-  end
-  return str;
-end;
-
-__stringToRunes = function(r)
-  local array = new Int32Array(#str);
-  local rune, j = 0;
-  local i = 0
-  local n = #str
-  while true do
-     if i >= n then
-        break
-     end
-     
-     rune = __decodeRune(str, i);
-     array[j] = rune[1];
-     
-     i = i + rune[2]
-     j = j + 1
-  end
-  -- in js, a subarray is like a slice, a view on a shared ArrayBuffer.
-  return array.subarray(0, j);
-end;
-
-__runesToString = function(slice)
-  if slice.__length == 0 then
-    return "";
-  end
-  local str = "";
-  for i = 0,#slice-1 do
-    str = str .. __encodeRune(slice.__array[slice.__offset + i]);
-  end
-  return str;
-end;
-
 
 --
 
@@ -1019,6 +967,41 @@ __copySlice = function(dst, src)
    local n = __min(src.__length, dst.__length);
    __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
    return n;
+end;
+
+
+__clone = function(src, typ)
+  local clone = typ.zero();
+  typ.copy(clone, src);
+  return clone;
+end;
+
+__pointerOfStructConversion = function(obj, typ)
+  if(obj.__proxies == nil) then
+    obj.__proxies = {};
+    obj.__proxies[obj.constructor.__str] = obj;
+  end
+  local proxy = obj.__proxies[typ.__str];
+  if proxy == nil then
+     local properties = {};
+     
+     local helper = function(p)
+        properties[fieldProp] = {
+           get= function() return obj[fieldProp]; end,
+           set= function(value) obj[fieldProp] = value; end
+        };
+     end
+     -- fields must be an array for this to work.
+     for i=0,#typ.elem.fields-1 do
+        helper(typ.elem.fields[i].prop);
+     end
+     
+    proxy = Object.create(typ.prototype, properties);
+    proxy.__val = proxy;
+    obj.__proxies[typ.__str] = proxy;
+    proxy.__proxies = obj.__proxies;
+  end
+  return proxy;
 end;
 
 

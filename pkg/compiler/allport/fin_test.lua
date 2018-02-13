@@ -220,3 +220,4 @@ ww = WonderWoman.ptr(2);
 
 expectEq(ww.Bracelets, 2)
 
+print("done with fin_test.lua")
