@@ -618,9 +618,6 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindPtr then
 
-      typ.methodSet = {__name="methodSet for "..str}
-      typ.methodSet.__index = typ.methodSet
-      
       typ.tfun = constructor  or
          function(this, getter, setter, target)
             --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
@@ -758,7 +755,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       -- metatable for instances of the struct; this is
       -- equivalent to the prototype in js.
       --
-      typ.methodSet = {__name="methodSet for "..str}
+      typ.methodSet = {__name="methodSet for "..str, __typ = typ}
       typ.methodSet.__index = typ.methodSet
       
       local ctor = function(this, ...)
@@ -771,8 +768,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
-      
+
       typ.ptr.elem = typ;
+      typ.ptr.methodSet = typ.methodSet
       typ.init = function(pkgPath, fields)
          typ.pkgPath = pkgPath;
          typ.fields = fields;

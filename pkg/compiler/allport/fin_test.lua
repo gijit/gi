@@ -206,7 +206,9 @@ func main() {
 }
 --]]
 
-WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...) 
+WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...)
+                           print("DEBUG WonderWoman.ctor called! dots=")
+                           __st({...})
    if self == nil then self = {}; end
    local args={...};
    if #args == 0 then
@@ -215,8 +217,8 @@ WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/g
    else 
       local Bracelets_, LassoPoints_ = ... ;
       self.Bracelets = Bracelets_;
-      self.LassoPoints = LassoPoints_;
-		 end
+      self.LassoPoints = LassoPoints_ or 0LL;
+   end
    return self; 
 end);
 
@@ -233,8 +235,10 @@ WonderWoman.ptr.methodSet.Fight = function(self)
    w.LassoPoints = w.LassoPoints + 1LL;
 end
 
-WonderWoman.methodSet.Fight = WonderWoman.ptr.methodSet.Fight
-      
+-- WonderWoman.ptr.methodSet.Fight = WonderWoman.methodSet.Fight
+
+ww:Fight()
+expectEq(ww.LassoPoints, 1LL)
       
 print("done with fin_test.lua")
 
