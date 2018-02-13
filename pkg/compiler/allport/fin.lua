@@ -349,7 +349,22 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
   kind == __kindSlice then
      
     typ.zero = function() return typ.__nil; end;
-         
+
+  elseif kind == __kindArray then
+
+     typ.zero = function()
+       --local arrayClass = __nativeArray(typ.elem.kind);
+       --if arrayClass ~= Array then
+       --   return new arrayClass(typ.len);
+       --end
+       --local array = new Array(typ.len);
+       local array = {} -- new Array(typ.len);
+       for i =0, typ.len -1 do
+          table.insert(array, typ.elem.zero());
+       end
+       return array;
+     end;
+     
   end
 
   typ.id = __typeIDCounter;

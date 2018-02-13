@@ -142,3 +142,5 @@ b = ptrType(function() return a; end, function(__v) a = __v; end, a);
 -- arrays
 
 arrayType = __arrayType(__Uint32, 2);
+
+pad = arrayType.zero();

@@ -1125,15 +1125,16 @@ elseif kind ==  __kindArray then
 
   elseif kind == __kindArray then
     typ.zero = function()
-      local arrayClass = __nativeArray(typ.elem.kind);
-      if arrayClass ~= Array then
-        return new arrayClass(typ.len);
-      end
-      local array = new Array(typ.len);
-      for i =0, #typ -1 do
-        array[i] = typ.elem.zero();
-      end
-      return array;
+       --local arrayClass = __nativeArray(typ.elem.kind);
+       --if arrayClass ~= Array then
+       --   return new arrayClass(typ.len);
+       --end
+       --local array = new Array(typ.len);
+       local array = {} -- new Array(typ.len);
+       for i =0, typ.len -1 do
+          table.insert(array, typ.elem.zero());
+       end
+       return array;
     end;
     
 
