@@ -4,7 +4,6 @@ dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
 __ffi = require("ffi")
 
 
-
 __Infinity = math.huge
 
 __kindBool = 1;
@@ -178,7 +177,7 @@ __valueArrayMT = {
    
    __index = function(t, k)
       print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
-      __st(t.__val)
+      --__st(t.__val)
       return t.__val[k+1]
    end,
 
@@ -475,8 +474,8 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
   end
 
   if src.subarray then
-    dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
-    return;
+     dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
+     return;
   end
 
   local sw = elem.kind

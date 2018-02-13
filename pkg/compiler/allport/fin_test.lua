@@ -149,3 +149,7 @@ a[1] = 32LL
 expectEq(a[1], 32LL)
 expectEq(#a, 2LL)
 
+b = arrayType()
+arrayType.copy(b, a)
+
+expectEq(b[1], 32LL)

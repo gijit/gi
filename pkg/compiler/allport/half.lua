@@ -341,6 +341,7 @@ __stringToRunes = function(r)
      i = i + rune[2]
      j = j + 1
   end
+  -- in js, a subarray is like a slice, a view on a shared ArrayBuffer.
   return array.subarray(0, j);
 end;
 
