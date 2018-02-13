@@ -10,6 +10,102 @@ __packages = {}
 __idCounter = 0;
 
 
+__equal = function(a, b, typ)
+  if typ == __jsObjectPtr then
+    return a == b;
+  end
+
+  local sw = typ.kind
+  if sw == __kindComplex64 or
+  sw == __kindComplex128 then
+     return a.__real == b.__real  and  a.__imag == b.__imag;
+     
+  elseif sw == __kindInt64 or
+         sw == __kindUint64 then 
+     return a.__high == b.__high  and  a.__low == b.__low;
+     
+  elseif sw == __kindArray then 
+    if #a ~= #b then
+      return false;
+    end
+    for i=0,#a-1 do
+      if  not __equal(a[i], b[i], typ.elem) then
+        return false;
+      end
+    end
+    return true;
+    
+  elseif sw == __kindStruct then
+     
+    for i = 0,#(typ.fields)-1 do
+      local f = typ.fields[i];
+      if  not __equal(a[f.prop], b[f.prop], f.typ) then
+        return false;
+      end
+    end
+    return true;
+  elseif sw == __kindInterface then 
+    return __interfaceIsEqual(a, b);
+  else
+    return a == b;
+  end
+end;
+
+__interfaceIsEqual = function(b)
+  if a == __ifaceNil  or  b == __ifaceNil then
+    return a == b;
+  end
+  if a.constructor ~= b.constructor then
+    return false;
+  end
+  if a.constructor == __jsObjectPtr then
+    return a.object == b.object;
+  end
+  if  not a.constructor.comparable then
+    __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
+  end
+  return __equal(a.__val, b.__val, a.constructor);
+end;
+
+__mod = function(y) return x % y; end;
+__parseInt = parseInt;
+__parseFloat = function(f)
+  if f ~= nil  and  f ~= nil  and  f.constructor == Number then
+    return f;
+  end
+  return parseFloat(f);
+end;
+
+--[[
+ __froundBuf = Float32Array(1);
+__fround = Math.fround  or  function(f)
+  __froundBuf[0] = f;
+  return __froundBuf[0];
+end;
+--]]
+
+--[[
+__imul = Math.imul  or  function(b)
+   local ah = __bit.band(__bit.rshift(a, 16), 0xffff);
+   local al = __bit.band(a, 0xffff);
+   local bh = __bit.band(__bit.rshift(b, 16), 0xffff);
+   local bl = __bit.band(b, 0xffff);
+   return ((al * bl) + __bit.arshift((__bit.rshift(__bit.lshift(ah * bl + al * bh), 16), 0), 0);
+end;
+--]]
+
+__floatKey = function(f)
+  if f ~= f then
+     __idCounter=__idCounter+1;
+    return "NaN__" .. tostring(__idCounter);
+  end
+  return tostring(f);
+end;
+
+__flatten64 = function(x)
+  return x.__high * 4294967296 + x.__low;
+end;
+
 
 __Infinity = math.huge
 
@@ -557,6 +653,25 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.wrapped = true;
       typ.keyFor = function(x) return __floatKey(x); end;
 
+
+  elseif kind ==  __kindComplex64 then 
+    typ.tfun = function(this, real, imag)
+      this.__real = __fround(real);
+      this.__imag = __fround(imag);
+      this.__val = this;
+    end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
+    
+
+  elseif kind ==  __kindComplex128 then 
+    typ.tfun = function(this, real, imag)
+      this.__real = real;
+      this.__imag = imag;
+      this.__val = this;
+    end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
+    
+      
    elseif kind ==  __kindPtr then
       
       typ.tfun = constructor  or
@@ -866,6 +981,7 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
       dst[dstOffset + i] = src[srcOffset + i];
    end
 end;
+
 
 -- __basicValue2kind: identify type of basic value
 
