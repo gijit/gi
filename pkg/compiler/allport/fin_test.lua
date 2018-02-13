@@ -216,5 +216,7 @@ end);
 
 WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __Int, tag= ""}});
 
-ww = new WonderWoman.ptr(2);
+ww = WonderWoman.ptr(2);
+
+expectEq(ww.Bracelets, 2)
 
