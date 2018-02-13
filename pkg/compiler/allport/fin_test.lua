@@ -132,10 +132,13 @@ expectEq(__basicValue2kind(float64(-1.0)), __kindFloat64)
 
 -- pointers
 
-a = __Int(4)
+a = __Int(4) -- currently, even integers are wrapped.
 
 -- b := &a  -- gets translated as two parts:
 ptrType = __ptrType(__Int)
 
 b = ptrType(function() return a; end, function(__v) a = __v; end, a);
 
+-- arrays
+
+arrayType = __arrayType(__Uint32, 2);

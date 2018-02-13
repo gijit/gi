@@ -350,6 +350,18 @@ __ptrType = function(elem)
   return typ;
 end;
 
+__arrayTypes = {};
+__arrayType = function(elem, len)
+  local typeKey = elem.id .. "_" .. len;
+  local typ = __arrayTypes[typeKey];
+  if typ == nil then
+    typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
+    __arrayTypes[typeKey] = typ;
+    typ.init(elem, len);
+  end
+  return typ;
+end;
+
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    
   if n == 0  or  (dst == src  and  dstOffset == srcOffset) then

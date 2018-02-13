@@ -1231,6 +1231,12 @@ f splitting strings, see string:split(sep)
 
 NB: Lua has a limit of a few thousand return values.
 
+f) s.substr(n): return the substring of s starting at n (0-indexed)
+
+Javascript s.substr(4) is a zero-indexed substring from 4 to end of string `s`.
+
+The Lua equivalent is string.sub(s, 5)
+
 # origin
 
 Author: Jason E. Aten

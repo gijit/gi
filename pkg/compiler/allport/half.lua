@@ -845,7 +845,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__low = low >>> 0;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
+    typ.keyFor = function(x) return x.__high .. "_" .. x.__low; end;
     
 
   elseif kind ==  __kindUint64 then 
@@ -854,7 +854,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__low = low >>> 0;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__high + "_" .. x.__low; end;
+    typ.keyFor = function(x) return x.__high .. "_" .. x.__low; end;
     
 
   elseif kind ==  __kindComplex64 then 
@@ -863,7 +863,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__imag = __fround(imag);
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
     
 
   elseif kind ==  __kindComplex128 then 
@@ -872,7 +872,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       this.__imag = imag;
       this.__val = this;
     end;
-    typ.keyFor = function(x) return x.__real + "_" .. x.__imag; end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
     
 
 elseif kind ==  __kindArray then
@@ -1292,10 +1292,10 @@ __toNativeArray = function(elemKind, array)
 end;
 __arrayTypes = {};
 __arrayType = function(elem, len)
-  local typeKey = elem.id + "_" .. len;
+  local typeKey = elem.id .. "_" .. len;
   local typ = __arrayTypes[typeKey];
   if typ == nil then
-    typ = __newType(12, __kindArray, "[" .. len + "]" .. elem.__str, false, "", false, nil);
+     typ = __newType(24, __kindArray, "[" .. tostring(len) .. "]" .. elem.__str, false, "", false, nil);
     __arrayTypes[typeKey] = typ;
     typ.init(elem, len);
   end
@@ -1303,22 +1303,32 @@ __arrayType = function(elem, len)
 end;
 
 __chanType = function(elem, sendOnly, recvOnly)
-   
-  local string = (recvOnly ? "<-" : "") + "chan" .. (sendOnly ? "<- " : " ") + elem.__str;
-  local field = sendOnly ? "SendChan" : (recvOnly ? "RecvChan" : "Chan");
+
+   local str
+   local field
+   if recvOnly then
+      str = "<-chan " .. elem.__str
+      field = "RecvChan"
+   elseif sendOnly then
+      str = "chan<- " .. elem.__str
+      field = "SendChan"
+   else
+      str = "chan " .. elem.__str
+      field = "Chan"
+   end
   local typ = elem[field];
   if typ == nil then
-    typ = __newType(4, __kindChan, string, false, "", false, nil);
+    typ = __newType(4, __kindChan, str, false, "", false, nil);
     elem[field] = typ;
     typ.init(elem, sendOnly, recvOnly);
   end
   return typ;
 end;
-__Chan = function(elem, capacity)
+__Chan = function(this, elem, capacity)
   if capacity < 0  or  capacity > 2147483647 then
-    __throwRuntimeError("makechan: size out of range");
+     __throwRuntimeError("makechan: size out of range");
   end
-  this.__elem = elem;
+  this.elem = elem;
   this.__capacity = capacity;
   this.__buffer = {};
   this.__sendQueue = {};
@@ -1350,18 +1360,24 @@ __funcType = function(params, results, variadic)
   return typ;
 end;
 
+function __interfaceStrHelper(m)
+   local s = ""
+   if m.pkg ~= "" then
+      s = m.pkg .. "."
+   end
+   return s .. m.name .. string.sub(m.typ.__str, 6) -- sub for removing "__kind"
+end   
+
 __interfaceTypes = {};
 __interfaceType = function(methods)
-  local typeKey = __mapArray(methods, function(m) return m.pkg + "," .. m.name + "," .. m.typ.id; end).join("_");
+  local typeKey = __mapArray(methods, function(m) return m.pkg .. "," .. m.name .. "," .. m.typ.id; end).join("_");
   local typ = __interfaceTypes[typeKey];
   if typ == nil then
-    local string = "interface {}";
+    local str = "interface {}";
     if #methods ~= 0 then
-      string = "interface { " .. __mapArray(methods, function(m)
-        return (m.pkg ~= "" ? m.pkg + "." : "") + m.name + m.typ.__str.substr(4);
-      end).join("; ") + " end";
+       str = "interface { " .. __mapAndJoinStrings("; ", methods, __interfaceStrHelper) .. " }"
     end
-    typ = __newType(8, __kindInterface, string, false, "", false, nil);
+    typ = __newType(8, __kindInterface, str, false, "", false, nil);
     __interfaceTypes[typeKey] = typ;
     typ.init(methods);
   end
@@ -1374,10 +1390,10 @@ __error.init([{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, [__Str
 
 __mapTypes = {};
 __mapType = function(key, elem)
-  local typeKey = key.id + "_" .. elem.id;
+  local typeKey = key.id .. "_" .. elem.id;
   local typ = __mapTypes[typeKey];
   if typ == nil then
-    typ = __newType(4, __kindMap, "map[" .. key.__str + "]" .. elem.__str, false, "", false, nil);
+    typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
     __mapTypes[typeKey] = typ;
     typ.init(key, elem);
   end
