@@ -172,16 +172,26 @@ __valueArrayMT = {
    __newindex = function(t, k, v)
       print("__valueArrayMT.__newindex called, t is:")
       __st(t)
+
+      if k < 0 or k >= #t then
+         error "read of array error: access out-of-bounds"
+      end
+      
       t.__val[k] = v
    end,
    
    __index = function(t, k)
       print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
       --__st(t.__val)
+      if k < 0 or k >= #t then
+         error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
+      end
+            
       return t.__val[k]
    end,
 
-   __len = function(t)
+    __len = function(t)
+   
       local n = #t.__val
       if t.__val[0] ~= nil then
          n=n+1
@@ -211,11 +221,61 @@ __valueArrayMT = {
    end
 }
 
+__valueSliceMT = {
+   __name = "__valueSliceMT",
+   
+   __newindex = function(t, k, v)
+      print("__valueSliceMT.__newindex called, t is:")
+      __st(t)
+      local w = t.__offset + k
+      if w < 0 or w >= t.__capacity then
+         error "slice error: write out-of-bounds"
+      end
+      t.__array[t.__offset+k] = v
+   end,
+   
+   __index = function(t, k)
+      --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      --__st(t.__val)
+      local w = t.__offset + k
+      if w < 0 or w >= t.__capacity then
+         error "slice error: access out-of-bounds"
+      end
+      return t.__array[t.__offset+k]
+   end,
+
+   __len = function(t)
+      return t.__length
+   end,
+   
+   __tostring = function(self, ...)
+      --print("__tostring called from __valueSliceMT")
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
+      end
+      if self ~= nil and self.__val ~= nil then
+         print("__valueSliceMT.__tostring called, with self.__val set.")
+         if self.__val == self then
+            -- not a basic value, but a pointer, array, slice, or struct.
+            return "<this.__val == this; avoid inf loop>"
+         end
+         --return tostring(self.__val)
+      end
+      if getmetatable(self.__val) == __valueSliceMT then
+         --print("avoid infinite loop")
+         return "<avoid inf loop>"
+      else
+         return tostring(self.__val)
+      end
+   end
+}
+
 
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
       print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      --print(debug.traceback())
       
       --print("in __tfunBasicMT, start __st on ...")
       --__st({...}, "__tfunBasicMT.dots")
@@ -326,13 +386,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
         this.__array = array;
         this.__offset = 0;
         this.__length = #array;
-        this.__capacity = #array;
+        this.__capacity = this.__length
         this.__val = this;
+        setmetatable(this, __valueSliceMT)        
      end;
      typ.init = function(elem)
         typ.elem = elem;
         typ.comparable = false;
-        typ.__nil = typ({});
+        typ.__nil = typ({},{});
      end;
      
   elseif kind ==  __kindArray then
@@ -480,7 +541,7 @@ __arrayType = function(elem, len)
 end;
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   print("__copyArray called with n = ", n)
+   print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
 
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
