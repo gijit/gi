@@ -196,6 +196,7 @@ import (
 )
 type WonderWoman struct {
 	Bracelets int
+        LassoPoints int
 }
 func main() {
 	ww := WonderWoman{
@@ -205,28 +206,34 @@ func main() {
 }
 --]]
 
-WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, Bracelets_)
-                           this.__val = this;
-                           if Bracelets_ == nil then
-                              this.Bracelets = 0;
-                              return;
-                           end
-                           this.Bracelets = Bracelets_;
+WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...) 
+   if self == nil then self = {}; end
+   local args={...};
+   if #args == 0 then
+      self.Bracelets = 0LL;
+      self.LassoPoints = 0LL;
+   else 
+      local Bracelets_, LassoPoints_ = ... ;
+      self.Bracelets = Bracelets_;
+      self.LassoPoints = LassoPoints_;
+		 end
+   return self; 
 end);
 
-WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __Int, tag= ""}});
+
+WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __Int, tag= ""}, {prop= "LassoPoints", name= "LassoPoints", anonymous= false, exported= true, typ= __Int, tag= ""}});
 
 ww = WonderWoman.ptr(2);
 
 expectEq(ww.Bracelets, 2)
 
 ptrType = __ptrType(WonderWoman);
-WonderWoman.ptr.methodSet.Fight = function(w)
+WonderWoman.ptr.methodSet.Fight = function(self)
    local w = self;
    w.LassoPoints = w.LassoPoints + 1LL;
 end
 
-WonderWoman.methodSet.Fight = function(this) return this.__val.Fight(); end;
+WonderWoman.methodSet.Fight = WonderWoman.ptr.methodSet.Fight
       
       
 print("done with fin_test.lua")
