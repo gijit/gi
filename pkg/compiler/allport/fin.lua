@@ -215,6 +215,7 @@ __throwNilPointerError = function()  __throwRuntimeError("invalid memory address
 __call = function(fn, rcvr, args)  return fn(rcvr, args); end;
 __makeFunc = function(fn)
    return function()
+      -- TODO: port this!
       return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
    end;
 end;
@@ -266,7 +267,7 @@ __methodVal = function(recv, name)
 end;
 
 __methodExpr = function(typ, name) 
-   local method = typ.prototype[name];
+   local method = typ.methodSet[name];
    if method.__expr == nil then
       method.__expr = function() 
          __stackDepthOffset=__stackDepthOffset-1;
@@ -616,6 +617,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
     
       
    elseif kind ==  __kindPtr then
+
+      typ.methodSet = {__name="methodSet for "..str}
+      typ.methodSet.__index = typ.methodSet
       
       typ.tfun = constructor  or
          function(this, getter, setter, target)
@@ -749,11 +753,21 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
+
+      -- the typ.methodSet will be the
+      -- metatable for instances of the struct; this is
+      -- equivalent to the prototype in js.
+      --
+      typ.methodSet = {__name="methodSet for "..str}
+      typ.methodSet.__index = typ.methodSet
       
       local ctor = function(this, ...)
          this.__get = function() return this; end;
          this.__set = function(v) typ.copy(this, v); end;
-         constructor(this, ...);
+         if constructor ~= nil then
+            constructor(this, ...);
+         end
+         setmetatable(this, typ.methodSet)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
@@ -792,7 +806,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          for i,f in ipairs(fields) do
             properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
          end;
-         typ.ptr.__nil = {} -- Object.create(constructor.prototype, properties);
+         typ.ptr.__nil = {} -- Object.create(constructor.prototype,s properties);
          --if constructor ~= nil then
          --   constructor(typ.ptr.__nil)
          --end
@@ -800,8 +814,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          -- /* methods for embedded fields */
          __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
-                  if target.prototype[m.prop] ~= nil then return; end
-                  target.prototype[m.prop] = function()
+                  if target.methodSet[m.prop] ~= nil then return; end
+                  target.methodSet[m.prop] = function()
                      local v = this.__val[f.prop];
                      if f.typ == __jsObjectPtr then
                         v = __jsObjectPtr(v);
@@ -885,7 +899,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    typ.named = named;
    typ.pkg = pkg;
    typ.exported = exported;
-   typ.methods = {};
+   typ.methods = typ.methods or {};
    typ.methodSetCache = nil;
    typ.comparable = true;
    return typ;
@@ -1193,7 +1207,7 @@ __pointerOfStructConversion = function(obj, typ)
         helper(typ.elem.fields[i].prop);
      end
      
-    proxy = Object.create(typ.prototype, properties);
+    proxy = Object.create(typ.methodSet, properties);
     proxy.__val = proxy;
     obj.__proxies[typ.__str] = proxy;
     proxy.__proxies = obj.__proxies;

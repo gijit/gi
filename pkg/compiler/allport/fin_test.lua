@@ -221,12 +221,12 @@ ww = WonderWoman.ptr(2);
 expectEq(ww.Bracelets, 2)
 
 ptrType = __ptrType(WonderWoman);
-WonderWoman.ptr.prototype.Fight = function(w)
+WonderWoman.ptr.methodSet.Fight = function(w)
    local w = self;
    w.LassoPoints = w.LassoPoints + 1LL;
 end
 
-WonderWoman.prototype.Fight = function(this) return this.__val.Fight(); end;
+WonderWoman.methodSet.Fight = function(this) return this.__val.Fight(); end;
       
       
 print("done with fin_test.lua")
