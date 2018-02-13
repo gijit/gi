@@ -162,3 +162,5 @@ expectEq(b[1], 32LL)
 slcInt = __sliceType(__Int)
 
 sl = __makeSlice(slcInt, 3, 4)
+
+s0 = __subslice(sl, 2)

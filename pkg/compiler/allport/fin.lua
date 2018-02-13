@@ -388,7 +388,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__length = #array;
          this.__capacity = this.__length
          this.__val = this;
-         setmetatable(this, __valueSliceMT)        
+         this.__constructor = typ.tfun
+         setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
          typ.elem = elem;
@@ -655,7 +656,9 @@ __subslice = function(slice, low, high, max)
    if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.__capacity)  or  (max ~= nil and max > slice.__capacity) then
       __throwRuntimeError("slice bounds out of range");
    end
-   local s = slice.constructor(slice.__array);
+   
+   local s = {}
+   slice.__constructor(s, slice.__array);
    s.__offset = slice.__offset + low;
    s.__length = slice.__length - low;
    s.__capacity = slice.__capacity - low;

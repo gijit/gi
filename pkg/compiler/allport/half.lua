@@ -984,14 +984,14 @@ elseif kind ==  __kindArray then
       this.__array = array;
       this.__offset = 0;
       this.__length = #array;
-      this.__capacity = #array;
+      this.__capacity = this.__length
       this.__val = this;
+      setmetatable(this, __valueSliceMT)      
     end;
     typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
-      --typ.nativeArray = --__nativeArray(elem.kind);
-      typ.__nil = typ({});
+      typ.__nil = typ({},{});
     end;
     
 
