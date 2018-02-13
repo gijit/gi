@@ -788,7 +788,7 @@ __ifaceKeyFor = function(x)
     return 'nil';
   end
   local c = x.constructor;
-  return c.__str + '__' + c.keyFor(x.__val);
+  return c.__str .. '__' .. c.keyFor(x.__val);
 end;
 
 __identity = function(x) return x; end;
