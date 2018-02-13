@@ -1115,15 +1115,15 @@ a) Pick an issue from here, https://github.com/gijit/gi/issues, and add a commen
 you are starting work on that feature. Make a branch for your feature, using `git checkout -b yourFeatureName`.
 
 b) Write a test for your feature. Make sure it fails (the test is red), before
-moving on to implementation. Tests are quite short. There are many examples are here,
-which show the currently implemented features. Add your test at the end of
-the compiler/repl_test.go file.
+moving on to implementation. Tests are quite short. There are many examples here
+in the pkg/compiler/*_test.go files. These show the currently implemented
+features. Add your test to a new _test.go file.
 
 https://github.com/gijit/gi/blob/master/pkg/compiler/repl_test.go
 
 Then simply implement your feature. (So simple! Yeah right!)
 
-So this is hard part. It's too situational to give general advice, but do see the hints
+So this is fun part. It's too situational to give general advice, but do see the hints
 https://github.com/gijit/gi#translation-hints below for some
 specific Lua tricks for translating javascript idioms.
 
