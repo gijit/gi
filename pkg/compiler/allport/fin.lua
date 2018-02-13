@@ -2,6 +2,13 @@ dofile '../math.lua' -- for __max, __min, __truncateToInt
 
 dofile '/Users/jaten/go/src/github.com/gijit/gi/pkg/compiler/int64.lua'
 __ffi = require("ffi")
+__bit =require("bit")
+
+__global ={};
+__module ={};
+__packages = {}
+__idCounter = 0;
+
 
 
 __Infinity = math.huge
@@ -33,7 +40,18 @@ __kindString = 24;
 __kindStruct = 25;
 __kindUnsafePointer = 26;
 
-__throwNilPointerError = function() error("invalid memory address or nil pointer dereference"); end
+-- jea: sanity check my assumption by comparing
+-- length with #a
+function __assertIsArray(a)
+   local n = 0
+   for k,v in pairs(a) do
+      n=n+1
+   end
+   if #a ~= n then
+      error("not an array, __assertIsArray failed")
+   end
+end
+
 
 -- length of array, counting [0] if present.
 function __lenz(array)      
@@ -150,6 +168,195 @@ __keys = function(m)
    table.sort(r)
    return r
 end
+
+--
+__flushConsole = function() end;
+__throwRuntimeError = function(...) error(...) end
+__throwNilPointerError = function()  __throwRuntimeError("invalid memory address or nil pointer dereference"); end;
+__call = function(fn, rcvr, args)  return fn(rcvr, args); end;
+__makeFunc = function(fn)
+   return function()
+      return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
+   end;
+end;
+__unused = function(v) end;
+
+--
+__mapArray = function(array, f)
+   local newarr = {}
+   -- handle a zero argument, if present.
+   local bump = 0
+   local zval = arr[0]
+   if zval ~= nil then
+      bump = 1
+      newarr[1] = fun(zval)
+   end
+   for i,v in ipairs(arr) do
+      newarr[i+bump] = fun(v)
+   end
+   return newarr
+end;
+
+__methodVal = function(recv, name) 
+  local vals = recv.__methodVals  or  {};
+  recv.__methodVals = vals; -- /* noop for primitives */
+  local f = vals[name];
+  if f ~= nil then
+    return f;
+  end
+  local method = recv[name];
+  f = function() 
+     __stackDepthOffset = __stackDepthOffset-1;
+     -- try
+     local res = {pcall(function()
+           return recv[method](arguments);
+     end)}
+        -- finally
+     __stackDepthOffset=__stackDepthOffset+1;
+     -- no catch, so either re-throw or return results
+     local ok, err = unpack(res)
+     if not ok then
+        -- rethrow
+        error(err)
+     end
+     -- return results (without the ok/not first value)
+     return table.remove(res, 1)
+  end;
+  vals[name] = f;
+  return f;
+end;
+
+__methodExpr = function(typ, name) 
+   local method = typ.prototype[name];
+   if method.__expr == nil then
+      method.__expr = function() 
+         __stackDepthOffset=__stackDepthOffset-1;
+
+         -- try
+         local res ={pcall(
+            function()
+               if typ.wrapped then
+                  arguments[0] = typ(arguments[0]);
+               end
+               return method(arguments);
+         end)}
+         local ok, threw = unpack(res)
+         -- finally
+         __stackDepthOffset=__stackDepthOffset+1;
+         -- no catch, so rethrow any exception
+         if not ok then
+            error(threw)
+         end
+         return table.remove(res, 1)
+      end;
+   end
+   return method.__expr;
+end;
+
+__ifaceMethodExprs = {};
+__ifaceMethodExpr = function(name) 
+  local expr = __ifaceMethodExprs["_"  ..  name];
+  if expr == nil then
+     expr = function()
+        __stackDepthOffset = __stackDepthOffset-1;
+        -- try
+        local res = {pcall(
+                        function()
+                           return Function.call.apply(arguments[0][name], arguments);
+        end)}
+        -- finally
+        __stackDepthOffset = __stackDepthOffset+1;
+        -- no catch
+        local ok, threw = unpack(res)
+        if not ok then
+           error(threw)
+        else
+           -- non-panic return from pcall
+           return table.remove(res, 1)
+        end   
+     end;
+     __ifaceMethodExprs["_"  ..  name] = expr
+  end
+  return expr;
+end;
+
+--
+
+__substring = function(str, low, high)
+  if low < 0  or  high < low  or  high > #str then
+    __throwRuntimeError("string slice bounds out of range");
+  end
+  return string.sub(str, low+1, high); -- high is inclusive, so no +1 needed.
+end;
+
+__sliceToArray = function(slice)
+   local cp = {}
+   if slice.__length > 0 then
+      local k = 0
+      for i = slice.__offset, slice.__offset + slice.__length -1 do
+         cp[k] = slice.array[i]
+         k=k+1
+      end
+   end
+   return cp
+end;
+
+--
+
+__stringToBytes = function(r)
+  local array = new Uint8Array(#str);
+  for i = 0,#str-1 do
+    array[i] = str.charCodeAt(i);
+  end
+  return array;
+end;
+
+--
+
+__bytesToString = function(e)
+  if #slice == 0 then
+    return "";
+  end
+  local str = "";
+  for i = 0,#slice-1,10000 do
+    str = str .. String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
+  end
+  return str;
+end;
+
+__stringToRunes = function(r)
+  local array = new Int32Array(#str);
+  local rune, j = 0;
+  local i = 0
+  local n = #str
+  while true do
+     if i >= n then
+        break
+     end
+     
+     rune = __decodeRune(str, i);
+     array[j] = rune[1];
+     
+     i = i + rune[2]
+     j = j + 1
+  end
+  -- in js, a subarray is like a slice, a view on a shared ArrayBuffer.
+  return array.subarray(0, j);
+end;
+
+__runesToString = function(slice)
+  if slice.__length == 0 then
+    return "";
+  end
+  local str = "";
+  for i = 0,#slice-1 do
+    str = str .. __encodeRune(slice.__array[slice.__offset + i]);
+  end
+  return str;
+end;
+
+
+--
 
 __valueBasicMT = {
    __name = "__valueBasicMT",
