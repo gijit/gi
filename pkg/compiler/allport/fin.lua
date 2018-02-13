@@ -816,13 +816,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                end;
                for i,f in ipairs(fields) do
                   if f.anonymous then
-                     __methodSet(f.typ).forEach(function(m)
-                           synthesizeMethod(typ, m, f);
-                           synthesizeMethod(typ.ptr, m, f);
-                                               end);
-                     __methodSet(__ptrType(f.typ)).forEach(function(m)
-                           synthesizeMethod(typ.ptr, m, f);
-                                                          end);
+                     for _, m in ipairs(__methodSet(f.typ)) do
+                        synthesizeMethod(typ, m, f);
+                        synthesizeMethod(typ.ptr, m, f);
+                     end;
+                     for _, m in ipairs(__methodSet(__ptrType(f.typ))) do
+                        synthesizeMethod(typ.ptr, m, f);
+                     end;
                   end
                end;
          end);
@@ -940,6 +940,7 @@ function __methodSet(typ)
        if knd == __kindStruct then
           
           -- assume that e.typ.fields must be an array!
+          -- TODO: remove this assert after confirmation.
           __assertIsArray(e.typ.fields)
           for i,f in ipairs(e.typ.fields) do
              if f.anonymous then
