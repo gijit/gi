@@ -729,9 +729,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      typ.keyFor = __ifaceKeyFor;
      typ.init = function(methods)
         typ.methods = methods;
-        methods.forEach(function(m)
-              __ifaceNil[m.prop] = __throwNilPointerError;
-        end);
+        for _, m in pairs(methods) do
+           __ifaceNil[m.prop] = __throwNilPointerError;
+        end;
      end;
      
      
@@ -891,6 +891,96 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    return typ;
    
 end
+
+function __methodSet(typ)
+   
+  if typ.methodSetCache ~= nil then
+    return typ.methodSetCache;
+  end
+  local base = {};
+
+  local isPtr = (typ.kind == __kindPtr);
+  if isPtr  and  typ.elem.kind == __kindInterface then
+     typ.methodSetCache = {};
+     return {};
+  end
+
+  local myTyp = typ
+  if isPtr then
+     myTyp = typ.elem
+  end
+  local current = {{typ= myTyp, indirect= isPtrend}};
+
+  local seen = {};
+
+  while #current > 0 do
+     local next = {};
+     local mset = {};
+     
+     for _,e in pairs(current) do
+        if seen[e.typ.__str] then
+           break
+        end
+        seen[e.typ.__str] = true;
+        
+       if e.typ.named then
+          for _, mthod in pairs(e.typ.methods) do
+             table.insert(mset, mthod);
+          end
+          if e.indirect then
+             for _, mthod in pairs(__ptrType(e.typ).methods) do
+                table.insert(mset, mthod)
+             end
+          end
+       end
+       
+       -- switch e.typ.kind
+       local knd = e.typ.kind
+       
+       if knd == __kindStruct then
+          
+          -- assume that e.typ.fields must be an array!
+          __assertIsArray(e.typ.fields)
+          for i,f in ipairs(e.typ.fields) do
+             if f.anonymous then
+                local fTyp = f.typ;
+                local fIsPtr = (fTyp.kind == __kindPtr);
+                local ty 
+                if fIsPtr then
+                   ty = fTyp.elem
+                else
+                   ty = fTyp
+                end
+                table.insert(next, {typ=ty, indirect= e.indirect or fIsPtr});
+             end;
+          end;
+          
+          
+       elseif knd == __kindInterface then
+          
+          for _, mthod in pairs(e.typ.methods) do
+             table.insert(mset, mthod)
+          end
+       end
+     end;
+     
+     for _, m in pairs(mset) do
+        if base[m.name] == nil then
+           base[m.name] = m;
+        end
+     end;
+     
+     current = next;
+  end
+  
+  typ.methodSetCache = {};
+  table.sort(base)
+  for _,name in ipairs(base) do
+     table.insert(typ.methodSetCache, base[name]);
+  end;
+  return typ.methodSetCache;
+end;
+
 
 __Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, nil);
 __Int           = __newType( 8, __kindInt,           "int",            true, "", false, nil);
