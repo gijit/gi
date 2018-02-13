@@ -141,13 +141,13 @@ b = ptrType(function() return a; end, function(__v) a = __v; end, a);
 
 -- arrays
 
-arrayType = __arrayType(__Int, 2);
+arrayType = __arrayType(__Int, 4);
 
 a = arrayType()
 expectEq(a[0], 0LL)
 a[1] = 32LL
 expectEq(a[1], 32LL)
-expectEq(#a, 2LL)
+expectEq(#a, 4LL)
 
 b = arrayType()
 a[0]=5LL
@@ -159,3 +159,6 @@ expectEq(b[1], 32LL)
 
 -- slices
 
+slcInt = __sliceType(__Int)
+
+sl = __makeSlice(slcInt, 3, 4)

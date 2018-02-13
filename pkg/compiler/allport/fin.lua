@@ -172,17 +172,21 @@ __valueArrayMT = {
    __newindex = function(t, k, v)
       print("__valueArrayMT.__newindex called, t is:")
       __st(t)
-      t.__val[k+1] = v
+      t.__val[k] = v
    end,
    
    __index = function(t, k)
       print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
       --__st(t.__val)
-      return t.__val[k+1]
+      return t.__val[k]
    end,
 
    __len = function(t)
-      return int(#t.__val)
+      local n = #t.__val
+      if t.__val[0] ~= nil then
+         n=n+1
+      end
+      return int(n)
    end,
    
    __tostring = function(self, ...)
@@ -552,4 +556,33 @@ function __basicValue2kind(v)
    end
    error("__basicValue2kind: unhandled ty: '"..ty.."'")   
 end
+
+__sliceType = function(elem)
+   local typ = elem.slice;
+   if typ == nil then
+      typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
+      elem.slice = typ;
+      typ.init(elem);
+   end
+   return typ;
+end;
+
+__makeSlice = function(typ, length, capacity)
+   length = tonumber(length)
+   if capacity == nil then
+      capacity = length
+   else
+      capacity = tonumber(capacity)
+   end
+   if length < 0  or  length > 9007199254740992 then -- 2^53
+      __throwRuntimeError("makeslice: len out of range");
+   end
+   if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
+      __throwRuntimeError("makeslice: cap out of range");
+   end
+   local array = __newAnyArrayValue(typ.elem, capacity)
+   local slice = typ(array);
+   slice.__length = length;
+   return slice;
+end;
 
