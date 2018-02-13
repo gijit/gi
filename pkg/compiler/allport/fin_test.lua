@@ -189,4 +189,32 @@ expectEq(#ap, 4)
 
 -- structs
 
-structType = __structType("main", {{prop= "uint32array", name= "uint32array", anonymous= false, exported= false, typ= arrayType, tag= ""}});
+--[[
+package main
+import (
+	"fmt"
+)
+type WonderWoman struct {
+	Bracelets int
+}
+func main() {
+	ww := WonderWoman{
+		Bracelets: 2,
+	}
+	fmt.Printf("ww=%#v\n", ww)
+}
+--]]
+
+WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, Bracelets_)
+                           this.__val = this;
+                           if Bracelets_ == nil then
+                              this.Bracelets = 0;
+                              return;
+                           end
+                           this.Bracelets = Bracelets_;
+end);
+
+WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __Int, tag= ""}});
+
+ww = new WonderWoman.ptr(2);
+

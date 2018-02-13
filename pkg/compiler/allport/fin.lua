@@ -449,6 +449,79 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
       end;
       -- end __kindArray
+
+    elseif kind ==  __kindStruct then
+       
+    typ.tfun = function(this, v) this.__val = v; end;
+    typ.wrapped = true;
+    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, constructor);
+    typ.ptr.elem = typ;
+    typ.ptr.prototype.__get = function() return this; end;
+    typ.ptr.prototype.__set = function(v) typ.copy(this, v); end;
+    typ.init = function(pkgPath, fields)
+      typ.pkgPath = pkgPath;
+      typ.fields = fields;
+      fields.forEach(function(f)
+        if  not f.typ.comparable then
+          typ.comparable = false;
+        end
+      end);
+      typ.keyFor = function(x)
+         local val = x.__val;
+         return __mapAndJoinStrings("_", fields, function(f)
+           return string.gsub(tostring(f.typ.keyFor(val[f.prop])), , "\\", "\\\\")
+         end)
+      end;
+      typ.copy = function(dst, src)
+         for i=0,#fields-1 do
+            local f = fields[i];
+            local sw2 = f.typ.kind
+            
+            if sw2 == __kindArray or
+            sw2 ==  __kindStruct then 
+               f.typ.copy(dst[f.prop], src[f.prop]);
+               continue;
+            else
+               dst[f.prop] = src[f.prop];
+               continue;
+          end
+        end
+      end;
+      -- /* nil value */
+      local properties = {};
+      fields.forEach(function(f)
+            properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
+      end);
+      typ.ptr.__nil = Object.create(constructor.prototype, properties);
+      typ.ptr.__nil.__val = typ.ptr.__nil;
+      -- /* methods for embedded fields */
+      __addMethodSynthesizer(function()
+        local synthesizeMethod = function(target, m, f)
+          if target.prototype[m.prop] ~= nil then return; end
+          target.prototype[m.prop] = function()
+            local v = this.__val[f.prop];
+            if f.typ == __jsObjectPtr then
+              v = new __jsObjectPtr(v);
+            end
+            if v.__val == nil then
+              v = new f.typ(v);
+            end
+            return v[m.prop].apply(v, arguments);
+          end;
+        end;
+        fields.forEach(function(f)
+          if f.anonymous then
+            __methodSet(f.typ).forEach(function(m)
+              synthesizeMethod(typ, m, f);
+              synthesizeMethod(typ.ptr, m, f);
+            end);
+            __methodSet(__ptrType(f.typ)).forEach(function(m)
+              synthesizeMethod(typ.ptr, m, f);
+            end);
+          end
+        end);
+      end);
+    end;
       
    else
       error("invalid kind: " .. tostring(kind));
@@ -492,6 +565,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.zero = function()
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
+
+  elseif kind == __kindStruct then
+    typ.zero = function() return new typ.ptr(); end;
+    
       
    end
 
