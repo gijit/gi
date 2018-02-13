@@ -877,19 +877,17 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
 elseif kind ==  __kindArray then
 
-    typ.tfun = function(this, v) this.__val = v; end;
-    typ.wrapped = true;
-    typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
-      this.__get = function() return array; end;
-      this.__set = function(v) typ.copy(this, v); end;
-      this.__val = array;
-    end);
-    typ.init = function(elem, len)
+   typ.tfun = function(this, v) this.__val = v; end;
+   typ.wrapped = true;
+   typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
+                          this.__get = function() return array; end;
+                          this.__set = function(v) typ.copy(this, v); end;
+                          this.__val = array;
+   end);
+   typ.init = function(elem, len)
       typ.elem = elem;
       typ.len = len;
       typ.comparable = elem.comparable;
-      typ.keyFor = function(x)
-
       typ.keyFor = function(x)
           local ma = __mapArray(x, function(e)
                return tostring(elem.keyFor(e))
@@ -918,10 +916,10 @@ elseif kind ==  __kindArray then
       -- Since comma expressions are not (efficiently) supported in Lua, let
       -- implement the nil check in a different manner.
       -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
-    end;
-    
-
-  elseif kind ==  __kindChan then 
+   end;
+   
+  elseif kind ==  __kindChan then
+     
     typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
     typ.keyFor = __idKey;
@@ -933,14 +931,14 @@ elseif kind ==  __kindArray then
     
 
   elseif kind ==  __kindFunc then 
-    typ.tfun = function(this, v) this.__val = v; end;
-    typ.wrapped = true;
-    typ.init = function(params, results, variadic)
-      typ.params = params;
-      typ.results = results;
-      typ.variadic = variadic;
-      typ.comparable = false;
-    end;
+     typ.tfun = function(this, v) this.__val = v; end;
+     typ.wrapped = true;
+     typ.init = function(params, results, variadic)
+        typ.params = params;
+        typ.results = results;
+        typ.variadic = variadic;
+        typ.comparable = false;
+     end;
     
 
   elseif kind ==  __kindInterface then 

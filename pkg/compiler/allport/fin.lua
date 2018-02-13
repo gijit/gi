@@ -167,6 +167,47 @@ __valueBasicMT = {
    end
 }
 
+__valueArrayMT = {
+   __name = "__valueArrayMT",
+   
+   __newindex = function(t, k, v)
+      print("__valueArrayMT.__newindex called, t is:")
+      __st(t)
+      t.__val[k+1] = v
+   end,
+   
+   __index = function(t, k)
+      print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      __st(t.__val)
+      return t.__val[k+1]
+   end,
+
+   __len = function(t)
+      return int(#t.__val)
+   end,
+   
+   __tostring = function(self, ...)
+      --print("__tostring called from __valueArrayMT")
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
+      end
+      if self ~= nil and self.__val ~= nil then
+         print("__valueArrayMT.__tostring called, with self.__val set.")
+         if self.__val == self then
+            -- not a basic value, but a pointer, array, slice, or struct.
+            return "<this.__val == this; avoid inf loop>"
+         end
+         --return tostring(self.__val)
+      end
+      if getmetatable(self.__val) == __valueArrayMT then
+         --print("avoid infinite loop")
+         return "<avoid inf loop>"
+      else
+         return tostring(self.__val)
+      end
+   end
+}
+
 
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
@@ -254,7 +295,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      
      typ.tfun = constructor  or
         function(this, getter, setter, target)
-           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."' setter='"..tostring(setter).."target = '"..tostring(target).."'")
+           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
            this.__get = getter;
            this.__set = setter;
            this.__target = target;
@@ -269,7 +310,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
   elseif kind ==  __kindArray then
 
-     typ.tfun = function(this, v) this.__val = v; end;
+     typ.tfun = function(this, v)
+        print("in tfun ctor function for __kindArray")
+        this.__val = v;
+        setmetatable(this, __valueArrayMT)
+     end;
      typ.wrapped = true;
      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
                             this.__get = function() return array; end;
@@ -281,38 +326,38 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
         typ.len = len;
         typ.comparable = elem.comparable;
         typ.keyFor = function(x)
+           local ma = __mapArray(x, function(e)
+                                    return tostring(elem.keyFor(e))
+           end)
+           return table.concat(ma, "_")
+        end
            
-           typ.keyFor = function(x)
-              local ma = __mapArray(x, function(e)
-                                       return tostring(elem.keyFor(e))
-              end)
-              return table.concat(ma, "_")
-           end
-           
-           --typ.keyFor = function(x)
-           --return Array.prototype.join.call(__mapArray(x, function(e)
-           --  return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
-           --end), "_");
-           --end;
-           
-           typ.copy = function(dst, src)
-              __copyArray(dst, src, 0, 0, #src, elem);
-           end;
-           typ.ptr.init(typ);
-           -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
-           -- jea: what seems odd is that the state of the pointer is
-           -- here defined on the type itself, and not on the particular instance of the
-           -- pointer. But perhaps this is javascript's prototypal inheritence in action.
-           --
-           -- gopherjs uses them in comma expressions. example, condensed:
-           --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
-           --
-           -- Since comma expressions are not (efficiently) supported in Lua, let
-           -- implement the nil check in a different manner.
-           -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+        --typ.keyFor = function(x)
+        --return Array.prototype.join.call(__mapArray(x, function(e)
+        --  return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
+        --end), "_");
+        --end;
+        
+        typ.copy = function(dst, src)
+           __copyArray(dst, src, 0, 0, #src, elem);
         end;
-     end
+        typ.ptr.init(typ);
+
+        -- TODO:
+        -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
+        -- jea: what seems odd is that the state of the pointer is
+        -- here defined on the type itself, and not on the particular instance of the
+        -- pointer. But perhaps this is javascript's prototypal inheritence in action.
+        --
+        -- gopherjs uses them in comma expressions. example, condensed:
+        --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
+        --
+        -- Since comma expressions are not (efficiently) supported in Lua, let
+        -- implement the nil check in a different manner.
+        -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+     end;
      -- end __kindArray
+     
   else
      error("invalid kind: " .. tostring(kind));
   end
