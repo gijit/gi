@@ -696,6 +696,12 @@ __append = function(...)
 end;
 
 __appendSlice = function(slice, toAppend)
+   if slice == nil then 
+      error("error calling __appendSlice: slice must be available")
+   end
+   if toAppend == nil then
+      error("error calling __appendSlice: toAppend must be available")      
+   end
    if type(toAppend) == "string" then
       local bytes = __stringToBytes(toAppend);
       return __internalAppend(slice, bytes, 0, #bytes);
