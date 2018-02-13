@@ -186,12 +186,12 @@ __valueArrayMT = {
       if k < 0 or k >= #t then
          error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
       end
-            
+      
       return t.__val[k]
    end,
 
-    __len = function(t)
-   
+   __len = function(t)
+      
       local n = #t.__val
       if t.__val[0] ~= nil then
          n=n+1
@@ -320,182 +320,182 @@ end
 __typeIDCounter = 0;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
-  local typ ={};
-  setmetatable(typ, __tfunBasicMT)
+   local typ ={};
+   setmetatable(typ, __tfunBasicMT)
 
-  if kind ==  __kindBool or
-  kind == __kindInt or 
-  kind == __kindInt8 or 
-  kind == __kindInt16 or 
-  kind == __kindInt32 or 
-  kind == __kindInt64 or 
-  kind == __kindUint or 
-  kind == __kindUint8 or 
-  kind == __kindUint16 or 
-  kind == __kindUint32 or 
-  kind == __kindUint64 or 
-  kind == __kindUintptr or 
-  kind == __kindUnsafePointer then
+   if kind ==  __kindBool or
+      kind == __kindInt or 
+      kind == __kindInt8 or 
+      kind == __kindInt16 or 
+      kind == __kindInt32 or 
+      kind == __kindInt64 or 
+      kind == __kindUint or 
+      kind == __kindUint8 or 
+      kind == __kindUint16 or 
+      kind == __kindUint32 or 
+      kind == __kindUint64 or 
+      kind == __kindUintptr or 
+   kind == __kindUnsafePointer then
 
-     -- jea: I observe that
-     -- primitives have: this.__val ~= v; and are the types are
-     -- distinguished with typ.wrapped = true; versus
-     -- all table based values, that have: this.__val == this;
-     -- and no .wrapped field.
-     --
-    typ.tfun = function(this, v) this.__val = v; end;
-    typ.wrapped = true;
-    typ.keyFor = __identity;
+      -- jea: I observe that
+      -- primitives have: this.__val ~= v; and are the types are
+      -- distinguished with typ.wrapped = true; versus
+      -- all table based values, that have: this.__val == this;
+      -- and no .wrapped field.
+      --
+      typ.tfun = function(this, v) this.__val = v; end;
+      typ.wrapped = true;
+      typ.keyFor = __identity;
 
-  elseif kind == __kindString then
-     
-     typ.tfun = function(this, v)
-        --print("strings' tfun called! with v='"..tostring(v).."' and this:")
-        --__st(this)
-        this.__val = v; end;
-    typ.wrapped = true;
-    typ.keyFor = function(x) return "_" .. x; end;
+   elseif kind == __kindString then
+      
+      typ.tfun = function(this, v)
+         --print("strings' tfun called! with v='"..tostring(v).."' and this:")
+         --__st(this)
+         this.__val = v; end;
+      typ.wrapped = true;
+      typ.keyFor = function(x) return "_" .. x; end;
 
-  elseif kind == __kindFloat32 or
-  kind == __kindFloat64 then
-       
-       typ.tfun = function(this, v) this.__val = v; end;
-       typ.wrapped = true;
-       typ.keyFor = function(x) return __floatKey(x); end;
+   elseif kind == __kindFloat32 or
+   kind == __kindFloat64 then
+      
+      typ.tfun = function(this, v) this.__val = v; end;
+      typ.wrapped = true;
+      typ.keyFor = function(x) return __floatKey(x); end;
 
-  elseif kind ==  __kindPtr then
-     
-     typ.tfun = constructor  or
-        function(this, getter, setter, target)
-           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
-           this.__get = getter;
-           this.__set = setter;
-           this.__target = target;
-           this.__val = this; -- seems to indicate a non-primitive value.
-        end;
-     typ.keyFor = __idKey;
-     typ.init = function(elem)
-        typ.elem = elem;
-        typ.wrapped = (elem.kind == __kindArray);
-        typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
-     end;
+   elseif kind ==  __kindPtr then
+      
+      typ.tfun = constructor  or
+         function(this, getter, setter, target)
+            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+            this.__get = getter;
+            this.__set = setter;
+            this.__target = target;
+            this.__val = this; -- seems to indicate a non-primitive value.
+         end;
+      typ.keyFor = __idKey;
+      typ.init = function(elem)
+         typ.elem = elem;
+         typ.wrapped = (elem.kind == __kindArray);
+         typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
+      end;
 
-  elseif kind ==  __kindSlice then
-     
-     typ.tfun = function(this, array)
-        this.__array = array;
-        this.__offset = 0;
-        this.__length = #array;
-        this.__capacity = this.__length
-        this.__val = this;
-        setmetatable(this, __valueSliceMT)        
-     end;
-     typ.init = function(elem)
-        typ.elem = elem;
-        typ.comparable = false;
-        typ.__nil = typ({},{});
-     end;
-     
-  elseif kind ==  __kindArray then
+   elseif kind ==  __kindSlice then
+      
+      typ.tfun = function(this, array)
+         this.__array = array;
+         this.__offset = 0;
+         this.__length = #array;
+         this.__capacity = this.__length
+         this.__val = this;
+         setmetatable(this, __valueSliceMT)        
+      end;
+      typ.init = function(elem)
+         typ.elem = elem;
+         typ.comparable = false;
+         typ.__nil = typ({},{});
+      end;
+      
+   elseif kind ==  __kindArray then
 
-     typ.tfun = function(this, v)
-        print("in tfun ctor function for __kindArray")
-        this.__val = v;
-        setmetatable(this, __valueArrayMT)
-     end;
-     typ.wrapped = true;
-     typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
-                            this.__get = function() return array; end;
-                            this.__set = function(v) typ.copy(this, v); end;
-                            this.__val = array;
-     end);
-     typ.init = function(elem, len)
-        typ.elem = elem;
-        typ.len = len;
-        typ.comparable = elem.comparable;
-        typ.keyFor = function(x)
-           return __mapAndJoinStrings("_", x, function(e)
-              return string.gsub(tostring(elem.keyFor(e)), "\\", "\\\\")
-           end)
-        end
-        typ.copy = function(dst, src)
-           __copyArray(dst, src, 0, 0, #src, elem);
-        end;
-        typ.ptr.init(typ);
+      typ.tfun = function(this, v)
+         print("in tfun ctor function for __kindArray")
+         this.__val = v;
+         setmetatable(this, __valueArrayMT)
+      end;
+      typ.wrapped = true;
+      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
+                             this.__get = function() return array; end;
+                             this.__set = function(v) typ.copy(this, v); end;
+                             this.__val = array;
+      end);
+      typ.init = function(elem, len)
+         typ.elem = elem;
+         typ.len = len;
+         typ.comparable = elem.comparable;
+         typ.keyFor = function(x)
+            return __mapAndJoinStrings("_", x, function(e)
+                                          return string.gsub(tostring(elem.keyFor(e)), "\\", "\\\\")
+            end)
+         end
+         typ.copy = function(dst, src)
+            __copyArray(dst, src, 0, 0, #src, elem);
+         end;
+         typ.ptr.init(typ);
 
-        -- TODO:
-        -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
-        -- jea: what seems odd is that the state of the pointer is
-        -- here defined on the type itself, and not on the particular instance of the
-        -- pointer. But perhaps this is javascript's prototypal inheritence in action.
-        --
-        -- gopherjs uses them in comma expressions. example, condensed:
-        --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
-        --
-        -- Since comma expressions are not (efficiently) supported in Lua, let
-        -- implement the nil check in a different manner.
-        -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
-     end;
-     -- end __kindArray
-     
-  else
-     error("invalid kind: " .. tostring(kind));
-  end
-  
-  -- set zero() method
-  if kind == __kindBool or
-  kind ==__kindMap then
-    typ.zero = function() return false; end;
+         -- TODO:
+         -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
+         -- jea: what seems odd is that the state of the pointer is
+         -- here defined on the type itself, and not on the particular instance of the
+         -- pointer. But perhaps this is javascript's prototypal inheritence in action.
+         --
+         -- gopherjs uses them in comma expressions. example, condensed:
+         --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
+         --
+         -- Since comma expressions are not (efficiently) supported in Lua, let
+         -- implement the nil check in a different manner.
+         -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
+      end;
+      -- end __kindArray
+      
+   else
+      error("invalid kind: " .. tostring(kind));
+   end
+   
+   -- set zero() method
+   if kind == __kindBool or
+   kind ==__kindMap then
+      typ.zero = function() return false; end;
 
-  elseif kind == __kindInt or
-  kind ==  __kindInt8 or
-  kind ==  __kindInt16 or
-  kind ==  __kindInt32 or
-  kind ==  __kindInt64 then
-     typ.zero = function() return 0LL; end;
-     
-  elseif kind ==  __kindUint or
-  kind ==  __kindUint8  or
-  kind ==  __kindUint16 or
-  kind ==  __kindUint32 or
-  kind ==  __kindUint64 or
-  kind ==  __kindUintptr or
-  kind ==  __kindUnsafePointer then
-     typ.zero = function() return 0ULL; end;
+   elseif kind == __kindInt or
+      kind ==  __kindInt8 or
+      kind ==  __kindInt16 or
+      kind ==  __kindInt32 or
+   kind ==  __kindInt64 then
+      typ.zero = function() return 0LL; end;
+      
+   elseif kind ==  __kindUint or
+      kind ==  __kindUint8  or
+      kind ==  __kindUint16 or
+      kind ==  __kindUint32 or
+      kind ==  __kindUint64 or
+      kind ==  __kindUintptr or
+   kind ==  __kindUnsafePointer then
+      typ.zero = function() return 0ULL; end;
 
-  elseif   kind ==  __kindFloat32 or
-  kind ==  __kindFloat64 then
-     typ.zero = function() return 0; end;
-     
-  elseif kind ==  __kindString then
-     typ.zero = function() return ""; end;
+   elseif   kind ==  __kindFloat32 or
+   kind ==  __kindFloat64 then
+      typ.zero = function() return 0; end;
+      
+   elseif kind ==  __kindString then
+      typ.zero = function() return ""; end;
 
-  elseif kind == __kindPtr or
-  kind == __kindSlice then
-     
-    typ.zero = function() return typ.__nil; end;
+   elseif kind == __kindPtr or
+   kind == __kindSlice then
+      
+      typ.zero = function() return typ.__nil; end;
 
-  elseif kind == __kindArray then
+   elseif kind == __kindArray then
 
-     typ.zero = function()
-        return __newAnyArrayValue(typ.elem, typ.len)
-     end;
-     
-  end
+      typ.zero = function()
+         return __newAnyArrayValue(typ.elem, typ.len)
+      end;
+      
+   end
 
-  typ.id = __typeIDCounter;
-  __typeIDCounter=__typeIDCounter+1;
-  typ.size = size;
-  typ.kind = kind;
-  typ.__str = str;
-  typ.named = named;
-  typ.pkg = pkg;
-  typ.exported = exported;
-  typ.methods = {};
-  typ.methodSetCache = nil;
-  typ.comparable = true;
-  return typ;
-  
+   typ.id = __typeIDCounter;
+   __typeIDCounter=__typeIDCounter+1;
+   typ.size = size;
+   typ.kind = kind;
+   typ.__str = str;
+   typ.named = named;
+   typ.pkg = pkg;
+   typ.exported = exported;
+   typ.methods = {};
+   typ.methodSetCache = nil;
+   typ.comparable = true;
+   return typ;
+   
 end
 
 __Bool          = __newType( 1, __kindBool,          "bool",           true, "", false, nil);
@@ -519,25 +519,25 @@ __String        = __newType(16, __kindString,        "string",         true, "",
 
 
 __ptrType = function(elem)
-  local typ = elem.ptr;
-  if typ == nil then
-    typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
-    elem.ptr = typ;
-    typ.init(elem);
-  end
-  return typ;
+   local typ = elem.ptr;
+   if typ == nil then
+      typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
+      elem.ptr = typ;
+      typ.init(elem);
+   end
+   return typ;
 end;
 
 __arrayTypes = {};
 __arrayType = function(elem, len)
-  local typeKey = elem.id .. "_" .. len;
-  local typ = __arrayTypes[typeKey];
-  if typ == nil then
-    typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
-    __arrayTypes[typeKey] = typ;
-    typ.init(elem, len);
-  end
-  return typ;
+   local typeKey = elem.id .. "_" .. len;
+   local typ = __arrayTypes[typeKey];
+   if typ == nil then
+      typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
+      __arrayTypes[typeKey] = typ;
+      typ.init(elem, len);
+   end
+   return typ;
 end;
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
@@ -548,30 +548,30 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
       return;
    end
 
-  local sw = elem.kind
-  if sw == __kindArray or sw == __kindStruct then
-     
-    if dst == src  and  dstOffset > srcOffset then
-      for i = n-1,0,-1 do
-        elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+   local sw = elem.kind
+   if sw == __kindArray or sw == __kindStruct then
+      
+      if dst == src  and  dstOffset > srcOffset then
+         for i = n-1,0,-1 do
+            elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+         end
+         return;
+      end
+      for i = 0,n-1 do
+         elem.copy(dst[dstOffset + i], src[srcOffset + i]);
       end
       return;
-    end
-    for i = 0,n-1 do
-      elem.copy(dst[dstOffset + i], src[srcOffset + i]);
-    end
-    return;
-  end
+   end
 
-  if dst == src  and  dstOffset > srcOffset then
-    for i = n-1,0,-1 do
+   if dst == src  and  dstOffset > srcOffset then
+      for i = n-1,0,-1 do
+         dst[dstOffset + i] = src[srcOffset + i];
+      end
+      return;
+   end
+   for i = 0,n-1 do
       dst[dstOffset + i] = src[srcOffset + i];
-    end
-    return;
-  end
-  for i = 0,n-1 do
-    dst[dstOffset + i] = src[srcOffset + i];
-  end
+   end
 end;
 
 -- __basicValue2kind: identify type of basic value
@@ -647,3 +647,23 @@ __makeSlice = function(typ, length, capacity)
    return slice;
 end;
 
+
+__subslice = function(slice, low, high, max)
+   if high == nil then
+      
+   end
+   if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.__capacity)  or  (max ~= nil and max > slice.__capacity) then
+      __throwRuntimeError("slice bounds out of range");
+   end
+   local s = slice.constructor(slice.__array);
+   s.__offset = slice.__offset + low;
+   s.__length = slice.__length - low;
+   s.__capacity = slice.__capacity - low;
+   if high ~= nil then
+      s.__length = high - low;
+   end
+   if max ~= nil then
+      s.__capacity = max - low;
+   end
+   return s;
+end;

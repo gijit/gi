@@ -2,6 +2,14 @@ dofile '../math.lua' -- for __max, __min, __truncateToInt
 
 __Infinity = math.huge
 
+function __newAnyArrayValue(elem, len)
+   local array = {}
+   for i =0, len -1 do
+      array[i]= elem.zero();
+   end
+   return array;
+end
+
 __tfunMT = {
    __name = "__tfunMT",
    __call = function(the_mt, self, ...)
@@ -203,11 +211,11 @@ __ifaceMethodExpr = function(name)
   return expr;
 end;
 
-__subslice = function(x)
+__subslice = function(slice, low, high, max)
   if low < 0  or  high < low  or  max < high  or  high > slice.__capacity  or  max > slice.__capacity then
     __throwRuntimeError("slice bounds out of range");
   end
-  local s = new slice.constructor(slice.__array);
+  local s = slice(slice.__array);
   s.__offset = slice.__offset + low;
   s.__length = slice.__length - low;
   s.__capacity = slice.__capacity - low;
@@ -982,7 +990,7 @@ elseif kind ==  __kindArray then
     typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
-      typ.nativeArray = __nativeArray(elem.kind);
+      --typ.nativeArray = --__nativeArray(elem.kind);
       typ.__nil = typ({});
     end;
     
@@ -1004,10 +1012,10 @@ elseif kind ==  __kindArray then
         end
       end);
       typ.keyFor = function(x)
-        local val = x.__val;
-        return __mapArray(fields, function(f)
-          return tostring(f.typ.keyFor(val[f.prop])).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
-        end).join("_");
+         local val = x.__val;
+         return __mapAndJoinStrings("_", fields, function(f)
+           return string.gsub(tostring(f.typ.keyFor(val[f.prop])), , "\\", "\\\\")
+         end)
       end;
       typ.copy = function(dst, src)
          for i=0,#fields-1 do
@@ -1112,17 +1120,8 @@ elseif kind ==  __kindArray then
     
 
   elseif kind == __kindArray then
-    typ.zero = function()
-       --local arrayClass = __nativeArray(typ.elem.kind);
-       --if arrayClass ~= Array then
-       --   return new arrayClass(typ.len);
-       --end
-       --local array = new Array(typ.len);
-       local array = {} -- new Array(typ.len);
-       for i =0, typ.len -1 do
-          table.insert(array, typ.elem.zero());
-       end
-       return array;
+     typ.zero = function()
+         return __newAnyArrayValue(typ.elem, typ.len)        
     end;
     
 
@@ -1281,6 +1280,8 @@ __toNativeArray = function(elemKind, array)
   end
   return new nativeArray(array);
 end;
+
+
 __arrayTypes = {};
 __arrayType = function(elem, len)
   local typeKey = elem.id .. "_" .. len;
@@ -1439,10 +1440,8 @@ __makeSlice = function(typ, length, capacity)
   if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
     __throwRuntimeError("makeslice: cap out of range");
   end
-  local array = typ.nativeArray(capacity);
-  for i = 0,capacity-1 do
-     array[i] = typ.elem.zero();
-  end
+
+  local array = __newAnyArrayValue(typ.elem, capacity)
   local slice = typ(array);
   slice.__length = length;
   return slice;
