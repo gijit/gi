@@ -307,6 +307,21 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
         typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
      end;
 
+  elseif kind ==  __kindSlice then
+     
+     typ.tfun = function(this, array)
+        this.__array = array;
+        this.__offset = 0;
+        this.__length = #array;
+        this.__capacity = #array;
+        this.__val = this;
+     end;
+     typ.init = function(elem)
+        typ.elem = elem;
+        typ.comparable = false;
+        typ.__nil = typ({});
+     end;
+     
   elseif kind ==  __kindArray then
 
      typ.tfun = function(this, v)
@@ -325,18 +340,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
         typ.len = len;
         typ.comparable = elem.comparable;
         typ.keyFor = function(x)
-           local ma = __mapArray(x, function(e)
-                                    return tostring(elem.keyFor(e))
+           return __mapAndJoinStrings("_", x, function(e)
+              return string.gsub(tostring(elem.keyFor(e)), "\\", "\\\\")
            end)
-           return table.concat(ma, "_")
         end
-           
-        --typ.keyFor = function(x)
-        --return Array.prototype.join.call(__mapArray(x, function(e)
-        --  return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
-        --end), "_");
-        --end;
-        
         typ.copy = function(dst, src)
            __copyArray(dst, src, 0, 0, #src, elem);
         end;

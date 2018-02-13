@@ -153,5 +153,9 @@ b = arrayType()
 a[0]=5LL
 arrayType.copy(b, a)
 
+-- verify that arrayType.copy() worked.
 expectEq(b[0], 5LL)
 expectEq(b[1], 32LL)
+
+-- slices
+

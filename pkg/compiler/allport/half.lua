@@ -381,11 +381,6 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
     return;
   end
 
-  if src.subarray then
-    dst.set(src.subarray(srcOffset, srcOffset + n), dstOffset);
-    return;
-  end
-
   local sw = elem.kind
   if sw == __kindArray or sw == __kindStruct then
      
@@ -895,18 +890,9 @@ elseif kind ==  __kindArray then
       typ.len = len;
       typ.comparable = elem.comparable;
       typ.keyFor = function(x)
-          local ma = __mapArray(x, function(e)
-               return tostring(elem.keyFor(e))
-            end)
-            return table.concat(ma, "_")
-         end
-
-      --typ.keyFor = function(x)
-        --return Array.prototype.join.call(__mapArray(x, function(e)
-        --  return tostring(elem.keyFor(e)).replace(/\\/g, "\\\\").replace(/\__/g, "\\__");
-        --end), "_");
-      --end;
-
+           return __mapAndJoinStrings("_", x, function(e)
+              return string.gsub(tostring(elem.keyFor(e)), "\\", "\\\\")
+           end)
       typ.copy = function(dst, src)
         __copyArray(dst, src, 0, 0, #src, elem);
       end;
@@ -985,10 +971,8 @@ elseif kind ==  __kindArray then
     
 
   elseif kind ==  __kindSlice then
+     
     typ.tfun = function(this, array)
-      if array.constructor ~= typ.nativeArray then
-         array = new typ.nativeArray(array);
-      end
       this.__array = array;
       this.__offset = 0;
       this.__length = #array;
@@ -998,8 +982,9 @@ elseif kind ==  __kindArray then
     typ.init = function(elem)
       typ.elem = elem;
       typ.comparable = false;
+      --typ.nativeArray = __nativeArray(elem.kind);
       typ.nativeArray = __nativeArray(elem.kind);
-      typ.__nil = new typ({});
+      typ.__nil = typ({});
     end;
     
 
@@ -1447,19 +1432,17 @@ end;
   
 __makeSlice = function(typ, length, capacity)
   capacity = capacity  or  length;
-  if length < 0  or  length > 2147483647 then
+  if length < 0  or  length > 9007199254740992 then -- 2^53
     __throwRuntimeError("makeslice: len out of range");
   end
-  if capacity < 0  or  capacity < length  or  capacity > 2147483647 then
+  if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
     __throwRuntimeError("makeslice: cap out of range");
   end
-  local array = new typ.nativeArray(capacity);
-  if typ.nativeArray == Array then
-     for i = 0,capacity-1 do
-      array[i] = typ.elem.zero();
-    end
+  local array = typ.nativeArray(capacity);
+  for i = 0,capacity-1 do
+     array[i] = typ.elem.zero();
   end
-  local slice = new typ(array);
+  local slice = typ(array);
   slice.__length = length;
   return slice;
 end;
