@@ -1298,11 +1298,6 @@ __chanType = function(elem, sendOnly, recvOnly)
    return typ;
 end;
 
-function dummy(a, b)
-   return a + b
-end
-
-
 function __Chan(elem, capacity)
    local this = {}
    if capacity < 0  or  capacity > 2147483647 then

@@ -267,8 +267,6 @@ sliceType = __sliceType(__emptyInterface);
 MyApply = function(bo, x, y)
    return bo(x, y);
 end
-_r = MyApply(function(r, s) 
-      return r + s;
-end), 1, 2);
+_r = MyApply(function(r, s)  return r + s; end, 1, 2);
+expectEq(_r, 3)
 
-   
