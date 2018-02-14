@@ -445,13 +445,8 @@ expectEq(#msHp, 1)
 msH = __methodSet(hobbit)
 expectEq(#msH, 0)
 
---[[
 w2 = Wolf.ptr(0, false);
 expectEq(getmetatable(w2).__name, "methodSet for *main.Wolf")
-try2 = tryTheTypeSwitch(w2);
-expectEq(try2, 1LL)
-expectEq(w2.Claw, 1LL)
---]]
 
 print("fin_test.lua: about to call battle(w, bilbo)")
 
