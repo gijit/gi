@@ -1647,11 +1647,13 @@ __assertType = function(value, typ, returnTuple)
                __st(vm)
                
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
+                  print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
+               print("match *not* found for tm.name = '"..tm.name.."'")
                ok = false;
                typ.missingMethodFor[valueTypeString] = tm.name;
                break;
@@ -1659,14 +1661,15 @@ __assertType = function(value, typ, returnTuple)
          end
          typ.implementedBy[valueTypeString] = ok;
       end
-      if  not ok then
+      if not ok then
          missingMethod = typ.missingMethodFor[valueTypeString];
       end
    end
+   print("__assertType: after matching loop, ok = ", ok)
    
-   if  not ok then
+   if not ok then
       if returnTuple then
-         return {typ.zero(), false};
+         return typ.zero(), false
       end
       local msg = ""
       if value ~= __ifaceNil then
@@ -1676,16 +1679,16 @@ __assertType = function(value, typ, returnTuple)
       error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")
    end
    
-   if  not isInterface then
+   if not isInterface then
       value = value.__val;
    end
    if typ == __jsObjectPtr then
       value = value.object;
    end
    if returnTuple then
-      return {value, true}
+      return value, true
    end
-   return value;
+   return value
 end;
 
 __stackDepthOffset = 0;
