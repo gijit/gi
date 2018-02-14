@@ -20,7 +20,7 @@ __bytesToString = function(e)
   return str;
 end;
 
-__stringToRunes = function(r)
+__stringToRunes = function(str)
   local array = Int32Array(#str);
   local rune, j = 0;
   local i = 0

@@ -47,7 +47,7 @@ __gi_PropsKey = {}
 __gi_MethodsetKey = {}
 __jsObjectPtr = {}
 
-function starToAsterisk(s)
+function __starToAsterisk(s)
    -- parenthesize to get rid of the
    -- substitution count.
    return (string.gsub(s,"*","&"))
@@ -81,7 +81,7 @@ __gi_PrivatePointer_MT = {
       --print("__gijit_Pointer: tostring called")
       local props = rawget(t, __gi_PropsKey)
       local typ = props.__str or "&unknownType"
-      typ = starToAsterisk(typ)
+      typ = __starToAsterisk(typ)
       return typ .. "{" .. tostring(props.__get()) .. "}"
    end
 }
@@ -265,7 +265,7 @@ function __structPrinter(self)
       if #i < 2 or string.byte(i,1,1)~=uscore or string.byte(i,2,2) ~= uscore then
          -- skip __ prefixed methods when printing;
          -- since most of these live in the metatable anyway.
-         sv = ""
+         local sv = ""
          if type(v) == "string" then
             sv = string.format("%q", v)
          else
@@ -738,6 +738,9 @@ function __gi_assertType(value, typ, returnTuple)
       elseif returnTuple == 1 then
          return false
       else
+         -- TODO! put in the actual zero val for this type
+         print("TODO finish this, return *actual* zero val")
+         local zeroVal = nil
          return zeroVal, false
       end
    end
@@ -1420,11 +1423,11 @@ function __gi_NewType(size, kind, shortPkg, shortTypeName, str, named, pkgPath, 
                   if fld.__anonymous then
                      
                      for i,m in pairs(__gi_methodSet(fld.__typ)) do
-                        synthesizeMethod(typ, m, f);
-                        synthesizeMethod(typ.__ptr, m, f);
+                        synthesizeMethod(typ, m, fld);
+                        synthesizeMethod(typ.__ptr, m, fld);
                      end
                      for i,m in pairs(__gi_methodSet(__ptrType(fld.__typ))) do
-                        synthesizeMethod(typ.__ptr, m, f);
+                        synthesizeMethod(typ.__ptr, m, fld);
                      end
                   end
                end
