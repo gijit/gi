@@ -44,7 +44,7 @@ function _gi_NewComplex128(real, imag)
 end
 
 function __gijit_printQuoted(...)
-   a = {...}
+   local a = {...}
    --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
    if a[0] ~= nil then
       if type(v) == "string" then
@@ -61,5 +61,3 @@ function __gijit_printQuoted(...)
       end
    end
 end
-
-
