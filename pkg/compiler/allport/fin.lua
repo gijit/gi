@@ -216,7 +216,9 @@ __call = function(fn, rcvr, args)  return fn(rcvr, args); end;
 __makeFunc = function(fn)
    return function()
       -- TODO: port this!
-      return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
+      print("jea TODO: port this, what is __externalize doing???")
+      error("NOT DONE: port this!")
+      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
    end;
 end;
 __unused = function(v) end;
@@ -1550,7 +1552,7 @@ __structType = function(pkgPath, fields)
                             if arg ~= nil then
                                this[f.prop] = arg
                             else
-                               this[f.prop] = t.typ.zero();
+                               this[f.prop] = f.typ.zero();
                             end
                          end
                          return this
@@ -1603,7 +1605,7 @@ __equal = function(a, b, typ)
   end
 end;
 
-__interfaceIsEqual = function(b)
+__interfaceIsEqual = function(a, b)
   if a == __ifaceNil  or  b == __ifaceNil then
     return a == b;
   end
