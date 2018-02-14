@@ -906,6 +906,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      typ.init = function(methods)
         typ.methods = methods;
         for _, m in pairs(methods) do
+           -- TODO:
+           -- jea: why this? seems it would end up being a huge set?
            __ifaceNil[m.prop] = __throwNilPointerError;
         end;
      end;
@@ -1581,13 +1583,13 @@ __assertType = function(value, typ, returnTuple)
    if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      ok = value.constructor == typ;
+      ok = value.__typ == typ;
    else
-      local valueTypeString = value.constructor.__str;
+      local valueTypeString = value.__typ.__str;
       ok = typ.implementedBy[valueTypeString];
       if ok == nil then
          ok = true;
-         local valueMethodSet = __methodSet(value.constructor);
+         local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
          for i = 0,#interfaceMethods-1 do
             
@@ -1620,7 +1622,7 @@ __assertType = function(value, typ, returnTuple)
       end
       local msg = ""
       if value ~= __ifaceNil then
-         msg = value.constructor.__str
+         msg = value.__typ.__str
       end
       --__panic(__packages["runtime"].TypeAssertionError.ptr("", msg, typ.__str, missingMethod));
       error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")
