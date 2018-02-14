@@ -1109,7 +1109,7 @@ elseif kind ==  __kindArray then
     typ.zero = function() return typ.__nil; end;
     
 
-    elseif kind == __kindChan:
+  elseif kind == __kindChan:
     typ.zero = function() return __chanNil; end;
     
 

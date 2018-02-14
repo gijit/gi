@@ -1049,13 +1049,27 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindString then
       typ.zero = function() return ""; end;
 
+   elseif kind == __kindComplex64 or
+   kind == __kindComplex128 then
+      local zero = typ(0, 0);
+      typ.zero = function() return zero; end;
+      
    elseif kind == __kindPtr or
    kind == __kindSlice then
       
       typ.zero = function() return typ.__nil; end;
-
+      
+   elseif kind == __kindChan then
+      typ.zero = function() return __chanNil; end;
+   
+   elseif kind == __kindFunc then
+      typ.zero = function() return __throwNilPointerError; end;
+      
+   elseif kind == __kindInterface then
+      typ.zero = function() return __ifaceNil; end;
+      
    elseif kind == __kindArray then
-
+      
       typ.zero = function()
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
@@ -1063,7 +1077,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindStruct then
       typ.zero = function()
          return typ.ptr();
-      end;      
+      end;
+
+   else
+      error("invalid kind: " .. tostring(kind))
    end
 
    typ.id = __typeIDCounter;
@@ -1083,9 +1100,9 @@ end
 
 function __methodSet(typ)
    
-  if typ.methodSetCache ~= nil then
-    return typ.methodSetCache;
-  end
+  --if typ.methodSetCache ~= nil then
+  --return typ.methodSetCache;
+  --end
   local base = {};
 
   local isPtr = (typ.kind == __kindPtr);
@@ -1098,7 +1115,7 @@ function __methodSet(typ)
   if isPtr then
      myTyp = typ.elem
   end
-  local current = {{typ= myTyp, indirect= isPtrend}};
+  local current = {{typ= myTyp, indirect= isPtr}};
 
   local seen = {};
 
@@ -1153,7 +1170,8 @@ function __methodSet(typ)
           end
        end
      end;
-     
+
+     -- above may have made duplicates, now dedup
      for _, m in pairs(mset) do
         if base[m.name] == nil then
            base[m.name] = m;
@@ -1591,13 +1609,9 @@ __assertType = function(value, typ, returnTuple)
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
-         for i = 0,#interfaceMethods-1 do
-            
-            local tm = interfaceMethods[i];
+         for _, tm in ipairs(interfaceMethods) do            
             local found = false;
-            for j = 0,#valueMethodSet-1 do
-               
-               local vm = valueMethodSet[j];
+            for _, vm in ipairs(valueMethodSet) do               
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
                   found = true;
                   break;

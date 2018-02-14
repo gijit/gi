@@ -412,10 +412,10 @@ i1, b1 = battle(w, bilbo);
 try0 = tryTheTypeSwitch(w);
 try1 = tryTheTypeSwitch(bilbo);
 
-expectEq(i0, 1)
+expectEq(i0, 1LL)
 expectEq(b0, true)
-expectEq(i1, 2)
+expectEq(i1, 2LL)
 expectEq(b1, false)
-expectEq(try0, 3)
-expectEq(try1, 1)
+expectEq(try0, 3LL)
+expectEq(try1, 1LL)
 
