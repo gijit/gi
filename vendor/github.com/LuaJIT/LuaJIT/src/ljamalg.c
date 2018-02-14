@@ -95,3 +95,4 @@
 #include "lib_ffi.c"
 #include "lib_init.c"
 
+#include "luajit-ffi-ctypeid.c"
