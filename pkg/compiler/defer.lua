@@ -1,7 +1,7 @@
 -- deferinit.lua : global setup for defer handling
 
 -- utility: table show
-function ts(t)
+function __ts(t)
    if t == nil then
       return "<nil>"
    end
@@ -95,7 +95,7 @@ __panicHandler = function(err, defers)
   --
 __processDefers = function(who, defers, __res, __namedNames, actEnv)
   --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
-  --print(who,": __processDefers top: __namedNames is: ", ts(__namedNames))
+  --print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
 
   if __res[1] then
       --print(who,": __processDefers: call had no panic")

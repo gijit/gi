@@ -49,7 +49,7 @@ _giPrivateArrayMt = {
       -- we want to skip both the _giPrivateRaw and the len
       -- when iterating, which happens automatically if we
       -- iterate on r, the inside private data, and not on the proxy.
-      quo = ""
+      local quo = ""
       if len > 0 and type(raw[0]) == "string" then
          quo = '"'
       end
@@ -185,7 +185,7 @@ function _gi_UnpackArrayRaw(t)
       return t
    end
    
-   raw = rawget(t, _giPrivateRaw)
+   local raw = rawget(t, _giPrivateRaw)
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.

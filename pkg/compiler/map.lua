@@ -38,7 +38,7 @@ _intentionalNilValue = {}
 
        -- invar: k is not nil
 
-       ks = tostring(k)
+       local ks = tostring(k)
        if v ~= nil then
           if t[_giPrivateMapRaw][ks] == nil then
              -- new key
@@ -80,7 +80,7 @@ _intentionalNilValue = {}
 
        -- k is not nil.
 
-       ks = tostring(k)       
+       local ks = tostring(k)       
        local val = t[_giPrivateMapRaw][ks]
        if val == _intentionalNilValue then
           return nil
@@ -116,7 +116,7 @@ _intentionalNilValue = {}
        local function stateless_iter(t, k)
            local v
            --  Implement your own key,value selection logic in place of next
-           ks = tostring(k)
+           local ks = tostring(k)
            ks, v = next(t[_giPrivateMapRaw], tostring(k))
            if v then return ks,v end
        end
@@ -149,7 +149,7 @@ _intentionalNilValue = {}
            end
            
            -- k is not nil.
-           ks = tostring(k)      
+           local ks = tostring(k)      
            local val = t[_giPrivateMapRaw][ks]
            if val == _intentionalNilValue then
               --print("val is the _intentinoalNilValue")
@@ -186,7 +186,7 @@ _intentionalNilValue = {}
               return
            end
 
-           ks = tostring(k)           
+           local ks = tostring(k)           
            if t[_giPrivateMapRaw][ks] == nil then
               -- key not present
               return

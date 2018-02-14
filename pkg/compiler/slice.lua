@@ -155,6 +155,7 @@ function _gi_NewSlice(typeKind, x, zeroVal, beg, endx, cap)
    --proxy[_giGo] = __lua2go(x)
 
    beg = beg or 0
+   local len
    if endx == nil then
       len = xlen - beg
       endx = beg + len
@@ -189,7 +190,7 @@ function _gi_UnpackSliceRaw(t)
       return t
    end
    
-   raw = t[_giPrivateRaw]
+   local raw = t[_giPrivateRaw]
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.
@@ -309,7 +310,7 @@ function __copySlice(dest, src)
       return 0LL
    end
    
-   -- copy direction allows for overlap   
+   -- copy direction allows for overlap
    if begSrc > begDest then
       --print("src.beg > dest.beg, copying forward, step=+1")
       for i = 0, len-1 do
@@ -351,7 +352,7 @@ end
 
 function __gi_makeSlice(typeKind, zeroVal, len, cap)
    --print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
-   raw = {}
+   local raw = {}
    cap = cap or len
    for i = 0, cap-1 do
       raw[i] = zeroVal
