@@ -10,15 +10,20 @@
 #include "lj_cconv.h"
 #include "lj_cdata.h"
 #include "lauxlib.h"
-#include <strings.h> /*bzero*/
+#include <strings.h> /*memset*/
 
 /* compilers have different ideas about how to print 64-bit ints*/
+#if LUAJIT_OS==LUAJIT_OS_WINDOWS
+#define RETURN_INT64_FORMAT  "return %I64dLL"
+#define RETURN_UINT64_FORMAT "return %I64uLL"
+#else
 #if LJ_TARGET_OSX
 #define RETURN_INT64_FORMAT  "return %lldLL"
 #define RETURN_UINT64_FORMAT "return %lluLL"
 #else
 #define RETURN_INT64_FORMAT  "return %ldLL"
 #define RETURN_UINT64_FORMAT "return %luLL"
+#endif
 #endif
 
 LUA_API uint32_t
@@ -27,7 +32,7 @@ luajit_push_cdata_int64(struct lua_State *L, int64_t n)
   int idx = lua_gettop(L);
   /* load cdata int64 returning function onto stack */
   char buf[128];
-  bzero(&buf[0], 128);
+  memset(&buf[0], '\0', 128);
   snprintf(&buf[0], 127, RETURN_INT64_FORMAT, n);
   
   int err = luaL_loadstring(L, &buf[0]);
@@ -50,7 +55,7 @@ luajit_push_cdata_uint64(struct lua_State *L, uint64_t u)
   int idx = lua_gettop(L);
   /* load cdata int64 returning function onto stack */
   char buf[128];
-  bzero(&buf[0], 128);
+  memset(&buf[0], '\0', 128);
   snprintf(&buf[0], 127, RETURN_UINT64_FORMAT, u);
   
   int err = luaL_loadstring(L, &buf[0]);
