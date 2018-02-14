@@ -222,7 +222,7 @@ end;
 __unused = function(v) end;
 
 --
-__mapArray = function(array, f)
+__mapArray = function(arr, f)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
@@ -318,6 +318,181 @@ __ifaceMethodExpr = function(name)
      __ifaceMethodExprs["_"  ..  name] = expr
   end
   return expr;
+end;
+
+--
+
+__subslice = function(slice, low, high, max)
+   if high == nil then
+      
+   end
+   if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.__capacity)  or  (max ~= nil and max > slice.__capacity) then
+      __throwRuntimeError("slice bounds out of range");
+   end
+   
+   local s = {}
+   slice.__constructor.tfun(s, slice.__array);
+   s.__offset = slice.__offset + low;
+   s.__length = slice.__length - low;
+   s.__capacity = slice.__capacity - low;
+   if high ~= nil then
+      s.__length = high - low;
+   end
+   if max ~= nil then
+      s.__capacity = max - low;
+   end
+   return s;
+end;
+
+__copySlice = function(dst, src)
+   local n = __min(src.__length, dst.__length);
+   __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
+   return n;
+end;
+
+--
+
+__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
+   --print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
+   --print("__copyArray has dst:")
+   --__st(dst)
+   --print("__copyArray has src:")
+   --__st(src)
+   
+   n = tonumber(n)
+   if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
+      return;
+   end
+
+   local sw = elem.kind
+   if sw == __kindArray or sw == __kindStruct then
+      
+      if dst == src  and  dstOffset > srcOffset then
+         for i = n-1,0,-1 do
+            elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+         end
+         return;
+      end
+      for i = 0,n-1 do
+         elem.copy(dst[dstOffset + i], src[srcOffset + i]);
+      end
+      return;
+   end
+
+   if dst == src  and  dstOffset > srcOffset then
+      for i = n-1,0,-1 do
+         dst[dstOffset + i] = src[srcOffset + i];
+      end
+      return;
+   end
+   for i = 0,n-1 do
+      dst[dstOffset + i] = src[srcOffset + i];
+   end
+end;
+
+--
+__clone = function(src, typ)
+  local clone = typ.zero();
+  typ.copy(clone, src);
+  return clone;
+end;
+
+__pointerOfStructConversion = function(obj, typ)
+  if(obj.__proxies == nil) then
+    obj.__proxies = {};
+    obj.__proxies[obj.constructor.__str] = obj;
+  end
+  local proxy = obj.__proxies[typ.__str];
+  if proxy == nil then
+     local properties = {};
+     
+     local helper = function(p)
+        properties[fieldProp] = {
+           get= function() return obj[fieldProp]; end,
+           set= function(value) obj[fieldProp] = value; end
+        };
+     end
+     -- fields must be an array for this to work.
+     for i=0,#typ.elem.fields-1 do
+        helper(typ.elem.fields[i].prop);
+     end
+     
+    proxy = Object.create(typ.methodSet, properties);
+    proxy.__val = proxy;
+    obj.__proxies[typ.__str] = proxy;
+    proxy.__proxies = obj.__proxies;
+  end
+  return proxy;
+end;
+
+--
+
+
+__append = function(...)
+   local arguments = {...}
+   local slice = arguments[1]
+   return __internalAppend(slice, arguments, 1, #arguments - 1);
+end;
+
+__appendSlice = function(slice, toAppend)
+   if slice == nil then 
+      error("error calling __appendSlice: slice must be available")
+   end
+   if toAppend == nil then
+      error("error calling __appendSlice: toAppend must be available")      
+   end
+   if type(toAppend) == "string" then
+      local bytes = __stringToBytes(toAppend);
+      return __internalAppend(slice, bytes, 0, #bytes);
+   end
+   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
+end;
+
+__internalAppend = function(slice, array, offset, length)
+   if length == 0 then
+      return slice;
+   end
+
+   local newArray = slice.__array;
+   local newOffset = slice.__offset;
+   local newLength = slice.__length + length;
+   --print("jea debug: __internalAppend: newLength is "..tostring(newLength))
+   local newCapacity = slice.__capacity;
+   local elem = slice.__constructor.elem;
+
+   if newLength > newCapacity then
+      newOffset = 0;
+      local tmpCap
+      if slice.__capacity < 1024 then
+         tmpCap = slice.__capacity * 2
+      else
+         tmpCap = __truncateToInt(slice.__capacity * 5 / 4)
+      end
+      newCapacity = __max(newLength, tmpCap);
+
+      newArray = {}
+      local w = slice.__offset
+      for i = 0,slice.__length do
+         newArray[i] = slice.__array[i + w]
+      end
+      for i = #slice,newCapacity-1 do
+         newArray[i] = elem.zero();
+      end
+      
+   end
+
+   --print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
+
+   __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
+   --print("jea debug, __internalAppend, after copying over array:")
+   --__st(newArray)
+
+   local newSlice ={}
+   slice.__constructor.tfun(newSlice, newArray);
+   newSlice.__offset = newOffset;
+   newSlice.__length = newLength;
+   newSlice.__capacity = newCapacity;
+   return newSlice;
 end;
 
 --
@@ -1014,6 +1189,49 @@ __Float64       = __newType( 8, __kindFloat64,       "float64",        true, "",
 __String        = __newType(16, __kindString,        "string",         true, "", false, nil);
 --__UnsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
+--[[
+
+__nativeArray = function(elemKind)
+
+   if false then
+      if elemKind ==  __kindInt then 
+         return Int32Array; -- in js, a builtin typed array
+      elseif elemKind ==  __kindInt8 then 
+         return Int8Array;
+      elseif elemKind ==  __kindInt16 then 
+         return Int16Array;
+      elseif elemKind ==  __kindInt32 then 
+         return Int32Array;
+      elseif elemKind ==  __kindUint then 
+         return Uint32Array;
+      elseif elemKind ==  __kindUint8 then 
+         return Uint8Array;
+      elseif elemKind ==  __kindUint16 then 
+         return Uint16Array;
+      elseif elemKind ==  __kindUint32 then 
+         return Uint32Array;
+      elseif elemKind ==  __kindUintptr then 
+         return Uint32Array;
+      elseif elemKind ==  __kindFloat32 then 
+         return Float32Array;
+      elseif elemKind ==  __kindFloat64 then 
+         return Float64Array;
+      else
+         return Array;
+      end
+   end
+end;
+
+__toNativeArray = function(elemKind, array)
+  local nativeArray = __nativeArray(elemKind);
+  if nativeArray == Array {
+    return array;
+  end
+  return nativeArray(array); -- new
+end;
+
+--]]
+
 
 __ptrType = function(elem)
    local typ = elem.ptr;
@@ -1024,6 +1242,25 @@ __ptrType = function(elem)
    end
    return typ;
 end;
+
+__newDataPointer = function(data, constructor)
+   if constructor.elem.kind == __kindStruct then
+      return data;
+   end
+   return constructor(function() return data; end, function(v) data = v; end);
+end;
+
+__indexPtr = function(array, index, constructor)
+   array.__ptr = array.__ptr  or  {};
+   local a = array.__ptr[index]
+   if a ~= nil then
+      return a
+   end
+   a = constructor(function() return array[index]; end, function(v) array[index] = v; end);
+   array.__ptr[index] = a
+   return a
+end;
+
 
 __arrayTypes = {};
 __arrayType = function(elem, len)
@@ -1037,42 +1274,126 @@ __arrayType = function(elem, len)
    return typ;
 end;
 
-__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   --print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
-   --print("__copyArray has dst:")
-   --__st(dst)
-   --print("__copyArray has src:")
-   --__st(src)
+
+__chanType = function(elem, sendOnly, recvOnly)
    
-   n = tonumber(n)
-   if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
-      return;
+   local str
+   local field
+   if recvOnly then
+      str = "<-chan " .. elem.__str
+      field = "RecvChan"
+   elseif sendOnly then
+      str = "chan<- " .. elem.__str
+      field = "SendChan"
+   else
+      str = "chan " .. elem.__str
+      field = "Chan"
    end
+   local typ = elem[field];
+   if typ == nil then
+      typ = __newType(4, __kindChan, str, false, "", false, nil);
+      elem[field] = typ;
+      typ.init(elem, sendOnly, recvOnly);
+   end
+   return typ;
+end;
 
-   local sw = elem.kind
-   if sw == __kindArray or sw == __kindStruct then
-      
-      if dst == src  and  dstOffset > srcOffset then
-         for i = n-1,0,-1 do
-            elem.copy(dst[dstOffset + i], src[srcOffset + i]);
-         end
-         return;
-      end
-      for i = 0,n-1 do
-         elem.copy(dst[dstOffset + i], src[srcOffset + i]);
-      end
-      return;
-   end
+function dummy(a, b)
+   return a + b
+end
 
-   if dst == src  and  dstOffset > srcOffset then
-      for i = n-1,0,-1 do
-         dst[dstOffset + i] = src[srcOffset + i];
+
+function __Chan(elem, capacity)
+   local this = {}
+   if capacity < 0  or  capacity > 2147483647 then
+      __throwRuntimeError("makechan: size out of range");
+   end
+   this.elem = elem;
+   this.__capacity = capacity;
+   this.__buffer = {};
+   this.__sendQueue = {};
+   this.__recvQueue = {};
+   this.__closed = false;
+   return this
+end;
+__chanNil = __Chan(nil, 0);
+__chanNil.__recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
+__chanNil.__sendQueue = __chanNil.__recvQueue
+
+
+__funcTypes = {};
+__funcType = function(params, results, variadic)
+   local typeKey = __mapAndJoinStrings(",", params, function(p) return p.id; end) .. "_" .. __mapAndJoinStrings(",", results, function(r) return r.id; end) .. "_" .. tostring(variadic);
+  local typ = __funcTypes[typeKey];
+  if typ == nil then
+    local paramTypes = __mapArray(params, function(p) return p.__str; end);
+    if variadic then
+      paramTypes[#paramTypes - 1] = "..." .. paramTypes[#paramTypes - 1].substr(2);
+    end
+    local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
+    if #results == 1 then
+      str = str .. " " .. results[1].__str;
+      end else if #results > 1 then
+      str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
+    end
+    typ = __newType(4, __kindFunc, str, false, "", false, nil);
+    __funcTypes[typeKey] = typ;
+    typ.init(params, results, variadic);
+  end
+  return typ;
+end;
+
+--- interface types here
+
+function __interfaceStrHelper(m)
+   local s = ""
+   if m.pkg ~= "" then
+      s = m.pkg .. "."
+   end
+   return s .. m.name .. string.sub(m.typ.__str, 6) -- sub for removing "__kind"
+end
+
+__interfaceTypes = {};
+__interfaceType = function(methods)
+   
+   local typeKey = __mapAndJoinStrings("_", methods, function(m)
+                                          return m.pkg .. "," .. m.name .. "," .. m.typ.id;
+   end)
+   local typ = __interfaceTypes[typeKey];
+   if typ == nil then
+      local str = "interface {}";
+      if #methods ~= 0 then
+         str = "interface { " .. __mapAndJoinStrings("; ", methods, __interfaceStrHelper) .. " }"
       end
-      return;
+      typ = __newType(8, __kindInterface, str, false, "", false, nil);
+      __interfaceTypes[typeKey] = typ;
+      typ.init(methods);
    end
-   for i = 0,n-1 do
-      dst[dstOffset + i] = src[srcOffset + i];
-   end
+   return typ;
+end;
+__emptyInterface = __interfaceType({});
+__ifaceNil = {};
+__error = __newType(8, __kindInterface, "error", true, "", false, nil);
+__error.init({{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, {__String}, false) }});
+
+__mapTypes = {};
+__mapType = function(key, elem)
+  local typeKey = key.id .. "_" .. elem.id;
+  local typ = __mapTypes[typeKey];
+  if typ == nil then
+    typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
+    __mapTypes[typeKey] = typ;
+    typ.init(key, elem);
+  end
+  return typ;
+end;
+__makeMap = function(keyForFunc, entries)
+   local m = {};
+   for i =0,#entries-1 do
+    local e = entries[i];
+    m[keyForFunc(e.k)] = e;
+  end
+  return m;
 end;
 
 
@@ -1149,137 +1470,6 @@ __makeSlice = function(typ, length, capacity)
    return slice;
 end;
 
-
-__subslice = function(slice, low, high, max)
-   if high == nil then
-      
-   end
-   if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.__capacity)  or  (max ~= nil and max > slice.__capacity) then
-      __throwRuntimeError("slice bounds out of range");
-   end
-   
-   local s = {}
-   slice.__constructor.tfun(s, slice.__array);
-   s.__offset = slice.__offset + low;
-   s.__length = slice.__length - low;
-   s.__capacity = slice.__capacity - low;
-   if high ~= nil then
-      s.__length = high - low;
-   end
-   if max ~= nil then
-      s.__capacity = max - low;
-   end
-   return s;
-end;
-
-__copySlice = function(dst, src)
-   local n = __min(src.__length, dst.__length);
-   __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
-   return n;
-end;
-
-
-__clone = function(src, typ)
-  local clone = typ.zero();
-  typ.copy(clone, src);
-  return clone;
-end;
-
-__pointerOfStructConversion = function(obj, typ)
-  if(obj.__proxies == nil) then
-    obj.__proxies = {};
-    obj.__proxies[obj.constructor.__str] = obj;
-  end
-  local proxy = obj.__proxies[typ.__str];
-  if proxy == nil then
-     local properties = {};
-     
-     local helper = function(p)
-        properties[fieldProp] = {
-           get= function() return obj[fieldProp]; end,
-           set= function(value) obj[fieldProp] = value; end
-        };
-     end
-     -- fields must be an array for this to work.
-     for i=0,#typ.elem.fields-1 do
-        helper(typ.elem.fields[i].prop);
-     end
-     
-    proxy = Object.create(typ.methodSet, properties);
-    proxy.__val = proxy;
-    obj.__proxies[typ.__str] = proxy;
-    proxy.__proxies = obj.__proxies;
-  end
-  return proxy;
-end;
-
-
-__append = function(...)
-   local arguments = {...}
-   local slice = arguments[1]
-   return __internalAppend(slice, arguments, 1, #arguments - 1);
-end;
-
-__appendSlice = function(slice, toAppend)
-   if slice == nil then 
-      error("error calling __appendSlice: slice must be available")
-   end
-   if toAppend == nil then
-      error("error calling __appendSlice: toAppend must be available")      
-   end
-   if type(toAppend) == "string" then
-      local bytes = __stringToBytes(toAppend);
-      return __internalAppend(slice, bytes, 0, #bytes);
-   end
-   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
-end;
-
-__internalAppend = function(slice, array, offset, length)
-   if length == 0 then
-      return slice;
-   end
-
-   local newArray = slice.__array;
-   local newOffset = slice.__offset;
-   local newLength = slice.__length + length;
-   --print("jea debug: __internalAppend: newLength is "..tostring(newLength))
-   local newCapacity = slice.__capacity;
-   local elem = slice.__constructor.elem;
-
-   if newLength > newCapacity then
-      newOffset = 0;
-      local tmpCap
-      if slice.__capacity < 1024 then
-         tmpCap = slice.__capacity * 2
-      else
-         tmpCap = __truncateToInt(slice.__capacity * 5 / 4)
-      end
-      newCapacity = __max(newLength, tmpCap);
-
-      newArray = {}
-      local w = slice.__offset
-      for i = 0,slice.__length do
-         newArray[i] = slice.__array[i + w]
-      end
-      for i = #slice,newCapacity-1 do
-         newArray[i] = elem.zero();
-      end
-      
-   end
-
-   --print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
-
-   __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
-   --print("jea debug, __internalAppend, after copying over array:")
-   --__st(newArray)
-
-   local newSlice ={}
-   slice.__constructor.tfun(newSlice, newArray);
-   newSlice.__offset = newOffset;
-   newSlice.__length = newLength;
-   newSlice.__capacity = newCapacity;
-   return newSlice;
-end;
 
 
 
@@ -1455,9 +1645,10 @@ end;
 
 __stackDepthOffset = 0;
 __getStackDepth = function()
-  local err = new Error();
+  local err = Error(); -- new
   if err.stack == nil then
     return nil;
   end
   return __stackDepthOffset + #err.stack.split("\n");
 end;
+

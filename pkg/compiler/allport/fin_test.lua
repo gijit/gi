@@ -196,12 +196,16 @@ import (
 )
 type WonderWoman struct {
 	Bracelets int
-        LassoPoints int
+    LassoPoints int
+}
+func (w *WonderWoman) Fight() {
+   w.LassoPoints++
 }
 func main() {
 	ww := WonderWoman{
 		Bracelets: 2,
 	}
+    ww.Fight()
 	fmt.Printf("ww=%#v\n", ww)
 }
 --]]
@@ -209,29 +213,25 @@ func main() {
 WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...)
                            print("DEBUG WonderWoman.ctor called! dots=")
                            __st({...})
-   if self == nil then self = {}; end
-   local args={...};
-   if #args == 0 then
-      self.Bracelets = 0LL;
-      self.LassoPoints = 0LL;
-   else 
-      local Bracelets_, LassoPoints_ = ... ;
-      self.Bracelets = Bracelets_;
-      self.LassoPoints = LassoPoints_ or 0LL;
-   end
-   return self; 
+                           if self == nil then self = {}; end
+                           
+                           local Bracelets_, LassoPoints_ = ... ;
+                           -- for each zero value that is not a nil pointer:
+                           self.Bracelets = Bracelets_ or (0LL);
+                           self.LassoPoints = LassoPoints_ or (0LL);
+                           return self; 
 end);
 
 
 WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __Int, tag= ""}, {prop= "LassoPoints", name= "LassoPoints", anonymous= false, exported= true, typ= __Int, tag= ""}});
 
-ww = WonderWoman.ptr(2);
+ww = WonderWoman.ptr(2LL);
 
-expectEq(ww.Bracelets, 2)
+expectEq(ww.Bracelets, 2LL)
 
 ptrType = __ptrType(WonderWoman);
-WonderWoman.ptr.methodSet.Fight = function(self)
-   local w = self;
+WonderWoman.ptr.methodSet.Fight = function(__self)
+   local w = __self;
    w.LassoPoints = w.LassoPoints + 1LL;
 end
 
@@ -239,6 +239,36 @@ end
 
 ww:Fight()
 expectEq(ww.LassoPoints, 1LL)
+ww:Fight()
+expectEq(ww.LassoPoints, 2LL)
       
 print("done with fin_test.lua")
 
+-- functions
+
+--[[
+package main
+import (
+	"fmt"
+)
+type Binop func(a, b int) int
+func MyApply(bo Binop, x, y int) int {
+	return bo(x, y)
+}
+func main() {
+	res := MyApply(func(r, s int) int {
+		return r + s
+	}, 1, 2)
+	fmt.Printf("res = %v\n", res)
+}
+--]]
+
+sliceType = __sliceType(__emptyInterface);
+MyApply = function(bo, x, y)
+   return bo(x, y);
+end
+_r = MyApply(function(r, s) 
+      return r + s;
+end), 1, 2);
+
+   
