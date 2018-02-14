@@ -950,8 +950,15 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.ptr.elem = typ;
       typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
       typ.ptr.methodSet.__index = typ.ptr.methodSet
-      
+
+      -- __kindStruct.init is here:
       typ.init = function(pkgPath, fields)
+         print("top of init() for struct, fields=")
+         for i, f in pairs(fields) do
+            __st(f, "field #"..tostring(i))
+            __st(f.typ, "typ of field #"..tostring(i))
+         end
+         
          typ.pkgPath = pkgPath;
          typ.fields = fields;
          for i,f in ipairs(fields) do
