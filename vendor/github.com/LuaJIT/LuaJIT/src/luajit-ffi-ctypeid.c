@@ -1,3 +1,4 @@
+#define LUA_LIB
 #include "lj_obj.h"
 
 #if LJ_HASFFI
@@ -81,7 +82,7 @@ luajit_ctypeid(struct lua_State *L, int idxNew)
   }
   
   /* convert from relative to absolute index,
-     but try to avoid chaning any pseudo indexes,
+     but try to avoid changing any pseudo indexes,
      which are large negative ints.
   */
   if (idxNew < 0 && (-idxNew) <= restoreAtEndIdx) {
