@@ -795,7 +795,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       typ.tfun = constructor  or
          function(this, getter, setter, target)
-            --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             this.__get = getter;
             this.__set = setter;
             this.__target = target;
@@ -941,13 +941,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          if constructor ~= nil then
             constructor(this, ...);
          end
-         setmetatable(this, typ.methodSet)
+         setmetatable(this, typ.ptr.methodSet)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
 
+      -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
-      typ.ptr.methodSet = typ.methodSet
+      typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
+      typ.ptr.methodSet.__index = typ.ptr.methodSet
+      
       typ.init = function(pkgPath, fields)
          typ.pkgPath = pkgPath;
          typ.fields = fields;
@@ -1106,7 +1109,12 @@ function __methodSet(typ)
   local base = {};
 
   local isPtr = (typ.kind == __kindPtr);
+  print("__methodSet called with typ=")
+  __st(typ)
+  print("__methodSet sees isPtr=", isPtr)
+  
   if isPtr  and  typ.elem.kind == __kindInterface then
+     -- jea: I assume this is because pointers to interfaces don't themselves have methods.
      typ.methodSetCache = {};
      return {};
   end
@@ -1117,8 +1125,14 @@ function __methodSet(typ)
   end
   local current = {{typ= myTyp, indirect= isPtr}};
 
+  -- the Go spec says:
+  -- The method set of the corresponding pointer type *T is
+  -- the set of all methods declared with receiver *T or T
+  -- (that is, it also contains the method set of T).
+  
   local seen = {};
 
+  print("top of while, #current is", #current)
   while #current > 0 do
      local next = {};
      local mset = {};
@@ -1131,10 +1145,12 @@ function __methodSet(typ)
         
        if e.typ.named then
           for _, mthod in pairs(e.typ.methods) do
+             print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod);
           end
           if e.indirect then
              for _, mthod in pairs(__ptrType(e.typ).methods) do
+                print("adding to mset, mthod = ", mthod)
                 table.insert(mset, mthod)
              end
           end
@@ -1166,25 +1182,29 @@ function __methodSet(typ)
        elseif knd == __kindInterface then
           
           for _, mthod in pairs(e.typ.methods) do
+             print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod)
           end
        end
      end;
 
      -- above may have made duplicates, now dedup
+     print("at dedup, #mset = " .. tostring(#mset))
      for _, m in pairs(mset) do
         if base[m.name] == nil then
            base[m.name] = m;
         end
      end;
+     print("after dedup, base for typ '"..typ.__str.."' is ")
+     __st(base)
      
      current = next;
   end
   
   typ.methodSetCache = {};
   table.sort(base)
-  for _,name in ipairs(base) do
-     table.insert(typ.methodSetCache, base[name]);
+  for _, detail in pairs(base) do
+     table.insert(typ.methodSetCache, detail)
   end;
   return typ.methodSetCache;
 end;
@@ -1604,14 +1624,28 @@ __assertType = function(value, typ, returnTuple)
       ok = value.__typ == typ;
    else
       local valueTypeString = value.__typ.__str;
-      ok = typ.implementedBy[valueTypeString];
+
+      -- this caching doesn't get updated as methods
+      -- are added, so disable it until fixed, possibly, in the future.
+      --ok = typ.implementedBy[valueTypeString];
+      ok = nil
       if ok == nil then
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
+         print("valueMethodSet is")
+         __st(valueMethodSet)
+         print("interfaceMethods is")
+         __st(interfaceMethods)
+         
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
-            for _, vm in ipairs(valueMethodSet) do               
+            for _, vm in ipairs(valueMethodSet) do
+               print("checking vm against tm, where tm=")
+               __st(tm)
+               print("and vm=")
+               __st(vm)
+               
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
                   found = true;
                   break;

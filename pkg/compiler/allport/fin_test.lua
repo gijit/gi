@@ -242,7 +242,6 @@ expectEq(ww.LassoPoints, 1LL)
 ww:Fight()
 expectEq(ww.LassoPoints, 2LL)
       
-print("done with fin_test.lua")
 
 -- functions
 
@@ -357,21 +356,28 @@ sliceType = __sliceType(__emptyInterface);
 ptrType = __ptrType(hobbit);
 ptrType__1 = __ptrType(Wolf);
 hobbit.ptr.methodSet.WearRing = function(this)
+   print("hobbit.ptr.methodSet.WearRing called!")
    h = this;
    h.hasRing = not h.hasRing;
    return h.hasRing;
 end
 
-hobbit.methodSet.WearRing = hobbit.ptr.methodSet.WearRing 
+hobbit.methodSet.WearRing = function(this)
+   print("hobbit.methodSet.WearRing called!")
+   return this.__val.WearRing(this);
+end
 
-
-Wolf.ptr.methodSet.Scowl = function(this) 
+Wolf.ptr.methodSet.Scowl = function(this)
+   print("Wolf.ptr.methodSet.Scowl called!")
    w = this;
    w.Claw = w.Claw + 1LL;
    return w.Claw;
 end
 
-Wolf.methodSet.Scowl = Wolf.ptr.methodSet.Scowl
+Wolf.methodSet.Scowl = function(this)
+   print("Wolf.methodSet.Scowl called!")
+   return this.__val.Scowl(this);
+end
 
 battle = function(g, b) 
    return g:Scowl(), b:WearRing();
@@ -390,16 +396,23 @@ hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "hasRing", name= "ha
 Wolf.init("", {{prop= "Claw", name= "Claw", anonymous= false, exported= true, typ= __Int, tag= ""}, {prop= "HasRing", name= "HasRing", anonymous= false, exported= true, typ= __Bool, tag= ""}});
 
 tryTheTypeSwitch = function(i)
+   print("top of tryTheTypeSwitch, with i=")
+   __st(i)
+   
    x, isG = __assertType(i, Gollum, true)
    if isG then
+      print("yes, i satisfies Gollum interface")
       return x.Scowl()
    end
    
    x, isB = __assertType(i, Baggins, true)
    if isB then
+      print("yes, i satisfies Baggins interface")
       if x.WearRing() then
          return 1
       end
+   else
+      print("i satisfied neither interface")
    end
    return 0
 end
@@ -407,6 +420,37 @@ end
 -- main
 w = Wolf.ptr(0, false);
 bilbo = hobbit.ptr(false);
+
+-- problem:
+-- hmm hobbit.methods and Wolf.methods are empty
+-- but ptrType.methods is set above, as is
+--     ptrType__1.methods
+
+-- the Go spec says:
+-- The method set of the corresponding pointer type *T is
+-- the set of all methods declared with receiver *T or T
+-- (that is, it also contains the method set of T).
+--
+-- So pointers should check their own and their elem methods.
+--  but we'll need to clone the value before calling a value-receiver method with a pointer.
+
+msWp = __methodSet(Wolf.ptr)
+expectEq(#msWp, 1)
+msW = __methodSet(Wolf)
+expectEq(#msW, 0)
+
+msHp = __methodSet(hobbit.ptr)
+expectEq(#msHp, 1)
+msH = __methodSet(hobbit)
+expectEq(#msH, 0)
+
+w2 = Wolf.ptr(0, false);
+expectEq(getmetatable(w2).__name, "methodSet for *main.Wolf")
+try2 = tryTheTypeSwitch(w2);
+expectEq(w2.Claw, 1LL)
+
+print("fin_test.lua: about to call battle(w, bilbo)")
+
 i0, b0 = battle(w, bilbo);
 i1, b1 = battle(w, bilbo);
 try0 = tryTheTypeSwitch(w);
@@ -419,3 +463,4 @@ expectEq(b1, false)
 expectEq(try0, 3LL)
 expectEq(try1, 1LL)
 
+print("done with fin_test.lua")
