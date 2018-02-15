@@ -26,6 +26,8 @@ end
 local function real(z)
    if ffiIsType("complex", z) then
       return z.re
+   elseif ffiIsType("complex float", z) then
+      return float32(z.re)
    end
    if type(z)=="number" then
       return z
@@ -37,6 +39,8 @@ end
 local function imag(z)
    if ffiIsType("complex", z) then
       return z.im
+   elseif ffiIsType("complex float", z) then
+      return float32(z.im)
    end
    return 0
 end

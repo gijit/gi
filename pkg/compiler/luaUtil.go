@@ -37,6 +37,10 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		return nil, err
 	}
 	err = LuaDoFiles(vm, files)
+	panicOn(err)
+	if err != nil {
+		return nil, err
+	}
 
 	// load the utf8 library as __utf8
 	cwd, err := os.Getwd()
