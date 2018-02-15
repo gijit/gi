@@ -59,6 +59,7 @@ local cosh=math.cosh
 local sinh=math.sinh
 local sqrt=math.sqrt
 local atan2=math.atan2
+local i=complex(0,1)
 
 local function cexp(a)
    return e^a
@@ -222,8 +223,6 @@ function cmath.tanh(c)
 end
 
 -- inverse trig functions
-
-local i=complex(0,1)
 
 function cmath.asin(c)
    return i*clog(i*c+(1-c^2)^0.5)
