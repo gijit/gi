@@ -19,6 +19,7 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/math"
 	shadow_math_rand "github.com/gijit/gi/pkg/compiler/shadow/math/rand"
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
+	shadow_reflect "github.com/gijit/gi/pkg/compiler/shadow/reflect"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
 
@@ -132,6 +133,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		luar.Register(ic.vm, "rand", shadow_math_rand.Pkg)
 	case "os":
 		luar.Register(ic.vm, "os", shadow_os.Pkg)
+	case "reflect":
+		luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
 	case "regexp":
 		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
 	case "time":
