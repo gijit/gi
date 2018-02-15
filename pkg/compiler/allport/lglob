@@ -1,0 +1,1003 @@
+#!/usr/bin/env lua
+-- Like globals.lua in Lua 5.1.4 -- globalsplus.lua
+-- Like globals.lua in Lua 5.1.4 but records fields in global tables too.
+--
+-- D.Manura, 2010-07
+-- Steve Donovan, 2013
+-- Public domain
+--
+-- See http://lua-users.org/wiki/DetectingUndefinedVariables
+
+local append = table.insert
+local lua52 = _VERSION:match '5%.2$'
+local stderr = io.stderr
+
+local usage = [[
+Lua static global analyzer, vs 1.0
+usage: lglob [options]  <scripts>
+    -t means "tolerant"; defined globals are ok (implies -g and -l)
+    -g accept globals defined in a module
+    -l call require() to track module exports
+    -w <file...>, whitelist files containing symbol={entries..},
+        which are added to _G.
+    -b <file...> blacklist files
+    -wx <file...> _exclusive_ whitelists, may be nil for none.
+    -wl <file...> whitelists used to resolve any require() calls
+    -gl list global references with line numbers
+    -gd generate locals for globals (e.g. 'local print=print')
+    -d dump module contents in whitelist format
+    -dx dump all unknown global accesses
+    -p <package> name to use for qualifying symbols in module dump
+    -rd dump requires in whitelist format
+    -ld <line> bytecode dump at given line
+    -luac <prog> set luac to use
+    -dump diagnostic dump
+    -v verbose
+
+    If the env variable LGLOB_PARAM exists, it specifies extra flags
+    LGLOB_PATH can be used to specify a path for *.wlist files
+    If global.whitelist exists in same directory, use that implicitly.
+    Unless tolerant, warn about altering known globals.
+]]
+
+local function quit (msg,...)
+    if msg then stderr:write('lglob: ',msg:format(...),'\n') end
+    print()
+    print(usage)
+    os.exit(1)
+end
+
+local function assertq (res,err)
+    if not res then quit(err) end
+    return res
+end
+
+local function exists (file)
+    local f = io.open(file)
+    if not f then
+        return nil
+    else
+        f:close()
+        return file
+    end
+end
+
+local function contents (file)
+    local f = io.open(file)
+    local res = f:read '*a'
+    f:close()
+    return res
+end
+
+local function copy (src,dest)
+    dest = dest or {}
+    for k,v in pairs(src) do dest[k] = v end
+    return dest
+end
+
+local function diff (t1,t2)
+    local res = {}
+    for k,v in pairs(t2) do
+        if t1[k] == nil then res[k] = t2[k] end
+    end
+    return res
+end
+
+local function keys (t)
+    local res = {}
+    for k in pairs(t) do append(res,k) end
+    return res
+end
+
+local function shell (cmd, how)
+    local f = io.popen(cmd)
+    local res = f:read(how or '*l')
+    f:close()
+    return res
+end
+
+local windows = package.config:sub(1,1)=='\\'
+
+local function getcwd ()
+    if windows then
+        return shell 'echo %CD%'
+    else
+        return os.getenv 'PWD'
+    end
+end
+
+local npath
+
+local function relative_path (p)
+    if windows then
+        if not npath then
+            npath = #getcwd()+2
+        end
+        return p:sub(npath)
+    else
+        return p:sub(3)
+    end
+end
+
+-- simple flag parser with filename globbing
+local function glob (args)
+    local res = {}
+    for _,a in ipairs(args) do
+        if a == '.' then -- if we just get '.' then look for ALL Lua files in this dir tree
+            local f = io.popen(windows and 'dir /b /s *.lua' or "find . -name '*.lua'")
+            for line in f:lines() do
+                append(res,relative_path(line))
+            end
+            f:close()
+        elseif a:match '[%*%?]' then -- no shell globbing, it's Windows :(
+            local f = io.popen('dir /b '..a)
+            local path = a:match [[(.-\)[^\]+$]] or ''
+            for line in f:lines() do
+                append(res,path..line)
+            end
+            f:close()
+        else
+            append(res,a)
+        end
+    end
+    return res
+end
+
+local function parse_args ()
+    local takes_value, known_flags = {},{}
+    for line in usage:gmatch '[^\n]+' do
+        local flag,rest = line:match '^%s+%-(%S+)%s+(.*)'
+        if flag then
+            known_flags[flag] = true
+            local valspec = rest:match '^%b<>'
+            if valspec then
+                takes_value[flag] = valspec:match '%.%.%.' and 'multiple' or 'single'
+            end
+        end
+    end
+    local glob_args = glob(arg)
+    local args = {}
+--~     for _,a in ipairs(args) do print(a) end; os.exit()
+    local i = 1
+    local params = os.getenv 'LGLOB_PARAM'
+    if params then
+        for p in params:gmatch '[^%s+]+' do
+            append(arg,p)
+        end
+    end
+    while i <= #glob_args do
+        local a,val = glob_args[i]
+        local flag = a:match '^%-(.+)'
+        if flag then
+            if not known_flags[flag] then quit('-'..flag..' unknown flag') end
+            -- grab the next argument if we need a value
+            if takes_value[flag] and not val then
+                i = i + 1
+                if i > #arg then quit('-'..flag..' needs a value') end
+                if takes_value[flag] == 'multiple' then
+                    val = args[flag] or {}
+                    append(val,arg[i])
+                else
+                    if args[flag] then quit('-'..flag..' takes only one value') end
+                    val = arg[i]
+                end
+            end
+            args[flag] = val or true
+        else
+            append(args,a)
+        end
+        i = i + 1
+    end
+    return args
+end
+
+-- Lua 5.1/5.2 dofile with optional environment
+local load = load
+if not lua52 then
+    function load(str,src,mode,env)
+        local chunk,err = loadstring(str,src)
+        if err then return nil,err end
+        setfenv(chunk, env)
+        return chunk
+    end
+end
+
+local function evalfile (file,env)
+    env = env or _G
+    local ok = true
+    if not exists(file) then
+        ok = false
+        local wpath = os.getenv 'LGLOB_PATH'
+        if wpath then
+            for p in wpath:gmatch '[^;]+' do
+                p = p:gsub('%?',file)
+                if exists(p) then
+                    file = p
+                    ok = true
+                    break
+                end
+            end
+        end
+    end
+    if not ok then quit("'%s' does not exist, or is not found on LGLOB_PATH",file) end
+    local chunk,err = load(contents(file),'tmp','t',env)
+    if err then  return nil,err  end
+    local ok,err = pcall(chunk)
+    if not ok then return nil,err end
+    return env
+end
+
+local function getnum (line)
+    return tonumber(line:match '%((%d+)%)')
+end
+
+local dump
+
+local function dumpt (t,name)
+    if not dump then return end
+    for _,item in ipairs(t) do
+        if next(item) then
+            io.write(name,': ')
+            for k,v in pairs(item) do io.write(k,'=',tostring(v),'; ') end
+            io.write '\n'
+        end
+    end
+end
+
+local yield = coroutine.yield
+local locs,upvals,known_locals
+local return_line
+
+-- Parse local/upvalue information from luac -l -l
+-- this information occurs _after_ dissembly listing for a function
+-- so we also cache this listing and feed it to the analyzer later
+local function fun_grabber(f)
+    yield ''
+    known_locals = {}
+    local line = true
+    while line do -- forall functions
+        line = f:read()
+        if not line:match '^%a+ <' then
+            print('bad line',line)
+            os.exit()
+        end
+
+        line = f:read() -- params,slots,upvalues,locals, etc
+        line = f:read()
+        -- cache the disassembly
+        local lines = {}
+        while line:match '^%s+%d' do
+            append(lines,line)
+            line = f:read()
+        end
+
+        -- grab RETURN for module analysis
+        if #lines > 1  and lines[#lines-1]:match 'RETURN' then
+            return_line = lines[#lines-1]
+        else
+            return_line = lines[#lines]
+        end
+        while not line:match '^locals' do line = f:read() end
+        locs = {}
+        for i = 1,getnum(line) do
+            line = f:read()
+            local idx, name, istart, istop = line:match '%s+(%d+)%s+([%w_]+)%s+(%d+)%s+(%d+)'
+            -- make the range include the instruction just before istart, because that's
+            -- where it will often be initialized
+            if istart then -- will fail for internal locals like (for index)
+                append(locs,{idx=tonumber(idx),name=name,istart=tonumber(istart)-1,istop=tonumber(istop)})
+            end
+        end
+        line = f:read()
+        upvals = {}
+        for i = 1,getnum(line) do
+            line = f:read()
+            local idx, name = line:match '%s+(%d+)%s+([%w_]+)'
+            append(upvals,{idx=tonumber(idx),name=name})
+        end
+        dumpt(locs,'locs')
+        dumpt(upvals,'upvals')
+        line = f:read() -- blank line between functions
+
+        -- our iterator over all lines!
+        for _,line in ipairs(lines) do
+            yield(line)
+        end
+        yield ''
+    end
+    f:close()
+    return nil
+end
+
+local function lwrapper (f)
+    local fun = coroutine.wrap(fun_grabber)
+    fun(f)
+
+    -- make a file-like object
+    local ff = {}
+    function ff:read () return fun() end
+    function ff:close () end
+
+    -- extended peak-ahead
+    function ff:get_return()
+        return return_line
+    end
+    return ff
+end
+
+local locals = {}
+
+-- find a local with a given slot valid for a particular line range.
+-- If we're at start, then match more promiscously!
+function locals.match(slot,ip,at_start)
+    if locs then
+        for _,loc in ipairs(locs) do
+            if loc.idx==slot
+            and (at_start or loc.istart < ip)
+            and ip <= loc.istop then
+                return loc
+            end
+        end
+    end
+end
+
+function locals.add_known (loc,name)
+    loc.known = true
+    loc.refname = name or loc.name
+    append(known_locals,loc)
+end
+
+local function find (t,value,field)
+    if t then
+        for _,loc in ipairs(t) do
+            if loc[field] == value then return loc end
+        end
+    end
+end
+
+function locals.match_known (name)
+    return find(known_locals,name,'name')
+end
+
+function locals.match_upvalue (slot)
+    return find(upvals,slot,'idx')
+end
+
+function locals.get_upvalue (data)
+    local upv = locals.match_upvalue(data.argb)
+    if upv and locals.match_known(upv.name) then
+        return upv
+    end
+end
+
+local rindex
+local refs,just_added,was_added,at_start_function = {}
+
+function locals.add_global_alias (slot,idx,name,glob) --do return end
+    if not at_start_function then return end
+    if glob then
+        local v = rindex(name)
+        if not v then return end
+        if type(v) ~= 'table' then return end
+    end
+    refs[slot] = name
+    just_added = true
+    was_added = true
+end
+
+function locals.process_global_aliases (data) --do return end
+    local this_idx = data.idx
+    if not this_idx then return end
+    if just_added then
+        just_added = false
+    elseif was_added then -- next instruction!
+        if data.opname ~= 'CALL' then
+            for slot, name in pairs(refs) do
+                local loc = locals.match(slot,this_idx)
+                if loc then
+                    locals.add_known(loc,name)
+                end
+            end
+        end
+        refs = {}
+        was_added = false
+        at_start_function = false
+    end
+end
+
+-- parsing dissembly output lines from luac
+local function parse(line)
+    local idx,linenum,opname,rest = line:match('^%s+(%d+)%s+%[(%d+)%]%s+(%w+)%s+(.+)')
+    local arga,argb,extra
+    if idx then
+        idx = tonumber(idx)
+        linenum = tonumber(linenum)
+        -- JMP has a different structure...
+        arga, argb, extra = rest:match '([-%d]+)%s+([-%d]+)%s*(.*)'
+        if arga then
+            arga = tonumber(arga)
+            argb = tonumber(argb)
+        end
+    end
+    local argc, const
+    if extra then
+        local extra2
+        argc, extra2 = extra:match('^([-%d]+)%s*(.*)')
+        if argc then argc = tonumber(argc); extra = extra2 end
+    end
+    if extra then
+        const = extra:match('^; (.+)')
+    end
+    return {idx=idx,linenum=linenum,opname=opname,arga=arga,argb=argb,argc=argc,const=const}
+end
+
+local function stripq (const)
+    return const and const:match('"(.-)"')
+end
+
+local function getname (const)
+    if lua52 then
+        local upv,name = const:match('(%S+)% (.+)')
+        name = stripq(name)
+        return name, upv ~= '_ENV'
+    else
+        return const
+    end
+end
+
+local GETGLOB = lua52 and 'GETTABUP' or 'GETGLOBAL'
+local SETGLOB = lua52 and 'SETTABUP' or 'SETGLOBAL'
+
+
+local function getglobals(fh)
+    local globals, requires, remarks = {},{},{}
+    local last
+
+    local function check_require ()
+        local data = parse(fh:read())
+        if data.opname == 'LOADK' then
+            local name = stripq(data.const)
+            data = parse(fh:read())
+            -- we track module require (LOADK value) and local alias (loc.name) if any
+            if data.opname == 'CALL' then
+                local loc = locals.match(data.arga,data.idx,true)
+                if loc then locals.add_known(loc) end
+                append(requires,{linenum=last.linenum,name=loc and loc.name,alias=loc,module=name})
+                last.called = true
+            end
+        end
+    end
+
+    local function set_module (linenum,name,strict)
+        remarks.uses_module = true
+        remarks.module_line = linenum
+        remarks.module_name = name
+        if strict then
+            remarks.strict = true
+        end
+    end
+
+    local function check_module ()
+        local data = parse(fh:read())
+        -- is this a 'strict' module or not? (Doesn't use package.seeall)
+        if data.opname == 'LOADK' or data.opname == 'VARARG' then
+            set_module(data.linenum,stripq(data.const),data.opname=='CALL')
+        end
+    end
+
+    local function global_ref (linenum,name,isset)
+        if dump then print('ref',linenum,name,isset) end
+        append(globals, {linenum=linenum,name=name,isset=isset})
+    end
+
+    -- was this upvalue a reference to a known local? (5.2)
+    local function global_upvalue_ref52 (data,name,setting)
+        local upv = locals.get_upvalue(data)
+        if upv and name then
+            global_ref(data.linenum,upv.name..'.'..name,false)
+        end
+    end
+
+
+    local main_function, module_loc = true
+    local line = fh:read()
+    at_start_function = true
+
+    -- if the main function returned a local, then we assume
+    -- that local is the module
+    if fh.get_return then
+        local data = parse(fh:get_return())
+        if data.argb == 2 then -- we _did_ actually return one value
+            local loc = locals.match(data.arga,data.idx)
+            if loc then
+                locals.add_known(loc)
+                remarks.simple_module = loc.name
+                module_loc = loc
+            end
+        end
+    end
+
+    while line do
+        local get_next = true
+        local data = parse(line)
+        local opname = data.opname
+        if opname == GETGLOB then
+            local name,upv = getname(data.const)
+            if name and not upv then -- global access
+                data.gname = name
+                last = data
+                global_ref(last.linenum,name,false)
+                if name == 'require' then -- collect requires for later loading
+                    check_require()
+                elseif name == 'module' then
+                    check_module()
+                else
+                    locals.add_global_alias (data.arga,data.idx,name,true)
+                end
+            elseif upv then
+                global_upvalue_ref52(data,name,false)
+            end
+         elseif opname == SETGLOB then
+            local name,upv = getname(data.const)
+            if name and not upv then -- global access
+                if name == '_LGLOB' then -- marker for 'no globals beyond this point!'
+                    set_module(data.linenum,nil,true)
+                else
+                    global_ref(data.linenum,name,true)
+                end
+            elseif upv then
+                global_upvalue_ref52(data,name,true)
+            end
+        elseif opname == 'NEWTABLE' then
+            -- range of module local must include the table ctor
+            if main_function and module_loc and data.arga == module_loc.idx then
+                module_loc.istart = data.idx
+                module_loc = nil
+            end
+        elseif opname == 'GETTABLE' or opname == 'SETTABLE' then
+            local setting = data.opname=='SETTABLE'
+            local reg = setting and 'arga' or 'argb'
+            -- looking up in a previous global or upvalue table
+            if last and data.const and last.gname and not last.called
+            and data.linenum==last.linenum --(data.idx-last.idx <= 2)
+            and last.arga == data[reg] then
+                local name = stripq(data.const)
+                if name then
+                    data.gname = last.gname .. '.' .. name
+                    global_ref(last.linenum,data.gname,setting)
+                    if not setting then
+                        locals.add_global_alias (data.argb,data.idx,data.gname)
+                    end
+                    last = nil
+                end
+            else -- refering to a known require alias local directly
+                local loc = locals.match(data[reg],data.idx)
+                -- we want to put out 'global' references for known local module access.
+                if loc and data.const and loc.known then
+                    local name = stripq(data.const)
+                    if name then
+                        data.gname = loc.refname .. '.' .. name
+                        global_ref(data.linenum,data.gname,setting)
+                    end
+                end
+            end
+        elseif opname == 'CLOSURE' and not lua52 then
+            -- a compound instruction in 5.1! In particular, ignore any GETUPVAL
+            -- instructions following it...not foolproof, but we don't track
+            -- the exceptions anyway...
+            repeat
+                line = fh:read()
+                data = parse(line)
+                opname = data.opname
+            until opname ~= 'MOVE' and opname ~= 'GETUPVAL'
+            get_next = false
+        elseif opname == 'GETUPVAL' then
+            -- was this upvalue a reference to a known local? (5.1)
+            local upv = locals.get_upvalue(data)
+            if upv then
+                data.gname = upv.name
+                last = data -- will be followed by GETTABLE...
+            end
+        elseif opname == 'SETUPVAL' and lua52 then
+            -- detecting Lua 5.2 _ENV module setting --
+            local upv = locals.match_upvalue(data.argb)
+            if upv and upv.name == '_ENV' then
+                set_module(data.linenum,nil,true)
+            end
+        elseif opname == 'CALL' then
+            if last then last.called = true end
+        elseif next(data) == nil then -- end of function disassembly --
+            last = nil
+            main_function = false
+            at_start_function = true
+        end
+        locals.process_global_aliases(data)
+        if get_next then
+            line = fh:read()
+        end
+    end
+    return globals, requires, remarks
+end
+
+local whitelist = _G
+
+local function safe_index (t,sym)
+    local ok,val = pcall(function() return t[sym] end)
+    if not ok then val = nil end
+    return val
+end
+
+-- look up a possibly qualified name (like table.concat) in the whitelist
+-- If we fail, second return is true if we _did_ match the package.
+function rindex(name)
+    local t = whitelist
+    local top,last_t,ok = t
+    ok = safe_index(t,name)
+    if ok~=nil then return ok end
+    for part in name:gmatch('[%w_]+') do
+        last_t = t
+        t = safe_index(t,part)
+
+        if t == nil then return nil, last_t ~= top end
+    end
+    return t
+end
+
+local globals_within_module, load_requires
+local tolerant, extra_whitelist,require_whitelist = false, nil, nil
+local luac, xlocal, package
+local MODSCOPE = {}
+
+local function launch_luac (file)
+    local xflags = xlocal and ' -l ' or ''
+    local inf = io.popen(luac..' -p -l '..xflags..file)
+    local line = inf:read()
+    if not line then -- we hit an error
+        return
+    end
+    return inf
+end
+
+local function dump_bytecode (file, linenum, delta)
+    local inf = launch_luac (file)
+    if not inf then return end
+    local l1,l2 = linenum-delta,linenum+delta
+    for line in inf:lines() do
+        local instr = parse(line)
+        local lno = instr.linenum
+        if lno then
+            lno = tonumber(lno)
+            if lno >= l1 and lno <= l2 then
+                print(line)
+            end
+        end
+    end
+    inf:close()
+end
+
+local function process_file (file)
+    local inf = launch_luac (file)
+    if not inf then return end
+    if xlocal then
+        inf = lwrapper(inf)
+    end
+    local globals, requires, remarks = getglobals(inf)
+    inf:close()
+    return globals, requires, remarks
+end
+
+local function dump_globals (file,show_defs)
+    local globals,requires,remarks = process_file(file)
+    if not globals then return end
+    local refs = {}
+    for _,v in ipairs(globals) do
+        local name = v.name
+        if not refs[name] then refs[name] = {} end
+        append(refs[name],v.linenum)
+    end
+    if not show_defs then -- just do a cross-reference dump for globals
+        for name, ref in pairs(refs) do
+            io.write(name,'\t')
+            for _,lno in ipairs(ref) do io.write(lno,' ') end
+            io.write '\n'
+        end
+    else -- separate globals into functions and tables
+        local funs,tabs = {},{}
+        local known = {require = true}
+        if remarks.uses_module then
+            known.module = true
+        end
+        for name in pairs(refs) do
+            local ref = whitelist[name]
+            if ref and not known[name] then
+                if type(ref) == 'function' then append(funs, name)
+                else append(tabs, name)
+                end
+            end
+        end
+        if #funs > 0 then
+            local list = table.concat(funs,',')
+            io.write('local ',list,' = ',list,'\n')
+        end
+        if #tabs > 0 then
+            local list = table.concat(tabs,',')
+            io.write('local ',list,' = ',list,'\n')
+        end
+    end
+end
+
+local function splitname (name)
+    return name:match '^([^.]+)%.([^%.]+)$'
+end
+
+local function module_name (file)
+    local basename = file:match '[^\\/]+$' -- filename bit
+    return splitname(basename) -- strip extension
+end
+
+local last_pkg
+
+local function dump_module (name,entries,req)
+    local this_pkg, pkg
+    if not name:match '%.'  then
+        this_pkg = package
+    else
+        this_pkg,name = splitname(name)
+    end
+    if req then
+        pkg = this_pkg
+    else
+        pkg = package
+        if this_pkg and this_pkg ~= last_pkg then
+            io.write(pkg,' = {}\n')
+            last_pkg = this_pkg
+        end
+    end
+    local pack = pkg and pkg..'.' or ''
+    io.write(pack,name,' = {','\n')
+    for k,v in pairs(entries) do
+        local _,name = splitname(v.name)
+        name = name or v.name
+        io.write('\t',name,' = ',v.linenum,',\n')
+    end
+    io.write '}\n'
+    return true
+end
+
+local function quote (v)
+    return '"'..v..'"'
+end
+
+local function print_error (file,item,...)
+    stderr:write('lglob: ',file,':',item.linenum,': ',...)
+end
+
+local global_accesses
+
+local function check_globals (file, args)
+    local ok, escaped_globals = true, {}
+    local globals, requires, remarks = process_file(file)
+    if not globals then return end -- failed, dammit!
+
+    local old_globals_within_module = globals_within_module
+    local old_whitelist,backed_up = whitelist
+    local module_whitelist = {}
+
+    local function backup_whitelist ()
+        if not backed_up then
+            whitelist = copy(whitelist,{})
+            backed_up = true
+        end
+    end
+
+    local function add_inner_globals (wlist,refs)
+        for _,v in ipairs(globals) do if v.isset then
+            wlist[v.name] = refs and v or MODSCOPE
+        end end
+    end
+
+    if load_requires then -- any globals from require(mod) are ok
+        for _,item in ipairs(requires) do
+            if dump then print('requiring',item.module) end
+            local ok,mod,names,injected
+            if require_whitelist then -- resolve module in this table
+                local pkg,name = splitname(item.module)
+                local base = require_whitelist
+                if pkg then base = base[pkg] else name = item.module end
+                mod = base[name]
+                ok = mod ~= nil
+            else -- actual direct loading of module!
+                local oldG,newG = copy(_G,{})
+                ok,mod = pcall(require,item.module)
+                if ok then
+                    injected = diff(oldG,_G)
+                    names = keys(injected)
+                    if #names == 0 then -- halleluja, good module!
+                        injected = nil
+                    elseif not (#names==1 and injected[names[1]]==mod) then
+                        table.sort(names)
+                        print_error(file,item,'warning: require "',item.module,'" added these globals: ',
+                            table.concat(names,','),'\n')
+                        for _,n in ipairs(names) do
+                            append(escaped_globals, n)
+                        end
+                    else
+                        injected = nil
+                    end
+                end
+            end
+            if not ok then
+                print_error(file,item, 'warning: could not require ',quote(item.module),'\n')
+            elseif item.alias then -- set to a local; make it available
+                backup_whitelist()
+                whitelist[item.name] = mod
+                module_whitelist[item.name] = mod
+            end
+            if args.rd then
+                local m = {}
+                for k,v in pairs(mod) do
+                    append(m,{name=k,linenum=quote(type(v))})
+                end
+                dump_module(item.module,m,true)
+            end
+        end
+        if args.rd then
+            return
+        end
+    end
+
+    if remarks.simple_module then -- module not using module() or _ENV
+        if dump then print('simple module:',remarks.simple_module) end
+        local modname,modt,entries = remarks.simple_module,{},{}
+        -- module goes into whitelist as a table containing all module exports
+        backup_whitelist()
+        whitelist[modname] = modt
+
+        for _,v in ipairs(globals) do if v.isset then
+            local name = v.name
+            local mod,entry = splitname(name)
+            if mod == modname then
+                modt[entry] = MODSCOPE
+                entries[entry] = v
+            end
+        end end
+        if args.d then
+            return dump_module(module_name(file),entries)
+        end
+    end
+
+    local delayed_whitelist_clear
+    if not tolerant and remarks.uses_module then
+        if not args.d then
+            if remarks.strict then -- just module(...) !
+                delayed_whitelist_clear = remarks.module_line
+            else -- module(package.seeall)
+                globals_within_module = true
+            end
+        else
+            local entries = {}
+            local name = remarks.module_name or module_name(file)
+            add_inner_globals(entries,true)
+            return dump_module(name,entries)
+        end
+    end
+
+    if globals_within_module then -- any global declares in file are ok
+        backup_whitelist()
+        add_inner_globals(whitelist)
+        whitelist._M = module_whitelist
+    end
+
+    -- handles case where require() is leaking globals!
+    for _,a in ipairs(escaped_globals) do whitelist[a] = true end
+
+    table.sort(globals, function(a,b) return a.linenum < b.linenum end)
+
+    for i,v in ipairs(globals) do
+        -- with module(), environment changes after the call
+        if delayed_whitelist_clear and v.linenum > delayed_whitelist_clear then
+            backup_whitelist()
+            whitelist = module_whitelist
+            add_inner_globals(whitelist)
+            whitelist._M = module_whitelist
+            delayed_whitelist_clear = nil
+        end
+        local found, found_root = rindex(v.name)
+        if not (tolerant or found == MODSCOPE) and (found or found_root) and v.isset then
+            print_error(file,v,'redefining global ',v.name,'\n')
+            ok = false
+        elseif not found then
+            print_error(file,v,'undefined ',v.isset and 'set' or 'get',' ',v.name,'\n')
+            if args.dx then
+                global_accesses[v.name] = true
+            end
+            ok = false
+        end
+    end
+
+    globals_within_module = old_globals_within_module
+    whitelist = old_whitelist
+    return ok
+end
+
+local args = parse_args()
+
+if #args == 0 then quit 'must provide Lua files' end
+
+luac = args.luac or 'luac'
+dump = args.dump
+xlocal = true
+package = args.p
+
+local function load_whitelists (wwl)
+    local wlist = {}
+    for _,wl in ipairs(wwl) do
+        assertq(evalfile(wl,wlist))
+    end
+    return wlist
+end
+
+if args.wl then -- lglob will use these instead of explicitly calling require
+    if args.wl[1] == 'nil' then
+        require_whitelist = {}
+    else
+        require_whitelist = load_whitelists(args.wl)
+    end
+end
+
+if args.dx then
+    global_accesses = {}
+end
+
+if xlocal or args.wl then args.l = true end
+
+tolerant = args.t
+if tolerant then args.g = true; args.l = true end
+
+globals_within_module = args.g
+load_requires = args.l
+
+if args.wx then -- no default whitelist! (usually it's _G)
+    if args.wx[1] ~= 'nil' then args.w = args.wx end
+    whitelist = {}
+end
+
+if args.w then -- explicit lists of symbols which are considered OK
+    extra_whitelist = load_whitelists(args.w)
+end
+
+if exists('global.whitelist') then -- plus any from default location
+    extra_whitelist = extra_whitelist or {}
+    assertq(evalfile 'global.whitelist',extra_whitelist)
+end
+
+if extra_whitelist then copy(extra_whitelist,whitelist) end
+
+if args.b then -- remove blacklist entries from whitelist
+    local blacklist = load_whitelists(args.b)
+    for k in pairs(blacklist) do
+        whitelist[k] = nil
+    end
+end
+
+local ok = true
+for _,a in ipairs(args) do
+    local res = true
+    if #args > 1 and args.v then print('-- file '..a) end
+    if args.gl or args.gd then
+        dump_globals (a,args.gd)
+    elseif args.ld then
+        dump_bytecode (a,tonumber(args.ld),1)
+    else
+        res = check_globals (a, args)
+    end
+    ok = ok and res
+end
+
+if args.dx then
+    for k,v in pairs(global_accesses) do
+        print('_G["'..k..'"] = true')
+    end
+end
+
+os.exit(ok and 0 or 1)
