@@ -68,8 +68,9 @@ local function conj(c)
    return complex(real(c), -imag(c))
 end
 
--- 
-local function mod(a)
+-- complex absolute value, also known
+-- as modulus, magnitude, or norm.
+local function cabs(a)
    local ra, ia = real(a), imag(a)
    if ia == 0 then
       return ra
@@ -77,18 +78,19 @@ local function mod(a)
    return sqrt(ra*ra + ia*ia)
 end
 
--- arg is the angle between the positive real
+-- carg is the angle between the positive real
 -- axis to the line joining the point to the origin;
 -- also known as an argument of the point.
--- a.k.a phase
-local function arg(a)
-   a=complex(a)
-   return atan2(imag(a), real(a))
+-- a.k.a phase; If no errors occur, returns
+-- the phase angle of z in the interval [−π; π].
+local function carg(z)
+   z=complex(z)
+   return atan2(imag(z), real(z))
 end
 
 -- returns two values: r, theta; giving the polar coordinates of c.
 local function polar(c)
-   return mod(c), arg(c)
+   return cabs(c), carg(c)
 end
 
 -- convert from polar coordinates to a complex number
@@ -167,6 +169,10 @@ local __cxMT={
    
 }
 
+local function csqrt(c)
+   return complex(c)^0.5
+end
+
 -- can only be done once, so we'll detect and skip
 -- any 2nd import.
 if not __cxMT_already then
@@ -174,20 +180,103 @@ if not __cxMT_already then
    __cxMT_already = true
 end
 
+-- cmath library functions
+local cmath = {
+   conj=conj,
+   cabs=cabs,
+   carg=carg,
+   cexp=cexp,
+   clog=clog,
+   polar=polar,
+   rect=rect,
+   csqrt=csqrt
+}
+
+
+function cmath.sin(c)
+	local r,i=real(c),imag(c)
+	return complex(sin(r)*cosh(i),cos(r)*sinh(i))
+end
+function cmath.cos(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(r)*cosh(i),sin(r)*sinh(i))
+end
+function cmath.tan(c)
+	local r,i=2*real(c),2*imag(c)
+	local div=cos(r)+cosh(i)
+	return complex(sin(r)/div,sinh(i)/div)
+end
+
+function cmath.sinh(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(i)*sinh(r),sin(i)*cosh(r))
+end
+function cmath.cosh(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(i)*cosh(r),sin(i)*sinh(r))
+end
+function cmath.tanh(c)
+	local r,i=2*real(c),2*imag(c)
+	local div=cos(i)+cosh(r)
+	return complex(sinh(r)/div,sin(i)/div)
+end
+
+-- inverse trig functions
+
+local i=complex(0,1)
+
+function cmath.asin(c)
+   return i*clog(i*c+(1-c^2)^0.5)
+end
+function cmath.acos(c)
+	return pi/2+i*clog(i*c+(1-c^2)^0.5)
+end
+function cmath.atan(c)
+	local r2,i2=re(c),im(c)
+	local c3,c4=complex(1-i2,r2),complex(1+r2^2-i2^2,2*r2*i2)
+	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.abs(c4)^0.5))
+end
+function cmath.atan2(c2,c1)--y,x
+	local r1,i1,r2,i2=re(c1),im(c1),re(c2),im(c2)
+	if r1==0 and i1==0 and r2==0 and i2==0 then--Indeterminate
+		return 0
+	end
+	local c3,c4=complex(r1-i2,i1+r2),complex(r1^2-i1^2+r2^2-i2^2,2*(r1*i1+r2*i2))
+	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.abs(c4)^0.5))
+end
+
+function cmath.asinh(c)
+	return clog(c+(1+c^2)^0.5)
+end
+function cmath.acosh(c)
+	return 2*clog((c-1)^0.5+(c+1)^0.5)-log(2)
+end
+function cmath.atanh(c)
+	return (clog(1+c)-clog(1-c))/2
+end
+
+-- complex base logarithm. log(b, z) gives log_b(z),
+-- which is log(z)/log(b).
+function cmath.log(z,b)
+	local br, bi = real(b), imag(b)
+	local zr, zi = real(z), imag(z)
+        
+	local qr = log(br*br+bi*bi)/2
+        local qi = atan2(bi,br)
+	local sr = log(zr*zr+zi*zi)/2
+        local si = atan2(zi,zr)
+        
+	local denom=sr*sr+si*si
+	return complex((qr*sr+qi*si)/denom, (sr*qi-qr*si)/denom)
+end
+
+cmath.pow = __cxMT.__pow
+
+
 -- exports
 _G.complex=complex
 _G.complex128=complex128
 _G.complex64=complex64
 _G.real=real
 _G.imag=imag
-local cmplx = {
-   conj=conj,
-   mod=mod,
-   arg=arg,
-   theta=arg,
-   polar=polar,
-   rect=rect,
-   cexp=cexp,
-   clog=clog
-}
-_G.cmplx=cmplx
+_G.cmath=cmath
