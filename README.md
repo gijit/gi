@@ -9,23 +9,29 @@ ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
 "go interpreter".
 
-most recent status
-------------------
+quick install
+-------------
 
-2018 Feb 12 update
-------------------
-Release v0.9.12 works under both go1.9.4 and go1.9.3, but see the
-special installation instructions for go1.9.4 below.
-
-Actually we recommend avoiding go1.9.4. It is pretty broken/borked.
-Use go1.9.3 and wait for go1.9.5 before upgrading.
-
-The installation instructions are now slightly different, so
-that all actual building is done under make.
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi && make install
+$ gi
 ~~~
+
+
+
+most recent status
+------------------
+
+2018 Feb 14 update
+------------------
+`gijit` was successfully built on Windows10,
+and this same approach will probably work on
+earlier Windows versions.
+See https://github.com/gijit/gi/issues/18
+for my notes on getting mingw64 installed, and
+see the `windows` branch of this repo.
+
 
 overview
 -------
@@ -203,9 +209,21 @@ status
 
 2018 Feb 12 update
 ------------------
-v0.9.12 works under both go1.9.4 and go1.9.3. See the
-special installation instructions for go1.9.4 below.
-Actually we recommend avoiding go1.9.4, its pretty borked.
+Release v0.9.12 works under both go1.9.4 and go1.9.3, but see the
+new/revised installation instructions.
+
+Actually we recommend avoiding go1.9.4. It is
+pretty broken/borked.
+Use go1.9.3 and wait for
+go1.9.5 before upgrading.
+
+The installation instructions are now slightly different, so
+that all actual building is done under make, where we
+can set the required environment variables.
+~~~
+$ go get -d github.com/gijit/gi/cmd/gi
+$ cd $GOPATH/src/github.com/gijit/gi && make install
+~~~
 
 2018 Feb 09 update
 ------------------
