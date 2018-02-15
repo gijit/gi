@@ -14,7 +14,10 @@ quick install
 
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
-$ cd $GOPATH/src/github.com/gijit/gi && make install
+$ cd $GOPATH/src/github.com/gijit/gi
+$ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
+$ (On windows: run `windows.bat` to build libluajit.a)
+$ make install
 $ gi
 ~~~
 
