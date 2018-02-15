@@ -38,7 +38,7 @@ LuaJIT can be as fast as C. LuaJIT is typically faster
 than Julia 0.4.1.
 
 ![LuaJIT benchmarked against C and Julia 0.4.1](http://scilua.org/images/results_norm.png "LuaJIT benchmarks")
-
+> from http://scilua.org/images/results_norm.png
 
 overview
 -------
