@@ -9,6 +9,12 @@ ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
 "go interpreter".
 
+# a glimpse into the future
+LuaJIT benchmarked against C and Julia 0.4.1.
+![LuaJIT benchmarked against C and Julia 0.4.1](http://scilua.org/images/results_norm.png "LuaJIT benchmarks")
+> Graphs are from http://scilua.org/images/results_norm.png ; on the front page of http://scilua.org
+
+
 quick install
 -------------
 
@@ -16,7 +22,7 @@ quick install
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi
 $ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
-$ (On windows: run `windows.bat` to build libluajit.a)
+$ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18 for notes on installing both mingw64 and make, which are pre-requisites.)
 $ make install
 $ gi
 ~~~
@@ -93,9 +99,6 @@ operations. The docs are http://scilua.org/.
 Also from sci-lua, some benchmarks showing
 LuaJIT can be as fast as C. LuaJIT is typically faster
 than Julia 0.4.1.
-
-![LuaJIT benchmarked against C and Julia 0.4.1](http://scilua.org/images/results_norm.png "LuaJIT benchmarks")
-> Graphs are from http://scilua.org/images/results_norm.png ; on the front page of http://scilua.org
 
 overview
 -------
