@@ -80,6 +80,15 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 Needs go1.9 or later. Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the `windows` branch and the notes in https://github.com/gijit/gi/issues/18
 
+~~~
+$ go get -d github.com/gijit/gi/cmd/gi
+$ cd $GOPATH/src/github.com/gijit/gi
+$ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
+$ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18 for notes on installing both mingw64 and make, which are pre-requisites.)
+$ make install
+$ gi
+~~~
+
 
 most recent status
 ------------------
