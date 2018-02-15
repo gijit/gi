@@ -109,7 +109,7 @@ end
 -- with polar coordinate components (r, θ) equals
 -- ln r + i(θ+2nπ), with the principal value ln r + iθ.
 -- 
-local function clog(a) -- 
+local function clog(a)
    local ra, ia = real(a), imag(a)   
    return complex(log(ra*ra + ia*ia)/2, atan2(ia,ra))
 end
@@ -255,19 +255,22 @@ function cmath.atanh(c)
 	return (clog(1+c)-clog(1-c))/2
 end
 
--- complex base logarithm. log(b, z) gives log_b(z),
--- which is log(z)/log(b).
-function cmath.log(z,b)
+-- complex base logarithm. log(b,z) gives log_b(z),
+-- which is clog(z)/clog(b), with base b.
+--
+function cmath.log(b, z)
+   
 	local br, bi = real(b), imag(b)
 	local zr, zi = real(z), imag(z)
         
 	local qr = log(br*br+bi*bi)/2
         local qi = atan2(bi,br)
+        
 	local sr = log(zr*zr+zi*zi)/2
         local si = atan2(zi,zr)
         
-	local denom=sr*sr+si*si
-	return complex((qr*sr+qi*si)/denom, (sr*qi-qr*si)/denom)
+	local denom=qr*qr+qi*qi
+	return complex((sr*qr+si*qi)/denom, (qr*si-sr*qi)/denom)
 end
 
 cmath.pow = __cxMT.__pow
