@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -180,6 +181,12 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 			shortFn[i] = path.Base(fn)
 		}
 		fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
+	}
+	// windows needs the \ turned into \\ in order to work
+	if runtime.GOOS == "windows" {
+		for i := range files {
+			files[i] = strings.Replace(files[i], `\`, `\\`, -1)
+		}
 	}
 	return files, nil
 }
