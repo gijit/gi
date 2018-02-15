@@ -4,7 +4,7 @@ all:
 	make install
 
 onetime: gitversion
-	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make && make libluajit.a
+	cd ../../vendor/github.com/LuaJIT/LuaJIT && make clean && make && cd src && make libluajit.a
 
 # This how we want to name the binary output
 BINARY=gi
