@@ -3,7 +3,8 @@ package lua
 /*
 #cgo CFLAGS: -I ${SRCDIR}/../../../LuaJIT/LuaJIT/src
 #cgo LDFLAGS: -lm
-#cgo (linux OR darwin) LDFLAGS: -ldl
+#cgo linux LDFLAGS: -ldl
+#cgo darwin LDFLAGS: -ldl
 
 #include <lua.h>
 #include <lualib.h>
