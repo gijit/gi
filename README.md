@@ -19,7 +19,6 @@ $ gi
 ~~~
 
 
-
 most recent status
 ------------------
 
@@ -31,6 +30,14 @@ earlier Windows versions.
 See https://github.com/gijit/gi/issues/18
 for my notes on getting mingw64 installed, and
 see the `windows` branch of this repo.
+
+OpenBLAS and sci-lua are vendored for matrix
+operations. The docs are http://scilua.org/.
+Also from sci-lua, some benchmarks showing
+LuaJIT can be as fast as C. LuaJIT is typically faster
+than Julia 0.4.1.
+
+![LuaJIT benchmarked against C and Julia 0.4.1](http://scilua.org/images/results_norm.png "LuaJIT benchmarks")
 
 
 overview
