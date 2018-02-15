@@ -18,6 +18,59 @@ $ cd $GOPATH/src/github.com/gijit/gi && make install
 $ gi
 ~~~
 
+# the dream
+
+Go, if it only had a decent REPL, could be a great
+language for exploratory data analysis.
+
+# the rationale
+
+Go has big advantages over python, R, and Matlab.
+It has good type checking, reasonable compiled performance,
+and excellent multicore support.
+
+
+# the aim
+
+We want to provide one excellent integrated REPL for Go.
+Exploratory data analysis should not be hampered
+by weak type-checking or hard-to-refactor code,
+and performance should not suffer just because
+you require interaction with your data.
+
+
+# of course we need a backend to develop against
+
+Considering possible backends,
+I compared node.js, chez scheme, otto,
+gopher-lua, and LuaJIT.
+
+# LuaJIT did what?  Will Golang run on GPU?
+
+LuaJIT in particular is an amazing
+backend to target. In our quick and
+dirty 500x500 random matrix multiplication
+benchmark, LuaJIT *beat even statically compiled go*
+code by a factor of 3x. Go's time was 360 msec.
+LuaJIT's time was 135 msec. Julia uses an optimized
+BLAS library for this task and beats both Go
+and LuaJIT by multiplying in 6 msec, but
+is too immature and too large to be
+a viable target.
+
+Bonus: LuaJIT has Torch7 for machine learning.
+And, Torch7 has GPU support. [1][2]
+
+[1] https://github.com/torch/cutorch
+
+[2] https://github.com/torch/torch7/wiki/Cheatsheet#gpu-support
+
+Will golang (Go) run on GPUs?  It might be possible!
+
+# installation
+
+Needs go1.9 or later. Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the `windows` branch and the notes in https://github.com/gijit/gi/issues/18
+
 
 most recent status
 ------------------
@@ -27,6 +80,7 @@ most recent status
 `gijit` was successfully built on Windows10,
 and this same approach will probably work on
 earlier Windows versions.
+
 See https://github.com/gijit/gi/issues/18
 for my notes on getting mingw64 installed, and
 see the `windows` branch of this repo.
@@ -962,57 +1016,6 @@ front end provided by (Gopherjs)[https://github.com/gopherjs/gopherjs], and the 
 backend provided by (LuaJIT)[http://luajit.org/], progress has been
 quite rapid.
 
-# the dream
-
-Go, if it only had a decent REPL, could be a great
-language for exploratory data analysis.
-
-# the rationale
-Go has big advantages over python, R, and Matlab.
-It has good type checking, reasonable compiled performance,
-and excellent multicore support.
-
-
-# the aim
-
-We want to provide one excellent integrated REPL for Go.
-Exploratory data analysis should not be hampered
-by weak type-checking or hard-to-refactor code,
-and performance should not suffer just because
-you require interaction with your data.
-
-
-# of course we need a backend to develop against
-
-Considering possible backends,
-I compared node.js, chez scheme, otto,
-gopher-lua, and LuaJIT.
-
-# LuaJIT did what?  Will Golang run on GPU?
-
-LuaJIT in particular is an amazing
-backend to target. In our quick and
-dirty 500x500 random matrix multiplication
-benchmark, LuaJIT *beat even statically compiled go*
-code by a factor of 3x. Go's time was 360 msec.
-LuaJIT's time was 135 msec. Julia uses an optimized
-BLAS library for this task and beats both Go
-and LuaJIT by multiplying in 6 msec, but
-is too immature and too large to be
-a viable target.
-
-Bonus: LuaJIT has Torch7 for machine learning.
-And, Torch7 has GPU support. [1][2]
-
-[1] https://github.com/torch/cutorch
-
-[2] https://github.com/torch/torch7/wiki/Cheatsheet#gpu-support
-
-Will golang (Go) run on GPUs?  It might be possible!
-
-# installation
-
-Needs go1.9 or later. Works on Mac OSX and Linux. On windows: theoretically it should work on windows, I have not worked out what flags are needed. One will need to install a C compiler on windows and work out the right compiler flags to make CGO build and link LuaJIT into the Go `gi` binary.
 
 # special note on installing under the borked go1.9.4:
 
