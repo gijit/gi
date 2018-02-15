@@ -27,13 +27,10 @@ SRCS=$(wildcard *.go)
 OBJS=$(SRCS:.go=.o)
 
 
-build:
-	CGO_LDFLAGS_ALLOW='.*\.a$$' go install ${LDFLAGS_gi}; go build ${LDFLAGS_gi}
-
-
 install:
-	make build
-	cp -p gi ${GOPATH}/bin/
+	CGO_LDFLAGS_ALLOW='.*\.a$$' go install ${LDFLAGS_gi}
+	CGO_LDFLAGS_ALLOW='.*\.a$$' go build ${LDFLAGS_gi}
+
 
 # Cleans our project: deletes binaries
 clean:
