@@ -552,24 +552,15 @@ barley.food =2
 Hound = ___newType(0, ___kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, ...) 
                         this.___val = this;
                         local Name_, Id_, Mate_, Litter_, PtrLit_, food_, ate_ = ...
-                        local args = {...}
-		if #args == 0  then
-			this.Name = "";
-			this.Id = 0;
-			this.Mate = ptrType.___nil;
-			this.Litter = sliceType.___nil;
-			this.PtrLit = ptrType___1.___nil;
-			this.food = 0;
-			this.ate = false;
+                        
+			this.Name = Name_ or "";
+			this.Id = Id_ or 0;
+			this.Mate = Mate_ or ptrType.___nil;
+			this.Litter = Litter_ or sliceType.___nil;
+			this.PtrLit = PtrLit_ or ptrType___1.___nil;
+			this.food = food_ or 0;
+			this.ate = ate_ or false;
 			return;
-		end
-		this.Name = Name_ or "";
-		this.Id = Id_ or 0LL;
-		this.Mate = Mate_ or ptrType.___nil;
-		this.Litter = Litter_;
-		this.PtrLit = PtrLit_;
-		this.food = food_ or 0LL;
-		this.ate = ate_ or false;
 end);
 
 Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "Name", name= "Name", anonymous= false, exported= true, typ= ___String, tag= ""}, {prop= "Id", name= "Id", anonymous= false, exported= true, typ= ___Int, tag= ""}, {prop= "Mate", name= "Mate", anonymous= false, exported= true, typ= ptrType, tag= ""}, {prop= "Litter", name= "Litter", anonymous= false, exported= true, typ= sliceType, tag= ""}, {prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, typ= ptrType___1, tag= ""}, {prop= "food", name= "food", anonymous= false, exported= false, typ= ___Int, tag= ""}, {prop= "ate", name= "ate", anonymous= false, exported= false, typ= ___Bool, tag= ""}});

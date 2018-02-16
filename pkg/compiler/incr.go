@@ -760,9 +760,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					//constructor = fmt.Sprintf("function(self) %s\n\t\t self.__gi_val=self; return self; end", diag)
 					constructor = fmt.Sprintf("function(self) %s\n\t\t return self; end", diag)
 				} else {
-					constructor = fmt.Sprintf("function(self, ...) %s\n\t\t if self == nil then self = {}; end\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
-					//constructor = fmt.Sprintf("function(self, ...) %s\n\t\t self.__gi_val=self;\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
+					constructor = fmt.Sprintf("function(self, ...) %s\n\t\t if self == nil then self = {}; end\n", diag)
+					//constructor = fmt.Sprintf("function(self, ...) %s\n\t\t if self == nil then self = {}; end\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
 
+					constructor += fmt.Sprintf("\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
 					for i := 0; i < t.NumFields(); i++ {
 
 						// the translateExpr call here is what
@@ -770,13 +771,12 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 						// generates the deferred 'anon_ptrType' and sibling type
 						// variables for any pointers in the members.
 						//
-						constructor += fmt.Sprintf("\t\t\t self.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+						constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_ or %[2]s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 					}
-					constructor += fmt.Sprintf("\t\t else \n\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
-					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
-					}
-					constructor += "\t\t end\n\t\t return self; \n\t end "
+					//for i := 0; i < t.NumFields(); i++ {
+					//	constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
+					//}
+					constructor += "\t\t return self; \n\t end;\n"
 				}
 				set_constructor = fmt.Sprintf("\n\t __type__%s.__constructor = %s;\n", typeName, constructor)
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
