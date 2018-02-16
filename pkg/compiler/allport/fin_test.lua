@@ -634,7 +634,10 @@ Hound.ptr.methodSet.Eat = function(this, a)
 -- end joy/jake puppies
 
                 -- notice that structs have the __get, __set functions, and the __val table.
-                -- what are these/do they work?/ should they live in the struct on on a related table?
+        -- what are these/do they work?/ should they live in the struct on on a related table?
+        -- they are related to pointer read/writes, and conversions;
+        -- StarExpr invokes __get, 
+        
 --[[
 this-on-Hound.ptr: ============================ table: 0x000a8720
 this-on-Hound.ptr:  1 key: 'ate' val: 'false'

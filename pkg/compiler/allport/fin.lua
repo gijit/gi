@@ -5,7 +5,7 @@ dofile '../math.lua' -- for __max, __min, __truncateToInt
 
 dofile '../int64.lua'
 __ffi = require("ffi")
-__bit =require("bit")
+__bit = require("bit")
 
 __global ={};
 __module ={};
@@ -58,6 +58,7 @@ end;
 
 __Infinity = math.huge
 
+-- returned by __basicValue2kind(v) on unrecognized kind.
 __kindUnknown = -1;
 
 __kindBool = 1;
@@ -1733,7 +1734,8 @@ __getStackDepth = function()
   return __stackDepthOffset + #err.stack.split("\n");
 end;
 
--- check/start at 0 if is present.
+-- possible replacement for ipairs.
+-- starts at a[0] if it is present.
 function zipairs(a)
    local n = 0
    local s = #a
