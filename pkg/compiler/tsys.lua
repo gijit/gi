@@ -15,27 +15,24 @@ if int8 == nil then
    dofile 'int64.lua' -- for integer types with Go naming.
 end
 
--- NB tsys.lua/fin.lua/fin_test.lua are using ___ triple underscores, to
--- avoid collision while integrating with struct.lua.
-
 -- translation of javascript builtin 'prototype' -> typ.methodSet
---                                   'constructor' -> typ.___constructor
+--                                   'constructor' -> typ.__constructor
 
-___ffi = require("ffi")
-___bit = require("bit")
+__ffi = require("ffi")
+__bit = require("bit")
 
-___global ={};
-___module ={};
-___packages = {}
-___idCounter = 0;
+__global ={};
+__module ={};
+__packages = {}
+__idCounter = 0;
 
-function ___ipairsZeroCheck(arr)
+function __ipairsZeroCheck(arr)
    if arr[0] ~= nil then error("ipairs will miss the [0] index of this array") end
 end
 
-___mod = function(y) return x % y; end;
-___parseInt = parseInt;
-___parseFloat = function(f)
+__mod = function(y) return x % y; end;
+__parseInt = parseInt;
+__parseFloat = function(f)
   if f ~= nil  and  f ~= nil  and  f.constructor == Number then
     return f;
   end
@@ -43,83 +40,83 @@ ___parseFloat = function(f)
 end;
 
 --[[
- ___froundBuf = Float32Array(1);
-___fround = Math.fround  or  function(f)
-  ___froundBuf[0] = f;
-  return ___froundBuf[0];
+ __froundBuf = Float32Array(1);
+__fround = Math.fround  or  function(f)
+  __froundBuf[0] = f;
+  return __froundBuf[0];
 end;
 --]]
 
 --[[
-___imul = Math.imul  or  function(b)
-   local ah = ___bit.band(___bit.rshift(a, 16), 0xffff);
-   local al = ___bit.band(a, 0xffff);
-   local bh = ___bit.band(___bit.rshift(b, 16), 0xffff);
-   local bl = ___bit.band(b, 0xffff);
-   return ((al * bl) + ___bit.arshift((___bit.rshift(___bit.lshift(ah * bl + al * bh), 16), 0), 0);
+__imul = Math.imul  or  function(b)
+   local ah = __bit.band(__bit.rshift(a, 16), 0xffff);
+   local al = __bit.band(a, 0xffff);
+   local bh = __bit.band(__bit.rshift(b, 16), 0xffff);
+   local bl = __bit.band(b, 0xffff);
+   return ((al * bl) + __bit.arshift((__bit.rshift(__bit.lshift(ah * bl + al * bh), 16), 0), 0);
 end;
 --]]
 
-___floatKey = function(f)
+__floatKey = function(f)
   if f ~= f then
-     ___idCounter=___idCounter+1;
-    return "NaN___" .. tostring(___idCounter);
+     __idCounter=__idCounter+1;
+    return "NaN__" .. tostring(__idCounter);
   end
   return tostring(f);
 end;
 
-___flatten64 = function(x)
-  return x.___high * 4294967296 + x.___low;
+__flatten64 = function(x)
+  return x.__high * 4294967296 + x.__low;
 end;
 
 
-___Infinity = math.huge
+__Infinity = math.huge
 
--- returned by ___basicValue2kind(v) on unrecognized kind.
-___kindUnknown = -1;
+-- returned by __basicValue2kind(v) on unrecognized kind.
+__kindUnknown = -1;
 
-___kindBool = 1;
-___kindInt = 2;
-___kindInt8 = 3;
-___kindInt16 = 4;
-___kindInt32 = 5;
-___kindInt64 = 6;
-___kindUint = 7;
-___kindUint8 = 8;
-___kindUint16 = 9;
-___kindUint32 = 10;
-___kindUint64 = 11;
-___kindUintptr = 12;
-___kindFloat32 = 13;
-___kindFloat64 = 14;
-___kindComplex64 = 15;
-___kindComplex128 = 16;
-___kindArray = 17;
-___kindChan = 18;
-___kindFunc = 19;
-___kindInterface = 20;
-___kindMap = 21;
-___kindPtr = 22;
-___kindSlice = 23;
-___kindString = 24;
-___kindStruct = 25;
-___kindUnsafePointer = 26;
+__kindBool = 1;
+__kindInt = 2;
+__kindInt8 = 3;
+__kindInt16 = 4;
+__kindInt32 = 5;
+__kindInt64 = 6;
+__kindUint = 7;
+__kindUint8 = 8;
+__kindUint16 = 9;
+__kindUint32 = 10;
+__kindUint64 = 11;
+__kindUintptr = 12;
+__kindFloat32 = 13;
+__kindFloat64 = 14;
+__kindComplex64 = 15;
+__kindComplex128 = 16;
+__kindArray = 17;
+__kindChan = 18;
+__kindFunc = 19;
+__kindInterface = 20;
+__kindMap = 21;
+__kindPtr = 22;
+__kindSlice = 23;
+__kindString = 24;
+__kindStruct = 25;
+__kindUnsafePointer = 26;
 
 -- jea: sanity check my assumption by comparing
 -- length with #a
-function ___assertIsArray(a)
+function __assertIsArray(a)
    local n = 0
    for k,v in pairs(a) do
       n=n+1
    end
    if #a ~= n then
-      error("not an array, ___assertIsArray failed")
+      error("not an array, __assertIsArray failed")
    end
 end
 
 
 -- length of array, counting [0] if present.
-function ___lenz(array)      
+function __lenz(array)      
    local n = #array
    if array[0] ~= nil then
       n=n+1
@@ -202,7 +199,7 @@ end
 -- between each one. It arr is empty then we
 -- return the empty string. arr can start at
 -- [0] or [1].
-function ___mapAndJoinStrings(splice, arr, fun)
+function __mapAndJoinStrings(splice, arr, fun)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
@@ -218,7 +215,7 @@ function ___mapAndJoinStrings(splice, arr, fun)
 end
 
 -- return sorted keys from table m
-___keys = function(m)
+__keys = function(m)
    if type(m) ~= "table" then
       return {}
    end
@@ -235,22 +232,22 @@ ___keys = function(m)
 end
 
 --
-___flushConsole = function() end;
-___throwRuntimeError = function(...) error(...) end
-___throwNilPointerError = function()  ___throwRuntimeError("invalid memory address or nil pointer dereference"); end;
-___call = function(fn, rcvr, args)  return fn(rcvr, args); end;
-___makeFunc = function(fn)
+__flushConsole = function() end;
+__throwRuntimeError = function(...) error(...) end
+__throwNilPointerError = function()  __throwRuntimeError("invalid memory address or nil pointer dereference"); end;
+__call = function(fn, rcvr, args)  return fn(rcvr, args); end;
+__makeFunc = function(fn)
    return function()
       -- TODO: port this!
-      print("jea TODO: port this, what is ___externalize doing???")
+      print("jea TODO: port this, what is __externalize doing???")
       error("NOT DONE: port this!")
-      --return ___externalize(fn(this, (__sliceType({},___jsObjectPtr))(___global.Array.prototype.slice.call(arguments, {}))), ___emptyInterface);
+      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
    end;
 end;
-___unused = function(v) end;
+__unused = function(v) end;
 
 --
-___mapArray = function(arr, f)
+__mapArray = function(arr, f)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
@@ -259,29 +256,29 @@ ___mapArray = function(arr, f)
       bump = 1
       newarr[1] = fun(zval)
    end
-   ___ipairsZeroCheck(arr)
+   __ipairsZeroCheck(arr)
    for i,v in ipairs(arr) do
       newarr[i+bump] = fun(v)
    end
    return newarr
 end;
 
-___methodVal = function(recv, name) 
-  local vals = recv.___methodVals  or  {};
-  recv.___methodVals = vals; -- /* noop for primitives */
+__methodVal = function(recv, name) 
+  local vals = recv.__methodVals  or  {};
+  recv.__methodVals = vals; -- /* noop for primitives */
   local f = vals[name];
   if f ~= nil then
     return f;
   end
   local method = recv[name];
   f = function() 
-     ___stackDepthOffset = ___stackDepthOffset-1;
+     __stackDepthOffset = __stackDepthOffset-1;
      -- try
      local res = {pcall(function()
            return recv[method](arguments);
      end)}
         -- finally
-     ___stackDepthOffset=___stackDepthOffset+1;
+     __stackDepthOffset=__stackDepthOffset+1;
      -- no catch, so either re-throw or return results
      local ok, err = unpack(res)
      if not ok then
@@ -295,11 +292,11 @@ ___methodVal = function(recv, name)
   return f;
 end;
 
-___methodExpr = function(typ, name) 
+__methodExpr = function(typ, name) 
    local method = typ.methodSet[name];
-   if method.___expr == nil then
-      method.___expr = function() 
-         ___stackDepthOffset=___stackDepthOffset-1;
+   if method.__expr == nil then
+      method.__expr = function() 
+         __stackDepthOffset=__stackDepthOffset-1;
 
          -- try
          local res ={pcall(
@@ -311,7 +308,7 @@ ___methodExpr = function(typ, name)
          end)}
          local ok, threw = unpack(res)
          -- finally
-         ___stackDepthOffset=___stackDepthOffset+1;
+         __stackDepthOffset=__stackDepthOffset+1;
          -- no catch, so rethrow any exception
          if not ok then
             error(threw)
@@ -319,22 +316,22 @@ ___methodExpr = function(typ, name)
          return table.remove(res, 1)
       end;
    end
-   return method.___expr;
+   return method.__expr;
 end;
 
-___ifaceMethodExprs = {};
-___ifaceMethodExpr = function(name) 
-  local expr = ___ifaceMethodExprs["_"  ..  name];
+__ifaceMethodExprs = {};
+__ifaceMethodExpr = function(name) 
+  local expr = __ifaceMethodExprs["_"  ..  name];
   if expr == nil then
      expr = function()
-        ___stackDepthOffset = ___stackDepthOffset-1;
+        __stackDepthOffset = __stackDepthOffset-1;
         -- try
         local res = {pcall(
                         function()
                            return Function.call.apply(arguments[0][name], arguments);
         end)}
         -- finally
-        ___stackDepthOffset = ___stackDepthOffset+1;
+        __stackDepthOffset = __stackDepthOffset+1;
         -- no catch
         local ok, threw = unpack(res)
         if not ok then
@@ -344,48 +341,48 @@ ___ifaceMethodExpr = function(name)
            return table.remove(res, 1)
         end   
      end;
-     ___ifaceMethodExprs["_"  ..  name] = expr
+     __ifaceMethodExprs["_"  ..  name] = expr
   end
   return expr;
 end;
 
 --
 
-___subslice = function(slice, low, high, max)
+__subslice = function(slice, low, high, max)
    if high == nil then
       
    end
-   if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.___capacity)  or  (max ~= nil and max > slice.___capacity) then
-      ___throwRuntimeError("slice bounds out of range");
+   if low < 0  or  (high ~= nil and high < low)  or  (max ~= nil and high ~= nil and max < high)  or  (high ~= nil and high > slice.__capacity)  or  (max ~= nil and max > slice.__capacity) then
+      __throwRuntimeError("slice bounds out of range");
    end
    
    local s = {}
-   slice.___constructor.tfun(s, slice.___array);
-   s.___offset = slice.___offset + low;
-   s.___length = slice.___length - low;
-   s.___capacity = slice.___capacity - low;
+   slice.__constructor.tfun(s, slice.__array);
+   s.__offset = slice.__offset + low;
+   s.__length = slice.__length - low;
+   s.__capacity = slice.__capacity - low;
    if high ~= nil then
-      s.___length = high - low;
+      s.__length = high - low;
    end
    if max ~= nil then
-      s.___capacity = max - low;
+      s.__capacity = max - low;
    end
    return s;
 end;
 
-___copySlice = function(dst, src)
-   local n = __min(src.___length, dst.___length);
-   ___copyArray(dst.___array, src.___array, dst.___offset, src.___offset, n, dst.___constructor.elem);
+__copySlice = function(dst, src)
+   local n = __min(src.__length, dst.__length);
+   __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
    return n;
 end;
 
 --
 
-___copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   --print("___copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
-   --print("___copyArray has dst:")
+__copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
+   --print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
+   --print("__copyArray has dst:")
    --__st(dst)
-   --print("___copyArray has src:")
+   --print("__copyArray has src:")
    --__st(src)
    
    n = tonumber(n)
@@ -394,7 +391,7 @@ ___copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    end
 
    local sw = elem.kind
-   if sw == ___kindArray or sw == ___kindStruct then
+   if sw == __kindArray or sw == __kindStruct then
       
       if dst == src  and  dstOffset > srcOffset then
          for i = n-1,0,-1 do
@@ -420,18 +417,18 @@ ___copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
 end;
 
 --
-___clone = function(src, typ)
+__clone = function(src, typ)
   local clone = typ.zero();
   typ.copy(clone, src);
   return clone;
 end;
 
-___pointerOfStructConversion = function(obj, typ)
-  if(obj.___proxies == nil) then
-    obj.___proxies = {};
-    obj.___proxies[obj.constructor.___str] = obj;
+__pointerOfStructConversion = function(obj, typ)
+  if(obj.__proxies == nil) then
+    obj.__proxies = {};
+    obj.__proxies[obj.constructor.__str] = obj;
   end
-  local proxy = obj.___proxies[typ.___str];
+  local proxy = obj.__proxies[typ.__str];
   if proxy == nil then
      local properties = {};
      
@@ -447,9 +444,9 @@ ___pointerOfStructConversion = function(obj, typ)
      end
      
     proxy = Object.create(typ.methodSet, properties);
-    proxy.___val = proxy;
-    obj.___proxies[typ.___str] = proxy;
-    proxy.___proxies = obj.___proxies;
+    proxy.__val = proxy;
+    obj.__proxies[typ.__str] = proxy;
+    proxy.__proxies = obj.__proxies;
   end
   return proxy;
 end;
@@ -457,52 +454,52 @@ end;
 --
 
 
-___append = function(...)
+__append = function(...)
    local arguments = {...}
    local slice = arguments[1]
-   return ___internalAppend(slice, arguments, 1, #arguments - 1);
+   return __internalAppend(slice, arguments, 1, #arguments - 1);
 end;
 
-___appendSlice = function(slice, toAppend)
+__appendSlice = function(slice, toAppend)
    if slice == nil then 
-      error("error calling ___appendSlice: slice must be available")
+      error("error calling __appendSlice: slice must be available")
    end
    if toAppend == nil then
-      error("error calling ___appendSlice: toAppend must be available")      
+      error("error calling __appendSlice: toAppend must be available")      
    end
    if type(toAppend) == "string" then
-      local bytes = ___stringToBytes(toAppend);
-      return ___internalAppend(slice, bytes, 0, #bytes);
+      local bytes = __stringToBytes(toAppend);
+      return __internalAppend(slice, bytes, 0, #bytes);
    end
-   return ___internalAppend(slice, toAppend.___array, toAppend.___offset, toAppend.___length);
+   return __internalAppend(slice, toAppend.__array, toAppend.__offset, toAppend.__length);
 end;
 
-___internalAppend = function(slice, array, offset, length)
+__internalAppend = function(slice, array, offset, length)
    if length == 0 then
       return slice;
    end
 
-   local newArray = slice.___array;
-   local newOffset = slice.___offset;
-   local newLength = slice.___length + length;
-   --print("jea debug: ___internalAppend: newLength is "..tostring(newLength))
-   local newCapacity = slice.___capacity;
-   local elem = slice.___constructor.elem;
+   local newArray = slice.__array;
+   local newOffset = slice.__offset;
+   local newLength = slice.__length + length;
+   --print("jea debug: __internalAppend: newLength is "..tostring(newLength))
+   local newCapacity = slice.__capacity;
+   local elem = slice.__constructor.elem;
 
    if newLength > newCapacity then
       newOffset = 0;
       local tmpCap
-      if slice.___capacity < 1024 then
-         tmpCap = slice.___capacity * 2
+      if slice.__capacity < 1024 then
+         tmpCap = slice.__capacity * 2
       else
-         tmpCap = __truncateToInt(slice.___capacity * 5 / 4)
+         tmpCap = __truncateToInt(slice.__capacity * 5 / 4)
       end
       newCapacity = __max(newLength, tmpCap);
 
       newArray = {}
-      local w = slice.___offset
-      for i = 0,slice.___length do
-         newArray[i] = slice.___array[i + w]
+      local w = slice.__offset
+      for i = 0,slice.__length do
+         newArray[i] = slice.__array[i + w]
       end
       for i = #slice,newCapacity-1 do
          newArray[i] = elem.zero();
@@ -510,34 +507,34 @@ ___internalAppend = function(slice, array, offset, length)
       
    end
 
-   --print("jea debug, ___internalAppend, newOffset = ", newOffset, " and slice.___length=", slice.___length)
+   --print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
 
-   ___copyArray(newArray, array, newOffset + slice.___length, offset, length, elem);
-   --print("jea debug, ___internalAppend, after copying over array:")
+   __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
+   --print("jea debug, __internalAppend, after copying over array:")
    --__st(newArray)
 
    local newSlice ={}
-   slice.___constructor.tfun(newSlice, newArray);
-   newSlice.___offset = newOffset;
-   newSlice.___length = newLength;
-   newSlice.___capacity = newCapacity;
+   slice.__constructor.tfun(newSlice, newArray);
+   newSlice.__offset = newOffset;
+   newSlice.__length = newLength;
+   newSlice.__capacity = newCapacity;
    return newSlice;
 end;
 
 --
 
-___substring = function(str, low, high)
+__substring = function(str, low, high)
   if low < 0  or  high < low  or  high > #str then
-    ___throwRuntimeError("string slice bounds out of range");
+    __throwRuntimeError("string slice bounds out of range");
   end
   return string.sub(str, low+1, high); -- high is inclusive, so no +1 needed.
 end;
 
-___sliceToArray = function(slice)
+__sliceToArray = function(slice)
    local cp = {}
-   if slice.___length > 0 then
+   if slice.__length > 0 then
       local k = 0
-      for i = slice.___offset, slice.___offset + slice.___length -1 do
+      for i = slice.__offset, slice.__offset + slice.__length -1 do
          cp[k] = slice.array[i]
          k=k+1
       end
@@ -550,116 +547,116 @@ end;
 
 --
 
-___valueBasicMT = {
-   __name = "___valueBasicMT",
+__valueBasicMT = {
+   __name = "__valueBasicMT",
    __tostring = function(self, ...)
-      --print("__tostring called from ___valueBasicMT")
-      if type(self.___val) == "string" then
-         return '"'..self.___val..'"'
+      --print("__tostring called from __valueBasicMT")
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
       end
-      if self ~= nil and self.___val ~= nil then
-         --print("___valueBasicMT.__tostring called, with self.___val set.")
-         if self.___val == self then
+      if self ~= nil and self.__val ~= nil then
+         --print("__valueBasicMT.__tostring called, with self.__val set.")
+         if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
-            return "<this.___val == this; avoid inf loop>"
+            return "<this.__val == this; avoid inf loop>"
          end
-         --return tostring(self.___val)
+         --return tostring(self.__val)
       end
-      if getmetatable(self.___val) == ___valueBasicMT then
+      if getmetatable(self.__val) == __valueBasicMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
       else
-         return tostring(self.___val)
+         return tostring(self.__val)
       end
    end,
 }
 
-___valueArrayMT = {
-   __name = "___valueArrayMT",
+__valueArrayMT = {
+   __name = "__valueArrayMT",
    
    __newindex = function(t, k, v)
-      --print("___valueArrayMT.__newindex called, t is:")
+      --print("__valueArrayMT.__newindex called, t is:")
       --__st(t)
 
       if k < 0 or k >= #t then
          error "read of array error: access out-of-bounds"
       end
       
-      t.___val[k] = v
+      t.__val[k] = v
    end,
    
    __index = function(t, k)
-      --print("___valueArrayMT.__index called, k='"..tostring(k).."'; t.___val is:")
-      --__st(t.___val)
+      --print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      --__st(t.__val)
       if k < 0 or k >= #t then
          error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
       end
       
-      return t.___val[k]
+      return t.__val[k]
    end,
 
    __len = function(t)
-      return int(___lenz(t.___val))
+      return int(__lenz(t.__val))
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from ___valueArrayMT")
-      if type(self.___val) == "string" then
-         return '"'..self.___val..'"'
+      --print("__tostring called from __valueArrayMT")
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
       end
-      if self ~= nil and self.___val ~= nil then
-         --print("___valueArrayMT.__tostring called, with self.___val set.")
-         if self.___val == self then
+      if self ~= nil and self.__val ~= nil then
+         --print("__valueArrayMT.__tostring called, with self.__val set.")
+         if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
-            return "<this.___val == this; avoid inf loop>"
+            return "<this.__val == this; avoid inf loop>"
          end
-         --return tostring(self.___val)
+         --return tostring(self.__val)
       end
-      if getmetatable(self.___val) == ___valueArrayMT then
+      if getmetatable(self.__val) == __valueArrayMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
       else
-         return tostring(self.___val)
+         return tostring(self.__val)
       end
    end,
 }
 
-___valueSliceMT = {
-   __name = "___valueSliceMT",
+__valueSliceMT = {
+   __name = "__valueSliceMT",
    
    __newindex = function(t, k, v)
-      --print("___valueSliceMT.__newindex called, t is:")
+      --print("__valueSliceMT.__newindex called, t is:")
       --__st(t)
-      local w = t.___offset + k
-      if k < 0 or k >= t.___capacity then
+      local w = t.__offset + k
+      if k < 0 or k >= t.__capacity then
          error "slice error: write out-of-bounds"
       end
-      t.___array[w] = v
+      t.__array[w] = v
    end,
    
    __index = function(t, k)
-      --print("___valueSliceMT.__index called, k='"..tostring(k).."'; t.___val is:")
-      --__st(t.___val)
-      local w = t.___offset + k
-      if k < 0 or k >= t.___capacity then
+      --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      --__st(t.__val)
+      local w = t.__offset + k
+      if k < 0 or k >= t.__capacity then
          error "slice error: access out-of-bounds"
       end
-      return t.___array[w]
+      return t.__array[w]
    end,
 
    __len = function(t)
-      return t.___length
+      return t.__length
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from ___valueSliceMT")
+      --print("__tostring called from __valueSliceMT")
 
-       local len = self.___length
-       local beg = self.___offset
-       local cap = self.___capacity
-       --local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is "..self.___constructor.___str.."{"
-       local s = self.___constructor.___str.."{"
-       local raw = self.___array
+       local len = self.__length
+       local beg = self.__offset
+       local cap = self.__capacity
+       --local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
+       local s = self.__constructor.__str.."{"
+       local raw = self.__array
 
        -- we want to skip both the _giPrivateRaw and the len
        -- when iterating, which happens automatically if we
@@ -676,43 +673,43 @@ ___valueSliceMT = {
       
    end,
    __old_tostring = function(self, ...)
-      if type(self.___val) == "string" then
-         return '"'..self.___val..'"'
+      if type(self.__val) == "string" then
+         return '"'..self.__val..'"'
       end
-      if self ~= nil and self.___val ~= nil then
-         print("___valueSliceMT.__tostring called, with self.___val set.")
-         if self.___val == self then
+      if self ~= nil and self.__val ~= nil then
+         print("__valueSliceMT.__tostring called, with self.__val set.")
+         if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
-            return "<this.___val == this; avoid inf loop>"
+            return "<this.__val == this; avoid inf loop>"
          end
-         --return tostring(self.___val)
+         --return tostring(self.__val)
       end
-      if getmetatable(self.___val) == ___valueSliceMT then
+      if getmetatable(self.__val) == __valueSliceMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
       else
-         return tostring(self.___val)
+         return tostring(self.__val)
       end
    end,
 }
 
 
-___tfunBasicMT = {
-   __name = "___tfunBasicMT",
+__tfunBasicMT = {
+   __name = "__tfunBasicMT",
    __call = function(self, ...)
-      --print("jea debug: ___tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       --print(debug.traceback())
       
-      --print("in ___tfunBasicMT, start ___st on ...")
-      --__st({...}, "___tfunBasicMT.dots")
-      --print("in ___tfunBasicMT,   end ___st on ...")
+      --print("in __tfunBasicMT, start __st on ...")
+      --__st({...}, "__tfunBasicMT.dots")
+      --print("in __tfunBasicMT,   end __st on ...")
 
-      --print("in ___tfunBasicMT, start ___st on self")
+      --print("in __tfunBasicMT, start __st on self")
       --__st(self, "self")
-      --print("in ___tfunBasicMT,   end ___st on self")
+      --print("in __tfunBasicMT,   end __st on self")
 
       local newInstance = {}
-      setmetatable(newInstance, ___valueBasicMT)
+      setmetatable(newInstance, __valueBasicMT)
       if self ~= nil then
          if self.tfun ~= nil then
             --print("calling tfun! -- let constructors set metatables if they wish to.")
@@ -735,7 +732,7 @@ ___tfunBasicMT = {
 }
 
 
-function ___newAnyArrayValue(elem, len)
+function __newAnyArrayValue(elem, len)
    local array = {}
    for i =0, len -1 do
       array[i]= elem.zero();
@@ -744,171 +741,171 @@ function ___newAnyArrayValue(elem, len)
 end
 
 
-___methodSynthesizers = {};
-___addMethodSynthesizer = function(f)
-   if ___methodSynthesizers == nil then
+__methodSynthesizers = {};
+__addMethodSynthesizer = function(f)
+   if __methodSynthesizers == nil then
       f();
       return;
    end
-   table.insert(___methodSynthesizers, f);
+   table.insert(__methodSynthesizers, f);
 end;
 
-___synthesizeMethods = function()
-   ___ipairsZeroCheck(___methodSynthesizers)
-   for i,f in ipairs(___methodSynthesizers) do
+__synthesizeMethods = function()
+   __ipairsZeroCheck(__methodSynthesizers)
+   for i,f in ipairs(__methodSynthesizers) do
       f();
    end
-   ___methodSynthesizers = nil;
+   __methodSynthesizers = nil;
 end;
 
-___ifaceKeyFor = function(x)
-  if x == ___ifaceNil then
+__ifaceKeyFor = function(x)
+  if x == __ifaceNil then
     return 'nil';
   end
   local c = x.constructor;
-  return c.___str .. '___' .. c.keyFor(x.___val);
+  return c.__str .. '__' .. c.keyFor(x.__val);
 end;
 
-___identity = function(x) return x; end;
+__identity = function(x) return x; end;
 
-___typeIDCounter = 0;
+__typeIDCounter = 0;
 
-___idKey = function(x)
-   if x.___id == nil then
-      ___idCounter=___idCounter+1;
-      x.___id = ___idCounter;
+__idKey = function(x)
+   if x.__id == nil then
+      __idCounter=__idCounter+1;
+      x.__id = __idCounter;
    end
-   return String(x.___id);
+   return String(x.__id);
 end;
 
-___newType = function(size, kind, str, named, pkg, exported, constructor)
+__newType = function(size, kind, str, named, pkg, exported, constructor)
    local typ ={};
-   setmetatable(typ, ___tfunBasicMT)
+   setmetatable(typ, __tfunBasicMT)
 
-   if kind ==  ___kindBool or
-      kind == ___kindInt or 
-      kind == ___kindInt8 or 
-      kind == ___kindInt16 or 
-      kind == ___kindInt32 or 
-      kind == ___kindInt64 or 
-      kind == ___kindUint or 
-      kind == ___kindUint8 or 
-      kind == ___kindUint16 or 
-      kind == ___kindUint32 or 
-      kind == ___kindUint64 or 
-      kind == ___kindUintptr or 
-   kind == ___kindUnsafePointer then
+   if kind ==  __kindBool or
+      kind == __kindInt or 
+      kind == __kindInt8 or 
+      kind == __kindInt16 or 
+      kind == __kindInt32 or 
+      kind == __kindInt64 or 
+      kind == __kindUint or 
+      kind == __kindUint8 or 
+      kind == __kindUint16 or 
+      kind == __kindUint32 or 
+      kind == __kindUint64 or 
+      kind == __kindUintptr or 
+   kind == __kindUnsafePointer then
 
       -- jea: I observe that
-      -- primitives have: this.___val ~= v; and are the types are
+      -- primitives have: this.__val ~= v; and are the types are
       -- distinguished with typ.wrapped = true; versus
-      -- all table based values, that have: this.___val == this;
+      -- all table based values, that have: this.__val == this;
       -- and no .wrapped field.
       --
-      typ.tfun = function(this, v) this.___val = v; end;
+      typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
-      typ.keyFor = ___identity;
+      typ.keyFor = __identity;
 
-   elseif kind == ___kindString then
+   elseif kind == __kindString then
       
       typ.tfun = function(this, v)
          --print("strings' tfun called! with v='"..tostring(v).."' and this:")
          --__st(this)
-         this.___val = v; end;
+         this.__val = v; end;
       typ.wrapped = true;
       typ.keyFor = function(x) return "_" .. x; end;
 
-   elseif kind == ___kindFloat32 or
-   kind == ___kindFloat64 then
+   elseif kind == __kindFloat32 or
+   kind == __kindFloat64 then
       
-      typ.tfun = function(this, v) this.___val = v; end;
+      typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
-      typ.keyFor = function(x) return ___floatKey(x); end;
+      typ.keyFor = function(x) return __floatKey(x); end;
 
 
-  elseif kind ==  ___kindComplex64 then 
+  elseif kind ==  __kindComplex64 then 
     typ.tfun = function(this, real, imag)
-      this.___real = ___fround(real);
-      this.___imag = ___fround(imag);
-      this.___val = this;
+      this.__real = __fround(real);
+      this.__imag = __fround(imag);
+      this.__val = this;
     end;
-    typ.keyFor = function(x) return x.___real .. "_" .. x.___imag; end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
     
 
-  elseif kind ==  ___kindComplex128 then 
+  elseif kind ==  __kindComplex128 then 
     typ.tfun = function(this, real, imag)
-      this.___real = real;
-      this.___imag = imag;
-      this.___val = this;
+      this.__real = real;
+      this.__imag = imag;
+      this.__val = this;
     end;
-    typ.keyFor = function(x) return x.___real .. "_" .. x.___imag; end;
+    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
     
       
-   elseif kind ==  ___kindPtr then
+   elseif kind ==  __kindPtr then
 
       typ.tfun = constructor  or
          function(this, getter, setter, target)
             print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
-            this.___get = getter;
-            this.___set = setter;
-            this.___target = target;
-            this.___val = this; -- seems to indicate a non-primitive value.
+            this.__get = getter;
+            this.__set = setter;
+            this.__target = target;
+            this.__val = this; -- seems to indicate a non-primitive value.
          end;
-      typ.keyFor = ___idKey;
+      typ.keyFor = __idKey;
       typ.init = function(elem)
          typ.elem = elem;
-         typ.wrapped = (elem.kind == ___kindArray);
-         typ.___nil = typ(___throwNilPointerError, ___throwNilPointerError);
+         typ.wrapped = (elem.kind == __kindArray);
+         typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
       end;
 
-   elseif kind ==  ___kindSlice then
+   elseif kind ==  __kindSlice then
       
       typ.tfun = function(this, array)
-         this.___array = array;
-         this.___offset = 0;
-         this.___length = ___lenz(array);
-         this.___capacity = this.___length;
-         --print("jea debug: slice tfun set ___length to ", this.___length)
-         --print("jea debug: slice tfun set ___capacity to ", this.___capacity)
+         this.__array = array;
+         this.__offset = 0;
+         this.__length = __lenz(array);
+         this.__capacity = this.__length;
+         --print("jea debug: slice tfun set __length to ", this.__length)
+         --print("jea debug: slice tfun set __capacity to ", this.__capacity)
          --print("jea debug: slice tfun sees array: ")
          --for i,v in pairs(array) do
          --   print("array["..tostring(i).."] = ", v)
          --end
          
-         this.___val = this;
-         this.___constructor = typ
-         setmetatable(this, ___valueSliceMT)
+         this.__val = this;
+         this.__constructor = typ
+         setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
          typ.elem = elem;
          typ.comparable = false;
-         typ.___nil = typ({},{});
+         typ.__nil = typ({},{});
       end;
       
-   elseif kind ==  ___kindArray then
+   elseif kind ==  __kindArray then
 
       typ.tfun = function(this, v)
-         --print("in tfun ctor function for ___kindArray")
-         this.___val = v;
-         setmetatable(this, ___valueArrayMT)
+         --print("in tfun ctor function for __kindArray")
+         this.__val = v;
+         setmetatable(this, __valueArrayMT)
       end;
       typ.wrapped = true;
-      typ.ptr = ___newType(4, ___kindPtr, "*" .. str, false, "", false, function(this, array)
-                             this.___get = function() return array; end;
-                             this.___set = function(v) typ.copy(this, v); end;
-                             this.___val = array;
+      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
+                             this.__get = function() return array; end;
+                             this.__set = function(v) typ.copy(this, v); end;
+                             this.__val = array;
       end);
       typ.init = function(elem, len)
          typ.elem = elem;
          typ.len = len;
          typ.comparable = elem.comparable;
          typ.keyFor = function(x)
-            return ___mapAndJoinStrings("_", x, function(e)
+            return __mapAndJoinStrings("_", x, function(e)
                                           return string.gsub(tostring(elem.keyFor(e)), "\\", "\\\\")
             end)
          end
          typ.copy = function(dst, src)
-            ___copyArray(dst, src, 0, 0, #src, elem);
+            __copyArray(dst, src, 0, 0, #src, elem);
          end;
          typ.ptr.init(typ);
 
@@ -923,16 +920,16 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
          --
          -- Since comma expressions are not (efficiently) supported in Lua, let
          -- implement the nil check in a different manner.
-         -- js: Object.defineProperty(typ.ptr.___nil, "nilCheck", { get= ___throwNilPointerError end);
+         -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
       end;
-      -- end ___kindArray
+      -- end __kindArray
 
    
-  elseif kind ==  ___kindChan then
+  elseif kind ==  __kindChan then
      
-    typ.tfun = function(this, v) this.___val = v; end;
+    typ.tfun = function(this, v) this.__val = v; end;
     typ.wrapped = true;
-    typ.keyFor = ___idKey;
+    typ.keyFor = __idKey;
     typ.init = function(elem, sendOnly, recvOnly)
       typ.elem = elem;
       typ.sendOnly = sendOnly;
@@ -940,9 +937,9 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
     end;
     
 
-  elseif kind ==  ___kindFunc then 
+  elseif kind ==  __kindFunc then 
 
-     typ.tfun = function(this, v) this.___val = v; end;
+     typ.tfun = function(this, v) this.__val = v; end;
      typ.wrapped = true;
      typ.init = function(params, results, variadic)
         typ.params = params;
@@ -952,23 +949,23 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
      end;
     
 
-  elseif kind ==  ___kindInterface then 
+  elseif kind ==  __kindInterface then 
 
      typ = { implementedBy= {}, missingMethodFor= {} };
-     typ.keyFor = ___ifaceKeyFor;
+     typ.keyFor = __ifaceKeyFor;
      typ.init = function(methods)
         typ.methods = methods;
         for _, m in pairs(methods) do
            -- TODO:
            -- jea: why this? seems it would end up being a huge set?
-           ___ifaceNil[m.prop] = ___throwNilPointerError;
+           __ifaceNil[m.prop] = __throwNilPointerError;
         end;
      end;
      
      
-   elseif kind ==  ___kindMap then 
+   elseif kind ==  __kindMap then 
       
-      typ.tfun = function(this, v) this.___val = v; end;
+      typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
       typ.init = function(key, elem)
          typ.key = key;
@@ -976,35 +973,35 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.comparable = false;
       end;
       
-   elseif kind ==  ___kindStruct then
+   elseif kind ==  __kindStruct then
       
-      typ.tfun = function(this, v) this.___val = v; end;
+      typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
 
       -- the typ.methodSet will be the
       -- metatable for instances of the struct; this is
       -- equivalent to the prototype in js.
       --
-      typ.methodSet = {___name="methodSet for "..str, ___typ = typ}
+      typ.methodSet = {__name="methodSet for "..str, __typ = typ}
       typ.methodSet.__index = typ.methodSet
       
       local ctor = function(this, ...)
-         this.___get = function() return this; end;
-         this.___set = function(v) typ.copy(this, v); end;
+         this.__get = function() return this; end;
+         this.__set = function(v) typ.copy(this, v); end;
          if constructor ~= nil then
             constructor(this, ...);
          end
          setmetatable(this, typ.ptr.methodSet)
       end
-      typ.ptr = ___newType(4, ___kindPtr, "*" .. str, false, pkg, exported, ctor);
-      -- ___newType sets typ.comparable = true
+      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
+      -- __newType sets typ.comparable = true
 
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
-      typ.ptr.methodSet = {___name="methodSet for "..typ.ptr.___str, ___typ = typ.ptr}
+      typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
       typ.ptr.methodSet.__index = typ.ptr.methodSet
 
-      -- ___kindStruct.init is here:
+      -- __kindStruct.init is here:
       typ.init = function(pkgPath, fields)
          print("top of init() for struct, fields=")
          for i, f in pairs(fields) do
@@ -1014,7 +1011,7 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
          
          typ.pkgPath = pkgPath;
          typ.fields = fields;
-         ___ipairsZeroCheck(fields)
+         __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
             if not f.typ.comparable then
                typ.comparable = false;
@@ -1022,8 +1019,8 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
             end
          end
          typ.keyFor = function(x)
-            local val = x.___val;
-            return ___mapAndJoinStrings("_", fields, function(f)
+            local val = x.__val;
+            return __mapAndJoinStrings("_", fields, function(f)
                                           return string.gsub(tostring(f.typ.keyFor(val[f.prop])), "\\", "\\\\")
             end)
          end;
@@ -1033,40 +1030,40 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
             __st(src, "src")
             print("fields:")
             __st(fields,"fields")
-            ___ipairsZeroCheck(fields)
+            __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.typ.kind
                
-               if sw2 == ___kindArray or
-               sw2 ==  ___kindStruct then 
+               if sw2 == __kindArray or
+               sw2 ==  __kindStruct then 
                   f.typ.copy(dst[f.prop], src[f.prop]);
                else
                   dst[f.prop] = src[f.prop];
                end
             end
          end;
-         print("jea debug: on ___kindStruct: set .copy on typ to .copy=", typ.copy)
+         print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
-         ___ipairsZeroCheck(fields)
+         __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-            properties[f.prop] = { get= ___throwNilPointerError, set= ___throwNilPointerError };
+            properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
          end;
-         typ.ptr.___nil = {} -- Object.create(constructor.prototype,s properties);
+         typ.ptr.__nil = {} -- Object.create(constructor.prototype,s properties);
          --if constructor ~= nil then
-         --   constructor(typ.ptr.___nil)
+         --   constructor(typ.ptr.__nil)
          --end
-         typ.ptr.___nil.___val = typ.ptr.___nil;
+         typ.ptr.__nil.__val = typ.ptr.__nil;
          -- /* methods for embedded fields */
-         ___addMethodSynthesizer(function()
+         __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   if target.methodSet[m.prop] ~= nil then return; end
                   target.methodSet[m.prop] = function()
-                     local v = this.___val[f.prop];
-                     if f.typ == ___jsObjectPtr then
-                        v = ___jsObjectPtr(v);
+                     local v = this.__val[f.prop];
+                     if f.typ == __jsObjectPtr then
+                        v = __jsObjectPtr(v);
                      end
-                     if v.___val == nil then
+                     if v.__val == nil then
                         local w = {}
                         f.typ(w, v);
                         v = w
@@ -1076,11 +1073,11 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
                end;
                for i,f in ipairs(fields) do
                   if f.anonymous then
-                     for _, m in ipairs(___methodSet(f.typ)) do
+                     for _, m in ipairs(__methodSet(f.typ)) do
                         synthesizeMethod(typ, m, f);
                         synthesizeMethod(typ.ptr, m, f);
                      end;
-                     for _, m in ipairs(___methodSet(___ptrType(f.typ))) do
+                     for _, m in ipairs(__methodSet(__ptrType(f.typ))) do
                         synthesizeMethod(typ.ptr, m, f);
                      end;
                   end
@@ -1093,59 +1090,59 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
    end
    
    -- set zero() method
-   if kind == ___kindBool or
-   kind ==___kindMap then
+   if kind == __kindBool or
+   kind ==__kindMap then
       typ.zero = function() return false; end;
 
-   elseif kind == ___kindInt or
-      kind ==  ___kindInt8 or
-      kind ==  ___kindInt16 or
-      kind ==  ___kindInt32 or
-   kind ==  ___kindInt64 then
+   elseif kind == __kindInt or
+      kind ==  __kindInt8 or
+      kind ==  __kindInt16 or
+      kind ==  __kindInt32 or
+   kind ==  __kindInt64 then
       typ.zero = function() return 0LL; end;
       
-   elseif kind ==  ___kindUint or
-      kind ==  ___kindUint8  or
-      kind ==  ___kindUint16 or
-      kind ==  ___kindUint32 or
-      kind ==  ___kindUint64 or
-      kind ==  ___kindUintptr or
-   kind ==  ___kindUnsafePointer then
+   elseif kind ==  __kindUint or
+      kind ==  __kindUint8  or
+      kind ==  __kindUint16 or
+      kind ==  __kindUint32 or
+      kind ==  __kindUint64 or
+      kind ==  __kindUintptr or
+   kind ==  __kindUnsafePointer then
       typ.zero = function() return 0ULL; end;
 
-   elseif   kind ==  ___kindFloat32 or
-   kind ==  ___kindFloat64 then
+   elseif   kind ==  __kindFloat32 or
+   kind ==  __kindFloat64 then
       typ.zero = function() return 0; end;
       
-   elseif kind ==  ___kindString then
+   elseif kind ==  __kindString then
       typ.zero = function() return ""; end;
 
-   elseif kind == ___kindComplex64 or
-   kind == ___kindComplex128 then
+   elseif kind == __kindComplex64 or
+   kind == __kindComplex128 then
       local zero = typ(0, 0);
       typ.zero = function() return zero; end;
       
-   elseif kind == ___kindPtr or
-   kind == ___kindSlice then
+   elseif kind == __kindPtr or
+   kind == __kindSlice then
       
-      typ.zero = function() return typ.___nil; end;
+      typ.zero = function() return typ.__nil; end;
       
-   elseif kind == ___kindChan then
-      typ.zero = function() return ___chanNil; end;
+   elseif kind == __kindChan then
+      typ.zero = function() return __chanNil; end;
    
-   elseif kind == ___kindFunc then
-      typ.zero = function() return ___throwNilPointerError; end;
+   elseif kind == __kindFunc then
+      typ.zero = function() return __throwNilPointerError; end;
       
-   elseif kind == ___kindInterface then
-      typ.zero = function() return ___ifaceNil; end;
+   elseif kind == __kindInterface then
+      typ.zero = function() return __ifaceNil; end;
       
-   elseif kind == ___kindArray then
+   elseif kind == __kindArray then
       
       typ.zero = function()
-         return ___newAnyArrayValue(typ.elem, typ.len)
+         return __newAnyArrayValue(typ.elem, typ.len)
       end;
 
-   elseif kind == ___kindStruct then
+   elseif kind == __kindStruct then
       typ.zero = function()
          return typ.ptr();
       end;
@@ -1154,11 +1151,11 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
       error("invalid kind: " .. tostring(kind))
    end
 
-   typ.id = ___typeIDCounter;
-   ___typeIDCounter=___typeIDCounter+1;
+   typ.id = __typeIDCounter;
+   __typeIDCounter=__typeIDCounter+1;
    typ.size = size;
    typ.kind = kind;
-   typ.___str = str;
+   typ.__str = str;
    typ.named = named;
    typ.pkg = pkg;
    typ.exported = exported;
@@ -1169,19 +1166,19 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
    
 end
 
-function ___methodSet(typ)
+function __methodSet(typ)
    
   --if typ.methodSetCache ~= nil then
   --return typ.methodSetCache;
   --end
   local base = {};
 
-  local isPtr = (typ.kind == ___kindPtr);
-  print("___methodSet called with typ=")
+  local isPtr = (typ.kind == __kindPtr);
+  print("__methodSet called with typ=")
   __st(typ)
-  print("___methodSet sees isPtr=", isPtr)
+  print("__methodSet sees isPtr=", isPtr)
   
-  if isPtr  and  typ.elem.kind == ___kindInterface then
+  if isPtr  and  typ.elem.kind == __kindInterface then
      -- jea: I assume this is because pointers to interfaces don't themselves have methods.
      typ.methodSetCache = {};
      return {};
@@ -1206,10 +1203,10 @@ function ___methodSet(typ)
      local mset = {};
      
      for _,e in pairs(current) do
-        if seen[e.typ.___str] then
+        if seen[e.typ.__str] then
            break
         end
-        seen[e.typ.___str] = true;
+        seen[e.typ.__str] = true;
         
        if e.typ.named then
           for _, mthod in pairs(e.typ.methods) do
@@ -1217,7 +1214,7 @@ function ___methodSet(typ)
              table.insert(mset, mthod);
           end
           if e.indirect then
-             for _, mthod in pairs(___ptrType(e.typ).methods) do
+             for _, mthod in pairs(__ptrType(e.typ).methods) do
                 print("adding to mset, mthod = ", mthod)
                 table.insert(mset, mthod)
              end
@@ -1227,16 +1224,16 @@ function ___methodSet(typ)
        -- switch e.typ.kind
        local knd = e.typ.kind
        
-       if knd == ___kindStruct then
+       if knd == __kindStruct then
           
           -- assume that e.typ.fields must be an array!
           -- TODO: remove this assert after confirmation.
-          ___assertIsArray(e.typ.fields)
-          ___ipairsZeroCheck(e.typ.fields)
+          __assertIsArray(e.typ.fields)
+          __ipairsZeroCheck(e.typ.fields)
           for i,f in ipairs(e.typ.fields) do
              if f.anonymous then
                 local fTyp = f.typ;
-                local fIsPtr = (fTyp.kind == ___kindPtr);
+                local fIsPtr = (fTyp.kind == __kindPtr);
                 local ty 
                 if fIsPtr then
                    ty = fTyp.elem
@@ -1248,7 +1245,7 @@ function ___methodSet(typ)
           end;
           
           
-       elseif knd == ___kindInterface then
+       elseif knd == __kindInterface then
           
           for _, mthod in pairs(e.typ.methods) do
              print("adding to mset, mthod = ", mthod)
@@ -1264,7 +1261,7 @@ function ___methodSet(typ)
            base[m.name] = m;
         end
      end;
-     print("after dedup, base for typ '"..typ.___str.."' is ")
+     print("after dedup, base for typ '"..typ.__str.."' is ")
      __st(base)
      
      current = next;
@@ -1279,51 +1276,51 @@ function ___methodSet(typ)
 end;
 
 
-__type__bool    = ___newType( 1, ___kindBool,    "bool",     true, "", false, nil);
-__type__int = ___newType( 8, ___kindInt,     "int",   true, "", false, nil);
-__type__int8    = ___newType( 1, ___kindInt8,    "int8",     true, "", false, nil);
-__type__int16   = ___newType( 2, ___kindInt16,   "int16",    true, "", false, nil);
-__type__int32   = ___newType( 4, ___kindInt32,   "int32",    true, "", false, nil);
-__type__int64   = ___newType( 8, ___kindInt64,   "int64",    true, "", false, nil);
-__type__uint    = ___newType( 8, ___kindUint,    "uint",     true, "", false, nil);
-__type__uint8   = ___newType( 1, ___kindUint8,   "uint8",    true, "", false, nil);
-__type__uint16  = ___newType( 2, ___kindUint16,  "uint16",   true, "", false, nil);
-__type__uint32  = ___newType( 4, ___kindUint32,  "uint32",   true, "", false, nil);
-__type__uint64  = ___newType( 8, ___kindUint64,  "uint64",   true, "", false, nil);
-__type__uintptr = ___newType( 8, ___kindUintptr,    "uintptr",  true, "", false, nil);
-__type__float32 = ___newType( 8, ___kindFloat32,    "float32",  true, "", false, nil);
-__type__float64 = ___newType( 8, ___kindFloat64,    "float64",  true, "", false, nil);
---__type__complex64  = ___newType( 8, ___kindComplex64,  "complex64",   true, "", false, nil);
---__type__complex128 = ___newType(16, ___kindComplex128, "complex128",  true, "", false, nil);
-__type__string  = ___newType(16, ___kindString,  "string",   true, "", false, nil);
---__type__unsafePointer = ___newType( 8, ___kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+__type__bool    = __newType( 1, __kindBool,    "bool",     true, "", false, nil);
+__type__int = __newType( 8, __kindInt,     "int",   true, "", false, nil);
+__type__int8    = __newType( 1, __kindInt8,    "int8",     true, "", false, nil);
+__type__int16   = __newType( 2, __kindInt16,   "int16",    true, "", false, nil);
+__type__int32   = __newType( 4, __kindInt32,   "int32",    true, "", false, nil);
+__type__int64   = __newType( 8, __kindInt64,   "int64",    true, "", false, nil);
+__type__uint    = __newType( 8, __kindUint,    "uint",     true, "", false, nil);
+__type__uint8   = __newType( 1, __kindUint8,   "uint8",    true, "", false, nil);
+__type__uint16  = __newType( 2, __kindUint16,  "uint16",   true, "", false, nil);
+__type__uint32  = __newType( 4, __kindUint32,  "uint32",   true, "", false, nil);
+__type__uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil);
+__type__uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
+__type__float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
+__type__float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
+--__type__complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
+--__type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
+__type__string  = __newType(16, __kindString,  "string",   true, "", false, nil);
+--__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 --[[
 
-___nativeArray = function(elemKind)
+__nativeArray = function(elemKind)
 
    if false then
-      if elemKind ==  ___kindInt then 
+      if elemKind ==  __kindInt then 
          return Int32Array; -- in js, a builtin typed array
-      elseif elemKind ==  ___kindInt8 then 
+      elseif elemKind ==  __kindInt8 then 
          return Int8Array;
-      elseif elemKind ==  ___kindInt16 then 
+      elseif elemKind ==  __kindInt16 then 
          return Int16Array;
-      elseif elemKind ==  ___kindInt32 then 
+      elseif elemKind ==  __kindInt32 then 
          return Int32Array;
-      elseif elemKind ==  ___kindUint then 
+      elseif elemKind ==  __kindUint then 
          return Uint32Array;
-      elseif elemKind ==  ___kindUint8 then 
+      elseif elemKind ==  __kindUint8 then 
          return Uint8Array;
-      elseif elemKind ==  ___kindUint16 then 
+      elseif elemKind ==  __kindUint16 then 
          return Uint16Array;
-      elseif elemKind ==  ___kindUint32 then 
+      elseif elemKind ==  __kindUint32 then 
          return Uint32Array;
-      elseif elemKind ==  ___kindUintptr then 
+      elseif elemKind ==  __kindUintptr then 
          return Uint32Array;
-      elseif elemKind ==  ___kindFloat32 then 
+      elseif elemKind ==  __kindFloat32 then 
          return Float32Array;
-      elseif elemKind ==  ___kindFloat64 then 
+      elseif elemKind ==  __kindFloat64 then 
          return Float64Array;
       else
          return Array;
@@ -1331,8 +1328,8 @@ ___nativeArray = function(elemKind)
    end
 end;
 
-___toNativeArray = function(elemKind, array)
-  local nativeArray = ___nativeArray(elemKind);
+__toNativeArray = function(elemKind, array)
+  local nativeArray = __nativeArray(elemKind);
   if nativeArray == Array {
     return array;
   end
@@ -1342,106 +1339,106 @@ end;
 --]]
 
 
-___ptrType = function(elem)
+__ptrType = function(elem)
    local typ = elem.ptr;
    if typ == nil then
-      typ = ___newType(4, ___kindPtr, "*" .. elem.___str, false, "", elem.exported, nil);
+      typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
       elem.ptr = typ;
       typ.init(elem);
    end
    return typ;
 end;
 
-___newDataPointer = function(data, constructor)
-   if constructor.elem.kind == ___kindStruct then
+__newDataPointer = function(data, constructor)
+   if constructor.elem.kind == __kindStruct then
       return data;
    end
    return constructor(function() return data; end, function(v) data = v; end);
 end;
 
-___indexPtr = function(array, index, constructor)
-   array.___ptr = array.___ptr  or  {};
-   local a = array.___ptr[index]
+__indexPtr = function(array, index, constructor)
+   array.__ptr = array.__ptr  or  {};
+   local a = array.__ptr[index]
    if a ~= nil then
       return a
    end
    a = constructor(function() return array[index]; end, function(v) array[index] = v; end);
-   array.___ptr[index] = a
+   array.__ptr[index] = a
    return a
 end;
 
 
-___arrayTypes = {};
-___arrayType = function(elem, len)
+__arrayTypes = {};
+__arrayType = function(elem, len)
    local typeKey = elem.id .. "_" .. len;
-   local typ = ___arrayTypes[typeKey];
+   local typ = __arrayTypes[typeKey];
    if typ == nil then
-      typ = ___newType(24, ___kindArray, "[" .. len .. "]" .. elem.___str, false, "", false, nil);
-      ___arrayTypes[typeKey] = typ;
+      typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
+      __arrayTypes[typeKey] = typ;
       typ.init(elem, len);
    end
    return typ;
 end;
 
 
-___chanType = function(elem, sendOnly, recvOnly)
+__chanType = function(elem, sendOnly, recvOnly)
    
    local str
    local field
    if recvOnly then
-      str = "<-chan " .. elem.___str
+      str = "<-chan " .. elem.__str
       field = "RecvChan"
    elseif sendOnly then
-      str = "chan<- " .. elem.___str
+      str = "chan<- " .. elem.__str
       field = "SendChan"
    else
-      str = "chan " .. elem.___str
+      str = "chan " .. elem.__str
       field = "Chan"
    end
    local typ = elem[field];
    if typ == nil then
-      typ = ___newType(4, ___kindChan, str, false, "", false, nil);
+      typ = __newType(4, __kindChan, str, false, "", false, nil);
       elem[field] = typ;
       typ.init(elem, sendOnly, recvOnly);
    end
    return typ;
 end;
 
-function ___Chan(elem, capacity)
+function __Chan(elem, capacity)
    local this = {}
    if capacity < 0  or  capacity > 2147483647 then
-      ___throwRuntimeError("makechan: size out of range");
+      __throwRuntimeError("makechan: size out of range");
    end
    this.elem = elem;
-   this.___capacity = capacity;
-   this.___buffer = {};
-   this.___sendQueue = {};
-   this.___recvQueue = {};
-   this.___closed = false;
+   this.__capacity = capacity;
+   this.__buffer = {};
+   this.__sendQueue = {};
+   this.__recvQueue = {};
+   this.__closed = false;
    return this
 end;
-___chanNil = ___Chan(nil, 0);
-___chanNil.___recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
-___chanNil.___sendQueue = ___chanNil.___recvQueue
+__chanNil = __Chan(nil, 0);
+__chanNil.__recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
+__chanNil.__sendQueue = __chanNil.__recvQueue
 
 
-___funcTypes = {};
-___funcType = function(params, results, variadic)
-   local typeKey = ___mapAndJoinStrings(",", params, function(p) return p.id; end) .. "_" .. ___mapAndJoinStrings(",", results, function(r) return r.id; end) .. "_" .. tostring(variadic);
-  local typ = ___funcTypes[typeKey];
+__funcTypes = {};
+__funcType = function(params, results, variadic)
+   local typeKey = __mapAndJoinStrings(",", params, function(p) return p.id; end) .. "_" .. __mapAndJoinStrings(",", results, function(r) return r.id; end) .. "_" .. tostring(variadic);
+  local typ = __funcTypes[typeKey];
   if typ == nil then
-    local paramTypes = ___mapArray(params, function(p) return p.___str; end);
+    local paramTypes = __mapArray(params, function(p) return p.__str; end);
     if variadic then
       paramTypes[#paramTypes - 1] = "..." .. paramTypes[#paramTypes - 1].substr(2);
     end
     local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
     if #results == 1 then
-      str = str .. " " .. results[1].___str;
+      str = str .. " " .. results[1].__str;
       end else if #results > 1 then
-      str = str .. " (" .. ___mapAndJoinStrings(", ", results, function(r) return r.___str; end) .. ")";
+      str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
     end
-    typ = ___newType(4, ___kindFunc, str, false, "", false, nil);
-    ___funcTypes[typeKey] = typ;
+    typ = __newType(4, __kindFunc, str, false, "", false, nil);
+    __funcTypes[typeKey] = typ;
     typ.init(params, results, variadic);
   end
   return typ;
@@ -1449,49 +1446,49 @@ end;
 
 --- interface types here
 
-function ___interfaceStrHelper(m)
+function __interfaceStrHelper(m)
    local s = ""
    if m.pkg ~= "" then
       s = m.pkg .. "."
    end
-   return s .. m.name .. string.sub(m.typ.___str, 6) -- sub for removing "___kind"
+   return s .. m.name .. string.sub(m.typ.__str, 6) -- sub for removing "__kind"
 end
 
-___interfaceTypes = {};
-___interfaceType = function(methods)
+__interfaceTypes = {};
+__interfaceType = function(methods)
    
-   local typeKey = ___mapAndJoinStrings("_", methods, function(m)
+   local typeKey = __mapAndJoinStrings("_", methods, function(m)
                                           return m.pkg .. "," .. m.name .. "," .. m.typ.id;
    end)
-   local typ = ___interfaceTypes[typeKey];
+   local typ = __interfaceTypes[typeKey];
    if typ == nil then
       local str = "interface {}";
       if #methods ~= 0 then
-         str = "interface { " .. ___mapAndJoinStrings("; ", methods, ___interfaceStrHelper) .. " }"
+         str = "interface { " .. __mapAndJoinStrings("; ", methods, __interfaceStrHelper) .. " }"
       end
-      typ = ___newType(8, ___kindInterface, str, false, "", false, nil);
-      ___interfaceTypes[typeKey] = typ;
+      typ = __newType(8, __kindInterface, str, false, "", false, nil);
+      __interfaceTypes[typeKey] = typ;
       typ.init(methods);
    end
    return typ;
 end;
-___emptyInterface = ___interfaceType({});
-___ifaceNil = {};
-___error = ___newType(8, ___kindInterface, "error", true, "", false, nil);
-___error.init({{prop= "Error", name= "Error", pkg= "", typ= ___funcType({}, {___String}, false) }});
+__emptyInterface = __interfaceType({});
+__ifaceNil = {};
+__error = __newType(8, __kindInterface, "error", true, "", false, nil);
+__error.init({{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, {__String}, false) }});
 
-___mapTypes = {};
-___mapType = function(key, elem)
+__mapTypes = {};
+__mapType = function(key, elem)
   local typeKey = key.id .. "_" .. elem.id;
-  local typ = ___mapTypes[typeKey];
+  local typ = __mapTypes[typeKey];
   if typ == nil then
-    typ = ___newType(8, ___kindMap, "map[" .. key.___str .. "]" .. elem.___str, false, "", false, nil);
-    ___mapTypes[typeKey] = typ;
+    typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
+    __mapTypes[typeKey] = typ;
     typ.init(key, elem);
   end
   return typ;
 end;
-___makeMap = function(keyForFunc, entries)
+__makeMap = function(keyForFunc, entries)
    local m = {};
    for i =0,#entries-1 do
     local e = entries[i];
@@ -1501,64 +1498,64 @@ ___makeMap = function(keyForFunc, entries)
 end;
 
 
--- ___basicValue2kind: identify type of basic value
---   or return ___kindUnknown if we don't recognize it.
-function ___basicValue2kind(v)
+-- __basicValue2kind: identify type of basic value
+--   or return __kindUnknown if we don't recognize it.
+function __basicValue2kind(v)
 
    local ty = type(v)
    if ty == "cdata" then
-      local cty = ___ffi.typeof(v)
+      local cty = __ffi.typeof(v)
       if cty == int64 then
-         return ___kindInt
+         return __kindInt
       elseif cty == int8 then
-         return ___kindInt8
+         return __kindInt8
       elseif cty == int16 then
-         return ___kindInt16
+         return __kindInt16
       elseif cty == int32 then
-         return ___kindInt32
+         return __kindInt32
       elseif cty == int64 then
-         return ___kindInt64
+         return __kindInt64
       elseif cty == uint then
-         return ___kindUint
+         return __kindUint
       elseif cty == uint8 then
-         return ___kindUint8
+         return __kindUint8
       elseif cty == uint16 then
-         return ___kindUint16
+         return __kindUint16
       elseif cty == uint32 then
-         return ___kindUint32
+         return __kindUint32
       elseif cty == uint64 then
-         return ___kindUint64
+         return __kindUint64
       elseif cty == float32 then
-         return ___kindFloat32
+         return __kindFloat32
       elseif cty == float64 then
-         return ___kindFloat64         
+         return __kindFloat64         
       else
-         return ___kindUnknown;
-         --error("___basicValue2kind: unhandled cdata cty: '"..tostring(cty).."'")
+         return __kindUnknown;
+         --error("__basicValue2kind: unhandled cdata cty: '"..tostring(cty).."'")
       end      
    elseif ty == "boolean" then
-      return ___kindBool;
+      return __kindBool;
    elseif ty == "number" then
-      return ___kindFloat64
+      return __kindFloat64
    elseif ty == "string" then
-      return ___kindString
+      return __kindString
    end
    
-   return ___kindUnknown;
-   --error("___basicValue2kind: unhandled ty: '"..ty.."'")   
+   return __kindUnknown;
+   --error("__basicValue2kind: unhandled ty: '"..ty.."'")   
 end
 
 __sliceType = function(elem)
    local typ = elem.slice;
    if typ == nil then
-      typ = ___newType(24, ___kindSlice, "[]" .. elem.___str, false, "", false, nil);
+      typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
       elem.slice = typ;
       typ.init(elem);
    end
    return typ;
 end;
 
-___makeSlice = function(typ, length, capacity)
+__makeSlice = function(typ, length, capacity)
    length = tonumber(length)
    if capacity == nil then
       capacity = length
@@ -1566,14 +1563,14 @@ ___makeSlice = function(typ, length, capacity)
       capacity = tonumber(capacity)
    end
    if length < 0  or  length > 9007199254740992 then -- 2^53
-      ___throwRuntimeError("makeslice: len out of range");
+      __throwRuntimeError("makeslice: len out of range");
    end
    if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
-      ___throwRuntimeError("makeslice: cap out of range");
+      __throwRuntimeError("makeslice: cap out of range");
    end
-   local array = ___newAnyArrayValue(typ.elem, capacity)
+   local array = __newAnyArrayValue(typ.elem, capacity)
    local slice = typ(array);
-   slice.___length = length;
+   slice.__length = length;
    return slice;
 end;
 
@@ -1586,29 +1583,29 @@ function field2strHelper(f)
       tag = string.gsub(f.tag, "\\", "\\\\")
       tag = string.gsub(tag, "\"", "\\\"")
    end
-   return f.name .. " " .. f.typ.___str .. tag
+   return f.name .. " " .. f.typ.__str .. tag
 end
 
 function typeKeyHelper(f)
    return f.name .. "," .. f.typ.id .. "," .. f.tag;
 end
 
-___structTypes = {};
-___structType = function(pkgPath, fields)
-   local typeKey = ___mapAndJoinStrings("_", fields, typeKeyHelper)
+__structTypes = {};
+__structType = function(pkgPath, fields)
+   local typeKey = __mapAndJoinStrings("_", fields, typeKeyHelper)
 
-   local typ = ___structTypes[typeKey];
+   local typ = __structTypes[typeKey];
    if typ == nil then
       local str
       if #fields == 0 then
          str = "struct {}";
       else
-         str = "struct { " .. ___mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
+         str = "struct { " .. __mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
       end
       
-      typ = ___newType(0, ___kindStruct, str, false, "", false, function()
+      typ = __newType(0, __kindStruct, str, false, "", false, function()
                          local this = {}
-                         this.___val = this;
+                         this.__val = this;
                          for i = 0, #fields-1 do
                             local f = fields[i];
                             local arg = arguments[i];
@@ -1620,82 +1617,82 @@ ___structType = function(pkgPath, fields)
                          end
                          return this
       end);
-      ___structTypes[typeKey] = typ;
+      __structTypes[typeKey] = typ;
       typ.init(pkgPath, fields);
    end
    return typ;
 end;
 
 
-___equal = function(a, b, typ)
-  if typ == ___jsObjectPtr then
+__equal = function(a, b, typ)
+  if typ == __jsObjectPtr then
     return a == b;
   end
 
   local sw = typ.kind
-  if sw == ___kindComplex64 or
-  sw == ___kindComplex128 then
-     return a.___real == b.___real  and  a.___imag == b.___imag;
+  if sw == __kindComplex64 or
+  sw == __kindComplex128 then
+     return a.__real == b.__real  and  a.__imag == b.__imag;
      
-  elseif sw == ___kindInt64 or
-         sw == ___kindUint64 then 
-     return a.___high == b.___high  and  a.___low == b.___low;
+  elseif sw == __kindInt64 or
+         sw == __kindUint64 then 
+     return a.__high == b.__high  and  a.__low == b.__low;
      
-  elseif sw == ___kindArray then 
+  elseif sw == __kindArray then 
     if #a ~= #b then
       return false;
     end
     for i=0,#a-1 do
-      if  not ___equal(a[i], b[i], typ.elem) then
+      if  not __equal(a[i], b[i], typ.elem) then
         return false;
       end
     end
     return true;
     
-  elseif sw == ___kindStruct then
+  elseif sw == __kindStruct then
      
     for i = 0,#(typ.fields)-1 do
       local f = typ.fields[i];
-      if  not ___equal(a[f.prop], b[f.prop], f.typ) then
+      if  not __equal(a[f.prop], b[f.prop], f.typ) then
         return false;
       end
     end
     return true;
-  elseif sw == ___kindInterface then 
-    return ___interfaceIsEqual(a, b);
+  elseif sw == __kindInterface then 
+    return __interfaceIsEqual(a, b);
   else
     return a == b;
   end
 end;
 
-___interfaceIsEqual = function(a, b)
-  if a == ___ifaceNil  or  b == ___ifaceNil then
+__interfaceIsEqual = function(a, b)
+  if a == __ifaceNil  or  b == __ifaceNil then
     return a == b;
   end
   if a.constructor ~= b.constructor then
     return false;
   end
-  if a.constructor == ___jsObjectPtr then
+  if a.constructor == __jsObjectPtr then
     return a.object == b.object;
   end
   if  not a.constructor.comparable then
-    ___throwRuntimeError("comparing uncomparable type "  ..  a.constructor.___str);
+    __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
   end
-  return ___equal(a.___val, b.___val, a.constructor);
+  return __equal(a.__val, b.__val, a.constructor);
 end;
 
 
-___assertType = function(value, typ, returnTuple)
+__assertType = function(value, typ, returnTuple)
 
-   local isInterface = (typ.kind == ___kindInterface)
+   local isInterface = (typ.kind == __kindInterface)
    local ok
    local missingMethod = "";
-   if value == ___ifaceNil then
+   if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      ok = value.___typ == typ;
+      ok = value.__typ == typ;
    else
-      local valueTypeString = value.___typ.___str;
+      local valueTypeString = value.__typ.__str;
 
       -- this caching doesn't get updated as methods
       -- are added, so disable it until fixed, possibly, in the future.
@@ -1703,15 +1700,15 @@ ___assertType = function(value, typ, returnTuple)
       ok = nil
       if ok == nil then
          ok = true;
-         local valueMethodSet = ___methodSet(value.___typ);
+         local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
          print("valueMethodSet is")
          __st(valueMethodSet)
          print("interfaceMethods is")
          __st(interfaceMethods)
 
-         ___ipairsZeroCheck(interfaceMethods)
-         ___ipairsZeroCheck(valueMethodSet)
+         __ipairsZeroCheck(interfaceMethods)
+         __ipairsZeroCheck(valueMethodSet)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
@@ -1739,24 +1736,24 @@ ___assertType = function(value, typ, returnTuple)
          missingMethod = typ.missingMethodFor[valueTypeString];
       end
    end
-   print("___assertType: after matching loop, ok = ", ok)
+   print("__assertType: after matching loop, ok = ", ok)
    
    if not ok then
       if returnTuple then
          return typ.zero(), false
       end
       local msg = ""
-      if value ~= ___ifaceNil then
-         msg = value.___typ.___str
+      if value ~= __ifaceNil then
+         msg = value.__typ.__str
       end
-      --___panic(___packages["runtime"].TypeAssertionError.ptr("", msg, typ.___str, missingMethod));
-      error("type-assertion-error: could not '"..msg.."' -> '"..typ.___str.."', missing method '"..missingMethod.."'")
+      --__panic(__packages["runtime"].TypeAssertionError.ptr("", msg, typ.__str, missingMethod));
+      error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")
    end
    
    if not isInterface then
-      value = value.___val;
+      value = value.__val;
    end
-   if typ == ___jsObjectPtr then
+   if typ == __jsObjectPtr then
       value = value.object;
    end
    if returnTuple then
@@ -1765,18 +1762,18 @@ ___assertType = function(value, typ, returnTuple)
    return value
 end;
 
-___stackDepthOffset = 0;
-___getStackDepth = function()
+__stackDepthOffset = 0;
+__getStackDepth = function()
   local err = Error(); -- new
   if err.stack == nil then
     return nil;
   end
-  return ___stackDepthOffset + #err.stack.split("\n");
+  return __stackDepthOffset + #err.stack.split("\n");
 end;
 
 -- possible replacement for ipairs.
 -- starts at a[0] if it is present.
-function ___zipairs(a)
+function __zipairs(a)
    local n = 0
    local s = #a
    if a[0] ~= nil then

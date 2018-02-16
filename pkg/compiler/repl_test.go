@@ -215,7 +215,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a = _gi_NewMap("int", "int", {});
+a = {};
 a["1LL"] = 10LL;
 a["2LL"] = 20LL;
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)

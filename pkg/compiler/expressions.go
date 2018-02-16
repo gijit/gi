@@ -266,9 +266,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
-			return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
-
-			// return c.formatExpr("$makeMap(%s.keyFor, [%s])", c.typeName(t.Key()), strings.Join(entries, ", "))
+			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
+			return c.formatExpr("__makeMap(%s.keyFor, {%s})", c.typeName(t.Key()), joined)
 		case *types.Struct:
 			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())
@@ -1096,7 +1095,9 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			if len(args) == 2 && c.p.Types[args[1]].Value == nil {
 				return c.formatExpr(`((%1f < 0 || %1f > 2147483647) ? error("makemap: size out of range") : {})`, args[1])
 			}
-			return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(argType.Key()), c.typeName(argType.Elem()))
+			// return c.formatExpr("{}") // gopherjs
+			return c.formatExpr("{}")
+			//return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(argType.Key()), c.typeName(argType.Elem()))
 		case *types.Chan:
 			length := "0"
 			if len(args) == 2 {
@@ -1797,7 +1798,7 @@ func structFieldTypes(t *types.Struct) (r []string) {
 func structFieldNameValuesForLua(t *types.Struct, ele []string) (r []string) {
 	n := t.NumFields()
 	if len(ele) != n {
-		panic(fmt.Sprintf("internal error, field count n != len(ele)", n, len(ele)))
+		panic(fmt.Sprintf("internal error, field count %v == n != len(ele)=%v", n, len(ele)))
 	}
 	for i := 0; i < n; i++ {
 		fld := t.Field(i)
