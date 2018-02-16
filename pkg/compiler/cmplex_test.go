@@ -1,5 +1,8 @@
 package compiler
 
+/* generated test values for complex.lua; keep for future extensions/use, but no
+   need to test everytime against the repl
+
 import (
 	"fmt"
 	"math/cmplx"
@@ -57,3 +60,4 @@ func Test500ComplexNumbers(t *testing.T) {
 		fmt.Printf("done\n")
 	})
 }
+*/
