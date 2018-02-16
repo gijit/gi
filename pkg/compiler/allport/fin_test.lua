@@ -462,4 +462,158 @@ expectEq(b1, false)
 expectEq(try0, 3LL)
 expectEq(try1, 1LL)
 
+-- structs with pointers and slices
+
+--[[
+package main
+
+import (
+	"fmt"
+)
+
+type Hound struct {
+	Name   string
+	Id     int
+	Mate   *Hound
+	Litter []*Hound
+	PtrLit *[]*Hound
+
+	food int
+	ate  bool
+}
+
+func (h *Hound) Eat(a int) int {
+	if h.ate {
+		return h.food
+	}
+	h.ate = true
+	h.food += a
+
+	for _, pup := range h.Litter {
+		pup.Eat(a)
+	}
+	if h.Mate != nil {
+		h.Mate.Eat(a)
+	}
+	return h.food
+}
+
+func main() {
+	jake := &Hound{
+		Name: "Jake",
+		Id:   123,
+	}
+	joy := &Hound{
+		Name: "Joy",
+		Id:   456,
+	}
+	bubbles := &Hound{
+		Name: "Bubbles",
+		Id:   2,
+	}
+	barley := &Hound{
+		Name: "Barley",
+		Id:   3,
+	}
+	jake.Mate = joy
+	joy.Mate = jake
+	joy.Litter = []*Hound{bubbles, barley}
+	jake.PtrLit = &(joy.Litter)
+
+	got := joy.Eat(2)
+
+	fmt.Printf("joy.Eat(2) returned =%#v\n", got)
+	fmt.Printf("jake.food =%#v\n", jake.food)
+	fmt.Printf("joy.food =%#v\n", joy.food)
+	fmt.Printf("bubbles.food =%#v\n", bubbles.food)
+	fmt.Printf("barley.food =%#v\n", barley.food)
+}
+
+/*
+joy.Eat(2) returned =2
+jake.food =2
+joy.food =2
+bubbles.food =2
+barley.food =2
+*/
+
+--]]
+
+
+-- begin joy/jake puppies example
+
+	ptrType = __ptrType(Hound);
+	sliceType = __sliceType(ptrType);
+	ptrType__1 = __ptrType(sliceType);
+	sliceType__1 = __sliceType(__emptyInterface);
+
+Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, ...) 
+                        this.__val = this;
+                        local Name_, Id_, Mate_, Litter_, PtrLit_, food_, ate_ = ...
+                        local args = {...}
+		if #args == 0 
+			this.Name = "";
+			this.Id = 0;
+			this.Mate = ptrType.nil;
+			this.Litter = sliceType.nil;
+			this.PtrLit = ptrType__1.nil;
+			this.food = 0;
+			this.ate = false;
+			return;
+		end
+		this.Name = Name_ or "";
+		this.Id = Id_ or 0LL;
+		this.Mate = Mate_ or ptrType.nil;
+		this.Litter = Litter_;
+		this.PtrLit = PtrLit_;
+		this.food = food_ or 0LL;
+		this.ate = ate_ or false;
+                end);
+-- replace .prototype with .methodSet
+	Hound.ptr.methodSet.Eat = function(a)
+		local _i, _ref, a, h, pup;
+		h = this;
+		if (h.ate) then
+			return h.food;
+		end
+		h.ate = true;
+		h.food = h.food + (a) >> 0;
+		_ref = h.Litter;
+		_i = 0;
+		while true do
+                   if (!(_i < _ref.__length)) then break; end
+
+                   if (_i < 0 or _i >= #_ref) then
+                      __throwRuntimeError("index out of range")
+                   end
+                   pup = _ref.__array[_ref.__offset + _i]);
+			pup.Eat(a);
+			_i=_i+1;
+                        end
+		if (!(h.Mate == ptrType.nil)) then
+			h.Mate.Eat(a);
+		end
+		return h.food;
+	end;
+	Hound.methodSet.Eat = function(a)  return this.__val.Eat(a); end;
+
+
+		jake =  Hound.ptr("Jake", 123, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
+		joy =  Hound.ptr("Joy", 456, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
+		bubbles =  Hound.ptr("Bubbles", 2, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
+		barley =  Hound.ptr("Barley", 3, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
+		jake.Mate = joy;
+		joy.Mate = jake;
+		joy.Litter =  sliceType({bubbles, barley});
+		jake.PtrLit = ptrType__1(function() return this.__target.Litter; end, function(__v)  this.__target.Litter = __v; end, joy);
+		got = joy.Eat(2);
+                
+		print("joy.Eat(2) returned =", got)
+		print("jake.food =",  jake.food)
+		print("joy.food =",  joy.food)
+		print("bubbles.food =",  bubbles.food)
+		print("barley.food =",  barley.food)
+
+-- end joy/jake puppies
+
 print("done with fin_test.lua")
