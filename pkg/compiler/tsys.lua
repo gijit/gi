@@ -129,7 +129,7 @@ end
 
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
-function ___st(t, name, indent, quiet, methods_desc, seen)
+function __st(t, name, indent, quiet, methods_desc, seen)
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -176,7 +176,7 @@ function ___st(t, name, indent, quiet, methods_desc, seen)
       local vals = ""
       if methods_desc then
          --print("methods_desc is true")
-         --vals = ___st(v,"",indent+1,quiet,methods_desc, seen)
+         --vals = __st(v,"",indent+1,quiet,methods_desc, seen)
       else 
          vals = tostring(v)
       end
@@ -188,7 +188,7 @@ function ___st(t, name, indent, quiet, methods_desc, seen)
 
    --local mt = getmetatable(t)
    if mt ~= nil then
-      s = s .. "\n"..___st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
+      s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
    end
    if not quiet then
       print(s)
@@ -244,7 +244,7 @@ ___makeFunc = function(fn)
       -- TODO: port this!
       print("jea TODO: port this, what is ___externalize doing???")
       error("NOT DONE: port this!")
-      --return ___externalize(fn(this, (___sliceType({},___jsObjectPtr))(___global.Array.prototype.slice.call(arguments, {}))), ___emptyInterface);
+      --return ___externalize(fn(this, (__sliceType({},___jsObjectPtr))(___global.Array.prototype.slice.call(arguments, {}))), ___emptyInterface);
    end;
 end;
 ___unused = function(v) end;
@@ -384,9 +384,9 @@ end;
 ___copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    --print("___copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
    --print("___copyArray has dst:")
-   --___st(dst)
+   --__st(dst)
    --print("___copyArray has src:")
-   --___st(src)
+   --__st(src)
    
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
@@ -514,7 +514,7 @@ ___internalAppend = function(slice, array, offset, length)
 
    ___copyArray(newArray, array, newOffset + slice.___length, offset, length, elem);
    --print("jea debug, ___internalAppend, after copying over array:")
-   --___st(newArray)
+   --__st(newArray)
 
    local newSlice ={}
    slice.___constructor.tfun(newSlice, newArray);
@@ -579,7 +579,7 @@ ___valueArrayMT = {
    
    __newindex = function(t, k, v)
       --print("___valueArrayMT.__newindex called, t is:")
-      --___st(t)
+      --__st(t)
 
       if k < 0 or k >= #t then
          error "read of array error: access out-of-bounds"
@@ -590,7 +590,7 @@ ___valueArrayMT = {
    
    __index = function(t, k)
       --print("___valueArrayMT.__index called, k='"..tostring(k).."'; t.___val is:")
-      --___st(t.___val)
+      --__st(t.___val)
       if k < 0 or k >= #t then
          error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
       end
@@ -629,7 +629,7 @@ ___valueSliceMT = {
    
    __newindex = function(t, k, v)
       --print("___valueSliceMT.__newindex called, t is:")
-      --___st(t)
+      --__st(t)
       local w = t.___offset + k
       if k < 0 or k >= t.___capacity then
          error "slice error: write out-of-bounds"
@@ -639,7 +639,7 @@ ___valueSliceMT = {
    
    __index = function(t, k)
       --print("___valueSliceMT.__index called, k='"..tostring(k).."'; t.___val is:")
-      --___st(t.___val)
+      --__st(t.___val)
       local w = t.___offset + k
       if k < 0 or k >= t.___capacity then
          error "slice error: access out-of-bounds"
@@ -652,12 +652,34 @@ ___valueSliceMT = {
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from ___valueSliceMT")
+      print("__tostring called from ___valueSliceMT")
+
+       local len = self.___length
+       local beg = self.___offset
+       local cap = self.___capacity
+       local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is _giSlice{"
+       local raw = self.___array
+
+       -- we want to skip both the _giPrivateRaw and the len
+       -- when iterating, which happens automatically if we
+       -- iterate on raw, the raw inside private data, and not on the proxy.
+       local quo = ""
+       if len > 0 and type(raw[beg]) == "string" then
+          quo = '"'
+       end
+       for i = 0, len-1 do
+          s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(raw[beg+i]) .. quo .. ", "
+       end
+       
+       return s .. "}"
+      
+   end,
+   __old_tostring = function(self, ...)
       if type(self.___val) == "string" then
          return '"'..self.___val..'"'
       end
       if self ~= nil and self.___val ~= nil then
-         --print("___valueSliceMT.__tostring called, with self.___val set.")
+         print("___valueSliceMT.__tostring called, with self.___val set.")
          if self.___val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.___val == this; avoid inf loop>"
@@ -681,11 +703,11 @@ ___tfunBasicMT = {
       --print(debug.traceback())
       
       --print("in ___tfunBasicMT, start ___st on ...")
-      --___st({...}, "___tfunBasicMT.dots")
+      --__st({...}, "___tfunBasicMT.dots")
       --print("in ___tfunBasicMT,   end ___st on ...")
 
       --print("in ___tfunBasicMT, start ___st on self")
-      --___st(self, "self")
+      --__st(self, "self")
       --print("in ___tfunBasicMT,   end ___st on self")
 
       local newInstance = {}
@@ -790,7 +812,7 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v)
          --print("strings' tfun called! with v='"..tostring(v).."' and this:")
-         --___st(this)
+         --__st(this)
          this.___val = v; end;
       typ.wrapped = true;
       typ.keyFor = function(x) return "_" .. x; end;
@@ -985,8 +1007,8 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.init = function(pkgPath, fields)
          print("top of init() for struct, fields=")
          for i, f in pairs(fields) do
-            ___st(f, "field #"..tostring(i))
-            ___st(f.typ, "typ of field #"..tostring(i))
+            __st(f, "field #"..tostring(i))
+            __st(f.typ, "typ of field #"..tostring(i))
          end
          
          typ.pkgPath = pkgPath;
@@ -1006,10 +1028,10 @@ ___newType = function(size, kind, str, named, pkg, exported, constructor)
          end;
          typ.copy = function(dst, src)
             print("top of typ.copy for structs, here is dst then src:")
-            ___st(dst, "dst")
-            ___st(src, "src")
+            __st(dst, "dst")
+            __st(src, "src")
             print("fields:")
-            ___st(fields,"fields")
+            __st(fields,"fields")
             ___ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.typ.kind
@@ -1155,7 +1177,7 @@ function ___methodSet(typ)
 
   local isPtr = (typ.kind == ___kindPtr);
   print("___methodSet called with typ=")
-  ___st(typ)
+  __st(typ)
   print("___methodSet sees isPtr=", isPtr)
   
   if isPtr  and  typ.elem.kind == ___kindInterface then
@@ -1242,7 +1264,7 @@ function ___methodSet(typ)
         end
      end;
      print("after dedup, base for typ '"..typ.___str.."' is ")
-     ___st(base)
+     __st(base)
      
      current = next;
   end
@@ -1256,23 +1278,23 @@ function ___methodSet(typ)
 end;
 
 
-___Bool          = ___newType( 1, ___kindBool,          "bool",           true, "", false, nil);
-___Int           = ___newType( 8, ___kindInt,           "int",            true, "", false, nil);
-___Int8          = ___newType( 1, ___kindInt8,          "int8",           true, "", false, nil);
-___Int16         = ___newType( 2, ___kindInt16,         "int16",          true, "", false, nil);
-___Int32         = ___newType( 4, ___kindInt32,         "int32",          true, "", false, nil);
-___Int64         = ___newType( 8, ___kindInt64,         "int64",          true, "", false, nil);
-___Uint          = ___newType( 8, ___kindUint,          "uint",           true, "", false, nil);
-___Uint8         = ___newType( 1, ___kindUint8,         "uint8",          true, "", false, nil);
-___Uint16        = ___newType( 2, ___kindUint16,        "uint16",         true, "", false, nil);
-___Uint32        = ___newType( 4, ___kindUint32,        "uint32",         true, "", false, nil);
-___Uint64        = ___newType( 8, ___kindUint64,        "uint64",         true, "", false, nil);
-___Uintptr       = ___newType( 8, ___kindUintptr,       "uintptr",        true, "", false, nil);
-___Float32       = ___newType( 8, ___kindFloat32,       "float32",        true, "", false, nil);
-___Float64       = ___newType( 8, ___kindFloat64,       "float64",        true, "", false, nil);
---___Complex64     = ___newType( 8, ___kindComplex64,     "complex64",      true, "", false, nil);
---___Complex128    = ___newType(16, ___kindComplex128,    "complex128",     true, "", false, nil);
-___String        = ___newType(16, ___kindString,        "string",         true, "", false, nil);
+___Bool    = ___newType( 1, ___kindBool,    "bool",     true, "", false, nil);
+__type__int = ___newType( 8, ___kindInt,     "int",   true, "", false, nil);
+___Int8    = ___newType( 1, ___kindInt8,    "int8",     true, "", false, nil);
+___Int16   = ___newType( 2, ___kindInt16,   "int16",    true, "", false, nil);
+___Int32   = ___newType( 4, ___kindInt32,   "int32",    true, "", false, nil);
+___Int64   = ___newType( 8, ___kindInt64,   "int64",    true, "", false, nil);
+___Uint    = ___newType( 8, ___kindUint,    "uint",     true, "", false, nil);
+___Uint8   = ___newType( 1, ___kindUint8,   "uint8",    true, "", false, nil);
+___Uint16  = ___newType( 2, ___kindUint16,  "uint16",   true, "", false, nil);
+___Uint32  = ___newType( 4, ___kindUint32,  "uint32",   true, "", false, nil);
+___Uint64  = ___newType( 8, ___kindUint64,  "uint64",   true, "", false, nil);
+___Uintptr = ___newType( 8, ___kindUintptr,    "uintptr",  true, "", false, nil);
+___Float32 = ___newType( 8, ___kindFloat32,    "float32",  true, "", false, nil);
+___Float64 = ___newType( 8, ___kindFloat64,    "float64",  true, "", false, nil);
+--___Complex64  = ___newType( 8, ___kindComplex64,  "complex64",   true, "", false, nil);
+--___Complex128 = ___newType(16, ___kindComplex128, "complex128",  true, "", false, nil);
+___String  = ___newType(16, ___kindString,  "string",   true, "", false, nil);
 --___UnsafePointer = ___newType( 8, ___kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 --[[
@@ -1525,7 +1547,7 @@ function ___basicValue2kind(v)
    --error("___basicValue2kind: unhandled ty: '"..ty.."'")   
 end
 
-___sliceType = function(elem)
+__sliceType = function(elem)
    local typ = elem.slice;
    if typ == nil then
       typ = ___newType(24, ___kindSlice, "[]" .. elem.___str, false, "", false, nil);
@@ -1683,9 +1705,9 @@ ___assertType = function(value, typ, returnTuple)
          local valueMethodSet = ___methodSet(value.___typ);
          local interfaceMethods = typ.methods;
          print("valueMethodSet is")
-         ___st(valueMethodSet)
+         __st(valueMethodSet)
          print("interfaceMethods is")
-         ___st(interfaceMethods)
+         __st(interfaceMethods)
 
          ___ipairsZeroCheck(interfaceMethods)
          ___ipairsZeroCheck(valueMethodSet)
@@ -1693,9 +1715,9 @@ ___assertType = function(value, typ, returnTuple)
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
                print("checking vm against tm, where tm=")
-               ___st(tm)
+               __st(tm)
                print("and vm=")
-               ___st(vm)
+               __st(vm)
                
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
                   print("match found against vm and tm.")

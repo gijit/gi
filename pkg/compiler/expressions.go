@@ -249,13 +249,14 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return c.formatExpr(fmt.Sprintf(`__gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
 
 		case *types.Slice:
-			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
+			//zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 			ele := strings.Join(collectIndexedElements(t.Elem()), ", ")
 			if len(ele) > 0 {
 				// jea: do 0-based indexing of slices, not 1-based.
 				ele = "[0]=" + ele
 			}
-			return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
+			return c.formatExpr("%s({%s})", c.typeName(exprType), ele)
+			//return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
 			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))

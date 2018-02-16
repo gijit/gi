@@ -200,8 +200,8 @@ func Test010Slice(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-	__type__sliceType = ___sliceType(___Int);
-a=__type__sliceType({[0]=1LL,2LL,3LL});`)
+	__type__anon_sliceType = ___sliceType(___Int);
+a=__type__anon_sliceType({[0]=1LL,2LL,3LL});`)
 	})
 }
 

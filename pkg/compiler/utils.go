@@ -484,7 +484,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.initArgs(ty)
 
 		// [10:] takes prefix "__gi__kind" off.
-		low := "anon_" + strings.ToLower(typeKind(ty)[10:]) + "Type"
+		low := "__type__anon_" + strings.ToLower(typeKind(ty)[10:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
