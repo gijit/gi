@@ -214,7 +214,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 			// print anon_arrayType immedaitely
 			c.TypeNameSetting = IMMEDIATE
-
+			_ = c.typeName(exprType)
 			if len(elements) == 0 {
 				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)

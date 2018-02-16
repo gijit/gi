@@ -451,7 +451,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 	whenAnonPrint := c.TypeNameSetting
 
-	pp("in typeNameWithAnonInfo, ty='%#v'", ty)
+	pp("in typeNameWithAnonInfo, ty='%#v'; whenAnonPrint=%v", ty, whenAnonPrint)
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
 		pp("funcContext.typeName returning with res = '%s'", res)
@@ -483,8 +483,8 @@ func (c *funcContext) typeNameWithAnonInfo(
 		// cause all embedded types to be registered
 		c.initArgs(ty)
 
-		// [10:] takes prefix "__gi__kind" off.
-		low := "__type__anon_" + strings.ToLower(typeKind(ty)[5:]) + "Type"
+		// [6:] takes prefix "__kind" off.
+		low := "__type__anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)

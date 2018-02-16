@@ -300,6 +300,7 @@ func Test015ArrayCreation(t *testing.T) {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+__type__anon_arrayType = __arrayType(__type__int, 3); -- 'IMMEDIATE' anon type printing.
 x=__toNativeArray(__kindInt, {[0]=1LL,2LL,3LL}); 
 bb = 3LL;`)
 
