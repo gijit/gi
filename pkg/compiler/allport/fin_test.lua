@@ -623,6 +623,7 @@ Hound.ptr.methodSet.Eat = function(this, a)
 
 		clone = __clone(barley, Hound);
 		print("clone.food =", clone.food)
+		print("clone.Name =", clone.Name)
                 
 		print("joy:Eat(2) returned =", got)
 		print("jake.food =",  jake.food)

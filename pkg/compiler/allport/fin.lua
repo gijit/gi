@@ -12,6 +12,9 @@ __module ={};
 __packages = {}
 __idCounter = 0;
 
+function __ipairsZeroCheck(arr)
+   if arr[0] ~= nil then error("ipairs will miss the [0] index of this array") end
+end
 
 __mod = function(y) return x % y; end;
 __parseInt = parseInt;
@@ -238,6 +241,7 @@ __mapArray = function(arr, f)
       bump = 1
       newarr[1] = fun(zval)
    end
+   __ipairsZeroCheck(arr)
    for i,v in ipairs(arr) do
       newarr[i+bump] = fun(v)
    end
@@ -709,6 +713,7 @@ __addMethodSynthesizer = function(f)
 end;
 
 __synthesizeMethods = function()
+   __ipairsZeroCheck(__methodSynthesizers)
    for i,f in ipairs(__methodSynthesizers) do
       f();
    end
@@ -968,6 +973,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          typ.pkgPath = pkgPath;
          typ.fields = fields;
+         __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
             if not f.typ.comparable then
                typ.comparable = false;
@@ -986,6 +992,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             __st(src, "src")
             print("fields:")
             __st(fields,"fields")
+            __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.typ.kind
                
@@ -1000,6 +1007,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
+         __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
             properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
          end;
@@ -1183,6 +1191,7 @@ function __methodSet(typ)
           -- assume that e.typ.fields must be an array!
           -- TODO: remove this assert after confirmation.
           __assertIsArray(e.typ.fields)
+          __ipairsZeroCheck(e.typ.fields)
           for i,f in ipairs(e.typ.fields) do
              if f.anonymous then
                 local fTyp = f.typ;
@@ -1659,7 +1668,9 @@ __assertType = function(value, typ, returnTuple)
          __st(valueMethodSet)
          print("interfaceMethods is")
          __st(interfaceMethods)
-         
+
+         __ipairsZeroCheck(interfaceMethods)
+         __ipairsZeroCheck(valueMethodSet)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
@@ -1722,3 +1733,15 @@ __getStackDepth = function()
   return __stackDepthOffset + #err.stack.split("\n");
 end;
 
+-- check/start at 0 if is present.
+function zipairs(a)
+   local n = 0
+   local s = #a
+   if a[0] ~= nil then
+      n = -1
+   end
+   return function()
+      n = n + 1
+      if n <= s then return n,a[n] end
+   end
+end
