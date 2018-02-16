@@ -522,6 +522,9 @@ func main() {
 
 	got := joy.Eat(2)
 
+	var clone Hound = *barley
+	fmt.Printf("clone.food =%#v\n", clone.food)
+
 	fmt.Printf("joy.Eat(2) returned =%#v\n", got)
 	fmt.Printf("jake.food =%#v\n", jake.food)
 	fmt.Printf("joy.food =%#v\n", joy.food)
@@ -530,6 +533,7 @@ func main() {
 }
 
 /*
+clone.food =2
 joy.Eat(2) returned =2
 jake.food =2
 joy.food =2
@@ -612,6 +616,10 @@ Hound.ptr.methodSet.Eat = function(this, a)
 		joy.Litter =  sliceType({bubbles, barley});
 		jake.PtrLit = ptrType__1(function() return this.__target.Litter; end, function(__v)  this.__target.Litter = __v; end, joy);
 		got = joy:Eat(2);
+
+
+		clone = __clone(barley, Hound);
+		print("clone.food =", clone.food)
                 
 		print("joy:Eat(2) returned =", got)
 		print("jake.food =",  jake.food)
@@ -621,4 +629,20 @@ Hound.ptr.methodSet.Eat = function(this, a)
 
 -- end joy/jake puppies
 
+                -- notice that structs have the __get, __set functions, and the __val table.
+                -- what are these/do they work?/ should they live in the struct on on a related table?
+--[[
+this-on-Hound.ptr: ============================ table: 0x000a8720
+this-on-Hound.ptr:  1 key: 'ate' val: 'false'
+this-on-Hound.ptr:  2 key: 'Mate' val: 'table: 0x000643e0'
+this-on-Hound.ptr:  3 key: '__get' val: 'function: 0x000a84f8'
+this-on-Hound.ptr:  4 key: 'Id' val: '123'
+this-on-Hound.ptr:  5 key: '__set' val: 'function: 0x00064418'
+this-on-Hound.ptr:  6 key: 'Litter' val: '<this.__val == this; avoid inf loop>'
+this-on-Hound.ptr:  7 key: 'Name' val: 'Jake'
+this-on-Hound.ptr:  8 key: 'food' val: '0'
+this-on-Hound.ptr:  9 key: 'PtrLit' val: '<this.__val == this; avoid inf loop>'
+this-on-Hound.ptr:  10 key: '__val' val: 'table: 0x000a8720'
+--]]
+                
 print("done with fin_test.lua")
