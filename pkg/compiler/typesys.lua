@@ -15,8 +15,8 @@ if int8 == nil then
    dofile 'int64.lua' -- for integer types with Go naming.
 end
 
--- NB fin and fin_test use ___ triple underscores, to
--- avoid collision while integrating with struct.lua
+-- NB typesys.lua/fin.lua/fin_test.lua are using ___ triple underscores, to
+-- avoid collision while integrating with struct.lua.
 
 -- translation of javascript builtin 'prototype' -> typ.methodSet
 --                                   'constructor' -> typ.___constructor
