@@ -2,7 +2,16 @@
 -- complex number support
 --
 
+-- Portions of /usr/local/go/src/math/cmplx
+-- in the Go language distribution/Go standard library, are
+-- used under the following terms:
+-- Copyright 2010 The Go Authors. All rights reserved.
+-- Use of this source code is governed by a BSD-style
+-- license that can be found in the LICENSE file.
+-- 
+
 local ffi = require("ffi")
+local bit = require("bit")
 
 -- complex128 and complex64 are Go predefined types
 local complex128=ffi.typeof("complex double") -- aka "complex". re and im are each float64.
@@ -10,6 +19,14 @@ local complex64=ffi.typeof("complex float")   -- re and im are each float32
 
 local ffiNew=ffi.new
 local ffiIsType=ffi.istype
+
+local function __truncateToInt(x)
+   if x >= 0 then
+       return x - (x % 1)
+   end
+   return x + (-x % 1)
+end
+
 
 -- provide Go's builtin complex constructor.
 local function complex(re, im)
@@ -64,6 +81,7 @@ local sinh=math.sinh
 local sqrt=math.sqrt
 local atan2=math.atan2
 local i=complex(0,1)
+local Inf=math.huge
 
 local function cexp(a)
    return e^a
@@ -94,7 +112,7 @@ local function carg(z)
 end
 
 -- returns two values: r, theta; giving the polar coordinates of c.
-local function polar(c)
+local function cpolar(c)
    return cabs(c), carg(c)
 end
 
@@ -103,7 +121,7 @@ end
 -- coordinates. e.g. r*exp(i*theta) -> x+iy, where
 -- x is r*cos(theta), and y is r*sin(theta).
 --
-local function rect(r, theta)
+local function crect(r, theta)
    return complex(r*cos(theta), r*sin(theta))
 end
 
@@ -169,7 +187,7 @@ local __cxMT={
          return complex(0, 0)
       end
       local theta=atan2(ia, ra)
-      return rect(alensq^(rb/2)*exp(-ib*theta),ib*log(alensq)/2+rb*theta)
+      return crect(alensq^(rb/2)*exp(-ib*theta),ib*log(alensq)/2+rb*theta)
    end
    
 }
@@ -187,40 +205,136 @@ end
 
 -- cmath library functions
 local cmath = {
-   conj=conj,
-   cabs=cabs,
-   carg=carg,
-   cexp=cexp,
-   clog=clog,
-   polar=polar,
-   rect=rect,
-   csqrt=csqrt
+   Conj=conj,
+   Abs=cabs,
+   Arg=carg,
+   Exp=cexp,
+   Log=clog,
+   Polar=cpolar,
+   Rect=crect,
+   Sqrt=csqrt
 }
 
 
-function cmath.sin(c)
+function cmath.Sin(c)
 	local r,i=real(c),imag(c)
 	return complex(sin(r)*cosh(i),cos(r)*sinh(i))
 end
-function cmath.cos(c)
+function cmath.Cos(c)
 	local r,i=real(c),imag(c)
 	return complex(cos(r)*cosh(i),sin(r)*sinh(i))
 end
-function cmath.tan(c)
+function cmath.Tan(c)
 	local r,i=2*real(c),2*imag(c)
 	local div=cos(r)+cosh(i)
 	return complex(sin(r)/div,sinh(i)/div)
 end
 
-function cmath.sinh(c)
+-- Program to subtract nearest integer multiple of PI
+function reducePi(x) -- takes float64, returns float64
+   -- extended precision value of PI:
+   local DP1 = 3.14159265160560607910E0   -- ?? 0x400921fb54000000
+   local DP2 = 1.98418714791870343106E-9  -- ?? 0x3e210b4610000000
+   local DP3 = 1.14423774522196636802E-17 -- ?? 0x3c6a62633145c06e
+	t = x / pi
+	if t >= 0 then
+		t = t + 0.5
+	else
+		t = t - 0.5
+	end
+    t = __truncateToInt(t) -- int64(t) = the multiple
+	return ((x - t*DP1) - t*DP2) - t*DP3
+end
+
+-- Taylor series expansion for cosh(2y) - cos(2x)
+function tanSeries(z) -- takes complex128, returns float64
+   local MACHEP = 1.0 / tonumber(bit.lshift(1LL, 53))
+   local x = abs(2 * real(z))
+   local y = abs(2 * imag(z))
+   x = reducePi(x)
+   x = x * x
+   y = y * y
+   local x2=1
+   local y2=1
+   local f =1
+   local rn = 0
+   local d = 0
+   while true do
+      rn=rn+1
+      f = f*rn
+      rn=rn+1
+      f=f*rn
+      x2 = x2 * x
+      y2 = y2 * y
+      local t = y2 + x2
+      t=t/f
+      d=d+t
+      
+      rn=rn+1
+      f=f*rn
+      rn=rn+1
+      f=f*rn
+      x2 = x2 * x
+      y2 = y2*y
+      t = y2 - x2
+      t = t/f
+      d=d+t
+      if not (abs(t/d) > MACHEP) then
+         -- Caution: Use `not` and > instead of <= for correct behavior if t/d is NaN.
+         -- See issue 17577.
+         break
+      end
+   end
+   return d
+end
+
+-- Complex circular cotangent
+--
+-- DESCRIPTION:
+--
+-- If
+--     z = x + iy,
+--
+-- then
+--
+--           sin 2x  -  i sinh 2y
+--     w  =  --------------------.
+--            cosh 2y  -  cos 2x
+--
+-- On the real axis, the denominator has zeros at even
+-- multiples of PI/2.  Near these points it is evaluated
+-- by a Taylor series.
+--
+-- ACCURACY:
+--
+--                      Relative error:
+-- arithmetic   domain     # trials      peak         rms
+--    DEC       -10,+10      3000       6.5e-17     1.6e-17
+--    IEEE      -10,+10     30000       9.2e-16     1.2e-16
+-- Also tested by ctan * ccot = 1 + i0.
+
+-- Cot returns the cotangent of x.
+function cmath.Cot(c)
+   local xr, xi = real(x), imag(x)
+   local d = cosh(2*xi) - cos(2*xr)
+	if abs(d) < 0.25 then
+		d = tanSeries(x)
+	end
+	if d == 0 then
+		return Inf
+	end
+	return complex(sin(2*xr)/d, -sinh(2*xi)/d)
+end
+
+function cmath.Sinh(c)
 	local r,i=real(c),imag(c)
 	return complex(cos(i)*sinh(r),sin(i)*cosh(r))
 end
-function cmath.cosh(c)
+function cmath.Cosh(c)
 	local r,i=real(c),imag(c)
 	return complex(cos(i)*cosh(r),sin(i)*sinh(r))
 end
-function cmath.tanh(c)
+function cmath.Tanh(c)
 	local r,i=2*real(c),2*imag(c)
 	local div=cos(i)+cosh(r)
 	return complex(sinh(r)/div,sin(i)/div)
@@ -228,40 +342,40 @@ end
 
 -- inverse trig functions
 
-function cmath.asin(c)
+function cmath.Asin(c)
    return i*clog(i*c+(1-c^2)^0.5)
 end
-function cmath.acos(c)
+function cmath.Acos(c)
 	return pi/2+i*clog(i*c+(1-c^2)^0.5)
 end
-function cmath.atan(c)
-	local r2,i2=re(c),im(c)
+function cmath.Atan(c)
+	local r2,i2=real(c),imag(c)
 	local c3,c4=complex(1-i2,r2),complex(1+r2^2-i2^2,2*r2*i2)
 	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.abs(c4)^0.5))
 end
-function cmath.atan2(c2,c1)--y,x
-	local r1,i1,r2,i2=re(c1),im(c1),re(c2),im(c2)
-	if r1==0 and i1==0 and r2==0 and i2==0 then--Indeterminate
+function cmath.Atan2(c2,c1)--y,x
+	local r1,i1,r2,i2=real(c1),imag(c1),real(c2),imag(c2)
+	if r1==0 and i1==0 and r2==0 and i2==0 then
 		return 0
 	end
 	local c3,c4=complex(r1-i2,i1+r2),complex(r1^2-i1^2+r2^2-i2^2,2*(r1*i1+r2*i2))
-	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.abs(c4)^0.5))
+	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.Abs(c4)^0.5))
 end
 
-function cmath.asinh(c)
+function cmath.Asinh(c)
 	return clog(c+(1+c^2)^0.5)
 end
-function cmath.acosh(c)
+function cmath.Acosh(c)
 	return 2*clog((c-1)^0.5+(c+1)^0.5)-log(2)
 end
-function cmath.atanh(c)
+function cmath.Atanh(c)
 	return (clog(1+c)-clog(1-c))/2
 end
 
 -- complex base logarithm. log(b,z) gives log_b(z),
 -- which is clog(z)/clog(b), with base b.
 --
-function cmath.log(b, z)
+function cmath.Log(b, z)
    
 	local br, bi = real(b), imag(b)
 	local zr, zi = real(z), imag(z)
@@ -276,7 +390,7 @@ function cmath.log(b, z)
 	return complex((sr*qr+si*qi)/denom, (qr*si-sr*qi)/denom)
 end
 
-cmath.pow = __cxMT.__pow
+cmath.Pow = __cxMT.__pow
 
 
 -- exports
