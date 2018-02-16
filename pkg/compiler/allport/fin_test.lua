@@ -542,73 +542,78 @@ barley.food =2
 
 -- begin joy/jake puppies example
 
-	ptrType = __ptrType(Hound);
-	sliceType = __sliceType(ptrType);
-	ptrType__1 = __ptrType(sliceType);
-	sliceType__1 = __sliceType(__emptyInterface);
-
 Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, ...) 
                         this.__val = this;
                         local Name_, Id_, Mate_, Litter_, PtrLit_, food_, ate_ = ...
                         local args = {...}
-		if #args == 0 
+		if #args == 0  then
 			this.Name = "";
 			this.Id = 0;
-			this.Mate = ptrType.nil;
-			this.Litter = sliceType.nil;
-			this.PtrLit = ptrType__1.nil;
+			this.Mate = ptrType.__nil;
+			this.Litter = sliceType.__nil;
+			this.PtrLit = ptrType__1.__nil;
 			this.food = 0;
 			this.ate = false;
 			return;
 		end
 		this.Name = Name_ or "";
 		this.Id = Id_ or 0LL;
-		this.Mate = Mate_ or ptrType.nil;
+		this.Mate = Mate_ or ptrType.__nil;
 		this.Litter = Litter_;
 		this.PtrLit = PtrLit_;
 		this.food = food_ or 0LL;
 		this.ate = ate_ or false;
                 end);
 -- replace .prototype with .methodSet
-	Hound.ptr.methodSet.Eat = function(a)
-		local _i, _ref, a, h, pup;
+Hound.ptr.methodSet.Eat = function(this, a)
+   print("Eat called, with a = ", a, " and this=")
+   __st(this,"this-on-Hound.ptr")
+   
+		local _i, _ref, h, pup;
 		h = this;
-		if (h.ate) then
-			return h.food;
+		if h.ate then
+                   return h.food;
 		end
 		h.ate = true;
-		h.food = h.food + (a) >> 0;
+		h.food = h.food + a;
 		_ref = h.Litter;
+                __st(_ref, "_ref")
 		_i = 0;
 		while true do
-                   if (!(_i < _ref.__length)) then break; end
+                   if not (_i < #_ref) then break; end
 
                    if (_i < 0 or _i >= #_ref) then
                       __throwRuntimeError("index out of range")
                    end
-                   pup = _ref.__array[_ref.__offset + _i]);
-			pup.Eat(a);
+                   __st(_ref.__array, "_ref.__array")
+                   print("_i = ", _i)
+                   pup = _ref.__array[_ref.__offset + _i + 1]; -- + 1 for lua's arrays
+                   pup:Eat(a);
 			_i=_i+1;
                         end
-		if (!(h.Mate == ptrType.nil)) then
-			h.Mate.Eat(a);
+		if not (h.Mate == ptrType.__nil) then
+			h.Mate:Eat(a);
 		end
 		return h.food;
 	end;
 	Hound.methodSet.Eat = function(a)  return this.__val.Eat(a); end;
 
+	ptrType = __ptrType(Hound);
+	sliceType = __sliceType(ptrType);
+	ptrType__1 = __ptrType(sliceType);
+	sliceType__1 = __sliceType(__emptyInterface);        
 
-		jake =  Hound.ptr("Jake", 123, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
-		joy =  Hound.ptr("Joy", 456, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
-		bubbles =  Hound.ptr("Bubbles", 2, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
-		barley =  Hound.ptr("Barley", 3, ptrType.nil, sliceType.nil, ptrType__1.nil, 0, false);
+		jake =  Hound.ptr("Jake", 123, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+		joy =  Hound.ptr("Joy", 456, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+		bubbles =  Hound.ptr("Bubbles", 2, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+		barley =  Hound.ptr("Barley", 3, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
 		jake.Mate = joy;
 		joy.Mate = jake;
 		joy.Litter =  sliceType({bubbles, barley});
 		jake.PtrLit = ptrType__1(function() return this.__target.Litter; end, function(__v)  this.__target.Litter = __v; end, joy);
-		got = joy.Eat(2);
+		got = joy:Eat(2);
                 
-		print("joy.Eat(2) returned =", got)
+		print("joy:Eat(2) returned =", got)
 		print("jake.food =",  jake.food)
 		print("joy.food =",  joy.food)
 		print("bubbles.food =",  bubbles.food)
