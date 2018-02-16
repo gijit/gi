@@ -13,6 +13,8 @@
 math.isnan  = function(x) return x ~= x; end
 math.finite = function(x) return x > -math.huge and x < math.huge; end
 
+math.nan = math.huge * 0
+
 __truncateToInt = function(x)
    if x >= 0 then
        return x - (x % 1)
