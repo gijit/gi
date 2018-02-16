@@ -567,7 +567,10 @@ Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/
 		this.PtrLit = PtrLit_;
 		this.food = food_ or 0LL;
 		this.ate = ate_ or false;
-                end);
+end);
+
+Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "Name", name= "Name", anonymous= false, exported= true, typ= __String, tag= ""}, {prop= "Id", name= "Id", anonymous= false, exported= true, typ= __Int, tag= ""}, {prop= "Mate", name= "Mate", anonymous= false, exported= true, typ= ptrType, tag= ""}, {prop= "Litter", name= "Litter", anonymous= false, exported= true, typ= sliceType, tag= ""}, {prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, typ= ptrType__1, tag= ""}, {prop= "food", name= "food", anonymous= false, exported= false, typ= __Int, tag= ""}, {prop= "ate", name= "ate", anonymous= false, exported= false, typ= __Bool, tag= ""}});
+
 -- replace .prototype with .methodSet
 Hound.ptr.methodSet.Eat = function(this, a)
    print("Eat called, with a = ", a, " and this=")

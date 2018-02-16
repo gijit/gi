@@ -1,5 +1,8 @@
 dofile '../math.lua' -- for __max, __min, __truncateToInt
 
+-- translation of javascript builtin 'prototype' -> typ.methodSet
+--                                   'constructor' -> typ.__constructor
+
 dofile '../int64.lua'
 __ffi = require("ffi")
 __bit =require("bit")
@@ -976,8 +979,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end)
          end;
          typ.copy = function(dst, src)
-            for i=0,#fields-1 do
-               local f = fields[i];
+            print("top of typ.copy for structs, here is dst then src:")
+            __st(dst, "dst")
+            __st(src, "src")
+            print("fields:")
+            __st(fields,"fields")
+            for _, f in ipairs(fields) do
                local sw2 = f.typ.kind
                
                if sw2 == __kindArray or
@@ -988,6 +995,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                end
             end
          end;
+         print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
          for i,f in ipairs(fields) do
