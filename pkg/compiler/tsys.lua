@@ -1,5 +1,5 @@
 --
--- typesys.lua the type system for gijit.
+-- tsys.lua the type system for gijit.
 -- It started life as a port of the GopherJS type
 -- system to LuaJIT, and still shows some
 -- javascript vestiges.
@@ -15,7 +15,7 @@ if int8 == nil then
    dofile 'int64.lua' -- for integer types with Go naming.
 end
 
--- NB typesys.lua/fin.lua/fin_test.lua are using ___ triple underscores, to
+-- NB tsys.lua/fin.lua/fin_test.lua are using ___ triple underscores, to
 -- avoid collision while integrating with struct.lua.
 
 -- translation of javascript builtin 'prototype' -> typ.methodSet
