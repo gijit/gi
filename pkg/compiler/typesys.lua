@@ -1,4 +1,19 @@
--- dofile '../math.lua' -- for __max, __min, __truncateToInt
+--
+-- typesys.lua the type system for gijit.
+-- It started life as a port of the GopherJS type
+-- system to LuaJIT, and still shows some
+-- javascript vestiges.
+
+-- We would typically assume these dofile imports
+-- are already done by prelude loading.
+-- For dev work, we'll load them if not already.
+--
+if __min == nil then
+   dofile 'math.lua' -- for __max, __min, __truncateToInt
+end
+if int8 == nil then
+   dofile 'int64.lua' -- for integer types with Go naming.
+end
 
 -- NB fin and fin_test use ___ triple underscores, to
 -- avoid collision while integrating with struct.lua
@@ -6,7 +21,6 @@
 -- translation of javascript builtin 'prototype' -> typ.methodSet
 --                                   'constructor' -> typ.___constructor
 
--- dofile '../int64.lua'
 ___ffi = require("ffi")
 ___bit = require("bit")
 
