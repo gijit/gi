@@ -77,6 +77,8 @@ local exp=math.exp
 local log=math.log
 local cos=math.cos
 local sin=math.sin
+local asin=math.asin
+local acos=math.acos
 local cosh=math.cosh
 local sinh=math.sinh
 local sqrt=math.sqrt
@@ -102,27 +104,35 @@ local function cabs(a)
    return sqrt(ra*ra + ia*ia)
 end
 
--- carg is the angle between the positive real
+
+-- phase returns the phase (also called the argument) of x.
+-- The returned value is in the range [-Pi, Pi].
+--
+-- It is the angle between the positive real
 -- axis to the line joining the point to the origin;
 -- also known as an argument of the point.
--- a.k.a phase; If no errors occur, returns
+--
+-- If no errors occur, returns
 -- the phase angle of z in the interval [−π; π].
-local function carg(z)
-   z=complex(z)
-   return atan2(imag(z), real(z))
+--
+local function phase(x)
+   x=complex(x)
+   return atan2(imag(x), real(x))
 end
 
 -- returns two values: r, theta; giving the polar coordinates of c.
-local function cpolar(c)
-   return cabs(c), carg(c)
+local function polar(c)
+   return cabs(c), phase(c)
 end
 
+-- rect returns the complex number x with polar coordinates r, θ.
+-- i.e.
 -- convert from polar coordinates to a complex number
 -- where the real and imag parts naturally provide rectangular
 -- coordinates. e.g. r*exp(i*theta) -> x+iy, where
 -- x is r*cos(theta), and y is r*sin(theta).
 --
-local function crect(r, theta)
+local function rect(r, theta)
    return complex(r*cos(theta), r*sin(theta))
 end
 
@@ -138,7 +148,7 @@ local function clog(a)
    return complex(log(ra*ra + ia*ia)/2, atan2(ia,ra))
 end
 
--- clog computes the complex natural log, single precision,
+-- clogf computes the complex natural log, single precision,
 -- with branch cut along the negative real axis.
 local function clogf(a)
    local ra, ia = real(a), imag(a)
@@ -188,7 +198,7 @@ local __cxMT={
          return complex(0, 0)
       end
       local theta=atan2(ia, ra)
-      return crect(alensq^(rb/2)*exp(-ib*theta),ib*log(alensq)/2+rb*theta)
+      return rect(alensq^(rb/2)*exp(-ib*theta),ib*log(alensq)/2+rb*theta)
    end
    
 }
@@ -208,11 +218,11 @@ end
 local cmath = {
    Conj=conj,
    Abs=cabs,
-   Arg=carg,
+   Phase=phase,
    Exp=cexp,
    Log=clog,
-   Polar=cpolar,
-   Rect=crect,
+   Polar=polar,
+   Rect=rect,
    Sqrt=csqrt
 }
 
@@ -223,7 +233,7 @@ function cmath.Sin(c)
 end
 function cmath.Cos(c)
 	local r,i=real(c),imag(c)
-	return complex(cos(r)*cosh(i),sin(r)*sinh(i))
+	return complex(cos(r)*cosh(i),-sin(r)*sinh(i))
 end
 function cmath.Tan(c)
 	local r,i=2*real(c),2*imag(c)
@@ -343,24 +353,58 @@ end
 
 -- inverse trig functions
 
-function cmath.Asin(c)
-   return i*clog(i*c+(1-c^2)^0.5)
+-- Complex circular arc sine
+--
+-- DESCRIPTION:
+--
+-- Inverse complex sine:
+--                               2
+-- w = -i clog( iz + csqrt( 1 - z ) ).
+--
+-- casin(z) = -i casinh(iz)
+--
+-- ACCURACY:
+--
+--                      Relative error:
+-- arithmetic   domain     # trials      peak         rms
+--    DEC       -10,+10     10100       2.1e-15     3.4e-16
+--    IEEE      -10,+10     30000       2.2e-14     2.7e-15
+-- Larger relative error can be observed for z near zero.
+-- Also tested by csin(casin(z)) = z.
+
+-- Asin returns the inverse sine of x.
+function cmath.Asin(x)
+   local xr = real(x)
+   local xi = imag(x)
+	if xi == 0 then
+		if abs(xr) > 1 then
+			return complex(pi/2, 0) -- DOMAIN error
+		end
+		return complex(asin(xr), 0)
+	end
+	local ct = complex(-xi, xr) -- i * x
+	local xx = x * x
+	local x1 = complex(1-real(xx), -imag(xx)) -- 1 - x*x
+	local x2 = csqrt(x1)                       -- x2 = sqrt(1 - x*x)
+	local w = clog(ct + x2)
+	return complex(imag(w), -real(w)) -- -i * w
 end
+
 function cmath.Acos(c)
 	return pi/2+i*clog(i*c+(1-c^2)^0.5)
 end
 function cmath.Atan(c)
 	local r2,i2=real(c),imag(c)
 	local c3,c4=complex(1-i2,r2),complex(1+r2^2-i2^2,2*r2*i2)
-	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.abs(c4)^0.5))
+	return complex(phase(c3/c4^0.5),-clog(cabs(c3)/cabs(c4)^0.5))
 end
-function cmath.Atan2(c2,c1)--y,x
+function cmath.Atan2(c2,c1) -- y, x
 	local r1,i1,r2,i2=real(c1),imag(c1),real(c2),imag(c2)
 	if r1==0 and i1==0 and r2==0 and i2==0 then
 		return 0
 	end
-	local c3,c4=complex(r1-i2,i1+r2),complex(r1^2-i1^2+r2^2-i2^2,2*(r1*i1+r2*i2))
-	return complex(arg(c3/c4^0.5),-clog(cmath.abs(c3)/cmath.Abs(c4)^0.5))
+	local c3,c4=complex(r1-i2,i1+r2),complex(r1*r1 - i1*i1 + r2*r2 - i2*i2, 2*(r1*i1 + r2*i2))
+	return complex(phase(c3/c4^0.5),-clog(cabs(c3)/cabs(c4)^0.5))
 end
 
 function cmath.Asinh(c)
@@ -376,7 +420,7 @@ end
 -- complex base logarithm. log(b,z) gives log_b(z),
 -- which is clog(z)/clog(b), with base b.
 --
-function cmath.Log(b, z)
+function cmath.ComplexLog(b, z)
    
 	local br, bi = real(b), imag(b)
 	local zr, zi = real(z), imag(z)
@@ -393,7 +437,6 @@ end
 
 cmath.Pow = __cxMT.__pow
 
-
 -- exports
 _G.complex=complex
 _G.complex128=complex128
@@ -401,6 +444,10 @@ _G.complex64=complex64
 _G.real=real
 _G.imag=imag
 _G.cmath=cmath
+
+-- Specifically do not import as cmplx, so that we can 
+-- allow the Go library to exist side-by-side for testing/comparison.
+-- _G.cmplx=cmath
 
 --[[
 -- tests
@@ -431,16 +478,45 @@ local expectedCot = {
    (-0.004336960053730652+1.0025022601350426i)
 }
 
-function cdiff(a,b)
-   return cabs(a-b) > 0.0000001
+function check(a, b)
+   if cabs(a-b) > 0.0000001 then
+      error("difference!")
+   end
 end
 
 for i, v in ipairs(acosTestVals) do
    --print("on i = ", i)
-   if cdiff(cmath.Cot(v), expectedCot[i]) then
-      error("difference at Cot case i="..i)
-   end
+   check(cmath.Cot(v), expectedCot[i])
 end
+
+check(cmath.Exp((1.0017679804707456-2.9138232718554953i)), (-2.652761299626814-0.6148879956088891i))
+print("cmath.Exp checks")
+
+check(cmath.Conj((1.0017679804707456-2.9138232718554953i)), (1.0017679804707456+2.9138232718554953i))
+check(cmath.Abs((1.0017679804707456-2.9138232718554953i)), 3.081218127024294)
+check(cmath.Phase((1.0017679804707456-2.9138232718554953i)), -1.2396569035824907)
+check(cmath.Log((1.0017679804707456-2.9138232718554953i)), (1.1253250145847473-1.2396569035824907i))
+check(cmath.Sqrt((1.0017679804707456-2.9138232718554953i)), (1.4288082634655777-1.019669099893085i))
+check(cmath.Sin((1.0017679804707456-2.9138232718554953i)), (7.784589065071272-4.949771659620112i))
+check(cmath.Cos((1.0017679804707456-2.9138232718554953i)), (4.979011924883674+7.738872474578103i))
+check(cmath.Tan((1.0017679804707456-2.9138232718554953i)), (0.005360254415745048-1.0024587328321108i))
+check(cmath.Cot((1.0017679804707456-2.9138232718554953i)), (0.005333839942314019+0.9975187770930108i))
+check(cmath.Sinh((1.0017679804707456-2.9138232718554953i)), (-1.1475081545902999-0.3489051537979257i))
+check(cmath.Cosh((1.0017679804707456-2.9138232718554953i)), (-1.5052531450365143-0.26598284181096343i))
+check(cmath.Tanh((1.0017679804707456-2.9138232718554953i)), (0.7789713818473163+0.0941450495765785i))
+check(cmath.Asin((1.0017679804707456-2.9138232718554953i)), (0.315902142176508-1.8389632402722567i))
+check(cmath.Acos((1.0017679804707456-2.9138232718554953i)), (1.2548941846183885+1.8389632402722567i))
+check(cmath.Atan((1.0017679804707456-2.9138232718554953i)), (1.4549738117535138-0.3130322073097648i))
+check(cmath.Asinh((1.0017679804707456-2.9138232718554953i)), (1.797481526353204-1.2223981995549138i))
+check(cmath.Acosh((1.0017679804707456-2.9138232718554953i)), (1.8389632402722567-1.2548941846183885i))
+check(cmath.Atanh((1.0017679804707456-2.9138232718554953i)), (0.0966478569558242-1.2701291676466084i))
+print("cmath.Atanh checks")
+
+local b = (0.48681307452231387690013905 - 2.463655912283054555225301i)
+local z = (2.6189310485682988308904501 - 2.9956543302898767795858704i)
+local l = cmath.ComplexLog(b, z)
+check(b^l, z)
+print("cmath.ComplexLog checks")
 
 -- end tests
 --]]
