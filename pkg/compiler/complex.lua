@@ -281,7 +281,7 @@ function tanSeries(z) -- takes complex128, returns float64
       d=d+t
       if not (abs(t/d) > MACHEP) then
          -- Caution: Use `not` and > instead of <= for correct behavior if t/d is NaN.
-         -- See issue 17577.
+         -- See golang issue 17577.
          break
       end
    end
@@ -314,7 +314,7 @@ end
 -- Also tested by ctan * ccot = 1 + i0.
 
 -- Cot returns the cotangent of x.
-function cmath.Cot(c)
+function cmath.Cot(x)
    local xr, xi = real(x), imag(x)
    local d = cosh(2*xi) - cos(2*xr)
 	if abs(d) < 0.25 then
