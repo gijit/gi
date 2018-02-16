@@ -232,7 +232,8 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);
+__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.  
+a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
 hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
 	})
 }
@@ -248,7 +249,8 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);
+  	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
+  	a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
 hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
