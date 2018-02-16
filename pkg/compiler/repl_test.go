@@ -281,7 +281,12 @@ func Test014LenOfSlice(t *testing.T) {
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewSlice("string",{[0]="hi","gophers!"},""); bb = #x;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+  	__type__anon_sliceType = __sliceType(__type__string); -- 'IMMEDIATE' anon type printing.
+  
+  	x = __type__anon_sliceType({[0]="hi", "gophers!"});
+
+    bb = #x;`)
 	})
 }
 
