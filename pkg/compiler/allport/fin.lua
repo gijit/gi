@@ -55,6 +55,8 @@ end;
 
 __Infinity = math.huge
 
+__kindUnknown = -1;
+
 __kindBool = 1;
 __kindInt = 2;
 __kindInt8 = 3;
@@ -1450,7 +1452,7 @@ end;
 
 
 -- __basicValue2kind: identify type of basic value
-
+--   or return __kindUnknown if we don't recognize it.
 function __basicValue2kind(v)
 
    local ty = type(v)
@@ -1481,7 +1483,8 @@ function __basicValue2kind(v)
       elseif cty == float64 then
          return __kindFloat64         
       else
-         error("__basicValue2kind: unhandled cdata cty: '"..tostring(cty).."'")
+         return __kindUnknown;
+         --error("__basicValue2kind: unhandled cdata cty: '"..tostring(cty).."'")
       end      
    elseif ty == "boolean" then
       return __kindBool;
@@ -1490,7 +1493,9 @@ function __basicValue2kind(v)
    elseif ty == "string" then
       return __kindString
    end
-   error("__basicValue2kind: unhandled ty: '"..ty.."'")   
+   
+   return __kindUnknown;
+   --error("__basicValue2kind: unhandled ty: '"..ty.."'")   
 end
 
 __sliceType = function(elem)
