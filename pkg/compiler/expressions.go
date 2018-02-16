@@ -211,27 +211,6 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		switch t := exprType.Underlying().(type) {
 		case *types.Array:
 			elements := collectIndexedElements(t.Elem())
-			/*
-				zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
-
-					if len(elements) == 0 {
-						pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
-						tn := c.typeName(t)
-						pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
-						return c.formatExpr("%s.__zero()", c.typeName(t))
-					}
-					for len(elements) < int(t.Len()) {
-						elements = append(elements, zero)
-					}
-					// make __gi_NewArray do what $toNatveArray does in terms of installing a __zero()
-					// method, etc.
-					return c.formatExpr(fmt.Sprintf(`__gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
-
-					//return c.formatExpr(`$toNativeArray(%s, [%s])`, typeKind(t.Elem()), strings.Join(elements, ", "))
-
-			*/
-			// jea earlier:
-			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 
 			// print anon_arrayType immedaitely
 			c.TypeNameSetting = IMMEDIATE
@@ -241,12 +220,15 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				tn := c.typeName(t)
 				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				// gijit below, but try to go back to gophrejs style __zero() call.
-				return c.formatExpr(fmt.Sprintf(`__gi_NewArray({}, "%s", %v, %s)`, typeKind(t.Elem()), t.Len(), zero))
+				return c.formatExpr("%s.zero()", tn)
+				//return c.formatExpr(fmt.Sprintf(`__gi_NewArray({}, "%s", %v, %s)`, typeKind(t.Elem()), t.Len(), zero))
 			}
+			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
-			return c.formatExpr(fmt.Sprintf(`__gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
+			//return c.formatExpr(fmt.Sprintf(`__gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
+			return c.formatExpr(`__toNativeArray(%s, {[0]=%s})`, typeKind(t.Elem()), strings.Join(elements, ", "))
 
 		case *types.Slice:
 			//zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()

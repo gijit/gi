@@ -484,7 +484,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.initArgs(ty)
 
 		// [10:] takes prefix "__gi__kind" off.
-		low := "__type__anon_" + strings.ToLower(typeKind(ty)[10:]) + "Type"
+		low := "__type__anon_" + strings.ToLower(typeKind(ty)[5:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
@@ -571,23 +571,23 @@ func typeKind(ty types.Type) (res string) {
 	}()
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
-		return "__gi_kind_" + toJavaScriptType(t)
+		return "__kind" + toJavaScriptTypeUppercase(t) //toJavaScriptType(t)
 	case *types.Array:
-		return "__gi_kind_Array"
+		return "__kindArray"
 	case *types.Chan:
-		return "__gi_kind_Chan"
+		return "__kindChan"
 	case *types.Interface:
-		return "__gi_kind_Interface"
+		return "__kindInterface"
 	case *types.Map:
-		return "__gi_kind_Map"
+		return "__kindMap"
 	case *types.Signature:
-		return "__gi_kind_Func"
+		return "__kindFunc"
 	case *types.Slice:
-		return "__gi_kind_Slice"
+		return "__kindSlice"
 	case *types.Struct:
-		return "__gi_kind_Struct"
+		return "__kindStruct"
 	case *types.Pointer:
-		return "__gi_kind_Ptr"
+		return "__kindPtr"
 	default:
 		panic(fmt.Sprintf("Unhandled type: %T\n", t))
 	}
@@ -608,6 +608,22 @@ func toJavaScriptType(t *types.Basic) string {
 		//jea
 		//return strings.ToUpper(name[:1]) + name[1:]
 		return name
+	}
+}
+
+func toJavaScriptTypeUppercase(t *types.Basic) string {
+	switch t.Kind() {
+	case types.UntypedInt:
+		return "Int"
+	case types.Byte:
+		return "Uint8"
+	case types.Rune:
+		return "Int32"
+	case types.UnsafePointer:
+		return "UnsafePointer"
+	default:
+		name := t.String()
+		return strings.ToUpper(name[:1]) + name[1:]
 	}
 }
 

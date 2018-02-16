@@ -299,12 +299,17 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=__gi_NewArray({[0]=1LL,2LL,3LL}, "__gi_kind_int", 3, 0LL); bb = 3LL;`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+x=__toNativeArray(__kindInt, {[0]=1LL,2LL,3LL}); 
+bb = 3LL;`)
 
 		// and empty array with size 3
 
 		code = `var x [3]int`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=__gi_NewArray({}, "__gi_kind_int", 3, 0LL);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+__type__anon_arrayType = __arrayType(__type_int, 3);
+x = __type__anon_arrayType.zero();
+`)
 
 		// upper case names too
 		code = `LX := len(x)`
