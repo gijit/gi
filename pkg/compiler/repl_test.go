@@ -264,7 +264,11 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `b=_gi_NewSlice("string",{[0]="hi","gophers!"}, ""); _gi_SetRangeCheck(b, 0, "");`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+__type__anon_sliceType = __sliceType(__type__string); -- 'IMMEDIATE' anon type printing.  
+b = __type__anon_sliceType({[0]="hi", "gophers!"});
+_gi_SetRangeCheck(b, 0, "");
+`)
 	})
 }
 
