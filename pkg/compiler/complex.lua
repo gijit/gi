@@ -402,7 +402,8 @@ _G.real=real
 _G.imag=imag
 _G.cmath=cmath
 
--- test
+--[[
+-- tests
 
 local acosTestVals = {
    (1.0017679804707456328694569 - 2.9138232718554953784519807i),
@@ -440,3 +441,6 @@ for i, v in ipairs(acosTestVals) do
       error("difference at Cot case i="..i)
    end
 end
+
+-- end tests
+--]]
