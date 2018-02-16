@@ -571,7 +571,7 @@ ___valueBasicMT = {
       else
          return tostring(self.___val)
       end
-   end
+   end,
 }
 
 ___valueArrayMT = {
@@ -621,7 +621,7 @@ ___valueArrayMT = {
       else
          return tostring(self.___val)
       end
-   end
+   end,
 }
 
 ___valueSliceMT = {
@@ -652,12 +652,13 @@ ___valueSliceMT = {
    end,
    
    __tostring = function(self, ...)
-      print("__tostring called from ___valueSliceMT")
+      --print("__tostring called from ___valueSliceMT")
 
        local len = self.___length
        local beg = self.___offset
        local cap = self.___capacity
-       local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is _giSlice{"
+       --local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is "..self.___constructor.___str.."{"
+       local s = self.___constructor.___str.."{"
        local raw = self.___array
 
        -- we want to skip both the _giPrivateRaw and the len
@@ -692,7 +693,7 @@ ___valueSliceMT = {
       else
          return tostring(self.___val)
       end
-   end
+   end,
 }
 
 
@@ -730,7 +731,7 @@ ___tfunBasicMT = {
          end
       end
       return newInstance
-   end
+   end,
 }
 
 
@@ -1278,24 +1279,24 @@ function ___methodSet(typ)
 end;
 
 
-___Bool    = ___newType( 1, ___kindBool,    "bool",     true, "", false, nil);
+__type__bool    = ___newType( 1, ___kindBool,    "bool",     true, "", false, nil);
 __type__int = ___newType( 8, ___kindInt,     "int",   true, "", false, nil);
-___Int8    = ___newType( 1, ___kindInt8,    "int8",     true, "", false, nil);
-___Int16   = ___newType( 2, ___kindInt16,   "int16",    true, "", false, nil);
-___Int32   = ___newType( 4, ___kindInt32,   "int32",    true, "", false, nil);
-___Int64   = ___newType( 8, ___kindInt64,   "int64",    true, "", false, nil);
-___Uint    = ___newType( 8, ___kindUint,    "uint",     true, "", false, nil);
-___Uint8   = ___newType( 1, ___kindUint8,   "uint8",    true, "", false, nil);
-___Uint16  = ___newType( 2, ___kindUint16,  "uint16",   true, "", false, nil);
-___Uint32  = ___newType( 4, ___kindUint32,  "uint32",   true, "", false, nil);
-___Uint64  = ___newType( 8, ___kindUint64,  "uint64",   true, "", false, nil);
-___Uintptr = ___newType( 8, ___kindUintptr,    "uintptr",  true, "", false, nil);
-___Float32 = ___newType( 8, ___kindFloat32,    "float32",  true, "", false, nil);
-___Float64 = ___newType( 8, ___kindFloat64,    "float64",  true, "", false, nil);
---___Complex64  = ___newType( 8, ___kindComplex64,  "complex64",   true, "", false, nil);
---___Complex128 = ___newType(16, ___kindComplex128, "complex128",  true, "", false, nil);
-___String  = ___newType(16, ___kindString,  "string",   true, "", false, nil);
---___UnsafePointer = ___newType( 8, ___kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+__type__int8    = ___newType( 1, ___kindInt8,    "int8",     true, "", false, nil);
+__type__int16   = ___newType( 2, ___kindInt16,   "int16",    true, "", false, nil);
+__type__int32   = ___newType( 4, ___kindInt32,   "int32",    true, "", false, nil);
+__type__int64   = ___newType( 8, ___kindInt64,   "int64",    true, "", false, nil);
+__type__uint    = ___newType( 8, ___kindUint,    "uint",     true, "", false, nil);
+__type__uint8   = ___newType( 1, ___kindUint8,   "uint8",    true, "", false, nil);
+__type__uint16  = ___newType( 2, ___kindUint16,  "uint16",   true, "", false, nil);
+__type__uint32  = ___newType( 4, ___kindUint32,  "uint32",   true, "", false, nil);
+__type__uint64  = ___newType( 8, ___kindUint64,  "uint64",   true, "", false, nil);
+__type__uintptr = ___newType( 8, ___kindUintptr,    "uintptr",  true, "", false, nil);
+__type__float32 = ___newType( 8, ___kindFloat32,    "float32",  true, "", false, nil);
+__type__float64 = ___newType( 8, ___kindFloat64,    "float64",  true, "", false, nil);
+--__type__complex64  = ___newType( 8, ___kindComplex64,  "complex64",   true, "", false, nil);
+--__type__complex128 = ___newType(16, ___kindComplex128, "complex128",  true, "", false, nil);
+__type__string  = ___newType(16, ___kindString,  "string",   true, "", false, nil);
+--__type__unsafePointer = ___newType( 8, ___kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 --[[
 

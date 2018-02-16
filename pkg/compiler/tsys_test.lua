@@ -1,4 +1,4 @@
-dofile 'fin.lua'
+dofile 'tsys.lua'
 
 -- fin and fin_test use ___ triple underscores, to
 -- avoid collision while integrating with struct.lua
@@ -83,16 +83,16 @@ end
 expectEq(x, ___keys({[f]="seven", [g]="eight"}))
 
 -- basic types, zero values
-expectEq("0LL", tostring(___Int()))
-expectEq("0ULL", tostring(___Uint()))
-expectEq("0", tostring(___Float64()))
-expectEq('""', tostring(___String()))
+expectEq("0LL", tostring(__type__int()))
+expectEq("0ULL", tostring(__type__uint()))
+expectEq("0", tostring(__type__float64()))
+expectEq('""', tostring(__type__string()))
 
 -- basic types, non-zero values
-expectEq("-43LL", tostring(___Int(-43LL)))
-expectEq("42ULL", tostring(___Uint(42ULL)))
-expectEq("-0.3", tostring(___Float64(-0.3)))
-expectEq('"hello world"', tostring(___String("hello world")))
+expectEq("-43LL", tostring(__type__int(-43LL)))
+expectEq("42ULL", tostring(__type__uint(42ULL)))
+expectEq("-0.3", tostring(__type__float64(-0.3)))
+expectEq('"hello world"', tostring(__type__string("hello world")))
 
                                                                                    
                                          
@@ -135,16 +135,16 @@ expectEq(___basicValue2kind(float64(-1.0)), ___kindFloat64)
 
 -- pointers
 
-a = ___Int(4) -- currently, even integers are wrapped.
+a = __type__int(4) -- currently, even integers are wrapped.
 
 -- b := &a  -- gets translated as two parts:
-ptrType = ___ptrType(___Int)
+ptrType = ___ptrType(__type__int)
 
 b = ptrType(function() return a; end, function(___v) a = ___v; end, a);
 
 -- arrays
 
-arrayType = ___arrayType(___Int, 4);
+arrayType = ___arrayType(__type__int, 4);
 
 a = arrayType()
 expectEq(a[0], 0LL)
@@ -162,7 +162,7 @@ expectEq(b[1], 32LL)
 
 -- slices
 
-slcInt = ___sliceType(___Int)
+slcInt = __sliceType(__type__int)
 
 sl = ___makeSlice(slcInt, 3, 4)
 
@@ -215,7 +215,7 @@ func main() {
 
 WonderWoman = ___newType(0, ___kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...)
                            print("DEBUG WonderWoman.ctor called! dots=")
-                           ___st({...})
+                           __st({...})
                            if self == nil then self = {}; end
                            
                            local Bracelets_, LassoPoints_ = ... ;
@@ -226,7 +226,7 @@ WonderWoman = ___newType(0, ___kindStruct, "main.WonderWoman", true, "github.com
 end);
 
 
-WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= ___Int, tag= ""}, {prop= "LassoPoints", name= "LassoPoints", anonymous= false, exported= true, typ= ___Int, tag= ""}});
+WonderWoman.init("", {{prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, typ= __type__int, tag= ""}, {prop= "LassoPoints", name= "LassoPoints", anonymous= false, exported= true, typ= __type__int, tag= ""}});
 
 ww = WonderWoman.ptr(2LL);
 
@@ -265,7 +265,7 @@ func main() {
 }
 --]]
 
-sliceType = ___sliceType(___emptyInterface);
+sliceType = __sliceType(___emptyInterface);
 MyApply = function(bo, x, y)
    return bo(x, y);
 end
@@ -355,7 +355,7 @@ Wolf = ___newType(0, ___kindStruct, "main.Wolf", true, "github.com/gijit/gi/pkg/
                     this.HasRing = HasRing_;
 end);
 
-sliceType = ___sliceType(___emptyInterface);
+sliceType = __sliceType(___emptyInterface);
 ptrType = ___ptrType(hobbit);
 ptrType___1 = ___ptrType(Wolf);
 hobbit.ptr.methodSet.WearRing = function(this)
@@ -386,21 +386,21 @@ battle = function(g, b)
    return g:Scowl(), b:WearRing();
 end
    
-ptrType.methods = {{prop= "WearRing", name= "WearRing", pkg= "", typ= ___funcType({}, {___Bool}, false)}};
+ptrType.methods = {{prop= "WearRing", name= "WearRing", pkg= "", typ= ___funcType({}, {__type__bool}, false)}};
 
-ptrType___1.methods = {{prop= "Scowl", name= "Scowl", pkg= "", typ= ___funcType({}, {___Int}, false)}};
+ptrType___1.methods = {{prop= "Scowl", name= "Scowl", pkg= "", typ= ___funcType({}, {__type__int}, false)}};
 
-Baggins.init({{prop= "WearRing", name= "WearRing", pkg= "", typ= ___funcType({}, {___Bool}, false)}});
+Baggins.init({{prop= "WearRing", name= "WearRing", pkg= "", typ= ___funcType({}, {__type__bool}, false)}});
 
-Gollum.init({{prop= "Scowl", name= "Scowl", pkg= "", typ= ___funcType({}, {___Int}, false)}});
+Gollum.init({{prop= "Scowl", name= "Scowl", pkg= "", typ= ___funcType({}, {__type__int}, false)}});
 
-hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "hasRing", name= "hasRing", anonymous= false, exported= false, typ= ___Bool, tag= ""}});
+hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "hasRing", name= "hasRing", anonymous= false, exported= false, typ= __type__bool, tag= ""}});
 
-Wolf.init("", {{prop= "Claw", name= "Claw", anonymous= false, exported= true, typ= ___Int, tag= ""}, {prop= "HasRing", name= "HasRing", anonymous= false, exported= true, typ= ___Bool, tag= ""}});
+Wolf.init("", {{prop= "Claw", name= "Claw", anonymous= false, exported= true, typ= __type__int, tag= ""}, {prop= "HasRing", name= "HasRing", anonymous= false, exported= true, typ= __type__bool, tag= ""}});
 
 tryTheTypeSwitch = function(i)
    print("top of tryTheTypeSwitch, with i=")
-   ___st(i)
+   __st(i)
    
    x, isG = ___assertType(i, Gollum, true)
    if isG then
@@ -563,12 +563,12 @@ Hound = ___newType(0, ___kindStruct, "main.Hound", true, "github.com/gijit/gi/pk
 			return;
 end);
 
-Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "Name", name= "Name", anonymous= false, exported= true, typ= ___String, tag= ""}, {prop= "Id", name= "Id", anonymous= false, exported= true, typ= ___Int, tag= ""}, {prop= "Mate", name= "Mate", anonymous= false, exported= true, typ= ptrType, tag= ""}, {prop= "Litter", name= "Litter", anonymous= false, exported= true, typ= sliceType, tag= ""}, {prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, typ= ptrType___1, tag= ""}, {prop= "food", name= "food", anonymous= false, exported= false, typ= ___Int, tag= ""}, {prop= "ate", name= "ate", anonymous= false, exported= false, typ= ___Bool, tag= ""}});
+Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{prop= "Name", name= "Name", anonymous= false, exported= true, typ= __type__string, tag= ""}, {prop= "Id", name= "Id", anonymous= false, exported= true, typ= __type__int, tag= ""}, {prop= "Mate", name= "Mate", anonymous= false, exported= true, typ= ptrType, tag= ""}, {prop= "Litter", name= "Litter", anonymous= false, exported= true, typ= sliceType, tag= ""}, {prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, typ= ptrType___1, tag= ""}, {prop= "food", name= "food", anonymous= false, exported= false, typ= __type__int, tag= ""}, {prop= "ate", name= "ate", anonymous= false, exported= false, typ= __type__bool, tag= ""}});
 
 -- replace .prototype with .methodSet
 Hound.ptr.methodSet.Eat = function(this, a)
    print("Eat called, with a = ", a, " and this=")
-   ___st(this,"this-on-Hound.ptr")
+   __st(this,"this-on-Hound.ptr")
    
 		local _i, _ref, h, pup;
 		h = this;
@@ -578,7 +578,7 @@ Hound.ptr.methodSet.Eat = function(this, a)
 		h.ate = true;
 		h.food = h.food + a;
 		_ref = h.Litter;
-                ___st(_ref, "_ref")
+                __st(_ref, "_ref")
 		_i = 0;
 		while true do
                    if not (_i < #_ref) then break; end
@@ -586,7 +586,7 @@ Hound.ptr.methodSet.Eat = function(this, a)
                    if (_i < 0 or _i >= #_ref) then
                       ___throwRuntimeError("index out of range")
                    end
-                   ___st(_ref.___array, "_ref.___array")
+                   __st(_ref.___array, "_ref.___array")
                    print("_i = ", _i)
                    pup = _ref.___array[_ref.___offset + _i + 1]; -- + 1 for lua's arrays
                    pup:Eat(a);
@@ -600,9 +600,9 @@ Hound.ptr.methodSet.Eat = function(this, a)
 	Hound.methodSet.Eat = function(a)  return this.___val.Eat(a); end;
 
 	ptrType = ___ptrType(Hound);
-	sliceType = ___sliceType(ptrType);
+	sliceType = __sliceType(ptrType);
 	ptrType___1 = ___ptrType(sliceType);
-	sliceType___1 = ___sliceType(___emptyInterface);        
+	sliceType___1 = __sliceType(___emptyInterface);        
 
 		jake =  Hound.ptr("Jake", 123, ptrType.___nil, sliceType.___nil, ptrType___1.___nil, 0, false);
 		joy =  Hound.ptr("Joy", 456, ptrType.___nil, sliceType.___nil, ptrType___1.___nil, 0, false);

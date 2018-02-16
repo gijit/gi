@@ -172,7 +172,15 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	if len(files) < 1 {
 		return nil, fmt.Errorf("-prelude dir '%s' had no lua files in it.", preludePath)
 	}
-	// get a consisten application order, by sorting by name.
+	// filter out *test.lua
+	keepers := []string{}
+	for _, fn := range files {
+		if !strings.HasSuffix(fn, "test.lua") {
+			keepers = append(keepers, fn)
+		}
+	}
+	files = keepers
+	// get a consistent application order, by sorting by name.
 	sort.Strings(files)
 	if !quiet {
 		fmt.Printf("\nusing this prelude directory: '%s'\n", preludePath)
