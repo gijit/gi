@@ -199,7 +199,9 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=_gi_NewSlice("int",{[0]=1LL,2LL,3LL}, 0LL);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+	__type__sliceType = ___sliceType(___Int);
+a=__type__sliceType({[0]=1LL,2LL,3LL});`)
 	})
 }
 
