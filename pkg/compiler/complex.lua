@@ -316,12 +316,6 @@ end
 -- multiples of PI/2.  Near these points it is evaluated
 -- by a Taylor series.
 --
--- ACCURACY:
---
---                      Relative error:
--- arithmetic   domain     # trials      peak         rms
---    DEC       -10,+10      3000       6.5e-17     1.6e-17
---    IEEE      -10,+10     30000       9.2e-16     1.2e-16
 -- Also tested by ctan * ccot = 1 + i0.
 
 -- Cot returns the cotangent of x.
@@ -363,14 +357,6 @@ end
 --
 -- casin(z) = -i casinh(iz)
 --
--- ACCURACY:
---
---                      Relative error:
--- arithmetic   domain     # trials      peak         rms
---    DEC       -10,+10     10100       2.1e-15     3.4e-16
---    IEEE      -10,+10     30000       2.2e-14     2.7e-15
--- Larger relative error can be observed for z near zero.
--- Also tested by csin(casin(z)) = z.
 
 -- Asin returns the inverse sine of x.
 function cmath.Asin(x)
