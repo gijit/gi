@@ -39,13 +39,10 @@ __parseFloat = function(f)
   return parseFloat(f);
 end;
 
---[[
- __froundBuf = Float32Array(1);
-__fround = Math.fround  or  function(f)
-  __froundBuf[0] = f;
-  return __froundBuf[0];
+-- __fround returns nearest float32
+__fround = function(x)
+   return float32(x)
 end;
---]]
 
 --[[
 __imul = Math.imul  or  function(b)
@@ -241,7 +238,7 @@ __makeFunc = function(fn)
       -- TODO: port this!
       print("jea TODO: port this, what is __externalize doing???")
       error("NOT DONE: port this!")
-      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __emptyInterface);
+      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__emptyInterface);
    end;
 end;
 __unused = function(v) end;
@@ -650,8 +647,8 @@ __valueSliceMT = {
    end,
    
    __index = function(t, k)
-      --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
-      --__st(t.__val)
+      print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      __st(t.__val)
       local w = t.__offset + k
       if k < 0 or k >= t.__capacity then
          error "slice error: access out-of-bounds"
@@ -838,23 +835,34 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.keyFor = function(x) return __floatKey(x); end;
 
 
-  elseif kind ==  __kindComplex64 then 
-    typ.tfun = function(this, real, imag)
-      this.__real = __fround(real);
-      this.__imag = __fround(imag);
-      this.__val = this;
-    end;
-    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
+   elseif kind ==  __kindComplex64 then
+
+      typ.tfun = function(this, v) this.__val = v; end;
+      typ.wrapped = true;
+      typ.keyFor = function(x) return tostring(x); end;
+      
+--    typ.tfun = function(this, real, imag)
+--      this.__real = __fround(real);
+--      this.__imag = __fround(imag);
+--      this.__val = this;
+--    end;
+--    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
     
 
-  elseif kind ==  __kindComplex128 then 
-    typ.tfun = function(this, real, imag)
-      this.__real = real;
-      this.__imag = imag;
-      this.__val = this;
-    end;
-    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
-    
+   elseif kind ==  __kindComplex128 then
+
+      typ.tfun = function(this, v) this.__val = v; end;
+      typ.wrapped = true;
+      typ.keyFor = function(x) return tostring(x); end;
+      
+--     typ.tfun = function(this, real, imag)
+--        this.__real = real;
+--        this.__imag = imag;
+--        this.__val = this;
+--        this.__constructor = typ
+--     end;
+--     typ.keyFor = __identity --function(x) return x.__real .. "_" .. x.__imag; end;
+--    
       
    elseif kind ==  __kindPtr then
 
@@ -1310,8 +1318,8 @@ __type__uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil)
 __type__uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
 __type__float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
 __type__float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
---__type__complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
---__type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
+__type__complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
+__type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
 __type__string  = __newType(16, __kindString,  "string",   true, "", false, nil);
 --__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
@@ -1448,7 +1456,7 @@ __interfaceType = function(methods)
    end
    return typ;
 end;
-__emptyInterface = __interfaceType({});
+__type__emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, {__String}, false) }});
@@ -1526,6 +1534,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
+   print("__sliceType called with elem = ", elem)
    local typ = elem.slice;
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
