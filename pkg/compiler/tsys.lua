@@ -1462,13 +1462,15 @@ __mapType = function(key, elem)
   end
   return typ;
 end;
-__makeMap = function(keyForFunc, entries)
-   local m = {};
-   for i =0,#entries-1 do
-    local e = entries[i];
-    m[keyForFunc(e.k)] = e;
-  end
-  return m;
+
+__makeMap = function(keyForFunc, entries, keyType, elemType)
+   local m={};
+   for k, e in pairs(entries) do
+      local key = keyForFunc(k)
+      --print("using key ", key, " for k=", k)
+      m[key] = e;
+   end
+   return _gi_NewMap(keyType, elemType, m);
 end;
 
 

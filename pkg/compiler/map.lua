@@ -89,9 +89,10 @@ _intentionalNilValue = {}
     end,
 
     __tostring = function(t)
+       print("__tostring for _gi_Map called")
        local props = t[_giPrivateMapProps]
        local len = props["len"]
-       local s = "map["..props["keyType"].. "]"..props["valType"].." of length " .. tostring(len) .. " is _giMap{"
+       local s = "map["..props["keyType"].__str.. "]"..props["valType"].__str.." of length " .. tostring(len) .. " is _giMap{"
        local r = t[_giPrivateMapRaw]
        -- we want to skip both the _giPrivateMapRaw and the len
        -- when iterating, which happens automatically if we

@@ -253,7 +253,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
 			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
-			return c.formatExpr("__makeMap(%s.keyFor, {%s})", c.typeName(t.Key()), joined)
+			return c.formatExpr("__makeMap(__type__%s.keyFor, {%s}, __type__%s, __type__%s)", c.typeName(t.Key()), joined, c.typeName(t.Key()), c.typeName(t.Elem()))
 		case *types.Struct:
 			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())

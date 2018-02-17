@@ -350,11 +350,13 @@ func Test016MapCreation(t *testing.T) {
 
 		// create using make
 		code := `y := make(map[int]string)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y=_gi_NewMap("int", "string", {});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `y={};`)
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+x = __makeMap(__type__int.keyFor, {["3LL"]="hello", ["4LL"]="gophers"});
+`)
 
 	})
 }
