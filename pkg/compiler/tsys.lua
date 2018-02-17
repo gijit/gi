@@ -828,7 +828,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          --__st(this)
          this.__val = v; end;
       typ.wrapped = true;
-      typ.keyFor = function(x) return "_" .. x; end;
+      typ.keyFor = __identity; -- function(x) return "_" .. x; end;
 
    elseif kind == __kindFloat32 or
    kind == __kindFloat64 then

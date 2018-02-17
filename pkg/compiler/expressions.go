@@ -248,7 +248,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			entries := make([]string, len(e.Elts))
 			for i, element := range e.Elts {
 				kve := element.(*ast.KeyValueExpr)
-				entries[i] = fmt.Sprintf(`["%s"]=%s`, c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
+				entries[i] = fmt.Sprintf(`[%s]=%s`, c.translateImplicitConversionWithCloning(kve.Key, t.Key()), c.translateImplicitConversionWithCloning(kve.Value, t.Elem()))
 			}
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
@@ -619,9 +619,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			key := fmt.Sprintf("%s", c.translateImplicitConversion(e.Index, t.Key()))
 			pp("t.Key()='%T'/%#v", t.Key(), t.Key())
-			switch t.Key().(type) {
+			switch bas := t.Key().(type) {
 			case *types.Basic:
-				key = `"` + key + `"`
+				if bas.Kind() != types.String {
+					key = `"` + key + `"`
+				}
 			}
 			//key := fmt.Sprintf("%s.keyFor(%s)", c.typeName(t.Key()), c.translateImplicitConversion(e.Index, t.Key()))
 			if _, isTuple := exprType.(*types.Tuple); isTuple {

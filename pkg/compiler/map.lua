@@ -89,15 +89,31 @@ _intentionalNilValue = {}
     end,
 
     __tostring = function(t)
-       print("__tostring for _gi_Map called")
+       --print("__tostring for _gi_Map called")
        local props = t[_giPrivateMapProps]
        local len = props["len"]
-       local s = "map["..props["keyType"].__str.. "]"..props["valType"].__str.." of length " .. tostring(len) .. " is _giMap{"
+       local s = "map["..props["keyType"].__str.. "]"..props["valType"].__str.."{"
        local r = t[_giPrivateMapRaw]
+       
+       local vquo = ""
+       if len > 0 and props.valType.__str == "string" then
+          vquo = '"'
+       end
+       local kquo = ""
+       if len > 0 and props.keyType.__str == "string" then
+          kquo = '"'
+       end
+       
        -- we want to skip both the _giPrivateMapRaw and the len
        -- when iterating, which happens automatically if we
        -- iterate on r, the inside private data, and not on the proxy.
-       for i, _ in pairs(r) do s = s .. "["..tostring(i).."]" .. "= " .. tostring(r[i]) .. ", " end
+       for i, _ in pairs(r) do
+
+          -- lua style:
+          -- s = s .. "["..kquo..tostring(i)..kquo.."]" .. "= " .. vquo..tostring(r[i]) ..vquo.. ", "
+          -- Go style
+          s = s .. kquo..tostring(i)..kquo.. ": " .. vquo..tostring(r[i]) ..vquo.. ", "
+       end
        return s .. "}"
     end,
 
