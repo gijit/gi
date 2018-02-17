@@ -3,18 +3,18 @@
 
 
 -- create private index
-_giPrivateRaw = _giPrivateRaw or {}
-_giPrivateSliceProps = _giPrivateSliceProps or {}
-_giGo = _giGo or {}
+__giPrivateRaw = __giPrivateRaw or {}
+__giPrivateSliceProps = __giPrivateSliceProps or {}
+__giGo = __giGo or {}
 
-_giPrivateSliceMt = {
+__giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
        --print("newindex called for key", k, " val=", v)
-       local props = rawget(t, _giPrivateSliceProps)
+       local props = rawget(t, __giPrivateSliceProps)
        local len = props.len
        local beg = props.beg
-       local raw = rawget(t, _giPrivateRaw)
+       local raw = rawget(t, __giPrivateRaw)
        
        --print("newindex called for key", k, " with b=", b, " len at start is ", len)
        if raw[k+beg] == nil then
@@ -38,33 +38,33 @@ _giPrivateSliceMt = {
   -- __index allows us to have fields to access the count.
   --
     __index = function(t, k)
-       --print("_gi_Slice: __index called for key", k)       
-       local props = rawget(t, _giPrivateSliceProps)
-       local raw = rawget(t, _giPrivateRaw)       
+       --print("__gi_Slice: __index called for key", k)       
+       local props = rawget(t, __giPrivateSliceProps)
+       local raw = rawget(t, __giPrivateRaw)       
        local beg = props.beg
        local rawlen = #raw
        if raw[0] ~= nil then
           rawlen = rawlen + 1
        end
-       --print("_gi_Slice: __index called for key", k, " with beg=", beg, " and rawlen=", rawlen)
+       --print("__gi_Slice: __index called for key", k, " with beg=", beg, " and rawlen=", rawlen)
        if k+beg >= rawlen then
           --print("out of bounds access " .. tostring(k+beg))
           error("out of bounds access " .. tostring(k+beg))
        end
-       local res = rawget(t, _giPrivateRaw)[beg+k]
-       --print("_gi_Slice __index returing res = ", res)
+       local res = rawget(t, __giPrivateRaw)[beg+k]
+       --print("__gi_Slice __index returing res = ", res)
        return res
     end,
 
     __tostring = function(t)
-       --print("_gi_Slice: tostring called")
-       local props = rawget(t, _giPrivateSliceProps)
+       --print("__gi_Slice: tostring called")
+       local props = rawget(t, __giPrivateSliceProps)
        local len = props.len
        local beg = props.beg
-       local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. props.cap ..  "> is _giSlice{"
-       local raw = rawget(t, _giPrivateRaw)
+       local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. props.cap ..  "> is __giSlice{"
+       local raw = rawget(t, __giPrivateRaw)
 
-       -- we want to skip both the _giPrivateRaw and the len
+       -- we want to skip both the __giPrivateRaw and the len
        -- when iterating, which happens automatically if we
        -- iterate on raw, the raw inside private data, and not on the proxy.
        local quo = ""
@@ -83,14 +83,14 @@ _giPrivateSliceMt = {
        -- the XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT was used
        -- in the LuaJIT build. So use it!
        --
-       local len = rawget(t, _giPrivateSliceProps)["len"]
-       --print("len called for _gi_Slice, returning ", len)
+       local len = rawget(t, __giPrivateSliceProps)["len"]
+       --print("len called for __gi_Slice, returning ", len)
        return len
     end,
 
     __pairs = function(t)
        -- print("__pairs called!")
-       -- this makes a _giSlice work in a for k,v in pairs() do loop.
+       -- this makes a __giSlice work in a for k,v in pairs() do loop.
 
        -- Iterator function takes the table and
        -- an index and returns the next index and
@@ -100,7 +100,7 @@ _giPrivateSliceMt = {
        local function stateless_iter(t, k)
            local v
            --  Implement your own key,value selection logic in place of next
-           k, v = next(rawget(t, _giPrivateRaw), k)
+           k, v = next(rawget(t, __giPrivateRaw), k)
            if v then return k,v end
        end
 
@@ -119,40 +119,40 @@ _giPrivateSliceMt = {
     end
  }
 
-function _gi_NewSlice(typeKind, x, zeroVal, beg, endx, cap)
-   --print("_gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
+function __gi_NewSlice(typeKind, x, zeroVal, beg, endx, cap)
+   --print("__gi_NewSlice called! beg=", beg, " endx=", endx, " cap=", cap)
    assert(type(x) == 'table', 'bad x parameter #1: must be table')
 
-   local arrProp = rawget(x, _giPrivateArrayProps)
-   local slcProp = rawget(x, _giPrivateSliceProps)
+   local arrProp = rawget(x, __giPrivateArrayProps)
+   local slcProp = rawget(x, __giPrivateSliceProps)
 
    local raw = x
    local xlen = #x
    
    if arrProp ~= nil then
-      --print("_gi_NewSlice sees x is an array")
-      raw = rawget(x, _giPrivateRaw)
+      --print("__gi_NewSlice sees x is an array")
+      raw = rawget(x, __giPrivateRaw)
       -- xlen is correct
    elseif slcProp ~= nil then
-      --print("_gi_NewSlice sees x is a slice")
-      raw = rawget(x, _giPrivateRaw)
+      --print("__gi_NewSlice sees x is a slice")
+      raw = rawget(x, __giPrivateRaw)
       -- xlen is correct
    else
-      --print("_gi_NewSlice sees x is not an array or slice. Hmm: raw input table")
+      --print("__gi_NewSlice sees x is not an array or slice. Hmm: raw input table")
       -- #x misses the [0] value, if present.
       if x[0] ~= nil then
          xlen = xlen + 1
       end      
    end
    
-   --print("_gi_NewSlice: xlen is ", xlen)
+   --print("__gi_NewSlice: xlen is ", xlen)
    
    local proxy = {}
-   proxy[_giPrivateRaw] = raw
-   proxy["Typeof"]="_gi_Slice"
+   proxy[__giPrivateRaw] = raw
+   proxy["Typeof"]="__gi_Slice"
 
    -- this next is crashing
-   --proxy[_giGo] = __lua2go(x)
+   --proxy[__giGo] = __lua2go(x)
 
    beg = beg or 0
    local len
@@ -163,31 +163,31 @@ function _gi_NewSlice(typeKind, x, zeroVal, beg, endx, cap)
       len = endx - beg 
    end
    
-   --print("_gi_NewSlice: beg=", beg, " endx=",endx," len of the new slice is ", len)
+   --print("__gi_NewSlice: beg=", beg, " endx=",endx," len of the new slice is ", len)
    
    -- TODO: cap not really implemented in any way, just stored.
    cap = cap or len
 
-   --print("_gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
+   --print("__gi_NewSlice debug: beg=", beg, " len=", len, " endx=", endx, " cap=", cap)
    
    local props = {beg=beg, len=len, cap=cap, endx=endx, typeKind=typeKind, zeroVal=zeroVal}
-   proxy[_giPrivateSliceProps] = props
+   proxy[__giPrivateSliceProps] = props
 
-   setmetatable(proxy, _giPrivateSliceMt)
+   setmetatable(proxy, __giPrivateSliceMt)
 
    return proxy
 end;
 
--- _gi_UnpackSliceRaw is a helper, used in
+-- __gi_UnpackSliceRaw is a helper, used in
 -- generated Lua code,
 -- for calling into vararg ... Go functions.
--- This helper unpacks the raw _gi_giSlice
+-- This helper unpacks the raw __giSlice
 -- arguments. It returns non tables unchanged,
--- and non _giSlice tables unpacked.
+-- and non __giSlice tables unpacked.
 --
 -- Now updated to use tsys slices
 -- instead of raw.
-function _gi_UnpackSliceRaw(t)
+function __gi_UnpackSliceRaw(t)
    if type(t) ~= 'table' then
       return t
    end
@@ -201,7 +201,7 @@ function _gi_UnpackSliceRaw(t)
       return unpack(t) 
    end
 
-   --print("jea debug, _gi_UnpackSliceRaw in slice.lua, raw is:")
+   --print("jea debug, __gi_UnpackSliceRaw in slice.lua, raw is:")
    --__st(raw)
 
    if off == 0 then
@@ -223,12 +223,12 @@ function _gi_UnpackSliceRaw(t)
    return unpack(sliced)
 end
 
-function _gi_Raw(t)
+function __gi_Raw(t)
    if type(t) ~= 'table' then
       return t
    end
    
-   return rawget(t,_giPrivateRaw)
+   return rawget(t,__giPrivateRaw)
 end
 
 
@@ -240,26 +240,26 @@ function append(t, ...)
       return t
    end
 
-   local props = rawget(t, _giPrivateSliceProps)
+   local props = rawget(t, __giPrivateSliceProps)
 
    -- simpler?
    --local tot = #t + #slc
    --local arr = __gi_NewArray({}, props.typeKind, tot, props.zeroVal)
-   --local res = _gi_NewSlice(props.typeKind, arr, props.zeroVal, 0, tot, tot)
+   --local res = __gi_NewSlice(props.typeKind, arr, props.zeroVal, 0, tot, tot)
    --copy(res, t)
    
    if props == nil then
       error "append() called with first value not a slice"
    end
    local len = props.len
-   local raw = rawget(t, _giPrivateRaw)
+   local raw = rawget(t, __giPrivateRaw)
    if raw == nil then
       error "could not get raw table from slice, internal error?"
    end
 
    -- make copy
    local proxy = {}
-   proxy["Typeof"]="_gi_Slice"
+   proxy["Typeof"]="__gi_Slice"
 
    local raw2 = {}
    if len > 0 then
@@ -281,11 +281,11 @@ function append(t, ...)
    len=len+k
    --print("done with slice addition, now len=", len)
    
-   proxy[_giPrivateRaw] = raw2
-   --proxy[_giGo] = __lua2go(raw2)
-   proxy[_giPrivateSliceProps] = {beg=0, len=len, cap=len, typeKind=props.typeKind}
+   proxy[__giPrivateRaw] = raw2
+   --proxy[__giGo] = __lua2go(raw2)
+   proxy[__giPrivateSliceProps] = {beg=0, len=len, cap=len, typeKind=props.typeKind}
 
-   setmetatable(proxy, _giPrivateSliceMt)
+   setmetatable(proxy, __giPrivateSliceMt)
 
    --print("append returning new slice = ", tostring(proxy))
    return proxy
@@ -299,8 +299,8 @@ end
 
 function __copySlice(dest, src)
    --print("__copySlice called")
-   local propsDest = rawget(dest, _giPrivateSliceProps)
-   local propsSrc  = rawget(src,  _giPrivateSliceProps)
+   local propsDest = rawget(dest, __giPrivateSliceProps)
+   local propsSrc  = rawget(src,  __giPrivateSliceProps)
    if propsDest == nil then
       error "__copySlice() called with destination value not a slice"
    end
@@ -310,8 +310,8 @@ function __copySlice(dest, src)
 
    local begDest = propsDest.beg
    local begSrc  = propsSrc.beg
-   local rawDest = rawget(dest, _giPrivateRaw)
-   local rawSrc  = rawget(src,  _giPrivateRaw)
+   local rawDest = rawget(dest, __giPrivateRaw)
+   local rawSrc  = rawget(src,  __giPrivateRaw)
 
    local dlen = #dest
    local slen = #src
@@ -342,16 +342,16 @@ end
 function __subslice(a, beg, endx)
    --print("top of __subslice, beg=",beg, " endx=", endx)
    
-   local arrProp = rawget(a, _giPrivateArrayProps)
-   local slcProp = rawget(a, _giPrivateSliceProps)
+   local arrProp = rawget(a, __giPrivateArrayProps)
+   local slcProp = rawget(a, __giPrivateSliceProps)
 
    local raw = a
    if arrProp ~= nil then
       --print("__subslice sees x is an array")
-      raw = rawget(a, _giPrivateRaw)
+      raw = rawget(a, __giPrivateRaw)
    elseif slcProp ~= nil then
       --print("__subslice sees x is a slice")
-      raw = rawget(a, _giPrivateRaw)
+      raw = rawget(a, __giPrivateRaw)
    else
       --print("__subslice sees x is not an array or slice. Hmm?")
       error("must have slice or array in __subslice")
@@ -360,17 +360,17 @@ function __subslice(a, beg, endx)
    local props = slcProp or arrProp
    local typeKind = props.typeKind
 
-   return _gi_NewSlice(typeKind, raw, props.zeroVal, beg, endx)
+   return __gi_NewSlice(typeKind, raw, props.zeroVal, beg, endx)
 end
 
-function __gi_makeSlice(typeKind, zeroVal, len, cap)
-   --print("__gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
+function ___gi_makeSlice(typeKind, zeroVal, len, cap)
+   --print("___gi_makeSlice() called, typeKind=", typeKind, " zeroVal= ",zeroVal," len=", len, " cap=", cap)
    local raw = {}
    cap = cap or len
    for i = 0, cap-1 do
       raw[i] = zeroVal
    end
-   return _gi_NewSlice(typeKind, raw, zeroVal, 0, len)
+   return __gi_NewSlice(typeKind, raw, zeroVal, 0, len)
 end
 
 -- from gopherjs

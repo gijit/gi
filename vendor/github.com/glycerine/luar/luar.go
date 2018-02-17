@@ -611,15 +611,15 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 	n := int(L.ObjLen(idx))
 	pp("in copyTableToSlice, n='%v', t='%v'. top=%v, idx=%v", n, t, L.GetTop(), idx)
 
-	// detect _gi_Slice and specialize for it.
+	// detect __gi_Slice and specialize for it.
 	if isSlice {
-		L.GetGlobal("_giPrivateSliceProps") // stack++
+		L.GetGlobal("__giPrivateSliceProps") // stack++
 	} else {
-		L.GetGlobal("_giPrivateArrayProps") // stack++
+		L.GetGlobal("__giPrivateArrayProps") // stack++
 	}
 	if !L.IsNil(-1) {
 		// we are running under `gi`
-		// is this a _gi_Slice? it is if the _giPrivateSliceProps key is present.
+		// is this a __gi_Slice? it is if the __giPrivateSliceProps key is present.
 
 		// since we increased the stack depth by 1, adjust idx.
 		adj := idx
@@ -627,15 +627,15 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 			adj--
 		}
 
-		pp("we are running under `gi`, _giPrivateSliceProps key was found in _G. top is now %v, idx=%v, adj=%v", L.GetTop(), idx, adj)
+		pp("we are running under `gi`, __giPrivateSliceProps key was found in _G. top is now %v, idx=%v, adj=%v", L.GetTop(), idx, adj)
 
 		// get table[key]. replaces key with value,
-		// i.e. replace the key _giPrivateSliceProps with
+		// i.e. replace the key __giPrivateSliceProps with
 		//  the actual table it represents.
 		L.GetTable(adj)
 		pp("under `gi`, after GetTable(adj), top is %v, and Top is nil: %v", L.GetTop(), L.IsNil(-1))
 		if !L.IsNil(-1) {
-			// yes, is _gi_Slice
+			// yes, is __gi_Slice
 			// leave the props on the top of the stack, we'll use
 			// them immediately.
 			return copyGiTableToSlice(L, adj, v, visited, isSlice)
@@ -930,7 +930,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case reflect.Struct:
 			return copyTableToStruct(L, idx, v, visited)
 		case reflect.Interface:
-			// jea: the original L.ObjLen reults was wrong b/c our _gi_Slice start indexing at 0 not 1.
+			// jea: the original L.ObjLen reults was wrong b/c our __gi_Slice start indexing at 0 not 1.
 			//n := int(L.ObjLen(idx)) // does not call __len metamethod. Problem.
 			n := getLenByCallingMetamethod(L, idx)
 			pp("n back from getLenByCallingMetamethod = %v at idx=%v", n, idx)
@@ -1201,7 +1201,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	t := v.Type()
 	getfield(L, -1, "len")
 	if L.IsNil(-1) {
-		panic("what? should be a `len` member of props for _gi_Slice")
+		panic("what? should be a `len` member of props for __gi_Slice")
 	}
 	n := int(L.ToNumber(-1))
 	L.Pop(1)
@@ -1222,7 +1222,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		    Table :
 		   '' => ''
 		   '' => ''
-		   'Typeof' => '_gi_Slice'
+		   'Typeof' => '__gi_Slice'
 
 		   DumpLuaStack: i=2, t= 0
 		    Type(code 0) : no auto-print available.
@@ -1233,9 +1233,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	*/
 
 	// get the raw table
-	L.GetGlobal("_giPrivateRaw") // stack++
+	L.GetGlobal("__giPrivateRaw") // stack++
 	if L.IsNil(-1) {
-		panic(`could not lookup "_giPrivateRaw" in global table`)
+		panic(`could not lookup "__giPrivateRaw" in global table`)
 	}
 
 	// since we increased the stack depth by 1, adjust idx.
@@ -1243,18 +1243,18 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		idx--
 	}
 
-	pp("found the global string _giPrivateRaw, here is stack, with adjusted idx=%v:", idx)
+	pp("found the global string __giPrivateRaw, here is stack, with adjusted idx=%v:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
 	// get table[key]. replaces key with value,
-	// i.e. replace the key _giPrivateRaw with
+	// i.e. replace the key __giPrivateRaw with
 	//  the actual table it represents.
 	L.GetTable(idx)
 	pp("under `gi`, after GetTable(idx=%v), top is %v, and Top is nil: %v", idx, L.GetTop(), L.IsNil(-1))
 	if L.IsNil(-1) {
-		panic("_giPrivateRaw not found in _gi_Slice outer value!")
+		panic("__giPrivateRaw not found in __gi_Slice outer value!")
 	}
 	pp("in copyGiTableToSlice. after fetching raw table to the top of the stack, here is stack:")
 	if verb.VerboseVerbose {
@@ -1407,7 +1407,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 
 	// INVAR: __len method is on top of stack.
 
-	// stack: __len method, the metatable, _gi_Slice table
+	// stack: __len method, the metatable, __gi_Slice table
 
 	//	pp("we think __len method is top of stack, followed by metable.")
 	//	if verb.VerboseVerbose {

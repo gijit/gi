@@ -1844,23 +1844,34 @@ function __zipairs(a)
    end
 end
 
---helper
-function __unpack0(t)
+--helper, get rid of 0, shift everything up in the returned.
+function __elim0(t)
    if type(t) ~= 'table' then
       return t
    end
-   
+
    if t == nil then
       return
    end
-
+   local n = tonumber(#t)
+   --print("n is "..tostring(n))
+   --__st(n, "n")
+   if n == 0 then
+      return
+   end
    local r = {}
    local z = t[0]
+   local off = 0
    if z ~= nil then
-      table.insert(r, z)
+      off = 1
    end
-   for _,v in ipairs(t) do
-      table.insert(r, v)
+   
+   for i=1,n do
+      table.insert(r, t[i-off])
    end
-   return unpack(r)
+   return r
+end
+
+function __unpack0(t)
+   return unpack(__elim0(t))
 end

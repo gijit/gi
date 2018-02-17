@@ -1,16 +1,16 @@
 -- arrays
 
 -- create private index
-_giPrivateRaw = _giPrivateRaw or {}
-_giPrivateArrayProps = _giPrivateArrayProps or {}
+__giPrivateRaw = __giPrivateRaw or {}
+__giPrivateArrayProps = __giPrivateArrayProps or {}
 
-_giPrivateArrayMt = {
+__giPrivateArrayMt = {
 
    __newindex = function(t, k, v)
-      local props = rawget(t, _giPrivateArrayProps)
+      local props = rawget(t, __giPrivateArrayProps)
       local len = props.len
-      --print("newindex called for key", k, " len at start is ", len)
-      local raw = rawget(t, _giPrivateRaw)
+      print("newindex called for key", k, " len at start is ", len)
+      local raw = rawget(t, __giPrivateRaw)
       if raw[k] == nil then
          if  v ~= nil then
             -- new value
@@ -36,17 +36,17 @@ _giPrivateArrayMt = {
       -- I don't think we need raw any more, now that
       -- __pairs works. It would be a problem for hash
       -- tables that want to store the key 'raw'.
-      -- if k == 'raw' then return t[_giPrivateRaw] end
-      return rawget(t, _giPrivateRaw)[k]
+      -- if k == 'raw' then return t[__giPrivateRaw] end
+      return rawget(t, __giPrivateRaw)[k]
    end,
 
    __tostring = function(t)
-      local props = rawget(t, _giPrivateArrayProps)
+      local props = rawget(t, __giPrivateArrayProps)
       local len =  props.len
-      local s = "array <len= " .. tostring(len) .. "> is _gi_Array{"
+      local s = "array <len= " .. tostring(len) .. "> is __gi_Array{"
       --print("t.len is", len)
-      local raw = rawget(t, _giPrivateRaw)
-      -- we want to skip both the _giPrivateRaw and the len
+      local raw = rawget(t, __giPrivateRaw)
+      -- we want to skip both the __giPrivateRaw and the len
       -- when iterating, which happens automatically if we
       -- iterate on r, the inside private data, and not on the proxy.
       local quo = ""
@@ -63,13 +63,13 @@ _giPrivateArrayMt = {
    __len = function(t)
       -- this does get called by the # operation
       --print("len called")
-      local props = rawget(t, _giPrivateArrayProps)
+      local props = rawget(t, __giPrivateArrayProps)
       return props.len
    end,
 
    __pairsDISABLED = function(t)
       print("__pairs called!")
-      -- this makes a _giArray work in a for k,v in pairs() do loop.
+      -- this makes a __giArray work in a for k,v in pairs() do loop.
 
       -- Iterator function takes the table and an index and returns the next index and associated value
       -- or nil to end iteration
@@ -77,8 +77,8 @@ _giPrivateArrayMt = {
       local function stateless_iter(t, k)
          local v
          --  Implement your own key,value selection logic in place of next
-         local raw = rawget(t, _giPrivateRaw)
-         print("raw from _giPrivateRaw is "..tostring(raw))
+         local raw = rawget(t, __giPrivateRaw)
+         print("raw from __giPrivateRaw is "..tostring(raw))
          k, v = next(raw, k)
          if v then return k,v end
       end
@@ -106,7 +106,7 @@ function __gi_NewArray(x, typeKind, len, zeroVal)
    end
 
    local proxy = {}
-   proxy[_giPrivateRaw] = x
+   proxy[__giPrivateRaw] = x
 
    -- zero any tail that is not set
    if zeroVal ~= nil then
@@ -118,11 +118,11 @@ function __gi_NewArray(x, typeKind, len, zeroVal)
    end
    
    local props = {len=len, typeKind=typeKind}
-   proxy[_giPrivateArrayProps] = props
+   proxy[__giPrivateArrayProps] = props
 
-   --print("upon init, len is ",proxy[_giPrivateArrayProps]["len"])
+   --print("upon init, len is ",proxy[__giPrivateArrayProps]["len"])
    
-   setmetatable(proxy, _giPrivateArrayMt)
+   setmetatable(proxy, __giPrivateArrayMt)
    return proxy
 end;
 
@@ -148,18 +148,18 @@ end
 
 -- jea: my earlier Proof of concept.
 -- function __gi_clone(t, typ)
---     print("_gi_clone called with typ ", typ)
+--     print("__gi_clone called with typ ", typ)
 --     if type(t) ~= 'table' then
---        error "__gi_clone called on non-table"
+--        error "___gi_clone called on non-table"
 --     end
 --  
 --     if typ == "kind_arrayType" then
---        local props = rawget(t, _giPrivateArrayProps)
+--        local props = rawget(t, __giPrivateArrayProps)
 --        if props == nil then
 --           error "__gi_clone for arrayType could not get props" 
 --        end
 --        -- make a copy of the data
---        local src = rawget(t, _giPrivateRaw)
+--        local src = rawget(t, __giPrivateRaw)
 --        local dest = {}
 --        for i,v in pairs(src) do
 --           dest[i] = v
@@ -175,19 +175,19 @@ end
 --  end
 
 
--- _gi_UnpackArrayRaw is a helper, used in
+-- __gi_UnpackArrayRaw is a helper, used in
 -- generated Lua code.
 --
--- This helper unpacks the raw _giArray
+-- This helper unpacks the raw __giArray
 -- arguments. It returns non tables unchanged,
--- and non _giArray tables unpacked.
+-- and non __giArray tables unpacked.
 --
-function _gi_UnpackArrayRaw(t)
+function __gi_UnpackArrayRaw(t)
    if type(t) ~= 'table' then
       return t
    end
    
-   local raw = rawget(t, _giPrivateRaw)
+   local raw = rawget(t, __giPrivateRaw)
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.
@@ -200,10 +200,10 @@ function _gi_UnpackArrayRaw(t)
    return raw[0], unpack(raw)
 end
 
-function _gi_ArrayRaw(t)
+function __gi_ArrayRaw(t)
    if type(t) ~= 'table' then
       return t
    end
    
-   return rawget(t, _giPrivateRaw)
+   return rawget(t, __giPrivateRaw)
 end
