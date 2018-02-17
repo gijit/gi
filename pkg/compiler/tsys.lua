@@ -600,18 +600,33 @@ __valueArrayMT = {
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from __valueArrayMT")
+      print("__tostring called from __valueArrayMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
       if self ~= nil and self.__val ~= nil then
-         --print("__valueArrayMT.__tostring called, with self.__val set.")
+         print("__valueArrayMT.__tostring called, with self.__val set.")
          if self.__val == self then
             -- not a basic value, but a pointer, array, slice, or struct.
             return "<this.__val == this; avoid inf loop>"
          end
-         --return tostring(self.__val)
+
+       local len = #self.__val
+       local s = self.__constructor.__str.."{"
+       local raw = self.__val
+       local beg = 1
+
+       local quo = ""
+       if len > 0 and type(raw[beg]) == "string" then
+          quo = '"'
+       end
+       for i = 0, len-1 do
+          s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(raw[beg+i]) .. quo .. ", "
+       end
+       
+       return s .. "}"
       end
+      
       if getmetatable(self.__val) == __valueArrayMT then
          --print("avoid infinite loop")
          return "<avoid inf loop>"
@@ -697,26 +712,26 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       --print(debug.traceback())
       
-      --print("in __tfunBasicMT, start __st on ...")
-      --__st({...}, "__tfunBasicMT.dots")
-      --print("in __tfunBasicMT,   end __st on ...")
+      print("in __tfunBasicMT, start __st on ...")
+      __st({...}, "__tfunBasicMT.dots")
+      print("in __tfunBasicMT,   end __st on ...")
 
-      --print("in __tfunBasicMT, start __st on self")
-      --__st(self, "self")
-      --print("in __tfunBasicMT,   end __st on self")
+      print("in __tfunBasicMT, start __st on self")
+      __st(self, "self")
+      print("in __tfunBasicMT,   end __st on self")
 
       local newInstance = {}
       setmetatable(newInstance, __valueBasicMT)
       if self ~= nil then
          if self.tfun ~= nil then
-            --print("calling tfun! -- let constructors set metatables if they wish to.")
+            print("calling tfun! -- let constructors set metatables if they wish to.")
 
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               --print("tfun sees no args and we have a typ.zero() method, so invoking it")
+               print("tfun sees no args and we have a typ.zero() method, so invoking it")
                self.tfun(newInstance, self.zero())
             else
                self.tfun(newInstance, ...)
@@ -883,12 +898,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end;
       
    elseif kind ==  __kindArray then
-
       typ.tfun = function(this, v)
-         --print("in tfun ctor function for __kindArray")
+         print("in tfun ctor function for __kindArray")
          this.__val = v;
+         this.__constructor = typ
          setmetatable(this, __valueArrayMT)
       end;
+      print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
       typ.wrapped = true;
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
                              this.__get = function() return array; end;
@@ -896,6 +912,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                              this.__val = array;
       end);
       typ.init = function(elem, len)
+         print("init() called for array.")
          typ.elem = elem;
          typ.len = len;
          typ.comparable = elem.comparable;
@@ -1139,6 +1156,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindArray then
       
       typ.zero = function()
+         print("in zero() for array...")
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
 

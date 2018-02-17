@@ -221,7 +221,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				tn := c.typeName(t)
 				pp("expressions.go making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				// gijit below, but try to go back to gophrejs style __zero() call.
-				ret := c.formatExpr("%s.zero()", tn)
+				//ret := c.formatExpr("%s.zero()", tn)
+				ret := c.formatExpr("%s()", tn) // will do zero for us *and* set proper metatable.
 				pp("about to return array zero() for 0 len array, c.output='%s'", string(c.output))
 				return ret
 				//return c.formatExpr(fmt.Sprintf(`__gi_NewArray({}, "%s", %v, %s)`, typeKind(t.Elem()), t.Len(), zero))

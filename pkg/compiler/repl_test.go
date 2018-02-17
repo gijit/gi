@@ -335,7 +335,7 @@ func Test015_5_ArrayCreation(t *testing.T) {
 		code := `var x [3]int`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 __type__anon_arrayType = __arrayType(__type__int, 3); -- 'IMMEDIATE' anon type printing.
-x = __type__anon_arrayType.zero();
+x = __type__anon_arrayType();
 `)
 	})
 }
