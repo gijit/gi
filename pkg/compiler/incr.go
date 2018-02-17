@@ -729,7 +729,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 	d.DceDeps = collectDependencies(func() {
 		// interface Dog getting codegen here
 		d.DeclCode = c.CatchOutput(0, func() {
-			typeName := c.objectName(o)
+			typeName := "__type__" + c.objectName(o)
 			lhs := typeName
 			if isPkgLevel(o) {
 				// jea: might need to attend to package names
@@ -870,7 +870,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("%s.__init(%s);", c.objectName(o), c.initArgs(t))
+				c.Printf("%s.__init(%s);", "__type__"+c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
 				if set_constructor != "" {

@@ -467,7 +467,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 			res = "__type__error"
 			return
 		}
-		res = c.objectName(t.Obj())
+		res = "__type__" + c.objectName(t.Obj())
 		return
 	case *types.Interface:
 		if t.Empty() {
