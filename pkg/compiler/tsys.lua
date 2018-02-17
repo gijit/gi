@@ -566,7 +566,7 @@ end;
 __valueBasicMT = {
    __name = "__valueBasicMT",
    __tostring = function(self, ...)
-      print("__tostring called from __valueBasicMT")
+      --print("__tostring called from __valueBasicMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -587,8 +587,31 @@ __valueBasicMT = {
    end,
 }
 
+-- use for slices and arrays
+__valueSliceIpairs = function(t)
+   
+   --print("__ipairs called!")
+   -- this makes a slice work in a for k,v in ipairs() do loop.
+   local off = rawget(t, "__offset")
+   local slcLen = rawget(t, "__length")
+   local function stateless_iter(arr, k)
+      k=k+1
+      if k >= off + slcLen then
+         return
+      end
+      return k, rawget(arr, off + k)
+   end       
+   -- Return an iterator function, the table, starting point
+   local arr = rawget(t, "__array")
+   --print("arr is "..tostring(arr))
+   return stateless_iter, arr, -1
+end
+
 __valueArrayMT = {
    __name = "__valueArrayMT",
+
+   __ipairs = __valueSliceIpairs,
+   __pairs  = __valueSliceIpairs,
    
    __newindex = function(t, k, v)
       print("__valueArrayMT.__newindex called, t is:")
@@ -663,24 +686,6 @@ __valueArrayMT = {
    end,
 }
 
-__valueSliceIpairs = function(t)
-   
-       print("__ipairs called!")
-       -- this makes a slice work in a for k,v in ipairs() do loop.
-       local off = rawget(t, "__offset")
-       local slcLen = rawget(t, "__length")
-       local function stateless_iter(arr, k)
-          k=k+1
-          if k >= off + slcLen then
-             return
-          end
-          return k, rawget(arr, off + k)
-       end       
-       -- Return an iterator function, the table, starting point
-       local arr = rawget(t, "__array")
-       --print("arr is "..tostring(arr))
-       return stateless_iter, arr, -1
-end
 
 __valueSliceMT = {
    __name = "__valueSliceMT",
@@ -979,6 +984,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, v)
          print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
+         this.__array = v; -- like slice, to reuse ipairs method.
+         this.__offset = 0; -- like slice.
          this.__constructor = typ
          this.__length = __lenz(v)
          -- TODO: come back and fix up Luar
