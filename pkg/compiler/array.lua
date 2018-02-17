@@ -32,7 +32,7 @@ _giPrivateArrayMt = {
    -- __index allows us to have fields to access the count.
    --
    __index = function(t, k)
-      --print("index called for key", k)
+      print("index called for key", k)
       -- I don't think we need raw any more, now that
       -- __pairs works. It would be a problem for hash
       -- tables that want to store the key 'raw'.
@@ -67,8 +67,8 @@ _giPrivateArrayMt = {
       return props.len
    end,
 
-   __pairs = function(t)
-      -- print("__pairs called!")
+   __pairsDISABLED = function(t)
+      print("__pairs called!")
       -- this makes a _giArray work in a for k,v in pairs() do loop.
 
       -- Iterator function takes the table and an index and returns the next index and associated value
@@ -77,7 +77,9 @@ _giPrivateArrayMt = {
       local function stateless_iter(t, k)
          local v
          --  Implement your own key,value selection logic in place of next
-         k, v = next(rawget(t, _giPrivateRaw), k)
+         local raw = rawget(t, _giPrivateRaw)
+         print("raw from _giPrivateRaw is "..tostring(raw))
+         k, v = next(raw, k)
          if v then return k,v end
       end
 

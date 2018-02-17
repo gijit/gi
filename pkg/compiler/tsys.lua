@@ -384,6 +384,7 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
+      --setmetatable(dst, getmetatable(src))
       return;
    end
 
@@ -395,12 +396,14 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
             print("here 0")
             elem.copy(dst[dstOffset + i], src[srcOffset + i]);
          end
+         --setmetatable(dst, getmetatable(src))         
          return;
       end
       print("here 1")
       for i = 0,n-1 do
          elem.copy(dst[dstOffset + i], src[srcOffset + i]);
       end
+      --setmetatable(dst, getmetatable(src))      
       return;
    end
 
@@ -409,12 +412,16 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
       for i = n-1,0,-1 do
          dst[dstOffset + i] = src[srcOffset + i];
       end
+      --setmetatable(dst, getmetatable(src))      
       return;
    end
    print("here 3")   
    for i = 0,n-1 do
       dst[dstOffset + i] = src[srcOffset + i];
    end
+   --setmetatable(dst, getmetatable(src))   
+   print("at end of array copy, src is:")
+   __st(src)
    print("at end of array copy, dst is:")
    __st(dst)
 end;
@@ -578,24 +585,36 @@ __valueArrayMT = {
    __name = "__valueArrayMT",
    
    __newindex = function(t, k, v)
-      --print("__valueArrayMT.__newindex called, t is:")
-      --__st(t)
+      print("__valueArrayMT.__newindex called, t is:")
+      __st(t)
 
       if k < 0 or k >= #t then
-         error "read of array error: access out-of-bounds"
+         error "write to array error: access out-of-bounds"
       end
       
       t.__val[k] = v
    end,
    
    __index = function(t, k)
-      --print("__valueArrayMT.__index called, k='"..tostring(k).."'; t.__val is:")
-      --__st(t.__val)
-      if k < 0 or k >= #t then
-         error("write to array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
+      print("__valueArrayMT.__index called, k='"..tostring(k).."';") --  t.__val is:")
+      if type(k) == "table" then
+         print("__index called with table?? ignoring")
+         -- empty table, no metatable.
+         --print(debug.traceback())
+         --local mt = getmetatable(k)
+         --setmetatable(k, nil)
+         --__st(k, "k")
+         --setmetatable(k, mt)
+         --__st(mt, "mt")
+      else
+         --__st(t.__val)
+         if k < 0 or k >= #t then
+            print(debug.traceback())
+            error("read from array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
+         end
+         
+         return t.__val[k]
       end
-      
-      return t.__val[k]
    end,
 
    __len = function(t)
@@ -603,7 +622,7 @@ __valueArrayMT = {
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from __valueArrayMT")
+      print("__tostring called from __valueArrayMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -615,9 +634,12 @@ __valueArrayMT = {
          end
 
          local len = #self.__val
+         if self.__val[0] ~= nil then
+            len=len+1
+         end
          local s = self.__constructor.__str.."{"
          local raw = self.__val
-         local beg = 1
+         local beg = 0
 
          local quo = ""
          if len > 0 and type(raw[beg]) == "string" then
@@ -740,8 +762,7 @@ __tfunBasicMT = {
             
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               --print("tfun sees no args and we have a typ.zero() method, so invoking it")
-               
+               print("tfun sees no args and we have a typ.zero() method, so invoking it")
                self.tfun(newInstance, self.zero())
             else
                self.tfun(newInstance, ...)
@@ -925,12 +946,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindArray then
       typ.tfun = function(this, v)
-         --print("in tfun ctor function for __kindArray")
+         print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
          this.__constructor = typ
          setmetatable(this, __valueArrayMT)
       end;
-      --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
+      print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
       typ.wrapped = true;
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
                              this.__get = function() return array; end;
@@ -938,7 +959,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                              this.__val = array;
       end);
       typ.init = function(elem, len)
-         --print("init() called for array.")
+         print("init() called for array.")
          typ.elem = elem;
          typ.len = len;
          typ.comparable = elem.comparable;
@@ -1206,7 +1227,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindArray then
       
       typ.zero = function()
-         --print("in zero() for array...")
+         print("in zero() for array...")
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
 
@@ -1821,4 +1842,25 @@ function __zipairs(a)
       n = n + 1
       if n <= s then return n,a[n] end
    end
+end
+
+--helper
+function __unpack0(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   
+   if t == nil then
+      return
+   end
+
+   local r = {}
+   local z = t[0]
+   if z ~= nil then
+      table.insert(r, z)
+   end
+   for _,v in ipairs(t) do
+      table.insert(r, v)
+   end
+   return unpack(r)
 end
