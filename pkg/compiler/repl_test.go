@@ -980,7 +980,11 @@ func Test042LenAtRepl(t *testing.T) {
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
 		code := `a := []int{3}; len(a)`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = _gi_NewSlice("int",{[0]=3LL}, 0LL); print(#a);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+    __type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.  
+ 	a = __type__anon_sliceType({[0]=3LL});
+    print(#a);
+`)
 	})
 }
 
