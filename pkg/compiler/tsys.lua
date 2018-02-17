@@ -1639,7 +1639,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-   --print("__sliceType called with elem = ", elem)
+   print("__sliceType called with elem = ", elem)
    local typ = elem.slice;
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);

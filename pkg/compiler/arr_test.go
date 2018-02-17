@@ -9,7 +9,7 @@ import (
 
 func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
-	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function`, t, func() {
+	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function. A test of Luar functionality.`, t, func() {
 
 		// a := [3]int64{1,2,3}
 		code := `

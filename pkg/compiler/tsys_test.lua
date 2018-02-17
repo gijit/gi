@@ -228,23 +228,13 @@ end;
 __type__WonderWoman.ptr.prototype.Fight = function(w) 
    w.LassoPoints = w.LassoPoints + (1LL);
 end;
-__type__WonderWoman.prototype.Fight = function(this, )  return this.__val.Fight(); end;
+__type__WonderWoman.prototype.Fight = function(this)  return this.__val.Fight(); end;
 
 ww = __type__WonderWoman.ptr({}, 2LL, 0LL);
 
 expectEq(ww.Bracelets, 2LL)
 
 ww:Fight();
-
-ptrType = __ptrType(WonderWoman);
-WonderWoman.ptr.methodSet.Fight = function(__self)
-   local w = __self;
-   w.LassoPoints = w.LassoPoints + 1LL;
-end
-
--- WonderWoman.ptr.methodSet.Fight = WonderWoman.methodSet.Fight
-
-ww:Fight()
 expectEq(ww.LassoPoints, 1LL)
 ww:Fight()
 expectEq(ww.LassoPoints, 2LL)
@@ -269,7 +259,7 @@ func main() {
 }
 --]]
 
-sliceType = __sliceType(__emptyInterface);
+sliceType = __sliceType(__type__emptyInterface);
 MyApply = function(bo, x, y)
    return bo(x, y);
 end
@@ -359,30 +349,30 @@ Wolf = __newType(0, __kindStruct, "main.Wolf", true, "github.com/gijit/gi/pkg/co
                     this.HasRing = HasRing_;
 end);
 
-sliceType = __sliceType(__emptyInterface);
+sliceType = __sliceType(__type__emptyInterface);
 ptrType = __ptrType(hobbit);
 ptrType__1 = __ptrType(Wolf);
-hobbit.ptr.methodSet.WearRing = function(this)
-   print("hobbit.ptr.methodSet.WearRing called!")
+hobbit.ptr.prototype.WearRing = function(this)
+   print("hobbit.ptr.prototype.WearRing called!")
    h = this;
    h.hasRing = not h.hasRing;
    return h.hasRing;
 end
 
-hobbit.methodSet.WearRing = function(this)
-   print("hobbit.methodSet.WearRing called!")
+hobbit.prototype.WearRing = function(this)
+   print("hobbit.prototype.WearRing called!")
    return this.__val.WearRing(this);
 end
 
-Wolf.ptr.methodSet.Scowl = function(this)
-   print("Wolf.ptr.methodSet.Scowl called!")
+Wolf.ptr.prototype.Scowl = function(this)
+   print("Wolf.ptr.prototype.Scowl called!")
    w = this;
    w.Claw = w.Claw + 1LL;
    return w.Claw;
 end
 
-Wolf.methodSet.Scowl = function(this)
-   print("Wolf.methodSet.Scowl called!")
+Wolf.prototype.Scowl = function(this)
+   print("Wolf.prototype.Scowl called!")
    return this.__val.Scowl(this);
 end
 
@@ -569,8 +559,8 @@ end);
 
 Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "Name", name= "Name", anonymous= false, exported= true, __typ= __type__string, tag= ""}, {__prop= "Id", name= "Id", anonymous= false, exported= true, __typ= __type__int, tag= ""}, {__prop= "Mate", name= "Mate", anonymous= false, exported= true, __typ= ptrType, tag= ""}, {__prop= "Litter", name= "Litter", anonymous= false, exported= true, __typ= sliceType, tag= ""}, {__prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, __typ= ptrType__1, tag= ""}, {__prop= "food", name= "food", anonymous= false, exported= false, __typ= __type__int, tag= ""}, {__prop= "ate", name= "ate", anonymous= false, exported= false, __typ= __type__bool, tag= ""}});
 
--- replace .prototype with .methodSet
-Hound.ptr.methodSet.Eat = function(this, a)
+-- return .methodSet to  .prototype
+Hound.ptr.prototype.Eat = function(this, a)
    print("Eat called, with a = ", a, " and this=")
    __st(this,"this-on-Hound.ptr")
    
@@ -601,12 +591,12 @@ Hound.ptr.methodSet.Eat = function(this, a)
 		end
 		return h.food;
 	end;
-	Hound.methodSet.Eat = function(a)  return this.__val.Eat(a); end;
+	Hound.prototype.Eat = function(a)  return this.__val.Eat(a); end;
 
 	ptrType = __ptrType(Hound);
 	sliceType = __sliceType(ptrType);
 	ptrType__1 = __ptrType(sliceType);
-	sliceType__1 = __sliceType(__emptyInterface);        
+	sliceType__1 = __sliceType(__type__emptyInterface);        
 
 		jake =  Hound.ptr("Jake", 123, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
 		joy =  Hound.ptr("Joy", 456, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
