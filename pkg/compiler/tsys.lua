@@ -437,7 +437,7 @@ __pointerOfStructConversion = function(obj, typ)
      end
      -- fields must be an array for this to work.
      for i=0,#typ.elem.fields-1 do
-        helper(typ.elem.fields[i].prop);
+        helper(typ.elem.fields[i].__prop);
      end
      
     proxy = Object.create(typ.methodSet, properties);
@@ -989,9 +989,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
         for _, m in pairs(methods) do
            -- TODO:
            -- jea: why this? seems it would end up being a huge set?
-           print("about to index with m.prop where m =")
+           print("about to index with m.__prop where m =")
            __st(m)
-           __ifaceNil[m.prop] = __throwNilPointerError;
+           __ifaceNil[m.__prop] = __throwNilPointerError;
         end;
      end;
      
@@ -1039,14 +1039,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("top of init() for struct, fields=")
          for i, f in pairs(fields) do
             __st(f, "field #"..tostring(i))
-            __st(f.typ, "typ of field #"..tostring(i))
+            __st(f.__typ, "typ of field #"..tostring(i))
          end
          
          typ.pkgPath = pkgPath;
          typ.fields = fields;
          __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-            if not f.typ.comparable then
+            if not f.__typ.comparable then
                typ.comparable = false;
                break;
             end
@@ -1054,7 +1054,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.keyFor = function(x)
             local val = x.__val;
             return __mapAndJoinStrings("_", fields, function(f)
-                                          return string.gsub(tostring(f.typ.keyFor(val[f.prop])), "\\", "\\\\")
+                                          return string.gsub(tostring(f.__typ.keyFor(val[f.__prop])), "\\", "\\\\")
             end)
          end;
          typ.copy = function(dst, src)
@@ -1065,13 +1065,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             __st(fields,"fields")
             __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
-               local sw2 = f.typ.kind
+               local sw2 = f.__typ.kind
                
                if sw2 == __kindArray or
                sw2 ==  __kindStruct then 
-                  f.typ.copy(dst[f.prop], src[f.prop]);
+                  f.__typ.copy(dst[f.__prop], src[f.__prop]);
                else
-                  dst[f.prop] = src[f.prop];
+                  dst[f.__prop] = src[f.__prop];
                end
             end
          end;
@@ -1080,7 +1080,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          local properties = {};
          __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-            properties[f.prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
+            properties[f.__prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
          end;
          typ.ptr.__nil = {} -- Object.create(constructor.prototype,s properties);
          --if constructor ~= nil then
@@ -1090,27 +1090,27 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          -- /* methods for embedded fields */
          __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
-                  if target.methodSet[m.prop] ~= nil then return; end
-                  target.methodSet[m.prop] = function()
-                     local v = this.__val[f.prop];
-                     if f.typ == __jsObjectPtr then
+                  if target.methodSet[m.__prop] ~= nil then return; end
+                  target.methodSet[m.__prop] = function()
+                     local v = this.__val[f.__prop];
+                     if f.__typ == __jsObjectPtr then
                         v = __jsObjectPtr(v);
                      end
                      if v.__val == nil then
                         local w = {}
-                        f.typ(w, v);
+                        f.__typ(w, v);
                         v = w
                      end
-                     return v[m.prop](v, arguments);
+                     return v[m.__prop](v, arguments);
                   end;
                end;
                for i,f in ipairs(fields) do
                   if f.anonymous then
-                     for _, m in ipairs(__methodSet(f.typ)) do
+                     for _, m in ipairs(__methodSet(f.__typ)) do
                         synthesizeMethod(typ, m, f);
                         synthesizeMethod(typ.ptr, m, f);
                      end;
-                     for _, m in ipairs(__methodSet(__ptrType(f.typ))) do
+                     for _, m in ipairs(__methodSet(__ptrType(f.__typ))) do
                         synthesizeMethod(typ.ptr, m, f);
                      end;
                   end
@@ -1239,36 +1239,36 @@ function __methodSet(typ)
      local mset = {};
      
      for _,e in pairs(current) do
-        if seen[e.typ.__str] then
+        if seen[e.__typ.__str] then
            break
         end
-        seen[e.typ.__str] = true;
+        seen[e.__typ.__str] = true;
         
-       if e.typ.named then
-          for _, mthod in pairs(e.typ.methods) do
+       if e.__typ.named then
+          for _, mthod in pairs(e.__typ.methods) do
              print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod);
           end
           if e.indirect then
-             for _, mthod in pairs(__ptrType(e.typ).methods) do
+             for _, mthod in pairs(__ptrType(e.__typ).methods) do
                 print("adding to mset, mthod = ", mthod)
                 table.insert(mset, mthod)
              end
           end
        end
        
-       -- switch e.typ.kind
-       local knd = e.typ.kind
+       -- switch e.__typ.kind
+       local knd = e.__typ.kind
        
        if knd == __kindStruct then
           
-          -- assume that e.typ.fields must be an array!
+          -- assume that e.__typ.fields must be an array!
           -- TODO: remove this assert after confirmation.
-          __assertIsArray(e.typ.fields)
-          __ipairsZeroCheck(e.typ.fields)
-          for i,f in ipairs(e.typ.fields) do
+          __assertIsArray(e.__typ.fields)
+          __ipairsZeroCheck(e.__typ.fields)
+          for i,f in ipairs(e.__typ.fields) do
              if f.anonymous then
-                local fTyp = f.typ;
+                local fTyp = f.__typ;
                 local fIsPtr = (fTyp.kind == __kindPtr);
                 local ty 
                 if fIsPtr then
@@ -1283,7 +1283,7 @@ function __methodSet(typ)
           
        elseif knd == __kindInterface then
           
-          for _, mthod in pairs(e.typ.methods) do
+          for _, mthod in pairs(e.__typ.methods) do
              print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod)
           end
@@ -1443,14 +1443,14 @@ function __interfaceStrHelper(m)
    if m.pkg ~= "" then
       s = m.pkg .. "."
    end
-   return s .. m.name .. string.sub(m.typ.__str, 6) -- sub for removing "__kind"
+   return s .. m.name .. string.sub(m.__typ.__str, 6) -- sub for removing "__kind"
 end
 
 __interfaceTypes = {};
 __interfaceType = function(methods)
    
    local typeKey = __mapAndJoinStrings("_", methods, function(m)
-                                          return m.pkg .. "," .. m.name .. "," .. m.typ.id;
+                                          return m.pkg .. "," .. m.name .. "," .. m.__typ.id;
    end)
    local typ = __interfaceTypes[typeKey];
    if typ == nil then
@@ -1467,7 +1467,7 @@ end;
 __type__emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
-__error.init({{prop= "Error", name= "Error", pkg= "", typ= __funcType({}, {__String}, false) }});
+__error.init({{__prop= "Error", __name= "Error", __pkg= "", typ= __funcType({}, {__String}, false) }});
 
 __mapTypes = {};
 __mapType = function(key, elem)
@@ -1580,11 +1580,11 @@ function field2strHelper(f)
       tag = string.gsub(f.tag, "\\", "\\\\")
       tag = string.gsub(tag, "\"", "\\\"")
    end
-   return f.name .. " " .. f.typ.__str .. tag
+   return f.name .. " " .. f.__typ.__str .. tag
 end
 
 function typeKeyHelper(f)
-   return f.name .. "," .. f.typ.id .. "," .. f.tag;
+   return f.name .. "," .. f.__typ.id .. "," .. f.tag;
 end
 
 __structTypes = {};
@@ -1607,9 +1607,9 @@ __structType = function(pkgPath, fields)
                             local f = fields[i];
                             local arg = arguments[i];
                             if arg ~= nil then
-                               this[f.prop] = arg
+                               this[f.__prop] = arg
                             else
-                               this[f.prop] = f.typ.zero();
+                               this[f.__prop] = f.__typ.zero();
                             end
                          end
                          return this
@@ -1650,7 +1650,7 @@ __equal = function(a, b, typ)
      
     for i = 0,#(typ.fields)-1 do
       local f = typ.fields[i];
-      if  not __equal(a[f.prop], b[f.prop], f.typ) then
+      if  not __equal(a[f.__prop], b[f.__prop], f.__typ) then
         return false;
       end
     end
@@ -1687,9 +1687,9 @@ __assertType = function(value, typ, returnTuple)
    if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      ok = value.typ == typ;
+      ok = value.__typ == typ;
    else
-      local valueTypeString = value.typ.__str;
+      local valueTypeString = value.__typ.__str;
 
       -- this caching doesn't get updated as methods
       -- are added, so disable it until fixed, possibly, in the future.
@@ -1697,7 +1697,7 @@ __assertType = function(value, typ, returnTuple)
       ok = nil
       if ok == nil then
          ok = true;
-         local valueMethodSet = __methodSet(value.typ);
+         local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
          print("valueMethodSet is")
          __st(valueMethodSet)
@@ -1714,7 +1714,7 @@ __assertType = function(value, typ, returnTuple)
                print("and vm=")
                __st(vm)
                
-               if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.typ == tm.typ then
+               if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
                   print("match found against vm and tm.")
                   found = true;
                   break;
@@ -1741,7 +1741,7 @@ __assertType = function(value, typ, returnTuple)
       end
       local msg = ""
       if value ~= __ifaceNil then
-         msg = value.typ.__str
+         msg = value.__typ.__str
       end
       --__panic(__packages["runtime"].TypeAssertionError.ptr("", msg, typ.__str, missingMethod));
       error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")

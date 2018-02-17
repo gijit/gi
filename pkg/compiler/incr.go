@@ -824,7 +824,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					pkgPath = method.Pkg().Path()
 				}
 				t := method.Type().(*types.Signature)
-				entry := fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				entry := fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 
 				// https://golang.org/ref/spec#Method_sets
 				//
