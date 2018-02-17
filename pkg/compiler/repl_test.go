@@ -413,7 +413,12 @@ func Test018ReadFromMap(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
-		expect := []string{`x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`, `x3 = x('get',"3LL", "");`}
+		expect := []string{`
+
+  	__type__anon_mapType = __mapType(__type__int, __type__string); -- 'IMMEDIATE' anon type printing.  
+  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);`,
+			`   x3 =  x('get', "3LL", "");`}
+
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -437,7 +442,9 @@ func Test018ReadFromSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
-		expect := []string{`x=_gi_NewSlice("int", {[0]=3LL, 4LL},0LL);`, `x3 = _gi_GetRangeCheck(x,0);`}
+		expect := []string{`  	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
+  
+  	x = __type__anon_sliceType({[0]=3LL, 4LL});`, `x3 = _gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
