@@ -392,7 +392,11 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=_gi_NewMap("int", "string", {["3LL"]="hello", ["4LL"]="gophers"});`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+  	__type__anon_mapType = __mapType(__type__int, __type__string); -- 'IMMEDIATE' anon type printing.
+  
+  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);
+`)
 		code = `delete(x, 3)`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x("delete",3LL);`)
 	})
