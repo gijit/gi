@@ -517,7 +517,7 @@ func Test021StructTypeValues(t *testing.T) {
 `)
 		code = `var a A`
 		//cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = __type__A.__ptr({}, nil);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a = __type__A.ptr({}, nil);`)
 
 	})
 }
@@ -546,7 +546,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-a = __type__A.__ptr({}, 43LL);
+a = __type__A.ptr({}, 43LL);
 `)
 		// a=__reg:NewInstance("A",{["B"]=43LL});
 

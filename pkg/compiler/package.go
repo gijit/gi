@@ -148,7 +148,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !method.Exported() {
 				pkgPath = method.Pkg().Path()
 			}
-			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __gi_funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
+			methods[i] = fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg= "%s", typ= __funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(methods, ", "))
 	case *types.Map:
@@ -175,7 +175,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !field.Exported() {
 				pkgPath = field.Pkg().Path()
 			}
-			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(field.Type()), encodeString(t.Tag(i)))
+			fields[i] = fmt.Sprintf(`{prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(field.Type()), encodeString(t.Tag(i)))
 		}
 		return fmt.Sprintf(`"%s", {%s}`, pkgPath, strings.Join(fields, ", "))
 	default:
@@ -208,12 +208,18 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 			if len(params) > 0 {
 				joinedParams = "," + joinedParams
 			}
-			return []byte(fmt.Sprintf("\t%s[__gi_MethodsetKey].%s=function%s;\n "+
-				"__reg:AddMethod(\"struct\", \"%s\", \"%s\", %s[__gi_MethodsetKey]%s, true)\n",
-				splt[0], splt[1],
+			return []byte(fmt.Sprintf("\t__type__%s.methodSet.%s=function%s;\n ",
+				splt[0],
+				splt[1],
 				fun,
-				splt[0], splt[1], splt[0], "."+splt[1],
 			))
+			/*			return []byte(fmt.Sprintf("\t%s.methodset.%s=function%s;\n "+
+							"__reg:AddMethod(\"struct\", \"%s\", \"%s\", %s.methodset.%s, true)\n",
+							splt[0], splt[1],
+							fun,
+							splt[0], splt[1], splt[0], "."+splt[1],
+						))
+			*/
 		} else {
 			return []byte(fmt.Sprintf("\t%s = %s;\n", funcRef, fun))
 		}

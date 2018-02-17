@@ -244,7 +244,7 @@ end;
 __unused = function(v) end;
 
 --
-__mapArray = function(arr, f)
+__mapArray = function(arr, fun)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
@@ -981,10 +981,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      typ = { implementedBy= {}, missingMethodFor= {} };
      typ.keyFor = __ifaceKeyFor;
      typ.init = function(methods)
+        print("top of init() for kindInterface, methods= ")
+        __st(methods)
+        print("and also at top of init() for kindInterface, typ= ")
+        __st(typ)
         typ.methods = methods;
         for _, m in pairs(methods) do
            -- TODO:
            -- jea: why this? seems it would end up being a huge set?
+           print("about to index with m.prop where m =")
+           __st(m)
            __ifaceNil[m.prop] = __throwNilPointerError;
         end;
      end;
@@ -1009,7 +1015,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       -- metatable for instances of the struct; this is
       -- equivalent to the prototype in js.
       --
-      typ.methodSet = {__name="methodSet for "..str, __typ = typ}
+      typ.methodSet = {__name="methodSet for "..str, typ = typ}
       typ.methodSet.__index = typ.methodSet
       
       local ctor = function(this, ...)
@@ -1025,7 +1031,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
-      typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
+      typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, typ = typ.ptr}
       typ.ptr.methodSet.__index = typ.ptr.methodSet
 
       -- __kindStruct.init is here:
@@ -1681,9 +1687,9 @@ __assertType = function(value, typ, returnTuple)
    if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      ok = value.__typ == typ;
+      ok = value.typ == typ;
    else
-      local valueTypeString = value.__typ.__str;
+      local valueTypeString = value.typ.__str;
 
       -- this caching doesn't get updated as methods
       -- are added, so disable it until fixed, possibly, in the future.
@@ -1691,7 +1697,7 @@ __assertType = function(value, typ, returnTuple)
       ok = nil
       if ok == nil then
          ok = true;
-         local valueMethodSet = __methodSet(value.__typ);
+         local valueMethodSet = __methodSet(value.typ);
          local interfaceMethods = typ.methods;
          print("valueMethodSet is")
          __st(valueMethodSet)
@@ -1735,7 +1741,7 @@ __assertType = function(value, typ, returnTuple)
       end
       local msg = ""
       if value ~= __ifaceNil then
-         msg = value.__typ.__str
+         msg = value.typ.__str
       end
       --__panic(__packages["runtime"].TypeAssertionError.ptr("", msg, typ.__str, missingMethod));
       error("type-assertion-error: could not '"..msg.."' -> '"..typ.__str.."', missing method '"..missingMethod.."'")

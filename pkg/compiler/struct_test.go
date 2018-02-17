@@ -132,7 +132,7 @@ __type__Ragdoll.__constructor = function(self, ...)
 		 return self; 
 end;
 
-doll = __type__Ragdoll.__ptr({}, anon_ptrType.__nil);
+doll = __type__Ragdoll.ptr({}, anon_ptrType.__nil);
 
 doll.Andy = doll;
 same = doll.Andy == doll;

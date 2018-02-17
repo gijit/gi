@@ -824,7 +824,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					pkgPath = method.Pkg().Path()
 				}
 				t := method.Type().(*types.Signature)
-				entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg="%s", __typ= __gi_funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+				entry := fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 
 				// https://golang.org/ref/spec#Method_sets
 				//
@@ -857,10 +857,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				pn := c.typeName(types.NewPointer(named)) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
-				pn = c.objectName(o)
+				pn = "__type__" + c.objectName(o)
 				// so these are the methods for B (test 102 face_test), but
 				// we'll need to get them to __type__B.__ptr and not to ptrType.
-				c.Printf("%s.__ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
+				c.Printf("%s.ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
 			}
 		})
 		allby = append(allby, d.MethodListCode...)

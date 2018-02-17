@@ -285,7 +285,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("%s.__ptr({}, %s)", c.typeName(exprType), sele)
+			return c.formatExpr("%s.ptr({}, %s)", c.typeName(exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
