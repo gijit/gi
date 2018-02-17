@@ -532,7 +532,17 @@ func Test022StructTypeValues(t *testing.T) {
 
 		code := `type A struct{ B int}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldStartWithModuloWhiteSpace, `
-   __type__A = __gi_NewType(0, __gi_kind_Struct, "main", "A", "main.A", true, "main", true
+	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}});
+  	
+  	 __type__A.__constructor = function(self, ...) 
+  		 if self == nil then self = {}; end
+  			 local B_ = ... ;
+  			 self.B = B_ or 0LL;
+  		 return self; 
+  	 end;
+  ;
+  
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
