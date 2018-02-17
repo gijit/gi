@@ -361,6 +361,27 @@ x = __makeMap(__type__int.keyFor, {["3LL"]="hello", ["4LL"]="gophers"});
 	})
 }
 
+func Test016bMapCreation(t *testing.T) {
+	vm, err := NewLuaVmWithPrelude(nil)
+	panicOn(err)
+	defer vm.Close()
+	inc := NewIncrState(vm, nil)
+
+	cv.Convey(`creating maps new named types should compile`, t, func() {
+
+		code := `type Yumo map[int]string; yesso := Yumo{2: "two"}`
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+__type__Yumo = ___newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
+
+__type__Yumo.__init(__type__int, __type__string);
+
+yesso = __makeMap(__type__int.keyFor, {[2LL]="two"}, __type__int, __type__string, __type__Yumo);
+
+`)
+
+	})
+}
+
 func Test017DeleteFromMap(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)

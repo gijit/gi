@@ -253,7 +253,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
 			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
-			return c.formatExpr("__makeMap(__type__%s.keyFor, {%s}, __type__%s, __type__%s)", c.typeName(t.Key()), joined, c.typeName(t.Key()), c.typeName(t.Elem()))
+			return c.formatExpr("__makeMap(%s.keyFor, {%s}, %s, %s, %s)", c.typeName(t.Key()), joined, c.typeName(t.Key()), c.typeName(t.Elem()), c.typeName(exprType))
 		case *types.Struct:
 			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())
@@ -285,7 +285,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("__type__%s.__ptr({}, %s)", c.typeName(exprType), sele)
+			return c.formatExpr("%s.__ptr({}, %s)", c.typeName(exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
@@ -914,11 +914,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
 			// jea, type assertion place 2; face_test 101 goes here.
 			// return both converted-interface-value, and ok.
-			return c.formatExpr(`__gi_assertType(%e, __type__%s, 2)`, e.X, c.typeName(t))
+			return c.formatExpr(`__gi_assertType(%e, %s, 2)`, e.X, c.typeName(t))
 			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(t))
 		}
 		// jea, type assertion place 0: only return value, without the 2nd 'ok' return.
-		return c.formatExpr(`__gi_assertType(%e, __type__%s, 0)`, e.X, c.typeName(t))
+		return c.formatExpr(`__gi_assertType(%e, %s, 0)`, e.X, c.typeName(t))
 
 	case *ast.Ident:
 		if e.Name == "_" {

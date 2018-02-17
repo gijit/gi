@@ -1107,9 +1107,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    end
    
    -- set zero() method
-   if kind == __kindBool or
-   kind ==__kindMap then
-      typ.zero = function() return false; end;
+   if kind == __kindBool then
+            typ.zero = function() return false; end;
+
+   elseif kind ==__kindMap then
+      typ.zero = function() return nil; end;
 
    elseif kind == __kindInt or
       kind ==  __kindInt8 or
@@ -1463,14 +1465,16 @@ __mapType = function(key, elem)
   return typ;
 end;
 
-__makeMap = function(keyForFunc, entries, keyType, elemType)
+__makeMap = function(keyForFunc, entries, keyType, elemType, mapType)
    local m={};
    for k, e in pairs(entries) do
       local key = keyForFunc(k)
       --print("using key ", key, " for k=", k)
       m[key] = e;
    end
-   return _gi_NewMap(keyType, elemType, m);
+   local mp = _gi_NewMap(keyType, elemType, m);
+   setmetatable(mp, mapType)
+   return mp
 end;
 
 

@@ -780,13 +780,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					//}
 					constructor += "\t\t return self; \n\t end;\n"
 				}
-				set_constructor = fmt.Sprintf("\n\t __type__%s.__constructor = %s;\n", typeName, constructor)
+				set_constructor = fmt.Sprintf("\n\t %s.__constructor = %s;\n", typeName, constructor)
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 				//size = sizes32.Sizeof(t)
 				size = sizes64.Sizeof(t)
 				_ = size
 			}
-			c.Printf(`__type__%s = ___newType(%d, %s, "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported()) //, constructor)
+			c.Printf(`%s = ___newType(%d, %s, "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported()) //, constructor)
 			//c.Printf(`__type__%s = __newType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
 			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 
@@ -849,7 +849,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 
 				tnn := c.typeName(named)
 				pp("tnn = '%s'", tnn)
-				c.Printf("__type__%s.__methods_desc = {%s}; -- incr.go:817 for methods\n", tnn, strings.Join(methods, ", "))
+				c.Printf("%s.__methods_desc = {%s}; -- incr.go:817 for methods\n", tnn, strings.Join(methods, ", "))
 
 			}
 			if len(ptrMethods) > 0 {
@@ -860,7 +860,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				pn = c.objectName(o)
 				// so these are the methods for B (test 102 face_test), but
 				// we'll need to get them to __type__B.__ptr and not to ptrType.
-				c.Printf("__type__%s.__ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
+				c.Printf("%s.__ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
 			}
 		})
 		allby = append(allby, d.MethodListCode...)
@@ -870,7 +870,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("__type__%s.__init(%s);", c.objectName(o), c.initArgs(t))
+				c.Printf("%s.__init(%s);", c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
 				if set_constructor != "" {
