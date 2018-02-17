@@ -491,8 +491,10 @@ func Test020StructTypeDeclarations(t *testing.T) {
 
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldStartWithModuloWhiteSpace, `
-       __type__A = __gi_NewType(0, __gi_kind_Struct, "main", "A", "main.A", true, "main",
-`)
+	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__A.init("", {});  	
+  	 __type__A.__constructor = function(self) 
+  		 return self; end;`)
 
 	})
 }
@@ -507,7 +509,11 @@ func Test021StructTypeValues(t *testing.T) {
 
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldStartWithModuloWhiteSpace, `
-       __type__A = __gi_NewType(0, __gi_kind_Struct, "main", "A", "main.A", true, "main",
+
+	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__A.init("", {});
+  	 __type__A.__constructor = function(self) 
+  		 return self; end;
 `)
 		code = `var a A`
 		//cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `a=__reg:NewInstance("A",{});`)
