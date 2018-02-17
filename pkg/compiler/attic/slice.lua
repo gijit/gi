@@ -1,18 +1,20 @@
 -- like a Go slice, a lua slice needs to point
 -- to a backing array
 
+-- important keys
+__giPrivateRaw = "__giPrivateRaw"
+__giPrivateArrayProps = "__giPrivateArrayProps"
+__giPrivateSliceProps = "__giPrivateSliceProps"
+__giGo = "__giGo"
 
--- create private index
-__giPrivateRaw = __giPrivateRaw or {}
-__giPrivateSliceProps = __giPrivateSliceProps or {}
-__giGo = __giGo or {}
+--print("__giPrivateSliceProps is ", __giPrivateSliceProps)
 
 __giPrivateSliceMt = {
 
     __newindex = function(t, k, v)
        --print("newindex called for key", k, " val=", v)
        local props = rawget(t, __giPrivateSliceProps)
-       local len = props.len
+       local len = props.__length
        local beg = props.beg
        local raw = rawget(t, __giPrivateRaw)
        
@@ -31,7 +33,7 @@ __giPrivateSliceMt = {
           end
       end
        raw[k+beg] = v
-       props.len = len
+       props.__length = len
        --print("len at end of newindex is ", len)
     end,
 
@@ -59,7 +61,7 @@ __giPrivateSliceMt = {
     __tostring = function(t)
        --print("__gi_Slice: tostring called")
        local props = rawget(t, __giPrivateSliceProps)
-       local len = props.len
+       local len = props.__length
        local beg = props.beg
        local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. props.cap ..  "> is __giSlice{"
        local raw = rawget(t, __giPrivateRaw)
@@ -251,7 +253,7 @@ function append(t, ...)
    if props == nil then
       error "append() called with first value not a slice"
    end
-   local len = props.len
+   local len = props.__length
    local raw = rawget(t, __giPrivateRaw)
    if raw == nil then
       error "could not get raw table from slice, internal error?"

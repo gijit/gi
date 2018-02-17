@@ -1,14 +1,16 @@
 -- arrays
 
--- create private index
-__giPrivateRaw = __giPrivateRaw or {}
-__giPrivateArrayProps = __giPrivateArrayProps or {}
+-- important keys
+__giPrivateRaw = "__giPrivateRaw"
+__giPrivateArrayProps = "__giPrivateArrayProps"
+__giPrivateSliceProps = "__giPrivateSliceProps"
+__giGo = "__giGo"
 
 __giPrivateArrayMt = {
 
    __newindex = function(t, k, v)
       local props = rawget(t, __giPrivateArrayProps)
-      local len = props.len
+      local len = props.__length
       print("newindex called for key", k, " len at start is ", len)
       local raw = rawget(t, __giPrivateRaw)
       if raw[k] == nil then
@@ -25,7 +27,7 @@ __giPrivateArrayMt = {
          end
       end
       raw[k] = v
-      props.len = len
+      props.__length = len
       --print("len at end of newidnex is ", len)
    end,
 
@@ -42,9 +44,9 @@ __giPrivateArrayMt = {
 
    __tostring = function(t)
       local props = rawget(t, __giPrivateArrayProps)
-      local len =  props.len
+      local len =  props.__length
       local s = "array <len= " .. tostring(len) .. "> is __gi_Array{"
-      --print("t.len is", len)
+      --print("t.__length is", len)
       local raw = rawget(t, __giPrivateRaw)
       -- we want to skip both the __giPrivateRaw and the len
       -- when iterating, which happens automatically if we
@@ -64,7 +66,7 @@ __giPrivateArrayMt = {
       -- this does get called by the # operation
       --print("len called")
       local props = rawget(t, __giPrivateArrayProps)
-      return props.len
+      return props.__length
    end,
 
    __pairsDISABLED = function(t)
@@ -166,7 +168,7 @@ end
 --        end
 --        -- unpack ignores the [0] value, so less useful.
 --        
---        local b = __gi_NewArray(dest, props.typeKind, props.len)
+--        local b = __gi_NewArray(dest, props.typeKind, props.__length)
 --        return b
 --     end
 --     print("unimplemented typ in __gi_clone: '"..tostring(typ).."'") -- Beagle for 028

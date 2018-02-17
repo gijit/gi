@@ -14,6 +14,9 @@ end
 if int8 == nil then
    dofile 'int64.lua' -- for integer types with Go naming.
 end
+if complex == nil then
+   dofile 'complex.lua'
+end
 
 -- translation of javascript builtin 'prototype' -> typ.prototype
 --                                   'constructor' -> typ.__constructor
@@ -549,6 +552,7 @@ __sliceToArray = function(slice)
          k=k+1
       end
    end
+   cp.__length = k
    return cp
 end;
 
@@ -560,7 +564,7 @@ end;
 __valueBasicMT = {
    __name = "__valueBasicMT",
    __tostring = function(self, ...)
-      --print("__tostring called from __valueBasicMT")
+      print("__tostring called from __valueBasicMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -595,17 +599,13 @@ __valueArrayMT = {
       t.__val[k] = v
    end,
    
-   __index = function(t, k)
-      print("__valueArrayMT.__index called, k='"..tostring(k).."';") --  t.__val is:")
-      if type(k) == "table" then
-         print("__index called with table?? ignoring")
-         -- empty table, no metatable.
-         --print(debug.traceback())
-         --local mt = getmetatable(k)
-         --setmetatable(k, nil)
-         --__st(k, "k")
-         --setmetatable(k, mt)
-         --__st(mt, "mt")
+   __index = function(t, k, mmm)
+      print("__valueArrayMT.__index called, k='"..tostring(k).."'; mmm="..tostring(mmm)) --  t.__val is:")
+      if type(k) == "string" then
+            return rawget(t,k)
+      elseif type(k) == "table" then
+         print("callstack:"..tostring(debug.traceback()))
+         error("table as key not supported in __valueArrayMT")
       else
          --__st(t.__val)
          if k < 0 or k >= #t then
@@ -677,13 +677,20 @@ __valueSliceMT = {
    __index = function(t, k)
       --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
       --__st(t.__val)
-      --print("trace:"..tostring(debug.traceback()))
-      
-      local w = t.__offset + k
-      if k < 0 or k >= t.__capacity then
-         error "slice error: access out-of-bounds"
+      --print("callstack:"..tostring(debug.traceback()))
+
+      if type(k) == "string" then
+         return rawget(t,k)
+      elseif type(k) == "table" then
+         print("callstack:"..tostring(debug.traceback()))
+         error("table as key not supported in __valueSliceMT")
+      else
+         local w = t.__offset + k
+         if k < 0 or k >= t.__capacity then
+            error "slice error: access out-of-bounds"
+         end
+         return t.__array[w]
       end
-      return t.__array[w]
    end,
 
    __len = function(t)
@@ -850,7 +857,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       -- all table based values, that have: this.__val == this;
       -- and no .wrapped field.
       --
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         this.__val = v;
+         setmetatable(this, __valueBasicMT)
+      end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
 
@@ -859,21 +869,29 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, v)
          --print("strings' tfun called! with v='"..tostring(v).."' and this:")
          --__st(this)
-         this.__val = v; end;
+         this.__val = v;
+         setmetatable(this, __valueBasicMT)
+      end;
       typ.wrapped = true;
       typ.keyFor = __identity; -- function(x) return "_" .. x; end;
 
    elseif kind == __kindFloat32 or
    kind == __kindFloat64 then
       
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         this.__val = v;
+         setmetatable(this, __valueBasicMT)
+      end;
       typ.wrapped = true;
       typ.keyFor = function(x) return __floatKey(x); end;
 
 
    elseif kind ==  __kindComplex64 then
 
-      typ.tfun = function(this, re, im) this.__val = re + im*complex(0,1); end;      
+      typ.tfun = function(this, re, im)
+         this.__val = re + im*complex(0,1);
+         setmetatable(this, __valueBasicMT)
+      end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
@@ -883,11 +901,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       --      this.__val = this;
       --    end;
       --    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
-      
 
    elseif kind ==  __kindComplex128 then
 
-      typ.tfun = function(this, re, im) this.__val = re + im*complex(0,1); end;
+      typ.tfun = function(this, re, im)
+         this.__val = re + im*complex(0,1);
+         setmetatable(this, __valueBasicMT)
+      end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
@@ -936,9 +956,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          this.__val = this;
          this.__constructor = typ
+         -- TODO: come back and fix up Luar.
          -- must set these for Luar (binary Go translation) to work.
-         this[__giPrivateRaw] = array
-         this[__giPrivateSliceProps] = this
+         --this[__giPrivateRaw] = array
+         --this[__giPrivateSliceProps] = this
          setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
@@ -952,10 +973,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
          this.__constructor = typ
-         this.__length = len
-         -- must set these keys for luar to work:
-         this[__giPrivateRaw] = v
-         this[__giPrivateArrayProps] = this
+         this.__length = __lenz(v)
+         -- TODO: come back and fix up Luar
+         -- must set these keys for Luar to work:
+         --this[__giPrivateRaw] = v
+         --this[__giPrivateArrayProps] = this
          setmetatable(this, __valueArrayMT)
       end;
       print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
@@ -1071,7 +1093,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          --__st(args, "args to ctor")
          --__st(args[1], "args[1]")
 
-         --print("trace:")
+         --print("callstack:")
          --print(debug.traceback())
          
          this.__get = function() return this; end;
@@ -1106,6 +1128,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.fields = fields;
          __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
+            __st(f,"f")
             if not f.__typ.comparable then
                typ.comparable = false;
                break;
