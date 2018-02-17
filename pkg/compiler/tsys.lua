@@ -663,6 +663,25 @@ __valueArrayMT = {
    end,
 }
 
+__valueSliceIpairs = function(t)
+   
+       print("__ipairs called!")
+       -- this makes a slice work in a for k,v in ipairs() do loop.
+       local off = rawget(t, "__offset")
+       local slcLen = rawget(t, "__length")
+       local function stateless_iter(arr, k)
+          k=k+1
+          if k >= off + slcLen then
+             return
+          end
+          return k, rawget(arr, off + k)
+       end       
+       -- Return an iterator function, the table, starting point
+       local arr = rawget(t, "__array")
+       --print("arr is "..tostring(arr))
+       return stateless_iter, arr, -1
+end
+
 __valueSliceMT = {
    __name = "__valueSliceMT",
    
@@ -726,41 +745,8 @@ __valueSliceMT = {
       return s .. "}"
       
    end,
-
-    __pairs = function(t)
-       --print("__pairs called!")
-       -- this makes a slice work in a for k,v in pairs() do loop.
-       local off = rawget(t, "__offset")
-       local slcLen = rawget(t, "__length")
-       local function stateless_iter(arr, k)
-          k=k+1
-          if k >= off + slcLen then
-             return
-          end
-          return k, rawget(arr, off + k)
-       end       
-       -- Return an iterator function, the table, starting point
-       return stateless_iter, rawget(t, "__val"), -1
-    end,
-
-    __ipairs = function(t)
-       print("__ipairs called!")
-       -- this makes a slice work in a for k,v in ipairs() do loop.
-       local off = rawget(t, "__offset")
-       local slcLen = rawget(t, "__length")
-       local function stateless_iter(arr, k)
-          k=k+1
-          if k >= off + slcLen then
-             return
-          end
-          return k, rawget(arr, off + k)
-       end       
-       -- Return an iterator function, the table, starting point
-       local arr = rawget(t, "__array")
-       print("arr is "..tostring(arr))
-       return stateless_iter, arr, -1
-    end,
-    
+   __pairs = __valueSliceIpairs,
+   __ipairs = __valueSliceIpairs,
 }
 
 
