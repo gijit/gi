@@ -428,7 +428,7 @@ end;
 
 --
 __clone = function(src, typ)
-   local clone = typ.zero();
+   local clone = typ()
    typ.copy(clone, src);
    return clone;
 end;
