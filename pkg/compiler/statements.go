@@ -912,10 +912,10 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
 				pp("debug __gi_clone2 arg: c.typeName(lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
-					return fmt.Sprintf(`%s = __gi_clone2(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type()))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type()))
 
 				} else {
-					return fmt.Sprintf(`%s = __gi_clone2(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
 
 				}
 			}

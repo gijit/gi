@@ -1374,9 +1374,9 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 			typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(desiredType)
 			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 			if isAnon {
-				return c.formatExpr(`__gi_clone2(%e, %s)`, expr, c.typeName(anonType.Type()))
+				return c.formatExpr(`__clone(%e, %s)`, expr, c.typeName(anonType.Type()))
 			} else {
-				return c.formatExpr(`__gi_clone2(%e, %s)`, expr, typName)
+				return c.formatExpr(`__clone(%e, %s)`, expr, typName)
 			}
 
 		}
