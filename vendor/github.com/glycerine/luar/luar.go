@@ -1199,9 +1199,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 
 	t := v.Type()
-	getfield(L, -1, "len")
+	getfield(L, -1, "__length")
 	if L.IsNil(-1) {
-		panic("what? should be a `len` member of props for __gi_Slice")
+		panic("what? should be a `__length` member of props for __gi_Slice")
 	}
 	n := int(L.ToNumber(-1))
 	L.Pop(1)

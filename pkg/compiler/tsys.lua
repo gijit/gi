@@ -936,6 +936,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          this.__val = this;
          this.__constructor = typ
+         -- must set these for Luar (binary Go translation) to work.
+         this[__giPrivateRaw] = array
+         this[__giPrivateSliceProps] = this
          setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
@@ -949,6 +952,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
          this.__constructor = typ
+         this.__length = len
+         -- must set these keys for luar to work:
+         this[__giPrivateRaw] = v
+         this[__giPrivateArrayProps] = this
          setmetatable(this, __valueArrayMT)
       end;
       print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
