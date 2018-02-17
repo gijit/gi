@@ -15,7 +15,7 @@ if int8 == nil then
    dofile 'int64.lua' -- for integer types with Go naming.
 end
 
--- translation of javascript builtin 'prototype' -> typ.methodSet
+-- translation of javascript builtin 'prototype' -> typ.prototype
 --                                   'constructor' -> typ.__constructor
 
 __ffi = require("ffi")
@@ -290,7 +290,7 @@ __methodVal = function(recv, name)
 end;
 
 __methodExpr = function(typ, name) 
-   local method = typ.methodSet[name];
+   local method = typ.prototype[name];
    if method.__expr == nil then
       method.__expr = function() 
          __stackDepthOffset=__stackDepthOffset-1;
@@ -440,7 +440,7 @@ __pointerOfStructConversion = function(obj, typ)
         helper(typ.elem.fields[i].__prop);
      end
      
-    proxy = Object.create(typ.methodSet, properties);
+    proxy = Object.create(typ.prototype, properties);
     proxy.__val = proxy;
     obj.__proxies[typ.__str] = proxy;
     proxy.__proxies = obj.__proxies;
@@ -711,34 +711,41 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
-      --print(debug.traceback())
+      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      print(debug.traceback())
       
-      --print("in __tfunBasicMT, start __st on ...")
-      --__st({...}, "__tfunBasicMT.dots")
-      --print("in __tfunBasicMT,   end __st on ...")
+      print("in __tfunBasicMT, start __st on ...")
+      __st({...}, "__tfunBasicMT.dots")
+      print("in __tfunBasicMT,   end __st on ...")
 
-      --print("in __tfunBasicMT, start __st on self")
-      --__st(self, "self")
-      --print("in __tfunBasicMT,   end __st on self")
+      print("in __tfunBasicMT, start __st on self")
+      __st(self, "self")
+      print("in __tfunBasicMT,   end __st on self")
 
       local newInstance = {}
-      setmetatable(newInstance, __valueBasicMT)
       if self ~= nil then
          if self.tfun ~= nil then
-            --print("calling tfun! -- let constructors set metatables if they wish to.")
+            print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
 
+            -- this makes a difference as to whether or
+            -- not the ctor receives a nil 'this' or not...
+            -- So *don't* set metatable here, let ctor do it.
+            -- setmetatable(newInstance, __valueBasicMT)
+            
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               --print("tfun sees no args and we have a typ.zero() method, so invoking it")
+               print("tfun sees no args and we have a typ.zero() method, so invoking it")
+               
                self.tfun(newInstance, self.zero())
             else
                self.tfun(newInstance, ...)
             end
          end
       else
+         setmetatable(newInstance, __valueBasicMT)
+
          if self ~= nil then
-            --print("self.tfun was nil")
+            print("self.tfun was nil")
          end
       end
       return newInstance
@@ -868,6 +875,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindPtr then
 
+      if constructor ~= nil then
+         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+      end
       typ.tfun = constructor  or
          function(this, getter, setter, target)
             print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
@@ -1008,31 +1018,47 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindStruct then
       
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         print("top of simple kindStruct tfun")
+         this.__val = v;
+      end;
       typ.wrapped = true;
 
-      -- the typ.methodSet will be the
+      -- the typ.prototype will be the
       -- metatable for instances of the struct; this is
       -- equivalent to the prototype in js.
       --
-      typ.methodSet = {__name="methodSet for "..str, typ = typ}
-      typ.methodSet.__index = typ.methodSet
+      typ.prototype = {__name="methodSet for "..str, __typ = typ}
+      typ.prototype.__index = typ.prototype
       
       local ctor = function(this, ...)
+         print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         local args = {...}
+         __st(args, "args to ctor")
+         __st(args[1], "args[1]")
+
+         --print("trace:")
+         --print(debug.traceback())
+         
          this.__get = function() return this; end;
          this.__set = function(v) typ.copy(this, v); end;
-         if constructor ~= nil then
-            constructor(this, ...);
+         if typ.__constructor ~= nil then
+            -- have to skip the first empty table...
+            local skipFirst = {}
+            for i,v in ipairs(args) do
+               if i > 1 then table.insert(skipFirst, v) end
+            end
+            typ.__constructor(this, unpack(skipFirst));
          end
-         setmetatable(this, typ.ptr.methodSet)
+         setmetatable(this, typ.ptr.prototype)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
 
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
-      typ.ptr.methodSet = {__name="methodSet for "..typ.ptr.__str, typ = typ.ptr}
-      typ.ptr.methodSet.__index = typ.ptr.methodSet
+      typ.ptr.prototype = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
+      typ.ptr.prototype.__index = typ.ptr.prototype
 
       -- __kindStruct.init is here:
       typ.init = function(pkgPath, fields)
@@ -1090,8 +1116,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          -- /* methods for embedded fields */
          __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
-                  if target.methodSet[m.__prop] ~= nil then return; end
-                  target.methodSet[m.__prop] = function()
+                  if target.prototype[m.__prop] ~= nil then return; end
+                  target.prototype[m.__prop] = function()
                      local v = this.__val[f.__prop];
                      if f.__typ == __jsObjectPtr then
                         v = __jsObjectPtr(v);
@@ -1224,7 +1250,7 @@ function __methodSet(typ)
   if isPtr then
      myTyp = typ.elem
   end
-  local current = {{typ= myTyp, indirect= isPtr}};
+  local current = {{__typ= myTyp, indirect= isPtr}};
 
   -- the Go spec says:
   -- The method set of the corresponding pointer type *T is
@@ -1276,7 +1302,7 @@ function __methodSet(typ)
                 else
                    ty = fTyp
                 end
-                table.insert(next, {typ=ty, indirect= e.indirect or fIsPtr});
+                table.insert(next, {__typ=ty, indirect= e.indirect or fIsPtr});
              end;
           end;
           
@@ -1467,7 +1493,7 @@ end;
 __type__emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
-__error.init({{__prop= "Error", __name= "Error", __pkg= "", typ= __funcType({}, {__String}, false) }});
+__error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__String}, false) }});
 
 __mapTypes = {};
 __mapType = function(key, elem)
