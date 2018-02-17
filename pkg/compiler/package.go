@@ -460,59 +460,62 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	namedNames := ""
 	zeroret := ""
 
-	if len(c.Flattened) != 0 {
-		c.localVars = append(c.localVars, "$s")
-		prefix = prefix + " $s = 0;"
-	}
+	// jea temp disable with false
+	if false {
+		if len(c.Flattened) != 0 {
+			c.localVars = append(c.localVars, "$s")
+			prefix = prefix + " $s = 0;"
+		}
 
-	if c.HasDefer {
-		c.localVars = append(c.localVars, "$deferred")
-		suffix = " }" + suffix
-		if len(c.Blocking) != 0 {
+		if c.HasDefer {
+			c.localVars = append(c.localVars, "$deferred")
 			suffix = " }" + suffix
+			if len(c.Blocking) != 0 {
+				suffix = " }" + suffix
+			}
 		}
-	}
 
-	if len(c.Blocking) != 0 {
-		c.localVars = append(c.localVars, "$r")
-		if funcRef == "" {
-			funcRef = "$b"
-			functionName = " $b"
-		}
-		var stores, loads string
-		for _, v := range c.localVars {
-			loads += fmt.Sprintf("%s = $f.%s; ", v, v)
-			stores += fmt.Sprintf("$f.%s = %s; ", v, v)
-		}
-		prefix = prefix + " var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; " + loads + "}"
-		suffix = " if ($f === undefined) { $f = { $blk: " + funcRef + " }; } " + stores + "return $f;" + suffix
-	}
-
-	if c.HasDefer {
-		prefix = prefix + " var $err = null; try {"
-		deferSuffix := " } catch(err) { $err = err;"
 		if len(c.Blocking) != 0 {
-			deferSuffix += " $s = -1;"
+			c.localVars = append(c.localVars, "$r")
+			if funcRef == "" {
+				funcRef = "$b"
+				functionName = " $b"
+			}
+			var stores, loads string
+			for _, v := range c.localVars {
+				loads += fmt.Sprintf("%s = $f.%s; ", v, v)
+				stores += fmt.Sprintf("$f.%s = %s; ", v, v)
+			}
+			prefix = prefix + " var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; " + loads + "}"
+			suffix = " if ($f === undefined) { $f = { $blk: " + funcRef + " }; } " + stores + "return $f;" + suffix
 		}
-		if c.resultNames == nil && c.sig.Results().Len() > 0 {
-			deferSuffix += fmt.Sprintf(" return%s;", c.translateResults(nil))
-		}
-		deferSuffix += " } finally { $callDeferred($deferred, $err);"
-		if c.resultNames != nil {
-			namedNames = strings.Join(preComputedNamedNames, ", ") //fmt.Sprintf("{%s}", c.translateResultsAllQuoted(c.resultNames))
-			zeroret = strings.Join(preComputedZeroRet, ", ")
-			deferSuffix += fmt.Sprintf(" if (!$curGoroutine.asleep) { return %s; }", c.translateResults(c.resultNames))
-		}
-		if len(c.Blocking) != 0 {
-			deferSuffix += " if($curGoroutine.asleep) {"
-		}
-		suffix = deferSuffix + suffix
-	}
 
-	if len(c.Flattened) != 0 {
-		prefix = prefix + " ::s:: while (true) do\n --switch (__s)\n\t\t if __s == 0 then\n"
-		suffix = " end; return; end\n" + suffix
-	}
+		if c.HasDefer {
+			prefix = prefix + " var $err = null; try {"
+			deferSuffix := " } catch(err) { $err = err;"
+			if len(c.Blocking) != 0 {
+				deferSuffix += " $s = -1;"
+			}
+			if c.resultNames == nil && c.sig.Results().Len() > 0 {
+				deferSuffix += fmt.Sprintf(" return%s;", c.translateResults(nil))
+			}
+			deferSuffix += " } finally { $callDeferred($deferred, $err);"
+			if c.resultNames != nil {
+				namedNames = strings.Join(preComputedNamedNames, ", ") //fmt.Sprintf("{%s}", c.translateResultsAllQuoted(c.resultNames))
+				zeroret = strings.Join(preComputedZeroRet, ", ")
+				deferSuffix += fmt.Sprintf(" if (!$curGoroutine.asleep) { return %s; }", c.translateResults(c.resultNames))
+			}
+			if len(c.Blocking) != 0 {
+				deferSuffix += " if($curGoroutine.asleep) {"
+			}
+			suffix = deferSuffix + suffix
+		}
+
+		if len(c.Flattened) != 0 {
+			prefix = prefix + " ::s:: while (true) do\n --switch (__s)\n\t\t if __s == 0 then\n"
+			suffix = " end; return; end\n" + suffix
+		}
+	} // end if false, jea temp disable
 
 	formals := strings.Join(params, ", ")
 	functionWord := "function"
@@ -547,10 +550,10 @@ end
 	}
 
 	if prefix != "" {
-		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:465 \n" + prefix + "\n" + bodyOutput
+		bodyOutput = strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:553 \n" + prefix + "\n" + bodyOutput
 	}
 	if suffix != "" {
-		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:468\n" + suffix + "\n"
+		bodyOutput = bodyOutput + strings.Repeat("\t", c.p.indentation+1) + "\n--jea package.go:556\n" + suffix + "\n"
 	}
 	if len(c.localVars) != 0 {
 		// jea, these are javascript only: at the top of a
