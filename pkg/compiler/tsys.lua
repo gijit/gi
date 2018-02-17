@@ -647,9 +647,9 @@ __valueSliceMT = {
    end,
    
    __index = function(t, k)
-      print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
-      __st(t.__val)
-      print("trace:"..tostring(debug.traceback()))
+     --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
+     --__st(t.__val)
+     --print("trace:"..tostring(debug.traceback()))
       
       local w = t.__offset + k
       if k < 0 or k >= t.__capacity then
@@ -711,21 +711,21 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
-      print(debug.traceback())
+     --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+     --print(debug.traceback())
       
-      print("in __tfunBasicMT, start __st on ...")
-      __st({...}, "__tfunBasicMT.dots")
-      print("in __tfunBasicMT,   end __st on ...")
+     --print("in __tfunBasicMT, start __st on ...")
+      --__st({...}, "__tfunBasicMT.dots")
+     --print("in __tfunBasicMT,   end __st on ...")
 
-      print("in __tfunBasicMT, start __st on self")
-      __st(self, "self")
-      print("in __tfunBasicMT,   end __st on self")
+     --print("in __tfunBasicMT, start __st on self")
+      --__st(self, "self")
+     --print("in __tfunBasicMT,   end __st on self")
 
       local newInstance = {}
       if self ~= nil then
          if self.tfun ~= nil then
-            print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
+           --print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
 
             -- this makes a difference as to whether or
             -- not the ctor receives a nil 'this' or not...
@@ -734,7 +734,7 @@ __tfunBasicMT = {
             
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               print("tfun sees no args and we have a typ.zero() method, so invoking it")
+              --print("tfun sees no args and we have a typ.zero() method, so invoking it")
                
                self.tfun(newInstance, self.zero())
             else
@@ -745,7 +745,7 @@ __tfunBasicMT = {
          setmetatable(newInstance, __valueBasicMT)
 
          if self ~= nil then
-            print("self.tfun was nil")
+           --print("self.tfun was nil")
          end
       end
       return newInstance
@@ -876,11 +876,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+        --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
          function(this, getter, setter, target)
-            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+           --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             this.__get = getter;
             this.__set = setter;
             this.__target = target;
@@ -991,16 +991,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
      typ = { implementedBy= {}, missingMethodFor= {} };
      typ.keyFor = __ifaceKeyFor;
      typ.init = function(methods)
-        print("top of init() for kindInterface, methods= ")
-        __st(methods)
-        print("and also at top of init() for kindInterface, typ= ")
-        __st(typ)
+       --print("top of init() for kindInterface, methods= ")
+        --__st(methods)
+       --print("and also at top of init() for kindInterface, typ= ")
+        --__st(typ)
         typ.methods = methods;
         for _, m in pairs(methods) do
            -- TODO:
            -- jea: why this? seems it would end up being a huge set?
-           print("about to index with m.__prop where m =")
-           __st(m)
+          --print("about to index with m.__prop where m =")
+           --__st(m)
            __ifaceNil[m.__prop] = __throwNilPointerError;
         end;
      end;
@@ -1019,7 +1019,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindStruct then
       
       typ.tfun = function(this, v)
-         print("top of simple kindStruct tfun")
+        --print("top of simple kindStruct tfun")
          this.__val = v;
       end;
       typ.wrapped = true;
@@ -1032,10 +1032,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype.__index = typ.prototype
       
       local ctor = function(this, ...)
-         print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+        --print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          local args = {...}
-         __st(args, "args to ctor")
-         __st(args[1], "args[1]")
+         --__st(args, "args to ctor")
+         --__st(args[1], "args[1]")
 
          --print("trace:")
          --print(debug.traceback())
@@ -1062,11 +1062,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       -- __kindStruct.init is here:
       typ.init = function(pkgPath, fields)
-         print("top of init() for struct, fields=")
-         for i, f in pairs(fields) do
-            __st(f, "field #"..tostring(i))
-            __st(f.__typ, "typ of field #"..tostring(i))
-         end
+        --print("top of init() for struct, fields=")
+         --for i, f in pairs(fields) do
+            --__st(f, "field #"..tostring(i))
+            --__st(f.__typ, "typ of field #"..tostring(i))
+         --end
          
          typ.pkgPath = pkgPath;
          typ.fields = fields;
@@ -1084,11 +1084,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end)
          end;
          typ.copy = function(dst, src)
-            print("top of typ.copy for structs, here is dst then src:")
-            __st(dst, "dst")
-            __st(src, "src")
-            print("fields:")
-            __st(fields,"fields")
+           --print("top of typ.copy for structs, here is dst then src:")
+            --__st(dst, "dst")
+            --__st(src, "src")
+           --print("fields:")
+            --__st(fields,"fields")
             __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.__typ.kind
@@ -1101,7 +1101,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                end
             end
          end;
-         print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
+        --print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
          __ipairsZeroCheck(fields)
@@ -1236,9 +1236,9 @@ function __methodSet(typ)
   local base = {};
 
   local isPtr = (typ.kind == __kindPtr);
-  print("__methodSet called with typ=")
-  __st(typ)
-  print("__methodSet sees isPtr=", isPtr)
+ --print("__methodSet called with typ=")
+  --__st(typ)
+ --print("__methodSet sees isPtr=", isPtr)
   
   if isPtr  and  typ.elem.kind == __kindInterface then
      -- jea: I assume this is because pointers to interfaces don't themselves have methods.
@@ -1259,7 +1259,7 @@ function __methodSet(typ)
   
   local seen = {};
 
-  print("top of while, #current is", #current)
+ --print("top of while, #current is", #current)
   while #current > 0 do
      local next = {};
      local mset = {};
@@ -1272,12 +1272,12 @@ function __methodSet(typ)
         
        if e.__typ.named then
           for _, mthod in pairs(e.__typ.methods) do
-             print("adding to mset, mthod = ", mthod)
+            --print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod);
           end
           if e.indirect then
              for _, mthod in pairs(__ptrType(e.__typ).methods) do
-                print("adding to mset, mthod = ", mthod)
+               --print("adding to mset, mthod = ", mthod)
                 table.insert(mset, mthod)
              end
           end
@@ -1310,21 +1310,21 @@ function __methodSet(typ)
        elseif knd == __kindInterface then
           
           for _, mthod in pairs(e.__typ.methods) do
-             print("adding to mset, mthod = ", mthod)
+            --print("adding to mset, mthod = ", mthod)
              table.insert(mset, mthod)
           end
        end
      end;
 
      -- above may have made duplicates, now dedup
-     print("at dedup, #mset = " .. tostring(#mset))
+    --print("at dedup, #mset = " .. tostring(#mset))
      for _, m in pairs(mset) do
         if base[m.name] == nil then
            base[m.name] = m;
         end
      end;
-     print("after dedup, base for typ '"..typ.__str.."' is ")
-     __st(base)
+    --print("after dedup, base for typ '"..typ.__str.."' is ")
+     --__st(base)
      
      current = next;
   end
@@ -1725,29 +1725,29 @@ __assertType = function(value, typ, returnTuple)
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
-         print("valueMethodSet is")
-         __st(valueMethodSet)
-         print("interfaceMethods is")
-         __st(interfaceMethods)
+        --print("valueMethodSet is")
+         --__st(valueMethodSet)
+        --print("interfaceMethods is")
+         --__st(interfaceMethods)
 
          __ipairsZeroCheck(interfaceMethods)
          __ipairsZeroCheck(valueMethodSet)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
-               print("checking vm against tm, where tm=")
-               __st(tm)
-               print("and vm=")
-               __st(vm)
+              --print("checking vm against tm, where tm=")
+               --__st(tm)
+              --print("and vm=")
+               --__st(vm)
                
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
-                  print("match found against vm and tm.")
+                 --print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
-               print("match *not* found for tm.name = '"..tm.name.."'")
+              --print("match *not* found for tm.name = '"..tm.name.."'")
                ok = false;
                typ.missingMethodFor[valueTypeString] = tm.name;
                break;
@@ -1759,7 +1759,7 @@ __assertType = function(value, typ, returnTuple)
          missingMethod = typ.missingMethodFor[valueTypeString];
       end
    end
-   print("__assertType: after matching loop, ok = ", ok)
+  --print("__assertType: after matching loop, ok = ", ok)
    
    if not ok then
       if returnTuple then

@@ -671,6 +671,7 @@ book := snoopy.Write("with a pen")`
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustString(vm, "book", "hiya:it was a dark and stormy night, with a pen")
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 
