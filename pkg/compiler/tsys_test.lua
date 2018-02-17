@@ -206,28 +206,35 @@ func main() {
 		Bracelets: 2,
 	}
     ww.Fight()
-	fmt.Printf("ww=%#v\n", ww)
+   fmt.Printf("ww=%#v\n", ww)
 }
 --]]
 
-WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(self, ...)
-                           print("DEBUG WonderWoman.ctor called! dots=")
-                           __st({...})
-                           if self == nil then self = {}; end
-                           
-                           local Bracelets_, LassoPoints_ = ... ;
-                           -- for each zero value that is not a nil pointer:
-                           self.Bracelets = Bracelets_ or (0LL);
-                           self.LassoPoints = LassoPoints_ or (0LL);
-                           return self; 
-end);
+__type__WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "main", true, nil);
 
+__type__WonderWoman.init("", {{__prop= "Bracelets", __name= "Bracelets", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "LassoPoints", __name= "LassoPoints", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}});
+	
+__type__WonderWoman.__constructor = function(self, ...)
+   print("DEBUG WonderWoman.ctor called! dots=")
+   __st({...})   
+   if self == nil then self = {}; end
+   local Bracelets_, LassoPoints_ = ... ;
+   self.Bracelets = Bracelets_ or 0LL;
+   self.LassoPoints = LassoPoints_ or 0LL;
+   return self; 
+end;
+;
 
-WonderWoman.init("", {{__prop= "Bracelets", name= "Bracelets", anonymous= false, exported= true, __typ= __type__int, tag= ""}, {__prop= "LassoPoints", name= "LassoPoints", anonymous= false, exported= true, __typ= __type__int, tag= ""}});
+__type__WonderWoman.ptr.prototype.Fight = function(w) 
+   w.LassoPoints = w.LassoPoints + (1LL);
+end;
+__type__WonderWoman.prototype.Fight = function(this, )  return this.__val.Fight(); end;
 
-ww = WonderWoman.ptr(2LL);
+ww = __type__WonderWoman.ptr({}, 2LL, 0LL);
 
 expectEq(ww.Bracelets, 2LL)
+
+ww:Fight();
 
 ptrType = __ptrType(WonderWoman);
 WonderWoman.ptr.methodSet.Fight = function(__self)

@@ -205,6 +205,6 @@ func Test085ForRangeOverSliceAndChangeValue(t *testing.T) {
 
 		// check for exception
 		LuaMustInt64(vm, "b0", 1)
-
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }

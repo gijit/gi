@@ -330,7 +330,12 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
 		code.Write(primaryFunction(true, typeName+".ptr.prototype."+funName))
-		fmt.Fprintf(code, "\t%s.prototype.%s = function(this, %s)  return this.__val.%s(%s); end;\n", typeName, funName, joinedParams, funName, joinedParams)
+		// get the comma right: either function(this) or function(this, a,b,c)
+		jp := ", " + joinedParams
+		if joinedParams == "" {
+			jp = ""
+		}
+		fmt.Fprintf(code, "\t%s.prototype.%s = function(this %s)  return this.__val.%s(%s); end;\n", typeName, funName, jp, funName, joinedParams)
 		return code.Bytes()
 	}
 
