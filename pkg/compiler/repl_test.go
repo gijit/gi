@@ -355,7 +355,8 @@ func Test016MapCreation(t *testing.T) {
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-x = __makeMap(__type__int.keyFor, {["3LL"]="hello", ["4LL"]="gophers"});
+  	__type__anon_mapType = __mapType(__type__int, __type__string); -- 'IMMEDIATE' anon type printing.
+  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);
 `)
 
 	})
@@ -371,9 +372,9 @@ func Test016bMapCreation(t *testing.T) {
 
 		code := `type Yumo map[int]string; yesso := Yumo{2: "two"}`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
-__type__Yumo = ___newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
+__type__Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
 
-__type__Yumo.__init(__type__int, __type__string);
+__type__Yumo.init(__type__int, __type__string);
 
 yesso = __makeMap(__type__int.keyFor, {[2LL]="two"}, __type__int, __type__string, __type__Yumo);
 

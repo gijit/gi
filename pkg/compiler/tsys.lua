@@ -819,7 +819,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       --
       typ.tfun = function(this, v) this.__val = v; end;
       typ.wrapped = true;
-      typ.keyFor = __identity;
+      typ.keyFor = function(x) return tostring(x); end;
 
    elseif kind == __kindString then
       
@@ -1473,7 +1473,7 @@ __makeMap = function(keyForFunc, entries, keyType, elemType, mapType)
       m[key] = e;
    end
    local mp = _gi_NewMap(keyType, elemType, m);
-   setmetatable(mp, mapType)
+   --setmetatable(mp, mapType)
    return mp
 end;
 
