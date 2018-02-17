@@ -642,7 +642,7 @@ func Test026LenOfString(t *testing.T) {
 
 func Test029StructMethods(t *testing.T) {
 
-	cv.Convey(`verify that 027 actually executes correctly on the repl: a simple method call through an interface to a struct method should translate`, t, func() {
+	cv.Convey(`verify that interface + struct + methods actually executes correctly on the repl: a simple method call through an interface to a struct method should translate`, t, func() {
 
 		code := `
 type Dog interface {
@@ -667,25 +667,6 @@ book := snoopy.Write("with a pen")`
 		inc := NewIncrState(vm, nil)
 
 		translation := inc.Tr([]byte(code))
-
-		/*
-					cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-						`
-			        Dog = __reg:RegisterInterface("Dog","main","main");
-			        Beagle = __reg:RegisterStruct("Beagle","main","main");
-
-				    function Beagle:Write(with)
-			            b = self;
-			  		    return b.word .. ":it was a dark and stormy night, " .. with;
-			     	end;
-			        __reg:AddMethod("struct", "Beagle", "Write", Beagle.Write)
-			        snoopy = __reg:NewInstance("Beagle",{["word"]="hiya"});
-
-			  	    _r = snoopy:Write("with a pen");
-			  	    book = _r;
-			`)
-		*/
-
 		// and verify that it happens correctly
 
 		LuaRunAndReport(vm, string(translation))
