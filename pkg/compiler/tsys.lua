@@ -1689,8 +1689,16 @@ __equal = function(a, b, typ)
 end;
 
 __interfaceIsEqual = function(a, b)
-   print("top of __interfaceIsEqual!")
+   print("top of __interfaceIsEqual! a is:")
+   __st(a,"a")
+   print("top of __interfaceIsEqual! b is:")   
+   __st(b,"b")
+   if a == nil or b == nil then
+      print("one or both is nil")
+      return a == b;
+   end
    if a == __ifaceNil  or  b == __ifaceNil then
+      print("one or both is __ifaceNil")
       return a == b;
    end
    if a.constructor ~= b.constructor then
