@@ -157,7 +157,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    local mt = getmetatable(t)
    setmetatable(t, nil)
    local addr = tostring(t) 
-   setmetatable(t, mt)
+   -- restore the metatable just before returning!
    
    local k = 0
    local name = name or ""
@@ -190,6 +190,8 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    if not quiet then
       print(s)
    end
+   -- restore metamethods
+   setmetatable(t, mt)
    return s
 end
 
@@ -675,11 +677,14 @@ __valueSliceMT = {
    end,
    
    __index = function(t, k)
-      --print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
+      
+      print("__valueSliceMT.__index called, k='"..tostring(k).."'");
       --__st(t.__val)
       --print("callstack:"..tostring(debug.traceback()))
 
       if type(k) == "string" then
+         print("we have string key, doing rawget on t")
+         __st(t, "t")
          return rawget(t,k)
       elseif type(k) == "table" then
          print("callstack:"..tostring(debug.traceback()))
@@ -698,7 +703,7 @@ __valueSliceMT = {
    end,
    
    __tostring = function(self, ...)
-      --print("__tostring called from __valueSliceMT")
+      print("__tostring called from __valueSliceMT")
 
       local len = self.__length
       local beg = self.__offset
@@ -721,25 +726,41 @@ __valueSliceMT = {
       return s .. "}"
       
    end,
-   __old_tostring = function(self, ...)
-      if type(self.__val) == "string" then
-         return '"'..self.__val..'"'
-      end
-      if self ~= nil and self.__val ~= nil then
-         --print("__valueSliceMT.__tostring called, with self.__val set.")
-         if self.__val == self then
-            -- not a basic value, but a pointer, array, slice, or struct.
-            return "<this.__val == this; avoid inf loop>"
-         end
-         --return tostring(self.__val)
-      end
-      if getmetatable(self.__val) == __valueSliceMT then
-         --print("avoid infinite loop")
-         return "<avoid inf loop>"
-      else
-         return tostring(self.__val)
-      end
-   end,
+
+    __pairs = function(t)
+       --print("__pairs called!")
+       -- this makes a slice work in a for k,v in pairs() do loop.
+       local off = rawget(t, "__offset")
+       local slcLen = rawget(t, "__length")
+       local function stateless_iter(arr, k)
+          k=k+1
+          if k >= off + slcLen then
+             return
+          end
+          return k, rawget(arr, off + k)
+       end       
+       -- Return an iterator function, the table, starting point
+       return stateless_iter, rawget(t, "__val"), -1
+    end,
+
+    __ipairs = function(t)
+       print("__ipairs called!")
+       -- this makes a slice work in a for k,v in ipairs() do loop.
+       local off = rawget(t, "__offset")
+       local slcLen = rawget(t, "__length")
+       local function stateless_iter(arr, k)
+          k=k+1
+          if k >= off + slcLen then
+             return
+          end
+          return k, rawget(arr, off + k)
+       end       
+       -- Return an iterator function, the table, starting point
+       local arr = rawget(t, "__array")
+       print("arr is "..tostring(arr))
+       return stateless_iter, arr, -1
+    end,
+    
 }
 
 
