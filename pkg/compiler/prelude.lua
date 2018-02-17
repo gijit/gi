@@ -43,17 +43,28 @@ function _gi_NewComplex128(real, imag)
 
 end
 
+-- length of array, counting [0] if present.
+function __lenz(array)      
+   local n = #array
+   if array[0] ~= nil then
+      n=n+1
+   end
+   return n
+end
+
+
 function __gijit_printQuoted(...)
    local a = {...}
-   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
+   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", __lenz(a))
    if a[0] ~= nil then
+      local v = a[0]
       if type(v) == "string" then
          print("`"..v.."`")
       else
          print(v)
       end
    end
-   for i,v in ipairs(a) do
+   for _,v in ipairs(a) do
       if type(v) == "string" then
          print("`"..v.."`")
       else

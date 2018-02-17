@@ -649,6 +649,8 @@ __valueSliceMT = {
    __index = function(t, k)
       print("__valueSliceMT.__index called, k='"..tostring(k).."'; t.__val is:")
       __st(t.__val)
+      print("trace:"..tostring(debug.traceback()))
+      
       local w = t.__offset + k
       if k < 0 or k >= t.__capacity then
          error "slice error: access out-of-bounds"
@@ -837,7 +839,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindComplex64 then
 
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, re, im) this.__val = re + im*complex(0,1); end;      
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
@@ -851,7 +853,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindComplex128 then
 
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, re, im) this.__val = re + im*complex(0,1); end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
@@ -1534,7 +1536,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-   print("__sliceType called with elem = ", elem)
+   --print("__sliceType called with elem = ", elem)
    local typ = elem.slice;
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);

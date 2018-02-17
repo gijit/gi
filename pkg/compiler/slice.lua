@@ -185,12 +185,16 @@ end;
 -- arguments. It returns non tables unchanged,
 -- and non _giSlice tables unpacked.
 --
+-- Now updated to use tsys slices
+-- instead of raw.
 function _gi_UnpackSliceRaw(t)
    if type(t) ~= 'table' then
       return t
    end
    
-   local raw = t[_giPrivateRaw]
+   local raw = t.__array
+   local off = t.__offset
+   local len = t.__length
    
    if raw == nil then
       -- unpack of empty table is ok. returns nil.
@@ -198,16 +202,25 @@ function _gi_UnpackSliceRaw(t)
    end
 
    --print("jea debug, _gi_UnpackSliceRaw in slice.lua, raw is:")
-   --st(raw)
+   --__st(raw)
 
-   if #raw == 0 then
-      -- will get here with just a single element, 0 indexed.
-      if raw[0] ~= nil then
-         return raw[0]
+   if off == 0 then
+      if #raw == 0 then
+         -- will get here with just a single element, 0 indexed.
+         if raw[0] ~= nil then
+            return raw[0]
+         end
+         return nil
       end
-      return nil
+      return raw[0], unpack(raw)
    end
-   return raw[0], unpack(raw)
+   -- invar: off > 0
+   
+   local sliced = {}
+   for i = off, off+len do
+      table.insert(sliced, raw[i])
+   end
+   return unpack(sliced)
 end
 
 function _gi_Raw(t)
@@ -215,7 +228,7 @@ function _gi_Raw(t)
       return t
    end
    
-   return t[_giPrivateRaw]
+   return rawget(t,_giPrivateRaw)
 end
 
 
