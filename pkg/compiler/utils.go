@@ -21,7 +21,7 @@ import (
 func (c *funcContext) Write(b []byte) (int, error) {
 	c.writePos()
 	c.output = append(c.output, b...)
-	//pp("func.ContextWrite, c.output is now '%v'", string(c.output))
+	pp("func.ContextWrite, c.output is now '%v'", string(c.output))
 	// DEBUG:
 	if strings.HasPrefix(string(c.output), "	sum1 = adder(5, 5)") {
 		//panic("where")
@@ -493,7 +493,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
-		pp("just added anonType='%s'", anonType.Name())
+		pp("just added anonType='%s', where whenAnonPrint='%v'", anonType.Name(), whenAnonPrint)
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
@@ -508,6 +508,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 			})
 		case IMMEDIATE:
 			c.Printf(anonTypePrint)
+			pp("done with IMMEDIATE printing of anonTypePrint='%v'", anonTypePrint)
 		case SKIP_ANON:
 		}
 	}

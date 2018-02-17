@@ -68,10 +68,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, "") //, string(debug.Stack()))
 	}
 	defer func() {
+		pp("returning from translateExpr.\n trace:\n%s\n", string(debug.Stack()))
 		if xprn == nil {
 			pp("444444 returning from gi translateExpr(): '<nil>'")
 		} else {
-			pp("444444 returning from gi translateExpr(): '%s'", xprn.str)
+			pp("444444 returning from gi translateExpr(): '%s', and c.output = '%#v'", xprn.str, string(c.output))
 		}
 	}()
 	if value := c.p.Types[expr].Value; value != nil {
@@ -216,11 +217,13 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			c.TypeNameSetting = IMMEDIATE
 			anonTypeName := c.typeName(exprType)
 			if len(elements) == 0 {
-				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
+				pp("expressions.go about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)
-				pp("expressions.go:148 making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
+				pp("expressions.go making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				// gijit below, but try to go back to gophrejs style __zero() call.
-				return c.formatExpr("%s.zero()", tn)
+				ret := c.formatExpr("%s.zero()", tn)
+				pp("about to return array zero() for 0 len array, c.output='%s'", string(c.output))
+				return ret
 				//return c.formatExpr(fmt.Sprintf(`__gi_NewArray({}, "%s", %v, %s)`, typeKind(t.Elem()), t.Len(), zero))
 			}
 			zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()

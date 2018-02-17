@@ -418,7 +418,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 										// jea, this is getting our "var x [3]int" decl,
 										// which needs to end up in code.
-										de.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type()), nil).String()))
+										x := c.translateExpr(c.zeroValue(o.Type()), nil).String()
+										preamble := string(c.output)
+										de.InitCode = []byte(fmt.Sprintf("%s\n\t\t%s = %s;\n", preamble, c.objectName(o), x))
 
 										pp("placeN+1, appending to newCodeText: d.InitCode='%s'", string(de.InitCode))
 										newCodeText = append(newCodeText, de.InitCode)

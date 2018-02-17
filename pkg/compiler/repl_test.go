@@ -306,6 +306,7 @@ bb = 3LL;`)
 
 		// and empty array with size 3
 
+		// type already declared above, so will be reused.
 		code = `var x [3]int`
 		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
 x = __type__anon_arrayType.zero();
@@ -332,7 +333,10 @@ func Test015_5_ArrayCreation(t *testing.T) {
 		// and empty array with size 3
 
 		code := `var x [3]int`
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `x=__gi_NewArray({}, "__gi_kind_int", 3, 0LL);`)
+		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+__type__anon_arrayType = __arrayType(__type__int, 3); -- 'IMMEDIATE' anon type printing.
+x = __type__anon_arrayType.zero();
+`)
 	})
 }
 
