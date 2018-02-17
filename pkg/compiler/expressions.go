@@ -214,7 +214,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 			// print anon_arrayType immedaitely
 			c.TypeNameSetting = IMMEDIATE
-			_ = c.typeName(exprType)
+			anonTypeName := c.typeName(exprType)
 			if len(elements) == 0 {
 				pp("expressions.go:146 about to call typeName(t) on t='%#v'", t)
 				tn := c.typeName(t)
@@ -227,8 +227,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			for len(elements) < int(t.Len()) {
 				elements = append(elements, zero)
 			}
-			//return c.formatExpr(fmt.Sprintf(`__gi_NewArray({[0]=%s}, "%s", %v, %s)`, strings.Join(elements, ", "), typeKind(t.Elem()), t.Len(), zero))
-			return c.formatExpr(`__toNativeArray(%s, {[0]=%s})`, typeKind(t.Elem()), strings.Join(elements, ", "))
+			return c.formatExpr(fmt.Sprintf(`%s({[0]=%s})`, anonTypeName, strings.Join(elements, ", "))) // , typeKind(t.Elem()), t.Len(), zero))
+			//return c.formatExpr(`__toNativeArray(%s, {[0]=%s})`, typeKind(t.Elem()), strings.Join(elements, ", "))
 
 		case *types.Slice:
 			//zero := c.translateExpr(c.zeroValue(t.Elem()), nil).String()
