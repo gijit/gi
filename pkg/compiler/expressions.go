@@ -1146,9 +1146,13 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		argStr := c.translateArgs(sig, args, ellipsis)
 		return c.formatExpr("%s(%s, %s)", c.typeName(sig.Results().At(0).Type()), argStr[0], argStr[1])
 	case "real":
-		return c.formatExpr("%e.$real", args[0])
+		// there is already a LuaJIT real() function
+		// available, from complex.lua, can we just cut straight to that?
+		return c.formatExpr("real(%e)", args[0])
 	case "imag":
-		return c.formatExpr("%e.$imag", args[0])
+		// there is already a LuaJIT imag() function
+		// available, from complex.lua, can we just cut straight to that?
+		return c.formatExpr("imag(%e)", args[0])
 	case "recover":
 		return c.formatExpr("recover()")
 	case "close":
