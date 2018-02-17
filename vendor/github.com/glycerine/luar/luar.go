@@ -1198,6 +1198,8 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		DumpLuaStack(L)
 	}
 
+	// TODO: changeover to using lenz like
+	// approach; query # and add 1 if [0] is in use.
 	t := v.Type()
 	getfield(L, -1, "__length")
 	if L.IsNil(-1) {
