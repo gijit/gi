@@ -7,6 +7,7 @@ import (
 	cv "github.com/glycerine/goconvey/convey"
 )
 
+/* temp disable until we put luar back on line
 func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function. A test of Luar functionality.`, t, func() {
@@ -37,6 +38,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 	})
 }
+*/
 
 func Test081CloneOfInt64Array(t *testing.T) {
 

@@ -1766,7 +1766,13 @@ __interfaceIsEqual = function(a, b)
    __st(b,"b")
    if a == nil or b == nil then
       print("one or both is nil")
-      return a == b;
+      if a == nil and b == nil then
+         print("both are nil")
+         return true
+      else
+         print("one is nil, one is not")
+         return false
+      end
    end
    if a == __ifaceNil  or  b == __ifaceNil then
       print("one or both is __ifaceNil")
@@ -1917,5 +1923,11 @@ function __elim0(t)
 end
 
 function __unpack0(t)
+   if type(t) ~= 'table' then
+      return t
+   end
+   if raw == nil then
+      return
+   end
    return unpack(__elim0(t))
 end

@@ -515,7 +515,19 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			prefix = prefix + " ::s:: while (true) do\n --switch (__s)\n\t\t if __s == 0 then\n"
 			suffix = " end; return; end\n" + suffix
 		}
-	} // end if false, jea temp disable
+
+	} else { // end if false, jea temp disable
+
+		// jea: compute namedNames, we need!
+		fmt.Printf("**** c.HasDefer=%v, c.resultNames=%v\n", c.HasDefer, c.resultNames)
+		if c.HasDefer {
+			if c.resultNames != nil {
+				fmt.Printf("**** computing namedNames!\n")
+				namedNames = strings.Join(preComputedNamedNames, ", ") //fmt.Sprintf("{%s}", c.translateResultsAllQuoted(c.resultNames))
+				zeroret = strings.Join(preComputedZeroRet, ", ")
+			}
+		}
+	}
 
 	formals := strings.Join(params, ", ")
 	functionWord := "function"

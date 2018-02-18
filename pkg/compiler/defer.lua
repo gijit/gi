@@ -95,7 +95,7 @@ __panicHandler = function(err, defers)
   --
 __processDefers = function(who, defers, __res, __namedNames, actEnv)
   --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
-  --print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
+  print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
 
   if __res[1] then
       --print(who,": __processDefers: call had no panic")
@@ -122,7 +122,7 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
         end
       end
   else
-      --print(who, " __processDefers: checking for panic still un-caught...", __recoverVal)
+      print(who, " __processDefers: checking for panic still un-caught...", __recoverVal)
       -- is there an un-recovered panic that we need to rethrow?
       if __recoverVal ~= nil then
          --print(who, "__processDefers: un recovered error still exists, rethrowing ", __recoverVal)
@@ -131,18 +131,22 @@ __processDefers = function(who, defers, __res, __namedNames, actEnv)
   end
 
   if #__namedNames == 0 then
-     --print("__processDefers: #__namedNames was 0, no returns")
+     print("__processDefers: #__namedNames was 0, no returns")
      return nil
   end
   -- put the named return values in order
   local orderedReturns={}
   for i, k in pairs(__namedNames) do
-     --print("debug: fetching from function env k=",k," which we see has value ", actEnv[k], "in actEnv", tostring(actEnv))
+     print("debug: fetching from function env k=",k," which we see has value ", actEnv[k], "in actEnv", tostring(actEnv))
      orderedReturns[i] = actEnv[k]
   end
-  for i,v in pairs(orderedReturns) do
-       --print(who," __processDefers: orderedReturns: i=",i, "  v=",v)
-  end 
+  local debug= true
+  if debug then
+     print("orderedReturns is len ", #orderedReturns)
+     for i,v in pairs(orderedReturns) do
+        print(who," __processDefers: orderedReturns: i=",i, "  v=",v)
+     end
+  end
   return unpack(orderedReturns)
 end
 
