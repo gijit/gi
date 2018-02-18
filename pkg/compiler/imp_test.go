@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -249,9 +249,6 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
-
-		// TODO undo the verb.Verbose setting
-		verb.VerboseVerbose = true
 
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
