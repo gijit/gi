@@ -939,7 +939,7 @@ posloop:
 func translateTypeNameToNewOper(typeName string) string {
 	switch typeName {
 	case "sliceType":
-		return "_gi_NewSlice"
+		return "_gi_NewSlice HUH?? --where is this used? utils.go:942"
 	}
 	panic(fmt.Sprintf("what here? for typeName = '%s'", typeName))
 }

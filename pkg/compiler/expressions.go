@@ -1442,6 +1442,14 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 }
 
 func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType types.Type) *expression {
+	// try reverting back got the GopherJS code:
+	switch c.p.TypeOf(expr).Underlying().(type) {
+	case *types.Array, *types.Pointer:
+		return c.formatExpr("%s(%e)", c.typeName(desiredType), expr)
+	}
+	return c.translateExpr(expr, nil)
+
+	/* version 1, pre tsys.lua fullport of gopherJS type system.
 	typeExpr := c.p.TypeOf(expr)
 	switch x := typeExpr.Underlying().(type) {
 	case *types.Pointer:
@@ -1460,6 +1468,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
 	}
 	return c.translateExpr(expr, nil)
+	*/
 }
 
 func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
