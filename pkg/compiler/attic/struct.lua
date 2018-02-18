@@ -64,7 +64,6 @@ end
 -- metatable for pointers
 
 __gi_PrivatePointer_MT = {
-
    __newindex = function(t, k, v)
       --print("__gijit_Pointer: __newindex called, calling set() with val=", v)
       local props = rawget(t, __gi_PropsKey)

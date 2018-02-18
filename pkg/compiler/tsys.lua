@@ -184,7 +184,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..vals.."'\n"
    end
    if k == 0 then
-      s = pre.."<empty table>"
+      s = pre.."<empty table> " .. addr
    end
 
    --local mt = getmetatable(t)
@@ -800,6 +800,33 @@ __tfunBasicMT = {
    end,
 }
 
+function __starToAsterisk(s)
+   -- parenthesize to get rid of the
+   -- substitution count.
+   return (string.gsub(s,"*","&"))
+end
+
+__valuePointerMT = {
+   __name = "__valuePointerMT",
+   
+   __newindex = function(t, k, v)
+      print("__valuePointerMT: __newindex called, calling set() with val=", v)
+      return t.__set(v)
+   end,
+
+   __index = function(t, k)
+      print("__valuePointerMT: __index called, doing get()")       
+      return t.__get()
+   end,
+
+   __tostring = function(t)
+      print("__valuePointerMT: tostring called")
+      local str = t.__str or ""
+      return str .. "{" .. tostring(t.__get()) .. "}"
+   end
+}
+
+
 
 function __newAnyArrayValue(elem, len)
    local array = {}
@@ -938,21 +965,33 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-         --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
-         function(this, getter, setter, target)
-            --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+         function(this, wat, getter, setter, target)
+            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
+            __st(this, "this")
+            print("wat, 2nd arg to ctor, is:")
+            __st(wat, "wat")
+            -- sanity checks
+            if setter ~= nil and type(setter) ~= "function" then
+               error "setter must be function"
+            end
+            if getter ~= nil and type(getter) ~= "function" then
+               error "getter must be function"
+            end
             this.__get = getter;
             this.__set = setter;
             this.__target = target;
             this.__val = this; -- seems to indicate a non-primitive value.
+            setmetatable(this, __valuePointerMT)
          end;
       typ.keyFor = __idKey;
       typ.init = function(elem)
+         print("init(elem) for pointer type called.")
          typ.elem = elem;
          typ.wrapped = (elem.kind == __kindArray);
-         typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
+         typ.__nil = typ({}, __throwNilPointerError, __throwNilPointerError);
       end;
 
    elseif kind ==  __kindSlice then

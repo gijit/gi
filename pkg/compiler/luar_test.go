@@ -319,7 +319,9 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		pp("good: aLen was %v, stack is now:", aLen)
 		DumpLuaStack(vm)
 
+		// this probably means you left the stack empty by mistake:
 		// Line 286: - cannot convert Lua value 'function: %!p(uintptr=75307960)' (function) to []int
+
 		panicOn(luar.LuaToGo(vm, top, &b))
 		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
 	})
