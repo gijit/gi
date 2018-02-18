@@ -486,7 +486,7 @@ __appendSlice = function(slice, toAppend)
    -- recognize and resolve the ellipsis.
    if type(toAppend) == "table" then
       if toAppend.__name == "__lazy_ellipsis_instance" then
-         print("resolving lazy ellipsis.")
+        --print("resolving lazy ellipsis.")
          toAppend = toAppend() -- resolve the lazy reference.
       end
    end
@@ -744,7 +744,7 @@ __valueSliceMT = {
    end,
 
    __len = function(t)
-      print("__valueSliceMT metamethod __len called, returning ", t.__length)
+     --print("__valueSliceMT metamethod __len called, returning ", t.__length)
       return t.__length
    end,
    
@@ -1021,14 +1021,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__array = array;
          this.__offset = 0;
          this.__length = __lenz(array)
-         print("# of array returned ", this.__length)
+         --print("# of array returned ", this.__length)
          this.__capacity = this.__length;
-         print("jea debug: slice tfun set __length to ", this.__length)
-         print("jea debug: slice tfun set __capacity to ", this.__capacity)
-         print("jea debug: slice tfun sees array: ")
-         for i,v in pairs(array) do
-            print("array["..tostring(i).."] = ", v)
-         end
+         --print("jea debug: slice tfun set __length to ", this.__length)
+         --print("jea debug: slice tfun set __capacity to ", this.__capacity)
+         --print("jea debug: slice tfun sees array: ")
+         --for i,v in pairs(array) do
+         --print("array["..tostring(i).."] = ", v)
+         --end
          
          this.__val = this;
          this.__constructor = typ
@@ -1485,7 +1485,7 @@ function __methodSet(typ)
       end;
 
       -- above may have made duplicates, now dedup
-      print("at dedup, #mset = " .. tostring(#mset))
+      --print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
          --print("m is ")
          --__st(m,"m")
