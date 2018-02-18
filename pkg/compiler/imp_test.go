@@ -3,6 +3,7 @@ package compiler
 import (
 	"testing"
 
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -148,8 +149,11 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`b = _gi_NewSlice("int",{[0]=8LL,9LL}, 0LL); a = gitesting.SummerAny(_gi_UnpackSliceRaw(b));`)
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+  	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
+  	b = __type__anon_sliceType({[0]=8LL, 9LL});
+  	a = gitesting.SummerAny(__unpack0(b));
+`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -163,6 +167,9 @@ func Test062SprintfOneSlice(t *testing.T) {
 
 		src := `import "fmt"; a := fmt.Sprintf("yip %#v eee\n", []int{4,5,6});`
 
+		// TODO undo the verb.Verbose setting
+		verb.VerboseVerbose = true
+
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -172,9 +179,10 @@ func Test062SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
-			`a = fmt.Sprintf("yip %#v eee\n", _gi_NewSlice("int",{[0]=4LL, 5LL, 6LL}, 0LL));`)
-
+		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
+  
+  	a = fmt.Sprintf("yip %#v eee\n", __type__anon_sliceType({[0]=4LL, 5LL, 6LL}));`)
 		LoadAndRunTestHelper(t, vm, translation)
 
 		LuaMustString(vm, "a", "yip []interface {}{4, 5, 6} eee\n")

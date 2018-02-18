@@ -469,6 +469,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			copySliceToTable(L, vp, visited)
 		}
 	case reflect.Slice:
+		pp("in reflect.Slice")
 		if proxify {
 			makeValueProxy(L, vp, cSliceMeta)
 		} else {
@@ -613,9 +614,9 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 
 	// detect __gi_Slice and specialize for it.
 	if isSlice {
-		L.GetGlobal("__giPrivateSliceProps") // stack++
+		L.GetGlobal("__array") // stack++
 	} else {
-		L.GetGlobal("__giPrivateArrayProps") // stack++
+		L.GetGlobal("__array") // stack++
 	}
 	if !L.IsNil(-1) {
 		// we are running under `gi`
