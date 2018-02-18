@@ -17,31 +17,6 @@ function __gi_SetRangeCheck(x, i, val)
   return val
 end;
 
--- complex numbers
--- "complex[?]" ?
-
-ffi = require('ffi')
-point = ffi.metatype("struct { double re, im; }", {
-    __add = function(a, b)
-     return point(a.re + b.re, a.im + b.im)
- end
-})
-
--- 1+2i
--- if reloaded, we get this error, so comment out for now.
--- prelude.lua:34: cannot change a protected metatable
--- See also https://stackoverflow.com/questions/325323/is-there-anyway-to-avoid-this-security-issue-in-lua
---[[
-point = ffi.metatype("complex", {
-    __add = function(a, b)
-     return point(a.re + b.re, a.im + b.im)
- end
-})
---]]
-
-function _gi_NewComplex128(real, imag)
-
-end
 
 -- length of array, counting [0] if present.
 function __lenz(array)      
@@ -55,7 +30,7 @@ end
 
 function __gijit_printQuoted(...)
    local a = {...}
-   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", __lenz(a))
+   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
    if a[0] ~= nil then
       local v = a[0]
       if type(v) == "string" then

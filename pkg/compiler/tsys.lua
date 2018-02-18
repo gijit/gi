@@ -119,14 +119,6 @@ function __assertIsArray(a)
 end
 
 
--- length of array, counting [0] if present.
-function __lenz(array)      
-   local n = #array
-   if array[0] ~= nil then
-      n=n+1
-   end
-   return n
-end
 
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
@@ -624,8 +616,8 @@ __valueArrayMT = {
       t.__val[k] = v
    end,
    
-   __index = function(t, k, mmm)
-      print("__valueArrayMT.__index called, k='"..tostring(k).."'; mmm="..tostring(mmm)) --  t.__val is:")
+   __index = function(t, k)
+      print("__valueArrayMT.__index called, k='"..tostring(k).."'")
       if type(k) == "string" then
             return rawget(t,k)
       elseif type(k) == "table" then
@@ -637,13 +629,17 @@ __valueArrayMT = {
             print(debug.traceback())
             error("read from array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
          end
-         
+         print("array access bounds check ok.")
          return t.__val[k]
       end
    end,
 
    __len = function(t)
-      return int(__lenz(t.__val))
+      local n = #t.__val
+      if t.__val[0] ~= nil then
+         return n+1
+      end
+      return n
    end,
    
    __tostring = function(self, ...)
@@ -719,6 +715,7 @@ __valueSliceMT = {
             print(debug.traceback())
             error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
          end
+         print("slice access bounds check ok.")
          return t.__array[w]
       end
    end,
@@ -731,10 +728,11 @@ __valueSliceMT = {
    __tostring = function(self, ...)
       print("__tostring called from __valueSliceMT")
 
-      local len = self.__length
-      local beg = self.__offset
+      local len = tonumber(self.__length) -- convert from LL int
+      local off = tonumber(self.__offset)
+      print("__tostring sees self.__length of ", len, " __offset = ", off)
       local cap = self.__capacity
-      --local s = "slice <len=" .. tostring(len) .. "; beg=" .. beg .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
+      --local s = "slice <len=" .. tostring(len) .. "; off=" .. off .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
       local s = self.__constructor.__str.."{"
       local raw = self.__array
 
@@ -742,11 +740,11 @@ __valueSliceMT = {
       -- when iterating, which happens automatically if we
       -- iterate on raw, the raw inside private data, and not on the proxy.
       local quo = ""
-      if len > 0 and type(raw[beg]) == "string" then
+      if len > 0 and type(raw[off]) == "string" then
          quo = '"'
       end
       for i = 0, len-1 do
-         s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(raw[beg+i]) .. quo .. ", "
+         s = s .. "["..tostring(i).."]" .. "= " ..quo.. tostring(raw[off+i]) .. quo .. ", "
       end
       
       return s .. "}"
@@ -999,7 +997,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, array)
          this.__array = array;
          this.__offset = 0;
-         this.__length = __lenz(array);
+         this.__length = #array;
+         print("# of array returned ", this.__length)
          this.__capacity = this.__length;
          --print("jea debug: slice tfun set __length to ", this.__length)
          --print("jea debug: slice tfun set __capacity to ", this.__capacity)
@@ -1029,7 +1028,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__array = v; -- like slice, to reuse ipairs method.
          this.__offset = 0; -- like slice.
          this.__constructor = typ
-         this.__length = __lenz(v)
+         local lenv = #v
+         if v[0] ~= nil then
+            lenv=lenv+1
+         end
+         this.__length = lenv
          -- TODO: come back and fix up Luar
          -- must set these keys for Luar to work:
          --this[__giPrivateRaw] = v
