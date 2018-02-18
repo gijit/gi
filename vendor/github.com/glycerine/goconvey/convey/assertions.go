@@ -68,4 +68,11 @@ var (
 	ShouldMatchModuloSpaces         = assertions.ShouldMatchModuloSpaces
 	ShouldMatchModuloWhiteSpace     = assertions.ShouldMatchModuloWhiteSpace
 	ShouldStartWithModuloWhiteSpace = assertions.ShouldStartWithModuloWhiteSpace
+
+	// with language specific comment-until-end-of-line removal first.
+	ShouldMatchModuloWhiteSpaceAndLuaComments     = assertions.ShouldMatchModuloWhiteSpaceAndLuaComments
+	ShouldStartWithModuloWhiteSpaceAndLuaComments = assertions.ShouldStartWithModuloWhiteSpaceAndLuaComments
+
+	ShouldMatchModuloWhiteSpaceAndGolangComments     = assertions.ShouldMatchModuloWhiteSpaceAndGolangComments
+	ShouldStartWithModuloWhiteSpaceAndGolangComments = assertions.ShouldStartWithModuloWhiteSpaceAndGolangComments
 )

@@ -3,6 +3,7 @@ package assertions
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -88,6 +89,76 @@ func ShouldMatchModuloWhiteSpace(actual interface{}, expected ...interface{}) st
 		return fail
 	}
 	return ShouldMatchModulo(map[rune]bool{' ': true, '\n': true, '\t': true}, actual, expected[0])
+}
+
+func ShouldMatchModuloWhiteSpaceAndLuaComments(actual interface{}, expected ...interface{}) string {
+	return ShouldMatchModuloWhiteSpaceAndComments("--", actual, expected...)
+}
+
+func ShouldMatchModuloWhiteSpaceAndGolangComments(actual interface{}, expected ...interface{}) string {
+	return ShouldMatchModuloWhiteSpaceAndComments(`//`, actual, expected...)
+}
+
+// comments from commentStart (e.g. "//" for Go, or "--" for Lua)
+// to end of line "\n", are removed before comparison. No
+// provision is made to account for commentStart within
+// quoted strings. Multiline comments are not treated.
+func ShouldMatchModuloWhiteSpaceAndComments(
+	commentStart string,
+	actual interface{},
+	expected ...interface{},
+
+) string {
+
+	if fail := need(1, expected); fail != success {
+		return fail
+	}
+	astr, aIsStr := actual.(string)
+	if !aIsStr {
+		return fmt.Sprintf("actual must be a string, found %T", actual)
+	}
+	estr, eIsStr := expected[0].(string)
+	if !eIsStr {
+		return fmt.Sprintf("expected must be a string, found %T", expected[0])
+	}
+	re := regexp.MustCompile(fmt.Sprintf("%s[^\n]*\n", commentStart))
+	estr = re.ReplaceAllString(estr, "\n")
+	astr = re.ReplaceAllString(astr, "\n")
+
+	return ShouldMatchModulo(map[rune]bool{' ': true, '\n': true, '\t': true}, astr, estr)
+}
+
+func ShouldStartWithModuloWhiteSpaceAndLuaComments(actual interface{}, expected ...interface{}) string {
+	return ShouldStartWithModuloWhiteSpaceAndComments("--", actual, expected...)
+}
+
+func ShouldStartWithModuloWhiteSpaceAndGolangComments(actual interface{}, expected ...interface{}) string {
+	return ShouldStartWithModuloWhiteSpaceAndComments(`//`, actual, expected...)
+}
+
+func ShouldStartWithModuloWhiteSpaceAndComments(
+	commentStart string,
+	actual interface{},
+	expected ...interface{},
+
+) string {
+
+	if fail := need(1, expected); fail != success {
+		return fail
+	}
+	astr, aIsStr := actual.(string)
+	if !aIsStr {
+		return fmt.Sprintf("actual must be a string, found %T", actual)
+	}
+	estr, eIsStr := expected[0].(string)
+	if !eIsStr {
+		return fmt.Sprintf("expected must be a string, found %T", expected[0])
+	}
+	re := regexp.MustCompile(fmt.Sprintf("%s[^\n]*\n", commentStart))
+	estr = re.ReplaceAllString(estr, "\n")
+	astr = re.ReplaceAllString(astr, "\n")
+
+	return ShouldStartWithModuloWhiteSpace(astr, estr)
 }
 
 func ShouldStartWithModuloWhiteSpace(actual interface{}, expectedPrefix ...interface{}) string {
