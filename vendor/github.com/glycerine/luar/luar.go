@@ -1240,26 +1240,29 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		DumpLuaStack(L)
 	}
 
-	/* old sample
-	       luar.go:1125 copyGiTableToSlice after getting n=3, stack is:
-		   ========== begin DumpLuaStack: top = 4
-		   DumpLuaStack: i=4, t= 5
-		    Table :
-		   'len' => '3'
-		   'typeKind' => 'int'
+	/* sample
+	luar.go:1238 2018-02-18 08:08:38.889 -0600 CST copyGiTableToSlice after fetching __array, stack is:
 
-		   DumpLuaStack: i=3, t= 5
-		    Table :
-		   '' => ''
-		   '' => ''
-		   'Typeof' => '__gi_Slice'
+	========== begin DumpLuaStack: top = 3
+	DumpLuaStack: i=3, t= 5
+	 Table :
+	'0' => ''
+	'1' => ''
+	'2' => ''
 
-		   DumpLuaStack: i=2, t= 0
-		    Type(code 0) : no auto-print available.
-		   DumpLuaStack: i=1, t= 5
-		    Table :
+	DumpLuaStack: i=2, t= 5
+	 Table :
+	'__array' => ''
+	'__offset' => '0'
+	'__constructor' => ''
+	'__val' => ''
+	'__capacity' => '3'
+	'__length' => '3'
 
-		   ========= end of DumpLuaStack
+	DumpLuaStack: i=1, t= 4
+	 String : 	yip %#v eee
+
+	========= end of DumpLuaStack
 	*/
 
 	// since we increased the stack depth by 1, adjust idx.
@@ -1272,9 +1275,8 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		DumpLuaStack(L)
 	}
 
-	// just leave the raw, remove the props table and the outer table.
+	// just leave the raw, remove the outer table.
 	L.Replace(-2)
-	//L.Pop(1)
 	pp("after popping the props and outer and leaving just the raw:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
