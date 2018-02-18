@@ -1945,7 +1945,15 @@ function __zipairs(a)
    end
 end
 
---helper, get rid of 0, shift everything up in the returned.
+-- __elim0 is a helper, to get rid of t[0], and
+-- shift everything up in the returned array
+-- that will start at [1], if non-empty/non-nil.
+--
+-- We assume an array starting at either [0] or [1],
+-- with no 'nil' holes in the middle. We don't
+-- depend upon # to be accurate or meta-methoded.
+-- We detect the end of the array by the first nil.
+--
 function __elim0(t)
    if type(t) ~= 'table' then
       return t
@@ -1954,21 +1962,23 @@ function __elim0(t)
    if t == nil then
       return
    end
-   local n = tonumber(#t)
-   --print("n is "..tostring(n))
-   --__st(n, "n")
-   if n == 0 then
-      return
-   end
-   local r = {}
-   local z = t[0]
-   local off = 0
-   if z ~= nil then
-      off = 1
+
+   -- can we leave t unchanged?
+   if t[0] == nil then
+      return t
    end
    
-   for i=1,n do
-      table.insert(r, t[i-off])
+   local r = {}
+   table.insert(r, t[0])
+   local i = 1
+   while true do
+      local v = t[i]
+      if v == nil then
+         break
+      else
+         table.insert(r, v)
+      end
+      i=i+1
    end
    return r
 end
@@ -1977,7 +1987,7 @@ function __unpack0(t)
    if type(t) ~= 'table' then
       return t
    end
-   if raw == nil then
+   if t == nil then
       return
    end
    return unpack(__elim0(t))
