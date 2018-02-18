@@ -312,7 +312,8 @@ bb = 3LL;`)
 		// type already declared above, so will be reused.
 		code = `var x [3]int`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-x = __type__anon_arrayType.zero();
+__type__anon_arrayType = __arrayType(__type__int, 3); 
+x = __type__anon_arrayType();
 `)
 
 		// upper case names too
