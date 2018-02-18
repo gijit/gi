@@ -167,9 +167,6 @@ func Test062SprintfOneSlice(t *testing.T) {
 
 		src := `import "fmt"; a := fmt.Sprintf("yip %#v eee\n", []int{4,5,6});`
 
-		// TODO undo the verb.Verbose setting
-		verb.VerboseVerbose = true
-
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -253,12 +250,18 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
+		// TODO undo the verb.Verbose setting
+		verb.VerboseVerbose = true
+
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), matchesLuaSrc,
-			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55LL, 56LL}, 0LL), fmt.Printf);`)
+		cv.So(string(translation), matchesLuaSrc, `
+     	__type__anon_sliceType = __sliceType(__type__int); 
+  
+     	fmt.Printf("heya %#v %v\n", "hello", __type__anon_sliceType({[0]=55LL, 56LL}), fmt.Printf);
+        `)
 		LoadAndRunTestHelper(t, vm, translation)
 
 	})

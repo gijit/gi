@@ -1207,7 +1207,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	t = v.Type()
 
 	// __length
-	getfield(L, -1, "__length")
+	getfield(L, idx, "__length")
 	if L.IsNil(-1) {
 		panic("what? should be a `__length` member of a gijit slice")
 	}
@@ -1219,7 +1219,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 
 	// __offset
-	getfield(L, -1, "__offset")
+	getfield(L, idx, "__offset")
 	if L.IsNil(-1) {
 		panic("what? should be a `__offset` member of a gijit slice")
 	}
@@ -1231,7 +1231,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 
 	// __array
-	getfield(L, -1, "__array")
+	getfield(L, idx, "__array")
 	if L.IsNil(-1) {
 		panic("what? should be a `__array` member of a gijit slice")
 	}
@@ -1276,7 +1276,12 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 
 	// just leave the raw, remove the outer table.
-	L.Replace(-2)
+
+	// lua_replace: Moves the top element into
+	// the given position (and pops it), without
+	// shifting any element (therefore replacing
+	// the value at the given position).
+	L.Replace(idx)
 	pp("after popping the props and outer and leaving just the raw:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
@@ -1344,7 +1349,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 }
 
 // getfield will
-// assume that table is on the stack top, and
+// assume that table is at tableIdx, and
 // returns with the value (that which corresponds to key) on
 // the top of the stack.
 // If value not present, then a nil is on top of the stack.
