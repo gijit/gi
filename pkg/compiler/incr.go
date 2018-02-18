@@ -813,35 +813,43 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			for i := 0; i < named.NumMethods(); i++ {
 				pp("on method i=%v, '%v'\n", i, named.Method(i).Name())
 				method := named.Method(i)
-				name := method.Name()
-				if reservedKeywords[name] {
-					name += "_"
-				}
-				// interface methods don't depend on any
-				// particular package, so this is the empty string.
-				pkgPath := ""
-				if !method.Exported() {
-					pkgPath = method.Pkg().Path()
-				}
-				t := method.Type().(*types.Signature)
-				entry := fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 
-				// https://golang.org/ref/spec#Method_sets
-				//
-				//   The method set of the corresponding
-				//   pointer type *T is the set of all
-				//   methods declared with receiver *T or T
-				//   (that is, it also contains the method set of T).
-				//
-				// jea: true seems to be needed to have 102 face_test green.
-				if true {
-					ptrMethods = append(ptrMethods, entry)
-				} else {
-					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
-						ptrMethods = append(ptrMethods, entry)
-						continue
+				entry := c.getMethodDetailsSig(method)
+				/*
+					func (c *funcContext) getMethodDetailsSig(method) (entry string) {
+					name := method.Name()
+					if reservedKeywords[name] {
+						name += "_"
 					}
-				}
+					// interface methods don't depend on any
+					// particular package, so this is the empty string.
+					pkgPath := ""
+					if !method.Exported() {
+						pkgPath = method.Pkg().Path()
+					}
+					t := method.Type().(*types.Signature)
+					entry := fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+
+					// https://golang.org/ref/spec#Method_sets
+					//
+					//   The method set of the corresponding
+					//   pointer type *T is the set of all
+					//   methods declared with receiver *T or T
+					//   (that is, it also contains the method set of T).
+					//
+					// jea: true seems to be needed to have 102 face_test green.
+					if true {
+						ptrMethods = append(ptrMethods, entry)
+					} else {
+						if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
+							ptrMethods = append(ptrMethods, entry)
+							continue
+						}
+					}
+				*/
+				// jea: true seems to be needed to have 102 face_test green.
+				ptrMethods = append(ptrMethods, entry)
+
 				methods = append(methods, entry)
 			}
 			if len(methods) > 0 {
@@ -870,7 +878,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("%s.init(%s);", "__type__"+c.objectName(o), c.initArgs(t))
+				c.Printf("%s.init(%s); -- incr.go:873", "__type__"+c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
 				if set_constructor != "" {
@@ -909,4 +917,19 @@ func (c *funcContext) oneAnonType(t *types.TypeName, collectDependencies func(f 
 	})
 
 	return &d, d.DeclCode
+}
+
+func (c *funcContext) getMethodDetailsSig(method *types.Func) (entry string) {
+	name := method.Name()
+	if reservedKeywords[name] {
+		name += "_"
+	}
+	// interface methods don't depend on any
+	// particular package, so this is the empty string.
+	pkgPath := ""
+	if !method.Exported() {
+		pkgPath = method.Pkg().Path()
+	}
+	t := method.Type().(*types.Signature)
+	return fmt.Sprintf(`{prop= "%s", __name= "%s", __pkg="%s", __typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 }

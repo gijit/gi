@@ -328,14 +328,23 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		funName += "_"
 	}
 
+	signatureDetail := ""
 	if _, isStruct := namedRecvType.Underlying().(*types.Struct); isStruct {
-		code.Write(primaryFunction(true, typeName+".ptr.prototype."+funName))
+		ptrAddMe := typeName + ".ptr.prototype." + funName
+		code.Write(primaryFunction(true, ptrAddMe))
 		// get the comma right: either function(this) or function(this, a,b,c)
 		jp := ", " + joinedParams
 		if joinedParams == "" {
 			jp = ""
 		}
 		fmt.Fprintf(code, "\t%s.prototype.%s = function(this %s)  return this.__val.%s(%s); end;\n", typeName, funName, jp, funName, joinedParams)
+
+		signatureDetail = c.getMethodDetailsSig(o)
+		// add to struct
+		fmt.Fprintf(code, "\n %s.__addToMethods(%s); -- package.go:344\n", typeName, signatureDetail)
+		// add to pointer to struct
+		fmt.Fprintf(code, "\n %s.__addToMethods(%s); -- package.go:346\n", ptrAddMe, signatureDetail)
+
 		return code.Bytes()
 	}
 

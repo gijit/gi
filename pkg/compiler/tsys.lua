@@ -813,6 +813,7 @@ __addMethodSynthesizer = function(f)
    table.insert(__methodSynthesizers, f);
 end;
 
+
 __synthesizeMethods = function()
    __ipairsZeroCheck(__methodSynthesizers)
    for i,f in ipairs(__methodSynthesizers) do
@@ -1057,10 +1058,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ = { implementedBy= {}, missingMethodFor= {} };
       typ.keyFor = __ifaceKeyFor;
       typ.init = function(methods)
-         --print("top of init() for kindInterface, methods= ")
-         --__st(methods)
-         --print("and also at top of init() for kindInterface, typ= ")
-         --__st(typ)
+         print("top of init() for kindInterface, methods= ")
+         __st(methods)
+         print("and also at top of init() for kindInterface, typ= ")
+         __st(typ)
          typ.methods = methods;
          for _, m in pairs(methods) do
             -- TODO:
@@ -1096,7 +1097,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       --
       typ.prototype = {__name="methodSet for "..str, __typ = typ}
       typ.prototype.__index = typ.prototype
-      
+
       local ctor = function(this, ...)
          --print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          local args = {...}
@@ -1126,6 +1127,25 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.ptr.prototype = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
       typ.ptr.prototype.__index = typ.ptr.prototype
 
+      -- incrementally expand the method set. Full
+      -- signature details are passed in det.
+      
+      -- a) for pointer
+      typ.ptr.__addToMethods=function(det)
+         print("typ.ptr.__addToMethods called, existing methods:")
+         __st(typ.ptr.methods, "typ.ptr.methods")
+         __st(det, "det")
+         table.insert(typ.ptr.methods, det)
+      end
+
+      -- b) for struct
+      typ.__addToMethods=function(det)
+         print("typ.__addToMethods called, existing methods:")
+         __st(typ.methods, "typ.methods")
+         __st(det, "det")
+         table.insert(typ.methods, det)
+      end
+      
       -- __kindStruct.init is here:
       typ.init = function(pkgPath, fields)
          --print("top of init() for struct, fields=")
@@ -1303,9 +1323,9 @@ function __methodSet(typ)
    local base = {};
 
    local isPtr = (typ.kind == __kindPtr);
-   --print("__methodSet called with typ=")
-   --__st(typ)
-   --print("__methodSet sees isPtr=", isPtr)
+   print("__methodSet called with typ=")
+   __st(typ)
+   print("__methodSet sees isPtr=", isPtr)
    
    if isPtr  and  typ.elem.kind == __kindInterface then
       -- jea: I assume this is because pointers to interfaces don't themselves have methods.
@@ -1326,20 +1346,26 @@ function __methodSet(typ)
    
    local seen = {};
 
-   --print("top of while, #current is", #current)
+   print("top of while, #current is", #current)
    while #current > 0 do
       local next = {};
       local mset = {};
       
       for _,e in pairs(current) do
+         print("e from pairs(current) is:")
+         __st(e,"e")
+         __st(e.__typ,"e.__typ")
          if seen[e.__typ.__str] then
+            print("already seen "..e.__typ.__str.." so breaking out of match loop")
             break
          end
          seen[e.__typ.__str] = true;
          
          if e.__typ.named then
+            print("have a named type, e.__typ.methods is:")
+            __st(e.__typ.methods, "e.__typ.methods")
             for _, mthod in pairs(e.__typ.methods) do
-               --print("adding to mset, mthod = ", mthod)
+               print("adding to mset, mthod = ", mthod)
                table.insert(mset, mthod);
             end
             if e.indirect then
@@ -1390,8 +1416,8 @@ function __methodSet(typ)
             base[m.name] = m;
          end
       end;
-      --print("after dedup, base for typ '"..typ.__str.."' is ")
-      --__st(base)
+      print("after dedup, base for typ '"..typ.__str.."' is ")
+      __st(base)
       
       current = next;
    end
@@ -1509,7 +1535,19 @@ __chanNil.__sendQueue = __chanNil.__recvQueue
 
 __funcTypes = {};
 __funcType = function(params, results, variadic)
-   local typeKey = __mapAndJoinStrings(",", params, function(p) return p.id; end) .. "_" .. __mapAndJoinStrings(",", results, function(r) return r.id; end) .. "_" .. tostring(variadic);
+   __st(results, "results")
+   local typeKey = "parm_" .. __mapAndJoinStrings(",", params, function(p)
+                                          if p.id == nil then
+                                             error("no id for p=",p);
+                                          end;
+                                          return p.id;
+   end) .. "__results_" .. __mapAndJoinStrings(",", results, function(r)
+                                                 if r.id == nil then
+                                                    error("no id for r=",r);
+                                                 end;
+                                                 return r.id;
+                                             end) .. "__variadic_" .. tostring(variadic);
+   print("typeKey is '"..typeKey.."'")
    local typ = __funcTypes[typeKey];
    if typ == nil then
       local paramTypes = __mapArray(params, function(p) return p.__str; end);
@@ -1807,29 +1845,29 @@ __assertType = function(value, typ, returnTuple)
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
-         --print("valueMethodSet is")
-         --__st(valueMethodSet)
-         --print("interfaceMethods is")
-         --__st(interfaceMethods)
+         print("valueMethodSet is")
+         __st(valueMethodSet)
+         print("interfaceMethods is")
+         __st(interfaceMethods)
 
          __ipairsZeroCheck(interfaceMethods)
          __ipairsZeroCheck(valueMethodSet)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
-               --print("checking vm against tm, where tm=")
-               --__st(tm)
-               --print("and vm=")
-               --__st(vm)
+               print("checking vm against tm, where tm=")
+               __st(tm)
+               print("and vm=")
+               __st(vm)
                
                if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
-                  --print("match found against vm and tm.")
+                  print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
-               --print("match *not* found for tm.name = '"..tm.name.."'")
+               print("match *not* found for tm.name = '"..tm.__name.."'")
                ok = false;
                typ.missingMethodFor[valueTypeString] = tm.name;
                break;
