@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -300,7 +300,6 @@ test2helper()
 		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
-		verb.VerboseVerbose = true // DEBUG ONLY TODO remove this.
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustString(vm, "result", "9876543210")
