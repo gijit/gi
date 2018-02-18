@@ -204,8 +204,11 @@ func Test063SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), matchesLuaSrc,
-			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackSliceRaw(_gi_NewSlice("emptyInterface",{[0]=4LL, 5LL, 6LL}, nil)));`)
+		cv.So(string(translation), matchesLuaSrc, `
+  	__type__anon_sliceType = __sliceType(__type__emptyInterface); 
+  
+  	a = fmt.Sprintf("yee %v %v %v haw\n", __unpack0(__type__anon_sliceType({[0]=4LL, 5LL, 6LL})));
+			`)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
