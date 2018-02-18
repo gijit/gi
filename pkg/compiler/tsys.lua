@@ -1535,7 +1535,11 @@ __chanNil.__sendQueue = __chanNil.__recvQueue
 
 __funcTypes = {};
 __funcType = function(params, results, variadic)
-   __st(results, "results")
+
+   -- example: func f(a int, b string) (string, uint32) {}
+   --   would have typeKey:
+   -- "parm_1,16__results_16,9__variadic_false"
+   --
    local typeKey = "parm_" .. __mapAndJoinStrings(",", params, function(p)
                                           if p.id == nil then
                                              error("no id for p=",p);
@@ -1555,14 +1559,16 @@ __funcType = function(params, results, variadic)
          paramTypes[#paramTypes - 1] = "..." .. paramTypes[#paramTypes - 1].substr(2);
       end
       local str = "func(" .. table.concat(paramTypes, ", ") .. ")";
+      
       if #results == 1 then
          str = str .. " " .. results[1].__str;
-   end else if #results > 1 then
+      elseif #results > 1 then
             str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
-            end
-         typ = __newType(4, __kindFunc, str, false, "", false, nil);
-         __funcTypes[typeKey] = typ;
-         typ.init(params, results, variadic);
+      end
+      
+      typ = __newType(4, __kindFunc, str, false, "", false, nil);
+      __funcTypes[typeKey] = typ;
+      typ.init(params, results, variadic);
    end
    return typ;
 end;
