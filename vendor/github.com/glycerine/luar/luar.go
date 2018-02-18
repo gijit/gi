@@ -688,7 +688,19 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 }
 
 func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
-	pp("top of copyTableToStruct")
+	pp("top of copyTableToStruct, here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	// jea debug only: TODO delete this defer.
+	defer func() {
+		r := recover()
+		pp("returning from copyTableToStruct: r=%v", r)
+		if r != nil {
+			panic(r)
+		}
+	}()
 	t := v.Type()
 
 	// See copyTableToSlice.
@@ -716,16 +728,35 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 	if idx < 0 {
 		idx--
 	}
+
+	// make sure the stack remains the same.
+	// lua_next expects the previous table
+	// key at the top of the stack so
+	// it can resume the traversal.
+
 	for L.Next(idx) != 0 {
 		L.PushValue(-2)
 		// Warning: ToString changes the value on stack.
 		key := L.ToString(-1)
 		L.Pop(1)
-		f := v.FieldByName(fields[key])
+		// key == "__set"; we want to ignore these
+		pp("key '%s' -> fields[key] = '%v'", key, fields[key]) // fields[key] is empty string
+		fk, ok := fields[key]
+		if !ok {
+			pp("ignoring key '%s' that was not in our fields map", key)
+			L.Pop(1)
+			continue
+		}
+		f := v.FieldByName(fk)
 		// jea: set private fields too.
 		//if f.CanSet() {
-		val := reflect.New(f.Type()).Elem()
+		pp("jea: just before f.Type(), f is '%#v'", f) // f is '<invalid reflect.Value>'
+
+		val := reflect.New(f.Type()).Elem() // call of reflect.Value.Type on zero Value
+
+		pp("jea: just after f.Type()")
 		err := luaToGo(L, -1, val, visited)
+		pp("jea: just after luaToGo")
 		if err != nil {
 			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 			status = ErrTableConv

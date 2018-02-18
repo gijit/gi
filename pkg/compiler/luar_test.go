@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
@@ -396,6 +396,9 @@ func testOp(m *myGoTestStruct) string { return "" }
 
 		//		cv.So(string(translation), matchesLuaSrc,
 		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
+
+		// TODO undo the verb.Verbose setting
+		verb.VerboseVerbose = true
 
 		LoadAndRunTestHelper(t, vm, translation)
 
