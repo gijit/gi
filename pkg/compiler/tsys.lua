@@ -482,11 +482,10 @@ __append = function(...)
 end;
 
 __appendSlice = function(slice, toAppend)
-   --local toAppend = {...}
-   print("toAppend:")
-   __st(toAppend, "toAppend")
-   print("slice:")
-   __st(slice, "slice")
+   --print("toAppend:")
+   --__st(toAppend, "toAppend")
+   --print("slice:")
+   --__st(slice, "slice")
    
    if slice == nil then 
       error("error calling __appendSlice: slice must be available")
@@ -2067,4 +2066,20 @@ function __unpack0(t)
       return
    end
    return unpack(__elim0(t))
+end
+
+function __lazy_ellipsis(t)
+   local r = {
+      __name = "__lazy_ellipsis_instance",
+      __val = t,
+   }
+   setmetatable(r, {
+                   __call = function(self, method)
+                      if method ~= nil then
+                         print("method = ", method)
+                      end
+                      return self.__val
+                   end,
+   })
+   return r
 end
