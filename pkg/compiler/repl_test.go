@@ -254,7 +254,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__int); 
   	a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
-hmm = function() for i, _ in pairs(a) do print(i, _gi_GetRangeCheck(a, i)); end end;`)
+hmm = function() for i, _ in pairs(a) do print(i, __gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
 
@@ -270,7 +270,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
 __type__anon_sliceType = __sliceType(__type__string); 
 b = __type__anon_sliceType({[0]="hi", "gophers!"});
-_gi_SetRangeCheck(b, 0, "");
+__gi_SetRangeCheck(b, 0, "");
 `)
 	})
 }
@@ -448,7 +448,7 @@ func Test018ReadFromSlice(t *testing.T) {
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
 		expect := []string{`  	__type__anon_sliceType = __sliceType(__type__int); 
   
-  	x = __type__anon_sliceType({[0]=3LL, 4LL});`, `x3 = _gi_GetRangeCheck(x,0);`}
+  	x = __type__anon_sliceType({[0]=3LL, 4LL});`, `x3 = __gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)

@@ -29,11 +29,16 @@ func Test086SlicesPointToArrays(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
-	a = __gi_NewArray({[0]=1LL, 3LL}, "__gi_kind_int64", 2, 0LL);
-  	b = _gi_NewSlice("int64", a, 0LL);
-  	c = __subslice(_gi_NewSlice("int64", a, 0LL), 1);
-  	_gi_SetRangeCheck(b, 1, (_gi_GetRangeCheck(b, 1) + (1LL)));
-  	c0 = _gi_GetRangeCheck(c, 0);
+	__type__anon_arrayType   = __arrayType(__type__int64, 2);
+	a = __type__anon_arrayType({[0]=1LL, 3LL});
+
+	__type__anon_sliceType   = __sliceType(__type__int64);
+  	b = __type__anon_sliceType(a, 0);
+
+  	c = __type__anon_sliceType(a, 1);
+
+    b[1] = b[1] + 1LL;
+    c0 = c[0];
   	a1 = a[1];
 `)
 
@@ -66,10 +71,14 @@ func Test088SlicesFromArrays(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
-	a = __gi_NewArray({[0]=88LL, 99LL}, "__gi_kind_int64", 2, 0LL);
-  	b = _gi_NewSlice("int64", a, 0LL);
- 	b0 = _gi_GetRangeCheck(b, 0);
-   	b1 = _gi_GetRangeCheck(b, 1);
+    __type__anon_arrayType = __arrayType(__type__int64, 2);
+	a = __type__anon_arrayType({[0]=88LL, 99LL});
+
+	__type__anon_sliceType   = __sliceType(__type__int64);
+  	b = __type__anon_sliceType(a, 0);
+
+ 	b0 = b[0]
+   	b1 = b[1]
 `)
 
 		// and verify that it happens correctly

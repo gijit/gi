@@ -293,8 +293,8 @@ func Test087ShadowRegexp(t *testing.T) {
 	a = regexp.MustCompile("llo");
 	loc = a.FindStringIndex("hello");
 	lenloc =  #loc;
-	a0 = _gi_GetRangeCheck(loc, 0);
-	a1 = _gi_GetRangeCheck(loc, 1);
+	a0 = __gi_GetRangeCheck(loc, 0);
+	a1 = __gi_GetRangeCheck(loc, 1);
 `)
 		LoadAndRunTestHelper(t, vm, translation)
 

@@ -839,7 +839,7 @@ func setRangeCheck(constantIndex, array bool) string {
 		return "%1e[%2f] = %3s"
 	}
 
-	return "_gi_SetRangeCheck(%1e, %2f, %3s)"
+	return "__gi_SetRangeCheck(%1e, %2f, %3s)"
 }
 
 func rangeCheck(pattern string, constantIndex, array bool) string {
@@ -848,7 +848,7 @@ func rangeCheck(pattern string, constantIndex, array bool) string {
 		return pattern
 	}
 	//panic("where?")
-	return "_gi_GetRangeCheck(%1e, %2f)"
+	return "__gi_GetRangeCheck(%1e, %2f)"
 	/*
 		lengthProp := "$length"
 		if array {
