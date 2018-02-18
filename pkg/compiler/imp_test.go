@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -135,9 +135,6 @@ func Test059CallFmtSummer(t *testing.T) {
 func Test061CallFmtSummerWithDots(t *testing.T) {
 
 	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function gitesting.SummerAny(a ...int), the call gitesting.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
-
-		// TODO remove
-		verb.VerboseVerbose = true
 
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
