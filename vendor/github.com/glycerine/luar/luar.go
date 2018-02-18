@@ -693,14 +693,16 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 		DumpLuaStack(L)
 	}
 
-	// jea debug only: TODO delete this defer.
-	defer func() {
-		r := recover()
-		pp("returning from copyTableToStruct: r=%v", r)
-		if r != nil {
-			panic(r)
-		}
-	}()
+	/*
+		// jea debug only: TODO delete this defer.
+		defer func() {
+			r := recover()
+			pp("returning from copyTableToStruct: r=%v", r)
+			if r != nil {
+				panic(r)
+			}
+		}()
+	*/
 	t := v.Type()
 
 	// See copyTableToSlice.
@@ -1155,9 +1157,9 @@ func LuaStackPosToString(L *lua.State, i int) string {
 
 	switch t {
 	case lua.LUA_TNONE: // -1
-		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index", i)
+		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index\n", i)
 	case lua.LUA_TNIL:
-		return fmt.Sprintf("LUA_TNIL: nil")
+		return fmt.Sprintf("LUA_TNIL: nil\n")
 	case lua.LUA_TSTRING:
 		return fmt.Sprintf(" String : \t%v\n", L.ToString(i))
 	case lua.LUA_TBOOLEAN:

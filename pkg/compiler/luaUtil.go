@@ -111,9 +111,9 @@ func LuaStackPosToString(L *golua.State, i int) string {
 
 	switch t {
 	case golua.LUA_TNONE: // -1
-		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index", i)
+		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index\n", i)
 	case golua.LUA_TNIL:
-		return fmt.Sprintf("LUA_TNIL: nil")
+		return fmt.Sprintf("LUA_TNIL: nil\n")
 	case golua.LUA_TSTRING:
 		return fmt.Sprintf(" String : \t%v\n", L.ToString(i))
 	case golua.LUA_TBOOLEAN:

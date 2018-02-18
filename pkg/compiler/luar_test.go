@@ -272,9 +272,9 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		vm.GetGlobal("_giPrivateSliceProps")
+		vm.GetGlobal("__gijit_tsys")
 		cv.So(vm.IsNil(-1), cv.ShouldBeFalse)
-		pp("good: we found _giPrivateSliceProps")
+		pp("good: we found __gijit_tsys")
 
 		start := vm.GetTop()
 		vm.GetGlobal("_MIS_SPELLED")
@@ -286,12 +286,19 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), matchesLuaSrc,
-			`a =_gi_NewSlice("int",{[0]=5LL,6LL,4LL}, 0LL);`)
+		cv.So(string(translation), matchesLuaSrc, `
+  	__type__anon_sliceType = __sliceType(__type__int); 
+  
+  	a = __type__anon_sliceType({[0]=5LL, 6LL, 4LL});
+    `)
+
+		// TODO undo the verb.Verbose setting
+		verb.VerboseVerbose = true
 
 		LoadAndRunTestHelper(t, vm, translation)
 
 		vm.GetGlobal("a")
+		pp("stack after GetGlobal on 'a':")
 		DumpLuaStack(vm)
 		b := []int{}
 		top := vm.GetTop()
@@ -301,18 +308,18 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		//cv.So(olen, cv.ShouldEqual, 3) // failing here, apparently objlen does not invoke the metatable method!
 
 		// let's get props, the query it for len
-		vm.GetGlobal("_giPrivateSliceProps") // stack++
+		vm.GetGlobal("__gijit_tsys") // stack++
 		if vm.IsNil(-1) {
-			panic("_giPrivateSliceProps must have been created in prelude!")
+			panic("__gijit_tsys must have been created in prelude!")
 		}
-		pp("good, _giPrivateSliceProps key was found")
+		pp("good, __gijit_tsys key was found")
 		DumpLuaStack(vm)
 
 		// now lookup _giPrivateSliceProps in the original table.
 		vm.GetTable(-2) // get table[key]
 
 		// this really should get us 3 back
-		getfield(vm, -1, "len")
+		getfield(vm, -1, "__length")
 		aLen := vm.ToNumber(-1)
 		cv.So(aLen, cv.ShouldEqual, 3)
 		vm.Pop(2)
@@ -396,9 +403,6 @@ func testOp(m *myGoTestStruct) string { return "" }
 
 		//		cv.So(string(translation), matchesLuaSrc,
 		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
-
-		// TODO undo the verb.Verbose setting
-		verb.VerboseVerbose = true
 
 		LoadAndRunTestHelper(t, vm, translation)
 
