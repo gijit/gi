@@ -1235,8 +1235,8 @@ from Javascript to Lua within the GopherJS-derived
 code base is half-done/still in progress.
 
 So when deciding how to change the output in the GopherJS derived code
-of a particular javascript idiom, we've
-note the following are helpful to keep in mind.
+of a particular javascript idiom, we
+note the following are helpful hints.
 
 d1) the ternary operator
 ~~~
