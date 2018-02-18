@@ -32,6 +32,7 @@ __global ={};
 __module ={};
 __packages = {}
 __idCounter = 0;
+__pkg = {};
 
 -- length of array, counting [0] if present,
 -- but trusting __len if metamethod avail.
@@ -1756,7 +1757,11 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-  --print("__sliceType called with elem = ", elem)
+   --print("__sliceType called with elem = ", elem)
+   if elem == nil then
+      print(debug.traceback())
+      error "__sliceType called with nil elem!"
+   end
    local typ = elem.slice;
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
