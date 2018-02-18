@@ -61,23 +61,19 @@ func Test120PointersInsideStructs(t *testing.T) {
 		//  we pass nil and the later rawset it.
 
 		cv.So(string(translation), matchesLuaSrc, `
-__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
-
-anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
-
-__type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
-
-__type__Ragdoll.__constructor = function(self, ...) 
-		 if self == nil then self = {}; end
-		 local args={...};
-		 if #args == 0 then
-			 self.Andy = anon_ptrType.__nil;
-		 else 
-			 local Andy_ = ... ;
-			 self.Andy = Andy_;
-		 end
-		 return self; 
-end;
+	__type__Ragdoll = __newType(0, __kindStruct, "main.Ragdoll", true, "main", true, nil);
+  	
+  	__type__anon_ptrType = __ptrType(__type__Ragdoll); 
+  
+  	__type__Ragdoll.init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= __type__anon_ptrType, __tag= ""}}); 
+  	
+  	 __type__Ragdoll.__constructor = function(self, ...) 
+  		 if self == nil then self = {}; end
+  			 local Andy_ = ... ;
+  			 self.Andy = Andy_ or __type__anon_ptrType.__nil;
+  		 return self; 
+  	 end;
+  ;
 `)
 
 		// and verify that it happens correctly
@@ -111,29 +107,22 @@ func Test121PointersInsideStructs(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
+	__type__Ragdoll = __newType(0, __kindStruct, "main.Ragdoll", true, "main", true, nil);
+	
+	__type__anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
 
-__type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
-
-anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
-
-__type__Ragdoll.__init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= anon_ptrType, __tag= ""}});
-
-__type__Ragdoll.__constructor = function(self, ...) 
+	__type__Ragdoll.init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= __type__anon_ptrType, __tag= ""}}); -- incr.go:873
+	
+	 __type__Ragdoll.__constructor = function(self, ...) 
 		 if self == nil then self = {}; end
-		 local args={...};
-		 if #args == 0 then
-			 self.Andy = anon_ptrType.__nil;
-		 else 
 			 local Andy_ = ... ;
-			 self.Andy = Andy_;
-		 end
+			 self.Andy = Andy_ or __type__anon_ptrType.__nil;
 		 return self; 
-end;
-
-doll = __type__Ragdoll.ptr({}, anon_ptrType.__nil);
-
-doll.Andy = doll;
-same = doll.Andy == doll;
+	 end;
+;
+	doll = __type__Ragdoll.ptr({}, __type__anon_ptrType.__nil);
+	doll.Andy = doll;
+	same = doll.Andy == doll;
 `)
 
 		// and verify that it happens correctly
