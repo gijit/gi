@@ -612,12 +612,9 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 	n := int(L.ObjLen(idx))
 	pp("in copyTableToSlice, n='%v', t='%v'. top=%v, idx=%v", n, t, L.GetTop(), idx)
 
-	// detect __gi_Slice and specialize for it.
-	if isSlice {
-		L.GetGlobal("__array") // stack++
-	} else {
-		L.GetGlobal("__array") // stack++
-	}
+	// detect gijit slices/arrays and specialize for them.
+	L.GetGlobal("__gijit_tsys") // stack++
+
 	if !L.IsNil(-1) {
 		// we are running under `gi`
 		// is this a __gi_Slice? it is if the __giPrivateSliceProps key is present.
@@ -628,21 +625,18 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 			adj--
 		}
 
-		pp("we are running under `gi`, __giPrivateSliceProps key was found in _G. top is now %v, idx=%v, adj=%v", L.GetTop(), idx, adj)
+		pp("we are running under `gijit`, __gijit_tsys found in _G. top is now %v, idx=%v, adj=%v", L.GetTop(), idx, adj)
 
 		// get table[key]. replaces key with value,
 		// i.e. replace the key __giPrivateSliceProps with
 		//  the actual table it represents.
-		L.GetTable(adj)
+		// L.GetTable(adj)
+		L.Pop(1)
 		pp("under `gi`, after GetTable(adj), top is %v, and Top is nil: %v", L.GetTop(), L.IsNil(-1))
-		if !L.IsNil(-1) {
-			// yes, is __gi_Slice
-			// leave the props on the top of the stack, we'll use
-			// them immediately.
-			return copyGiTableToSlice(L, adj, v, visited, isSlice)
-		} else {
-			L.Pop(1)
-		}
+		// yes, is __gi_Slice
+		// leave the props on the top of the stack, we'll use
+		// them immediately.
+		return copyGiTableToSlice(L, adj, v, visited, isSlice)
 	} else {
 		L.Pop(1)
 	}
@@ -1116,51 +1110,62 @@ func DumpLuaStackAsString(L *lua.State) (s string) {
 	top = L.GetTop()
 	s += fmt.Sprintf("========== begin DumpLuaStack: top = %v\n", top)
 	for i := top; i >= 1; i-- {
+
 		t := L.Type(i)
 		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
-		switch t {
-		case lua.LUA_TSTRING:
-			s += fmt.Sprintf(" String : \t%v\n", L.ToString(i))
-		case lua.LUA_TBOOLEAN:
-			s += fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
-		case lua.LUA_TNUMBER:
-			s += fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
-		case lua.LUA_TTABLE:
-			s += fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
-
-		case 10: // LUA_TCDATA aka cdata
-			//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
-			ctype := L.LuaJITctypeID(i)
-			//pp("luar.go Dump sees ctype = %v", ctype)
-			switch ctype {
-			case 5: //  int8
-			case 6: //  uint8
-			case 7: //  int16
-			case 8: //  uint16
-			case 9: //  int32
-			case 10: //  uint32
-			case 11: //  int64
-				val := L.CdataToInt64(i)
-				s += fmt.Sprintf(" int64: '%v'\n", val)
-			case 12: //  uint64
-				val := L.CdataToUint64(i)
-				s += fmt.Sprintf(" uint64: '%v'\n", val)
-			case 13: //  float32
-			case 14: //  float64
-
-			case 0: // means it wasn't a ctype
-			}
-
-		case lua.LUA_TUSERDATA:
-			s += fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
-		case lua.LUA_TFUNCTION:
-			s += fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
-		default:
-			s += fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
-		}
+		s += LuaStackPosToString(L, i)
 	}
 	s += fmt.Sprintf("========= end of DumpLuaStack\n")
 	return
+}
+
+func LuaStackPosToString(L *lua.State, i int) string {
+	t := L.Type(i)
+
+	switch t {
+	case lua.LUA_TNONE: // -1
+		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index", i)
+	case lua.LUA_TNIL:
+		return fmt.Sprintf("LUA_TNIL: nil")
+	case lua.LUA_TSTRING:
+		return fmt.Sprintf(" String : \t%v\n", L.ToString(i))
+	case lua.LUA_TBOOLEAN:
+		return fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
+	case lua.LUA_TNUMBER:
+		return fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
+	case lua.LUA_TTABLE:
+		return fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
+
+	case 10: // LUA_TCDATA aka cdata
+		//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
+		ctype := L.LuaJITctypeID(i)
+		//pp("luar.go Dump sees ctype = %v", ctype)
+		switch ctype {
+		case 5: //  int8
+		case 6: //  uint8
+		case 7: //  int16
+		case 8: //  uint16
+		case 9: //  int32
+		case 10: //  uint32
+		case 11: //  int64
+			val := L.CdataToInt64(i)
+			return fmt.Sprintf(" int64: '%v'\n", val)
+		case 12: //  uint64
+			val := L.CdataToUint64(i)
+			return fmt.Sprintf(" uint64: '%v'\n", val)
+		case 13: //  float32
+		case 14: //  float64
+
+		case 0: // means it wasn't a ctype
+		}
+
+	case lua.LUA_TUSERDATA:
+		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
+	case lua.LUA_TFUNCTION:
+		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
+	default:
+	}
+	return fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
 }
 
 func dumpTableString(L *lua.State, index int) (s string) {
@@ -1193,27 +1198,49 @@ func dumpTableString(L *lua.State, index int) (s string) {
 	return
 }
 
-func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (int, reflect.Type) {
+func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (n int, offset int, t reflect.Type) {
 	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
-	// TODO: changeover to using lenz like
-	// approach; query # and add 1 if [0] is in use.
-	t := v.Type()
+	t = v.Type()
+
+	// __length
 	getfield(L, -1, "__length")
 	if L.IsNil(-1) {
-		panic("what? should be a `__length` member of props for __gi_Slice")
+		panic("what? should be a `__length` member of a gijit slice")
 	}
-	n := int(L.ToNumber(-1))
+	n = int(L.ToNumber(-1))
 	L.Pop(1)
-	pp("copyGiTableToSlice after getting n=%v, stack is:", n)
+	pp("copyGiTableToSlice after getting __length=%v, stack is:", n)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
-	/* sample
+	// __offset
+	getfield(L, -1, "__offset")
+	if L.IsNil(-1) {
+		panic("what? should be a `__offset` member of a gijit slice")
+	}
+	offset = int(L.ToNumber(-1))
+	L.Pop(1)
+	pp("copyGiTableToSlice after getting __offset=%v, stack is:", offset)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	// __array
+	getfield(L, -1, "__array")
+	if L.IsNil(-1) {
+		panic("what? should be a `__array` member of a gijit slice")
+	}
+	pp("copyGiTableToSlice after fetching __array, stack is:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	/* old sample
 	       luar.go:1125 copyGiTableToSlice after getting n=3, stack is:
 		   ========== begin DumpLuaStack: top = 4
 		   DumpLuaStack: i=4, t= 5
@@ -1235,44 +1262,25 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		   ========= end of DumpLuaStack
 	*/
 
-	// get the raw table
-	L.GetGlobal("__giPrivateRaw") // stack++
-	if L.IsNil(-1) {
-		panic(`could not lookup "__giPrivateRaw" in global table`)
-	}
-
 	// since we increased the stack depth by 1, adjust idx.
 	if idx < 0 && idx > -10000 {
 		idx--
 	}
 
-	pp("found the global string __giPrivateRaw, here is stack, with adjusted idx=%v:", idx)
-	if verb.VerboseVerbose {
-		DumpLuaStack(L)
-	}
-
-	// get table[key]. replaces key with value,
-	// i.e. replace the key __giPrivateRaw with
-	//  the actual table it represents.
-	L.GetTable(idx)
-	pp("under `gi`, after GetTable(idx=%v), top is %v, and Top is nil: %v", idx, L.GetTop(), L.IsNil(-1))
-	if L.IsNil(-1) {
-		panic("__giPrivateRaw not found in __gi_Slice outer value!")
-	}
-	pp("in copyGiTableToSlice. after fetching raw table to the top of the stack, here is stack:")
+	pp("after adjusting to having __array on stack, here is stack, with adjusted idx=%v:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
 	// just leave the raw, remove the props table and the outer table.
-	L.Replace(-3)
-	L.Pop(1)
+	L.Replace(-2)
+	//L.Pop(1)
 	pp("after popping the props and outer and leaving just the raw:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
-	return n, t
+	return n, offset, t
 }
 
 // props is on top of stack. The actual table at idx, which props describes.
@@ -1283,9 +1291,9 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 	}
 
 	// extract out the raw underlying table
-	n, t := giSliceGetRawHelper(L, idx, v, visited)
+	n, offset, t := giSliceGetRawHelper(L, idx, v, visited)
 
-	pp("in copyGiTableToSlice, n='%v', t='%v'", n, t)
+	pp("in copyGiTableToSlice, n='%v', t='%v', offset='%v'", n, t, offset)
 
 	// Adjust the length of the array/slice.
 	if n > v.Len() {
@@ -1317,7 +1325,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 
 	te := t.Elem()
 	for i := 0; i < n; i++ {
-		L.RawGeti(idx, i)
+		L.RawGeti(idx, i+offset)
 		val := reflect.New(te).Elem()
 		err := luaToGo(L, -1, val, visited)
 		if err != nil {
@@ -1389,7 +1397,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 		return int(L.ObjLen(idx))
 	}
 
-	L.PushString("__len")
+	L.PushString("__len") // the metamethod
 
 	// lua_gettable: It receives the
 	// position of the table in the stack,

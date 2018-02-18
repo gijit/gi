@@ -101,7 +101,6 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 		t := L.Type(i)
 		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
 		s += LuaStackPosToString(L, i)
-
 	}
 	s += fmt.Sprintf("========= end of DumpLuaStack\n")
 	return

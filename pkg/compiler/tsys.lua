@@ -18,6 +18,10 @@ if complex == nil then
    dofile 'complex.lua'
 end
 
+-- tell Luar that it is running under gijit,
+-- by setting this global flag.
+__gijit_tsys = true
+
 -- translation of javascript builtin 'prototype' -> typ.prototype
 --                                   'constructor' -> typ.__constructor
 
@@ -700,7 +704,7 @@ __valueSliceMT = {
       
       print("__valueSliceMT.__index called, k='"..tostring(k).."'");
       --__st(t.__val)
-      --print("callstack:"..tostring(debug.traceback()))
+      print("callstack:"..tostring(debug.traceback()))
 
       if type(k) == "string" then
          print("we have string key, doing rawget on t")
@@ -720,6 +724,7 @@ __valueSliceMT = {
    end,
 
    __len = function(t)
+      print("__valueSliceMT metamethod __len called, returning ", t.__length)
       return t.__length
    end,
    
@@ -1969,7 +1974,7 @@ function __elim0(t)
    -- is __len available?
    local mt = getmetatable(t)
    if mt ~= nil and rawget(mt, "__len") ~= nil then
-      print("__len found!")
+      --print("__len found!")
       -- Go slice/array, from 0.
       local n = #t
       local r = {}
