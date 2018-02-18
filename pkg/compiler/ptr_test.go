@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -50,6 +51,9 @@ c := *b
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
+
+		// TODO undo the verb.Verbose setting
+		verb.VerboseVerbose = true
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)

@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 	"github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
@@ -271,9 +270,6 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
-
-		// TODO undo the verb.Verbose setting
-		verb.VerboseVerbose = true
 
 		vm.GetGlobal("__gijit_tsys")
 		cv.So(vm.IsNil(-1), cv.ShouldBeFalse)
