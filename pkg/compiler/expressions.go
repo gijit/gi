@@ -1127,7 +1127,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 	case "append":
 		if ellipsis || len(args) == 1 {
 			argStr := c.translateArgs(sig, args, ellipsis)
-			return c.formatExpr("appendSlice(%s, %s)", argStr[0], argStr[1])
+			return c.formatExpr("__appendSlice(%s, %s)", argStr[0], argStr[1])
 		}
 		sliceType := sig.Results().At(0).Type().Underlying().(*types.Slice)
 		return c.formatExpr("append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))

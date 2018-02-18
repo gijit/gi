@@ -482,6 +482,12 @@ __append = function(...)
 end;
 
 __appendSlice = function(slice, toAppend)
+   --local toAppend = {...}
+   print("toAppend:")
+   __st(toAppend, "toAppend")
+   print("slice:")
+   __st(slice, "slice")
+   
    if slice == nil then 
       error("error calling __appendSlice: slice must be available")
    end
