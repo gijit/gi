@@ -1,8 +1,8 @@
-;;; gi-golang-3.92
+;;; gijit-3.92
 ;;;
-;;; (Setq *gi-golang-version-string* "3.92") ; update this below when changing.
+;;; (Setq *gijit-version-string* "3.92") ; update this below when changing.
 ;;;
-;;; gi-golang.el     - is a pair of modes for sending lines from a 
+;;; gijit.el     - is a pair of modes for sending lines from a 
 ;;;                  script (sender) to a comint-started inferior 
 ;;;                  (receiver) process. We  use Ctrl-n by default as 
 ;;;                  the "send this line and step" key. This enables 
@@ -27,19 +27,19 @@
 ;;; (1) If you are changing which interpreter you want to use, examine
 ;;;     and adjust the "commonly-adjusted parameters" section just below.
 ;;;
-;;; (2) Copy gigo.el into your ~/.emacs.d/  directory.
+;;; (2) Copy gijit.el into your ~/.emacs.d/  directory.
 ;;;
 ;;; (3) Then put this in your .emacs:
 ;;;
-;;;    (load "/home/yourHomeDirectory/.emacs.d/gigo.el") ; adjust path to fit your home directory.
-;;;    (require 'gi-golang-mode)
-;;;    (global-set-key "\C-n" 'gi-golang-send-line)
+;;;    (load "/home/yourHomeDirectory/.emacs.d/gijit.el") ; adjust path to fit your home directory.
+;;;    (require 'gijit-mode)
+;;;    (global-set-key "\C-n" 'gijit-send-line)
 ;;;
 ;;; (4) Optionally for speed, M-x byte-compile-file <enter> 
-;;;                           ~/.emacs.d/gigo.el <enter>
+;;;                           ~/.emacs.d/gijit.el <enter>
 ;;;
-;;; (5) To use, do 'M-x run-gi-golang' to start the interpreter. Open
-;;;     your script and in the script buffer do 'M-x gi-golang-mode'.
+;;; (5) To use, do 'M-x run-gijit' to start the interpreter. Open
+;;;     your script and in the script buffer do 'M-x gijit-mode'.
 ;;;
 ;;;     Or, open a file with an automatically recognized extension
 ;;;     (as specified below) and press 'C-n' on the first line
@@ -53,109 +53,109 @@
 ;; NB: these just give defaults, which the setq settings below will override.
 ;; Putting them here keeps the byte-compiler from complaining.
 
-(defvar *inferior-gi-golang-program* "gi"
-  "Program invoked by `inferior-gi-golang'.")
+(defvar *inferior-gijit-program* "gi"
+  "Program invoked by `inferior-gijit'.")
 
-(defvar *inferior-gi-golang-buffer* "*gi-golang*"
-  "*Name of buffer for running an inferior Gi-Golang process.")
+(defvar *inferior-gijit-buffer* "*gijit*"
+  "*Name of buffer for running an inferior Gijit process.")
 
-(defvar *inferior-gi-golang-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]"
-  "Regexp to match prompts for the inferior Gi-Golang process.")
-(setq *inferior-gi-golang-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]")
+(defvar *inferior-gijit-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]"
+  "Regexp to match prompts for the inferior Gijit process.")
+(setq *inferior-gijit-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]")
 
-(defvar *gi-golang-keypress-to-sendline* (kbd "C-n")
+(defvar *gijit-keypress-to-sendline* (kbd "C-n")
   "keypress that, when in a pure mode script, sends a line to the interpreter
    and then steps to the next line.")
 
-(defvar *gi-golang-keypress-to-send-sexp-jdev*      (kbd "C-9")
+(defvar *gijit-keypress-to-send-sexp-jdev*      (kbd "C-9")
   "keypress that sends the next sexp to the repl, and advances past it.")
 
-(defvar *gi-golang-keypress-to-send-sexp-jdev-prev* (kbd "C-p")
+(defvar *gijit-keypress-to-send-sexp-jdev-prev* (kbd "C-p")
   "keypress that sends the previous sexp to the repl")
 
-(defvar *gi-golang-version-string* "3.92"
-  "version of gi-golang currently running.")
+(defvar *gijit-version-string* "3.92"
+  "version of gijit currently running.")
 
-(defvar *gi-golang-gdb-terp-buffer* "*vlush2-gdb*"
-  "name of the *gdb-terp* buffer when running gdbterp under gi-golang.")
+(defvar *gijit-gdb-terp-buffer* "*vlush2-gdb*"
+  "name of the *gdb-terp* buffer when running gdbterp under gijit.")
 
 ;; ================================================
 ;; ================================================
 ;; begin commonly-adjusted parameters
 
 ;; the name of the interpreter to run
-(setq *inferior-gi-golang-program*  "gi")
+(setq *inferior-gijit-program*  "gi")
 
 
 ;; the name of the buffer to run the interpreter in
-(setq *inferior-gi-golang-buffer* "*gi-golang*")
+(setq *inferior-gijit-buffer* "*gijit*")
 
 ;; name of the gdb buffer
-(setq *gi-golang-gdb-terp-buffer* "*gdb-terp*")
+(setq *gijit-gdb-terp-buffer* "*gdb-terp*")
 
 ;; the comment character
-(setq *inferior-gi-golang-comment-char* ";")
+(setq *inferior-gijit-comment-char* ";")
 
-(setq  comment-start   *inferior-gi-golang-comment-char*)
+(setq  comment-start   *inferior-gijit-comment-char*)
 (setq  comment-end     nil)
 (setq  comment-column  4)
 
 
-;; file extensions that indicate we should automatically enter gi-golang mode...
-(setq auto-mode-alist (cons '("\\.go$" . gi-golang-mode) auto-mode-alist))
+;; file extensions that indicate we should automatically enter gijit mode...
+(setq auto-mode-alist (cons '("\\.go$" . gijit-mode) auto-mode-alist))
 
 ;; regexp to know when interpreter output is done and we are at a prompt.
-;;(setq *inferior-gi-golang-regex-prompt*  "[^\]]*: ")
+;;(setq *inferior-gijit-regex-prompt*  "[^\]]*: ")
 
 ;; keypress that, when in a pure mode script, sends a line to the interpreter
 ;;  and then steps to the next line.
-(setq *gi-golang-keypress-to-sendline* (kbd "C-n"))
+(setq *gijit-keypress-to-sendline* (kbd "C-n"))
 
 ;; keypress that, when in a pure mode script, sends an sexp to the JDEV repl
 ;;  and then steps to the next line.
-(setq *gi-golang-keypress-to-send-sexp-jdev*      (kbd "C-9"))
-(setq *gi-golang-keypress-to-send-sexp-jdev-prev* (kbd "C-p"))
+(setq *gijit-keypress-to-send-sexp-jdev*      (kbd "C-9"))
+(setq *gijit-keypress-to-send-sexp-jdev-prev* (kbd "C-p"))
 
 ;; end commonly-adjusted parameters
 ;; ================================================
 ;; ================================================
 
 
-(defvar inferior-gi-golang-output-list nil)
-(defvar inferior-gi-golang-output-string nil)
-(defvar inferior-gi-golang-receive-in-progress nil)
-(defvar inferior-gi-golang-process nil)
+(defvar inferior-gijit-output-list nil)
+(defvar inferior-gijit-output-string nil)
+(defvar inferior-gijit-receive-in-progress nil)
+(defvar inferior-gijit-process nil)
 
-(defvar gi-golang-mode-hook nil
-  "*Hook to be run when Gi-Golang mode is started.")
+(defvar gijit-mode-hook nil
+  "*Hook to be run when Gijit mode is started.")
 
-(defvar gi-golang-send-show-buffer t
-  "*Non-nil means display `*inferior-gi-golang-buffer*' after sending to it.")
-(setq gi-golang-send-show-buffer t)
+(defvar gijit-send-show-buffer t
+  "*Non-nil means display `*inferior-gijit-buffer*' after sending to it.")
+(setq gijit-send-show-buffer t)
 
-(defvar gi-golang-send-line-auto-forward nil
-  "*Control auto-forward after sending to the inferior Gi-Golang process.
-Non-nil means always go to the next Gi-Golang code line after sending.")
+(defvar gijit-send-line-auto-forward nil
+  "*Control auto-forward after sending to the inferior Gijit process.
+Non-nil means always go to the next Gijit code line after sending.")
 
-(setq gi-golang-send-line-auto-forward nil)
+(setq gijit-send-line-auto-forward nil)
 
-(defvar gi-golang-send-echo-input t
-  "*Non-nil means echo input sent to the inferior Gi-Golang process.")
-(setq gi-golang-send-echo-input t)
+(defvar gijit-send-echo-input t
+  "*Non-nil means echo input sent to the inferior Gijit process.")
+(setq gijit-send-echo-input t)
 
 
 ;; try to hide the ctrl-M carriage returns that ipython generates.
 (defun remove-dos-eol ()
   "Do not show ^M in files containing mixed UNIX and DOS line endings."
   (interactive)
-  (with-current-buffer *inferior-gi-golang-buffer* 
+  (with-current-buffer *inferior-gijit-buffer* 
     (setq buffer-display-table (make-display-table))
     (aset buffer-display-table ?\^M [])))
 
 
 ;;; Motion
-(defun gi-golang-next-code-line (&optional arg)
-  "Move ARG lines of Gi-Golang code forward (backward if ARG is negative).
+(defun gijit-next-code-line (&optional arg)
+  "Move ARG lines of Gijit code forward (backward if ARG is negative).
 Skips past all empty and comment lines.  Default for ARG is 1.
 
 On success, return 0.  Otherwise, go as far as possible and return -1."
@@ -172,94 +172,94 @@ On success, return 0.  Otherwise, go as far as possible and return -1."
       (setq arg (- arg inc)))
     n))
 
-(defun gi-golang-previous-code-line (&optional arg)
-  "Move ARG lines of Gi-Golang code backward (forward if ARG is negative).
+(defun gijit-previous-code-line (&optional arg)
+  "Move ARG lines of Gijit code backward (forward if ARG is negative).
 Skips past all empty and comment lines.  Default for ARG is 1.
 
 On success, return 0.  Otherwise, go as far as possible and return -1."
   (interactive "p")
   (or arg (setq arg 1))
-  (gi-golang-next-code-line (- arg)))
+  (gijit-next-code-line (- arg)))
 
 
-;;; Communication with the inferior Gi-Golang process
-(defun gi-golang-kill-process ()
-  "Kill inferior Gi-Golang process and its buffer."
+;;; Communication with the inferior Gijit process
+(defun gijit-kill-process ()
+  "Kill inferior Gijit process and its buffer."
   (interactive)
-  (if inferior-gi-golang-process
+  (if inferior-gijit-process
       (progn
-	(process-send-string inferior-gi-golang-process "quit;\n")
-	(accept-process-output inferior-gi-golang-process)))
-  (if *inferior-gi-golang-buffer*
-      (kill-buffer *inferior-gi-golang-buffer*)))
+	(process-send-string inferior-gijit-process "quit;\n")
+	(accept-process-output inferior-gijit-process)))
+  (if *inferior-gijit-buffer*
+      (kill-buffer *inferior-gijit-buffer*)))
 
-(defun gi-golang-show-process-buffer ()
-  "Make sure that `*inferior-gi-golang-buffer*' is displayed."
+(defun gijit-show-process-buffer ()
+  "Make sure that `*inferior-gijit-buffer*' is displayed."
   (interactive)
-  (if (get-buffer *inferior-gi-golang-buffer*)
-      (display-buffer *inferior-gi-golang-buffer*)
-      ;(display-buffer  *gi-golang-gdb-terp-buffer*)
-    (message "No buffer named %s" *inferior-gi-golang-buffer*)))
+  (if (get-buffer *inferior-gijit-buffer*)
+      (display-buffer *inferior-gijit-buffer*)
+      ;(display-buffer  *gijit-gdb-terp-buffer*)
+    (message "No buffer named %s" *inferior-gijit-buffer*)))
 
-(defun gi-golang-hide-process-buffer ()
-  "Delete all windows that display `*inferior-gi-golang-buffer*'."
+(defun gijit-hide-process-buffer ()
+  "Delete all windows that display `*inferior-gijit-buffer*'."
   (interactive)
-  (if (get-buffer *inferior-gi-golang-buffer*)
-      (delete-windows-on *inferior-gi-golang-buffer*)
-    (message "No buffer named %s" *inferior-gi-golang-buffer*)))
+  (if (get-buffer *inferior-gijit-buffer*)
+      (delete-windows-on *inferior-gijit-buffer*)
+    (message "No buffer named %s" *inferior-gijit-buffer*)))
 
-(defun gi-golang-send-region (beg end)
-  "Send current region to the inferior Gi-Golang process."
+(defun gijit-send-region (beg end)
+  "Send current region to the inferior Gijit process."
   (interactive "r")
-  (inferior-gi-golang t)
-  (let ((proc inferior-gi-golang-process)
+  (inferior-gijit t)
+  (let ((proc inferior-gijit-process)
 	(string (buffer-substring-no-properties beg end))
 	line)
     (if (string-equal string "")
 	(setq string "\n"))
-    (with-current-buffer *inferior-gi-golang-buffer* 
-      (setq inferior-gi-golang-output-list nil)
+    (with-current-buffer *inferior-gijit-buffer* 
+      (setq inferior-gijit-output-list nil)
       (while (not (string-equal string ""))
 	(if (string-match "\n" string)
 	    (setq line (substring string 0 (match-beginning 0))
 		  string (substring string (match-end 0)))
 	  (setq line string string ""))
-	(setq inferior-gi-golang-receive-in-progress t)
-	(inferior-gi-golang-send-list-and-digest (list (concat line "\n")))
-;;	(inferior-gi-golang-send-list-and-digest (list (concat "%cpaste\n" line "\n--\n")))
-	(while inferior-gi-golang-receive-in-progress
+	(setq inferior-gijit-receive-in-progress t)
+	(inferior-gijit-send-list-and-digest (list (concat line "\n")))
+;;	(inferior-gijit-send-list-and-digest (list (concat "%cpaste\n" line "\n--\n")))
+	(while inferior-gijit-receive-in-progress
 	  (accept-process-output proc))
 	(insert-before-markers
 	 (mapconcat 'identity
 		    (append
-		     (if gi-golang-send-echo-input (list line) (list ""))
-		     (mapcar 'inferior-gi-golang-strip-ctrl-g
-			     inferior-gi-golang-output-list)
-		     (list inferior-gi-golang-output-string))
+		     (if gijit-send-echo-input (list line) (list ""))
+		     (mapcar 'inferior-gijit-strip-ctrl-g
+			     inferior-gijit-output-list)
+		     (list inferior-gijit-output-string))
 		    "\n")))))
-  (if gi-golang-send-show-buffer
-      (gi-golang-eob)))
+  (if gijit-send-show-buffer
+      (gijit-eob)))
        
 
 
 ;; test out moving the inf buffer to end...
-(defun gi-golang-eob ()
+(defun gijit-eob ()
   (interactive)
-  (let* ((mywin (display-buffer *inferior-gi-golang-buffer*))
-	 (bl (with-current-buffer *inferior-gi-golang-buffer*
+  (let* ((mywin (display-buffer *inferior-gijit-buffer*))
+	 (bl (with-current-buffer *inferior-gijit-buffer*
 	       (line-number-at-pos (point-min))))
-	 (cl (with-current-buffer *inferior-gi-golang-buffer*
+	 (cl (with-current-buffer *inferior-gijit-buffer*
 	       (line-number-at-pos (window-point mywin))))
-	 (el (with-current-buffer *inferior-gi-golang-buffer*
+	 (el (with-current-buffer *inferior-gijit-buffer*
 	       (goto-char (point-max))
 	       (line-number-at-pos))))
     ;;;(message "bl is %d,    el is %d, cl is %d,  el-cl is %d" bl el cl (- el cl))
-    (setq other-window-scroll-buffer (get-buffer *inferior-gi-golang-buffer*))
+    (setq other-window-scroll-buffer (get-buffer *inferior-gijit-buffer*))
     (scroll-other-window (- el cl))
-    (with-current-buffer *inferior-gi-golang-buffer*
+    (with-current-buffer *inferior-gijit-buffer*
       (goto-char (point-max))
       (set-window-point mywin (point-max)))
-    (display-buffer *inferior-gi-golang-buffer*)
+    (display-buffer *inferior-gijit-buffer*)
     ))
 
 
@@ -267,13 +267,13 @@ On success, return 0.  Otherwise, go as far as possible and return -1."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; the entire point of gi-golang-mode : to enable the use
-;; of gi-golang-send-line with a single keypress.
+;; the entire point of gijit-mode : to enable the use
+;; of gijit-send-line with a single keypress.
 ;;
-(defun gi-golang-send-line (&optional arg)
-  "Send current Gi-Golang code line to the inferior Gi-Golang process.
+(defun gijit-send-line (&optional arg)
+  "Send current Gijit code line to the inferior Gijit process.
 With positive prefix ARG, send that many lines.
-If `gi-golang-send-line-auto-forward' is non-nil, go to the next unsent
+If `gijit-send-line-auto-forward' is non-nil, go to the next unsent
 code line."
   (interactive "P")
   (or arg (setq arg 1))
@@ -281,17 +281,17 @@ code line."
       (let (beg end)
 	(beginning-of-line)
 	(setq beg (point))
-	(gi-golang-next-code-line (- arg 1))
+	(gijit-next-code-line (- arg 1))
 	(end-of-line)
 	(setq end (point))
-	(if gi-golang-send-line-auto-forward
-	    (gi-golang-next-code-line 1)
+	(if gijit-send-line-auto-forward
+	    (gijit-next-code-line 1)
 	  (forward-line 1))
-	(gi-golang-send-region beg end))))
+	(gijit-send-region beg end))))
 
-;;;;;;; sexp-based version -- hard code in *inferior-gi-golang-buffer*, and remove SLIME dependencies.
+;;;;;;; sexp-based version -- hard code in *inferior-gijit-buffer*, and remove SLIME dependencies.
 
-;;;;;;;;;;;  gi-golang-advance-and-eval-sexp-jdev    and   gi-golang-advance-and-eval-sexp-jdev-prev
+;;;;;;;;;;;  gijit-advance-and-eval-sexp-jdev    and   gijit-advance-and-eval-sexp-jdev-prev
 
 
 (defun nil-to-point-max (x)
@@ -321,7 +321,7 @@ code line."
     ;; conversely, if nextword < eol and (nextcomment is nil or nextword < nextcomment) then stop skipping lines
     (while (not done-skipping)
       (setq startp        (point))
-      (setq nextcomment   (nil-to-point-max (search-forward *inferior-gi-golang-comment-char* nil 0 1)))
+      (setq nextcomment   (nil-to-point-max (search-forward *inferior-gijit-comment-char* nil 0 1)))
       (setq eol           (progn (goto-char startp) (nil-to-point-max (search-forward "\n" nil 0 1))))
       (setq nextword      (progn (goto-char startp) (+ (point) (skip-chars-forward "\t ;\n"))))
       
@@ -384,7 +384,7 @@ sake, this is a compile time, not a runtime, convenience."
       (setq startp        (point))
       (setq bol           (progn (goto-char startp)                         (nil-to-point-min (search-backward "\n" 0 0 1))))
       (setq prevbol       (progn (goto-char (max (point-min) (- bol 1)))    (nil-to-point-min (search-backward "\n" 0 0 1))))
-      (setq nextcomment   (progn (goto-char bol)                            (nil-to-point-max (search-forward *inferior-gi-golang-comment-char* nil 0 1))))
+      (setq nextcomment   (progn (goto-char bol)                            (nil-to-point-max (search-forward *inferior-gijit-comment-char* nil 0 1))))
       (setq eol           (progn (goto-char startp)                         (nil-to-point-max (search-forward "\n" nil 0 1))))
       (setq nextword      (progn (goto-char bol)                            (+ (point) (skip-chars-forward "\t ;\n"))))
 
@@ -498,7 +498,7 @@ which is just following the next form back."
       (DEBUG message "--> INVAR: we are on a line with some content")
     
       (setq bol           (progn (goto-char startp)                         (nil-to-point-min (search-backward "\n" 0 0 1))))
-      (setq nextcomment   (progn (goto-char bol)                            (nil-to-point-max (search-forward *inferior-gi-golang-comment-char* nil 0 1))))
+      (setq nextcomment   (progn (goto-char bol)                            (nil-to-point-max (search-forward *inferior-gijit-comment-char* nil 0 1))))
       (setq eol           (progn (goto-char startp)                         (nil-to-point-max (search-forward "\n" nil 0 1))))
 
       ;; start from eol, or from nextcomment if nextcomment is < eol
@@ -544,7 +544,7 @@ which is just following the next form back."
       
       ;; find previous comment
       (goto-char startp) ;; start over
-      (search-backward *inferior-gi-golang-comment-char* 0 0 1) 
+      (search-backward *inferior-gijit-comment-char* 0 0 1) 
       (setq prevcomment (point))
       
       ;; find previous double quote
@@ -596,12 +596,12 @@ which is just following the next form back."
 	))))
 
 
-(defun gi-golang-advance-and-eval-sexp-jdev ()
+(defun gijit-advance-and-eval-sexp-jdev ()
        "advance one sexp, and copy that sexp into the
-*inferior-gi-golang-buffer*, so as to step through lines in a lisp .cl file"
+*inferior-gijit-buffer*, so as to step through lines in a lisp .cl file"
        (interactive)
-       (inferior-gi-golang t)
-       (setq clisp-buf *inferior-gi-golang-buffer*)
+       (inferior-gijit t)
+       (setq clisp-buf *inferior-gijit-buffer*)
        (setq pstart (point))
        (push-mark)
        (my-forward-sexp-ignoring-comments)
@@ -614,17 +614,17 @@ which is just following the next form back."
 	 (setq comint-eol-on-send t)
 	 (setq comint-process-echoes nil)
 	 (setq comint-move-point-for-output t)
-	 (gi-golang-send-input)
+	 (gijit-send-input)
 	 (display-buffer clisp-buf)
 	 (recenter)
 ))
 	 
 
-(defun gi-golang-advance-and-eval-sexp-jdev-prev ()
-       "copy the previous sexp into the *inferior-gi-golang-buffer*"
+(defun gijit-advance-and-eval-sexp-jdev-prev ()
+       "copy the previous sexp into the *inferior-gijit-buffer*"
        (interactive)
-       (inferior-gi-golang t)
-       (setq clisp-buf *inferior-gi-golang-buffer*)
+       (inferior-gijit t)
+       (setq clisp-buf *inferior-gijit-buffer*)
        (if (and (my-backward-sexp-ignoring-comments)
 		  (not (line-is-comment-or-whitespace)))
 	   (progn
@@ -638,7 +638,7 @@ which is just following the next form back."
 	       (setq comint-eol-on-send t)
 	       (setq comint-process-echoes nil)
 	       (setq comint-move-point-for-output t)
-	       (gi-golang-send-input)
+	       (gijit-send-input)
 	       (display-buffer clisp-buf)
 	       (recenter)
 	       )
@@ -649,26 +649,26 @@ which is just following the next form back."
 
 ;;;;;;;;;;;; simplest possible major mode stuff
 
-(defvar gi-golang-mode-map nil
-  "Local keymap for gi-golang mode buffers.")
+(defvar gijit-mode-map nil
+  "Local keymap for gijit mode buffers.")
 
-(setq gi-golang-mode-map nil)
+(setq gijit-mode-map nil)
 
-(if gi-golang-mode-map
+(if gijit-mode-map
     nil
-  (setq gi-golang-mode-map (make-sparse-keymap))
-  (define-key gi-golang-mode-map *gi-golang-keypress-to-sendline* 'gi-golang-send-line)
-  (define-key gi-golang-mode-map *gi-golang-keypress-to-send-sexp-jdev* 'gi-golang-advance-and-eval-sexp-jdev)
-  (define-key gi-golang-mode-map *gi-golang-keypress-to-send-sexp-jdev-prev* 'gi-golang-advance-and-eval-sexp-jdev-prev)
+  (setq gijit-mode-map (make-sparse-keymap))
+  (define-key gijit-mode-map *gijit-keypress-to-sendline* 'gijit-send-line)
+  (define-key gijit-mode-map *gijit-keypress-to-send-sexp-jdev* 'gijit-advance-and-eval-sexp-jdev)
+  (define-key gijit-mode-map *gijit-keypress-to-send-sexp-jdev-prev* 'gijit-advance-and-eval-sexp-jdev-prev)
 )
 
-(defun gi-golang-mode ()
-  "simple send-line, aka gi-golang mode."
+(defun gijit-mode ()
+  "simple send-line, aka gijit mode."
   (interactive)
   (kill-all-local-variables)
-  (setq major-mode 'gi-golang-mode)
-  (setq mode-name "gi-golang")
-  (use-local-map gi-golang-mode-map)
+  (setq major-mode 'gijit-mode)
+  (setq mode-name "gijit")
+  (use-local-map gijit-mode-map)
 
   ;; borrow the setup for lisp mode indentation from the other emacs lisp modes.
   (lisp-mode-variables  t)
@@ -678,43 +678,43 @@ which is just following the next form back."
 
 ;;; provide ourself
 
-;;;(provide 'gi-golang-mod)
+;;;(provide 'gijit-mod)
 
-;;; gi-golang-mod.el ends here
+;;; gijit-mod.el ends here
 
 
-;;; gi-golang-inf.el --- running Gi-Golang as an inferior Emacs process
+;;; gijit-inf.el --- running Gijit as an inferior Emacs process
 
-;;(require 'gi-golang-mod)
+;;(require 'gijit-mod)
 (require 'comint)
 
-(defgroup gi-golang-inferior nil
-  "Running Gi-Golang as an inferior Emacs process."
-  :group 'gi-golang)
+(defgroup gijit-inferior nil
+  "Running Gijit as an inferior Emacs process."
+  :group 'gijit)
 
 
 
 
-(defvar inferior-gi-golang-mode-map
+(defvar inferior-gijit-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map comint-mode-map)
     map)
-  "Keymap used in Inferior Gi-Golang mode.")
+  "Keymap used in Inferior Gijit mode.")
 
-(defvar inferior-gi-golang-mode-syntax-table
+(defvar inferior-gijit-mode-syntax-table
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?\` "w" table)
     table)
-  "Syntax table in use in inferior-gi-golang-mode buffers.")
+  "Syntax table in use in inferior-gijit-mode buffers.")
 
-(defvar inferior-gi-golang-mode-hook nil
-  "*Hook to be run when Inferior Gi-Golang mode is started.")
+(defvar inferior-gijit-mode-hook nil
+  "*Hook to be run when Inferior Gijit mode is started.")
 
 
-(defvar *inferior-gi-golang-startup-args* nil
-  "arguments to be given to the Inferior Gi-Golang process on startup.")
-;(setq *inferior-gi-golang-startup-args* (list "console" "--nosep" "--colors=NoColor"))
-(setq *inferior-gi-golang-startup-args* nil) ;;(list "--pylab"))
+(defvar *inferior-gijit-startup-args* nil
+  "arguments to be given to the Inferior Gijit process on startup.")
+;(setq *inferior-gijit-startup-args* (list "console" "--nosep" "--colors=NoColor"))
+(setq *inferior-gijit-startup-args* nil) ;;(list "--pylab"))
 
 ;;; Compatibility functions
 (if (not (fboundp 'comint-line-beginning-position))
@@ -727,94 +727,94 @@ variable."
       (save-excursion (comint-bol nil) (point))))
 
 
-(defvar inferior-gi-golang-output-list nil)
-(defvar inferior-gi-golang-output-string nil)
-(defvar inferior-gi-golang-receive-in-progress nil)
-(defvar inferior-gi-golang-startup-hook nil)
+(defvar inferior-gijit-output-list nil)
+(defvar inferior-gijit-output-string nil)
+(defvar inferior-gijit-receive-in-progress nil)
+(defvar inferior-gijit-startup-hook nil)
 
 
-(defun inferior-gi-golang-mode ()
-  "Major mode for interacting with an inferior Gi-Golang process.
-Runs Gi-Golang as a subprocess of Emacs, with Gi-Golang I/O through an Emacs
+(defun inferior-gijit-mode ()
+  "Major mode for interacting with an inferior Gijit process.
+Runs Gijit as a subprocess of Emacs, with Gijit I/O through an Emacs
 buffer.
 
 Entry to this mode successively runs the hooks `comint-mode-hook' and
-`inferior-gi-golang-mode-hook'."
+`inferior-gijit-mode-hook'."
   (interactive)
   (delay-mode-hooks (comint-mode))
-  (setq comint-prompt-regexp *inferior-gi-golang-regex-prompt*
-	major-mode 'inferior-gi-golang-mode
-	mode-name "Inferior Gi-Golang"
+  (setq comint-prompt-regexp *inferior-gijit-regex-prompt*
+	major-mode 'inferior-gijit-mode
+	mode-name "Inferior Gijit"
 	mode-line-process '(":%s"))
-  (use-local-map inferior-gi-golang-mode-map)
+  (use-local-map inferior-gijit-mode-map)
   (setq comint-input-ring-file-name
-	(or (getenv "GI-GOLANG_HISTFILE") "~/.gi-golang_hist")
-	comint-input-ring-size (or (getenv "GI-GOLANG_HISTSIZE") 1024))
+	(or (getenv "GIJIT_HISTFILE") "~/.gijit_hist")
+	comint-input-ring-size (or (getenv "GIJIT_HISTSIZE") 1024))
   (comint-read-input-ring t)
 
   (make-local-variable 'kill-buffer-hook)
-  (add-hook 'kill-buffer-hook 'gi-golang-kill-buffer-function)
+  (add-hook 'kill-buffer-hook 'gijit-kill-buffer-function)
 
-  (run-mode-hooks 'inferior-gi-golang-mode-hook))
+  (run-mode-hooks 'inferior-gijit-mode-hook))
 
 ;;;###autoload
-(defun inferior-gi-golang (&optional arg)
-  "Run an inferior Gi-Golang process, I/O via `*inferior-gi-golang-buffer*'.
-This buffer is put in Inferior Gi-Golang mode.  See `inferior-gi-golang-mode'.
+(defun inferior-gijit (&optional arg)
+  "Run an inferior Gijit process, I/O via `*inferior-gijit-buffer*'.
+This buffer is put in Inferior Gijit mode.  See `inferior-gijit-mode'.
 
 Unless ARG is non-nil, switches to this buffer.
 
-The elements of the list `*inferior-gi-golang-startup-args*' are sent as
-command line arguments to the inferior Gi-Golang process on startup.
+The elements of the list `*inferior-gijit-startup-args*' are sent as
+command line arguments to the inferior Gijit process on startup.
 
 Additional commands to be executed on startup can be provided either in
-the file specified by `inferior-gi-golang-startup-file' or by the default
-startup file, `~/.emacs-gi-golang'."
+the file specified by `inferior-gijit-startup-file' or by the default
+startup file, `~/.emacs-gijit'."
   (interactive "P")
-  (let ((buffer *inferior-gi-golang-buffer*))
+  (let ((buffer *inferior-gijit-buffer*))
     (get-buffer-create buffer)
     (if (comint-check-proc buffer)
 	()
       (with-current-buffer buffer
 	(comint-mode)
-	(inferior-gi-golang-startup)
-	(inferior-gi-golang-mode)))
+	(inferior-gijit-startup)
+	(inferior-gijit-mode)))
     (if (not arg)
 	(pop-to-buffer buffer))))
 
 ;;;###autoload
-(defalias 'run-gi-golang 'inferior-gi-golang)
+(defalias 'run-gijit 'inferior-gijit)
 
-(defun inferior-gi-golang-startup ()
-  "Start an inferior Gi-Golang process."
+(defun inferior-gijit-startup ()
+  "Start an inferior Gijit process."
   (let ((proc (comint-exec-1
-	       (substring *inferior-gi-golang-buffer* 1 -1)
-	       *inferior-gi-golang-buffer*
-	       *inferior-gi-golang-program*
-	       *inferior-gi-golang-startup-args*)))
-    (set-process-filter proc 'inferior-gi-golang-output-filter)
+	       (substring *inferior-gijit-buffer* 1 -1)
+	       *inferior-gijit-buffer*
+	       *inferior-gijit-program*
+	       *inferior-gijit-startup-args*)))
+    (set-process-filter proc 'inferior-gijit-output-filter)
     (setq comint-ptyp process-connection-type
-	  inferior-gi-golang-process proc
-	  inferior-gi-golang-output-list nil
-	  inferior-gi-golang-output-string nil
-	  inferior-gi-golang-receive-in-progress t)
+	  inferior-gijit-process proc
+	  inferior-gijit-output-list nil
+	  inferior-gijit-output-string nil
+	  inferior-gijit-receive-in-progress t)
 
     (remove-dos-eol)
-    (run-hooks 'inferior-gi-golang-startup-hook)
-    (run-hooks 'inferior-gi-golang-startup-hook)))
+    (run-hooks 'inferior-gijit-startup-hook)
+    (run-hooks 'inferior-gijit-startup-hook)))
 
 
-(defun inferior-gi-golang-strip-ctrl-m (string)
+(defun inferior-gijit-strip-ctrl-m (string)
   (while (string-match "\r$" string)
       (setq string (concat (substring string 0 (- (length string) 1)) "\n")))
   string)
 
 ;; test:
-;; (inferior-gi-golang-strip-ctrl-m "hi")
+;; (inferior-gijit-strip-ctrl-m "hi")
 
 
 
-(defun inferior-gi-golang-strip-ctrl-g (string)
+(defun inferior-gijit-strip-ctrl-g (string)
   "Strip leading `^G' character.
 If STRING starts with a `^G', ring the bell and strip it."
   (if (string-match "^\a" string)
@@ -823,56 +823,56 @@ If STRING starts with a `^G', ring the bell and strip it."
         (setq string (substring string 1))))
   string)
 
-(defun inferior-gi-golang-output-filter (proc string)
-  "Standard output filter for the inferior Gi-Golang process.
+(defun inferior-gijit-output-filter (proc string)
+  "Standard output filter for the inferior Gijit process.
 Ring Emacs bell if process output starts with an ASCII bell, and pass
 the rest to `comint-output-filter'."
-;;  (comint-output-filter proc (inferior-gi-golang-strip-ctrl-m (inferior-gi-golang-strip-ctrl-g string))))
-  (comint-output-filter proc (inferior-gi-golang-strip-ctrl-g string)))
+;;  (comint-output-filter proc (inferior-gijit-strip-ctrl-m (inferior-gijit-strip-ctrl-g string))))
+  (comint-output-filter proc (inferior-gijit-strip-ctrl-g string)))
 
-(defun inferior-gi-golang-output-digest (proc string)
-  "Special output filter for the inferior Gi-Golang process.
-Save all output between newlines into `inferior-gi-golang-output-list', and
-the rest to `inferior-gi-golang-output-string'."
-  (setq string (concat inferior-gi-golang-output-string string))
+(defun inferior-gijit-output-digest (proc string)
+  "Special output filter for the inferior Gijit process.
+Save all output between newlines into `inferior-gijit-output-list', and
+the rest to `inferior-gijit-output-string'."
+  (setq string (concat inferior-gijit-output-string string))
   (while (string-match "\n" string)
-    (setq inferior-gi-golang-output-list
-	  (append inferior-gi-golang-output-list
+    (setq inferior-gijit-output-list
+	  (append inferior-gijit-output-list
 		  (list (substring string 0 (match-beginning 0))))
 	  string (substring string (match-end 0))))
-  (if (string-match *inferior-gi-golang-regex-prompt* string)
-      (setq inferior-gi-golang-receive-in-progress nil))
-  (setq inferior-gi-golang-output-string string))
+  (if (string-match *inferior-gijit-regex-prompt* string)
+      (setq inferior-gijit-receive-in-progress nil))
+  (setq inferior-gijit-output-string string))
 
-(defun inferior-gi-golang-send-list-and-digest (list)
-  "Send LIST to the inferior Gi-Golang process and digest the output.
+(defun inferior-gijit-send-list-and-digest (list)
+  "Send LIST to the inferior Gijit process and digest the output.
 The elements of LIST have to be strings and are sent one by one.  All
-output is passed to the filter `inferior-gi-golang-output-digest'."
-  (let* ((proc inferior-gi-golang-process)
+output is passed to the filter `inferior-gijit-output-digest'."
+  (let* ((proc inferior-gijit-process)
 	 (filter (process-filter proc))
 	 string)
-    (set-process-filter proc 'inferior-gi-golang-output-digest)
-    (setq inferior-gi-golang-output-list nil)
+    (set-process-filter proc 'inferior-gijit-output-digest)
+    (setq inferior-gijit-output-list nil)
     (unwind-protect
 	(while (setq string (car list))
-	  (setq inferior-gi-golang-output-string nil
-		inferior-gi-golang-receive-in-progress t)
+	  (setq inferior-gijit-output-string nil
+		inferior-gijit-receive-in-progress t)
 	  (comint-send-string proc string)
-	  (while inferior-gi-golang-receive-in-progress
+	  (while inferior-gijit-receive-in-progress
 	    (accept-process-output proc))
 	  (setq list (cdr list)))
       (set-process-filter proc filter))))
 
 
-(defun gi-golang-kill-buffer-function nil
-  "Function run just before an GI-GOLANG process buffer is killed.
+(defun gijit-kill-buffer-function nil
+  "Function run just before an GIJIT process buffer is killed.
   This simply deletes the buffers process to avoid an Emacs bug
   where the sentinel is run *after* the buffer is deleted."
   (let ((proc (get-buffer-process (current-buffer))))
     (if proc (delete-process proc))))
 
 
-(defun gi-golang-gdb-send-input ()
+(defun gijit-gdb-send-input ()
   "gdb-sender(): send this current text between process-mark and point to gdb
    meant as a replacement for comint-send-input to send input to gdb instead
    our inferior process."
@@ -890,13 +890,13 @@ output is passed to the filter `inferior-gi-golang-output-digest'."
 
 
 
-(defun gi-golang-send-input ()
-  "gi-golang-send-input: send input to both comint-send-input  and  gi-golang-gdb-send-input"
+(defun gijit-send-input ()
+  "gijit-send-input: send input to both comint-send-input  and  gijit-gdb-send-input"
   (interactive)
-  ;;(gi-golang-gdb-send-input)
+  ;;(gijit-gdb-send-input)
   (comint-send-input)
 )
 
 ;;; provide ourself
-(provide 'gi-golang-mode)
+(provide 'gijit-mode)
 

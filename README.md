@@ -1149,10 +1149,10 @@ gi>
 # editor support
 
 An emacs mode `gigo.el` can be found in the `emacs/` subdirectory
-here https://github.com/gijit/gi/tree/master/emacs/gigo.el
+here https://github.com/gijit/gi/tree/master/emacs/gijit.el
 
-M-x `run-gi-golang` to start the interpreter. Pressing ctrl-n will
-step through any file that is in `gi-golang` mode. 
+M-x `run-gijit` to start the interpreter. Pressing ctrl-n will
+step through any file that is in `gijit` mode. 
 
 Other editors: please contribute!
 

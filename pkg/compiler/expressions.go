@@ -1073,10 +1073,10 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			t := c.typeName(c.p.TypeOf(args[0]))
 			zero := c.zeroValue(argType.Elem())
 			if len(args) == 3 {
-				return c.formatExpr("__gi_makeSlice(%s, %e, %f, %f)",
+				return c.formatExpr("__makeSlice(%s, %e, %f, %f)",
 					t, zero, args[1], args[2])
 			}
-			return c.formatExpr("__gi_makeSlice(%s, %e, %f)",
+			return c.formatExpr("__makeSlice(%s, %e, %f)",
 				t, zero, args[1])
 
 		case *types.Map:
