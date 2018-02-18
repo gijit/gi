@@ -2092,3 +2092,31 @@ function __lazy_ellipsis(t)
    setmetatable(r, __lazyEllipsisMT)
    return r
 end
+
+function __printHelper(v)
+
+      local tv = type(v)
+      if tv == "string" then
+         print("`"..v.."`")
+      elseif tv == "table" then
+         if v.__name == "__lazy_ellipsis_instance" then
+            local expand = v()
+            for _,c in pairs(expand) do
+               __printHelper(c)
+            end
+            return
+         end
+      end
+      print(v)
+end
+
+function __gijit_printQuoted(...)
+   local a = {...}
+   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
+   if a[0] ~= nil then
+      __printHelper(a[0])
+   end
+   for _,v in ipairs(a) do
+      __printHelper(v)
+   end
+end

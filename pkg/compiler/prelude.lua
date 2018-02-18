@@ -17,23 +17,3 @@ function __gi_SetRangeCheck(x, i, val)
   return val
 end;
 
-
-function __gijit_printQuoted(...)
-   local a = {...}
-   --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)
-   if a[0] ~= nil then
-      local v = a[0]
-      if type(v) == "string" then
-         print("`"..v.."`")
-      else
-         print(v)
-      end
-   end
-   for _,v in ipairs(a) do
-      if type(v) == "string" then
-         print("`"..v.."`")
-      else
-         print(v)
-      end
-   end
-end
