@@ -379,7 +379,7 @@ end;
 __copySlice = function(dst, src)
    local n = __min(src.__length, dst.__length);
    __copyArray(dst.__array, src.__array, dst.__offset, src.__offset, n, dst.__constructor.elem);
-   return n;
+   return int(n);
 end;
 
 --
