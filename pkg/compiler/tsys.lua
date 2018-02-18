@@ -712,7 +712,8 @@ __valueSliceMT = {
       else
          local w = t.__offset + k
          if k < 0 or k >= t.__capacity then
-            error "slice error: access out-of-bounds"
+            print(debug.traceback())
+            error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
          end
          return t.__array[w]
       end
@@ -1949,10 +1950,12 @@ end
 -- shift everything up in the returned array
 -- that will start at [1], if non-empty/non-nil.
 --
--- We assume an array starting at either [0] or [1],
--- with no 'nil' holes in the middle. We don't
--- depend upon # to be accurate or meta-methoded.
--- We detect the end of the array by the first nil.
+-- If t.__len is available, we assume that this
+-- is a Go slices or arrays, that starts at 0
+-- if len > 0.
+--
+-- Otherwise, we assume an array starting at either [0] or [1],
+-- with no 'nil' holes in the middle.
 --
 function __elim0(t)
    if type(t) ~= 'table' then
@@ -1963,13 +1966,27 @@ function __elim0(t)
       return
    end
 
+   -- is __len available?
+   local mt = getmetatable(t)
+   if mt ~= nil and rawget(mt, "__len") ~= nil then
+      print("__len found!")
+      -- Go slice/array, from 0.
+      local n = #t
+      local r = {}
+      for i=0,n-1 do
+         table.insert(r, t[i])
+      end
+      return r
+   end
+   
    -- can we leave t unchanged?
-   if t[0] == nil then
+   local z = t[0]
+   if z == nil then
       return t
    end
    
    local r = {}
-   table.insert(r, t[0])
+   table.insert(r, z)
    local i = 1
    while true do
       local v = t[i]
