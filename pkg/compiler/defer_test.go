@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -278,9 +278,6 @@ test1helper();
 func Test033dDefersWorkOnDirectionFunctionCalls(t *testing.T) {
 
 	cv.Convey(`defer on a repeated direct function call`, t, func() {
-
-		// TODO remove
-		verb.VerboseVerbose = true
 
 		code := `
 import "fmt"

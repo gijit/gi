@@ -904,6 +904,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 		}
 		return 0, nil
 	}
+	L.Pop(1)
 
 	fmt.Printf("okay! we have a lazy ellipsis!\n")
 	// unpack the top

@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -136,6 +136,9 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 
 	cv.Convey(`Given b := []int{8,9} and a pre-compiled Go function gitesting.SummerAny(a ...int), the call gitesting.SummaryAny(b...) should expand b into the varargs of SummerAny`, t, func() {
 
+		// TODO remove
+		verb.VerboseVerbose = true
+
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
 
@@ -152,7 +155,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		cv.So(string(translation), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
   	b = __type__anon_sliceType({[0]=8LL, 9LL});
-  	a = gitesting.SummerAny(b);
+  	a = gitesting.SummerAny(__lazy_ellipsis(b));
 `)
 
 		LoadAndRunTestHelper(t, vm, translation)
