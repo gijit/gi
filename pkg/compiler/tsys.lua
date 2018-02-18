@@ -606,8 +606,8 @@ __valueArrayMT = {
    __pairs  = __valueSliceIpairs,
    
    __newindex = function(t, k, v)
-      print("__valueArrayMT.__newindex called, t is:")
-      __st(t)
+      --print("__valueArrayMT.__newindex called, t is:")
+      --__st(t)
 
       if k < 0 or k >= #t then
          error "write to array error: access out-of-bounds"
@@ -617,7 +617,7 @@ __valueArrayMT = {
    end,
    
    __index = function(t, k)
-      print("__valueArrayMT.__index called, k='"..tostring(k).."'")
+     --print("__valueArrayMT.__index called, k='"..tostring(k).."'")
       if type(k) == "string" then
             return rawget(t,k)
       elseif type(k) == "table" then
@@ -629,7 +629,7 @@ __valueArrayMT = {
             print(debug.traceback())
             error("read from array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
          end
-         print("array access bounds check ok.")
+        --print("array access bounds check ok.")
          return t.__val[k]
       end
    end,
@@ -643,7 +643,7 @@ __valueArrayMT = {
    end,
    
    __tostring = function(self, ...)
-      print("__tostring called from __valueArrayMT")
+     --print("__tostring called from __valueArrayMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -698,13 +698,13 @@ __valueSliceMT = {
    
    __index = function(t, k)
       
-      print("__valueSliceMT.__index called, k='"..tostring(k).."'");
+     --print("__valueSliceMT.__index called, k='"..tostring(k).."'");
       --__st(t.__val)
-      print("callstack:"..tostring(debug.traceback()))
+     --print("callstack:"..tostring(debug.traceback()))
 
       if type(k) == "string" then
-         print("we have string key, doing rawget on t")
-         __st(t, "t")
+         --print("we have string key, doing rawget on t")
+         --__st(t, "t")
          return rawget(t,k)
       elseif type(k) == "table" then
          print("callstack:"..tostring(debug.traceback()))
@@ -715,22 +715,22 @@ __valueSliceMT = {
             print(debug.traceback())
             error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
          end
-         print("slice access bounds check ok.")
+        --print("slice access bounds check ok.")
          return t.__array[w]
       end
    end,
 
    __len = function(t)
-      print("__valueSliceMT metamethod __len called, returning ", t.__length)
+     --print("__valueSliceMT metamethod __len called, returning ", t.__length)
       return t.__length
    end,
    
    __tostring = function(self, ...)
-      print("__tostring called from __valueSliceMT")
+     --print("__tostring called from __valueSliceMT")
 
       local len = tonumber(self.__length) -- convert from LL int
       local off = tonumber(self.__offset)
-      print("__tostring sees self.__length of ", len, " __offset = ", off)
+     --print("__tostring sees self.__length of ", len, " __offset = ", off)
       local cap = self.__capacity
       --local s = "slice <len=" .. tostring(len) .. "; off=" .. off .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
       local s = self.__constructor.__str.."{"
@@ -781,7 +781,7 @@ __tfunBasicMT = {
             
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-               print("tfun sees no args and we have a typ.zero() method, so invoking it")
+              --print("tfun sees no args and we have a typ.zero() method, so invoking it")
                self.tfun(newInstance, self.zero())
             else
                self.tfun(newInstance, ...)
@@ -808,17 +808,17 @@ __valuePointerMT = {
    __name = "__valuePointerMT",
    
    __newindex = function(t, k, v)
-      print("__valuePointerMT: __newindex called, calling set() with val=", v)
+     --print("__valuePointerMT: __newindex called, calling set() with val=", v)
       return t.__set(v)
    end,
 
    __index = function(t, k)
-      print("__valuePointerMT: __index called, doing get()")       
+     --print("__valuePointerMT: __index called, doing get()")       
       return t.__get()
    end,
 
    __tostring = function(t)
-      print("__valuePointerMT: tostring called")
+     --print("__valuePointerMT: tostring called")
       local str = t.__str or ""
       return str .. "{" .. tostring(t.__get()) .. "}"
    end
@@ -963,14 +963,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+        --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
          function(this, wat, getter, setter, target)
-            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
-            __st(this, "this")
-            print("wat, 2nd arg to ctor, is:")
-            __st(wat, "wat")
+           --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
+            --__st(this, "this")
+            --print("wat, 2nd arg to ctor, is:")
+            --__st(wat, "wat")
             -- sanity checks
             if setter ~= nil and type(setter) ~= "function" then
                error "setter must be function"
@@ -986,7 +986,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          end;
       typ.keyFor = __idKey;
       typ.init = function(elem)
-         print("init(elem) for pointer type called.")
+        --print("init(elem) for pointer type called.")
          typ.elem = elem;
          typ.wrapped = (elem.kind == __kindArray);
          typ.__nil = typ({}, __throwNilPointerError, __throwNilPointerError);
@@ -998,7 +998,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__array = array;
          this.__offset = 0;
          this.__length = #array;
-         print("# of array returned ", this.__length)
+        --print("# of array returned ", this.__length)
          this.__capacity = this.__length;
          --print("jea debug: slice tfun set __length to ", this.__length)
          --print("jea debug: slice tfun set __capacity to ", this.__capacity)
@@ -1023,7 +1023,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindArray then
       typ.tfun = function(this, v)
-         print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
+         --print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
          this.__array = v; -- like slice, to reuse ipairs method.
          this.__offset = 0; -- like slice.
@@ -1039,7 +1039,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          --this[__giPrivateArrayProps] = this
          setmetatable(this, __valueArrayMT)
       end;
-      print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
+     --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
       typ.wrapped = true;
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
                              this.__get = function() return array; end;
@@ -1047,7 +1047,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                              this.__val = array;
       end);
       typ.init = function(elem, len)
-         print("init() called for array.")
+        --print("init() called for array.")
          typ.elem = elem;
          typ.len = len;
          typ.comparable = elem.comparable;
@@ -1106,10 +1106,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ = { implementedBy= {}, missingMethodFor= {} };
       typ.keyFor = __ifaceKeyFor;
       typ.init = function(methods)
-         print("top of init() for kindInterface, methods= ")
-         __st(methods)
-         print("and also at top of init() for kindInterface, typ= ")
-         __st(typ)
+         --print("top of init() for kindInterface, methods= ")
+         --__st(methods)
+         --print("and also at top of init() for kindInterface, typ= ")
+         --__st(typ)
          typ.methods = methods;
          for _, m in pairs(methods) do
             -- TODO:
@@ -1180,9 +1180,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       -- a) for pointer
       typ.ptr.__addToMethods=function(det)
-         print("typ.ptr.__addToMethods called, existing methods:")
-         __st(typ.ptr.methods, "typ.ptr.methods")
-         __st(det, "det")
+        --print("typ.ptr.__addToMethods called, existing methods:")
+         --__st(typ.ptr.methods, "typ.ptr.methods")
+         --__st(det, "det")
          if typ.ptr.methods == nil then
             typ.ptr.methods={}
          end
@@ -1191,9 +1191,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       -- b) for struct
       typ.__addToMethods=function(det)
-         print("typ.__addToMethods called, existing methods:")
-         __st(typ.methods, "typ.methods")
-         __st(det, "det")
+         --print("typ.__addToMethods called, existing methods:")
+         --__st(typ.methods, "typ.methods")
+         --__st(det, "det")
          if typ.methods == nil then
             typ.methods={}
          end
@@ -1341,7 +1341,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindArray then
       
       typ.zero = function()
-         print("in zero() for array...")
+        --print("in zero() for array...")
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
 
@@ -1377,9 +1377,9 @@ function __methodSet(typ)
    local base = {};
 
    local isPtr = (typ.kind == __kindPtr);
-   print("__methodSet called with typ=")
-   __st(typ)
-   print("__methodSet sees isPtr=", isPtr)
+   --print("__methodSet called with typ=")
+   --__st(typ)
+  --print("__methodSet sees isPtr=", isPtr)
    
    if isPtr  and  typ.elem.kind == __kindInterface then
       -- jea: I assume this is because pointers to interfaces don't themselves have methods.
@@ -1400,26 +1400,26 @@ function __methodSet(typ)
    
    local seen = {};
 
-   print("top of while, #current is", #current)
+  --print("top of while, #current is", #current)
    while #current > 0 do
       local next = {};
       local mset = {};
       
       for _,e in pairs(current) do
-         print("e from pairs(current) is:")
-         __st(e,"e")
-         __st(e.__typ,"e.__typ")
+        --print("e from pairs(current) is:")
+         --__st(e,"e")
+         --__st(e.__typ,"e.__typ")
          if seen[e.__typ.__str] then
-            print("already seen "..e.__typ.__str.." so breaking out of match loop")
+            --print("already seen "..e.__typ.__str.." so breaking out of match loop")
             break
          end
          seen[e.__typ.__str] = true;
          
          if e.__typ.named then
-            print("have a named type, e.__typ.methods is:")
-            __st(e.__typ.methods, "e.__typ.methods")
+            --print("have a named type, e.__typ.methods is:")
+            --__st(e.__typ.methods, "e.__typ.methods")
             for _, mthod in pairs(e.__typ.methods) do
-               print("adding to mset, mthod = ", mthod)
+               --print("adding to mset, mthod = ", mthod)
                table.insert(mset, mthod);
             end
             if e.indirect then
@@ -1466,14 +1466,14 @@ function __methodSet(typ)
       -- above may have made duplicates, now dedup
       print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
-         print("m is ")
-         __st(m,"m")
+         --print("m is ")
+         --__st(m,"m")
          if base[m.__name] == nil then
             base[m.__name] = m;
          end
       end;
-      print("after dedup, base for typ '"..typ.__str.."' is ")
-      __st(base)
+      --print("after dedup, base for typ '"..typ.__str.."' is ")
+      --__st(base)
       
       current = next;
    end
@@ -1607,7 +1607,7 @@ __funcType = function(params, results, variadic)
                                                  end;
                                                  return r.id;
                                              end) .. "__variadic_" .. tostring(variadic);
-   print("typeKey is '"..typeKey.."'")
+   --print("typeKey is '"..typeKey.."'")
    local typ = __funcTypes[typeKey];
    if typ == nil then
       local paramTypes = __mapArray(params, function(p) return p.__str; end);
@@ -1735,7 +1735,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-   print("__sliceType called with elem = ", elem)
+  --print("__sliceType called with elem = ", elem)
    local typ = elem.slice;
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
@@ -1856,22 +1856,22 @@ __equal = function(a, b, typ)
 end;
 
 __interfaceIsEqual = function(a, b)
-   print("top of __interfaceIsEqual! a is:")
-   __st(a,"a")
-   print("top of __interfaceIsEqual! b is:")   
-   __st(b,"b")
+  --print("top of __interfaceIsEqual! a is:")
+   --__st(a,"a")
+  --print("top of __interfaceIsEqual! b is:")   
+   --__st(b,"b")
    if a == nil or b == nil then
-      print("one or both is nil")
+     --print("one or both is nil")
       if a == nil and b == nil then
-         print("both are nil")
+        --print("both are nil")
          return true
       else
-         print("one is nil, one is not")
+        --print("one is nil, one is not")
          return false
       end
    end
    if a == __ifaceNil  or  b == __ifaceNil then
-      print("one or both is __ifaceNil")
+     --print("one or both is __ifaceNil")
       return a == b;
    end
    if a.constructor ~= b.constructor then
@@ -1907,29 +1907,29 @@ __assertType = function(value, typ, returnTuple)
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
-         print("valueMethodSet is")
-         __st(valueMethodSet)
-         print("interfaceMethods is")
-         __st(interfaceMethods)
+        --print("valueMethodSet is")
+         --__st(valueMethodSet)
+        --print("interfaceMethods is")
+         --__st(interfaceMethods)
 
          __ipairsZeroCheck(interfaceMethods)
          __ipairsZeroCheck(valueMethodSet)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
-               print("checking vm against tm, where tm=")
-               __st(tm)
-               print("and vm=")
-               __st(vm)
+              --print("checking vm against tm, where tm=")
+               --__st(tm)
+              --print("and vm=")
+               --__st(vm)
                
                if vm.__name == tm.__name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
-                  print("match found against vm and tm.")
+                 --print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
-               print("match *not* found for tm.__name = '"..tm.__name.."'")
+              --print("match *not* found for tm.__name = '"..tm.__name.."'")
                ok = false;
                typ.missingMethodFor[valueTypeString] = tm.__name;
                break;
