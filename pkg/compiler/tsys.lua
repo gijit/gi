@@ -2068,18 +2068,17 @@ function __unpack0(t)
    return unpack(__elim0(t))
 end
 
+local __lazyEllipsisMT = {
+   __call  = function(self)
+      return self.__val
+   end,
+}
+
 function __lazy_ellipsis(t)
    local r = {
       __name = "__lazy_ellipsis_instance",
       __val = t,
    }
-   setmetatable(r, {
-                   __call = function(self, method)
-                      if method ~= nil then
-                         print("method = ", method)
-                      end
-                      return self.__val
-                   end,
-   })
+   setmetatable(r, __lazyEllipsisMT)
    return r
 end
