@@ -482,6 +482,14 @@ __append = function(...)
 end;
 
 __appendSlice = function(slice, toAppend)
+
+   -- recognize and resolve the ellipsis.
+   if type(toAppend) == "table" then
+      if toAppend.__name == "__lazy_ellipsis_instance" then
+         print("resolving lazy ellipsis.")
+         toAppend = toAppend() -- resolve the lazy reference.
+      end
+   end
    --print("toAppend:")
    --__st(toAppend, "toAppend")
    --print("slice:")
@@ -736,7 +744,7 @@ __valueSliceMT = {
    end,
 
    __len = function(t)
-     --print("__valueSliceMT metamethod __len called, returning ", t.__length)
+      print("__valueSliceMT metamethod __len called, returning ", t.__length)
       return t.__length
    end,
    
@@ -1024,6 +1032,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          this.__val = this;
          this.__constructor = typ
+         this.__name = "__sliceValue"
          -- TODO: come back and fix up Luar.
          -- must set these for Luar (binary Go translation) to work.
          --this[__giPrivateRaw] = array
@@ -1044,6 +1053,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__offset = 0; -- like slice.
          this.__constructor = typ
          this.__length = __lenz(v)
+         this.__name = "__arrayValue"
          -- TODO: come back and fix up Luar
          -- must set these keys for Luar to work:
          --this[__giPrivateRaw] = v

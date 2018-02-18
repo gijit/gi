@@ -313,7 +313,8 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 				pp("about to call LuaToGo with val from lastT: '%#v'/%T", val.Interface(), val.Interface())
 				err := LuaToGo(L, i, val.Interface())
 				if err != nil {
-					pp("problem point 2")
+					pp("problem point 2, stack:\n%s\n", string(debug.Stack()))
+
 					L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
 				}
 				args = append(args, val.Elem())
@@ -848,10 +849,90 @@ define LUA_TUSERDATA	7
 define LUA_TTHREAD		8
 */
 
+// only at the top of the stack do we do this.
+func expandLazyEllipsis(L *lua.State, idx int) error {
+	top := L.GetTop()
+	if top == 0 {
+		return nil
+	}
+	// for now, only handle the top...
+	if idx != top {
+		return nil
+	}
+	if L.Type(idx) != lua.LUA_TTABLE {
+		return nil
+	}
+	getfield(L, idx, "__name")
+	if L.IsNil(-1) {
+		L.Pop(1)
+		return nil
+	}
+	nm := L.ToString(-1)
+	if nm != "__lazy_ellipsis_instance" {
+		return nil
+	}
+	L.Pop(1)
+
+	getfield(L, idx, "__val")
+	if L.IsNil(-1) {
+		L.Pop(1)
+		return nil
+	}
+
+	fmt.Printf("okay! we have a lazy ellipsis!\n")
+	// unpack the top
+
+	// get the length to unpack from the array
+	n, err := getLenByCallingMetamethod(L, -1)
+	if err != nil {
+		panic(err)
+	}
+	// 88888888888888888
+	fmt.Printf("lazy elip: back safe from getting n=%v\n", n)
+	if n <= 0 {
+		// empty? just clear ourselves off the stack
+		L.SetTop(top)
+		L.Pop(1)
+		return nil
+	}
+	if !L.CheckStack(n) {
+		return fmt.Errorf("could not allocate Lua stack space for %v elem; lua_checkstack returned false.", n)
+	}
+
+	pp("-- just before expanding the lazy ellip, here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	for i := 0; i < n; i++ {
+		L.RawGeti(idx, i)
+	}
+
+	pp("-- after expanding the lazy ellip, but before removing container, here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	// now expanded, remove the lazy ellipsis container.
+	L.Remove(idx)
+
+	pp("-- after expanding lazy ellip, and removing container, returng this stack::")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	return nil
+}
+
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
 	pp("-- top of luaToGo, here is stack:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
+	}
+
+	err := expandLazyEllipsis(L, idx)
+	if err != nil {
+		return err
 	}
 
 	// Derefence 'v' until a non-pointer.
@@ -960,7 +1041,10 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case reflect.Interface:
 			// jea: the original L.ObjLen reults was wrong b/c our __gi_Slice start indexing at 0 not 1.
 			//n := int(L.ObjLen(idx)) // does not call __len metamethod. Problem.
-			n := getLenByCallingMetamethod(L, idx)
+			n, err := getLenByCallingMetamethod(L, idx)
+			if err != nil {
+				panic(err)
+			}
 			pp("n back from getLenByCallingMetamethod = %v at idx=%v", n, idx)
 
 			switch v.Elem().Kind() {
@@ -1416,8 +1500,9 @@ func getfield(L *lua.State, tableIdx int, key string) {
 	L.Remove(-2)
 }
 
-// jea add
-func getLenByCallingMetamethod(L *lua.State, idx int) int {
+// jea add: calls __len if avail, otherwise
+// returns ObjLen
+func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 	pp("top of getLenByCallingMetamethod for idx=%v, here is stack:", idx)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
@@ -1434,7 +1519,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 	//
 	found := L.GetMetaTable(idx)
 	if !found {
-		return int(L.ObjLen(idx))
+		return int(L.ObjLen(idx)), nil
 	}
 
 	L.PushString("__len") // the metamethod
@@ -1447,7 +1532,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 	L.RawGet(-2) // get table[key]
 	if L.IsNil(-1) {
 		// __len method not found in metatable
-		return int(L.ObjLen(idx))
+		return int(L.ObjLen(idx)), nil
 	}
 	pp("after RawGet was not nil, top =%v, stack is", top)
 	if verb.VerboseVerbose {
@@ -1469,6 +1554,10 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 	// __len method expects the actual table to be its self parameter.
 	L.Remove(-2)
 
+	if idx < 0 && idx > -10000 {
+		idx--
+	}
+
 	pp("after Remove(-2), top =%v, stack is", top)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
@@ -1484,13 +1573,13 @@ func getLenByCallingMetamethod(L *lua.State, idx int) int {
 
 	err := L.Call(1, 1)
 	if err != nil {
-		panic(err)
+		return -1, err
 	}
 	fLen := L.ToNumber(-1)
 	// NOTE: won't work for tables of len > 2^52 or 4 peta items.
 	// Since that's way bigger than viable ram, we don't worry about it here.
 	pp("getLenByCallingMetamethod returning %v", fLen)
-	return int(fLen)
+	return int(fLen), nil
 }
 
 func canAndDidAssign(f, v *reflect.Value) (res bool) {

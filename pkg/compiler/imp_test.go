@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -152,7 +152,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		cv.So(string(translation), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
   	b = __type__anon_sliceType({[0]=8LL, 9LL});
-  	a = gitesting.SummerAny(__unpack0(b));
+  	a = gitesting.SummerAny(b);
 `)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -201,10 +201,12 @@ func Test063SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
+		verb.VerboseVerbose = true
+
 		cv.So(string(translation), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__emptyInterface); 
-  
-  	a = fmt.Sprintf("yee %v %v %v haw\n", __unpack0(__type__anon_sliceType({[0]=4LL, 5LL, 6LL})));
+
+     a = fmt.Sprintf("yee %v %v %v haw\n", __lazy_ellipsis(__type__anon_sliceType({[0]=4LL, 5LL, 6LL})));  
 			`)
 
 		LoadAndRunTestHelper(t, vm, translation)
