@@ -84,9 +84,9 @@ func NewRepl(cfg *GIConfig) *Repl {
 	}
 
 	r.reader = bufio.NewReader(os.Stdin)
-	r.goPrompt = "//gi> "
+	r.goPrompt = "gi> "
 	//r.goMorePrompt = ">>>    "
-	r.luaPrompt = "//raw luajit gi> "
+	r.luaPrompt = "raw luajit gi> "
 	r.isDo = false
 	r.isSource = false
 
@@ -450,7 +450,7 @@ func (r *Repl) Eval(src string) error {
 	//DumpLuaStack(vm)
 	fmt.Printf("\n")
 	r.reader.Reset(os.Stdin)
-	fmt.Printf("// elapsed: %v\n", r.t1.Sub(r.t0))
+	fmt.Printf("elapsed: '%v'\n", r.t1.Sub(r.t0))
 
 	return nil
 }

@@ -59,9 +59,9 @@
 (defvar *inferior-gijit-buffer* "*gijit*"
   "*Name of buffer for running an inferior Gijit process.")
 
-(defvar *inferior-gijit-regex-prompt* "[^\(//gi>\)\|\(\.\.\.\)]*[//gi> ]"
+(defvar *inferior-gijit-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]"
   "Regexp to match prompts for the inferior Gijit process.")
-(setq *inferior-gijit-regex-prompt* "[^\(//gi>\)\|\(\.\.\.\)]*[//gi> ]|\[//raw luajit gi> ]")
+(setq *inferior-gijit-regex-prompt* "[^\(gi>\)\|\(\.\.\.\)]*[gi> ]")
 
 (defvar *gijit-keypress-to-sendline* (kbd "C-n")
   "keypress that, when in a pure mode script, sends a line to the interpreter
