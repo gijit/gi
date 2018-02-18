@@ -22,8 +22,6 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
 
 		// and verify that it happens correctly
@@ -48,8 +46,6 @@ func Test095StringExpressionsShouldWorkAtREPL(t *testing.T) {
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
 
@@ -77,8 +73,6 @@ func Test096MultipleExpressionsAtOnceAtTheREPL(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n  b = __gijit_ans[1]\n  c = __gijit_ans[2]\n ")...)
 
 		// and verify that it happens correctly
@@ -105,8 +99,6 @@ func Test097SingleExpressionAtTheREPL(t *testing.T) {
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
 

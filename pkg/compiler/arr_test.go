@@ -28,7 +28,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// too fragile
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,``)
+		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -59,7 +59,7 @@ func Test081CloneOfInt64Array(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// too fragile.
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,``)
+		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -89,7 +89,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`
   	__type__anon_arrayType = __arrayType(__type__int64, 3); -- 'IMMEDIATE' anon type printing.
   

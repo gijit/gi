@@ -24,7 +24,7 @@ func Test201ConvertToFloat64ActuallyDoes(t *testing.T) {
 		translation := string(inc.Tr([]byte(code)))
 		fmt.Printf("translation = '%s'\n", translation)
 
-		cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
 				a = 1LL;
 				b = 2LL;
 				c = (tonumber((a+b)));

@@ -28,8 +28,6 @@ b := s.val
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
@@ -55,8 +53,6 @@ c := *b
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		LuaRunAndReport(vm, string(translation))
 

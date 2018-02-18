@@ -28,7 +28,7 @@ func Test086SlicesPointToArrays(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
 	a = __gi_NewArray({[0]=1LL, 3LL}, "__gi_kind_int64", 2, 0LL);
   	b = _gi_NewSlice("int64", a, 0LL);
   	c = __subslice(_gi_NewSlice("int64", a, 0LL), 1);
@@ -65,7 +65,7 @@ func Test088SlicesFromArrays(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
 	a = __gi_NewArray({[0]=88LL, 99LL}, "__gi_kind_int64", 2, 0LL);
   	b = _gi_NewSlice("int64", a, 0LL);
  	b0 = _gi_GetRangeCheck(b, 0);

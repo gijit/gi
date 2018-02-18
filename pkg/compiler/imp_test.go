@@ -22,7 +22,7 @@ func Test050CallFmtSprintf(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("hello no-args");`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -50,7 +50,7 @@ func Test051CallFmtSprintf(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("hello one: %v", 1LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -74,7 +74,7 @@ func Test052CallFmtSprintf(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("hello %v %v", 3LL, 4LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -97,7 +97,7 @@ func Test058CallFmtIncr(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = gitesting.Incr(1LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -123,7 +123,7 @@ func Test059CallFmtSummer(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = gitesting.SummerAny(1LL, 2LL, 3LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -149,7 +149,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
   	b = __type__anon_sliceType({[0]=8LL, 9LL});
   	a = gitesting.SummerAny(__unpack0(b));
@@ -179,7 +179,7 @@ func Test062SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
 __type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
   
   	a = fmt.Sprintf("yip %#v eee\n", __type__anon_sliceType({[0]=4LL, 5LL, 6LL}));`)
@@ -204,7 +204,7 @@ func Test063SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("yee %v %v %v haw\n", _gi_UnpackSliceRaw(_gi_NewSlice("emptyInterface",{[0]=4LL, 5LL, 6LL}, nil)));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -228,7 +228,7 @@ func Test064SprintfOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("%v %v\n", "hello", _gi_NewSlice("int",{[0]=4LL, 5LL, 6LL}, 0LL));`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -253,7 +253,7 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`fmt.Printf("heya %#v %v\n", "hello", _gi_NewSlice("int",{[0]=55LL, 56LL}, 0LL), fmt.Printf);`)
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -284,7 +284,7 @@ func Test087ShadowRegexp(t *testing.T) {
 		// gotta translate to a.FindStringIndex(), not a:FindStringIndex()
 		// because FindStringIndex doesn't take a first 'self' parameter.
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`
 	a = regexp.MustCompile("llo");
 	loc = a.FindStringIndex("hello");

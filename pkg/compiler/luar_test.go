@@ -286,7 +286,7 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		cv.So(string(translation), matchesLuaSrc,
 			`a =_gi_NewSlice("int",{[0]=5LL,6LL,4LL}, 0LL);`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -394,7 +394,7 @@ func testOp(m *myGoTestStruct) string { return "" }
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		//		cv.So(string(translation), matchesLuaSrc,
 		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -408,7 +408,7 @@ func testOp(m *myGoTestStruct) string { return "" }
 		translation = inc.Tr([]byte(src))
 		pp("got to here, go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
-		//		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace,
+		//		cv.So(string(translation), matchesLuaSrc,
 		//			`a =_gi_NewSlice("int",{[0]=5,6,4});`)
 
 		LoadAndRunTestHelper(t, vm, translation)

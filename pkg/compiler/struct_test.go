@@ -27,8 +27,6 @@ h := s.hi()
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
@@ -62,7 +60,7 @@ func Test120PointersInsideStructs(t *testing.T) {
 		//  the __constructor in the call to __gi_NewType. So
 		//  we pass nil and the later rawset it.
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
 __type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
 anon_ptrType = __ptrType(__type__Ragdoll); -- 'DELAYED' anon type printing.
@@ -112,7 +110,7 @@ func Test121PointersInsideStructs(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, `
+		cv.So(string(translation), matchesLuaSrc, `
 
 __type__Ragdoll = __gi_NewType(0, __gi_kind_Struct, "main", "Ragdoll", "main.Ragdoll", true, "main", true, nil);
 
@@ -181,7 +179,6 @@ func Test122ManyPointersInsideStructs(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustBool(vm, "same", true)
@@ -215,7 +212,6 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 		LuaRunAndReport(vm, string(translation))
 
 		//LuaMustBeNil(vm, "p")

@@ -28,7 +28,7 @@ i := int(f)
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
+		//cv.So(string(translation), matchesLuaSrc, ``)
 
 		LuaRunAndReport(vm, string(translation))
 

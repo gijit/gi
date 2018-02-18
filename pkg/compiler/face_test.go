@@ -88,8 +88,6 @@ e := c.Next()
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
@@ -163,7 +161,6 @@ func Test101InterfaceConversion(t *testing.T) {
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))

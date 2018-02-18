@@ -232,7 +232,7 @@ test1helper()
 		pp("translation='%s'", string(translation))
 
 		if false {
-			cv.So(string(inc.Tr([]byte(code))), cv.ShouldMatchModuloWhiteSpace, `
+			cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
 result = ""
 
 addInt = function(i) 

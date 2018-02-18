@@ -28,8 +28,6 @@ b := Bean(99)
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "b", 99)
@@ -56,8 +54,6 @@ c := b.counter
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "c", 3)
@@ -81,8 +77,6 @@ g := F(3.4)
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		LuaRunAndReport(vm, string(translation))
 
@@ -139,8 +133,6 @@ var f F = 2.5
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		LuaRunAndReport(vm, string(translation))
 
@@ -219,8 +211,6 @@ two := g.F.a;`
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
-
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "two", 2)
@@ -246,8 +236,6 @@ type Bean struct{
 
 		translation := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
-		//cv.So(string(translation), cv.ShouldMatchModuloWhiteSpace, ``)
 
 		LuaRunAndReport(vm, string(translation))
 
