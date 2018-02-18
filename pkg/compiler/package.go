@@ -343,7 +343,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		// add to struct
 		fmt.Fprintf(code, "\n %s.__addToMethods(%s); -- package.go:344\n", typeName, signatureDetail)
 		// add to pointer to struct
-		fmt.Fprintf(code, "\n %s.__addToMethods(%s); -- package.go:346\n", ptrAddMe, signatureDetail)
+		fmt.Fprintf(code, "\n %s.__addToMethods(%s); -- package.go:346\n", typeName+".ptr", signatureDetail)
 
 		return code.Bytes()
 	}

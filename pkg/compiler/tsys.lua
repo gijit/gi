@@ -1135,6 +1135,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("typ.ptr.__addToMethods called, existing methods:")
          __st(typ.ptr.methods, "typ.ptr.methods")
          __st(det, "det")
+         if typ.ptr.methods == nil then
+            typ.ptr.methods={}
+         end
          table.insert(typ.ptr.methods, det)
       end
 
@@ -1143,6 +1146,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("typ.__addToMethods called, existing methods:")
          __st(typ.methods, "typ.methods")
          __st(det, "det")
+         if typ.methods == nil then
+            typ.methods={}
+         end
          table.insert(typ.methods, det)
       end
       
@@ -1410,10 +1416,12 @@ function __methodSet(typ)
       end;
 
       -- above may have made duplicates, now dedup
-      --print("at dedup, #mset = " .. tostring(#mset))
+      print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
-         if base[m.name] == nil then
-            base[m.name] = m;
+         print("m is ")
+         __st(m,"m")
+         if base[m.__name] == nil then
+            base[m.__name] = m;
          end
       end;
       print("after dedup, base for typ '"..typ.__str.."' is ")
@@ -1580,14 +1588,14 @@ function __interfaceStrHelper(m)
    if m.pkg ~= "" then
       s = m.pkg .. "."
    end
-   return s .. m.name .. string.sub(m.__typ.__str, 6) -- sub for removing "__kind"
+   return s .. m.__name .. string.sub(m.__typ.__str, 6) -- sub for removing "__kind"
 end
 
 __interfaceTypes = {};
 __interfaceType = function(methods)
    
    local typeKey = __mapAndJoinStrings("_", methods, function(m)
-                                          return m.pkg .. "," .. m.name .. "," .. m.__typ.id;
+                                          return m.pkg .. "," .. m.__name .. "," .. m.__typ.id;
    end)
    local typ = __interfaceTypes[typeKey];
    if typ == nil then
@@ -1717,11 +1725,11 @@ function field2strHelper(f)
       tag = string.gsub(f.tag, "\\", "\\\\")
       tag = string.gsub(tag, "\"", "\\\"")
    end
-   return f.name .. " " .. f.__typ.__str .. tag
+   return f.__name .. " " .. f.__typ.__str .. tag
 end
 
 function typeKeyHelper(f)
-   return f.name .. "," .. f.__typ.id .. "," .. f.tag;
+   return f.__name .. "," .. f.__typ.id .. "," .. f.tag;
 end
 
 __structTypes = {};
@@ -1866,16 +1874,16 @@ __assertType = function(value, typ, returnTuple)
                print("and vm=")
                __st(vm)
                
-               if vm.name == tm.name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
+               if vm.__name == tm.__name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
                   print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
-               print("match *not* found for tm.name = '"..tm.__name.."'")
+               print("match *not* found for tm.__name = '"..tm.__name.."'")
                ok = false;
-               typ.missingMethodFor[valueTypeString] = tm.name;
+               typ.missingMethodFor[valueTypeString] = tm.__name;
                break;
             end
          end
