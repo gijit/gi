@@ -68,7 +68,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, "") //, string(debug.Stack()))
 	}
 	defer func() {
-		pp("returning from translateExpr.\n trace:\n%s\n", string(debug.Stack()))
+		//pp("returning from translateExpr.\n trace:\n%s\n", string(debug.Stack()))
 		if xprn == nil {
 			pp("444444 returning from gi translateExpr(): '<nil>'")
 		} else {
@@ -914,11 +914,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
 			// jea, type assertion place 2; face_test 101 goes here.
 			// return both converted-interface-value, and ok.
-			return c.formatExpr(`__gi_assertType(%e, %s, 2)`, e.X, c.typeName(t))
+			return c.formatExpr(`__assertType(%e, %s, 2)`, e.X, c.typeName(t))
 			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(t))
 		}
 		// jea, type assertion place 0: only return value, without the 2nd 'ok' return.
-		return c.formatExpr(`__gi_assertType(%e, %s, 0)`, e.X, c.typeName(t))
+		return c.formatExpr(`__assertType(%e, %s, 0)`, e.X, c.typeName(t))
 
 	case *ast.Ident:
 		if e.Name == "_" {

@@ -340,13 +340,14 @@ end);
 
 Wolf = __newType(0, __kindStruct, "main.Wolf", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, Claw_, HasRing_) 
                     this.__val = this;
+                    
                     if HasRing_ == nil then
                        this.Claw = 0;
                        this.HasRing = false;
                        return;
                     end
-                    this.Claw = Claw_;
-                    this.HasRing = HasRing_;
+                    this.Claw = Claw_ or 0;
+                    this.HasRing = HasRing_ or false;
 end);
 
 sliceType = __sliceType(__type__emptyInterface);

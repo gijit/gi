@@ -381,11 +381,11 @@ end;
 --
 
 __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
-   print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
-   print("__copyArray has dst:")
-   __st(dst)
-   print("__copyArray has src:")
-   __st(src)
+   --print("__copyArray called with n = ", n, " dstOffset=", dstOffset, " srcOffset=", srcOffset)
+   --print("__copyArray has dst:")
+   --__st(dst)
+   --print("__copyArray has src:")
+   --__st(src)
    
    n = tonumber(n)
    if n == 0  or  (dst == src  and  dstOffset == srcOffset) then
@@ -398,13 +398,11 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
       
       if dst == src  and  dstOffset > srcOffset then
          for i = n-1,0,-1 do
-            print("here 0")
             elem.copy(dst[dstOffset + i], src[srcOffset + i]);
          end
          --setmetatable(dst, getmetatable(src))         
          return;
       end
-      print("here 1")
       for i = 0,n-1 do
          elem.copy(dst[dstOffset + i], src[srcOffset + i]);
       end
@@ -413,22 +411,20 @@ __copyArray = function(dst, src, dstOffset, srcOffset, n, elem)
    end
 
    if dst == src  and  dstOffset > srcOffset then
-      print("here 2")
       for i = n-1,0,-1 do
          dst[dstOffset + i] = src[srcOffset + i];
       end
       --setmetatable(dst, getmetatable(src))      
       return;
    end
-   print("here 3")   
    for i = 0,n-1 do
       dst[dstOffset + i] = src[srcOffset + i];
    end
    --setmetatable(dst, getmetatable(src))   
-   print("at end of array copy, src is:")
-   __st(src)
-   print("at end of array copy, dst is:")
-   __st(dst)
+   --print("at end of array copy, src is:")
+   --__st(src)
+   --print("at end of array copy, dst is:")
+   --__st(dst)
 end;
 
 --

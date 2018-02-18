@@ -119,7 +119,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				return c.formatExpr("%s == __gi_ifaceNil", refVar)
 			}
 			// jea, type assertion place 1
-			return c.formatExpr(`__gi_assertType(%s, %s, 1)`, refVar, c.typeName(c.p.TypeOf(cond)))
+			return c.formatExpr(`__assertType(%s, %s, 1)`, refVar, c.typeName(c.p.TypeOf(cond)))
 			//return c.formatExpr("$assertType(%s, %s, true)[1]", refVar, c.typeName(c.p.TypeOf(cond)))
 		}
 		var caseClauses []*ast.CaseClause
