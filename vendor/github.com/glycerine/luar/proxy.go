@@ -68,7 +68,7 @@ func isValueProxy(L *lua.State, idx int) bool {
 
 func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 	var a interface{}
-	err := LuaToGo(L, idx, &a)
+	_, err := LuaToGo(L, idx, &a)
 	if err != nil {
 		L.RaiseError(err.Error())
 	}

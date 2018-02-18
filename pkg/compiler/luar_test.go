@@ -138,7 +138,8 @@ func Test055_cdata_Int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		DumpLuaStack(vm)
 		var b int64
 		top := vm.GetTop()
-		panicOn(luar.LuaToGo(vm, top, &b))
+		_, err = luar.LuaToGo(vm, top, &b)
+		panicOn(err)
 		pp("a == '%#v'", a)
 		pp("b == '%#v'", b)
 
@@ -195,7 +196,8 @@ func Test056_cdata_Uint64_unsigned_int64_GoToLuar_Then_LuarToGo(t *testing.T) {
 		DumpLuaStack(vm)
 		var b uint64
 		top := vm.GetTop()
-		panicOn(luar.LuaToGo(vm, top, &b))
+		_, err = luar.LuaToGo(vm, top, &b)
+		panicOn(err)
 		pp("a == '%#v'", a)
 		pp("b == '%#v'", b)
 
@@ -322,7 +324,8 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		// this probably means you left the stack empty by mistake:
 		// Line 286: - cannot convert Lua value 'function: %!p(uintptr=75307960)' (function) to []int
 
-		panicOn(luar.LuaToGo(vm, top, &b))
+		_, err = luar.LuaToGo(vm, top, &b)
+		panicOn(err)
 		cv.So(b, cv.ShouldResemble, []int{5, 6, 4})
 	})
 }

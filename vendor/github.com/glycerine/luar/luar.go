@@ -294,7 +294,7 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 		args := make([]reflect.Value, len(argsT))
 		for i, t := range argsT {
 			val := reflect.New(t)
-			err := LuaToGo(L, i+1, val.Interface())
+			_, err := LuaToGo(L, i+1, val.Interface())
 			if err != nil {
 				pp("problem point 1")
 				L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
@@ -311,13 +311,16 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 
 				val := reflect.New(lastT)
 				pp("about to call LuaToGo with val from lastT: '%#v'/%T", val.Interface(), val.Interface())
-				err := LuaToGo(L, i, val.Interface())
+				xtra, err := LuaToGo(L, i, val.Interface())
 				if err != nil {
 					pp("problem point 2, stack:\n%s\n", string(debug.Stack()))
 
 					L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
 				}
 				args = append(args, val.Elem())
+				// if we expanded lazy ellipsis to more than one value,
+				// pick it up here.
+				n += xtra
 			}
 			argsT = argsT[:len(argsT)+1]
 		}
@@ -578,7 +581,7 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 	for L.Next(idx) != 0 {
 		// key at -2, value at -1
 		key := reflect.New(tk).Elem()
-		err := luaToGo(L, -2, key, visited)
+		_, err := luaToGo(L, -2, key, visited)
 		if err != nil {
 			// here is where fmt.Sprintf( table) is failing.
 			pp("ErrTableConv about to be status, since luaToGo failed for key at -2: '%v'. tk='%s', key='%s'. stack:\n%s\n", err, tk, key,
@@ -588,7 +591,7 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 			continue
 		}
 		val := reflect.New(te).Elem()
-		err = luaToGo(L, -1, val, visited)
+		_, err = luaToGo(L, -1, val, visited)
 		if err != nil {
 			pp("ErrTableConv about to be status, since luaToGo failed for key '%s'", key.Interface())
 			status = ErrTableConv
@@ -674,7 +677,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 	for i := 1; i <= n; i++ {
 		L.RawGeti(idx, i)
 		val := reflect.New(te).Elem()
-		err := luaToGo(L, -1, val, visited)
+		_, err := luaToGo(L, -1, val, visited)
 		if err != nil {
 			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 			status = ErrTableConv
@@ -758,7 +761,7 @@ func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintp
 		val := reflect.New(f.Type()).Elem() // call of reflect.Value.Type on zero Value
 
 		pp("jea: just after f.Type()")
-		err := luaToGo(L, -1, val, visited)
+		_, err := luaToGo(L, -1, val, visited)
 		pp("jea: just after luaToGo")
 		if err != nil {
 			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
@@ -806,7 +809,7 @@ func setField(fld, val reflect.Value) {
 // Proxies are unwrapped to the Go value, if convertible.
 // Userdata that is not a proxy will be converted to a LuaObject if the Go value
 // is an interface or a LuaObject.
-func LuaToGo(L *lua.State, idx int, a interface{}) error {
+func LuaToGo(L *lua.State, idx int, a interface{}) (xtraExpandedCount int, err error) {
 	// jea debug:
 	//verb.VerboseVerbose = true
 
@@ -817,17 +820,17 @@ func LuaToGo(L *lua.State, idx int, a interface{}) error {
 	// TODO: Test interfaces with methods.
 	// TODO: Allow unreferenced map? encoding/json does not do it.
 	if v.Kind() != reflect.Ptr {
-		return errors.New("not a pointer")
+		return 0, errors.New("not a pointer")
 	}
 	if v.IsNil() {
-		return errors.New("nil pointer")
+		return 0, errors.New("nil pointer")
 	}
 
 	v = v.Elem()
 	// If the Lua value is 'nil' and the Go value is a pointer, nullify the pointer.
 	if v.Kind() == reflect.Ptr && L.IsNil(idx) {
 		v.Set(reflect.Zero(v.Type()))
-		return nil
+		return 0, nil
 	}
 
 	return luaToGo(L, idx, v, map[uintptr]reflect.Value{})
@@ -850,34 +853,36 @@ define LUA_TTHREAD		8
 */
 
 // only at the top of the stack do we do this.
-func expandLazyEllipsis(L *lua.State, idx int) error {
+func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	top := L.GetTop()
 	if top == 0 {
-		return nil
+		return 0, nil
 	}
 	// for now, only handle the top...
 	if idx != top {
-		return nil
+		return 0, nil
 	}
 	if L.Type(idx) != lua.LUA_TTABLE {
-		return nil
+		return 0, nil
 	}
 	getfield(L, idx, "__name")
 	if L.IsNil(-1) {
 		L.Pop(1)
-		return nil
+		return 0, nil
 	}
 	nm := L.ToString(-1)
 	if nm != "__lazy_ellipsis_instance" {
-		return nil
+		return 0, nil
 	}
 	L.Pop(1)
 
 	getfield(L, idx, "__val")
 	if L.IsNil(-1) {
 		L.Pop(1)
-		return nil
+		return 0, nil
 	}
+
+	sliceValueToExpand := L.GetTop()
 
 	fmt.Printf("okay! we have a lazy ellipsis!\n")
 	// unpack the top
@@ -885,7 +890,8 @@ func expandLazyEllipsis(L *lua.State, idx int) error {
 	// get the length to unpack from the array
 	n, err := getLenByCallingMetamethod(L, -1)
 	if err != nil {
-		panic(err)
+		L.Pop(2)
+		return -1, err
 	}
 	// 88888888888888888
 	fmt.Printf("lazy elip: back safe from getting n=%v\n", n)
@@ -893,11 +899,27 @@ func expandLazyEllipsis(L *lua.State, idx int) error {
 		// empty? just clear ourselves off the stack
 		L.SetTop(top)
 		L.Pop(1)
-		return nil
+		return 0, nil
 	}
-	if !L.CheckStack(n) {
-		return fmt.Errorf("could not allocate Lua stack space for %v elem; lua_checkstack returned false.", n)
+	if !L.CheckStack(n + 3) {
+		return -1, fmt.Errorf("could not allocate Lua stack space for %v elem; lua_checkstack returned false.", n)
 	}
+
+	getfield(L, sliceValueToExpand, "__offset")
+	if L.IsNil(-1) {
+		L.Pop(3)
+		return -1, fmt.Errorf("could not find __val raw array within slice!")
+	}
+	off := L.ToNumber(-1)
+	L.Pop(1)
+	pp("good: got offset of %v\n", off)
+
+	getfield(L, sliceValueToExpand, "__array")
+	if L.IsNil(-1) {
+		L.Pop(2)
+		return -1, fmt.Errorf("could not find __val raw array within slice!")
+	}
+	valueToExpand := L.GetTop()
 
 	pp("-- just before expanding the lazy ellip, here is stack:")
 	if verb.VerboseVerbose {
@@ -905,7 +927,7 @@ func expandLazyEllipsis(L *lua.State, idx int) error {
 	}
 
 	for i := 0; i < n; i++ {
-		L.RawGeti(idx, i)
+		L.RawGeti(valueToExpand, i)
 	}
 
 	pp("-- after expanding the lazy ellip, but before removing container, here is stack:")
@@ -913,7 +935,9 @@ func expandLazyEllipsis(L *lua.State, idx int) error {
 		DumpLuaStack(L)
 	}
 
-	// now expanded, remove the lazy ellipsis container.
+	// now expanded, remove the array value and lazy ellipsis container
+	L.Remove(valueToExpand)
+	L.Remove(sliceValueToExpand)
 	L.Remove(idx)
 
 	pp("-- after expanding lazy ellip, and removing container, returng this stack::")
@@ -921,20 +945,28 @@ func expandLazyEllipsis(L *lua.State, idx int) error {
 		DumpLuaStack(L)
 	}
 
-	return nil
+	return n, nil
 }
 
-func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) error {
+func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (xtraExpandedCount int, err error) {
+
 	pp("-- top of luaToGo, here is stack:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
 
-	err := expandLazyEllipsis(L, idx)
+	expandCount, err := expandLazyEllipsis(L, idx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
+	if expandCount > 0 {
+		xtraExpandedCount = expandCount - 1
+	}
+	if expandCount > 0 {
+		pp("expandCount from lazy ellipsis was %v; stack:\n%s\n", expandCount, string(debug.Stack()))
+
+	}
 	// Derefence 'v' until a non-pointer.
 	// This initializes the values, which will be useless effort if the conversion fails.
 	// This must be done here so that the copyTable* functions can also call luaToGo on pointers.
@@ -960,7 +992,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 	case lua.LUA_TBOOLEAN:
 		pp("luar.go, type of idx == LUA_TBOOLEAN")
 		if kind != reflect.Bool && kind != reflect.Interface {
-			return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		v.Set(reflect.ValueOf(L.ToBoolean(idx)))
 	case lua.LUA_TNUMBER:
@@ -974,12 +1006,12 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case reflect.Complex128:
 			v.SetComplex(complex(L.ToNumber(idx), 0))
 		default:
-			return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	case lua.LUA_TSTRING:
 		pp("luar.go, type of idx == LUA_TSTRING: '%s'", L.ToString(idx))
 		if kind != reflect.String && kind != reflect.Interface {
-			return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		v.Set(reflect.ValueOf(L.ToString(idx)))
 	case lua.LUA_TUSERDATA:
@@ -990,7 +1022,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			if val.Interface() == Null {
 				// Special case for Null.
 				v.Set(reflect.Zero(v.Type()))
-				return nil
+				return xtraExpandedCount, nil
 			}
 
 			for !typ.ConvertibleTo(v.Type()) && val.Kind() == reflect.Ptr {
@@ -998,18 +1030,18 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				typ = typ.Elem()
 			}
 			if !typ.ConvertibleTo(v.Type()) {
-				return ConvError{From: fmt.Sprintf("proxy (%v)", typ), To: v.Type()}
+				return xtraExpandedCount, ConvError{From: fmt.Sprintf("proxy (%v)", typ), To: v.Type()}
 			}
 			// We automatically convert between types. This behaviour is consistent
 			// with LuaToGo conversions elsewhere.
 			v.Set(val.Convert(v.Type()))
-			return nil
+			return xtraExpandedCount, nil
 		} else if kind != reflect.Interface || v.Type() != reflect.TypeOf(LuaObject{}) {
 			pp("luar.go, type of idx == LUA_TUSERDATA, ConvError happening!??, from: '%s', to: '%s'", luaDesc(L, idx), v.Type())
 			// jea try this, so that we wrap into a lua ref
 			// This makes gi: fmt.Printf("%v", fmt.Printf) work.
 			v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
-			//return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			//return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 		// Wrap the userdata into a LuaObject.
 		v.Set(reflect.ValueOf(NewLuaObject(L, idx)))
@@ -1025,19 +1057,19 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			} else {
 				v.Set(val)
 			}
-			return nil
+			return xtraExpandedCount, nil
 		}
 		pp("visited[ptr] was false, kind='%#v'/'%v'", kind, kind)
 
 		switch kind {
 		case reflect.Array:
-			return copyTableToSlice(L, idx, v, visited, false)
+			return xtraExpandedCount, copyTableToSlice(L, idx, v, visited, false)
 		case reflect.Slice:
-			return copyTableToSlice(L, idx, v, visited, true)
+			return xtraExpandedCount, copyTableToSlice(L, idx, v, visited, true)
 		case reflect.Map:
-			return copyTableToMap(L, idx, v, visited)
+			return xtraExpandedCount, copyTableToMap(L, idx, v, visited)
 		case reflect.Struct:
-			return copyTableToStruct(L, idx, v, visited)
+			return xtraExpandedCount, copyTableToStruct(L, idx, v, visited)
 		case reflect.Interface:
 			// jea: the original L.ObjLen reults was wrong b/c our __gi_Slice start indexing at 0 not 1.
 			//n := int(L.ObjLen(idx)) // does not call __len metamethod. Problem.
@@ -1049,11 +1081,11 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 
 			switch v.Elem().Kind() {
 			case reflect.Map:
-				return copyTableToMap(L, idx, v.Elem(), visited)
+				return xtraExpandedCount, copyTableToMap(L, idx, v.Elem(), visited)
 			case reflect.Slice:
 				// Need to make/resize the slice here since interface values are not adressable.
 				v.Set(reflect.MakeSlice(v.Elem().Type(), n, n))
-				return copyTableToSlice(L, idx, v.Elem(), visited, true)
+				return xtraExpandedCount, copyTableToSlice(L, idx, v.Elem(), visited, true)
 				// jea debug: add default: case
 			default:
 				pp("v.Elem().Kind() = '%#v', v='%#v'/type='%T'", v.Elem().Kind(), v, v) // 0x0, nil interface, reflect.Value
@@ -1067,16 +1099,16 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 						if mapLen != n {
 							v.Set(reflect.MakeMap(tmap))
 							// jea: why are we copying a vararg table to a map???
-							return copyTableToMap(L, idx, v.Elem(), visited)
+							return xtraExpandedCount, copyTableToMap(L, idx, v.Elem(), visited)
 						}
 			*/
 			v.Set(reflect.MakeSlice(tslice, n, n))
-			return copyTableToSlice(L, idx, v.Elem(), visited, true)
+			return xtraExpandedCount, copyTableToSlice(L, idx, v.Elem(), visited, true)
 		default:
 			pp("luar.go ConvError: from '%v' to '%v'\n stack:\n%s\n",
 				luaDesc(L, idx), v.Type(),
 				string(debug.Stack()))
-			return ConvError{From: luaDesc(L, idx), To: v.Type()}
+			return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 		}
 	case 10: // LUA_TCDATA aka cdata
 		pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
@@ -1106,7 +1138,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			} else {
 
 				if !canAndDidAssign(&f, &v) {
-					return ConvError{From: luaDesc(L, idx), To: v.Type()}
+					return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 				}
 				// huh?
 				// go test -v -run TestArray
@@ -1114,7 +1146,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				//v.Set(f)
 				//setField(f, v)
 			}
-			return nil
+			return xtraExpandedCount, nil
 		case 12: //  uint64
 			val := L.CdataToUint64(idx)
 			//pp("luar.go calling L.CdataToUint64, got val='%#v'", val)
@@ -1131,25 +1163,25 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 				                   uint to int, which is not what we want, as
 				                   we could loose information. Instead panic with a type error.
 								if !canAndDidAssign(&f, &v) {
-									return ConvError{From: luaDesc(L, idx), To: v.Type()}
+									return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 								}
 				*/
 				v.Set(f)
 			}
-			return nil
+			return xtraExpandedCount, nil
 		case 13: //  float32
 		case 14: //  float64
 
 		case 0: // means it wasn't a ctype
 		}
 
-		return ConvError{From: luaDesc(L, idx), To: v.Type()}
+		return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 
 	default:
-		return ConvError{From: luaDesc(L, idx), To: v.Type()}
+		return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
 	}
 
-	return nil
+	return xtraExpandedCount, nil
 }
 
 func isNewType(t reflect.Type) bool {
@@ -1451,7 +1483,7 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 	for i := 0; i < n; i++ {
 		L.RawGeti(idx, i+offset)
 		val := reflect.New(te).Elem()
-		err := luaToGo(L, -1, val, visited)
+		_, err := luaToGo(L, -1, val, visited)
 		if err != nil {
 			pp("ErrTableConv about to be status, since luaToGo failed for val '%v'", val.Interface())
 			status = ErrTableConv
@@ -1522,6 +1554,9 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 		return int(L.ObjLen(idx)), nil
 	}
 
+	defer L.SetTop(top)
+	pp("defer will SetTop(top=%v)", top)
+
 	L.PushString("__len") // the metamethod
 
 	// lua_gettable: It receives the
@@ -1538,8 +1573,6 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
-
-	defer L.SetTop(top)
 
 	// INVAR: __len method is on top of stack.
 
@@ -1576,6 +1609,13 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 		return -1, err
 	}
 	fLen := L.ToNumber(-1)
+	L.Pop(1) // clean up the len count, fLen has it.
+
+	pp("after __len call, flen is %v; with stack:", fLen)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
 	// NOTE: won't work for tables of len > 2^52 or 4 peta items.
 	// Since that's way bigger than viable ram, we don't worry about it here.
 	pp("getLenByCallingMetamethod returning %v", fLen)
