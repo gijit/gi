@@ -1897,6 +1897,9 @@ __assertType = function(value, typ, returnTuple)
    
    if not ok then
       if returnTuple then
+         if isInterface then
+            return nil, false
+         end
          return typ.zero(), false
       end
       local msg = ""
