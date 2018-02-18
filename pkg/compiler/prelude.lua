@@ -18,16 +18,6 @@ function __gi_SetRangeCheck(x, i, val)
 end;
 
 
--- length of array, counting [0] if present.
-function __lenz(array)      
-   local n = #array
-   if array[0] ~= nil then
-      n=n+1
-   end
-   return n
-end
-
-
 function __gijit_printQuoted(...)
    local a = {...}
    --print("__gijit_printQuoted called, a = " .. tostring(a), " len=", #a)

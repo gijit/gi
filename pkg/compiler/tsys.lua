@@ -33,6 +33,20 @@ __module ={};
 __packages = {}
 __idCounter = 0;
 
+-- length of array, counting [0] if present,
+-- but trusting __len if metamethod avail.
+function __lenz(array)
+   local n = #array
+   local lenmeth = array.__len
+   if lenmeth ~= nil then
+      return n
+   end
+   if array[0] ~= nil then
+      n=n+1
+   end
+   return n
+end
+
 function __ipairsZeroCheck(arr)
    if arr[0] ~= nil then error("ipairs will miss the [0] index of this array") end
 end
@@ -635,11 +649,7 @@ __valueArrayMT = {
    end,
 
    __len = function(t)
-      local n = #t.__val
-      if t.__val[0] ~= nil then
-         return n+1
-      end
-      return n
+      return __lenz(t.__val)
    end,
    
    __tostring = function(self, ...)
@@ -997,15 +1007,15 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, array)
          this.__array = array;
          this.__offset = 0;
-         this.__length = #array;
-        --print("# of array returned ", this.__length)
+         this.__length = __lenz(array)
+         print("# of array returned ", this.__length)
          this.__capacity = this.__length;
-         --print("jea debug: slice tfun set __length to ", this.__length)
-         --print("jea debug: slice tfun set __capacity to ", this.__capacity)
-         --print("jea debug: slice tfun sees array: ")
-         --for i,v in pairs(array) do
-         --   print("array["..tostring(i).."] = ", v)
-         --end
+         print("jea debug: slice tfun set __length to ", this.__length)
+         print("jea debug: slice tfun set __capacity to ", this.__capacity)
+         print("jea debug: slice tfun sees array: ")
+         for i,v in pairs(array) do
+            print("array["..tostring(i).."] = ", v)
+         end
          
          this.__val = this;
          this.__constructor = typ
@@ -1028,11 +1038,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__array = v; -- like slice, to reuse ipairs method.
          this.__offset = 0; -- like slice.
          this.__constructor = typ
-         local lenv = #v
-         if v[0] ~= nil then
-            lenv=lenv+1
-         end
-         this.__length = lenv
+         this.__length = __lenz(v)
          -- TODO: come back and fix up Luar
          -- must set these keys for Luar to work:
          --this[__giPrivateRaw] = v
