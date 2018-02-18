@@ -266,7 +266,7 @@ func ExampleMakeChan() {
 	L1.SetGlobal("c")
 	L1.GetGlobal("c")
 	var c interface{}
-	err := luar.LuaToGo(L1, -1, &c)
+	_, err := luar.LuaToGo(L1, -1, &c)
 	L1.Pop(1)
 	if err != nil {
 		log.Fatal(err)

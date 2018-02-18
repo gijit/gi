@@ -3,7 +3,7 @@ package compiler
 import (
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -200,8 +200,6 @@ func Test063SprintfOneSlice(t *testing.T) {
 		// need the side effect of loading `import "fmt"` package.
 		translation := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-
-		verb.VerboseVerbose = true
 
 		cv.So(string(translation), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__emptyInterface); 

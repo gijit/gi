@@ -883,14 +883,34 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	}
 
 	sliceValueToExpand := L.GetTop()
+	// maybe its a single value, not a slice?
+
+	topType := L.Type(-1)
+	if topType != lua.LUA_TTABLE {
+		pp("non-table type inside lazy ellipses, returning early with it on top of stack:")
+		if verb.VerboseVerbose {
+			DumpLuaStack(L)
+		}
+		return 0, nil
+	}
+
+	getfield(L, sliceValueToExpand, "__name")
+	if L.IsNil(-1) {
+		pp("non-slice inside lazy ellipses, returning early with it on top of stack:")
+		if verb.VerboseVerbose {
+			DumpLuaStack(L)
+		}
+		return 0, nil
+	}
 
 	fmt.Printf("okay! we have a lazy ellipsis!\n")
 	// unpack the top
 
 	// get the length to unpack from the array
-	n, err := getLenByCallingMetamethod(L, -1)
+	n, err := getLenByCallingMetamethod(L, sliceValueToExpand)
 	if err != nil {
 		L.Pop(2)
+		fmt.Printf("lazy ellipsis: early exit, could not get length of object on top of stack\n")
 		return -1, err
 	}
 	// 88888888888888888
