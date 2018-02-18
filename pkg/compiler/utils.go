@@ -310,7 +310,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// Answer, this was generating different tmp variables with different
 	// names. Use a gensym instead.
 
-	if false { // jea add
+	if true { // jea add
 		if n > 0 {
 			varName = fmt.Sprintf("%s_%d", name, n)
 		}
