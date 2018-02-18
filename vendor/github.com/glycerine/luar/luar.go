@@ -887,6 +887,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 
 	topType := L.Type(-1)
 	if topType != lua.LUA_TTABLE {
+		L.Remove(idx)
 		pp("non-table type inside lazy ellipses, returning early with it on top of stack:")
 		if verb.VerboseVerbose {
 			DumpLuaStack(L)
@@ -896,6 +897,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 
 	getfield(L, sliceValueToExpand, "__name")
 	if L.IsNil(-1) {
+		L.Remove(idx)
 		pp("non-slice inside lazy ellipses, returning early with it on top of stack:")
 		if verb.VerboseVerbose {
 			DumpLuaStack(L)
