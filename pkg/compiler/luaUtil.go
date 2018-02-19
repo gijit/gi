@@ -35,13 +35,15 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	}
 
 	// establish prelude location so prelude can know itself.
-	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s";`, cfg.PreludePath))
+	// __preludePath must be terminated with a '/' character.
+	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s/";`, cfg.PreludePath))
 	if err != nil {
 		return nil, err
 	}
 
 	// load prelude
 	files, err := FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
+	panicOn(err)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,12 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 	cwd, err := os.Getwd()
 	panicOn(err)
 	panicOn(os.Chdir(cfg.PreludePath))
-	LuaRunAndReport(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
+	err = LuaDoString(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
+	panicOn(err)
+	if err != nil {
+		return nil, err
+	}
+
 	panicOn(os.Chdir(cwd))
 
 	// take a Lua value, turn it into a Go value, wrap
@@ -98,16 +105,16 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 func LuaDoString(vm *golua.State, cmd string) error {
 	interr := vm.LoadString(cmd)
 	if interr != 0 {
-		pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
+		pp("interr %v on vm.LoadString for dofile on '%s'", interr, cmd)
 		msg := DumpLuaStackAsString(vm)
 		vm.Pop(1)
-		return fmt.Errorf("error in LuaDoString('%s') during LoadString on file '%s': Details: '%s'", cmd, f, msg)
+		return fmt.Errorf("error in LuaDoString('%s') during LoadString. Details: '%s'", cmd, msg)
 	}
 	err := vm.Call(0, 0)
 	if err != nil {
 		msg := DumpLuaStackAsString(vm)
 		vm.Pop(1)
-		return fmt.Errorf("error in LuaDoString('%s') during Call on file '%s': '%v'. Details: '%s'", cmd, f, err, msg)
+		return fmt.Errorf("error in LuaDoString('%s') during Call: '%v'. Details: '%s'", cmd, err, msg)
 	}
 	return nil
 }
