@@ -105,14 +105,14 @@ function __NewDFSState()
       newDfsNode = __newDfsNode,
       addChild = __addChild,
       markGraphUnVisited = __markGraphUnVisited,
-      hasTypes == __hasTypes,
+      hasTypes = __hasTypes,
    }
 end
 
 --[[
 -- test. To test, change the --[[ above to ---[[
 --       and issue dofile('dfs.lua')
-dofile 'tutil.lua'
+dofile 'tutil.lua' -- must be in prelude dir to test.
 
 function __testDFS()
    local s = __NewDFSState()
