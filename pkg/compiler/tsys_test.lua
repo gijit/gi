@@ -511,7 +511,7 @@ barley.food =2
 
 -- begin joy/jake puppies example
 
-Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, ...) 
+__type__Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, ...) 
                         this.__val = this;
                         local Name_, Id_, Mate_, Litter_, PtrLit_, food_, ate_ = ...
                         
@@ -525,75 +525,78 @@ Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/
 			return;
 end);
 
-Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "Name", __name= "Name", __anonymous= false, __exported= true, __typ= __type__string, __tag= ""}, {__prop= "Id", __name= "Id", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "Mate", __name= "Mate", __anonymous= false, __exported= true, __typ= ptrType, __tag= ""}, {__prop= "Litter", __name= "Litter", __anonymous= false, __exported= true, __typ= sliceType, __tag= ""}, {__prop= "PtrLit", __name= "PtrLit", __anonymous= false, __exported= true, __typ= ptrType__1, __tag= ""}, {__prop= "food", __name= "food", __anonymous= false, __exported= false, __typ= __type__int, __tag= ""}, {__prop= "ate", __name= "ate", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}});
+__type__Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "Name", __name= "Name", __anonymous= false, __exported= true, __typ= __type__string, __tag= ""}, {__prop= "Id", __name= "Id", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "Mate", __name= "Mate", __anonymous= false, __exported= true, __typ= ptrType, __tag= ""}, {__prop= "Litter", __name= "Litter", __anonymous= false, __exported= true, __typ= sliceType, __tag= ""}, {__prop= "PtrLit", __name= "PtrLit", __anonymous= false, __exported= true, __typ= ptrType__1, __tag= ""}, {__prop= "food", __name= "food", __anonymous= false, __exported= false, __typ= __type__int, __tag= ""}, {__prop= "ate", __name= "ate", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}});
 
 -- return .methodSet to  .prototype
-Hound.ptr.prototype.Eat = function(this, a)
+__type__Hound.ptr.prototype.Eat = function(this, a)
    print("Eat called, with a = ", a, " and this=")
    __st(this,"this-on-Hound.ptr")
    
-		local _i, _ref, h, pup;
-		h = this;
-		if h.ate then
-                   return h.food;
-		end
-		h.ate = true;
-		h.food = h.food + a;
-		_ref = h.Litter;
-                __st(_ref, "_ref")
-		_i = 0;
-		while true do
-                   if not (_i < #_ref) then break; end
+   local _i, _ref, h, pup;
+   h = this;
+   if h.ate then
+      return h.food;
+   end
+   h.ate = true;
+   if h.food == nil then
+      h.food = 0
+   end
+   h.food = h.food + a;
+   _ref = h.Litter;
+   __st(_ref, "_ref")
+   _i = 0;
+   while true do
+      if not (_i < #_ref) then break; end
+      
+      if (_i < 0 or _i >= #_ref) then
+         __throwRuntimeError("index out of range")
+      end
+      __st(_ref.__array, "_ref.__array")
+      print("_i = ", _i)
+      pup = _ref.__array[_ref.__offset + _i + 1]; -- + 1 for lua's arrays
+      pup:Eat(a);
+      _i=_i+1;
+   end
+   if not (h.Mate == ptrType.__nil) then
+      h.Mate:Eat(a);
+   end
+   return h.food;
+end;
+__type__Hound.prototype.Eat = function(a)  return this.__val.Eat(a); end;
 
-                   if (_i < 0 or _i >= #_ref) then
-                      __throwRuntimeError("index out of range")
-                   end
-                   __st(_ref.__array, "_ref.__array")
-                   print("_i = ", _i)
-                   pup = _ref.__array[_ref.__offset + _i + 1]; -- + 1 for lua's arrays
-                   pup:Eat(a);
-			_i=_i+1;
-                        end
-		if not (h.Mate == ptrType.__nil) then
-			h.Mate:Eat(a);
-		end
-		return h.food;
-	end;
-	Hound.prototype.Eat = function(a)  return this.__val.Eat(a); end;
+ptrType = __ptrType(__type__Hound);
+sliceType = __sliceType(ptrType);
+ptrType__1 = __ptrType(sliceType);
+sliceType__1 = __sliceType(__type__emptyInterface);        
 
-	ptrType = __ptrType(Hound);
-	sliceType = __sliceType(ptrType);
-	ptrType__1 = __ptrType(sliceType);
-	sliceType__1 = __sliceType(__type__emptyInterface);        
-
-		jake =  Hound.ptr("Jake", 123, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
-		joy =  Hound.ptr("Joy", 456, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
-		bubbles =  Hound.ptr("Bubbles", 2, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
-		barley =  Hound.ptr("Barley", 3, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
-		jake.Mate = joy;
-		joy.Mate = jake;
-		joy.Litter =  sliceType({bubbles, barley});
-		jake.PtrLit = ptrType__1(function() return this.__target.Litter; end, function(__v)  this.__target.Litter = __v; end, joy);
-		got = joy:Eat(2);
+jake =  __type__Hound.ptr("Jake", 123, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+joy =  __type__Hound.ptr("Joy", 456, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+bubbles =  __type__Hound.ptr("Bubbles", 2, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+barley =  __type__Hound.ptr("Barley", 3, ptrType.__nil, sliceType.__nil, ptrType__1.__nil, 0, false);
+jake.Mate = joy;
+joy.Mate = jake;
+joy.Litter =  sliceType({bubbles, barley});
+jake.PtrLit = ptrType__1({}, function() return this.__target.Litter; end, function(__v)  this.__target.Litter = __v; end, joy);
+got = joy:Eat(2);
 
 
-		clone = __clone(barley, Hound);
-		print("clone.food =", clone.food)
-		print("clone.Name =", clone.Name)
-                
-		print("joy:Eat(2) returned =", got)
-		print("jake.food =",  jake.food)
-		print("joy.food =",  joy.food)
-		print("bubbles.food =",  bubbles.food)
-		print("barley.food =",  barley.food)
+clone = __clone(barley, __type__Hound);
+print("clone.food =", clone.food)
+print("clone.Name =", clone.Name)
+
+print("joy:Eat(2) returned =", got)
+print("jake.food =",  jake.food)
+print("joy.food =",  joy.food)
+print("bubbles.food =",  bubbles.food)
+print("barley.food =",  barley.food)
 
 -- end joy/jake puppies
 
-                -- notice that structs have the __get, __set functions, and the __val table.
-        -- what are these/do they work?/ should they live in the struct on on a related table?
-        -- they are related to pointer read/writes, and conversions;
-        -- StarExpr invokes __get, 
-        
+-- notice that structs have the __get, __set functions, and the __val table.
+-- what are these/do they work?/ should they live in the struct on on a related table?
+-- they are related to pointer read/writes, and conversions;
+-- StarExpr invokes __get, 
+
 --[[
 this-on-Hound.ptr: ============================ table: 0x000a8720
 this-on-Hound.ptr:  1 key: 'ate' val: 'false'
