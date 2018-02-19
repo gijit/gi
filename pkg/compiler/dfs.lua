@@ -7,40 +7,37 @@
 --  leaf types before the compound
 --  types that need them defined.
 
-__dfsNodes = {}
-__dfsOrder = {}
-__dfsNextID = 0
 
-function __newDfsNode(name, payload)
+function __newDfsNode(self, name, payload)
    local node= {
       visited=false,
       children={},
-      id = __dfsNextID,
+      id = self.dfsNextID,
       name=name,
       payload=payload,
    }
-   __dfsNextID=__dfsNextID+1
-   table.insert(__dfsNodes, node)
+   self.dfsNextID=self.dfsNextID+1
+   table.insert(self.dfsNodes, node)
    return node
 end
 
-function __addChild(par, ch)
+function __addChild(self, par, ch)
    table.insert(par.children, ch)
 end
 
-function __markGraphUnVisited()
-   __dfsOrder = {}
-   for _,n in ipairs(__dfsNodes) do
+function __markGraphUnVisited(self)
+   self.dfsOrder = {}
+   for _,n in ipairs(self.dfsNodes) do
       n.visited = false
    end
 end
 
-function __emptyOutGraph()
-   __dfsOrder = {}
-   __dfsNodes = {}
+function __emptyOutGraph(self)
+   self.dfsOrder = {}
+   self.dfsNodes = {}
 end
 
-function __dfsHelper(node)
+function __dfsHelper(self, node)
    if node == nil then
       return
    end
@@ -49,56 +46,78 @@ function __dfsHelper(node)
    end
    node.visited = true
    for _, ch in ipairs(node.children) do
-      __dfsHelper(ch)
+      self:dfsHelper(ch)
    end
    print("post-order visit sees node "..tostring(node.id).." : "..node.name)
-   table.insert(__dfsOrder, node)
+   table.insert(self.dfsOrder, node)
 end
 
-function __doDFS()
-   __markGraphUnVisited()
-   for _, n in ipairs(__dfsNodes) do
-      __dfsHelper(n)
+function __doDFS(self)
+   __markGraphUnVisited(self)
+   for _, n in ipairs(self.dfsNodes) do
+      self:dfsHelper(n)
    end
 end
 
---[[
+function __NewDFSState()
+   return {
+      dfsNodes = {},
+      dfsOrder = {},
+      dfsNextID = 0,
+
+      doDFS = __doDFS,
+      dfsHelper = __dfsHelper,
+      emptyOutGraph = __emptyOutGraph,
+      newDfsNode = __newDfsNode,
+      addChild = __addChild,
+      markGraphUnVisited = __markGraphUnVisited,
+   }
+end
+
+---[[
 -- test
 dofile 'tutil.lua'
 
 function __testDFS()
-   __emptyOutGraph()
+   local s = __NewDFSState()
+
+   -- verify that __emptyOutGraph
+   -- works by doing two passes.
    
-   local a = __newDfsNode("a")
-   local b = __newDfsNode("b")
-   local c = __newDfsNode("c")
-   local d = __newDfsNode("d")
-   local e = __newDfsNode("e")
-   local f = __newDfsNode("f")
+   for i =1,2 do
+      s:emptyOutGraph()
+      
+      local a = s:newDfsNode("a")
+      local b = s:newDfsNode("b")
+      local c = s:newDfsNode("c")
+      local d = s:newDfsNode("d")
+      local e = s:newDfsNode("e")
+      local f = s:newDfsNode("f")
 
-   -- separate island:
-   local g = __newDfsNode("g")
-   
-   __addChild(a, b)
-   __addChild(b, c)
-   __addChild(b, d)
-   __addChild(d, e)
-   __addChild(d, f)
+      -- separate island:
+      local g = s:newDfsNode("g")
+      
+      s:addChild(a, b)
+      s:addChild(b, c)
+      s:addChild(b, d)
+      s:addChild(d, e)
+      s:addChild(d, f)
 
-   __doDFS()
+      s:doDFS()
 
-   for i, n in ipairs(__dfsOrder) do
-      print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
+      for i, n in ipairs(s.dfsOrder) do
+         print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
+      end
+      
+      expectEq(s.dfsOrder[1], c)
+      expectEq(s.dfsOrder[2], e)
+      expectEq(s.dfsOrder[3], f)
+      expectEq(s.dfsOrder[4], d)
+      expectEq(s.dfsOrder[5], b)
+      expectEq(s.dfsOrder[6], a)
+      expectEq(s.dfsOrder[7], g)
    end
    
-   expectEq(__dfsOrder[1], c)
-   expectEq(__dfsOrder[2], e)
-   expectEq(__dfsOrder[3], f)
-   expectEq(__dfsOrder[4], d)
-   expectEq(__dfsOrder[5], b)
-   expectEq(__dfsOrder[6], a)
-   expectEq(__dfsOrder[7], g)
-
 end
 __testDFS()
 __testDFS()
