@@ -1643,7 +1643,7 @@ __type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", fa
 __type__string  = __newType(16, __kindString,  "string",   true, "", false, nil);
 --__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
-__ptrType = function(elem)
+__ptrType = function(elem, selfDefnSrcCode)
    if elem == nil then
       error("internal error: cannot call __ptrType() will nil elem")
    end
@@ -1653,6 +1653,7 @@ __ptrType = function(elem)
       __dfsGlobal:addChild(typ, elem)
       elem.ptr = typ;
       typ.init(elem);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
@@ -1677,7 +1678,7 @@ end;
 
 
 __arrayTypes = {};
-__arrayType = function(elem, len)
+__arrayType = function(elem, len, selfDefnSrcCode)
    local typeKey = elem.id .. "_" .. len;
    local typ = __arrayTypes[typeKey];
    if typ == nil then
@@ -1685,12 +1686,13 @@ __arrayType = function(elem, len)
       __arrayTypes[typeKey] = typ;
       __dfsGlobal:addChild(typ, elem)
       typ.init(elem, len);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
 
 
-__chanType = function(elem, sendOnly, recvOnly)
+__chanType = function(elem, sendOnly, recvOnly, selfDefnSrcCode)
    
    local str
    local field
@@ -1710,6 +1712,7 @@ __chanType = function(elem, sendOnly, recvOnly)
       elem[field] = typ;
       __dfsGlobal:addChild(typ, elem)
       typ.init(elem, sendOnly, recvOnly);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
@@ -1741,7 +1744,7 @@ end
 
 
 __funcTypes = {};
-__funcType = function(params, results, variadic)
+__funcType = function(params, results, variadic, selfDefnSrcCode)
 
    -- example: func f(a int, b string) (string, uint32) {}
    --   would have typeKey:
@@ -1781,6 +1784,7 @@ __funcType = function(params, results, variadic)
       __addChildTypesHelper(typ, results)
 
       typ.init(params, results, variadic);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
@@ -1796,7 +1800,7 @@ function __interfaceStrHelper(m)
 end
 
 __interfaceTypes = {};
-__interfaceType = function(methods)
+__interfaceType = function(methods, selfDefnSrcCode)
    
    local typeKey = __mapAndJoinStrings("_", methods, function(m)
                                           return m.pkg .. "," .. m.__name .. "," .. m.__typ.id;
@@ -1819,6 +1823,7 @@ __interfaceType = function(methods)
       end)
       
       typ.init(methods);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
@@ -1828,7 +1833,7 @@ __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__String}, false) }});
 
 __mapTypes = {};
-__mapType = function(key, elem)
+__mapType = function(key, elem, selfDefnSrcCode)
    local typeKey = key.id .. "_" .. elem.id;
    local typ = __mapTypes[typeKey];
    if typ == nil then
@@ -1839,6 +1844,7 @@ __mapType = function(key, elem)
       __dfsGlobal:addChild(typ, elem)
       
       typ.init(key, elem);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
@@ -1903,7 +1909,7 @@ function __basicValue2kind(v)
    --error("__basicValue2kind: unhandled ty: '"..ty.."'")   
 end
 
-__sliceType = function(elem)
+__sliceType = function(elem, selfDefnSrcCode)
    --print("__sliceType called with elem = ", elem)
    if elem == nil then
       print(debug.traceback())
@@ -1915,6 +1921,7 @@ __sliceType = function(elem)
       elem.slice = typ;
       __dfsGlobal:addChild(typ, elem)
       typ.init(elem);
+      typ.src = selfDefnSrcCode
    end
    return typ;
 end;
