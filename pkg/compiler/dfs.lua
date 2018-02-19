@@ -71,6 +71,7 @@ function __addChild(self, parTyp, chTyp)
       error "parTyp cannot be nil in __addChild"
    end
    if chTyp == nil then
+      print(debug.traceback())
       error "chTyp cannot be nil in __addChild"
    end
    if not __dfsTestMode then

@@ -119,7 +119,7 @@ if __dfsOrder == nil then
 end
 
 -- global for now, later figure out to scope down.
-__globalDFS = __NewDFSState()
+__dfsGlobal = __NewDFSState()
 
 -- tell Luar that it is running under gijit,
 -- by setting this global flag.
@@ -1003,7 +1003,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    local typ ={
       __str = str,
    };
-   typ.__dfsNode = __globalDFS:newDfsNode(str, typ)
+   typ.__dfsNode = __dfsGlobal:newDfsNode(str, typ)
 
    setmetatable(typ, __tfunBasicMT)
 
@@ -1115,8 +1115,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             setmetatable(this, __valuePointerMT)
          end;
       typ.keyFor = __idKey;
+      
       typ.init = function(elem)
-        --print("init(elem) for pointer type called.")
+         --print("init(elem) for pointer type called.")
+         __dfsGlobal:addChild(typ, elem)
          typ.elem = elem;
          typ.wrapped = (elem.kind == __kindArray);
          typ.__nil = typ({}, __throwNilPointerError, __throwNilPointerError);
@@ -1176,7 +1178,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end);
       
       -- track the dependency between types
-      __globalDFS:addChild(typ, typ.ptr)
+      __dfsGlobal:addChild(typ.ptr, typ)
       
       typ.init = function(elem, len)
         --print("init() called for array.")
@@ -1303,8 +1305,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
-
-      __globalDFS:addChild(typ, typ.ptr)
+      print("calling addChild(typ.ptr, typ)")
+      __dfsGlobal:addChild(typ.ptr, typ)
+      print("done calling addChild(typ.ptr, typ)")
       
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
@@ -1646,7 +1649,7 @@ __ptrType = function(elem)
    local typ = elem.ptr;
    if typ == nil then
       typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
-      __globalDFS:addChild(typ, elem)
+      __dfsGlobal:addChild(typ, elem)
       elem.ptr = typ;
       typ.init(elem);
    end
@@ -1679,7 +1682,7 @@ __arrayType = function(elem, len)
    if typ == nil then
       typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
       __arrayTypes[typeKey] = typ;
-      __globalDFS:addChild(typ, elem)
+      __dfsGlobal:addChild(typ, elem)
       typ.init(elem, len);
    end
    return typ;
@@ -1704,7 +1707,7 @@ __chanType = function(elem, sendOnly, recvOnly)
    if typ == nil then
       typ = __newType(4, __kindChan, str, false, "", false, nil);
       elem[field] = typ;
-      __globalDFS:addChild(typ, elem)
+      __dfsGlobal:addChild(typ, elem)
       typ.init(elem, sendOnly, recvOnly);
    end
    return typ;
@@ -1731,7 +1734,7 @@ __chanNil.__sendQueue = __chanNil.__recvQueue
 -- before calling __addChild.
 function __addChildTypesHelper(parentTyp, array)
    __mapArray(array, function(ty)
-                 __globalDFS:addChild(parentTyp, ty)
+                 __dfsGlobal:addChild(parentTyp, ty)
    end)
 end
 
@@ -1808,7 +1811,7 @@ __interfaceType = function(methods)
 
       -- note dependencies
       __mapArray(methods, function(m)
-                    __globalDFS:addChild(typ, m.__typ)
+                    __dfsGlobal:addChild(typ, m.__typ)
                     -- should be redundant b/c m.__typ already added these:
                     --__addChildTypesHelper(typ, m.__typ.params)
                     --__addChildTypesHelper(typ, m.__typ.results)
@@ -1831,8 +1834,8 @@ __mapType = function(key, elem)
       typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
       __mapTypes[typeKey] = typ;
 
-      __globalDFS:addChild(typ, key)
-      __globalDFS:addChild(typ, elem)
+      __dfsGlobal:addChild(typ, key)
+      __dfsGlobal:addChild(typ, elem)
       
       typ.init(key, elem);
    end
@@ -1909,7 +1912,7 @@ __sliceType = function(elem)
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
       elem.slice = typ;
-      __globalDFS:addChild(typ, elem)
+      __dfsGlobal:addChild(typ, elem)
       typ.init(elem);
    end
    return typ;
@@ -1986,7 +1989,7 @@ __structType = function(pkgPath, fields)
       __structTypes[typeKey] = typ;
 
       __mapArray(fields, function(f)
-                    __globalDFS:addChild(typ, f.__typ)
+                    __dfsGlobal:addChild(typ, f.__typ)
       end)
       
       typ.init(pkgPath, fields);
