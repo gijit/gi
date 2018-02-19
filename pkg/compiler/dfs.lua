@@ -7,17 +7,23 @@
 --  leaf types before the compound
 --  types that need them defined.
 
+local __dfsTestMode = false
 
-function __newDfsNode(self, name, payload)
-   if payload == nil then
-      error "payload cannot be nil in __newDfsNode"
+function __newDfsNode(self, name, typ)
+   if typ == nil then
+      error "typ cannot be nil in __newDfsNode"
    end
-   if payload.__str == nil then
-      print(debug.traceback())
-      error "payload must be typ, in __newDfsNode"
+   if not __dfsTestMode then
+      if typ.__str == nil then
+         print(debug.traceback())
+         error "typ must be typ, in __newDfsNode"
+      end
+      -- but we won't know the kind until
+      -- later, since this may be early in
+      -- typ construction.
    end
    
-   local nd = self.dfsDedup[payload]
+   local nd = self.dfsDedup[typ]
    if nd ~= nil then
       return nd
    end
@@ -27,41 +33,83 @@ function __newDfsNode(self, name, payload)
       dedupChildren={},
       id = self.dfsNextID,
       name=name,
-      payloadTyp=payload,
+      typ=typ,
    }
    self.dfsNextID=self.dfsNextID+1
-   self.dfsDedup[payload] = node
+   self.dfsDedup[typ] = node
    table.insert(self.dfsNodes, node)
+
+   print("just added to dfsNodes node "..name)
+   __st(typ, "typ, in __newDfsNode")
+   
    self.stale = true
    
    return node
 end
 
--- par should be a node; e.g. typ.__dfsNode
-function __addChild(self, par, ch)
-
-   -- Avoid empty payloads under test
-   local chTyp = ch.payloadTyp
-   if chTyp ~= nil and chTyp.kind ~= nil then
-      
-      -- we can skip all basic types,
-      -- as they are already defined.
-      --
-      if not chTyp.named then
-         if chTyp.kind <= 16 or -- __kindComplex128
-            chTyp.kind == 24 or -- __kindString
-         chTyp.kind == 26 then  -- __kindUnsafePointer
-            return
-         end
-      end
+function __isBasicTyp(typ)
+   if typ == nil or
+      typ.kind == nil or
+   typ.named then
+      return false
    end
    
-   if par.dedupChildren[ch] ~= nil then
+   -- we can skip all basic types,
+   -- as they are already defined.
+   --
+   if typ.kind <= 16 or -- __kindComplex128
+      typ.kind == 24 or -- __kindString
+   typ.kind == 26 then  -- __kindUnsafePointer
+      return
+   end
+end
+
+-- par should be a node; e.g. typ.__dfsNode
+function __addChild(self, parTyp, chTyp)
+
+   if parTyp == nil then
+      error "parTyp cannot be nil in __addChild"
+   end
+   if chTyp == nil then
+      error "chTyp cannot be nil in __addChild"
+   end
+   if not __dfsTestMode then
+      if parTyp.__str == nil then
+         print(debug.traceback())
+         error "parTyp must be typ, in __addChild"
+      end
+      if chTyp.__str == nil then
+         print(debug.traceback())
+         error "chTyp must be typ, in __addChild"
+      end
+   end
+
+   -- we can skip all basic types,
+   -- as they are already defined.   
+   if __isBasicTyp(chTyp) then
+      return
+   end
+   if __isBasicTyp(parTyp) then
+      error("__addChild error: parent was basic type. "..
+               "cannot add child to basic typ ".. parType.__str)
+   end
+
+   local chNode = self.dfsDedup[chTyp]
+   if chNode == nil then
+      chNode = self:newDfsNode(chTyp.__str, chTyp)
+   end
+   
+   local parNode = self.dfsDedup[parTyp]
+   if parNode == nil then
+      parNode = self:newDfsNode(parTyp.__str, parTyp)
+   end
+   
+   if parNode.dedupChildren[ch] ~= nil then
       -- avoid adding same child twice.
       return
    end
-   par.dedupChildren[ch]= #par.children+1
-   table.insert(par.children, ch)
+   parNode.dedupChildren[chNode]= #parNode.children+1
+   table.insert(parNode.children, chNode)
    self.stale = true
 end
 
@@ -143,6 +191,7 @@ end
 dofile 'tutil.lua' -- must be in prelude dir to test.
 
 function __testDFS()
+   __dfsTestMode = true
    local s = __NewDFSState()
 
    -- verify that reset()

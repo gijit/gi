@@ -1176,7 +1176,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end);
       
       -- track the dependency between types
-      __globalDFS:addChild(typ.__dfsNode, typ.ptr)
+      __globalDFS:addChild(typ, typ.ptr)
       
       typ.init = function(elem, len)
         --print("init() called for array.")
@@ -1304,7 +1304,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
 
-      __globalDFS:addChild(typ.__dfsNode, typ.ptr)
+      __globalDFS:addChild(typ, typ.ptr)
       
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
@@ -1646,7 +1646,7 @@ __ptrType = function(elem)
    local typ = elem.ptr;
    if typ == nil then
       typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
-      __globalDFS:addChild(typ.__dfsNode, elem)
+      __globalDFS:addChild(typ, elem)
       elem.ptr = typ;
       typ.init(elem);
    end
@@ -1679,7 +1679,7 @@ __arrayType = function(elem, len)
    if typ == nil then
       typ = __newType(24, __kindArray, "[" .. len .. "]" .. elem.__str, false, "", false, nil);
       __arrayTypes[typeKey] = typ;
-      __globalDFS:addChild(typ.__dfsNode, elem)
+      __globalDFS:addChild(typ, elem)
       typ.init(elem, len);
    end
    return typ;
@@ -1704,7 +1704,7 @@ __chanType = function(elem, sendOnly, recvOnly)
    if typ == nil then
       typ = __newType(4, __kindChan, str, false, "", false, nil);
       elem[field] = typ;
-      __globalDFS:addChild(typ.__dfsNode, elem)
+      __globalDFS:addChild(typ, elem)
       typ.init(elem, sendOnly, recvOnly);
    end
    return typ;
@@ -1727,11 +1727,11 @@ __chanNil = __Chan(nil, 0);
 __chanNil.__recvQueue = { length= 0, push= function()end, shift= function() return nil; end, indexOf= function() return -1; end; };
 __chanNil.__sendQueue = __chanNil.__recvQueue
 
--- parentTyp should be a typ, we will take parent.__dfsNode
+-- parentTyp should be a typ, we will take parent
 -- before calling __addChild.
 function __addChildTypesHelper(parentTyp, array)
    __mapArray(array, function(ty)
-                 __globalDFS:addChild(parentTyp.__dfsNode, ty)
+                 __globalDFS:addChild(parentTyp, ty)
    end)
 end
 
@@ -1808,7 +1808,7 @@ __interfaceType = function(methods)
 
       -- note dependencies
       __mapArray(methods, function(m)
-                    __globalDFS:addChild(typ.__dfsNode, m.__typ)
+                    __globalDFS:addChild(typ, m.__typ)
                     -- should be redundant b/c m.__typ already added these:
                     --__addChildTypesHelper(typ, m.__typ.params)
                     --__addChildTypesHelper(typ, m.__typ.results)
@@ -1831,8 +1831,8 @@ __mapType = function(key, elem)
       typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
       __mapTypes[typeKey] = typ;
 
-      __globalDFS:addChild(typ.__dfsNode, key)
-      __globalDFS:addChild(typ.__dfsNode, elem)
+      __globalDFS:addChild(typ, key)
+      __globalDFS:addChild(typ, elem)
       
       typ.init(key, elem);
    end
@@ -1909,7 +1909,7 @@ __sliceType = function(elem)
    if typ == nil then
       typ = __newType(24, __kindSlice, "[]" .. elem.__str, false, "", false, nil);
       elem.slice = typ;
-      __globalDFS:addChild(typ.__dfsNode, elem)
+      __globalDFS:addChild(typ, elem)
       typ.init(elem);
    end
    return typ;
@@ -1986,7 +1986,7 @@ __structType = function(pkgPath, fields)
       __structTypes[typeKey] = typ;
 
       __mapArray(fields, function(f)
-                 __globalDFS:addChild(typ.__dfsNode, f.__typ)
+                    __globalDFS:addChild(typ, f.__typ)
       end)
       
       typ.init(pkgPath, fields);
