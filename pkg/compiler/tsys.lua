@@ -1305,9 +1305,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
-      print("calling addChild(typ.ptr, typ)")
       __dfsGlobal:addChild(typ.ptr, typ)
-      print("done calling addChild(typ.ptr, typ)")
       
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;

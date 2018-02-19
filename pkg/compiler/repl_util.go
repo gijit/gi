@@ -15,8 +15,6 @@ import (
 
 func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err error) {
 	defer func() {
-		//jea debug!
-		return
 		recov := recover()
 		if recov != nil {
 			msg := fmt.Sprintf("problem detected during Go static type checking: '%v'", recov)
