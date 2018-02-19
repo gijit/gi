@@ -29,7 +29,15 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 
 	if cfg == nil {
 		cfg = NewVmConfig()
-		cfg.PreludePath = "."
+		cwd, err := os.Getwd()
+		panicOn(err)
+		cfg.PreludePath = cwd
+	}
+
+	// establish prelude location so prelude can know itself.
+	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s";`, cfg.PreludePath))
+	if err != nil {
+		return nil, err
 	}
 
 	// load prelude
@@ -83,6 +91,23 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 			vm.Pop(1)
 			return fmt.Errorf("error in setupPrelude during Call on file '%s': '%v'. Details: '%s'", f, err, msg)
 		}
+	}
+	return nil
+}
+
+func LuaDoString(vm *golua.State, cmd string) error {
+	interr := vm.LoadString(cmd)
+	if interr != 0 {
+		pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
+		msg := DumpLuaStackAsString(vm)
+		vm.Pop(1)
+		return fmt.Errorf("error in LuaDoString('%s') during LoadString on file '%s': Details: '%s'", cmd, f, msg)
+	}
+	err := vm.Call(0, 0)
+	if err != nil {
+		msg := DumpLuaStackAsString(vm)
+		vm.Pop(1)
+		return fmt.Errorf("error in LuaDoString('%s') during Call on file '%s': '%v'. Details: '%s'", cmd, f, err, msg)
 	}
 	return nil
 }

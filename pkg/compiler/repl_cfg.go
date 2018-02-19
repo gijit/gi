@@ -30,7 +30,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.Verbose, "v", false, "show debug prints")
 	fs.BoolVar(&c.VerboseVerbose, "vv", false, "show even more verbose debug prints")
 	fs.BoolVar(&c.RawLua, "r", false, "raw mode: skip all translation, type raw Lua to LuaJIT with our prelude installed")
-	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GOINTERP_PRELUDE_DIR' env var. -prelude overrides this.")
+	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GIJIT_PRELUDE_DIR' env var. -prelude overrides this.")
 	fs.BoolVar(&c.IsTestMode, "t", true, "load test mode functions and types")
 	fs.BoolVar(&c.NoLiner, "no-liner", false, "turn off liner, e.g. under emacs")
 }
@@ -47,7 +47,7 @@ func init() {
 func (c *GIConfig) ValidateConfig() error {
 
 	if c.PreludePath == "" {
-		dir := os.Getenv("GOINTERP_PRELUDE_DIR")
+		dir := os.Getenv("GIJIT_PRELUDE_DIR")
 		if dir != "" {
 			c.PreludePath = dir
 		} else {
@@ -74,5 +74,5 @@ func (c *GIConfig) ValidateConfig() error {
 }
 
 func preludeError() error {
-	return fmt.Errorf("setenv GOINTERP_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler but GOINTERP_PRELUDE_DIR was not set and -prelude was not specified.")
+	return fmt.Errorf("setenv GIJIT_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler but GIJIT_PRELUDE_DIR was not set and -prelude was not specified.")
 }

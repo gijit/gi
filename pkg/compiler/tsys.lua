@@ -8,22 +8,107 @@
 -- are already done by prelude loading.
 -- For dev work, we'll load them if not already.
 --
-if __min == nil then
-   dofile 'math.lua' -- for __max, __min, __truncateToInt
-end
-if int8 == nil then
-   dofile 'int64.lua' -- for integer types with Go naming.
-end
-if complex == nil then
-   dofile 'complex.lua'
+
+-- __minifs only has getcwd and chdir.
+-- Just enough to bootstrap.
+--
+__minifs = {}
+__ffi = require "ffi"
+local __osname = __ffi.os == "Windows" and "windows" or "unix"
+
+local __system = ({
+	windows	= {
+		getcwd	= "_getcwd",
+		chdir	= "_chdir",
+		maxpath	= 260,
+	},
+	unix	= {
+		getcwd	= "getcwd",
+		chdir	= "chdir",
+		maxpath	= 4096,
+	}
+})[__osname]
+
+__ffi.cdef(
+	[[
+		char   *]] .. __system.getcwd .. [[ ( char *buf, size_t size );
+		int		]] .. __system.chdir  .. [[ ( const char *path );
+		]]
+)
+
+__minifs.getcwd = function ()
+	local buff = __ffi.new("char[?]", __system.maxpath)
+	__ffi.C[__system.getcwd](buff, __system.maxpath)
+	return __ffi.string(buff)
 end
 
+__minifs.chdir = function (path)
+	return __ffi.C[__system.chdir](path) == 0
+end
+
+-- Ugh, it renames.
+-- So only use this on "__gijit_prelude_path_default",
+-- which is a file of little importance, only there
+-- to verify our path is correct.
+function __minifs.renameBasedFileExists(file)
+   local ok, err, code = os.rename(file, file)
+   if not ok then
+      if code == 13 then
+         -- denied, but it exists
+         return true
+      end
+   end
+   return ok, err
+end
+
+function __minifs.dirExists(path)
+   -- "/" works on both Unix and Windows
+   return __minifs.fileExists(path.."/")
+end
+
+-- The point of __minifs is so we can find
+-- and set __preludePath if it is not set.
+-- It will always be set by gijit, but this
+-- allows standalone development and testing.
+--
+if __preludePath == nil then
+   local dir = os.getenv("GIJIT_PRELUDE_DIR")
+   if dir ~= nil then
+      __preludePath = dir .. "/"
+   else
+      local defaultPreludePath = "/src/github.com/gijit/gi/pkg/compiler"
+      local gopath = os.getenv("GOPATH")
+      if gopath ~= nil then
+         __preludePath = gopath .. defaultPreludePath .. "/"
+      else
+         -- try $HOME/go
+         local home = os.getenv("HOME")
+         if home ~= nil then
+            __preludePath = home .. "/go" .. defaultPreludePath .. "/"
+         else
+            -- default to cwd
+            __preludePath = __minifs.getcwd().."/"
+         end
+      end
+   end
+   -- check for our marker file.
+   if not __minifs.renameBasedFileExists(__preludePath.."__gijit_prelude_path_default") then
+      error("error in tsys.lua: could not find my prelude directory. Tried __preludePath='"..__preludePath.."'")
+   end
+end
+
+if __min == nil then
+   dofile(__preludePath..'math.lua') -- for __max, __min, __truncateToInt
+end
+if int8 == nil then
+   dofile(__preludePath..'int64.lua') -- for integer types with Go naming.
+end
 if complex == nil then
-   dofile 'complex.lua'
+   dofile(__preludePath..'complex.lua')
 end
 
 if __dfsOrder == nil then
-   dofile 'dfs.lua'
+   dofile(__preludePath..'dfs.lua')
 end
 
 -- tell Luar that it is running under gijit,
@@ -33,7 +118,6 @@ __gijit_tsys = true
 -- translation of javascript builtin 'prototype' -> typ.prototype
 --                                   'constructor' -> typ.__constructor
 
-__ffi = require("ffi")
 __bit = require("bit")
 
 __global ={};
