@@ -11,12 +11,13 @@ __nodes = {}
 __dfsOrder = {}
 __nextID = 0
 
-function __newNode(name)
+function __newDfsNode(name, payload)
    local node= {
       visited=false,
       children={},
       id = __nextID,
       name=name,
+      payload=payload,
    }
    __nextID=__nextID+1
    table.insert(__nodes, node)
@@ -61,21 +62,22 @@ function __doDFS()
    end
 end
 
+--[[
 -- test
 dofile 'tutil.lua'
 
 function __testDFS()
    __emptyOutGraph()
    
-   local a = __newNode("a")
-   local b = __newNode("b")
-   local c = __newNode("c")
-   local d = __newNode("d")
-   local e = __newNode("e")
-   local f = __newNode("f")
+   local a = __newDfsNode("a")
+   local b = __newDfsNode("b")
+   local c = __newDfsNode("c")
+   local d = __newDfsNode("d")
+   local e = __newDfsNode("e")
+   local f = __newDfsNode("f")
 
    -- separate island:
-   local g = __newNode("g")
+   local g = __newDfsNode("g")
    
    __addChild(a, b)
    __addChild(b, c)
@@ -100,3 +102,4 @@ function __testDFS()
 end
 __testDFS()
 __testDFS()
+--]]

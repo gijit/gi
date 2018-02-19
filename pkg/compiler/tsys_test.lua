@@ -93,7 +93,7 @@ a = __type__int(4) -- currently, even integers are wrapped.
 -- b := &a  -- gets translated as two parts:
 ptrType = __ptrType(__type__int)
 
-b = ptrType(function() return a; end, function(__v) a = __v; end, a);
+b = ptrType({}, function() return a; end, function(__v) a = __v; end, a);
 
 -- arrays
 
@@ -103,7 +103,7 @@ a = arrayType()
 expectEq(a[0], 0LL)
 a[1] = 32LL
 expectEq(a[1], 32LL)
-expectEq(#a, 4LL)
+expectEq(#a, 4)
 
 b = arrayType()
 a[0]=5LL
@@ -128,7 +128,7 @@ expectEq(s0[0], 45LL)
 s2 = __makeSlice(slcInt, 3)
 m = __copySlice(s2, sl)
 expectEq(s2[2], 45LL)
-expectEq(m, 3)
+expectEq(m, 3LL)
 
 s0[0]=100LL
 s2[0]=101LL
@@ -168,7 +168,7 @@ func main() {
 
 __type__WonderWoman = __newType(0, __kindStruct, "main.WonderWoman", true, "main", true, nil);
 
-__type__WonderWoman.init("", {{__prop= "Bracelets", __name= "Bracelets", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "LassoPoints", __name= "LassoPoints", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}});
+__type__WonderWoman.init("", {{__prop= "Bracelets", __name= "Bracelets", __anonymous= false, ____exported= true, __typ= __type__int, __tag= ""}, {__prop= "LassoPoints", __name= "LassoPoints", __anonymous= false, ____exported= true, __typ= __type__int, __tag= ""}});
 	
 __type__WonderWoman.__constructor = function(self, ...)
    print("DEBUG WonderWoman.ctor called! dots=")
@@ -302,7 +302,7 @@ Wolf = __newType(0, __kindStruct, "main.Wolf", true, "github.com/gijit/gi/pkg/co
                        this.HasRing = false;
                        return;
                     end
-                    this.Claw = Claw_ or 0;
+                    this.Claw = Claw_ or 0LL;
                     this.HasRing = HasRing_ or false;
 end);
 
@@ -337,17 +337,17 @@ battle = function(g, b)
    return g:Scowl(), b:WearRing();
 end
    
-ptrType.methods = {{__prop= "WearRing", name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}};
+ptrType.methods = {{__prop= "WearRing", __name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}};
 
-ptrType__1.methods = {{__prop= "Scowl", name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}};
+ptrType__1.methods = {{__prop= "Scowl", __name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}};
 
-Baggins.init({{__prop= "WearRing", name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}});
+Baggins.init({{__prop= "WearRing", __name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}});
 
-Gollum.init({{__prop= "Scowl", name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}});
+Gollum.init({{__prop= "Scowl", __name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}});
 
-hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "hasRing", name= "hasRing", anonymous= false, exported= false, __typ= __type__bool, tag= ""}});
+hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "hasRing", __name= "hasRing", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}});
 
-Wolf.init("", {{__prop= "Claw", name= "Claw", anonymous= false, exported= true, __typ= __type__int, tag= ""}, {__prop= "HasRing", name= "HasRing", anonymous= false, exported= true, __typ= __type__bool, tag= ""}});
+Wolf.init("", {{__prop= "Claw", __name= "Claw", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "HasRing", __name= "HasRing", __anonymous= false, __exported= true, __typ= __type__bool, __tag= ""}});
 
 tryTheTypeSwitch = function(i)
    print("top of tryTheTypeSwitch, with i=")
@@ -514,7 +514,7 @@ Hound = __newType(0, __kindStruct, "main.Hound", true, "github.com/gijit/gi/pkg/
 			return;
 end);
 
-Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "Name", name= "Name", anonymous= false, exported= true, __typ= __type__string, tag= ""}, {__prop= "Id", name= "Id", anonymous= false, exported= true, __typ= __type__int, tag= ""}, {__prop= "Mate", name= "Mate", anonymous= false, exported= true, __typ= ptrType, tag= ""}, {__prop= "Litter", name= "Litter", anonymous= false, exported= true, __typ= sliceType, tag= ""}, {__prop= "PtrLit", name= "PtrLit", anonymous= false, exported= true, __typ= ptrType__1, tag= ""}, {__prop= "food", name= "food", anonymous= false, exported= false, __typ= __type__int, tag= ""}, {__prop= "ate", name= "ate", anonymous= false, exported= false, __typ= __type__bool, tag= ""}});
+Hound.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "Name", __name= "Name", __anonymous= false, __exported= true, __typ= __type__string, __tag= ""}, {__prop= "Id", __name= "Id", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "Mate", __name= "Mate", __anonymous= false, __exported= true, __typ= ptrType, __tag= ""}, {__prop= "Litter", __name= "Litter", __anonymous= false, __exported= true, __typ= sliceType, __tag= ""}, {__prop= "PtrLit", __name= "PtrLit", __anonymous= false, __exported= true, __typ= ptrType__1, __tag= ""}, {__prop= "food", __name= "food", __anonymous= false, __exported= false, __typ= __type__int, __tag= ""}, {__prop= "ate", __name= "ate", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}});
 
 -- return .methodSet to  .prototype
 Hound.ptr.prototype.Eat = function(this, a)

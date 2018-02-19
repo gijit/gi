@@ -1125,7 +1125,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindInterface then 
 
-      typ = { implementedBy= {}, missingMethodFor= {} };
+      typ.implementedBy= {}
+      typ.missingMethodFor= {}
+      
       typ.keyFor = __ifaceKeyFor;
       typ.init = function(methods)
          --print("top of init() for kindInterface, methods= ")
@@ -1488,8 +1490,8 @@ function __methodSet(typ)
       -- above may have made duplicates, now dedup
       --print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
-         --print("m is ")
-         --__st(m,"m")
+         print("m is ")
+         __st(m,"m")
          if base[m.__name] == nil then
             base[m.__name] = m;
          end
