@@ -336,15 +336,35 @@ __type__Wolf.prototype.Scowl = function(this )  return this.__val.Scowl(); end;
 __type__Wolf.__addToMethods({prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}); -- package.go:344
 
 __type__Wolf.ptr.__addToMethods({prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}); -- package.go:346
-battle = function(g, b) 
-   _r = g:Scowl();
-   _r_1 = b:WearRing();
-   $s = -1; return  _r, _r_1 ;
+
+battle = function(g, b)
+   return g:Scowl(), b:WearRing();
 end;
-tryTheTypeSwitch = function(i) 
-   _ref = i;
-   $s = -1; return  0LL ;
-end;
+
+
+tryTheTypeSwitch = function(i)
+   print("top of tryTheTypeSwitch, with i=")
+   __st(i)
+
+   x, isG = __assertType(i, __type__Gollum, true)
+   if isG then
+      print("yes, i satisfies __type__Gollum interface")
+      return x:Scowl()
+   end
+   print("i did not satisfy __type__Gollum, trying __type__Baggins...")
+
+   x, isB = __assertType(i, __type__Baggins, true)
+   if isB then
+      print("yes, i satisfies Baggins interface")
+      if x:WearRing() then
+         return 1LL
+      end
+   else
+      print("i satisfied neither interface")
+   end
+   return 0LL
+end
+
 main = function() 
    w = __type__Wolf.ptr({}, 0LL, false);
    bilbo = __type__hobbit.ptr({}, false);
@@ -352,20 +372,20 @@ main = function()
    i0, b0 = _r
    _r_1 = battle(w, bilbo);
    i1, b1 = _r_1
-   fmt.Printf("i0=%v, b0=%v\n", i0, b0);
-   fmt.Printf("i1=%v, b1=%v\n", i1, b1);
+   println("i0=%v, b0=%v\n", i0, b0);
+   println("i1=%v, b1=%v\n", i1, b1);
    _r_2 = tryTheTypeSwitch(w);
    _arg = _r_2;
-   _r_3 = fmt.Printf("tried wolf=%v\n", _arg);
-   _r_3;
+   _r_3 = println("tried wolf=%v\n", _arg);
    _r_4 = tryTheTypeSwitch(bilbo);
    _arg_1 = _r_4;
-   _r_5 = fmt.Printf("tried bilbo=%v\n", _arg_1);
-end
-        
+   _r_5 = println("tried bilbo=%v\n", _arg_1);
+end;
+
+
 -- main
-w = Wolf.ptr(0, false);
-bilbo = hobbit.ptr(false);
+w = __type__Wolf.ptr(0, false);
+bilbo = __type__hobbit.ptr(false);
 
 -- problem:
 -- hmm hobbit.methods and Wolf.methods are empty
@@ -380,17 +400,17 @@ bilbo = hobbit.ptr(false);
 -- So pointers should check their own and their elem methods.
 --  but we'll need to clone the value before calling a value-receiver method with a pointer.
 
-msWp = __methodSet(Wolf.ptr)
+msWp = __methodSet(__type__Wolf.ptr)
 expectEq(#msWp, 1)
-msW = __methodSet(Wolf)
-expectEq(#msW, 0)
+msW = __methodSet(__type__Wolf)
+expectEq(#msW, 1)
 
-msHp = __methodSet(hobbit.ptr)
+msHp = __methodSet(__type__hobbit.ptr)
 expectEq(#msHp, 1)
-msH = __methodSet(hobbit)
-expectEq(#msH, 0)
+msH = __methodSet(__type__hobbit)
+expectEq(#msH, 1)
 
-w2 = Wolf.ptr(0, false);
+w2 = __type__Wolf.ptr(0, false);
 expectEq(getmetatable(w2).__name, "methodSet for *main.Wolf")
 
 print("fin_test.lua: about to call battle(w, bilbo)")
