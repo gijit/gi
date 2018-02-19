@@ -36,7 +36,7 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
-	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s/";`, cfg.PreludePath))
+	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)))
 	if err != nil {
 		return nil, err
 	}
@@ -224,10 +224,17 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	// windows needs the \ turned into \\ in order to work
 	if runtime.GOOS == "windows" {
 		for i := range files {
-			files[i] = strings.Replace(files[i], `\`, `\\`, -1)
+			files[i] = makePathWindowsSafe(files[i])
 		}
 	}
 	return files, nil
+}
+
+func makePathWindowsSafe(path string) string {
+	if runtime.GOOS != "windows" {
+		return path
+	}
+	return strings.Replace(path, `\`, `\\`, -1)
 }
 
 // prefer below LuaMustInt64
