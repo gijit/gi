@@ -97,6 +97,18 @@ $ gi
 most recent status
 ------------------
 
+2018 Feb 18 update
+------------------
+As of `gigit` v0.9.15, Complex numbers
+fully supported, with all the `cmplx` library
+funtions available. The underlying complex.lua
+library works natively. There's still some
+cruft left in the compiler to clear out
+of the way, but that will be quick.
+
+The revamped type system supports the matrix multiplication
+benchmark.
+
 2018 Feb 14 update
 ------------------
 `gijit` was successfully built on Windows10,

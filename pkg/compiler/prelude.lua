@@ -2,8 +2,8 @@
 -- be available before any user code is run.
 
 function __gi_GetRangeCheck(x, i)
-  if x == nil or i < 0 or i >= #x then
-     error("index out of range")
+   if x == nil or i < 0 or i >= #x then
+      error("index out of range")
   end
   return x[i]
 end;
