@@ -383,7 +383,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			case is64Bit(basic):
 				return c.formatExpr("%1s(-%2h, -%2l)", c.typeName(t), e.X)
 			case isComplex(basic):
-				return c.formatExpr("%1s(-%2r, -%2i)", c.typeName(t), e.X)
+				return c.formatExpr("-(%1e)", e.X)
+				//return c.formatExpr("-(%1r+%1i)", e.X)
+				//return c.formatExpr("%1s(-%2r, -%2i)", c.typeName(t), e.X)
 			case isUnsigned(basic):
 				return c.fixNumber(c.formatExpr("-%e", e.X), basic)
 			default:
@@ -457,7 +459,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				case token.EQL:
 					return c.formatExpr("(%1r == %2r && %1i == %2i)", e.X, e.Y)
 				case token.ADD, token.SUB:
-					return c.formatExpr("%3s(%1r %4t %2r, %1i %4t %2i)", e.X, e.Y, c.typeName(t), e.Op)
+
+					return c.formatExpr("(%1e %3t %2e)", e.X, e.Y, e.Op)
+					//return c.formatExpr("%3s(%1r %4t %2r, %1i %4t %2i)", e.X, e.Y, c.typeName(t), e.Op)
 				case token.MUL:
 					return c.formatExpr("%3s(%1r * %2r - %1i * %2i, %1r * %2i + %1i * %2r)", e.X, e.Y, c.typeName(t))
 				case token.QUO:
@@ -1627,9 +1631,9 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	}()
 	defer func() {
 		if xprn != nil {
-			pp("expressions.go:1352, formatExprInternal('%s') returning '%s'", format, xprn.str)
-			if xprn.str == `(x = a[0], x = 1LL, new int64(x.$high - x.$high, x.$low - x.$low))` {
-				panic("where a[0]-- ?")
+			pp("formatExprInternal('%s') returning '%s'", format, xprn.str)
+			if xprn.str == `(x_1 = __type__complex128((tonumber((a + b))), 0), __type__complex128(real(x_1) + 1, imag(x_1) + 0))` {
+				panic("where?")
 			}
 		} else {
 			pp("expressions.go:1357, formatExprInternal('%s') returning nil", format)

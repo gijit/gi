@@ -313,7 +313,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	if true { // jea add
 		if n > 0 {
 			//fmt.Printf("repeated name '%s'! funcContext c = '%#v'", name, c)
-			fmt.Printf("repeated name '%s'! funcContext c.parent = '%#v'", name, *c.parent)
+			//fmt.Printf("repeated name '%s'! funcContext c.parent = '%#v'", name, *c.parent)
 			varName = fmt.Sprintf("%s_%d", name, n)
 		}
 	}
