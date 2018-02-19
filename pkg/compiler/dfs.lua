@@ -33,6 +33,17 @@ end
 
 -- par should be a node; e.g. typ.__dfsNode
 function __addChild(self, par, ch)
+
+   -- we can skip all basic types,
+   -- as they are already defined.
+   if not ch.named then
+      if ch.kind <= 16 or -- __kindComplex128
+         ch.kind == 24 or -- __kindString
+      ch.kind == 26 then  -- __kindUnsafePointer
+         return
+      end
+   end
+   
    if par.dedupChildren[ch] ~= nil then
       -- avoid adding same child twice.
       return
