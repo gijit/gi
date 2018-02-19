@@ -36,7 +36,7 @@ function __addChild(self, par, ch)
 
    -- Avoid empty payloads under test
    local chTyp = ch.payloadTyp
-   if chTyp.kind ~= nil then
+   if chTyp ~= nil and chTyp.kind ~= nil then
       
       -- we can skip all basic types,
       -- as they are already defined.
