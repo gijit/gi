@@ -1778,7 +1778,7 @@ __makeSlice = function(typ, length, capacity)
       print(debug.traceback())
    end
    length = length or 0
-   capacity = capacity or 0
+   capacity = capacity or length
    
    length = tonumber(length)
    print("in __makeSlice: after tonumber, length is: '"..tostring(length).."'")
@@ -1792,7 +1792,7 @@ __makeSlice = function(typ, length, capacity)
       __throwRuntimeError("makeslice: len out of range");
    end
    if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
-      __throwRuntimeError("makeslice: cap out of range");
+      __throwRuntimeError("makeslice: cap out of range: "..tostring(capcity));
    end
    local array = __newAnyArrayValue(typ.elem, capacity)
    local slice = typ(array);
