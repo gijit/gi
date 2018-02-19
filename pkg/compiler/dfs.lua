@@ -12,6 +12,11 @@ function __newDfsNode(self, name, payload)
    if payload == nil then
       error "payload cannot be nil in __newDfsNode"
    end
+   if payload.__str == nil then
+      print(debug.traceback())
+      error "payload must be typ, in __newDfsNode"
+   end
+   
    local nd = self.dfsDedup[payload]
    if nd ~= nil then
       return nd
@@ -27,6 +32,7 @@ function __newDfsNode(self, name, payload)
    self.dfsNextID=self.dfsNextID+1
    self.dfsDedup[payload] = node
    table.insert(self.dfsNodes, node)
+   self.stale = true
    
    return node
 end
@@ -56,6 +62,7 @@ function __addChild(self, par, ch)
    end
    par.dedupChildren[ch]= #par.children+1
    table.insert(par.children, ch)
+   self.stale = true
 end
 
 function __markGraphUnVisited(self)
@@ -63,6 +70,7 @@ function __markGraphUnVisited(self)
    for _,n in ipairs(self.dfsNodes) do
       n.visited = false
    end
+   self.stale = false
 end
 
 function __emptyOutGraph(self)
@@ -70,6 +78,7 @@ function __emptyOutGraph(self)
    self.dfsNodes = {} -- node stored in value.
    self.dfsDedup = {} -- payloadTyp key -> node value.
    self.dfsNextID = 0
+   self.stale = false
 end
 
 function __dfsHelper(self, node)
@@ -80,6 +89,7 @@ function __dfsHelper(self, node)
       return
    end
    node.visited = true
+   __st(node,"node, in __dfsHelper")
    for _, ch in ipairs(node.children) do
       self:dfsHelper(ch)
    end
@@ -88,6 +98,9 @@ function __dfsHelper(self, node)
 end
 
 function __showDFSOrder(self)
+   if self.stale then
+      self:doDFS()
+   end
    for i, n in ipairs(self.dfsOrder) do
       print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
    end
@@ -98,6 +111,7 @@ function __doDFS(self)
    for _, n in ipairs(self.dfsNodes) do
       self:dfsHelper(n)
    end
+   self.stale = false
 end
 
 function __hasTypes(self)

@@ -1000,7 +1000,9 @@ __idKey = function(x)
 end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
-   local typ ={};
+   local typ ={
+      __str = str,
+   };
    typ.__dfsNode = __globalDFS:newDfsNode(str, typ)
 
    setmetatable(typ, __tfunBasicMT)
