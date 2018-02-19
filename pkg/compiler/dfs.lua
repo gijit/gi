@@ -8,8 +8,8 @@
 --  types that need them defined.
 
 __nodes = {}
-__nextID = 0
 __dfsOrder = {}
+__nextID = 0
 
 function __newNode(name)
    local node= {
@@ -19,7 +19,7 @@ function __newNode(name)
       name=name,
    }
    __nextID=__nextID+1
-   __nodes[node]=true
+   table.insert(__nodes, node)
    return node
 end
 
@@ -29,12 +29,20 @@ end
 
 function __markGraphUnVisited()
    __dfsOrder = {}
-   for n,_ in pairs(__nodes) do
+   for _,n in ipairs(__nodes) do
       n.visited = false
    end
 end
 
+function __emptyOutGraph()
+   __dfsOrder = {}
+   __nodes = {}
+end
+
 function __dfsHelper(node)
+   if node == nil then
+      return
+   end
    if node.visited then
       return
    end
@@ -46,15 +54,19 @@ function __dfsHelper(node)
    table.insert(__dfsOrder, node)
 end
 
-function __doDFS(root)
+function __doDFS()
    __markGraphUnVisited()
-   __dfsHelper(root)
+   for _, n in ipairs(__nodes) do
+      __dfsHelper(n)
+   end
 end
 
 -- test
 dofile 'tutil.lua'
 
 function __testDFS()
+   __emptyOutGraph()
+   
    local a = __newNode("a")
    local b = __newNode("b")
    local c = __newNode("c")
@@ -62,13 +74,16 @@ function __testDFS()
    local e = __newNode("e")
    local f = __newNode("f")
 
+   -- separate island:
+   local g = __newNode("g")
+   
    __addChild(a, b)
    __addChild(b, c)
    __addChild(b, d)
    __addChild(d, e)
    __addChild(d, f)
 
-   __doDFS(a)
+   __doDFS()
 
    for i, n in ipairs(__dfsOrder) do
       print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
@@ -80,6 +95,8 @@ function __testDFS()
    expectEq(__dfsOrder[4], d)
    expectEq(__dfsOrder[5], b)
    expectEq(__dfsOrder[6], a)
+   expectEq(__dfsOrder[7], g)
 
 end
--- __testDFS()
+__testDFS()
+__testDFS()
