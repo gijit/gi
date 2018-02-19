@@ -1075,13 +1075,13 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		switch argType := c.p.TypeOf(args[0]).Underlying().(type) {
 		case *types.Slice:
 			t := c.typeName(0, c.p.TypeOf(args[0]))
-			zero := c.zeroValue(argType.Elem())
+			//zero := c.zeroValue(argType.Elem())
 			if len(args) == 3 {
-				return c.formatExpr("__makeSlice(%s, %e, %f, %f)",
-					t, zero, args[1], args[2])
+				return c.formatExpr("__makeSlice(%s, %f, %f)",
+					t, args[1], args[2])
 			}
-			return c.formatExpr("__makeSlice(%s, %e, %f)",
-				t, zero, args[1])
+			return c.formatExpr("__makeSlice(%s, %f)",
+				t, args[1])
 
 		case *types.Map:
 			if len(args) == 2 && c.p.Types[args[1]].Value == nil {

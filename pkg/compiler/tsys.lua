@@ -1772,7 +1772,17 @@ __sliceType = function(elem)
 end;
 
 __makeSlice = function(typ, length, capacity)
+   print("__makeSlice called with type length='"..type(length).."'")
+   if type(length) == "string" then
+      print("string length?? where:")
+      print(debug.traceback())
+   end
+   length = length or 0
+   capacity = capacity or 0
+   
    length = tonumber(length)
+   print("in __makeSlice: after tonumber, length is: '"..tostring(length).."'")
+   
    if capacity == nil then
       capacity = length
    else
