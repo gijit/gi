@@ -22,7 +22,7 @@ function __newDfsNode(self, name, payload)
       dedupChildren={},
       id = self.dfsNextID,
       name=name,
-      payload=payload,
+      payloadTyp=payload,
    }
    self.dfsNextID=self.dfsNextID+1
    self.dfsDedup[payload] = node
@@ -34,13 +34,19 @@ end
 -- par should be a node; e.g. typ.__dfsNode
 function __addChild(self, par, ch)
 
-   -- we can skip all basic types,
-   -- as they are already defined.
-   if not ch.named then
-      if ch.kind <= 16 or -- __kindComplex128
-         ch.kind == 24 or -- __kindString
-      ch.kind == 26 then  -- __kindUnsafePointer
-         return
+   -- Avoid empty payloads under test
+   local chTyp = ch.payloadTyp
+   if chTyp.kind ~= nil then
+      
+      -- we can skip all basic types,
+      -- as they are already defined.
+      --
+      if not chTyp.named then
+         if chTyp.kind <= 16 or -- __kindComplex128
+            chTyp.kind == 24 or -- __kindString
+         chTyp.kind == 26 then  -- __kindUnsafePointer
+            return
+         end
       end
    end
    
@@ -62,7 +68,7 @@ end
 function __emptyOutGraph(self)
    self.dfsOrder = {}
    self.dfsNodes = {} -- node stored in value.
-   self.dfsDedup = {} -- payload key -> node value.
+   self.dfsDedup = {} -- payloadTyp key -> node value.
    self.dfsNextID = 0
 end
 
@@ -81,6 +87,12 @@ function __dfsHelper(self, node)
    table.insert(self.dfsOrder, node)
 end
 
+function __showDFSOrder(self)
+   for i, n in ipairs(self.dfsOrder) do
+      print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
+   end
+end
+
 function __doDFS(self)
    __markGraphUnVisited(self)
    for _, n in ipairs(self.dfsNodes) do
@@ -91,6 +103,7 @@ end
 function __hasTypes(self)
    return self.dfsNextID ~= 0
 end
+
 
 function __NewDFSState()
    return {
@@ -106,10 +119,11 @@ function __NewDFSState()
       addChild = __addChild,
       markGraphUnVisited = __markGraphUnVisited,
       hasTypes = __hasTypes,
+      showDFSOrder=__showDFSOrder,
    }
 end
 
---[[
+---[[
 -- test. To test, change the --[[ above to ---[[
 --       and issue dofile('dfs.lua')
 dofile 'tutil.lua' -- must be in prelude dir to test.
@@ -156,10 +170,8 @@ function __testDFS()
 
       s:doDFS()
 
-      for i, n in ipairs(s.dfsOrder) do
-         print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
-      end
-      
+      s:showDFSOrder()
+
       expectEq(s.dfsOrder[1], c)
       expectEq(s.dfsOrder[2], e)
       expectEq(s.dfsOrder[3], f)
