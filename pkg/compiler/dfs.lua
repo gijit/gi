@@ -9,6 +9,13 @@
 
 
 function __newDfsNode(self, name, payload)
+   if payload == nil then
+      error "payload cannot be nil in __newDfsNode"
+   end
+   local nd = self.dfsDedup[payload]
+   if nd ~= nil then
+      return nd
+   end
    local node= {
       visited=false,
       children={},
@@ -17,7 +24,9 @@ function __newDfsNode(self, name, payload)
       payload=payload,
    }
    self.dfsNextID=self.dfsNextID+1
+   self.dfsDedup[payload] = node
    table.insert(self.dfsNodes, node)
+   
    return node
 end
 
@@ -34,7 +43,8 @@ end
 
 function __emptyOutGraph(self)
    self.dfsOrder = {}
-   self.dfsNodes = {}
+   self.dfsNodes = {} -- node stored in value.
+   self.dfsDedup = {} -- payload key -> node value.
 end
 
 function __dfsHelper(self, node)
@@ -63,6 +73,7 @@ function __NewDFSState()
    return {
       dfsNodes = {},
       dfsOrder = {},
+      dfsDedup = {},
       dfsNextID = 0,
 
       doDFS = __doDFS,
@@ -87,15 +98,22 @@ function __testDFS()
    for i =1,2 do
       s:emptyOutGraph()
       
-      local a = s:newDfsNode("a")
-      local b = s:newDfsNode("b")
-      local c = s:newDfsNode("c")
-      local d = s:newDfsNode("d")
-      local e = s:newDfsNode("e")
-      local f = s:newDfsNode("f")
+      local aPayload = {}
+      local a = s:newDfsNode("a", aPayload)
+   
+      local adup = s:newDfsNode("a", aPayload)
+      if adup ~= a then
+          error "dedup failed."
+      end
+
+      local b = s:newDfsNode("b", {})
+      local c = s:newDfsNode("c", {})
+      local d = s:newDfsNode("d", {})
+      local e = s:newDfsNode("e", {})
+      local f = s:newDfsNode("f", {})
 
       -- separate island:
-      local g = s:newDfsNode("g")
+      local g = s:newDfsNode("g", {})
       
       s:addChild(a, b)
       s:addChild(b, c)
