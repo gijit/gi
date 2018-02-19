@@ -100,14 +100,22 @@ most recent status
 2018 Feb 18 update
 ------------------
 As of `gigit` v0.9.15, Complex numbers
-fully supported, with all the `cmplx` library
+fully supported, with all of the `cmplx` library
 funtions available. The underlying complex.lua
-library works natively. There's still some
-cruft left in the compiler to clear out
-of the way, but that will be quick.
+library works at LuaJIT natively.
 
-The revamped type system supports the matrix multiplication
-benchmark.
+There's still some cruft to clear out
+in the compiler from all the javascript
+support that is no longer needed. So
+complex number interactive use is still
+a little awkward, but this can be
+quickly improved.
+
+The revamped type system supports the
+matrix multiplication benchmark.
+
+Building on Windows, alongside OSX
+and Linux, now works.
 
 2018 Feb 14 update
 ------------------

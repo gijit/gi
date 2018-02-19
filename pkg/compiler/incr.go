@@ -281,11 +281,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				funcSrcCache[d.Name.Name] = by.String()
 				pp("stored in c.p.funcSrcCache['%s'] the value '%s'", d.Name.Name, funcSrcCache[d.Name.Name])
 
-				pp("with AST:")
-				if verb.Verbose {
-					ast.Print(fileSet, d)
-				}
-				pp("done showing AST for *ast.FuncDecl...:'%#v'", d)
+				//pp("with AST:")
+				//if verb.Verbose {
+				//	ast.Print(fileSet, d)
+				//}
+				//pp("done showing AST for *ast.FuncDecl...:'%#v'", d)
 
 				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)
 				var recvType types.Type
@@ -358,11 +358,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					err := printer.Fprint(os.Stdout, fileSet, d)
 					panicOn(err)
 				}
-				pp("with AST:")
-				if verb.Verbose {
-					ast.Print(fileSet, d)
-				}
-				pp("done showing AST for *ast.GenDecl...:'%#v'", d)
+				//pp("with AST:")
+				//if verb.Verbose {
+				//	ast.Print(fileSet, d)
+				//}
+				//pp("done showing AST for *ast.GenDecl...:'%#v'", d)
 
 				switch ds := d.Specs[0].(type) {
 				case *ast.TypeSpec:

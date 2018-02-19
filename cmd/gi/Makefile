@@ -28,6 +28,7 @@ OBJS=$(SRCS:.go=.o)
 
 
 install:
+	rm ${GOPATH}/bin/${BINARY}
 	CGO_LDFLAGS_ALLOW='.*\.a$$' go install ${LDFLAGS_gi}
 	CGO_LDFLAGS_ALLOW='.*\.a$$' go build ${LDFLAGS_gi}
 

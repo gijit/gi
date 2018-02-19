@@ -65,7 +65,7 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 	ic.pkgMap[key] = pk
 	ic.CurPkg = pk
 
-	ic.EnableImportsFromLua() // from Lua, use __gi_import("fmt");
+	ic.EnableImportsFromLua() // from Lua, use __go_import("fmt");
 
 	return ic
 }
@@ -137,7 +137,6 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	panicOn(err)
 	pp("we got past the ParseFile !")
 
-	// Print the AST.
 	if tr.PrintAST {
 		ast.Print(tr.CurPkg.fileSet, file)
 	}
