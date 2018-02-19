@@ -123,7 +123,7 @@ function __NewDFSState()
    }
 end
 
----[[
+--[[
 -- test. To test, change the --[[ above to ---[[
 --       and issue dofile('dfs.lua')
 dofile 'tutil.lua' -- must be in prelude dir to test.
