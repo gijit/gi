@@ -19,6 +19,7 @@ function __newDfsNode(self, name, payload)
    local node= {
       visited=false,
       children={},
+      dedupChildren={},
       id = self.dfsNextID,
       name=name,
       payload=payload,
@@ -31,6 +32,11 @@ function __newDfsNode(self, name, payload)
 end
 
 function __addChild(self, par, ch)
+   if par.dedupChildren[ch] ~= nil then
+      -- avoid adding same child twice.
+      return
+   end
+   par.dedupChildren[ch]= #par.children+1
    table.insert(par.children, ch)
 end
 
@@ -116,6 +122,14 @@ function __testDFS()
       local g = s:newDfsNode("g", {})
       
       s:addChild(a, b)
+
+      -- check dedup of child add
+      local startCount = #a.children
+      s:addChild(a, b)
+      if #a.children ~= startCount then
+          error("child dedup failed.")
+      end
+
       s:addChild(b, c)
       s:addChild(b, d)
       s:addChild(d, e)
