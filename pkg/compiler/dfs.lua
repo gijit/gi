@@ -63,6 +63,7 @@ function __emptyOutGraph(self)
    self.dfsOrder = {}
    self.dfsNodes = {} -- node stored in value.
    self.dfsDedup = {} -- payload key -> node value.
+   self.dfsNextID = 0
 end
 
 function __dfsHelper(self, node)
@@ -87,6 +88,10 @@ function __doDFS(self)
    end
 end
 
+function __hasTypes(self)
+   return self.dfsNextID ~= 0
+end
+
 function __NewDFSState()
    return {
       dfsNodes = {},
@@ -96,10 +101,11 @@ function __NewDFSState()
 
       doDFS = __doDFS,
       dfsHelper = __dfsHelper,
-      emptyOutGraph = __emptyOutGraph,
+      reset = __emptyOutGraph,
       newDfsNode = __newDfsNode,
       addChild = __addChild,
       markGraphUnVisited = __markGraphUnVisited,
+      hasTypes == __hasTypes,
    }
 end
 
@@ -111,11 +117,11 @@ dofile 'tutil.lua'
 function __testDFS()
    local s = __NewDFSState()
 
-   -- verify that __emptyOutGraph
+   -- verify that reset()
    -- works by doing two passes.
    
    for i =1,2 do
-      s:emptyOutGraph()
+      s:reset()
       
       local aPayload = {}
       local a = s:newDfsNode("a", aPayload)

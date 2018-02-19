@@ -62,6 +62,13 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		return nil, err
 	}
 
+	// lastly, after the prelude, reset the DFS graph
+	// so new type dependencies are tracked
+	err = LuaDoString(vm, "__globalDFS:reset();")
+	if err != nil {
+		return nil, err
+	}
+
 	panicOn(os.Chdir(cwd))
 
 	// take a Lua value, turn it into a Go value, wrap
