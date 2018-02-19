@@ -1644,6 +1644,9 @@ __type__string  = __newType(16, __kindString,  "string",   true, "", false, nil)
 --__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 __ptrType = function(elem)
+   if elem == nil then
+      error("internal error: cannot call __ptrType() will nil elem")
+   end
    local typ = elem.ptr;
    if typ == nil then
       typ = __newType(4, __kindPtr, "*" .. elem.__str, false, "", elem.exported, nil);
