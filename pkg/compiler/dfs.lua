@@ -29,7 +29,7 @@ function __newDfsNode(self, name, typ)
    end
    local node= {
       visited=false,
-      children={},
+      children=false, -- lazily put in table, better printing.
       dedupChildren={},
       id = self.dfsNextID,
       name=name,
@@ -97,7 +97,10 @@ function __addChild(self, parTyp, chTyp)
 
    local chNode = self.dfsDedup[chTyp]
    if chNode == nil then
-      chNode = self:newDfsNode(chTyp.__str, chTyp)
+      -- child was previously generated, so
+      -- we don't need to worry about this
+      -- dependency
+      return
    end
    
    local parNode = self.dfsDedup[parTyp]
@@ -109,7 +112,21 @@ function __addChild(self, parTyp, chTyp)
       -- avoid adding same child twice.
       return
    end
-   parNode.dedupChildren[chNode]= #parNode.children+1
+
+   -- In Lua both nil and the boolean
+   -- value false represent false in
+   -- a logical expression
+   --
+   if not parNode.children then
+      -- we lazily instantiate children
+      -- for better diagnostics. Its
+      -- much clearer to see "children = false"
+      -- than "children = 'table: 0x04e99af8'"
+      parNode.children = {}
+   end
+   
+   local pnc = #parNode.children
+   parNode.dedupChildren[chNode]= pnc+1
    table.insert(parNode.children, chNode)
    self.stale = true
 end
@@ -139,8 +156,10 @@ function __dfsHelper(self, node)
    end
    node.visited = true
    __st(node,"node, in __dfsHelper")
-   for _, ch in ipairs(node.children) do
-      self:dfsHelper(ch)
+   if node.children then
+      for _, ch in ipairs(node.children) do
+         self:dfsHelper(ch)
+      end
    end
    print("post-order visit sees node "..tostring(node.id).." : "..node.name)
    table.insert(self.dfsOrder, node)
