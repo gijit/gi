@@ -18,6 +18,14 @@ if complex == nil then
    dofile 'complex.lua'
 end
 
+if complex == nil then
+   dofile 'complex.lua'
+end
+
+if __dfsOrder == nil then
+   dofile 'dfs.lua'
+end
+
 -- tell Luar that it is running under gijit,
 -- by setting this global flag.
 __gijit_tsys = true

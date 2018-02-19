@@ -7,20 +7,20 @@
 --  leaf types before the compound
 --  types that need them defined.
 
-__nodes = {}
+__dfsNodes = {}
 __dfsOrder = {}
-__nextID = 0
+__dfsNextID = 0
 
 function __newDfsNode(name, payload)
    local node= {
       visited=false,
       children={},
-      id = __nextID,
+      id = __dfsNextID,
       name=name,
       payload=payload,
    }
-   __nextID=__nextID+1
-   table.insert(__nodes, node)
+   __dfsNextID=__dfsNextID+1
+   table.insert(__dfsNodes, node)
    return node
 end
 
@@ -30,14 +30,14 @@ end
 
 function __markGraphUnVisited()
    __dfsOrder = {}
-   for _,n in ipairs(__nodes) do
+   for _,n in ipairs(__dfsNodes) do
       n.visited = false
    end
 end
 
 function __emptyOutGraph()
    __dfsOrder = {}
-   __nodes = {}
+   __dfsNodes = {}
 end
 
 function __dfsHelper(node)
@@ -57,7 +57,7 @@ end
 
 function __doDFS()
    __markGraphUnVisited()
-   for _, n in ipairs(__nodes) do
+   for _, n in ipairs(__dfsNodes) do
       __dfsHelper(n)
    end
 end
