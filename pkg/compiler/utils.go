@@ -177,7 +177,7 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	//return append(args[:paramsLen-1], fmt.Sprintf("awesome new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
 
 	// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
-	newOper := translateTypeNameToNewOper(c.typeName(varargType))
+	newOper := translateTypeNameToNewOper(c.typeName(0, varargType))
 
 	pp("jea debug, utils.go: paramsLen = %v; newOper=%#v", paramsLen, newOper)
 	for i := range args {
@@ -437,7 +437,7 @@ func (tns typeNameSetting) String() string {
 	panic("unknown tns")
 }
 
-func (c *funcContext) typeName(ty types.Type) (res string) {
+func (c *funcContext) typeName(level int, ty types.Type) (res string) {
 
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return
@@ -503,13 +503,14 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- '%s' anon type printing.\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
 		fmt.Printf("whenAnonPrint = %v, for anonType: '%s'.\n", whenAnonPrint, anonType.Name())
 		switch whenAnonPrint {
 		case DELAYED:
+			//panic("where?")
 			c.Delayed(func() {
 				c.Printf(anonTypePrint)
 			})
@@ -537,7 +538,7 @@ func (c *funcContext) externalize(s string, t types.Type) string {
 			return "null"
 		}
 	}
-	return fmt.Sprintf("$externalize(%s, %s)", s, c.typeName(t))
+	return fmt.Sprintf("$externalize(%s, %s)", s, c.typeName(0, t))
 }
 
 func (c *funcContext) handleEscapingVars(n ast.Node) {

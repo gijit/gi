@@ -769,7 +769,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					for i := 0; i < t.NumFields(); i++ {
 
 						// the translateExpr call here is what
-						// eventually calls c.typeName() and thus
+						// eventually calls c.typeName(0, ) and thus
 						// generates the deferred 'anon_ptrType' and sibling type
 						// variables for any pointers in the members.
 						//
@@ -853,16 +853,16 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				methods = append(methods, entry)
 			}
 			if len(methods) > 0 {
-				// jea: the call to c.typeName() will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
+				// jea: the call to c.typeName(0, ) will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
 
-				tnn := c.typeName(named)
+				tnn := c.typeName(0, named)
 				pp("tnn = '%s'", tnn)
 				c.Printf("%s.__methods_desc = {%s}; -- incr.go:817 for methods\n", tnn, strings.Join(methods, ", "))
 
 			}
 			if len(ptrMethods) > 0 {
 				c.TypeNameSetting = SKIP_ANON
-				pn := c.typeName(types.NewPointer(named)) // "kind_ptrType"
+				pn := c.typeName(0, types.NewPointer(named)) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
 				pn = "__type__" + c.objectName(o)

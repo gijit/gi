@@ -143,9 +143,9 @@ func (c *funcContext) initArgs(ty types.Type) string {
 
 	switch t := ty.(type) {
 	case *types.Array:
-		return fmt.Sprintf("%s, %d", c.typeName(t.Elem()), t.Len())
+		return fmt.Sprintf("%s, %d", c.typeName(0, t.Elem()), t.Len())
 	case *types.Chan:
-		return fmt.Sprintf("%s, %t, %t", c.typeName(t.Elem()), t.Dir()&types.SendOnly != 0, t.Dir()&types.RecvOnly != 0)
+		return fmt.Sprintf("%s, %t, %t", c.typeName(0, t.Elem()), t.Dir()&types.SendOnly != 0, t.Dir()&types.RecvOnly != 0)
 	case *types.Interface:
 		methods := make([]string, t.NumMethods())
 		for i := range methods {
@@ -158,19 +158,19 @@ func (c *funcContext) initArgs(ty types.Type) string {
 		}
 		return fmt.Sprintf("{%s}", strings.Join(methods, ", "))
 	case *types.Map:
-		return fmt.Sprintf("%s, %s", c.typeName(t.Key()), c.typeName(t.Elem()))
+		return fmt.Sprintf("%s, %s", c.typeName(0, t.Key()), c.typeName(0, t.Elem()))
 	case *types.Pointer:
-		return fmt.Sprintf("%s", c.typeName(t.Elem()))
+		return fmt.Sprintf("%s", c.typeName(0, t.Elem()))
 	case *types.Slice:
-		return fmt.Sprintf("%s", c.typeName(t.Elem()))
+		return fmt.Sprintf("%s", c.typeName(0, t.Elem()))
 	case *types.Signature:
 		params := make([]string, t.Params().Len())
 		for i := range params {
-			params[i] = c.typeName(t.Params().At(i).Type())
+			params[i] = c.typeName(0, t.Params().At(i).Type())
 		}
 		results := make([]string, t.Results().Len())
 		for i := range results {
-			results[i] = c.typeName(t.Results().At(i).Type())
+			results[i] = c.typeName(0, t.Results().At(i).Type())
 		}
 		return fmt.Sprintf("{%s}, {%s}, %t", strings.Join(params, ", "), strings.Join(results, ", "), t.Variadic())
 	case *types.Struct:
@@ -181,7 +181,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !field.Exported() {
 				pkgPath = field.Pkg().Path()
 			}
-			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(field.Type()), encodeString(t.Tag(i)))
+			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(0, field.Type()), encodeString(t.Tag(i)))
 		}
 		return fmt.Sprintf(`"%s", {%s}`, pkgPath, strings.Join(fields, ", "))
 	default:

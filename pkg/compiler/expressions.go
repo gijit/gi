@@ -101,7 +101,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 					panic("could not get exact int")
 				}
 				return c.formatExpr("%sLL", strconv.FormatInt(d, 10))
-				//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatInt(d>>32, 10), strconv.FormatUint(uint64(d)&(1<<32-1), 10))
+				//return c.formatExpr("new %s(%s, %s)", c.typeName(0, exprType), strconv.FormatInt(d>>32, 10), strconv.FormatUint(uint64(d)&(1<<32-1), 10))
 			}
 
 			d, ok := constant.Uint64Val(constant.ToInt(value))
@@ -110,7 +110,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			return c.formatExpr("%sULL", strconv.FormatUint(d, 10))
 
-			//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatUint(d>>32, 10), strconv.FormatUint(d&(1<<32-1), 10))
+			//return c.formatExpr("new %s(%s, %s)", c.typeName(0, exprType), strconv.FormatUint(d>>32, 10), strconv.FormatUint(d&(1<<32-1), 10))
 			//}
 			/*
 				d, ok := constant.Int64Val(constant.ToInt(value))
@@ -137,7 +137,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			// jea, luajit has native complex number syntax
 			return c.formatExpr("%s+%si", strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
-			//return c.formatExpr("new %s(%s, %s)", c.typeName(exprType), strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
+			//return c.formatExpr("new %s(%s, %s)", c.typeName(0, exprType), strconv.FormatFloat(r, 'g', -1, 64), strconv.FormatFloat(i, 'g', -1, 64))
 		case isString(basic):
 			pp("jea, in translateExpr(), value = '%v'", value)
 			return c.formatExpr("%s", encodeString(constant.StringVal(value)))
@@ -215,10 +215,10 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 			// print anon_arrayType immedaitely
 			c.TypeNameSetting = IMMEDIATE
-			anonTypeName := c.typeName(exprType)
+			anonTypeName := c.typeName(0, exprType)
 			if len(elements) == 0 {
 				pp("expressions.go about to call typeName(t) on t='%#v'", t)
-				tn := c.typeName(t)
+				tn := c.typeName(0, t)
 				pp("expressions.go making array of size %v with tn='%v' from t='%#v'", t.Len(), tn, t)
 				// gijit below, but try to go back to gophrejs style __zero() call.
 				//ret := c.formatExpr("%s.zero()", tn)
@@ -241,9 +241,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				// jea: do 0-based indexing of slices, not 1-based.
 				ele = "[0]=" + ele
 			}
-			return c.formatExpr("%s({%s})", c.typeName(exprType), ele)
-			//return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(t.Elem()), ele, zero))
-			//return c.formatExpr("new %s([%s])", c.typeName(exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
+			return c.formatExpr("%s({%s})", c.typeName(0, exprType), ele)
+			//return c.formatExpr(fmt.Sprintf(`_gi_NewSlice("%s",{%s}, %s)`, c.typeName(0, t.Elem()), ele, zero))
+			//return c.formatExpr("new %s([%s])", c.typeName(0, exprType), strings.Join(collectIndexedElements(t.Elem()), ", "))
 		case *types.Map:
 			entries := make([]string, len(e.Elts))
 			for i, element := range e.Elts {
@@ -252,8 +252,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
-			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(t.Key()), c.typeName(t.Elem()), joined)
-			return c.formatExpr("__makeMap(%s.keyFor, {%s}, %s, %s, %s)", c.typeName(t.Key()), joined, c.typeName(t.Key()), c.typeName(t.Elem()), c.typeName(exprType))
+			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(0, t.Key()), c.typeName(0, t.Elem()), joined)
+			return c.formatExpr("__makeMap(%s.keyFor, {%s}, %s, %s, %s)", c.typeName(0, t.Key()), joined, c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
 		case *types.Struct:
 			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())
@@ -285,12 +285,12 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("%s.ptr({}, %s)", c.typeName(exprType), sele)
+			return c.formatExpr("%s.ptr({}, %s)", c.typeName(0, exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
-			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(exprType), strings.Join(vals, ", "))
+			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(0, exprType), strings.Join(vals, ", "))
 			// original:
-			//return c.formatExpr("new %s.__ptr(%s)", c.typeName(exprType), strings.Join(elements, ", "))
+			//return c.formatExpr("new %s.__ptr(%s)", c.typeName(0, exprType), strings.Join(elements, ", "))
 		default:
 			panic(fmt.Sprintf("Unhandled CompositeLit type: %T\n", t))
 		}
@@ -325,35 +325,35 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 			switch x := astutil.RemoveParens(e.X).(type) {
 			case *ast.CompositeLit:
-				return c.formatExpr("__newDataPointer(%e, %s)", x, c.typeName(c.p.TypeOf(e)))
+				return c.formatExpr("__newDataPointer(%e, %s)", x, c.typeName(0, c.p.TypeOf(e)))
 			case *ast.Ident:
 				obj := c.p.Uses[x].(*types.Var)
 				if c.p.escapingVars[obj] {
-					return c.formatExpr("(%1s.$ptr || (%1s.$ptr = %2s(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, %1s)))", c.p.objectNames[obj], c.typeName(exprType))
+					return c.formatExpr("(%1s.$ptr || (%1s.$ptr = %2s(function() { return this.$target[0]; }, function($v) { this.$target[0] = $v; }, %1s)))", c.p.objectNames[obj], c.typeName(0, exprType))
 				}
 				// basic taking address of value to get pointer. See ptr_test.go, test 099.
 				//return c.formatExpr(`__ptrType(function() return %1s; end, function(v) %2s; end, "%s")`, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false), starToAmp(exprType.String()))
 
-				pp("c.typeName(exprType) = '%v'", c.typeName(exprType))
+				pp("c.typeName(0, exprType) = '%v'", c.typeName(0, exprType))
 				pp("exprType = '%#v'", exprType)
-				return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
+				return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(0, exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
 
 			case *ast.SelectorExpr:
 				sel, ok := c.p.SelectionOf(x)
 				if !ok {
 					// qualified identifier
 					obj := c.p.Uses[x.Sel].(*types.Var)
-					return c.formatExpr(`(%1s || (%1s = %2s(function() { return %3s; }, function($v) { %4s })))`, c.varPtrName(obj), c.typeName(exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("$v", exprType), false))
+					return c.formatExpr(`(%1s || (%1s = %2s(function() { return %3s; }, function($v) { %4s })))`, c.varPtrName(obj), c.typeName(0, exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("$v", exprType), false))
 				}
 				newSel := &ast.SelectorExpr{X: c.newIdent("this.$target", c.p.TypeOf(x.X)), Sel: x.Sel}
 				c.setType(newSel, exprType)
 				c.p.additionalSelections[newSel] = sel
-				return c.formatExpr("(%1e.$ptr_%2s || (%1e.$ptr_%2s = %3s(function() { return %4e; }, function($v) { %5s }, %1e)))", x.X, x.Sel.Name, c.typeName(exprType), newSel, c.translateAssign(newSel, c.newIdent("$v", exprType), false))
+				return c.formatExpr("(%1e.$ptr_%2s || (%1e.$ptr_%2s = %3s(function() { return %4e; }, function($v) { %5s }, %1e)))", x.X, x.Sel.Name, c.typeName(0, exprType), newSel, c.translateAssign(newSel, c.newIdent("$v", exprType), false))
 			case *ast.IndexExpr:
 				if _, ok := c.p.TypeOf(x.X).Underlying().(*types.Slice); ok {
-					return c.formatExpr("$indexPtr(%1e.$array, %1e.$offset + %2e, %3s)", x.X, x.Index, c.typeName(exprType))
+					return c.formatExpr("$indexPtr(%1e.$array, %1e.$offset + %2e, %3s)", x.X, x.Index, c.typeName(0, exprType))
 				}
-				return c.formatExpr("$indexPtr(%e, %e, %s)", x.X, x.Index, c.typeName(exprType))
+				return c.formatExpr("$indexPtr(%e, %e, %s)", x.X, x.Index, c.typeName(0, exprType))
 			case *ast.StarExpr:
 				return c.translateExpr(x.X, nil)
 			default:
@@ -381,11 +381,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case token.SUB:
 			switch {
 			case is64Bit(basic):
-				return c.formatExpr("%1s(-%2h, -%2l)", c.typeName(t), e.X)
+				return c.formatExpr("%1s(-%2h, -%2l)", c.typeName(0, t), e.X)
 			case isComplex(basic):
 				return c.formatExpr("-(%1e)", e.X)
 				//return c.formatExpr("-(%1r+%1i)", e.X)
-				//return c.formatExpr("%1s(-%2r, -%2i)", c.typeName(t), e.X)
+				//return c.formatExpr("%1s(-%2r, -%2i)", c.typeName(0, t), e.X)
 			case isUnsigned(basic):
 				return c.fixNumber(c.formatExpr("-%e", e.X), basic)
 			default:
@@ -393,7 +393,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 		case token.XOR:
 			if is64Bit(basic) {
-				return c.formatExpr("%1s(~%2h, ~%2l >>> 0)", c.typeName(t), e.X)
+				return c.formatExpr("%1s(~%2h, ~%2l >>> 0)", c.typeName(0, t), e.X)
 			}
 			return c.fixNumber(c.formatExpr("~%e", e.X), basic)
 		case token.NOT:
@@ -444,11 +444,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 							case token.GEQ:
 								return c.formatExpr("(%1h > %2h || (%1h == %2h && %1l >= %2l))", e.X, e.Y)
 							case token.ADD, token.SUB:
-								return c.formatExpr("%3s(%1h %4t %2h, %1l %4t %2l)", e.X, e.Y, c.typeName(t), e.Op)
+								return c.formatExpr("%3s(%1h %4t %2h, %1l %4t %2l)", e.X, e.Y, c.typeName(0, t), e.Op)
 							case token.AND, token.OR, token.XOR:
-								return c.formatExpr("%3s(%1h %4t %2h, (%1l %4t %2l) >>> 0)", e.X, e.Y, c.typeName(t), e.Op)
+								return c.formatExpr("%3s(%1h %4t %2h, (%1l %4t %2l) >>> 0)", e.X, e.Y, c.typeName(0, t), e.Op)
 							case token.AND_NOT:
-								return c.formatExpr("%3s(%1h & ~%2h, (%1l & ~%2l) >>> 0)", e.X, e.Y, c.typeName(t))
+								return c.formatExpr("%3s(%1h & ~%2h, (%1l & ~%2l) >>> 0)", e.X, e.Y, c.typeName(0, t))
 							default:
 								panic(e.Op)
 							}
@@ -461,9 +461,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				case token.ADD, token.SUB:
 
 					return c.formatExpr("(%1e %3t %2e)", e.X, e.Y, e.Op)
-					//return c.formatExpr("%3s(%1r %4t %2r, %1i %4t %2i)", e.X, e.Y, c.typeName(t), e.Op)
+					//return c.formatExpr("%3s(%1r %4t %2r, %1i %4t %2i)", e.X, e.Y, c.typeName(0, t), e.Op)
 				case token.MUL:
-					return c.formatExpr("%3s(%1r * %2r - %1i * %2i, %1r * %2i + %1i * %2r)", e.X, e.Y, c.typeName(t))
+					return c.formatExpr("%3s(%1r * %2r - %1i * %2i, %1r * %2i + %1i * %2r)", e.X, e.Y, c.typeName(0, t))
 				case token.QUO:
 					return c.formatExpr("$divComplex(%e, %e)", e.X, e.Y)
 				default:
@@ -573,13 +573,13 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case token.EQL:
 			switch u := t.Underlying().(type) {
 			case *types.Array, *types.Struct:
-				return c.formatExpr("__equal(%e, %e, %s)", e.X, e.Y, c.typeName(t))
+				return c.formatExpr("__equal(%e, %e, %s)", e.X, e.Y, c.typeName(0, t))
 			case *types.Interface:
 				pp("e.Y='%#v'", e.Y)
 				return c.formatExpr("__interfaceIsEqual(%s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t))
 			case *types.Pointer:
 				if _, ok := u.Elem().Underlying().(*types.Array); ok {
-					return c.formatExpr("$equal(%s, %s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t), c.typeName(u.Elem()))
+					return c.formatExpr("$equal(%s, %s, %s)", c.translateImplicitConversion(e.X, t), c.translateImplicitConversion(e.Y, t), c.typeName(0, u.Elem()))
 				}
 			case *types.Basic:
 				if isBoolean(u) {
@@ -629,7 +629,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 					key = `"` + key + `"`
 				}
 			}
-			//key := fmt.Sprintf("%s.keyFor(%s)", c.typeName(t.Key()), c.translateImplicitConversion(e.Index, t.Key()))
+			//key := fmt.Sprintf("%s.keyFor(%s)", c.typeName(0, t.Key()), c.translateImplicitConversion(e.Index, t.Key()))
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
 				return c.formatExpr(` %1e('get', %2s, %3e) `, e.X, key, c.zeroValue(t.Elem()))
 
@@ -701,7 +701,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			fields, jsTag := c.translateSelection(sel, e.Pos())
 			if jsTag != "" {
 				if _, ok := sel.Type().(*types.Signature); ok {
-					return c.formatExpr("$internalize(%1e.%2s.%3s, %4s, %1e.%2s)", e.X, strings.Join(fields, "."), jsTag, c.typeName(sel.Type()))
+					return c.formatExpr("$internalize(%1e.%2s.%3s, %4s, %1e.%2s)", e.X, strings.Join(fields, "."), jsTag, c.typeName(0, sel.Type()))
 				}
 				return c.internalize(c.formatExpr("%e.%s.%s", e.X, strings.Join(fields, "."), jsTag), sel.Type())
 			}
@@ -709,9 +709,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case types.MethodVal:
 			sel, _ := c.p.SelectionOf(e)
 			recvType := sel.Recv()
-			pp("case types.MethodVal: typeName of e.X = '%#v'", c.typeName(recvType))
+			pp("case types.MethodVal: typeName of e.X = '%#v'", c.typeName(0, recvType))
 			recvr := c.makeReceiver(e)
-			return c.formatExpr(`__gi_methodVal(%s, "%s", "%s")`, recvr, sel.Obj().(*types.Func).Name(), c.typeName(recvType))
+			return c.formatExpr(`__gi_methodVal(%s, "%s", "%s")`, recvr, sel.Obj().(*types.Func).Name(), c.typeName(0, recvType))
 			//return c.formatExpr(`$methodVal(%s, "%s")`, c.makeReceiver(e), sel.Obj().(*types.Func).Name())
 		case types.MethodExpr:
 			if !sel.Obj().Exported() {
@@ -720,7 +720,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if _, ok := sel.Recv().Underlying().(*types.Interface); ok {
 				return c.formatExpr(`$ifaceMethodExpr("%s")`, sel.Obj().(*types.Func).Name())
 			}
-			return c.formatExpr(`$methodExpr(%s, "%s")`, c.typeName(sel.Recv()), sel.Obj().(*types.Func).Name())
+			return c.formatExpr(`$methodExpr(%s, "%s")`, c.typeName(0, sel.Recv()), sel.Obj().(*types.Func).Name())
 		default:
 			panic(fmt.Sprintf("unexpected sel.Kind(): %T", sel.Kind()))
 		}
@@ -918,11 +918,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		if _, isTuple := exprType.(*types.Tuple); isTuple {
 			// jea, type assertion place 2; face_test 101 goes here.
 			// return both converted-interface-value, and ok.
-			return c.formatExpr(`__assertType(%e, %s, 2)`, e.X, c.typeName(t))
-			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(t))
+			return c.formatExpr(`__assertType(%e, %s, 2)`, e.X, c.typeName(0, t))
+			//return c.formatExpr("$assertType(%e, %s, true)", e.X, c.typeName(0, t))
 		}
 		// jea, type assertion place 0: only return value, without the 2nd 'ok' return.
-		return c.formatExpr(`__assertType(%e, %s, 0)`, e.X, c.typeName(t))
+		return c.formatExpr(`__assertType(%e, %s, 0)`, e.X, c.typeName(0, t))
 
 	case *ast.Ident:
 		if e.Name == "_" {
@@ -936,7 +936,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case *types.Func:
 			return c.formatExpr("%s", c.objectName(o))
 		case *types.TypeName:
-			return c.formatExpr("%s", c.typeName(o.Type()))
+			return c.formatExpr("%s", c.typeName(0, o.Type()))
 		case *types.Nil:
 			if typesutil.IsJsObject(exprType) {
 				return c.formatExpr("null")
@@ -948,7 +948,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				}
 				return c.formatExpr("0")
 			case *types.Slice, *types.Pointer:
-				return c.formatExpr("%s.__nil", c.typeName(exprType))
+				return c.formatExpr("%s.__nil", c.typeName(0, exprType))
 			case *types.Chan:
 				return c.formatExpr("$chanNil")
 			case *types.Map:
@@ -1053,7 +1053,7 @@ func (c *funcContext) makeReceiver(e *ast.SelectorExpr) *expression {
 
 	recv := c.translateImplicitConversionWithCloning(x, methodsRecvType)
 	if isWrapped(recvType) {
-		recv = c.formatExpr("%s(%s)", c.typeName(methodsRecvType), recv)
+		recv = c.formatExpr("%s(%s)", c.typeName(0, methodsRecvType), recv)
 	}
 	return recv
 }
@@ -1069,12 +1069,12 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		case *types.Struct, *types.Array:
 			return c.formatExpr("%e", c.zeroValue(t.Elem()))
 		default:
-			return c.formatExpr("$newDataPointer(%e, %s)", c.zeroValue(t.Elem()), c.typeName(t))
+			return c.formatExpr("$newDataPointer(%e, %s)", c.zeroValue(t.Elem()), c.typeName(0, t))
 		}
 	case "make":
 		switch argType := c.p.TypeOf(args[0]).Underlying().(type) {
 		case *types.Slice:
-			t := c.typeName(c.p.TypeOf(args[0]))
+			t := c.typeName(0, c.p.TypeOf(args[0]))
 			zero := c.zeroValue(argType.Elem())
 			if len(args) == 3 {
 				return c.formatExpr("__makeSlice(%s, %e, %f, %f)",
@@ -1089,13 +1089,13 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			}
 			// return c.formatExpr("{}") // gopherjs
 			return c.formatExpr("{}")
-			//return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(argType.Key()), c.typeName(argType.Elem()))
+			//return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(0, argType.Key()), c.typeName(0, argType.Elem()))
 		case *types.Chan:
 			length := "0"
 			if len(args) == 2 {
 				length = c.formatExpr("%f", args[1]).String()
 			}
-			return c.formatExpr("new $Chan(%s, %s)", c.typeName(c.p.TypeOf(args[0]).Underlying().(*types.Chan).Elem()), length)
+			return c.formatExpr("new $Chan(%s, %s)", c.typeName(0, c.p.TypeOf(args[0]).Underlying().(*types.Chan).Elem()), length)
 		default:
 			panic(fmt.Sprintf("Unhandled make type: %T\n", argType))
 		}
@@ -1148,7 +1148,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("print(%s)", strings.Join(c.translateExprSlice(args, nil), ", "))
 	case "complex":
 		argStr := c.translateArgs(sig, args, ellipsis)
-		return c.formatExpr("%s(%s, %s)", c.typeName(sig.Results().At(0).Type()), argStr[0], argStr[1])
+		return c.formatExpr("%s(%s, %s)", c.typeName(0, sig.Results().At(0).Type()), argStr[0], argStr[1])
 	case "real":
 		// there is already a LuaJIT real() function
 		// available, from complex.lua, can we just cut straight to that?
@@ -1221,11 +1221,11 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			case is64Bit(t):
 				if !is64Bit(basicExprType) {
 					if basicExprType.Kind() == types.Uintptr { // this might be an Object returned from reflect.Value.Pointer()
-						return c.formatExpr("%1s(0, %2e.constructor == Number ? %2e : 1)", c.typeName(desiredType), expr)
+						return c.formatExpr("%1s(0, %2e.constructor == Number ? %2e : 1)", c.typeName(0, desiredType), expr)
 					}
-					return c.formatExpr("%s(0, %e)", c.typeName(desiredType), expr)
+					return c.formatExpr("%s(0, %e)", c.typeName(0, desiredType), expr)
 				}
-				return c.formatExpr("%1s(%2h, %2l)", c.typeName(desiredType), expr)
+				return c.formatExpr("%1s(%2h, %2l)", c.typeName(0, desiredType), expr)
 			case is64Bit(basicExprType):
 				if !isUnsigned(t) && !isUnsigned(basicExprType) {
 					return c.fixNumber(c.formatParenExpr("%1l + ((%1h >> 31) * 4294967296)", expr), t)
@@ -1247,7 +1247,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			}
 			return c.formatExpr("tonumber(%f)", expr)
 		case isComplex(t):
-			return c.formatExpr("%1s(%2r, %2i)", c.typeName(desiredType), expr)
+			return c.formatExpr("%1s(%2r, %2i)", c.typeName(0, desiredType), expr)
 		case isString(t):
 			value := c.translateExpr(expr, nil)
 			switch et := exprType.Underlying().(type) {
@@ -1301,12 +1301,12 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 		case *types.Basic:
 			if isString(et) {
 				if types.Identical(t.Elem().Underlying(), types.Typ[types.Rune]) {
-					return c.formatExpr("%s($stringToRunes(%e))", c.typeName(desiredType), expr)
+					return c.formatExpr("%s($stringToRunes(%e))", c.typeName(0, desiredType), expr)
 				}
-				return c.formatExpr("%s($stringToBytes(%e))", c.typeName(desiredType), expr)
+				return c.formatExpr("%s($stringToBytes(%e))", c.typeName(0, desiredType), expr)
 			}
 		case *types.Array, *types.Pointer:
-			return c.formatExpr("%s(%e)", c.typeName(desiredType), expr)
+			return c.formatExpr("%s(%e)", c.typeName(0, desiredType), expr)
 		}
 
 	case *types.Pointer:
@@ -1319,7 +1319,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 				target := c.newVariable("_struct")
 				return c.formatExpr("(%s = %e, %s = %e, %s, %s)", array, expr, target, c.zeroValue(t.Elem()), c.loadStruct(array, target, u), target)
 			}
-			return c.formatExpr("$pointerOfStructConversion(%e, %s)", expr, c.typeName(t))
+			return c.formatExpr("$pointerOfStructConversion(%e, %s)", expr, c.typeName(0, t))
 		}
 
 		if !types.Identical(exprType, types.Typ[types.UnsafePointer]) {
@@ -1327,7 +1327,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			ptrVar := c.newVariable("_ptr")
 			getterConv := c.translateConversion(c.setType(&ast.StarExpr{X: c.newIdent(ptrVar, exprType)}, exprTypeElem), t.Elem())
 			setterConv := c.translateConversion(c.newIdent("$v", t.Elem()), exprTypeElem)
-			return c.formatExpr("(%1s = %2e, new %3s(function() { return %4s; }, function($v) { %1s.$set(%5s); }, %1s.$target))", ptrVar, expr, c.typeName(desiredType), getterConv, setterConv)
+			return c.formatExpr("(%1s = %2e, new %3s(function() { return %4s; }, function($v) { %1s.$set(%5s); }, %1s.$target))", ptrVar, expr, c.typeName(0, desiredType), getterConv, setterConv)
 		}
 
 	case *types.Interface:
@@ -1351,12 +1351,12 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 			// this is the __gi_clone that is called for value receivers on methods.
 			// $clone in gohperjs.
 			// And for passing an array to a function argument (by-value of course).
-			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'", c.typeName(desiredType))
+			pp("debug __gi_clone2 arg: c.typeName(0, desiredType)='%s'", c.typeName(0, desiredType))
 
 			typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(desiredType)
-			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
+			pp("debug __gi_clone2 arg: c.typeName(0, desiredType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 			if isAnon {
-				return c.formatExpr(`__clone(%e, %s)`, expr, c.typeName(anonType.Type()))
+				return c.formatExpr(`__clone(%e, %s)`, expr, c.typeName(0, anonType.Type()))
 			} else {
 				return c.formatExpr(`__clone(%e, %s)`, expr, typName)
 			}
@@ -1391,7 +1391,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 	switch desiredType.Underlying().(type) {
 	case *types.Slice:
 		pp("YYY 4 translateImplicitConversion exiting early")
-		return c.formatExpr("__subslice(new %1s(%2e.$array), %2e.$offset, %2e.$offset + %2e.$length)", c.typeName(desiredType), expr)
+		return c.formatExpr("__subslice(new %1s(%2e.$array), %2e.$offset, %2e.$offset + %2e.$length)", c.typeName(0, desiredType), expr)
 
 	case *types.Interface:
 		if typesutil.IsJsObject(exprType) {
@@ -1408,7 +1408,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			// which we don't need.
 			// likewise, function references have junk wrapped around them.
 			// Example: fmt.Printf -> new funcType(fmt.Printf)
-			//return c.formatExpr("%s(%e)", c.typeName(exprType), expr)
+			//return c.formatExpr("%s(%e)", c.typeName(0, exprType), expr)
 
 			// references to functions arrive here.
 			return c.formatExpr("%e", expr)
@@ -1427,7 +1427,7 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 	// try reverting back got the GopherJS code:
 	switch c.p.TypeOf(expr).Underlying().(type) {
 	case *types.Array, *types.Pointer:
-		return c.formatExpr("%s(%e)", c.typeName(desiredType), expr)
+		return c.formatExpr("%s(%e)", c.typeName(0, desiredType), expr)
 	}
 	return c.translateExpr(expr, nil)
 
@@ -1439,15 +1439,15 @@ func (c *funcContext) translateConversionToSlice(expr ast.Expr, desiredType type
 		et := x.Elem()
 		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
 		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
-		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
-		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(desiredType), expr)
+		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(0, et), expr, zero)
+		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(0, desiredType), expr)
 	case *types.Array:
 		et := x.Elem()
 		pp("array to slice conversion, desiredType = '%#v', typeExpr='%#v', x='%#v', et='%s'", desiredType, typeExpr, x, et.String())
 		zero := c.translateExpr(c.zeroValue(x.Elem()), nil).String()
-		// c.typeName(desiredType)
-		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(et), expr)
-		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(et), expr, zero)
+		// c.typeName(0, desiredType)
+		//return c.formatExpr(`_gi_NewSlice("%s", %e)`, c.typeName(0, et), expr)
+		return c.formatExpr(`_gi_NewSlice("%s", %e, %s)`, c.typeName(0, et), expr, zero)
 	}
 	return c.translateExpr(expr, nil)
 	*/
@@ -1476,7 +1476,7 @@ func (c *funcContext) loadStruct(array, target string, s *types.Struct) string {
 		case *types.Basic:
 			if isNumeric(t) {
 				if is64Bit(t) {
-					code += fmt.Sprintf(", %s = new %s(%s.getUint32(%d, true), %s.getUint32(%d, true))", field.Name(), c.typeName(field.Type()), view, offsets[i]+4, view, offsets[i])
+					code += fmt.Sprintf(", %s = new %s(%s.getUint32(%d, true), %s.getUint32(%d, true))", field.Name(), c.typeName(0, field.Type()), view, offsets[i]+4, view, offsets[i])
 					break
 				}
 				code += fmt.Sprintf(", %s = %s.get%s(%d, true)", field.Name(), view, toJavaScriptType(t), offsets[i])
@@ -1585,7 +1585,7 @@ func (c *funcContext) internalize(s *expression, t types.Type) *expression {
 			return c.formatExpr("$parseFloat(%s)", s)
 		}
 	}
-	return c.formatExpr("$internalize(%s, %s)", s, c.typeName(t))
+	return c.formatExpr("$internalize(%s, %s)", s, c.typeName(0, t))
 }
 
 func (c *funcContext) formatExpr(format string, a ...interface{}) *expression {

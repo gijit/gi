@@ -119,8 +119,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				return c.formatExpr("%s == __gi_ifaceNil", refVar)
 			}
 			// jea, type assertion place 1
-			return c.formatExpr(`__assertType(%s, %s, 1)`, refVar, c.typeName(c.p.TypeOf(cond)))
-			//return c.formatExpr("$assertType(%s, %s, true)[1]", refVar, c.typeName(c.p.TypeOf(cond)))
+			return c.formatExpr(`__assertType(%s, %s, 1)`, refVar, c.typeName(0, c.p.TypeOf(cond)))
+			//return c.formatExpr("$assertType(%s, %s, true)[1]", refVar, c.typeName(0, c.p.TypeOf(cond)))
 		}
 		var caseClauses []*ast.CaseClause
 		var defaultClause *ast.CaseClause
@@ -871,7 +871,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			return fmt.Sprintf(`%s[%s%s%s] = %s;`, c.translateExpr(l.X, nil), dq, c.translateImplicitConversionWithCloning(l.Index, t.Key()), dq, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 			// jea replace next 2 lines with the above
 			//keyVar := c.newVariable("_key")
-			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(0, t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 		}
 	}
 
@@ -910,16 +910,16 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 				//	typPrefix = ""
 				//}
 				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
-				pp("debug __gi_clone2 arg: c.typeName(lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
+				pp("debug __gi_clone2 arg: c.typeName(0, lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
-					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type()))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(0, anonType.Type()))
 
 				} else {
-					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(0, lhsType))
 
 				}
 			}
-			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(lhsType), c.translateExpr(lhs, nil), rhsExpr)
+			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(0, lhsType), c.translateExpr(lhs, nil), rhsExpr)
 		}
 	}
 
