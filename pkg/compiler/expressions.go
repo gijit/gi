@@ -1351,29 +1351,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 			// this is the __gi_clone that is called for value receivers on methods.
 			// $clone in gohperjs.
 			// And for passing an array to a function argument (by-value of course).
-
-			/*
-				switch desiredType.Underlying().(type) {
-				case *types.Array:
-
-					desiredTypeTypeName, isAnon, anonType, createdVarName := c.typeNameWithAnonInfo(desiredType)
-					_ = anonType
-					if isAnon && createdVarName != "" {
-						// c.p.anonTypes = append(c.p.anonTypes, anonType) has been called.
-						// c.p.anonTypeMap.Set(desiredType, anonType) has been called.
-
-						return c.formatExpr(`__gi_clone(%e, "%s", "%s")`, expr, desiredTypeTypeName, createdVarName)
-					}
-
-					return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
-
-				case *types.Struct:
-					return c.formatExpr(`__gi_clone(%e, "%s")`, expr, c.typeName(desiredType))
-				}
-			*/
 			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'", c.typeName(desiredType))
-			// problem: 'kind_arrayType'
-			//return c.formatExpr(`__gi_clone2(%e, %s)`, expr, c.typeName(desiredType))
 
 			typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(desiredType)
 			pp("debug __gi_clone2 arg: c.typeName(desiredType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)

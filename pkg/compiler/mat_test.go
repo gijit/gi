@@ -29,16 +29,17 @@ e := m.A[0][1]
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
-	__type__Matrix = __newType(0, __kindStruct, "main.Matrix", true, "main", true, nil);
-
   	__type__anon_sliceType = __sliceType(__type__float64); 
-	__type__anon_sliceType_1 = __sliceType(__type__anon_sliceType);
+  
+  	__type__Matrix = __newType(0, __kindStruct, "main.Matrix", true, "main", true, nil);
+  	
+  	__type__anon_sliceType_1 = __sliceType(__type__anon_sliceType); 
   
   	__type__Matrix.init("", {{__prop= "A", __name= "A", __anonymous= false, __exported= true, __typ= __type__anon_sliceType_1, __tag= ""}}); 
   	
   	 __type__Matrix.__constructor = function(self, ...) 
   		 if self == nil then self = {}; end
-  			 local A_  = ... ;
+  			 local A_ = ... ;
   			 self.A = A_ or __type__anon_sliceType_1.__nil;
   		 return self; 
   	 end;

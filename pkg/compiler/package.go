@@ -135,6 +135,12 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 }
 
 func (c *funcContext) initArgs(ty types.Type) string {
+	prev := c.TypeNameSetting
+	c.TypeNameSetting = IMMEDIATE
+	defer func() {
+		c.TypeNameSetting = prev
+	}()
+
 	switch t := ty.(type) {
 	case *types.Array:
 		return fmt.Sprintf("%s, %d", c.typeName(t.Elem()), t.Len())

@@ -457,7 +457,10 @@ func (c *funcContext) typeNameWithAnonInfo(
 	pp("in typeNameWithAnonInfo, ty='%#v'; whenAnonPrint=%v", ty, whenAnonPrint)
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
-		pp("funcContext.typeName returning with res = '%s'", res)
+		fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
+		if res == "__type__anon_sliceType" {
+			//panic("where?")
+		}
 	}()
 	switch t := ty.(type) {
 	case *types.Basic:
@@ -504,6 +507,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
+		fmt.Printf("whenAnonPrint = %v, for anonType: '%s'.\n", whenAnonPrint, anonType.Name())
 		switch whenAnonPrint {
 		case DELAYED:
 			c.Delayed(func() {
