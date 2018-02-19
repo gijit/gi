@@ -1,0 +1,136 @@
+__go_import "math/rand"
+__go_import "fmt"
+__go_import "time"
+
+__type__anon_sliceType = __sliceType(__type__float64); -- 'IMMEDIATE' anon type printing. utils.go:506
+
+__type__Matrix = __newType(0, __kindStruct, "main.Matrix", true, "main", true, nil);
+
+__type__anon_sliceType_1 = __sliceType(__type__anon_sliceType); -- 'DELAYED' anon type printing. utils.go:506
+
+__type__Matrix.__methods_desc = {{prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}, {prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}}; -- incr.go:817 for methods
+
+__type__Matrix.ptr.__methods_desc = {{prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}, {prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}}; -- incr.go:827 for ptr_methods
+
+__type__Matrix.init("", {{__prop= "A", __name= "A", __anonymous= false, __exported= true, __typ= __type__anon_sliceType_1, __tag= ""}, {__prop= "Nrow", __name= "Nrow", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "Ncol", __name= "Ncol", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}}); -- incr.go:873
+
+__type__Matrix.__constructor = function(self, ...) 
+   if self == nil then self = {}; end
+   local A_, Nrow_, Ncol_ = ... ;
+   self.A = A_ or __type__anon_sliceType_1.__nil;
+   self.Nrow = Nrow_ or 0LL;
+   self.Ncol = Ncol_ or 0LL;
+   return self; 
+end;
+;
+
+NewMatrix = function(nrow, ncol, fill) 
+   m = __type__Matrix.ptr({}, __makeSlice(__type__anon_sliceType_1, nrow), nrow, ncol);
+   for i, _ in pairs(m.A) do 
+      __gi_SetRangeCheck(m.A, i, __makeSlice(__type__anon_sliceType, ncol));
+   end 
+   if (fill) then 
+      for i, _ in pairs(m.A) do 
+         for j, _ in pairs(__gi_GetRangeCheck(m.A, i)) do 
+            __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i), j, ((math.random(100) / ((2 + math.random(100))))));
+         end 
+      end 
+   end 
+   return  m ;
+end;
+__pkg.NewMatrix = NewMatrix;
+mult = function(m1, m2) 
+   --local r = __type__anon_ptrType.__nil;
+   if ( not ((m1.Ncol == m2.Nrow))) then 
+      panic(fmt.Sprintf("incompatible: m1.Ncol=%v, m2.Nrow=%v", m1.Ncol, m2.Nrow));
+   end 
+   local r = NewMatrix(m1.Nrow, m2.Ncol, false);
+   nr1 = m1.Nrow;
+   nr2 = m2.Nrow;
+   nc2 = m2.Ncol;
+   local i = 0LL;
+   while (true) do
+      if (not (i < nr1)) then break; end
+      local k = 0LL;
+      while (true) do
+         if (not (k < nr2)) then break; end
+         local j = 0LL;
+         while (true) do
+            if (not (j < nc2)) then break; end
+            a = r:Get(i, j);
+            a = a + (m1:Get(i, k) * m2:Get(k, j));
+            r:Set(i, j, a);
+            j = j + (1LL);
+         end 
+         k = k + (1LL);
+      end 
+      i = i + (1LL);
+   end 
+   return  r ;
+end;
+__type__Matrix.ptr.prototype.Set = function(m,i, j, val) 
+   __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i), j, val);
+end;
+__type__Matrix.prototype.Set = function(this , i, j, val)  return this.__val.Set(i, j, val); end;
+
+__type__Matrix.__addToMethods({prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}); -- package.go:344
+
+__type__Matrix.ptr.__addToMethods({prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}); -- package.go:346
+__type__Matrix.ptr.prototype.Get = function(m,i, j) 
+   return  __gi_GetRangeCheck(__gi_GetRangeCheck(m.A, i), j) ;
+end;
+__type__Matrix.prototype.Get = function(this , i, j)  return this.__val.Get(i, j); end;
+
+__type__Matrix.__addToMethods({prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}); -- package.go:344
+
+
+
+__type__Matrix.ptr.__addToMethods({prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}); -- package.go:346
+
+
+
+MatScaMul = function(m, x) 
+   --local r = __type__anon_ptrType.__nil;
+   local r = NewMatrix(m.Nrow, m.Ncol, false);
+   local i = 0LL;
+   while (true) do
+      if (not (i < m.Nrow)) then break; end
+      local j = 0LL;
+      while (true) do
+         if (not (j < m.Ncol)) then break; end
+         r:Set(i, j, x * m:Get(i, j));
+         j = j + (1LL);
+      end 
+      i = i + (1LL);
+   end 
+   return  r ;
+end;
+__pkg.MatScaMul = MatScaMul;
+
+main = function() 
+   local sz = 500LL;
+   local i = 0LL;
+   while (true) do
+      if (not (i < 10LL)) then break; end
+      a = NewMatrix(sz, sz, true);
+      b = NewMatrix(sz, sz, true);
+      mult(a, b);
+      i = i + (1LL);
+   end 
+end;
+
+
+sz = 500LL;
+start_time = int(time.Now().UnixNano())
+
+a = NewMatrix(sz, sz, true);
+
+end_time = int(time.Now().UnixNano())
+elapsed_time = end_time - start_time
+
+print("elap=", elapsed_time)
+-- time to make a 500x500 matrix, 2 random numbers per entry:
+-- 3.66 seconds, using calls into math/rand.Intn()
+-- 0.551 seconds, using LuaJITs math.random
+-- native Go: 22 msec, about 23x faster.
+
