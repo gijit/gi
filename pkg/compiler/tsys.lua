@@ -98,7 +98,7 @@ if __preludePath == nil then
       end
    end
    -- check for our marker file.
-   if not __minifs.renameBasedFileExists(__preludePath.."__gijit_prelude_path_default") then
+   if not __minifs.renameBasedFileExists(__preludePath.."__gijit_prelude") then
       error("error in tsys.lua: could not find my prelude directory. Tried __preludePath='"..__preludePath.."'; "..origin)
    end
    print("using __preludePath = '"..__preludePath.."'")

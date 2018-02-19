@@ -1,4 +1,4 @@
--- __gijit_prelude_path_default is a
+-- __gijit_prelude is a
 -- file whose presence lets us
 -- locate our __preludePath reliably.
 -- The contents of this file don't
