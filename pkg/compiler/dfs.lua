@@ -31,6 +31,7 @@ function __newDfsNode(self, name, payload)
    return node
 end
 
+-- par should be a node; e.g. typ.__dfsNode
 function __addChild(self, par, ch)
    if par.dedupChildren[ch] ~= nil then
       -- avoid adding same child twice.
@@ -92,7 +93,8 @@ function __NewDFSState()
 end
 
 --[[
--- test
+-- test. To test, change the --[[ above to ---[[
+--       and issue dofile('dfs.lua')
 dofile 'tutil.lua'
 
 function __testDFS()
