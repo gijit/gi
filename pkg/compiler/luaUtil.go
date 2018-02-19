@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -217,7 +216,7 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 		fmt.Printf("\nusing this prelude directory: '%s'\n", preludePath)
 		shortFn := make([]string, len(files))
 		for i, fn := range files {
-			shortFn[i] = path.Base(fn)
+			shortFn[i] = filepath.Base(fn)
 		}
 		fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
 	}
