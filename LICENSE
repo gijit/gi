@@ -46,6 +46,8 @@ LuaJIT -- a Just-In-Time Compiler for Lua. http://luajit.org/
 
 Copyright (C) 2005-2017 Mike Pall. All rights reserved.
 
+(The MIT License:)
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -71,23 +73,7 @@ THE SOFTWARE.
 
 Copyright (C) 1994-2012 Lua.org, PUC-Rio.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+Followed by the MIT License (above).
 
 ===============================================================================
 [ LuaJIT includes code from dlmalloc, which has this license statement: ]
@@ -98,64 +84,8 @@ http://creativecommons.org/licenses/publicdomain
 
 ===============================================================================
 
-
--- __minifs only has getcwd and chdir
-local __minifs = {}
-local __ffi = require "ffi"
-
-local __os = __ffi.os == "Windows" and "windows" or "unix"
-
-local __system = ({
-	windows	= {
-		getcwd	= "_getcwd",
-		chdir	= "_chdir",
-		maxpath	= 260,
-	},
-	unix	= {
-		getcwd	= "getcwd",
-		chdir	= "chdir",
-		maxpath	= 4096,
-	}
-})[__os]
-
-ffi.cdef(
-	[[
-		char   *]] .. __system.getcwd .. [[ ( char *buf, size_t size );
-		int		]] .. __system.chdir  .. [[ ( const char *path );
-		]]
-)
-
-__minifs.currentdir = function ()
-	local buff = ffi.new("char[?]", system.maxpath)
-
-	ffi.C[system.getcwd](buff, system.maxpath)
-
-	return ffi.string(buff)
-end
-
-__minifs.chdir = function (path)
-	return ffi.C[system.chdir](path) == 0
-end
-
 Small fragments used from https://github.com/Positive07/lfs-ffi.lua under
-The MIT License (MIT)
-are
+The MIT License (MIT) are
 Copyright (c) 2016 Pablo Mayobre
+Followed by the MIT License (above).
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

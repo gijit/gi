@@ -47,7 +47,7 @@ __minifs.chdir = function (path)
 end
 
 -- Ugh, it renames.
--- So only use this on "__gijit_prelude_path_default",
+-- So only use this on the "__gijit_prelude" marker file,
 -- which is a file of little importance, only there
 -- to verify our path is correct.
 function __minifs.renameBasedFileExists(file)
