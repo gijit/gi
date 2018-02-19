@@ -9,14 +9,6 @@ ahead-of-time compiled Go code. The REPL
 binary is called simply `gi`, as it is a
 "go interpreter".
 
-# a glimpse into the future
-LuaJIT benchmarked against C and Julia 0.4.1.  Scilua's performance is within 2x of C.
-Scilua is actually faster than C in 3 out of 8 of these trials. LuaJIT can inline
-C calls at runtime.
-![LuaJIT benchmarked against C and Julia 0.4.1](http://scilua.org/images/results_norm.png "LuaJIT benchmarks")
-> Graphs are from http://scilua.org/images/results_norm.png ; on the front page of http://scilua.org
-
-
 quick install
 -------------
 
