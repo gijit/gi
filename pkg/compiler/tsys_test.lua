@@ -281,97 +281,88 @@ tried bilbo=1
 */
 --]]
 
+-- new stuff
 
-Baggins= __newType(8, __kindInterface, "main.Baggins", true, "github.com/gijit/gi/pkg/compiler/tmp", true, null);
-Gollum = __newType(8, __kindInterface, "main.Gollum", true, "github.com/gijit/gi/pkg/compiler/tmp", true, null);
+__type__Baggins = __newType(16, __kindInterface, "main.Baggins", true, "main", true, nil);
+__type__Baggins.init({{__prop= "WearRing", __name= "WearRing", __pkg= "", __typ= __funcType({}, {__type__bool}, false)}}); -- incr.go:873
+__type__Gollum = __newType(16, __kindInterface, "main.Gollum", true, "main", true, nil);
+__type__Gollum.init({{__prop= "Scowl", __name= "Scowl", __pkg= "", __typ= __funcType({}, {__type__int}, false)}}); -- incr.go:873
+__type__hobbit = __newType(0, __kindStruct, "main.hobbit", true, "main", false, nil);
+__type__hobbit.__methods_desc = {{prop= "WearRing", __name= "WearRing", __pkg="", __typ= __funcType({}, {__type__bool}, false)}}; -- incr.go:817 for methods
 
-hobbit = __newType(0, __kindStruct, "main.hobbit", true, "github.com/gijit/gi/pkg/compiler/tmp", false, function(this, hasRing_)
-		this.__val = this; -- signal a non-basic value?
-		if hasRing_ == nil then
-			this.hasRing = false;
-			return;
-		end
-		this.hasRing = hasRing_;
-end);
+__type__hobbit.ptr.__methods_desc = {{prop= "WearRing", __name= "WearRing", __pkg="", __typ= __funcType({}, {__type__bool}, false)}}; -- incr.go:827 for ptr_methods
 
-Wolf = __newType(0, __kindStruct, "main.Wolf", true, "github.com/gijit/gi/pkg/compiler/tmp", true, function(this, Claw_, HasRing_) 
-                    this.__val = this;
-                    
-                    if HasRing_ == nil then
-                       this.Claw = 0;
-                       this.HasRing = false;
-                       return;
-                    end
-                    this.Claw = Claw_ or 0LL;
-                    this.HasRing = HasRing_ or false;
-end);
+__type__hobbit.init("main", {{__prop= "hasRing", __name= "hasRing", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}}); -- incr.go:873
 
-sliceType = __sliceType(__type__emptyInterface);
-ptrType = __ptrType(hobbit);
-ptrType__1 = __ptrType(Wolf);
-hobbit.ptr.prototype.WearRing = function(this)
-   print("hobbit.ptr.prototype.WearRing called!")
-   h = this;
-   h.hasRing = not h.hasRing;
-   return h.hasRing;
-end
+__type__hobbit.__constructor = function(self, ...) 
+   if self == nil then self = {}; end
+   local hasRing_ = ... ;
+   self.hasRing = hasRing_ or false;
+   return self; 
+end;
+;
 
-hobbit.prototype.WearRing = function(this)
-   print("hobbit.prototype.WearRing called!")
-   return this.__val.WearRing(this);
-end
+__type__hobbit.ptr.prototype.WearRing = function(h) 
+   h.hasRing =  not h.hasRing;
+   return  h.hasRing ;
+end;
+__type__hobbit.prototype.WearRing = function(this )  return this.__val.WearRing(); end;
 
-Wolf.ptr.prototype.Scowl = function(this)
-   print("Wolf.ptr.prototype.Scowl called!")
-   w = this;
-   w.Claw = w.Claw + 1LL;
-   return w.Claw;
-end
+__type__hobbit.__addToMethods({prop= "WearRing", __name= "WearRing", __pkg="", __typ= __funcType({}, {__type__bool}, false)}); -- package.go:344
 
-Wolf.prototype.Scowl = function(this)
-   print("Wolf.prototype.Scowl called!")
-   return this.__val.Scowl(this);
-end
+__type__hobbit.ptr.__addToMethods({prop= "WearRing", __name= "WearRing", __pkg="", __typ= __funcType({}, {__type__bool}, false)}); -- package.go:346
+__type__Wolf = __newType(0, __kindStruct, "main.Wolf", true, "main", true, nil);
+__type__Wolf.__methods_desc = {{prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}}; -- incr.go:817 for methods
 
+__type__Wolf.ptr.__methods_desc = {{prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}}; -- incr.go:827 for ptr_methods
+
+__type__Wolf.init("", {{__prop= "Claw", __name= "Claw", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "HasRing", __name= "HasRing", __anonymous= false, __exported= true, __typ= __type__bool, __tag= ""}}); -- incr.go:873
+
+__type__Wolf.__constructor = function(self, ...) 
+   if self == nil then self = {}; end
+   local Claw_, HasRing_ = ... ;
+   self.Claw = Claw_ or 0LL;
+   self.HasRing = HasRing_ or false;
+   return self; 
+end;
+;
+
+__type__Wolf.ptr.prototype.Scowl = function(w) 
+   w.Claw = w.Claw + (1LL);
+   return  w.Claw ;
+end;
+__type__Wolf.prototype.Scowl = function(this )  return this.__val.Scowl(); end;
+
+__type__Wolf.__addToMethods({prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}); -- package.go:344
+
+__type__Wolf.ptr.__addToMethods({prop= "Scowl", __name= "Scowl", __pkg="", __typ= __funcType({}, {__type__int}, false)}); -- package.go:346
 battle = function(g, b) 
-   return g:Scowl(), b:WearRing();
+   _r = g:Scowl();
+   _r_1 = b:WearRing();
+   $s = -1; return  _r, _r_1 ;
+end;
+tryTheTypeSwitch = function(i) 
+   _ref = i;
+   $s = -1; return  0LL ;
+end;
+main = function() 
+   w = __type__Wolf.ptr({}, 0LL, false);
+   bilbo = __type__hobbit.ptr({}, false);
+   _r = battle(w, bilbo);
+   i0, b0 = _r
+   _r_1 = battle(w, bilbo);
+   i1, b1 = _r_1
+   fmt.Printf("i0=%v, b0=%v\n", i0, b0);
+   fmt.Printf("i1=%v, b1=%v\n", i1, b1);
+   _r_2 = tryTheTypeSwitch(w);
+   _arg = _r_2;
+   _r_3 = fmt.Printf("tried wolf=%v\n", _arg);
+   _r_3;
+   _r_4 = tryTheTypeSwitch(bilbo);
+   _arg_1 = _r_4;
+   _r_5 = fmt.Printf("tried bilbo=%v\n", _arg_1);
 end
-   
-ptrType.methods = {{__prop= "WearRing", __name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}};
-
-ptrType__1.methods = {{__prop= "Scowl", __name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}};
-
-Baggins.init({{__prop= "WearRing", __name= "WearRing", pkg= "", __typ= __funcType({}, {__type__bool}, false)}});
-
-Gollum.init({{__prop= "Scowl", __name= "Scowl", pkg= "", __typ= __funcType({}, {__type__int}, false)}});
-
-hobbit.init("github.com/gijit/gi/pkg/compiler/tmp", {{__prop= "hasRing", __name= "hasRing", __anonymous= false, __exported= false, __typ= __type__bool, __tag= ""}});
-
-Wolf.init("", {{__prop= "Claw", __name= "Claw", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}, {__prop= "HasRing", __name= "HasRing", __anonymous= false, __exported= true, __typ= __type__bool, __tag= ""}});
-
-tryTheTypeSwitch = function(i)
-   print("top of tryTheTypeSwitch, with i=")
-   __st(i)
-   
-   x, isG = __assertType(i, Gollum, true)
-   if isG then
-      print("yes, i satisfies Gollum interface")
-      return x:Scowl()
-   end
-   print("i did not satisfy Gollum, trying Baggins...")
-   
-   x, isB = __assertType(i, Baggins, true)
-   if isB then
-      print("yes, i satisfies Baggins interface")
-      if x:WearRing() then
-         return 1LL
-      end
-   else
-      print("i satisfied neither interface")
-   end
-   return 0LL
-end
-
+        
 -- main
 w = Wolf.ptr(0, false);
 bilbo = hobbit.ptr(false);

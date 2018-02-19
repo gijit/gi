@@ -330,7 +330,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		}
 		rVal := c.translateResults(results)
 		if len(c.Flattened) != 0 {
-			c.Printf("$s = -1; return%s;", rVal)
+			//c.Printf("$s = -1; return%s;", rVal)
 			return
 		}
 		pp("DEBUG rVal='%s'", rVal)
@@ -657,12 +657,12 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 		}
 		condStrs[i] = strings.Join(conds, " || ")
 		if flatten {
-			c.Printf("/*jea statements.go:652 */ if (%s) then $s = %d; continue; end", condStrs[i], caseOffset+i)
+			//c.Printf("/*jea statements.go:652 */ if (%s) then $s = %d; continue; end", condStrs[i], caseOffset+i)
 		}
 	}
 
 	if flatten {
-		c.Printf("/*jea statements.go:657*/ $s = %d; continue;", defaultCase)
+		//c.Printf("/*jea statements.go:657*/ $s = %d; continue;", defaultCase)
 	}
 
 	prefix := ""
