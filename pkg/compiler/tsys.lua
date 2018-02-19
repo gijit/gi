@@ -72,29 +72,36 @@ end
 -- allows standalone development and testing.
 --
 if __preludePath == nil then
+   print("__preludePath is nil...")
+   local origin=""
    local dir = os.getenv("GIJIT_PRELUDE_DIR")
    if dir ~= nil then
+      origin = "__preludePath set from GIJIT_PRELUDE_DIR"
       __preludePath = dir .. "/"
    else
       local defaultPreludePath = "/src/github.com/gijit/gi/pkg/compiler"
       local gopath = os.getenv("GOPATH")
       if gopath ~= nil then
+         origin = "__preludePath set from GOPATH"
          __preludePath = gopath .. defaultPreludePath .. "/"
       else
          -- try $HOME/go
          local home = os.getenv("HOME")
          if home ~= nil then
+            origin = "__preludePath set from $HOME/go"
             __preludePath = home .. "/go" .. defaultPreludePath .. "/"
          else
             -- default to cwd
+            origin = "__preludePath set from cwd"     
             __preludePath = __minifs.getcwd().."/"
          end
       end
    end
    -- check for our marker file.
    if not __minifs.renameBasedFileExists(__preludePath.."__gijit_prelude_path_default") then
-      error("error in tsys.lua: could not find my prelude directory. Tried __preludePath='"..__preludePath.."'")
+      error("error in tsys.lua: could not find my prelude directory. Tried __preludePath='"..__preludePath.."'; "..origin)
    end
+   print("using __preludePath = '"..__preludePath.."'")
 end
 
 if __min == nil then
