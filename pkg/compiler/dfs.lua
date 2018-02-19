@@ -39,8 +39,8 @@ function __newDfsNode(self, name, typ)
    self.dfsDedup[typ] = node
    table.insert(self.dfsNodes, node)
 
-   print("just added to dfsNodes node "..name)
-   __st(typ, "typ, in __newDfsNode")
+   --print("just added to dfsNodes node "..name)
+   --__st(typ, "typ, in __newDfsNode")
    
    self.stale = true
    
