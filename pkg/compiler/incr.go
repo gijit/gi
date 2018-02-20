@@ -205,7 +205,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 	sort.Strings(importedPaths)
 	for _, impPath := range importedPaths {
-		id := c.newIdent(fmt.Sprintf(`%s.$init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
+		id := c.newIdent(fmt.Sprintf(`%s._init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
 		call := &ast.CallExpr{Fun: id}
 		c.Blocking[call] = true
 		c.Flattened[call] = true

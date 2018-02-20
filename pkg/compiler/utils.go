@@ -504,7 +504,8 @@ func (c *funcContext) typeNameWithAnonInfo(
 		createdVarName = varName
 
 		selfDefinition := fmt.Sprintf("%s = __%sType(%s);", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()))
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s, [===[%s]===]); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), selfDefinition, whenAnonPrint.String())
+		anonTypePrint := selfDefinition
+		//anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s, [===[%s]===]); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), selfDefinition, whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
