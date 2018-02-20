@@ -12,7 +12,8 @@ function __gi_GetRangeCheck(x, i)
    end
    if x == nil or i < 0 or i >= #x then
       error("index out of range: i="..tostring(i).." vs #x is "..tostring(#x))
-  end
+   end
+   print("range check on x = "..tostring(x).." at i = "..tostring(i).." looks okay, returning value: ", x[i])
   return x[i]
 end;
 

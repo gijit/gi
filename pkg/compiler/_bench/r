@@ -8,6 +8,8 @@ __type__anon_sliceType = __sliceType(__type__float64); -- 'IMMEDIATE' anon type 
 
 __type__Matrix = __newType(0, __kindStruct, "main.Matrix", true, "main", true, nil);
 
+__type__anon_ptrType = __ptrType(__type__Matrix);
+
 __type__anon_sliceType_1 = __sliceType(__type__anon_sliceType); -- 'DELAYED' anon type printing. utils.go:506
 
 __type__Matrix.__methods_desc = {{prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}, {prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}}; -- incr.go:817 for methods
@@ -27,41 +29,43 @@ end;
 ;
 
 NewMatrix = function(nrow, ncol, fill)
-   print("top of NewMatrix, nrow=",nrow," ncol=",ncol)
+   print("NewMatrix, ncol = ",ncol)
    m = __type__Matrix.ptr({}, __makeSlice(__type__anon_sliceType_1, nrow), nrow, ncol);
    do  local i = 0; 
-      local i_ = 0; local __gensym_1__lim = __lenz(m.A);
-      while i_ < __gensym_1__lim do
+      local __gensym_2_i = 0; local __gensym_1__lim = __lenz(m.A);
+      while __gensym_2_i < __gensym_1__lim do
          
-         i = i_;
+         i = __gensym_2_i;
 
          __gi_SetRangeCheck(m.A, i, __makeSlice(__type__anon_sliceType, ncol));
          
-         i_=i_+1;
+         __gensym_2_i=__gensym_2_i+1;
 
    end end;
+
+   print("after making matrix, m.A is = "..tostring(m.A))
    
    if (fill) then 
       do  local i = 0; 
-         local i_ = 0; local __gensym_2__lim = __lenz(m.A);
-         while i_ < __gensym_2__lim do
+         local __gensym_5_i = 0; local __gensym_4__lim = __lenz(m.A);
+         while __gensym_5_i < __gensym_4__lim do
             
-            i = i_;
+            i = __gensym_5_i;
 
 			do  local j = 0; 
-               local j_ = 0; local __gensym_3__lim = __lenz(__gi_GetRangeCheck(m.A, i_1));
-               while j_ < __gensym_3__lim do
+               local __gensym_8_i = 0; local __gensym_7__lim = __lenz(__gi_GetRangeCheck(m.A, i));
+               while __gensym_8_i < __gensym_7__lim do
                   
-                  j = j_;
+                  j = __gensym_8_i;
 
-                  __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i_1), j, (tonumber(rand.Intn(100LL))) / (tonumber((2LL + rand.Intn(100LL)))));
+                  __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i), j, (tonumber(rand.Intn(100LL))) / (tonumber((2LL + rand.Intn(100LL)))));
                   
-                  j_=j_+1;
+                  __gensym_8_i=__gensym_8_i+1;
 
             end end;
             
 			
-            i_=i_+1;
+            __gensym_5_i=__gensym_5_i+1;
 
       end end;
       
@@ -106,7 +110,11 @@ __type__Matrix.prototype.Set = function(this , i, j, val)  return this.__val.Set
 __type__Matrix.__addToMethods({prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}); -- package.go:344
 
 __type__Matrix.ptr.__addToMethods({prop= "Set", __name= "Set", __pkg="", __typ= __funcType({__type__int, __type__int, __type__float64}, {}, false)}); -- package.go:346
-__type__Matrix.ptr.prototype.Get = function(m,i, j) 
+__type__Matrix.ptr.prototype.Get = function(m,i, j)
+   print("Get called!  i =",i,"  and j =", j)
+   print("Get sees m = "..tostring(m))
+   print("done with tostring on m")
+   print("Get sees m.A = "..tostring(m.A))
    return  __gi_GetRangeCheck(__gi_GetRangeCheck(m.A, i), j) ;
 end;
 __type__Matrix.prototype.Get = function(this , i, j)  return this.__val.Get(i, j); end;
@@ -132,7 +140,7 @@ MatScaMul = function(m, x)
 end;
 __pkg.MatScaMul = MatScaMul;
 main = function() 
-   local sz = 5LL;
+   local sz = 3LL;
    local i = 0LL;
    while (true) do
       if (not (i < 1LL)) then break; end
@@ -145,4 +153,4 @@ end;
 
 sz=3
 
-a = NewMatrix(sz, sz, true);
+--a = NewMatrix(sz, sz, true);
