@@ -712,8 +712,14 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 		c.flowDatas[nil] = prevFlowData
 	}()
 
-	if !flatten && label != nil {
-		c.Printf("%s:", label.Name())
+	gotoLabel := ""
+	if !flatten {
+		if label != nil {
+			c.Printf("::%s::", label.Name())
+			gotoLabel = label.Name()
+		} else {
+			gotoLabel = c.gensym("label_")
+		}
 	}
 	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
 	c.Indent(func() {
@@ -742,7 +748,7 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 
 		c.p.escapingVars = prevEV
 	})
-	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
+	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; goto %s; case %d:", data.beginCase, data.endCase, gotoLabel))
 }
 
 func (c *funcContext) getKeyCast(key ast.Expr) string {
