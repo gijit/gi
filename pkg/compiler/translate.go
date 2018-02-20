@@ -11,18 +11,17 @@ import (
 	//"github.com/gijit/gi/pkg/verb"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
-	"github.com/fsnotify/fsnotify"
 	luajit "github.com/glycerine/golua/lua"
+	//"github.com/kisielk/gotool"
 	//"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
+	//gbuild "github.com/gijit/gi/pkg/gibuild"
 )
 
 // the incremental translation state
@@ -31,8 +30,6 @@ func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
 	if vmCfg == nil {
 		vmCfg = NewVmConfig()
 	}
-	//	options := &gbuild.Options{CreateMapFile: true}
-	//	s := gbuild.NewSession(options)
 
 	ic := &IncrState{
 		pkgMap: make(map[string]*IncrPkg),
@@ -119,7 +116,7 @@ type IncrState struct {
 	PrintAST bool
 }
 
-// Tr: translate from go to javascript, statement by statement or
+// Tr: translate from go to Lua, statement by statement or
 // expression by expression
 func (tr *IncrState) Tr(src []byte) []byte {
 
@@ -338,7 +335,7 @@ type Options struct {
 	GOPATH         string
 	Verbose        bool
 	Quiet          bool
-	Watch          bool
+	Watch          bool // not implemented in gijit.
 	CreateMapFile  bool
 	MapToLocalDisk bool
 	Minify         bool
@@ -372,7 +369,6 @@ type Session struct {
 	options  *Options
 	Archives map[string]*Archive
 	Types    map[string]*types.Package
-	Watcher  *fsnotify.Watcher
 }
 
 func NewSession(options *Options) *Session {
@@ -389,19 +385,6 @@ func NewSession(options *Options) *Session {
 		Archives: make(map[string]*Archive),
 	}
 	s.Types = make(map[string]*types.Package)
-	if options.Watch {
-		if out, err := exec.Command("ulimit", "-n").Output(); err == nil {
-			if n, err := strconv.Atoi(strings.TrimSpace(string(out))); err == nil && n < 1024 {
-				fmt.Printf("Warning: The maximum number of open file descriptors is very low (%d). Change it with 'ulimit -n 8192'.\n", n)
-			}
-		}
-
-		var err error
-		s.Watcher, err = fsnotify.NewWatcher()
-		if err != nil {
-			panic(err)
-		}
-	}
 	return s
 }
 
@@ -439,32 +422,6 @@ func hasGopathPrefix(file, gopath string) (hasGopathPrefix bool, prefixLen int) 
 	return false, 0
 }
 
-func (s *Session) WaitForChange() {
-	s.options.PrintSuccess("watching for changes...\n")
-	for {
-		select {
-		case ev := <-s.Watcher.Events:
-			if ev.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) == 0 || filepath.Base(ev.Name)[0] == '.' {
-				continue
-			}
-			if !strings.HasSuffix(ev.Name, ".go") && !strings.HasSuffix(ev.Name, ".inc.js") {
-				continue
-			}
-			s.options.PrintSuccess("change detected: %s\n", ev.Name)
-		case err := <-s.Watcher.Errors:
-			s.options.PrintError("watcher error: %s\n", err.Error())
-		}
-		break
-	}
-
-	go func() {
-		for range s.Watcher.Events {
-			// consume, else Close() may deadlock
-		}
-	}()
-	s.Watcher.Close()
-}
-
 var gijitAnsPrefix = []byte("__gijit_ans := []interface{}{")
 var gijitAnsSuffix = []byte("}\n __gijit_printQuoted(__gijit_ans...);")
 
@@ -480,4 +437,40 @@ func prependAns(src []byte) []byte {
 		return append(gijitAnsPrefix, append(trimmed[leftdiff+1:], gijitAnsSuffix...)...)
 	}
 	return src
+}
+
+// full package
+
+// FullPackage: translate a full package from go to Lua.
+func (tr *IncrState) FullPackage(src []byte) ([]byte, error) {
+
+	fileSet := token.NewFileSet()
+	file, err := parser.ParseFile(fileSet, "", src, 0)
+	if err != nil {
+		pp("we got an error on the ParseFile: '%v'", err)
+	}
+	panicOn(err)
+	pp("we got past the ParseFile !")
+
+	files := []*ast.File{file}
+	file.Name = &ast.Ident{
+		Name: "", // jea: was "/repl", but that seemed to cause scope issues.
+	}
+
+	tr.CurPkg.Arch, err = FullPackageCompile(tr.CurPkg.pack.ImportPath, files, fileSet, tr.CurPkg.importContext, tr.minify)
+	panicOn(err)
+	//pp("archive = '%#v'", tr.CurPkg.Arch)
+	//pp("len(tr.CurPkg.Arch.Declarations)= '%v'", len(tr.CurPkg.Arch.Declarations))
+	//pp("len(tr.CurPkg.Arch.NewCode)= '%v'", len(tr.CurPkg.Arch.NewCodeText))
+
+	pp("got past FullPackageCompile")
+
+	var res bytes.Buffer
+	for i, d := range tr.CurPkg.Arch.NewCodeText {
+		pp("writing tr.CurPkg.Arch.NewCode[i=%v].Code = '%v'", i, string(tr.CurPkg.Arch.NewCodeText[i]))
+		res.Write(d)
+	}
+	tr.CurPkg.Arch.NewCodeText = nil
+
+	return res.Bytes(), nil
 }

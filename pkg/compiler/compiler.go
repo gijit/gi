@@ -178,7 +178,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 		}
 	}
 
-	if _, err := w.Write([]byte("\"use strict\";\n(function() {\n\n")); err != nil {
+	if _, err := w.Write([]byte("\n(function()\n\n")); err != nil {
 		return err
 	}
 	if _, err := w.Write(removeWhitespace([]byte(prelude.Prelude), minify)); err != nil {
@@ -195,7 +195,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 		}
 	}
 
-	if _, err := w.Write([]byte("$synthesizeMethods();\nvar $mainPkg = $packages[\"" + string(mainPkg.ImportPath) + "\"];\n$packages[\"runtime\"].$init();\n$go($mainPkg.$init, []);\n$flushConsole();\n\n}).call(this);\n")); err != nil {
+	if _, err := w.Write([]byte("_synthesizeMethods();\nlocal _mainPkg = _packages[\"" + string(mainPkg.ImportPath) + "\"];\n_packages[\"runtime\"]._init();\n _go(_mainPkg._init, {});\n\n end)();\n")); err != nil {
 		return err
 	}
 
@@ -212,10 +212,10 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 	if _, err := w.Write(pkg.IncJSCode); err != nil {
 		return err
 	}
-	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("$packages[\"%s\"] = (function() {\n", pkg.ImportPath)), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("_packages[\"%s\"] = (function() {\n", pkg.ImportPath)), minify)); err != nil {
 		return err
 	}
-	vars := []string{"$pkg = {}", "$init"}
+	vars := []string{"_pkg = {}", "_init"}
 	var filteredDecls []*Decl
 	for _, d := range pkg.Declarations {
 		if _, ok := dceSelection[d]; ok {
@@ -223,7 +223,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			filteredDecls = append(filteredDecls, d)
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("\tvar %s;\n", strings.Join(vars, ", "))), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("\tlocal %s;\n", strings.Join(vars, ", "))), minify)); err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {
@@ -242,7 +242,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		}
 	}
 
-	if _, err := w.Write(removeWhitespace([]byte("\t__init = function()\n\t\t __pkg.__init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if this ~= nil && this.__blk ~= nil then  __f = this; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) so\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if self ~= nil && self.__blk ~= nil then  __f = self; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) so\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {
@@ -250,7 +250,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= __init }; } __f.__s = __s; __f.__r = __r; return __f;\n\t};\n\t__pkg.__init = __init;\n\treturn __pkg;\n})();"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= _init }; } __f.__s = __s; __f.__r = __r; return __f;\n\t};\n\t__pkg._init = _init;\n\treturn __pkg;\nend)();"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified

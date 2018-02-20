@@ -38,7 +38,7 @@ func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
 		GOROOT:        build.Default.GOROOT,
 		GOPATH:        build.Default.GOPATH,
 		GOOS:          build.Default.GOOS,
-		GOARCH:        "js",
+		GOARCH:        "gijit",
 		InstallSuffix: installSuffix,
 		Compiler:      "gc",
 		BuildTags:     append(buildTags, "netgo"),
