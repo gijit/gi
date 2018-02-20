@@ -437,7 +437,37 @@ func (tns typeNameSetting) String() string {
 	panic("unknown tns")
 }
 
-func (c *funcContext) typeName(level int, ty types.Type) (res string) {
+// re-port typeName, see if it brings back mat_test 501 package level vars/funcs
+func (c *funcContext) typeName(level int, ty types.Type) string {
+
+	switch t := ty.(type) {
+	case *types.Basic:
+		return "__type__" + toJavaScriptType(t)
+	case *types.Named:
+		if t.Obj().Name() == "error" {
+			return "__type__error"
+		}
+		return "__type__" + c.objectName(t.Obj())
+	case *types.Interface:
+		if t.Empty() {
+			return "__type__emptyInterface"
+		}
+	}
+
+	anonType, ok := c.p.anonTypeMap.At(ty).(*types.TypeName)
+	if !ok {
+		c.initArgs(ty) // cause all embedded types to be registered
+		varName := c.newVariableWithLevel(strings.ToLower(typeKind(ty)[6:])+"Type", true)
+		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
+		c.p.anonTypes = append(c.p.anonTypes, anonType)
+		c.p.anonTypeMap.Set(ty, anonType)
+	}
+	c.p.dependencies[anonType] = true
+	return anonType.Name()
+}
+
+// re-port typeName, see if it brings back mat_test 501 package level vars/funcs
+func (c *funcContext) typeNameGijit(level int, ty types.Type) (res string) {
 
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return
@@ -503,9 +533,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		selfDefinition := fmt.Sprintf("%s = __%sType(%s);", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()))
-		anonTypePrint := selfDefinition
-		//anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s, [===[%s]===]); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), selfDefinition, whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
@@ -540,7 +568,7 @@ func (c *funcContext) externalize(s string, t types.Type) string {
 			return "null"
 		}
 	}
-	return fmt.Sprintf("$externalize(%s, %s)", s, c.typeName(0, t))
+	return fmt.Sprintf("__externalize(%s, %s)", s, c.typeName(0, t))
 }
 
 func (c *funcContext) handleEscapingVars(n ast.Node) {
@@ -571,7 +599,7 @@ func (c *funcContext) handleEscapingVars(n ast.Node) {
 func fieldName(t *types.Struct, i int) string {
 	name := t.Field(i).Name()
 	if name == "_" || reservedKeywords[name] {
-		return fmt.Sprintf("%s$%d", name, i)
+		return fmt.Sprintf("%s__%d", name, i)
 	}
 	return name
 }

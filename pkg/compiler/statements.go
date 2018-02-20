@@ -905,10 +905,6 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		switch lhsType.Underlying().(type) {
 		case *types.Array, *types.Struct:
 			if define {
-				//typPrefix := "__type__"
-				//if true {
-				//	typPrefix = ""
-				//}
 				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
 				pp("debug __gi_clone2 arg: c.typeName(0, lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
