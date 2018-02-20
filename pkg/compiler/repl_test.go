@@ -239,7 +239,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; tot:=0; func hmm() { for k, v := range a { tot += v; _ = k } }; hmm()`
 		lua := string(inc.Tr([]byte(code)))
-		pp("lua='%s'", lua)
+		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "tot", 6)
 	})
@@ -254,9 +254,26 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
-		code := `a:=[]int{1,2,3}; itot:=0; i:= 0; for i = range a { itot+=i }`
+		code := `a:=[]int{1,2,3}; itot:=0;  for i := range a { itot+=i }`
 		lua := string(inc.Tr([]byte(code)))
-		pp("lua='%s'", lua)
+		fmt.Printf("lua='%s'", lua)
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "itot", 3)
+	})
+}
+
+func Test012AssignNotDefineRangeForLoop(t *testing.T) {
+
+	vm, err := NewLuaVmWithPrelude(nil)
+	panicOn(err)
+	defer vm.Close()
+	inc := NewIncrState(vm, nil)
+
+	cv.Convey("key only range over a slice should compile into lua", t, func() {
+
+		code := `a:=[]int{1,2,3}; itot:=0; i:=0; for i = range a { itot+=i }`
+		lua := string(inc.Tr([]byte(code)))
+		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "itot", 3)
 	})
