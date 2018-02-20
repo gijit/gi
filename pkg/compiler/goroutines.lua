@@ -2,14 +2,16 @@
 
 __stackDepthOffset = 0;
 __getStackDepth = function() 
-   local err = Error();
-   if err.stack == nil then
-      return nil;
-   end
-   return __stackDepthOffset + #err.stack.split("\n");
+   -- javascript/mozilla gives a stack trace under .stack,
+   -- which GopherJS was using if available.
+   -- Inlining makes debug.traceback() pretty useless under LuaJIT.
+   
+   return __stackDepthOffset
 end;
 
-__panicStackDepth = nil, __panicValue;
+__panicStackDepth = nil;
+__panicValue = nil;
+
 __callDeferred = function(deferred, jsErr, fromPanic) 
    if not fromPanic and deferred ~= nil and deferred.index >= #__curGoroutine.deferStack then
       error( jsErr);
@@ -47,7 +49,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
    --try
    local res = {pcall(function()
                       ::top::                 
-                      while (true) do
+                      while true do
                          if deferred == nil then
                             deferred = __curGoroutine.deferStack[#__curGoroutine.deferStack - 1];
                             if deferred == nil then
@@ -103,6 +105,7 @@ __panic = function(value)
    __curGoroutine.panicStack.push(value);
    __callDeferred(nil, nil, true);
 end;
+
 __recover = function() 
    if __panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2) then
       return __ifaceNil;
@@ -110,6 +113,7 @@ __recover = function()
    __panicStackDepth = nil;
    return __panicValue;
 end;
+
 __throw = function(err)  error(err); end;
 
 __noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
@@ -171,6 +175,7 @@ __go = function(fun, args)
 end;
 
 __scheduled = {};
+
 __runScheduled = function() 
    --try
    local res = {pcall(function()
