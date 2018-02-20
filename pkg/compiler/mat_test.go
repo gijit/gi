@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	//"github.com/gijit/gi/pkg/verb"
@@ -152,7 +153,7 @@ func main() {
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		fmt.Printf("go origin source:")
-		fmt.Printf(src)
+		fmt.Printf(strings.Replace(src, "%", "%%", -1))
 		fmt.Printf("\n\n  --> translation to lua -->\n\n")
 		fmt.Printf(string(translation))
 		fmt.Printf("\n\n")

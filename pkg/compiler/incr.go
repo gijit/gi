@@ -412,7 +412,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 								if _, ok := varsWithInit[o]; !ok {
 
 									de.DceDeps = collectDependencies(func() {
-										// this is producing the $ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
+										// this is producing the __ifaceNil for the next line, and the &Beagle{word:"hiya"} part is getting lost.
 										// the var snoopy Dog = &Beagle{word:"hiya"}
 										// versus at place2, the Beagle does get printed!
 										//
@@ -634,12 +634,12 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			c.p.Uses[id] = mainFunc
 			call := &ast.CallExpr{Fun: id}
 			ifStmt := &ast.IfStmt{
-				Cond: c.newIdent("$pkg === $mainPkg", types.Typ[types.Bool]),
+				Cond: c.newIdent("__pkg === __mainPkg", types.Typ[types.Bool]),
 				Body: &ast.BlockStmt{
 					List: []ast.Stmt{
 						&ast.ExprStmt{X: call},
 						&ast.AssignStmt{
-							Lhs: []ast.Expr{c.newIdent("$mainFinished", types.Typ[types.Bool])},
+							Lhs: []ast.Expr{c.newIdent("__mainFinished", types.Typ[types.Bool])},
 							Tok: token.ASSIGN,
 							Rhs: []ast.Expr{c.newConst(types.Typ[types.Bool], constant.MakeBool(true))},
 						},
@@ -735,7 +735,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			if isPkgLevel(o) {
 				// jea: might need to attend to package names
 				//  eventually, or not.
-				//lhs += " = $pkg." + encodeIdent(o.Name())
+				//lhs += " = __pkg." + encodeIdent(o.Name())
 			}
 			size := int64(0)
 
@@ -789,7 +789,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			}
 			c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported()) //, constructor)
 			//c.Printf(`__type__%s = __newType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
-			//c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+			//c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 
 			// jea: GopherJS can defer init which adds the methods
 			// to the interface, but at the REPL we cannot.
@@ -887,7 +887,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				}
 			})
 			// example of what is generated:
-			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: $funcType([String], [String], false)}]);
+			// Dog.init([{prop: "Write", name: "Write", pkg: "", typ: __funcType([String], [String], false)}]);
 			allby = append(allby, d.TypeInitCode...)
 		}
 	})
@@ -914,7 +914,7 @@ func (c *funcContext) oneAnonType(t *types.TypeName, collectDependencies func(f 
 		DceObjectFilter: t.Name(),
 	}
 	d.DceDeps = collectDependencies(func() {
-		d.DeclCode = []byte(fmt.Sprintf("\t%s = $%sType(%s);\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
+		d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s);\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
 	})
 
 	return &d, d.DeclCode

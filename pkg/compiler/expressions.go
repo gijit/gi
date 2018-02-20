@@ -362,7 +362,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 		case token.ARROW:
 			call := &ast.CallExpr{
-				Fun:  c.newIdent("$recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
+				Fun:  c.newIdent("_recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
 				Args: []ast.Expr{e.X},
 			}
 			c.Blocking[call] = true
@@ -996,7 +996,7 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 	// jea
 	//resumeCase := c.caseCounter
 	c.caseCounter++
-	returnVar := "$r"
+	returnVar := "_r"
 	if sig.Results().Len() != 0 {
 		returnVar = c.newVariable("_r")
 	}
@@ -1192,6 +1192,13 @@ func (c *funcContext) translateExprSlice(exprs []ast.Expr, desiredType types.Typ
 }
 
 func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type) *expression {
+
+	// jea debug
+	var buf bytes.Buffer
+	fset := token.NewFileSet()
+	printer.Fprint(&buf, fset, expr)
+	fmt.Printf("debug: translate Conversion sees expr: '%v'.\n", string(buf.Bytes()))
+
 	exprType := c.p.TypeOf(expr)
 	if types.Identical(exprType, desiredType) {
 		return c.translateExpr(expr, nil)
@@ -1221,16 +1228,17 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			case is64Bit(t):
 				if !is64Bit(basicExprType) {
 					if basicExprType.Kind() == types.Uintptr { // this might be an Object returned from reflect.Value.Pointer()
-						return c.formatExpr("%1s(0, %2e.constructor == Number ? %2e : 1)", c.typeName(0, desiredType), expr)
+						return c.formatExpr("%1s(%2e)", c.typeName(0, desiredType), expr)
+						//return c.formatExpr("%1s(0, %2e.constructor == Number ? %2e : 1)", c.typeName(0, desiredType), expr)
 					}
-					return c.formatExpr("%s(0, %e)", c.typeName(0, desiredType), expr)
+					return c.formatExpr("%s(%e)", c.typeName(0, desiredType), expr)
 				}
-				return c.formatExpr("%1s(%2h, %2l)", c.typeName(0, desiredType), expr)
+				return c.formatExpr("%s(%e)", c.typeName(0, desiredType), expr)
 			case is64Bit(basicExprType):
 				if !isUnsigned(t) && !isUnsigned(basicExprType) {
-					return c.fixNumber(c.formatParenExpr("%1l + ((%1h >> 31) * 4294967296)", expr), t)
+					return c.formatParenExpr("%e", expr)
 				}
-				return c.fixNumber(c.formatExpr("%s.$low", c.translateExpr(expr, nil)), t)
+				return c.formatExpr("%s", c.translateExpr(expr, nil), t)
 			case isFloat(basicExprType):
 				// jea
 				//return c.formatParenExpr("%e >> 0", expr)
@@ -1256,14 +1264,14 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 					value = c.formatExpr("%s.$low", value)
 				}
 				if isNumeric(et) {
-					return c.formatExpr("$encodeRune(%s)", value)
+					return c.formatExpr("__encodeRune(%s)", value)
 				}
 				return value
 			case *types.Slice:
 				if types.Identical(et.Elem().Underlying(), types.Typ[types.Rune]) {
-					return c.formatExpr("$runesToString(%s)", value)
+					return c.formatExpr("__runesToString(%s)", value)
 				}
-				return c.formatExpr("$bytesToString(%s)", value)
+				return c.formatExpr("__bytesToString(%s)", value)
 			default:
 				panic(fmt.Sprintf("Unhandled conversion: %v\n", et))
 			}

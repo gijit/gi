@@ -390,10 +390,10 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 		}
 
 		if len(c.Blocking) != 0 {
-			c.localVars = append(c.localVars, "$r")
+			c.localVars = append(c.localVars, "_r")
 			if funcRef == "" {
-				funcRef = "$b"
-				functionName = " $b"
+				funcRef = "_b"
+				functionName = " _b"
 			}
 			var stores, loads string
 			for _, v := range c.localVars {
