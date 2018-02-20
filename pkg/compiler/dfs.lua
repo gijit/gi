@@ -19,10 +19,10 @@ function __isBasicTyp(typ)
    -- we can skip all basic types,
    -- as they are already defined.
    --
-   if typ.kind <= 16 or -- __kindComplex128
+   if typ.kind <= 16 or -- __kindComplex128 or earlier primitive.
       typ.kind == 24 or -- __kindString
       typ.kind == 26 or -- __kindUnsafePointer
-   (typ.kind == 20 and typ.__str == "interface {}") then
+   (typ.kind == 20 and typ.__str == "interface {}") then -- empty interface
 
       return true
    end

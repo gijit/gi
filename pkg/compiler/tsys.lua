@@ -992,9 +992,15 @@ __valuePointerMT = {
    end,
 
    __tostring = function(t)
-     --print("__valuePointerMT: tostring called")
-      local str = t.__str or ""
-      return str .. "{" .. tostring(t.__get()) .. "}"
+      --print("__valuePointerMT: tostring called")
+      if t == nil then return "<__valuePointer nil pointer>" end
+      -- avoid getting messed up by metatable intercept, do a rawget.
+      local str =  rawget(t,"__str")
+      if str == nil then
+         return "<__valuePointer with __str nil>"
+      end
+      local ret = str .. "{" .. tostring(t.__get()) .. "}"
+      return ret
    end
 }
 
