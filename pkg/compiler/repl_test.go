@@ -221,7 +221,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; ktot:=0; vtot:=0; func hmm() { for k, v := range a { ktot+=k; vtot+=v; } }; hmm();`
 		lua := string(inc.Tr([]byte(code)))
-		pp("lua='%s'", lua)
+		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "ktot", 3)
 		LuaMustInt64(vm, "vtot", 30)

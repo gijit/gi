@@ -2,6 +2,11 @@
 
 local ffi = require("ffi")
 
+ffi.cdef[[
+long long int atoll(const char *nptr);
+]]
+__atoll=ffi.C.atoll
+
 -- assume 64-bit int and uint
 int = ffi.typeof(0LL)
 uint=ffi.typeof(0ULL)

@@ -745,6 +745,21 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 	c.PrintCond(!flatten, " end ", fmt.Sprintf("$s = %d; continue; case %d:", data.beginCase, data.endCase))
 }
 
+func (c *funcContext) getKeyCast(key ast.Expr) string {
+	keyType := c.p.TypeOf(key)
+	_ = keyType
+	fmt.Printf("\n keyType = '%#v'\n", keyType)
+
+	switch b := keyType.(type) {
+	case *types.Basic:
+		switch b.Kind() {
+		case types.Int64, types.Int:
+			return "__atoll"
+		}
+	}
+	return ""
+}
+
 // jea: modified copy of the above translateLoopingStmt
 func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
 
@@ -776,17 +791,27 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	case *types.Map:
 		isMap = true
 	}
-	extraEnd := false
+	ipairs := false
+	target := c.translateExpr(s.X, nil)
+
+	// keycast reverses the key -> string that was done to store in the map.
+	// string -> int, use __atoll()
+	keycast := c.getKeyCast(s.Key)
+
+	// jea TODO: if the range is not a := range, then leave off
+	// declaring the two locals in the outer do scope.
+
 	if isMap {
-		c.Printf("for %s, %s in pairs(%s) do ", key, value, c.translateExpr(s.X, nil))
+		c.Printf("do local %[1]s, %[2]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast)
 	} else {
-		extraEnd = true
-		// eschew ipairs: numeric for is faster, and 0 based.
-		slice := c.translateExpr(s.X, nil)
+
+		ipairs = true
+		// eschew ipairs: numeric for is 0 based.
+
 		// for loops AND array indexes in Lua require float64
-		s := fmt.Sprintf("do\n\t local %s = 0; local __lim = __lenz(%s);\n\t while %s < __lim do\n\t\n", key, slice, key)
+		s := fmt.Sprintf("do\n\t local %s = 0; local __lim = __lenz(%s);\n\t while %s < __lim do\n\t\n", key, target, key)
 		if value != "_" {
-			s += fmt.Sprintf("\t local %s = %s[%s];\n", value, slice, key)
+			s += fmt.Sprintf("\t local %s = %s[%s];\n", value, target, key)
 		}
 		c.Printf("%s", s)
 	}
@@ -809,10 +834,10 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	}
 
 	c.p.escapingVars = prevEV
-	c.Printf("\n\t %[1]s=%[1]s+1;\n end;\n", key)
-	if extraEnd {
-		c.Printf(" end;\n ")
+	if ipairs {
+		c.Printf("\n\t %[1]s=%[1]s+1;\n", key)
 	}
+	c.Printf(" end end;\n ")
 }
 
 // body helper
