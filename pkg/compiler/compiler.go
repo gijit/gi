@@ -245,7 +245,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		}
 	}
 
-	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if self ~= nil and self.__blk ~= nil then  __f = self; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) so\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if self ~= nil and self.__blk ~= nil then  __f = self; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {
