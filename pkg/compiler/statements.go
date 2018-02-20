@@ -876,10 +876,10 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	}
 
 	lhsType := c.p.TypeOf(lhs)
-	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
+	//pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
-		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
+		//pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
 		return fmt.Sprintf("%s%s = %s;", local, c.translateExpr(lhs, nil), rhsExpr) // skip $copy
 	}
 	if _, ok := rhs.(*ast.BasicLit); ok && define {
@@ -889,13 +889,13 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			}
 			panic("what goes here?")
 		} else {
-			pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
+			//pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
 			tlhs := c.translateExpr(lhs, nil)
-			pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
+			//pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
 			return fmt.Sprintf("%s%s = %s;", local, tlhs, rhsExpr) // skip $copy
 		}
 	}
-	pp("rhsExpr = '%#v'", rhsExpr)
+	//pp("rhsExpr = '%#v'", rhsExpr)
 
 	isReflectValue := false
 	if named, ok := lhsType.(*types.Named); ok && named.Obj().Pkg() != nil && named.Obj().Pkg().Path() == "reflect" && named.Obj().Name() == "Value" {
