@@ -2,7 +2,7 @@ package prelude
 
 const Prelude = `
 
--------- complex.lua -------
+-------- ../complex.lua -------
 --
 -- complex number support
 --
@@ -512,7 +512,7 @@ print("cmath.ComplexLog checks")
 -- end tests
 --]]
 -----------------------
--------- defer.lua -------
+-------- ../defer.lua -------
 -- deferinit.lua : global setup for defer handling
 
 -- utility: table show
@@ -692,7 +692,7 @@ __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __or
   return __processDefers(who, __defers, __res,  __namedNames, actEnv)  
 end
 -----------------------
--------- dfs.lua -------
+-------- ../dfs.lua -------
 --  depend.lua:
 --
 --  Implement Depth-First-Search (DFS)
@@ -964,7 +964,7 @@ __testDFS()
 __testDFS()
 --]]
 -----------------------
--------- int64.lua -------
+-------- ../int64.lua -------
 -- int64 uint64 helpers
 
 local ffi = require("ffi")
@@ -998,7 +998,7 @@ float32 = ffi.typeof("float")
 
 -- to use cdata as hash keys... tostring() to make them strings first.
 -----------------------
--------- map.lua -------
+-------- ../map.lua -------
 -- a Lua virtual table system suitable for use in arrays and maps
 
 -- design using the _giPrivateMapRaw index was suggested
@@ -1240,7 +1240,7 @@ function _gi_NewMap(keyType, valType, x)
 end;
 
 -----------------------
--------- math.lua -------
+-------- ../math.lua -------
 -- math helper functions
 
 -- x == math.huge   -- test for +inf, inline
@@ -1290,7 +1290,7 @@ function __min(a,b)
    return b
 end
 -----------------------
--------- prelude.lua -------
+-------- ../prelude.lua -------
 -- prelude defines things that should
 -- be available before any user code is run.
 
@@ -1319,7 +1319,7 @@ function __gi_SetRangeCheck(x, i, val)
 end;
 
 -----------------------
--------- rune.lua -------
+-------- ../rune.lua -------
 function __decodeRune(s, i)
    return {__utf8.sub(s, i+1, i+1), 1}
 end
@@ -1412,7 +1412,7 @@ end;
 
 --]]
 -----------------------
--------- string.lua -------
+-------- ../string.lua -------
 
 __stringToBytes = function(str)
   local array = Uint8Array(#str);
@@ -1475,7 +1475,7 @@ __copyString = function(dst, src)
   return n;
 end;
 -----------------------
--------- tsys.lua -------
+-------- ../tsys.lua -------
 --
 -- tsys.lua the type system for gijit.
 -- It started life as a port of the GopherJS type
@@ -3746,7 +3746,7 @@ function __printHelper(v)
 
       local tv = type(v)
       if tv == "string" then
-         print("\""..v.."\"")
+         print("\""..v.."\"") -- used to be backticks
       elseif tv == "table" then
          if v.__name == "__lazy_ellipsis_instance" then
             local expand = v()
@@ -3770,7 +3770,7 @@ function __gijit_printQuoted(...)
    end
 end
 -----------------------
--------- utf8.lua -------
+-------- ../utf8.lua -------
 -- $Id: utf8.lua 179 2009-04-03 18:10:03Z pasta $
 --
 -- from https://github.com/Stepets/utf8.lua

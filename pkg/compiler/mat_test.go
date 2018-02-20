@@ -151,7 +151,11 @@ func main() {
 		translation, err := inc.FullPackage([]byte(src), importPath)
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, string(translation))
+		fmt.Printf("go origin source:")
+		fmt.Printf(src)
+		fmt.Printf("\n\n  --> translation to lua -->\n\n")
+		fmt.Printf(string(translation))
+		fmt.Printf("\n\n")
 
 		//cv.So(string(translation), matchesLuaSrc, ``)
 

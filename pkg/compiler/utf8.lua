@@ -1,4 +1,4 @@
--- $Id: utf8.lua 179 2009-04-03 18:10:03Z pasta $
+-- utf8.lua
 --
 -- from https://github.com/Stepets/utf8.lua
 --
