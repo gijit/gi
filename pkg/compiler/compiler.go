@@ -206,7 +206,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
   local __rtTemp = __packages["runtime"]; 
   if __rtTemp ~= nil then _init(); end;
 
-  __mainPkg._init()
+  -- __mainPkg._init()
 end)();
 `)); err != nil {
 		return err
@@ -255,7 +255,28 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		}
 	}
 
-	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false;\n\t\t local __s = 0;\n\t\t local __r;\n\t\t if self ~= nil and self.__blk ~= nil then\n\t\t  __f = self;\n\t\t __c = true;\n\t\t __s = __f.__s;\n\t\t __r = __f.__r;\n\t\t end;\n\t\t ::s::\n\t\t while (true) do\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
+	_, err := w.Write(removeWhitespace([]byte(`
+   _init = function(self)
+   _pkg._init = function() end;
+    -- jea compiler.go:245
+    local __f
+    local __c = false;
+    local __s = 0;
+    local __r;
+    if self ~= nil and self.__blk ~= nil then
+         __f = self;
+         __c = true;
+         __s = __f.__s;
+         __r = __f.__r;
+    end;
+     ::s::
+    while (true) do
+         --switch (__s)
+    if __s == 0 then
+`), minify))
+
+	//_, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false;\n\t\t local __s = 0;\n\t\t local __r;\n\t\t if self ~= nil and self.__blk ~= nil then\n\t\t  __f = self;\n\t\t __c = true;\n\t\t __s = __f.__s;\n\t\t __r = __f.__r;\n\t\t end;\n\t\t ::s::\n\t\t while (true) do\n  --switch (__s)\n if __s == 0 then\n"), minify))
+	if err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {

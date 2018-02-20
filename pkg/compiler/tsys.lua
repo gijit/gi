@@ -972,6 +972,7 @@ end;
 
 
 __synthesizeMethods = function()
+   print("__synthesizeMethods called! we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
    __ipairsZeroCheck(__methodSynthesizers)
    for i,f in ipairs(__methodSynthesizers) do
       f();

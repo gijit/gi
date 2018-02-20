@@ -145,7 +145,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			Vars: []string{c.p.pkgVars[impPath]},
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
-			InitCode: c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }),
+			//InitCode: c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }),
 		})
 	}
 
