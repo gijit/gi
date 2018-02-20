@@ -610,5 +610,14 @@ this-on-Hound.ptr:  8 key: 'food' val: '0'
 this-on-Hound.ptr:  9 key: 'PtrLit' val: '<this.__val == this; avoid inf loop>'
 this-on-Hound.ptr:  10 key: '__val' val: 'table: 0x000a8720'
 --]]
-                
+
+-- test __lenz
+__type__anon_sliceType = __sliceType(__type__int);
+b = __type__anon_sliceType({[0]=0LL});
+expectEq(__lenz(b), 1)
+expectEq({1,2,3}, 3)
+expectEq({[0]=1,2,3}, 3)
+
+
 print("done with fin_test.lua")
+

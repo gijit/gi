@@ -769,15 +769,24 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	}
 	key := nameHelper(s.Key)
 	value := nameHelper(s.Value)
-	pairs := "ipairs" // slice, array
 
 	exprType := c.p.TypeOf(s.X)
+	isMap := false
 	switch exprType.(type) {
 	case *types.Map:
-		pairs = "pairs"
+		isMap = true
 	}
-	c.Printf("for %s, %s in %s(%s) do ", key, value, pairs, c.translateExpr(s.X, nil))
-
+	if isMap {
+		c.Printf("for %s, %s in pairs(%s) do ", key, value, c.translateExpr(s.X, nil))
+	} else {
+		// eschew ipairs: numeric for is faster, and 0 based.
+		slice := c.translateExpr(s.X, nil)
+		if value == "_" {
+			c.Printf("for %s = 0, __lenz(%s)-1 do ", key, slice)
+		} else {
+			c.Printf("for %s = 0, __lenz(%s)-1 do %s = %s[%s]; ", key, slice, value, slice, key)
+		}
+	}
 	prevEV := c.p.escapingVars
 	c.handleEscapingVars(body)
 

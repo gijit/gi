@@ -140,11 +140,14 @@ __pkg = {};
 -- but trusting __len if metamethod avail.
 function __lenz(array)
    local n = #array
-   local lenmeth = array.__len
-   if lenmeth ~= nil then
+   local mt = getmetatable(array)
+   if mt ~= nil and mt.__len ~= nil then
+      --print("__len was not nil")
       return n
    end
+   --print("__len was nil")
    if array[0] ~= nil then
+      --print("array[0] is not nil")
       n=n+1
    end
    return n
