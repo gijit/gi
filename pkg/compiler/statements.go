@@ -747,9 +747,6 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 
 func (c *funcContext) getKeyCast(key ast.Expr) string {
 	keyType := c.p.TypeOf(key)
-	_ = keyType
-	fmt.Printf("\n keyType = '%#v'\n", keyType)
-
 	switch b := keyType.(type) {
 	case *types.Basic:
 		switch b.Kind() {
@@ -800,17 +797,35 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	// jea TODO: if the range is not a := range, then leave off
 	// declaring the two locals in the outer do scope.
+	isAssign := true
+	valUnder := false
+
+	addMe := ""
+	if isAssign {
+		if key != "_" {
+			if isMap {
+				addMe = fmt.Sprintf("local %s; ", key)
+			} else {
+				addMe = fmt.Sprintf("local %s = 0; ", key)
+			}
+		}
+		if value != "_" {
+			addMe += fmt.Sprintf("local %s; ", value)
+		} else {
+			valUnder = true
+		}
+	}
 
 	if isMap {
-		c.Printf("do local %[1]s, %[2]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast)
+		c.Printf("do %[5]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast, addMe)
 	} else {
 
 		ipairs = true
 		// eschew ipairs: numeric for is 0 based.
 
 		// for loops AND array indexes in Lua require float64
-		s := fmt.Sprintf("do\n\t local %s = 0; local __lim = __lenz(%s);\n\t while %s < __lim do\n\t\n", key, target, key)
-		if value != "_" {
+		s := fmt.Sprintf("do  %[3]s\n\t local %[1]s_ = 0; local __lim = __lenz(%[2]s);\n\t while %[1]s_ < __lim do\n\t\n", key, target, addMe)
+		if !valUnder {
 			s += fmt.Sprintf("\t local %s = %s[%s];\n", value, target, key)
 		}
 		c.Printf("%s", s)
@@ -835,7 +850,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	c.p.escapingVars = prevEV
 	if ipairs {
-		c.Printf("\n\t %[1]s=%[1]s+1;\n", key)
+		c.Printf("\n\t %[1]s_=%[1]s_+1;\n", key)
 	}
 	c.Printf(" end end;\n ")
 }
