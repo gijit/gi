@@ -253,7 +253,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= _init }; } __f.__s = __s; __f.__r = __r; return __f;\n\t};\n\t__pkg._init = _init;\n\treturn __pkg;\nend)();"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= _init }; end;  __f.__s = __s; __f.__r = __r; return __f;\n\t end;\n\t__pkg._init = _init;\n\treturn __pkg;\nend)();"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified
