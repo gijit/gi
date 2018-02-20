@@ -6,12 +6,12 @@ __getStackDepth = function()
   if (err.stack == nil) then
     return nil;
   end
-  return __stackDepthOffset + err.stack.split("\n").length;
+  return __stackDepthOffset + #err.stack.split("\n");
 end;
 
 __panicStackDepth = null, __panicValue;
 __callDeferred = function(deferred, jsErr, fromPanic) 
-  if (!fromPanic && deferred ~= null && deferred.index >= __curGoroutine.deferStack.length) then
+  if (!fromPanic and deferred ~= null and deferred.index >= #__curGoroutine.deferStack) then
     throw jsErr;
   end
   if (jsErr ~= null) then
@@ -43,12 +43,12 @@ __callDeferred = function(deferred, jsErr, fromPanic)
   try {
     while (true) do
       if (deferred == null) then
-        deferred = __curGoroutine.deferStack[__curGoroutine.deferStack.length - 1];
+        deferred = __curGoroutine.deferStack[#__curGoroutine.deferStack - 1];
         if (deferred == nil) then
-          -- The panic reached the top of the stack. Clear it and throw it as a JavaScript error. --
+          -- The panic reached the top of the stack. Clear it and throw it as a Lua error. --
           __panicStackDepth = null;
           if (localPanicValue.Object instanceof Error) then
-            throw localPanicValue.Object;
+             error(localPanicValue.Object);
           end
           local msg;
           if (localPanicValue.constructor == __String) then
@@ -73,7 +73,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
         return;
       end
       local r = call[0].apply(call[2], call[1]);
-      if (r && r.__blk ~= nil) then
+      if (r and r.__blk ~= nil) then
         deferred.push([r.__blk, {}, r]);
         if (fromPanic) then
           throw null;
@@ -81,7 +81,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
         return;
       end
 
-      if (localPanicValue ~= nil && __panicStackDepth == null) then
+      if (localPanicValue ~= nil and __panicStackDepth == null) then
         throw null; -- error was recovered --
       end
     end
@@ -102,13 +102,13 @@ __panic = function(value)
   __callDeferred(null, null, true);
 end;
 __recover = function() 
-  if (__panicStackDepth == null || (__panicStackDepth ~= nil && __panicStackDepth ~= __getStackDepth() - 2)) then
+  if (__panicStackDepth == null or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2)) then
     return __ifaceNil;
   end
   __panicStackDepth = null;
   return __panicValue;
 end;
-__throw = function(err)  throw err; end;
+__throw = function(err)  error(err); end;
 
 __noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
 __curGoroutine = __noGoroutine, __totalGoroutines = 0, __awakeGoroutines = 0, __checkForDeadlock = true;
@@ -120,7 +120,7 @@ __go = function(fun, args)
     try {
       __curGoroutine = __goroutine;
       local r = fun.apply(nil, args);
-      if (r && r.__blk ~= nil) then
+      if (r and r.__blk ~= nil) then
         fun = function()  return r.__blk(); end;
         args = {};
         return;
@@ -138,7 +138,7 @@ __go = function(fun, args)
       end
       if (__goroutine.asleep) then
          __awakeGoroutines=__awakeGoroutines-1;
-         if (!__mainFinished && __awakeGoroutines == 0 && __checkForDeadlock) then
+         if (!__mainFinished and __awakeGoroutines == 0 and __checkForDeadlock) then
             console.error("fatal error: all goroutines are asleep - deadlock!");
             if (__global.process ~= nil) then
                __global.process.exit(2);
@@ -162,7 +162,7 @@ __runScheduled = function()
       r();
     end
   } finally {
-    if (__scheduled.length > 0) then
+    if (#__scheduled > 0) then
       setTimeout(__runScheduled, 0);
     end
   }
@@ -203,7 +203,7 @@ __send = function(chan, value)
     queuedRecv([value, true]);
     return;
   end
-  if (chan.__buffer.length < chan.__capacity) then
+  if (#chan.__buffer < chan.__capacity) then
     chan.__buffer.push(value);
     return;
   end
@@ -289,7 +289,7 @@ __select = function(comms)
          if chan.__closed then
             __throwRuntimeError("send on closed channel");
          end
-         if (chan.__recvQueue.length ~= 0 or chan.__buffer.length < chan.__capacity) then
+         if (#chan.__recvQueue ~= 0 or #chan.__buffer < chan.__capacity) then
             ready.push(i-1);
          end
          break;
@@ -297,7 +297,7 @@ __select = function(comms)
    end
 
    if #ready  ~= 0 then
-      -- jea NB lua's math.random doesn't return 0.
+      -- jea NB lua's math.random(n) returns in [1,n] to match its arrays.
       selection = ready[math.random(#ready)]; 
    end
    if (selection ~= -1) then
