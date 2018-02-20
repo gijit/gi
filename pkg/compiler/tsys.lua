@@ -914,30 +914,22 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
-      print(debug.traceback())
+      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      --print(debug.traceback())
 
-      local args = {...}
-      print("in __tfunBasicMT, start __st on args")
-      __st(args, "args to __tfunBasicMT.__call")
-      print("in __tfunBasicMT,   end __st on args")
+      --local args = {...}
+      --print("in __tfunBasicMT, start __st on args")
+      --__st(args, "args to __tfunBasicMT.__call")
+      --print("in __tfunBasicMT,   end __st on args")
 
-      print("in __tfunBasicMT, start __st on self")
-      __st(self, "self")
-      print("in __tfunBasicMT,   end __st on self")
-      
-      local callName = args[1]
-      print("callName/args[1] is ")
-      __st(args[1], "args[1]")
-      if callName == "bloom" then
-         print("bloom call seen!")
-         return
-      end
+      --print("in __tfunBasicMT, start __st on self")
+      --__st(self, "self")
+      --print("in __tfunBasicMT,   end __st on self")
       
       local newInstance = {}
       if self ~= nil then
          if self.tfun ~= nil then
-            print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
+            --print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
 
             -- this makes a difference as to whether or
             -- not the ctor receives a nil 'this' or not...
@@ -949,7 +941,7 @@ __tfunBasicMT = {
                error("typ.__dfsNode was nil for type "..self.__str.." at "..__st(self, "self", 0, true))
             end
             if not self.__dfsNode.made then
-               -- turn off to bootstrap, TODO: enable this!
+               --turn off to bootstrap, TODO: enable this!
                --self.__dfsNode:makeRequiredTypes()
             end
             
@@ -1557,8 +1549,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    typ.methods = typ.methods or {};
    typ.methodSetCache = nil;
    typ.comparable = true;
+   typ.bloom = function()
+      print("bloom called for typ:")
+      __st(typ)
+   end
    return typ;
-   
 end
 
 function __methodSet(typ)
