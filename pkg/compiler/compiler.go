@@ -198,7 +198,6 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 		}
 	}
 
-	// leave off the   __go(__mainPkg._init, {});
 	if _, err := w.Write([]byte(`
   __synthesizeMethods();
 
@@ -206,7 +205,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
   local __rtTemp = __packages["runtime"]; 
   if __rtTemp ~= nil then _init(); end;
 
-  __mainPkg._init()
+  __go(__mainPkg._init(), {});
 end)();
 `)); err != nil {
 		return err
