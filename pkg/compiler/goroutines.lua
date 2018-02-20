@@ -3,7 +3,7 @@
 __stackDepthOffset = 0;
 __getStackDepth = function() 
   local err = Error();
-  if (err.stack == nil) then
+  if err.stack == nil then
     return nil;
   end
   return __stackDepthOffset + #err.stack.split("\n");
@@ -11,7 +11,7 @@ end;
 
 __panicStackDepth = nil, __panicValue;
 __callDeferred = function(deferred, jsErr, fromPanic) 
-  if (not fromPanic and deferred ~= nil and deferred.index >= #__curGoroutine.deferStack) then
+  if not fromPanic and deferred ~= nil and deferred.index >= #__curGoroutine.deferStack then
      error( jsErr);
   end
   if jsErr ~= nil then
@@ -46,55 +46,56 @@ __callDeferred = function(deferred, jsErr, fromPanic)
 
   --try
   local res = {pcall(function()
+    ::top::                 
     while (true) do
       if deferred == nil then
         deferred = __curGoroutine.deferStack[#__curGoroutine.deferStack - 1];
-        if (deferred == nil) then
+        if deferred == nil then
           -- The panic reached the top of the stack. Clear it and throw it as a Lua error. --
           __panicStackDepth = nil;
-          if (localPanicValue.Object instanceof Error) then
+          if localPanicValue.Object.__instanceof == "Error" then
              error(localPanicValue.Object);
           end
           local msg;
-          if (localPanicValue.constructor == __String) then
+          if localPanicValue.__constructor == __type__string then
             msg = localPanicValue.__val;
-          elseif (localPanicValue.Error ~= nil) then
-            msg = localPanicValue.Error();
-          elseif (localPanicValue.String ~= nil) then
-            msg = localPanicValue.String();
+          elseif localPanicValue.Error ~= nil then
+             msg = localPanicValue.Error();
+          elseif localPanicValue.String ~= nil then
+             msg = localPanicValue.String();
           else 
-            msg = localPanicValue;
+             msg = localPanicValue;
           end
           error( Error(msg)); -- jea: was new Error
         end
       end
       local call = deferred.pop();
-      if (call == nil) then
+      if call == nil then
         __curGoroutine.deferStack.pop();
-        if (localPanicValue ~= nil) then
+        if localPanicValue ~= nil then
           deferred = nil;
-          continue;
+          goto top; -- continue;
         end
         return;
       end
       local r = call[0](call[2], call[1]);
-      if (r and r.__blk ~= nil) then
+      if r and r.__blk ~= nil then
          deferred.push({r.__blk, {}, r});
-        if (fromPanic) then
+        if fromPanic then
            error( nil);
         end
         return;
       end
 
-      if (localPanicValue ~= nil and __panicStackDepth == nil) then
+      if localPanicValue ~= nil and __panicStackDepth == nil then
          error( nil); -- error was recovered --
       end
     end
   end)}
   --finally, no catch
   
-  if (localPanicValue ~= nil) then
-     if (__panicStackDepth ~= nil) then
+  if localPanicValue ~= nil then
+     if __panicStackDepth ~= nil then
         __curGoroutine.panicStack.push(localPanicValue);
      end
      __panicStackDepth = outerPanicStackDepth;
@@ -116,7 +117,7 @@ __panic = function(value)
   __callDeferred(nil, nil, true);
 end;
 __recover = function() 
-  if (__panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2)) then
+  if __panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2) then
     return __ifaceNil;
   end
   __panicStackDepth = nil;
@@ -125,8 +126,13 @@ end;
 __throw = function(err)  error(err); end;
 
 __noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
-__curGoroutine = __noGoroutine, __totalGoroutines = 0, __awakeGoroutines = 0, __checkForDeadlock = true;
+
+__curGoroutine = __noGoroutine;
+__totalGoroutines = 0;
+__awakeGoroutines = 0;
+__checkForDeadlock = true;
 __mainFinished = false;
+
 __go = function(fun, args) 
    __totalGoroutines=__totalGoroutines+1;
    __awakeGoroutines=__awakeGoroutines+1;
@@ -135,8 +141,8 @@ __go = function(fun, args)
       local res = {pcall(function()
                          
                          __curGoroutine = __goroutine;
-                         local r = fun.apply(nil, args);
-                         if (r and r.__blk ~= nil) then
+                         local r = fun(nil, args);
+                         if r and r.__blk ~= nil then
                             fun = function()  return r.__blk(); end;
                             args = {};
                             return;
@@ -181,13 +187,16 @@ __scheduled = {};
 __runScheduled = function() 
    --try
    local res = {pcall(function()
-    local r;
-    while ((r = __scheduled.shift()) ~= nil) do
-      r();
-    end
+                      while true do
+                         local r = __scheduled.shift();
+                         if r == nil then
+                            break
+                         end
+                         r()
+                      end
    end)}
     -- finally, no catch
-    if (#__scheduled > 0) then
+    if #__scheduled > 0 then
       setTimeout(__runScheduled, 0);
     end
     -- end finally, no catch
@@ -239,7 +248,7 @@ __send = function(chan, value)
   end
 
   thisGoroutine = __curGoroutine;
-  closedDuringSend;
+  local closedDuringSend;
   chan.__sendQueue.push(function(closed) 
     closedDuringSend = closed;
     __schedule(thisGoroutine);
@@ -256,22 +265,22 @@ __send = function(chan, value)
 end;
 __recv = function(chan) 
   local queuedSend = chan.__sendQueue.shift();
-  if (queuedSend ~= nil) then
-    chan.__buffer.push(queuedSend(false));
+  if queuedSend ~= nil then
+     chan.__buffer.push(queuedSend(false));
   end
   local bufferedValue = chan.__buffer.shift();
-  if (bufferedValue ~= nil) then
+  if bufferedValue ~= nil then
      return bufferedValue, true;
   end
-  if (chan.__closed) then
+  if chan.__closed then
      return chan.__elem.zero(), false;
   end
 
   local thisGoroutine = __curGoroutine;
   local f = { __blk= function(self)  return self.value; end };
   local queueEntry = function(v) 
-    f.value = v;
-    __schedule(thisGoroutine);
+     f.value = v;
+     __schedule(thisGoroutine);
   end;
   chan.__recvQueue.push(queueEntry);
   __block();
@@ -279,24 +288,24 @@ __recv = function(chan)
 end;
 
 __close = function(chan) 
-  if (chan.__closed) then
-    __throwRuntimeError("close of closed channel");
-  end
-  chan.__closed = true;
-  while (true) do
-    local queuedSend = chan.__sendQueue.shift();
-    if (queuedSend == nil) then
-      break;
-    end
-    queuedSend(true); -- will panic --
-  end
-  while (true) do
-    local queuedRecv = chan.__recvQueue.shift();
-    if (queuedRecv == nil) then
-      break;
-    end
-    queuedRecv({chan.__elem.zero(), false});
-  end
+   if chan.__closed then
+      __throwRuntimeError("close of closed channel");
+   end
+   chan.__closed = true;
+   while true do
+      local queuedSend = chan.__sendQueue.shift();
+      if (queuedSend == nil) then
+         break;
+      end
+      queuedSend(true); -- will panic --
+   end
+   while true do
+      local queuedRecv = chan.__recvQueue.shift();
+      if (queuedRecv == nil) then
+         break;
+      end
+      queuedRecv({chan.__elem.zero(), false});
+   end
 end;
 
 __select = function(comms)
@@ -312,7 +321,7 @@ __select = function(comms)
          break;
       elseif comm_len == 1 then
          -- recv --
-         if (#chan.__sendQueue ~= 0 or #chan.__buffer ~= 0 or chan.__closed then
+         if #chan.__sendQueue ~= 0 or #chan.__buffer ~= 0 or chan.__closed then
                 ready.push(i-1);
          end
          break;
@@ -321,7 +330,7 @@ __select = function(comms)
          if chan.__closed then
             __throwRuntimeError("send on closed channel");
          end
-         if (#chan.__recvQueue ~= 0 or #chan.__buffer < chan.__capacity) then
+         if #chan.__recvQueue ~= 0 or #chan.__buffer < chan.__capacity then
             ready.push(i-1);
          end
          break;
@@ -332,7 +341,7 @@ __select = function(comms)
       -- jea NB lua's math.random(n) returns in [1,n] to match its arrays.
       selection = ready[math.random(#ready)]; 
    end
-   if (selection ~= -1) then
+   if selection ~= -1 then
     local comm = comms[selection];
     -- switch (comm.length)
     local comm_len = #comm
@@ -356,7 +365,7 @@ __select = function(comms)
    for i,entry in ipairs(entries) do
       local queue = entry[1];
       local index = queue.indexOf(entry[2]);
-      if (index ~= -1) then
+      if index ~= -1 then
         queue.splice(index, 2);
       end
     end
@@ -369,27 +378,27 @@ __select = function(comms)
       if comm_len == 1 then
          -- recv --
         local queueEntry = function(value) 
-          f.selection = [i, value];
+           f.selection = {i, value};
           removeFromQueues();
           __schedule(thisGoroutine);
         end;
-        entries.push([comm[1].__recvQueue, queueEntry]);
+        entries.push({comm[1].__recvQueue, queueEntry});
         comm[1].__recvQueue.push(queueEntry);
-        break;
+
       elseif comm_len == 2 then
         -- send --
         local queueEntry = function() 
-          if (comm[1].__closed) then
+          if comm[1].__closed then
             __throwRuntimeError("send on closed channel");
           end
-          f.selection = [i];
+          f.selection = {i};
           removeFromQueues();
           __schedule(thisGoroutine);
           return comm[1];
         end;
         entries.push({comm[1].__sendQueue, queueEntry});
         comm[1].__sendQueue.push(queueEntry);
-        break;
+
       end
     end)(i);
   end
