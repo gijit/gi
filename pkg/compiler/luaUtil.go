@@ -261,6 +261,9 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
+	if vm.IsNil(top) {
+		panic(fmt.Sprintf("global variable '%s' is nil", varname))
+	}
 	value_int := vm.CdataToInt64(top)
 
 	pp("LuaMustInt64, expect='%v'; observe value_int='%v'", expect, value_int)

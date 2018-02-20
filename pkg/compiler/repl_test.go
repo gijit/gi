@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 	luajit "github.com/glycerine/golua/lua"
 )
@@ -235,11 +236,11 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 	cv.Convey("range over a slice should compile into lua", t, func() {
 
-		code := `a:=[]int{1,2,3}; func hmm() { for k, v := range a { println(k," ",v) } }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__anon_sliceType = __sliceType(__type__int);
-a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
-hmm = function() for k, v in ipairs(a) do print(k, " ", v);  end end;`)
+		code := `a:=[]int{1,2,3}; tot:=0; func hmm() { for k, v := range a { tot += v; _ = k } }; hmm()`
+		lua := string(inc.Tr([]byte(code)))
+		pp("lua='%s'", lua)
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "tot", 6)
 	})
 }
 
@@ -252,11 +253,12 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
-		code := `a:=[]int{1,2,3}; func hmm() { for i := range a { println(i, a[i]) } }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-  	__type__anon_sliceType = __sliceType(__type__int); 
-  	a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
-hmm = function() for i, _ in ipairs(a) do print(i, __gi_GetRangeCheck(a, i)); end end;`)
+		code := `a:=[]int{1,2,3}; itot:=0; for i := range a { itot+=i }`
+		lua := string(inc.Tr([]byte(code)))
+		verb.VerboseVerbose = true
+		pp("lua='%s'", lua)
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "itot", 3)
 	})
 }
 

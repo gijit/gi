@@ -153,6 +153,22 @@ function __lenz(array)
    return n
 end
 
+-- return an int64 as the value, not a double
+function __lenzi(array)
+   local n = #array
+   local mt = getmetatable(array)
+   if mt ~= nil and mt.__len ~= nil then
+      --print("__len was not nil")
+      return int(n)
+   end
+   --print("__len was nil")
+   if array[0] ~= nil then
+      --print("array[0] is not nil")
+      n=n+1
+   end
+   return int(n)
+end
+
 function __ipairsZeroCheck(arr)
    if arr[0] ~= nil then error("ipairs will miss the [0] index of this array") end
 end

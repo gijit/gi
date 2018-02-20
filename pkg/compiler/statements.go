@@ -781,11 +781,12 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	} else {
 		// eschew ipairs: numeric for is faster, and 0 based.
 		slice := c.translateExpr(s.X, nil)
-		if value == "_" {
-			c.Printf("for %s = 0, __lenz(%s)-1 do ", key, slice)
-		} else {
-			c.Printf("for %s = 0, __lenz(%s)-1 do %s = %s[%s]; ", key, slice, value, slice, key)
+		// for loops AND array indexes in Lua require float64
+		s := fmt.Sprintf("do\n\t local %s = 0; local __lim = __lenz(%s);\n\t while %s < __lim do\n\t\n", key, slice, key)
+		if value != "_" {
+			s += fmt.Sprintf("\t local %s = %s[%s];\n", value, slice, key)
 		}
+		c.Printf("%s", s)
 	}
 	prevEV := c.p.escapingVars
 	c.handleEscapingVars(body)
@@ -806,7 +807,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	}
 
 	c.p.escapingVars = prevEV
-	c.Printf(" end ")
+	c.Printf("\n\t %[1]s=%[1]s+1;\n end;\n end;\n ", key)
 }
 
 // body helper
