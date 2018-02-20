@@ -821,8 +821,10 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 		}
 	}
 	loopLim := c.gensym("_lim")
+	privateI := c.gensym("i") // must be float64 for ipairs
+	privateV := c.gensym("v")
 	if isMap {
-		c.Printf("do %[5]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast, addMe)
+		c.Printf("do %[5]s\n for %[6]s, %[7]s in pairs(%[3]s) do \n %[1]s = %[4]s(%[6]s);\n %[2]s = %[7]s;", key, value, target, keycast, addMe, privateI, privateV)
 
 	} else {
 		// slice or array
@@ -831,12 +833,12 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 		// eschew ipairs: numeric for is 0 based.
 
 		// for loops AND array indexes in Lua require float64
-		s := fmt.Sprintf("do  %[3]s\n\t local %[1]s_ = 0; local %[4]s = __lenz(%[2]s);\n\t while %[1]s_ < %[4]s do\n\t\n", key, target, addMe, loopLim)
+		s := fmt.Sprintf("do  %[3]s\n\t local %[5]s = 0; local %[4]s = __lenz(%[2]s);\n\t while %[5]s < %[4]s do\n\t\n", key, target, addMe, loopLim, privateI)
 		if !keyUnder {
-			s += fmt.Sprintf("\t %[1]s = %[1]s_;\n", key)
+			s += fmt.Sprintf("\t %[1]s = %[2]s;\n", key, privateI)
 		}
 		if !valUnder {
-			s += fmt.Sprintf("\t %s = %s[%s_];\n", value, target, key)
+			s += fmt.Sprintf("\t %s = %s[%s];\n", value, target, privateI)
 		}
 		c.Printf("%s", s)
 	}
@@ -860,7 +862,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	c.p.escapingVars = prevEV
 	if ipairs {
-		c.Printf("\n\t %[1]s_=%[1]s_+1;\n", key)
+		c.Printf("\n\t %[1]s=%[1]s+1;\n", privateI)
 	}
 	c.Printf(" end end;\n ")
 }

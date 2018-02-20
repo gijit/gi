@@ -1,6 +1,8 @@
+
 __go_import "math/rand"
 __go_import "fmt"
 __go_import "time"
+
 
 __type__anon_sliceType = __sliceType(__type__float64); -- 'IMMEDIATE' anon type printing. utils.go:506
 
@@ -24,27 +26,55 @@ __type__Matrix.__constructor = function(self, ...)
 end;
 ;
 
-NewMatrix = function(nrow, ncol, fill) 
+NewMatrix = function(nrow, ncol, fill)
+   print("top of NewMatrix, nrow=",nrow," ncol=",ncol)
    m = __type__Matrix.ptr({}, __makeSlice(__type__anon_sliceType_1, nrow), nrow, ncol);
-   for i, _ in pairs(m.A) do 
-      __gi_SetRangeCheck(m.A, i, __makeSlice(__type__anon_sliceType, ncol));
-   end 
+   do  local i = 0; 
+      local i_ = 0; local __gensym_1__lim = __lenz(m.A);
+      while i_ < __gensym_1__lim do
+         
+         i = i_;
+
+         __gi_SetRangeCheck(m.A, i, __makeSlice(__type__anon_sliceType, ncol));
+         
+         i_=i_+1;
+
+   end end;
+   
    if (fill) then 
-      for i, _ in pairs(m.A) do 
-         for j, _ in pairs(__gi_GetRangeCheck(m.A, i)) do 
-            __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i), j, ((math.random(100) / ((2 + math.random(100))))));
-         end 
-      end 
+      do  local i = 0; 
+         local i_ = 0; local __gensym_2__lim = __lenz(m.A);
+         while i_ < __gensym_2__lim do
+            
+            i = i_;
+
+			do  local j = 0; 
+               local j_ = 0; local __gensym_3__lim = __lenz(__gi_GetRangeCheck(m.A, i_1));
+               while j_ < __gensym_3__lim do
+                  
+                  j = j_;
+
+                  __gi_SetRangeCheck(__gi_GetRangeCheck(m.A, i_1), j, (tonumber(rand.Intn(100LL))) / (tonumber((2LL + rand.Intn(100LL)))));
+                  
+                  j_=j_+1;
+
+            end end;
+            
+			
+            i_=i_+1;
+
+      end end;
+      
    end 
    return  m ;
 end;
 __pkg.NewMatrix = NewMatrix;
 mult = function(m1, m2) 
-   --local r = __type__anon_ptrType.__nil;
+   local r = __type__anon_ptrType.__nil;
    if ( not ((m1.Ncol == m2.Nrow))) then 
       panic(fmt.Sprintf("incompatible: m1.Ncol=%v, m2.Nrow=%v", m1.Ncol, m2.Nrow));
    end 
-   local r = NewMatrix(m1.Nrow, m2.Ncol, false);
+   r = NewMatrix(m1.Nrow, m2.Ncol, false);
    nr1 = m1.Nrow;
    nr2 = m2.Nrow;
    nc2 = m2.Ncol;
@@ -83,15 +113,10 @@ __type__Matrix.prototype.Get = function(this , i, j)  return this.__val.Get(i, j
 
 __type__Matrix.__addToMethods({prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}); -- package.go:344
 
-
-
 __type__Matrix.ptr.__addToMethods({prop= "Get", __name= "Get", __pkg="", __typ= __funcType({__type__int, __type__int}, {__type__float64}, false)}); -- package.go:346
-
-
-
 MatScaMul = function(m, x) 
-   --local r = __type__anon_ptrType.__nil;
-   local r = NewMatrix(m.Nrow, m.Ncol, false);
+   local r = __type__anon_ptrType.__nil;
+   r = NewMatrix(m.Nrow, m.Ncol, false);
    local i = 0LL;
    while (true) do
       if (not (i < m.Nrow)) then break; end
@@ -106,12 +131,11 @@ MatScaMul = function(m, x)
    return  r ;
 end;
 __pkg.MatScaMul = MatScaMul;
-
 main = function() 
-   local sz = 500LL;
+   local sz = 5LL;
    local i = 0LL;
    while (true) do
-      if (not (i < 10LL)) then break; end
+      if (not (i < 1LL)) then break; end
       a = NewMatrix(sz, sz, true);
       b = NewMatrix(sz, sz, true);
       mult(a, b);
@@ -119,18 +143,6 @@ main = function()
    end 
 end;
 
-
-sz = 500LL;
-start_time = int(time.Now().UnixNano())
+sz=3
 
 a = NewMatrix(sz, sz, true);
-
-end_time = int(time.Now().UnixNano())
-elapsed_time = end_time - start_time
-
-print("elap=", elapsed_time)
--- time to make a 500x500 matrix, 2 random numbers per entry:
--- 3.66 seconds, using calls into math/rand.Intn()
--- 0.551 seconds, using LuaJITs math.random
--- native Go: 22 msec, about 23x faster.
-
