@@ -2,20 +2,20 @@
 
 __stackDepthOffset = 0;
 __getStackDepth = function() 
-  local err = new Error();
+  local err = Error();
   if (err.stack == nil) then
     return nil;
   end
   return __stackDepthOffset + #err.stack.split("\n");
 end;
 
-__panicStackDepth = null, __panicValue;
+__panicStackDepth = nil, __panicValue;
 __callDeferred = function(deferred, jsErr, fromPanic) 
-  if (!fromPanic and deferred ~= null and deferred.index >= #__curGoroutine.deferStack) then
-    throw jsErr;
+  if (not fromPanic and deferred ~= nil and deferred.index >= #__curGoroutine.deferStack) then
+     error( jsErr);
   end
-  if (jsErr ~= null) then
-    local newErr = null;
+  if jsErr ~= nil then
+    local newErr = nil;
     --try
     local res = {pcall(function()
       __curGoroutine.deferStack.push(deferred);
@@ -30,7 +30,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
     __callDeferred(deferred, newErr);
     return;
   end
-  if (__curGoroutine.asleep) then
+  if __curGoroutine.asleep then
     return;
   end
 
@@ -39,7 +39,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
   outerPanicValue = __panicValue;
 
   localPanicValue = __curGoroutine.panicStack.pop();
-  if (localPanicValue ~= nil) then
+  if localPanicValue ~= nil then
     __panicStackDepth = __getStackDepth();
     __panicValue = localPanicValue;
   end
@@ -47,11 +47,11 @@ __callDeferred = function(deferred, jsErr, fromPanic)
   --try
   local res = {pcall(function()
     while (true) do
-      if (deferred == null) then
+      if deferred == nil then
         deferred = __curGoroutine.deferStack[#__curGoroutine.deferStack - 1];
         if (deferred == nil) then
           -- The panic reached the top of the stack. Clear it and throw it as a Lua error. --
-          __panicStackDepth = null;
+          __panicStackDepth = nil;
           if (localPanicValue.Object instanceof Error) then
              error(localPanicValue.Object);
           end
@@ -65,14 +65,14 @@ __callDeferred = function(deferred, jsErr, fromPanic)
           else 
             msg = localPanicValue;
           end
-          throw Error(msg); -- jea: was new Error
+          error( Error(msg)); -- jea: was new Error
         end
       end
       local call = deferred.pop();
       if (call == nil) then
         __curGoroutine.deferStack.pop();
         if (localPanicValue ~= nil) then
-          deferred = null;
+          deferred = nil;
           continue;
         end
         return;
@@ -81,20 +81,20 @@ __callDeferred = function(deferred, jsErr, fromPanic)
       if (r and r.__blk ~= nil) then
          deferred.push({r.__blk, {}, r});
         if (fromPanic) then
-          throw null;
+           error( nil);
         end
         return;
       end
 
-      if (localPanicValue ~= nil and __panicStackDepth == null) then
-        throw null; -- error was recovered --
+      if (localPanicValue ~= nil and __panicStackDepth == nil) then
+         error( nil); -- error was recovered --
       end
     end
   end)}
   --finally, no catch
   
   if (localPanicValue ~= nil) then
-     if (__panicStackDepth ~= null) then
+     if (__panicStackDepth ~= nil) then
         __curGoroutine.panicStack.push(localPanicValue);
      end
      __panicStackDepth = outerPanicStackDepth;
@@ -113,13 +113,13 @@ end;
 
 __panic = function(value) 
   __curGoroutine.panicStack.push(value);
-  __callDeferred(null, null, true);
+  __callDeferred(nil, nil, true);
 end;
 __recover = function() 
-  if (__panicStackDepth == null or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2)) then
+  if (__panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2)) then
     return __ifaceNil;
   end
-  __panicStackDepth = null;
+  __panicStackDepth = nil;
   return __panicValue;
 end;
 __throw = function(err)  error(err); end;
