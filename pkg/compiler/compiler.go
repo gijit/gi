@@ -206,7 +206,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
   local __rtTemp = __packages["runtime"]; 
   if __rtTemp ~= nil then _init(); end;
 
-  -- __mainPkg._init()
+  __mainPkg._init()
 end)();
 `)); err != nil {
 		return err
