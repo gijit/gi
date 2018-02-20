@@ -457,7 +457,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 	pp("in typeNameWithAnonInfo, ty='%#v'; whenAnonPrint=%v", ty, whenAnonPrint)
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
-		fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
+		//fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
 		if res == "__type__anon_sliceType" {
 			//panic("where?")
 		}

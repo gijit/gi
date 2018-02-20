@@ -88,7 +88,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	case "gitesting":
 		// test only:
 		if !ic.vmCfg.NotTestMode {
-			fmt.Print("\n registering gitesting.SumArrayInt64! \n")
+			//fmt.Print("\n registering gitesting.SumArrayInt64! \n")
 			pkg = types.NewPackage("gitesting", "gitesting")
 			pkg.MarkComplete()
 			scope := pkg.Scope()
