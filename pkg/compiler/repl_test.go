@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gijit/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 	luajit "github.com/glycerine/golua/lua"
 )
@@ -219,12 +219,13 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 
 	cv.Convey("maps and range for loops should compile into lua", t, func() {
 
-		code := `a:=make(map[int]int); a[1]=10; a[2]=20; func hmm() { for k, v := range a { println(k," ",v) } }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-a = {};
-a["1LL"] = 10LL;
-a["2LL"] = 20LL;
-hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
+		code := `a:=make(map[int]int); a[1]=10; a[2]=20; ktot:=0; vtot:=0; func hmm() { for k, v := range a { ktot+=k; vtot+=v; } }; hmm();`
+		lua := string(inc.Tr([]byte(code)))
+		pp("lua='%s'", lua)
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "ktot", 3)
+		LuaMustInt64(vm, "vtot", 30)
+
 	})
 }
 
@@ -255,7 +256,6 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; itot:=0; for i := range a { itot+=i }`
 		lua := string(inc.Tr([]byte(code)))
-		verb.VerboseVerbose = true
 		pp("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "itot", 3)

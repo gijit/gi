@@ -776,9 +776,11 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	case *types.Map:
 		isMap = true
 	}
+	extraEnd := false
 	if isMap {
 		c.Printf("for %s, %s in pairs(%s) do ", key, value, c.translateExpr(s.X, nil))
 	} else {
+		extraEnd = true
 		// eschew ipairs: numeric for is faster, and 0 based.
 		slice := c.translateExpr(s.X, nil)
 		// for loops AND array indexes in Lua require float64
@@ -807,7 +809,10 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	}
 
 	c.p.escapingVars = prevEV
-	c.Printf("\n\t %[1]s=%[1]s+1;\n end;\n end;\n ", key)
+	c.Printf("\n\t %[1]s=%[1]s+1;\n end;\n", key)
+	if extraEnd {
+		c.Printf(" end;\n ")
+	}
 }
 
 // body helper
