@@ -757,12 +757,13 @@ __valueArrayMT = {
    __newindex = function(t, k, v)
       --print("__valueArrayMT.__newindex called, t is:")
       --__st(t)
-
-      if k < 0 or k >= #t then
+      local w = tonumber(k)
+      
+      if w < 0 or w >= #t then
          error "write to array error: access out-of-bounds"
       end
       
-      t.__val[k] = v
+      t.__val[w] = v
    end,
    
    __index = function(t, k)
@@ -836,7 +837,7 @@ __valueSliceMT = {
    __newindex = function(t, k, v)
       --print("__valueSliceMT.__newindex called, t is:")
       --__st(t)
-      local w = t.__offset + k
+      local w = tonumber(t.__offset + k)
       if k < 0 or k >= t.__capacity then
          error "slice error: write out-of-bounds"
       end

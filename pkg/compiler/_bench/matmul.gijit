@@ -85,8 +85,8 @@ func MatScaMul(m *Matrix, x float64) (r *Matrix) {
 }
 
 func main() {
-	sz := 500
-	for i := 0; i < 10; i++ {
+	sz := 3
+	for i := 0; i < 1; i++ {
 		a := NewMatrix(sz, sz, true)
 		b := NewMatrix(sz, sz, true)
 		//t0 := time.Now()
