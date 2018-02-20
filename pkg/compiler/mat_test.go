@@ -161,7 +161,9 @@ go run matmul.go
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		importPath := ""
+		translation, err := inc.FullPackage([]byte(src), importPath)
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 

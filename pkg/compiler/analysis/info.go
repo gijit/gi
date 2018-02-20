@@ -163,7 +163,7 @@ func (c *FuncInfo) Visit(node ast.Node) ast.Visitor {
 					}
 				}
 				if o.Pkg() != c.p.Pkg {
-					if c.p.IsBlocking(o) {
+					if c.p.IsBlocking(o) { // generates recursive call to shadow/math/rand
 						c.markBlocking(c.analyzeStack)
 					}
 					return

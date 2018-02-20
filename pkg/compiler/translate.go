@@ -442,7 +442,7 @@ func prependAns(src []byte) []byte {
 // full package
 
 // FullPackage: translate a full package from go to Lua.
-func (tr *IncrState) FullPackage(src []byte) ([]byte, error) {
+func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) {
 
 	fileSet := token.NewFileSet()
 	file, err := parser.ParseFile(fileSet, "", src, 0)
@@ -457,7 +457,8 @@ func (tr *IncrState) FullPackage(src []byte) ([]byte, error) {
 		Name: "", // jea: was "/repl", but that seemed to cause scope issues.
 	}
 
-	tr.CurPkg.Arch, err = FullPackageCompile(tr.CurPkg.pack.ImportPath, files, fileSet, tr.CurPkg.importContext, tr.minify)
+	//tr.CurPkg.Arch,
+	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify)
 	panicOn(err)
 	//pp("archive = '%#v'", tr.CurPkg.Arch)
 	//pp("len(tr.CurPkg.Arch.Declarations)= '%v'", len(tr.CurPkg.Arch.Declarations))
@@ -466,11 +467,10 @@ func (tr *IncrState) FullPackage(src []byte) ([]byte, error) {
 	pp("got past FullPackageCompile")
 
 	var res bytes.Buffer
-	for i, d := range tr.CurPkg.Arch.NewCodeText {
-		pp("writing tr.CurPkg.Arch.NewCode[i=%v].Code = '%v'", i, string(tr.CurPkg.Arch.NewCodeText[i]))
-		res.Write(d)
+	w := &SourceMapFilter{
+		Writer: &res,
 	}
-	tr.CurPkg.Arch.NewCodeText = nil
+	err = WriteProgramCode([]*Archive{arch}, w)
 
-	return res.Bytes(), nil
+	return res.Bytes(), err
 }
