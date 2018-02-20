@@ -808,8 +808,9 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 				addMe = fmt.Sprintf("local %s; ", key)
 			} else {
 				addMe = fmt.Sprintf("local %s = 0; ", key)
-				keyUnder = true
 			}
+		} else {
+			keyUnder = true
 		}
 		if value != "_" {
 			addMe += fmt.Sprintf("local %s; ", value)
@@ -820,6 +821,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	if isMap {
 		c.Printf("do %[5]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast, addMe)
+
 	} else {
 		// slice or array
 

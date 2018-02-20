@@ -239,7 +239,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; tot:=0; func hmm() { for k, v := range a { tot += v; _ = k } }; hmm()`
 		lua := string(inc.Tr([]byte(code)))
-		fmt.Printf("lua='%s'", lua)
+		pp("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "tot", 6)
 	})
@@ -256,7 +256,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}; itot:=0; for i := range a { itot+=i }`
 		lua := string(inc.Tr([]byte(code)))
-		pp("lua='%s'", lua)
+		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "itot", 3)
 	})
