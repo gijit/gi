@@ -279,6 +279,23 @@ func Test012AssignNotDefineRangeForLoop(t *testing.T) {
 	})
 }
 
+func Test012DoubleRangeLoop(t *testing.T) {
+
+	vm, err := NewLuaVmWithPrelude(nil)
+	panicOn(err)
+	defer vm.Close()
+	inc := NewIncrState(vm, nil)
+
+	cv.Convey("nested range loops", t, func() {
+
+		code := `a:=[]int{1,2,3}; b:=[]int{4,5,6}; vtot:=0; for i := range a { for j := range b { vtot += a[i]*b[j] } }`
+		lua := string(inc.Tr([]byte(code)))
+		fmt.Printf("lua='%s'", lua)
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "vtot", 90)
+	})
+}
+
 func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
