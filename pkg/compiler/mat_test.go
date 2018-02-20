@@ -127,6 +127,7 @@ func MatScaMul(m *Matrix, x float64) (r *Matrix) {
 	return
 }
 
+var done bool
 func main() {
 	sz := 500
 	for i := 0; i < 10; i++ {
@@ -138,24 +139,9 @@ func main() {
 		fmt.Printf("%v x %v matrix multiply in Go took %v msec\n",
 			sz, sz, int(elap/time.Millisecond))
 	}
-
+    done = true
 }
-
-/*
-go run matmul.go
-500 x 500 matrix multiply in Go took 362 msec
-500 x 500 matrix multiply in Go took 360 msec
-500 x 500 matrix multiply in Go took 372 msec
-500 x 500 matrix multiply in Go took 371 msec
-500 x 500 matrix multiply in Go took 382 msec
-500 x 500 matrix multiply in Go took 360 msec
-500 x 500 matrix multiply in Go took 364 msec
-500 x 500 matrix multiply in Go took 364 msec
-500 x 500 matrix multiply in Go took 363 msec
-500 x 500 matrix multiply in Go took 399 msec
-*/
 `
-		// e == 2
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -165,12 +151,15 @@ go run matmul.go
 		translation, err := inc.FullPackage([]byte(src), importPath)
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
+		fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, string(translation))
 
 		//cv.So(string(translation), matchesLuaSrc, ``)
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LuaMustFloat64(vm, "e", 2)
+		LoadAndRunTestHelper(t, vm, []byte("main()"))
+
+		LuaMustBool(vm, "done", true)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }

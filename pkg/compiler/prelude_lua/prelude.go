@@ -1,3 +1,1481 @@
+package prelude
+
+const Prelude = `
+
+-------- complex.lua -------
+--
+-- complex number support
+--
+
+-- Portions of /usr/local/go/src/math/cmplx
+-- in the Go language distribution/Go standard library, are
+-- used under the following terms:
+-- Copyright 2010 The Go Authors. All rights reserved.
+-- Use of this source code is governed by a BSD-style
+-- license that can be found in the LICENSE file.
+--
+-- See the top level LICENSE file for the full text.
+
+local ffi = require("ffi")
+local bit = require("bit")
+
+-- complex128 and complex64 are Go predefined types
+local complex128=ffi.typeof("complex double") -- aka "complex". re and im are each float64.
+local complex64=ffi.typeof("complex float")   -- re and im are each float32
+
+local ffiNew=ffi.new
+local ffiIsType=ffi.istype
+
+local function __truncateToInt(x)
+   if x >= 0 then
+       return x - (x % 1)
+   end
+   return x + (-x % 1)
+end
+
+
+-- provide Go's builtin complex constructor.
+local function complex(re, im)
+   if ffiIsType("complex", re) then
+      if im ~= nil then
+         error("bad input to complex: with first arg complex, 2nd arg must be nil")
+      end
+      return re
+   end
+   return ffiNew("complex",re or 0,im or 0)
+end
+
+-- real is a Go builtin, returning the real part of z.
+local function real(z)
+   if ffiIsType("complex", z) then
+      return z.re
+   elseif ffiIsType("complex float", z) then
+      return float32(z.re)
+   end
+   if type(z)=="number" then
+      return z
+   end
+   return 0
+end
+
+-- imag is a Go builtin, returning the imaginary part of z.
+local function imag(z)
+   if ffiIsType("complex", z) then
+      return z.im
+   elseif ffiIsType("complex float", z) then
+      return float32(z.im)
+   end
+   return 0
+end
+
+-- for speed, make local versions
+
+local type=type
+local select=select
+local tonumber=tonumber
+local tostring=tostring
+
+local e=math.exp(1)
+local pi=math.pi
+local abs=math.abs
+local exp=math.exp
+local log=math.log
+local cos=math.cos
+local sin=math.sin
+local asin=math.asin
+local acos=math.acos
+local cosh=math.cosh
+local sinh=math.sinh
+local sqrt=math.sqrt
+local atan2=math.atan2
+local i=complex(0,1)
+local Inf=math.huge
+
+local function cexp(a)
+   return e^a
+end
+
+local function conj(c)
+   return complex(real(c), -imag(c))
+end
+
+-- complex absolute value, also known
+-- as modulus, magnitude, or norm.
+local function cabs(a)
+   local ra, ia = real(a), imag(a)
+   if ia == 0 then
+      return ra
+   end
+   return sqrt(ra*ra + ia*ia)
+end
+
+
+-- phase returns the phase (also called the argument) of x.
+-- The returned value is in the range [-Pi, Pi].
+--
+-- It is the angle between the positive real
+-- axis to the line joining the point to the origin;
+-- also known as an argument of the point.
+--
+-- If no errors occur, returns
+-- the phase angle of z in the interval [−π; π].
+--
+local function phase(x)
+   x=complex(x)
+   return atan2(imag(x), real(x))
+end
+
+-- returns two values: r, theta; giving the polar coordinates of c.
+local function polar(c)
+   return cabs(c), phase(c)
+end
+
+-- rect returns the complex number x with polar coordinates r, θ.
+-- i.e.
+-- convert from polar coordinates to a complex number
+-- where the real and imag parts naturally provide rectangular
+-- coordinates. e.g. r*exp(i*theta) -> x+iy, where
+-- x is r*cos(theta), and y is r*sin(theta).
+--
+local function rect(r, theta)
+   return complex(r*cos(theta), r*sin(theta))
+end
+
+
+-- clog computes the complex natural log, double precision,
+-- with branch cut along the negative real axis.
+-- The natural logarithm of a complex number z
+-- with polar coordinate components (r, θ) equals
+-- ln r + i(θ+2nπ), with the principal value ln r + iθ.
+-- 
+local function clog(a)
+   local ra, ia = real(a), imag(a)   
+   return complex(log(ra*ra + ia*ia)/2, atan2(ia,ra))
+end
+
+-- clogf computes the complex natural log, single precision,
+-- with branch cut along the negative real axis.
+local function clogf(a)
+   local ra, ia = real(a), imag(a)
+   return complex64(log(ra*ra + ia*ia)/2, atan2(ia,ra))
+end
+
+
+-- the metatable for complex number arithmetic.
+local __cxMT={
+   __add=function(a, b)
+      return complex(real(a)+real(b),imag(a)+imag(b))
+   end,
+   
+   __sub=function(a, b)
+      return complex(real(a)-real(b),imag(a)-imag(b))
+   end,
+   
+   __mul=function(a,b)
+      local ra,ia=real(a),imag(a)
+      local rb,ib=real(b),imag(b)
+      return complex(ra*rb - ia*ib, ra*ib + rb*ia)
+   end,
+   
+   __div=function(a,b)
+      local ra,ia=real(a),imag(a)
+      local rb,ib=real(b),imag(b)
+      local denom=rb*rb + ib*ib
+      return complex((ra*rb+ia*ib)/denom, (rb*ia-ra*ib)/denom)
+   end,
+
+   __unm=function(a)
+      return complex(-real(a),-imag(a))
+   end,
+   
+   __tostring=function(c)
+      return real(c).."+"..imag(c).."i"
+   end,
+
+   __pow=function(a,b)
+      local ra,ia = real(a), imag(a)
+      local rb,ib = real(b), imag(b)
+      local alensq=ra*ra+ia*ia
+      if alensq==0 then
+         if rb==0 and ib==0 then
+            return complex(1, 0)
+         end
+         return complex(0, 0)
+      end
+      local theta=atan2(ia, ra)
+      return rect(alensq^(rb/2)*exp(-ib*theta),ib*log(alensq)/2+rb*theta)
+   end
+   
+}
+
+local function csqrt(c)
+   return complex(c)^0.5
+end
+
+-- can only be done once, so we'll detect and skip
+-- any 2nd import.
+if not __cxMT_already then
+   ffi.metatype(complex128, __cxMT)
+   __cxMT_already = true
+end
+
+-- cmath library functions
+local cmath = {
+   Conj=conj,
+   Abs=cabs,
+   Phase=phase,
+   Exp=cexp,
+   Log=clog,
+   Polar=polar,
+   Rect=rect,
+   Sqrt=csqrt
+}
+
+
+function cmath.Sin(c)
+	local r,i=real(c),imag(c)
+	return complex(sin(r)*cosh(i),cos(r)*sinh(i))
+end
+function cmath.Cos(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(r)*cosh(i),-sin(r)*sinh(i))
+end
+function cmath.Tan(c)
+	local r,i=2*real(c),2*imag(c)
+	local div=cos(r)+cosh(i)
+	return complex(sin(r)/div,sinh(i)/div)
+end
+
+-- Program to subtract nearest integer multiple of PI
+function reducePi(x) -- takes float64, returns float64
+   -- extended precision value of PI:
+   local DP1 = 3.14159265160560607910E0   -- ?? 0x400921fb54000000
+   local DP2 = 1.98418714791870343106E-9  -- ?? 0x3e210b4610000000
+   local DP3 = 1.14423774522196636802E-17 -- ?? 0x3c6a62633145c06e
+	t = x / pi
+	if t >= 0 then
+		t = t + 0.5
+	else
+		t = t - 0.5
+	end
+    t = __truncateToInt(t) -- int64(t) = the multiple
+	return ((x - t*DP1) - t*DP2) - t*DP3
+end
+
+-- Taylor series expansion for cosh(2y) - cos(2x)
+function tanSeries(z) -- takes complex128, returns float64
+   local MACHEP = 1.0 / tonumber(bit.lshift(1LL, 53))
+   local x = abs(2 * real(z))
+   local y = abs(2 * imag(z))
+   x = reducePi(x)
+   x = x * x
+   y = y * y
+   local x2=1
+   local y2=1
+   local f =1
+   local rn = 0
+   local d = 0
+   while true do
+      rn=rn+1
+      f = f*rn
+      rn=rn+1
+      f=f*rn
+      x2 = x2 * x
+      y2 = y2 * y
+      local t = y2 + x2
+      t=t/f
+      d=d+t
+      
+      rn=rn+1
+      f=f*rn
+      rn=rn+1
+      f=f*rn
+      x2 = x2 * x
+      y2 = y2*y
+      t = y2 - x2
+      t = t/f
+      d=d+t
+      if not (abs(t/d) > MACHEP) then
+         -- Caution: Use "not" and > instead of <= for correct behavior if t/d is NaN.
+         -- See golang issue 17577.
+         break
+      end
+   end
+   return d
+end
+
+-- Complex circular cotangent
+--
+-- DESCRIPTION:
+--
+-- If
+--     z = x + iy,
+--
+-- then
+--
+--           sin 2x  -  i sinh 2y
+--     w  =  --------------------.
+--            cosh 2y  -  cos 2x
+--
+-- On the real axis, the denominator has zeros at even
+-- multiples of PI/2.  Near these points it is evaluated
+-- by a Taylor series.
+--
+-- Also tested by ctan * ccot = 1 + i0.
+
+-- Cot returns the cotangent of x.
+function cmath.Cot(x)
+   local xr, xi = real(x), imag(x)
+   local d = cosh(2*xi) - cos(2*xr)
+	if abs(d) < 0.25 then
+		d = tanSeries(x)
+	end
+	if d == 0 then
+		return Inf
+	end
+	return complex(sin(2*xr)/d, -sinh(2*xi)/d)
+end
+
+function cmath.Sinh(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(i)*sinh(r),sin(i)*cosh(r))
+end
+function cmath.Cosh(c)
+	local r,i=real(c),imag(c)
+	return complex(cos(i)*cosh(r),sin(i)*sinh(r))
+end
+function cmath.Tanh(c)
+	local r,i=2*real(c),2*imag(c)
+	local div=cos(i)+cosh(r)
+	return complex(sinh(r)/div,sin(i)/div)
+end
+
+-- inverse trig functions
+
+-- Complex circular arc sine
+--
+-- DESCRIPTION:
+--
+-- Inverse complex sine:
+--                               2
+-- w = -i clog( iz + csqrt( 1 - z ) ).
+--
+-- casin(z) = -i casinh(iz)
+--
+
+-- Asin returns the inverse sine of x.
+function cmath.Asin(x)
+   local xr = real(x)
+   local xi = imag(x)
+	if xi == 0 then
+		if abs(xr) > 1 then
+			return complex(pi/2, 0) -- DOMAIN error
+		end
+		return complex(asin(xr), 0)
+	end
+	local ct = complex(-xi, xr) -- i * x
+	local xx = x * x
+	local x1 = complex(1-real(xx), -imag(xx)) -- 1 - x*x
+	local x2 = csqrt(x1)                       -- x2 = sqrt(1 - x*x)
+	local w = clog(ct + x2)
+	return complex(imag(w), -real(w)) -- -i * w
+end
+
+function cmath.Acos(c)
+	return pi/2+i*clog(i*c+(1-c^2)^0.5)
+end
+function cmath.Atan(c)
+	local r2,i2=real(c),imag(c)
+	local c3,c4=complex(1-i2,r2),complex(1+r2^2-i2^2,2*r2*i2)
+	return complex(phase(c3/c4^0.5),-clog(cabs(c3)/cabs(c4)^0.5))
+end
+function cmath.Atan2(c2,c1) -- y, x
+	local r1,i1,r2,i2=real(c1),imag(c1),real(c2),imag(c2)
+	if r1==0 and i1==0 and r2==0 and i2==0 then
+		return 0
+	end
+	local c3,c4=complex(r1-i2,i1+r2),complex(r1*r1 - i1*i1 + r2*r2 - i2*i2, 2*(r1*i1 + r2*i2))
+	return complex(phase(c3/c4^0.5),-clog(cabs(c3)/cabs(c4)^0.5))
+end
+
+function cmath.Asinh(c)
+	return clog(c+(1+c^2)^0.5)
+end
+function cmath.Acosh(c)
+	return 2*clog((c-1)^0.5+(c+1)^0.5)-log(2)
+end
+function cmath.Atanh(c)
+	return (clog(1+c)-clog(1-c))/2
+end
+
+-- complex base logarithm. log(b,z) gives log_b(z),
+-- which is clog(z)/clog(b), with base b.
+--
+function cmath.ComplexLog(b, z)
+   
+	local br, bi = real(b), imag(b)
+	local zr, zi = real(z), imag(z)
+        
+	local qr = log(br*br+bi*bi)/2
+        local qi = atan2(bi,br)
+        
+	local sr = log(zr*zr+zi*zi)/2
+        local si = atan2(zi,zr)
+        
+	local denom=qr*qr+qi*qi
+	return complex((sr*qr+si*qi)/denom, (qr*si-sr*qi)/denom)
+end
+
+cmath.Pow = __cxMT.__pow
+
+-- exports
+_G.complex=complex
+_G.complex128=complex128
+_G.complex64=complex64
+_G.real=real
+_G.imag=imag
+_G.cmath=cmath
+
+-- Specifically do not import as cmplx, so that we can 
+-- allow the Go library to exist side-by-side for testing/comparison.
+-- _G.cmplx=cmath
+
+--[[
+-- tests
+
+local acosTestVals = {
+   (1.0017679804707456328694569 - 2.9138232718554953784519807i),
+   (0.03606427612041407369636057 + 2.7358584434576260925091256i),
+   (1.6249365462333796703711823 + 2.3159537454335901187730929i),
+   (2.0485650849650740120660391 - 3.0795576791204117911123886i),
+   (0.29621132089073067282488147 - 3.0007392508200622519398814i),
+   (1.0664555914934156601503632 - 2.4872865024796011364747111i),
+   (0.48681307452231387690013905 - 2.463655912283054555225301i),
+   (0.6116977071277574248407752 - 1.8734458851737055262693056i),
+   (1.3649311280370181331184214 + 2.8793528632328795424123832i),
+   (2.6189310485682988308904501 - 2.9956543302898767795858704i)
+}
+
+local expectedCot = {
+   (0.005333839942314019+0.9975187770930108i),
+   (0.0006110458528512657-1.0084212802655375i),
+   (-0.002064200607561421-0.9808251268240298i),
+   (-0.0034444657331057713+0.9975566188309715i),
+   (0.002775424851723473+1.0041112277051858i),
+   (0.011609912676285432+0.9925920872057117i),
+   (0.012081615289134921+1.0081095190379168i),
+   (0.04506207267921228+1.015185741448182i),
+   (0.0025108438745688137-0.9942304877145374i),
+   (-0.004336960053730652+1.0025022601350426i)
+}
+
+function check(a, b)
+   if cabs(a-b) > 0.0000001 then
+      error("difference!")
+   end
+end
+
+for i, v in ipairs(acosTestVals) do
+   --print("on i = ", i)
+   check(cmath.Cot(v), expectedCot[i])
+end
+
+check(cmath.Exp((1.0017679804707456-2.9138232718554953i)), (-2.652761299626814-0.6148879956088891i))
+print("cmath.Exp checks")
+
+check(cmath.Conj((1.0017679804707456-2.9138232718554953i)), (1.0017679804707456+2.9138232718554953i))
+check(cmath.Abs((1.0017679804707456-2.9138232718554953i)), 3.081218127024294)
+check(cmath.Phase((1.0017679804707456-2.9138232718554953i)), -1.2396569035824907)
+check(cmath.Log((1.0017679804707456-2.9138232718554953i)), (1.1253250145847473-1.2396569035824907i))
+check(cmath.Sqrt((1.0017679804707456-2.9138232718554953i)), (1.4288082634655777-1.019669099893085i))
+check(cmath.Sin((1.0017679804707456-2.9138232718554953i)), (7.784589065071272-4.949771659620112i))
+check(cmath.Cos((1.0017679804707456-2.9138232718554953i)), (4.979011924883674+7.738872474578103i))
+check(cmath.Tan((1.0017679804707456-2.9138232718554953i)), (0.005360254415745048-1.0024587328321108i))
+check(cmath.Cot((1.0017679804707456-2.9138232718554953i)), (0.005333839942314019+0.9975187770930108i))
+check(cmath.Sinh((1.0017679804707456-2.9138232718554953i)), (-1.1475081545902999-0.3489051537979257i))
+check(cmath.Cosh((1.0017679804707456-2.9138232718554953i)), (-1.5052531450365143-0.26598284181096343i))
+check(cmath.Tanh((1.0017679804707456-2.9138232718554953i)), (0.7789713818473163+0.0941450495765785i))
+check(cmath.Asin((1.0017679804707456-2.9138232718554953i)), (0.315902142176508-1.8389632402722567i))
+check(cmath.Acos((1.0017679804707456-2.9138232718554953i)), (1.2548941846183885+1.8389632402722567i))
+check(cmath.Atan((1.0017679804707456-2.9138232718554953i)), (1.4549738117535138-0.3130322073097648i))
+check(cmath.Asinh((1.0017679804707456-2.9138232718554953i)), (1.797481526353204-1.2223981995549138i))
+check(cmath.Acosh((1.0017679804707456-2.9138232718554953i)), (1.8389632402722567-1.2548941846183885i))
+check(cmath.Atanh((1.0017679804707456-2.9138232718554953i)), (0.0966478569558242-1.2701291676466084i))
+print("cmath.Atanh checks")
+
+local b = (0.48681307452231387690013905 - 2.463655912283054555225301i)
+local z = (2.6189310485682988308904501 - 2.9956543302898767795858704i)
+local l = cmath.ComplexLog(b, z)
+check(b^l, z)
+print("cmath.ComplexLog checks")
+
+-- end tests
+--]]
+-----------------------
+-------- defer.lua -------
+-- deferinit.lua : global setup for defer handling
+
+-- utility: table show
+function __ts(t)
+   if t == nil then
+      return "<nil>"
+   end
+   local s = "<non-nil table:>\n"
+   local k = 0
+   for i,v in pairs(t) do
+      s = s .. "key:" .. tostring(i) .. " -> val:" .. tostring(v) .. "\n"
+      k = k +1
+   end
+   if k > 0 then
+      return s
+   end
+   return "<non-nil but empty table with 0 entries>: " .. tostring(t)
+end
+
+-- can we have one global definition of panic and recover?
+-- This would be preferred to repeating them in every function.
+
+-- string viewing of panic value
+__recovMT = {__tostring = function(v) return 'a-panic-value:' .. tostring(v[1]) end}
+
+-- __recoverVal will be nill if no panic,
+--              or if panic happened and
+--              then was recovered.
+-- this is always a table to avoid
+--  stringification problems. The real
+--  panic value is inside at position [1].
+--
+-- NB __recoverVal  needs to be per-goroutine. As each
+--  could be unwinding independently at any
+--  point in time.
+
+__recoverVal = nil
+
+recover = function() 
+    local cp = __recoverVal
+    __recoverVal = nil
+    return cp;
+end
+
+panic = function(err)
+  -- wrap err in table to prevent conversion to string by error()
+  __recoverVal = {err}
+  -- but still allow it to be viewable in a stack trace:
+  setmetatable(__recoverVal, __recovMT)
+  error(__recoverVal)
+end
+
+
+  -- begin boilerplate part 2:
+  
+  -- prepare to handle panic/defer/recover
+__handler2 = function(err)
+     --print(" __handler2 running with err =", err)
+     __recoverVal = err
+     return err
+end
+  
+__panicHandler = function(err, defers)
+       --print("__panicHandler running with err =", err)
+       -- print(debug.traceback())
+       --print("__panicHandler running with defers:", tostring(defers))
+
+     __recoverVal = err
+     if defers ~= nil then
+
+         --print(debug.traceback(), " __panicHandler running with err =", err, " and #defer = ", #defers)      
+         --print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
+         for __i = #defers, 1, -1 do
+             local dcall = {xpcall(defers[__i], __handler2)}
+             --for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
+         end
+     else
+         --print("debug: found no defers in __panicHandler")
+     end
+     --print("__panicHandler: done with defer processing")
+     if __recoverVal ~= nil then
+        return __recoverVal
+     end
+  end
+
+  -- __processDefers represents the normal
+  --    return path, without a panic.
+  --
+  --    We need to update the named return values if
+  --    there were explicit return values from __actual,
+  --    and then we need to call the defers.
+  --
+  --    __namedNames is an array of the variable names of the return values,
+  --                 so we know how to update actEnv.
+  --
+__processDefers = function(who, defers, __res, __namedNames, actEnv)
+  --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
+  print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
+
+  if __res[1] then
+      --print(who,": __processDefers: call had no panic")
+      -- call had no panic. run defers with the nil recover
+
+      if #__res > 1 then
+         --for k,v in pairs(__res) do print(who, " __processDefers: __res k=", k, " val=", v) end
+
+         -- explicit return, so fill the named vals before defers see them.
+         local unp = {table.unpack(__res, 2)}
+         --print("unp is: ", tostring(unp))
+         for i, k in pairs(__namedNames) do
+             actEnv[k] = unp[i]
+         end
+
+         --print(who, " __processDefers: post fill: ret0 = ", ret0, " and ret1=", ret1)
+      end
+
+      assert(recoverVal == nil)
+      for __i = #defers, 1, -1 do
+        local dcall = {xpcall(defers[__i], __handler2)}
+        for i,v in pairs(dcall) do
+            --print(who," __processDefers: normal path defer call result: i=",i, "  v=",v)
+        end
+      end
+  else
+      print(who, " __processDefers: checking for panic still un-caught...", __recoverVal)
+      -- is there an un-recovered panic that we need to rethrow?
+      if __recoverVal ~= nil then
+         --print(who, "__processDefers: un recovered error still exists, rethrowing ", __recoverVal)
+         error(__recoverVal)
+      end
+  end
+
+  if #__namedNames == 0 then
+     print("__processDefers: #__namedNames was 0, no returns")
+     return nil
+  end
+  -- put the named return values in order
+  local orderedReturns={}
+  for i, k in pairs(__namedNames) do
+     print("debug: fetching from function env k=",k," which we see has value ", actEnv[k], "in actEnv", tostring(actEnv))
+     orderedReturns[i] = actEnv[k]
+  end
+  local debug= true
+  if debug then
+     print("orderedReturns is len ", #orderedReturns)
+     for i,v in pairs(orderedReturns) do
+        print(who," __processDefers: orderedReturns: i=",i, "  v=",v)
+     end
+  end
+  return unpack(orderedReturns)
+end
+
+
+__actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __orig)
+
+   --local actEnv = getfenv(__actual)
+   -- So getfenv(__actual) showed that actEnv
+   -- was the _G global env, not good.
+   -- To fix this, we give f its own env,
+   -- so that named return variables can
+   -- be written/read from this env.
+   
+   local actEnv = {}
+   local mt = {
+      __index = _G, -- read through to globals.
+      __newindex = _G, -- write to closure-capture globals too.
+   }
+   setmetatable(actEnv,mt)
+   setfenv(__actual, actEnv)
+
+  for i,k in pairs(__namedNames) do
+     --print("filling actEnv[k='"..tostring(k).."'] = '"..tostring(actEnv[k]).."' with __zeroret[i='"..tostring(i).."']='",tostring(__zeroret[i]),"'")
+     actEnv[k] = __zeroret[i]
+  end  
+  local myPanic = function(err) __panicHandler(err, __defers) end
+  local __res = {xpcall(__actual, myPanic, unpack(__orig))}
+  return __processDefers(who, __defers, __res,  __namedNames, actEnv)  
+end
+-----------------------
+-------- dfs.lua -------
+--  depend.lua:
+--
+--  Implement Depth-First-Search (DFS)
+--  on the graph of depedencies
+--  between types. A pre-order
+--  traversal will print
+--  leaf types before the compound
+--  types that need them defined.
+
+local __dfsTestMode = false
+
+function __newDfsNode(self, name, typ)
+   if typ == nil then
+      error "typ cannot be nil in __newDfsNode"
+   end
+   if not __dfsTestMode then
+      if typ.__str == nil then
+         print(debug.traceback())
+         error "typ must be typ, in __newDfsNode"
+      end
+      -- but we won't know the kind until
+      -- later, since this may be early in
+      -- typ construction.
+   end
+   
+   local nd = self.dfsDedup[typ]
+   if nd ~= nil then
+      return nd
+   end
+   local node= {
+      visited=false,
+      children=false, -- lazily put in table, better printing.
+      dedupChildren={},
+      id = self.dfsNextID,
+      name=name,
+      typ=typ,
+   }
+   self.dfsNextID=self.dfsNextID+1
+   self.dfsDedup[typ] = node
+   table.insert(self.dfsNodes, node)
+
+   --print("just added to dfsNodes node "..name)
+   --__st(typ, "typ, in __newDfsNode")
+   
+   self.stale = true
+   
+   return node
+end
+
+function __isBasicTyp(typ)
+   if typ == nil or
+      typ.kind == nil or
+   typ.named then
+      return false
+   end
+   
+   -- we can skip all basic types,
+   -- as they are already defined.
+   --
+   if typ.kind <= 16 or -- __kindComplex128
+      typ.kind == 24 or -- __kindString
+   typ.kind == 26 then  -- __kindUnsafePointer
+      return
+   end
+end
+
+-- par should be a node; e.g. typ.__dfsNode
+function __addChild(self, parTyp, chTyp)
+
+   if parTyp == nil then
+      error "parTyp cannot be nil in __addChild"
+   end
+   if chTyp == nil then
+      print(debug.traceback())
+      error "chTyp cannot be nil in __addChild"
+   end
+   if not __dfsTestMode then
+      if parTyp.__str == nil then
+         print(debug.traceback())
+         error "parTyp must be typ, in __addChild"
+      end
+      if chTyp.__str == nil then
+         print(debug.traceback())
+         error "chTyp must be typ, in __addChild"
+      end
+   end
+
+   -- we can skip all basic types,
+   -- as they are already defined.   
+   if __isBasicTyp(chTyp) then
+      return
+   end
+   if __isBasicTyp(parTyp) then
+      error("__addChild error: parent was basic type. "..
+               "cannot add child to basic typ ".. parType.__str)
+   end
+
+   local chNode = self.dfsDedup[chTyp]
+   if chNode == nil then
+      -- child was previously generated, so
+      -- we don't need to worry about this
+      -- dependency
+      return
+   end
+   
+   local parNode = self.dfsDedup[parTyp]
+   if parNode == nil then
+      parNode = self:newDfsNode(parTyp.__str, parTyp)
+   end
+   
+   if parNode.dedupChildren[ch] ~= nil then
+      -- avoid adding same child twice.
+      return
+   end
+
+   -- In Lua both nil and the boolean
+   -- value false represent false in
+   -- a logical expression
+   --
+   if not parNode.children then
+      -- we lazily instantiate children
+      -- for better diagnostics. Its
+      -- much clearer to see "children = false"
+      -- than "children = 'table: 0x04e99af8'"
+      parNode.children = {}
+   end
+   
+   local pnc = #parNode.children
+   parNode.dedupChildren[chNode]= pnc+1
+   table.insert(parNode.children, chNode)
+   self.stale = true
+end
+
+function __markGraphUnVisited(self)
+   self.dfsOrder = {}
+   for _,n in ipairs(self.dfsNodes) do
+      n.visited = false
+   end
+   self.stale = false
+end
+
+function __emptyOutGraph(self)
+   self.dfsOrder = {}
+   self.dfsNodes = {} -- node stored in value.
+   self.dfsDedup = {} -- payloadTyp key -> node value.
+   self.dfsNextID = 0
+   self.stale = false
+end
+
+function __dfsHelper(self, node)
+   if node == nil then
+      return
+   end
+   if node.visited then
+      return
+   end
+   node.visited = true
+   __st(node,"node, in __dfsHelper")
+   if node.children then
+      for _, ch in ipairs(node.children) do
+         self:dfsHelper(ch)
+      end
+   end
+   print("post-order visit sees node "..tostring(node.id).." : "..node.name)
+   table.insert(self.dfsOrder, node)
+end
+
+function __showDFSOrder(self)
+   if self.stale then
+      self:doDFS()
+   end
+   for i, n in ipairs(self.dfsOrder) do
+      print("dfs order "..i.." is "..tostring(n.id).." : "..n.name)
+   end
+end
+
+function __doDFS(self)
+   __markGraphUnVisited(self)
+   for _, n in ipairs(self.dfsNodes) do
+      self:dfsHelper(n)
+   end
+   self.stale = false
+end
+
+function __hasTypes(self)
+   return self.dfsNextID ~= 0
+end
+
+
+function __NewDFSState()
+   return {
+      dfsNodes = {},
+      dfsOrder = {},
+      dfsDedup = {},
+      dfsNextID = 0,
+
+      doDFS = __doDFS,
+      dfsHelper = __dfsHelper,
+      reset = __emptyOutGraph,
+      newDfsNode = __newDfsNode,
+      addChild = __addChild,
+      markGraphUnVisited = __markGraphUnVisited,
+      hasTypes = __hasTypes,
+      showDFSOrder=__showDFSOrder,
+   }
+end
+
+--[[
+-- test. To test, change the --[[ above to ---[[
+--       and issue dofile('dfs.lua')
+dofile 'tutil.lua' -- must be in prelude dir to test.
+
+function __testDFS()
+   __dfsTestMode = true
+   local s = __NewDFSState()
+
+   -- verify that reset()
+   -- works by doing two passes.
+   
+   for i =1,2 do
+      s:reset()
+      
+      local aPayload = {}
+      local a = s:newDfsNode("a", aPayload)
+   
+      local adup = s:newDfsNode("a", aPayload)
+      if adup ~= a then
+          error "dedup failed."
+      end
+
+      local b = s:newDfsNode("b", {})
+      local c = s:newDfsNode("c", {})
+      local d = s:newDfsNode("d", {})
+      local e = s:newDfsNode("e", {})
+      local f = s:newDfsNode("f", {})
+
+      -- separate island:
+      local g = s:newDfsNode("g", {})
+      
+      s:addChild(a, b)
+
+      -- check dedup of child add
+      local startCount = #a.children
+      s:addChild(a, b)
+      if #a.children ~= startCount then
+          error("child dedup failed.")
+      end
+
+      s:addChild(b, c)
+      s:addChild(b, d)
+      s:addChild(d, e)
+      s:addChild(d, f)
+
+      s:doDFS()
+
+      s:showDFSOrder()
+
+      expectEq(s.dfsOrder[1], c)
+      expectEq(s.dfsOrder[2], e)
+      expectEq(s.dfsOrder[3], f)
+      expectEq(s.dfsOrder[4], d)
+      expectEq(s.dfsOrder[5], b)
+      expectEq(s.dfsOrder[6], a)
+      expectEq(s.dfsOrder[7], g)
+   end
+   
+end
+__testDFS()
+__testDFS()
+--]]
+-----------------------
+-------- int64.lua -------
+-- int64 uint64 helpers
+
+local ffi = require("ffi")
+
+-- assume 64-bit int and uint
+int = ffi.typeof(0LL)
+uint=ffi.typeof(0ULL)
+
+int64=ffi.typeof("int64_t")
+uint64=ffi.typeof("uint64_t")
+
+int32 = ffi.typeof("int32_t")
+uint32 = ffi.typeof("uint32_t")
+
+int16 = ffi.typeof("int16_t")
+uint16 = ffi.typeof("uint16_t")
+
+int8 = ffi.typeof("int8_t")
+uint8 = ffi.typeof("uint8_t")
+byte = uint8
+
+float64 = ffi.typeof("double")
+float32 = ffi.typeof("float")
+
+-- to display floats, use: tonumber() to convert to float64 that lua can print.
+
+--MinInt64: -9223372036854775808
+--MaxInt64: 9223372036854775807
+
+-- a=int(-9223372036854775808LL)
+
+-- to use cdata as hash keys... tostring() to make them strings first.
+-----------------------
+-------- map.lua -------
+-- a Lua virtual table system suitable for use in arrays and maps
+
+-- design using the _giPrivateMapRaw index was suggested
+-- by https://www.lua.org/pil/13.4.4.html
+-- To intercept all writes, the requirement is that
+-- the table always be empty. Hence the user uses
+-- and nearly empty proxy. The only thing the proxy
+-- has in it are a pointer to the actual data,
+-- and a len counter.
+
+-- create private index
+_giPrivateMapRaw = {}
+_giPrivateMapProps = {}
+
+-- stored as map value in place of nil, so
+-- we can recognized stored nil values in maps.
+_intentionalNilValue = {}
+
+ _giPrivateMapMt = {
+
+    __newindex = function(t, k, v)
+       --print("newindex called for key", k, " len at start is ", len)
+
+       local props = t[_giPrivateMapProps]
+       local len = props.len
+
+       if k == nil then
+          if props.nilKeyStored then
+             -- replacement, no change in len.
+          else
+             -- new key
+             props.len = len + 1
+             props.nilKeyStored = true
+          end
+          props.nilValue = v
+          return
+       end
+
+       -- invar: k is not nil
+
+       local ks = tostring(k)
+       if v ~= nil then
+          if t[_giPrivateMapRaw][ks] == nil then
+             -- new key
+             props.len = len + 1
+          end
+          t[_giPrivateMapRaw][ks] = v
+          return
+
+       else
+          -- invar: k is not nil. v is nil.
+
+          if t[_giPrivateMapRaw][ks] == nil then
+             -- new key
+             props.len = len + 1
+          end
+          t[_giPrivateMapRaw][ks] = _intentionalNilValue
+          return
+      end
+      --print("len at end of newidnex is ", len)
+    end,
+
+    __index = function(t, k)
+       -- Instead of __index,
+       -- use __call('get', ...) for two valued return and
+       --  proper zero-value return upon not present.
+       -- __index only ever returns one value[1].
+       -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
+              
+       --print("__index called for key", k)
+       if k == nil then
+          local props = t[_giPrivateMapProps]
+          if props.nilKeyStored then
+             return props.nilValue
+          else
+             -- TODO: replace nil with zero-value for the value type.
+             return nil
+          end
+       end
+
+       -- k is not nil.
+
+       local ks = tostring(k)       
+       local val = t[_giPrivateMapRaw][ks]
+       if val == _intentionalNilValue then
+          return nil
+       end
+       return val
+    end,
+
+    __tostring = function(t)
+       --print("__tostring for _gi_Map called")
+       local props = t[_giPrivateMapProps]
+       local len = props["len"]
+       local s = "map["..props["keyType"].__str.. "]"..props["valType"].__str.."{"
+       local r = t[_giPrivateMapRaw]
+       
+       local vquo = ""
+       if len > 0 and props.valType.__str == "string" then
+          vquo = '"'
+       end
+       local kquo = ""
+       if len > 0 and props.keyType.__str == "string" then
+          kquo = '"'
+       end
+       
+       -- we want to skip both the _giPrivateMapRaw and the len
+       -- when iterating, which happens automatically if we
+       -- iterate on r, the inside private data, and not on the proxy.
+       for i, _ in pairs(r) do
+
+          -- lua style:
+          -- s = s .. "["..kquo..tostring(i)..kquo.."]" .. "= " .. vquo..tostring(r[i]) ..vquo.. ", "
+          -- Go style
+          s = s .. kquo..tostring(i)..kquo.. ": " .. vquo..tostring(r[i]) ..vquo.. ", "
+       end
+       return s .. "}"
+    end,
+
+    __len = function(t)
+       -- this does get called by the # operation(!)
+       -- print("len called")
+       return t[_giPrivateMapProps]["len"]
+    end,
+
+    __pairs = function(t)
+       -- print("__pairs called!")
+       -- this makes a _giMap work in a for k,v in pairs() do loop.
+
+       -- Iterator function takes the table and an index and returns the next index and associated value
+       -- or nil to end iteration
+
+       local function stateless_iter(t, k)
+           local v
+           --  Implement your own key,value selection logic in place of next
+           local ks = tostring(k)
+           ks, v = next(t[_giPrivateMapRaw], tostring(k))
+           if v then return ks,v end
+       end
+
+       -- Return an iterator function, the table, starting point
+       return stateless_iter, t, nil
+    end,
+
+    __call = function(t, ...)
+        --print("__call() invoked, with ... = ", ...)
+        local oper, k, zeroVal = ...
+        --print("oper is", oper)
+        --print("key is ", k)
+
+        -- we use __call('get', k, zeroVal) instead of __index
+        -- so that we can return multiple values
+        -- to match Go's "a, ok := mymap[k]" call.
+        
+        if oper == "get" then
+
+           --print("get called for key", k)
+           if k == nil then
+              local props = t[_giPrivateMapProps]
+              if props.nilKeyStored then
+                 return props.nilValue, true;
+              else
+                 -- key not present returns the zero value for the value.
+                 return zeroVal, false;
+              end
+           end
+           
+           -- k is not nil.
+           local ks = tostring(k)      
+           local val = t[_giPrivateMapRaw][ks]
+           if val == _intentionalNilValue then
+              --print("val is the _intentinoalNilValue")
+              return nil, true;
+
+           elseif val == nil then
+              -- key not present
+              --print("key not present, zeroVal=", zeroVal)
+              --for i,v in pairs(t[_giPrivateMapRaw]) do
+              --   print("debug: i=", i, "  v=", v)
+              --end
+              return zeroVal, false;
+           end
+           
+           return val, true
+           
+        elseif oper == "delete" then
+
+           -- the hash table delete operation
+
+           local props = t[_giPrivateMapProps]              
+           local len = props.len
+           --print("delete called for key", k, " len at start is ", len)
+                      
+           if k == nil then
+
+              if props.nilKeyStored then
+                 props.nilKeyStored = false
+                 props.nilVaue = nil
+                 props.len = len -1
+              end
+
+              --print("len at end of delete is ", props.len)              
+              return
+           end
+
+           local ks = tostring(k)           
+           if t[_giPrivateMapRaw][ks] == nil then
+              -- key not present
+              return
+           end
+           
+           -- key present and key is not nil
+           t[_giPrivateMapRaw][ks] = nil
+           props.len = len - 1
+           
+           --print("len at end of delete is ", props.len)
+        end
+    end
+ }
+ 
+function _gi_NewMap(keyType, valType, x)
+   assert(type(x) == 'table', 'bad parameter #1: must be table')
+
+   local proxy = {}
+   proxy["Typeof"]="_gi_Map"
+   proxy[_giPrivateMapRaw] = x
+
+   -- get initial count
+   local len = 0
+   for k, v in pairs(x) do
+      len = len + 1
+   end
+
+   local props = {len=len, keyType=keyType, valType=valType, nilKeyStored=false}
+   proxy[_giPrivateMapProps] = props
+
+   setmetatable(proxy, _giPrivateMapMt)
+   return proxy
+end;
+
+-----------------------
+-------- math.lua -------
+-- math helper functions
+
+-- x == math.huge   -- test for +inf, inline
+
+-- x == -math.huge  -- test for -inf, inline
+
+-- x ~= x           -- test for nan, inline
+
+-- x > -math.huge and x < math.huge  -- test for finite
+
+-- or their slower counterparts:
+
+math.isnan  = function(x) return x ~= x; end
+math.finite = function(x) return x > -math.huge and x < math.huge; end
+
+math.nan = math.huge * 0
+
+__truncateToInt = function(x)
+   if x >= 0 then
+       return x - (x % 1)
+   end
+   return x + (-x % 1)
+end
+
+__integerByZeroCheck = function(x)
+   if not math.finite(x) then
+      error("integer divide by zero")
+   end
+   -- eliminate any fractional part
+   if x >= 0 then
+       return x - (x % 1)
+   end
+   return x + (-x % 1)
+end
+
+function __max(a,b)
+   if a > b then
+      return a
+   end
+   return b
+end
+
+function __min(a,b)
+   if a < b then
+      return a
+   end
+   return b
+end
+-----------------------
+-------- prelude.lua -------
+-- prelude defines things that should
+-- be available before any user code is run.
+
+function __gi_GetRangeCheck(x, i)
+   if i == nil then
+      print(debug.traceback())
+      error "where is i nil??"
+   end
+   if x == nil then
+      print(debug.traceback())
+      error "where is x nil??"
+   end
+   if x == nil or i < 0 or i >= #x then
+      error("index out of range: i="..tostring(i).." vs #x is "..tostring(#x))
+  end
+  return x[i]
+end;
+
+function __gi_SetRangeCheck(x, i, val)
+  --print("SetRangeCheck. x=", x, " i=", i, " val=", val)
+  if x == nil or i < 0 or i >= #x then
+     error("index out of range")
+  end
+  x[i] = val
+  return val
+end;
+
+-----------------------
+-------- rune.lua -------
+function __decodeRune(s, i)
+   return {__utf8.sub(s, i+1, i+1), 1}
+end
+
+-- from gopherjs, ported to use bit ops.
+__bit =require("bit")
+
+--[[
+
+-- js op precedence: higher precendence = tighter binding.
+--
+-- arshift/lshift: 12 left-to-right   
+-- band: 9    left-to-right
+-- bor : 7    left-to-right
+
+
+__decodeRune = function(str, pos)
+  local c0 = str.charCodeAt(pos);
+
+  if c0 < 0x80 then
+    return {c0, 1};
+  end
+
+  if c0 ~= c0  or  c0 < 0xC0 then
+    return {0xFFFD, 1};
+  end
+
+  local c1 = str.charCodeAt(pos + 1);
+  if c1 ~= c1  or  c1 < 0x80  or  0xC0 <= c1 then
+    return {0xFFFD, 1};
+  end
+
+  if c0 < 0xE0 then
+     local r = __bit.bor(__bit.lshift(__bit.band(c0, 0x1F), 6), __bit.band(c1, 0x3F));
+    if r <= 0x7F then
+      return {0xFFFD, 1};
+    end
+    return {r, 2};
+  end
+
+  local c2 = str.charCodeAt(pos + 2);
+  if c2 ~= c2  or  c2 < 0x80  or  0xC0 <= c2 then
+    return {0xFFFD, 1};
+  end
+
+  if c0 < 0xF0 then
+   local r = __bit.bor(__bit.bor(__bit.lshift(__bit.band(c0, 0x0F), 12), __bit.lshift(__bit.band(c1, 0x3F), 6)), __bit.band(c2, 0x3F));
+   
+    if r <= 0x7FF then
+      return {0xFFFD, 1};
+    end
+    if 0xD800 <= r  and  r <= 0xDFFF then
+      return {0xFFFD, 1};
+    end
+    return {r, 3};
+  end
+
+  local c3 = str.charCodeAt(pos + 3);
+  if c3 ~= c3  or  c3 < 0x80  or  0xC0 <= c3 then
+    return {0xFFFD, 1};
+  end
+
+  if c0 < 0xF8 then
+    local r = __bit.bor(__bit.bor(__bit.bor(__bit.lshift(__bit.band(c0, 0x07),18), __bit.lshift(__bit.band(c1, 0x3F), 12)), __bit.lshift(__bit.band(c2, 0x3F), 6), __bit.band(c3, 0x3F)));
+
+    if r <= 0xFFFF  or  0x10FFFF < r then
+      return {0xFFFD, 1};
+    end
+    return {r, 4};
+  end
+
+  return {0xFFFD, 1};
+end;
+
+__encodeRune = function(r)
+  if r < 0  or  r > 0x10FFFF  or  (0xD800 <= r  and  r <= 0xDFFF) then
+    r = 0xFFFD;
+  end
+  if r <= 0x7F then
+    return String.fromCharCode(r);
+  end
+  if r <= 0x7FF then
+    return String.fromCharCode(__bit.bor(0xC0, __bit.arshift(r,6)), __bit.bor(0x80, __bit.band(r, 0x3F)));
+  end
+  if r <= 0xFFFF then
+   return String.fromCharCode(__bit.bor(0xE0, __bit.arshift(r,12)), __bit.bor(0x80, (__bit.band(__bit.arshift(r,6), 0x3F))), __bit.bor(0x80, __bit.band(r, 0x3F)));
+  end
+   return String.fromCharCode(__bit.bor(0xF0, __bit.arshift(r, 18)), __bit.bor(0x80, __bit.band(__bit.arshift(r,12),0x3F)), __bit.bor(0x80, __bit.band(__bit.arshift(r,6), 0x3F)), __bit.bor(0x80, __bit.band(r, 0x3F)));
+end;
+
+--]]
+-----------------------
+-------- string.lua -------
+
+__stringToBytes = function(str)
+  local array = Uint8Array(#str);
+  for i = 0,#str-1 do
+    array[i] = str.charCodeAt(i);
+  end
+  return array;
+end;
+
+--
+
+__bytesToString = function(e)
+  if #slice == 0 then
+    return "";
+  end
+  local str = "";
+  for i = 0,#slice-1,10000 do
+    str = str .. String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
+  end
+  return str;
+end;
+
+__stringToRunes = function(str)
+  local array = Int32Array(#str);
+  local rune, j = 0;
+  local i = 0
+  local n = #str
+  while true do
+     if i >= n then
+        break
+     end
+     
+     rune = __decodeRune(str, i);
+     array[j] = rune[1];
+     
+     i = i + rune[2]
+     j = j + 1
+  end
+  -- in js, a subarray is like a slice, a view on a shared ArrayBuffer.
+  return array.subarray(0, j);
+end;
+
+__runesToString = function(slice)
+  if slice.__length == 0 then
+    return "";
+  end
+  local str = "";
+  for i = 0,#slice-1 do
+    str = str .. __encodeRune(slice.__array[slice.__offset + i]);
+  end
+  return str;
+end;
+
+
+__copyString = function(dst, src)
+  local n = __min(#src, dst.__length);
+  for i = 0,n-1 do
+    dst.__array[dst.__offset + i] = src.charCodeAt(i);
+  end
+  return n;
+end;
+-----------------------
+-------- tsys.lua -------
 --
 -- tsys.lua the type system for gijit.
 -- It started life as a port of the GopherJS type
@@ -2268,7 +3746,7 @@ function __printHelper(v)
 
       local tv = type(v)
       if tv == "string" then
-         print("\""..v.."\"") -- used to be backticks
+         print("\""..v.."\"")
       elseif tv == "table" then
          if v.__name == "__lazy_ellipsis_instance" then
             local expand = v()
@@ -2291,3 +3769,1057 @@ function __gijit_printQuoted(...)
       __printHelper(v)
    end
 end
+-----------------------
+-------- utf8.lua -------
+-- $Id: utf8.lua 179 2009-04-03 18:10:03Z pasta $
+--
+-- from https://github.com/Stepets/utf8.lua
+--
+-- Provides UTF-8 aware string functions implemented in pure lua:
+-- * utf8len(s)
+-- * utf8sub(s, i, j)
+-- * utf8reverse(s)
+-- * utf8char(unicode)
+-- * utf8unicode(s, i, j)
+-- * utf8gensub(s, sub_len)
+-- * utf8find(str, regex, init, plain)
+-- * utf8match(str, regex, init)
+-- * utf8gmatch(str, regex, all)
+-- * utf8gsub(str, regex, repl, limit)
+--
+-- If utf8data.lua (containing the lower<->upper case mappings) is loaded, these
+-- additional functions are available:
+-- * utf8upper(s)
+-- * utf8lower(s)
+--
+-- All functions behave as their non UTF-8 aware counterparts with the exception
+-- that UTF-8 characters are used instead of bytes for all units.
+
+--[[
+Copyright (c) 2006-2007, Kyle Smith
+All rights reserved.
+
+Contributors:
+	Alimov Stepan
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the author nor the names of its contributors may be
+      used to endorse or promote products derived from this software without
+      specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+--]]
+
+-- ABNF from RFC 3629
+--
+-- UTF8-octets = *( UTF8-char )
+-- UTF8-char   = UTF8-1 / UTF8-2 / UTF8-3 / UTF8-4
+-- UTF8-1      = %x00-7F
+-- UTF8-2      = %xC2-DF UTF8-tail
+-- UTF8-3      = %xE0 %xA0-BF UTF8-tail / %xE1-EC 2( UTF8-tail ) /
+--               %xED %x80-9F UTF8-tail / %xEE-EF 2( UTF8-tail )
+-- UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
+--               %xF4 %x80-8F 2( UTF8-tail )
+-- UTF8-tail   = %x80-BF
+--
+
+local byte    = string.byte
+local char    = string.char
+local dump    = string.dump
+local find    = string.find
+local format  = string.format
+local len     = string.len
+local lower   = string.lower
+local rep     = string.rep
+local sub     = string.sub
+local upper   = string.upper
+
+-- returns the number of bytes used by the UTF-8 character at byte i in s
+-- also doubles as a UTF-8 character validator
+local function utf8charbytes (s, i)
+	-- argument defaults
+	i = i or 1
+
+	-- argument checking
+	if type(s) ~= "string" then
+		error("bad argument #1 to 'utf8charbytes' (string expected, got ".. type(s).. ")")
+	end
+	if type(i) ~= "number" then
+		error("bad argument #2 to 'utf8charbytes' (number expected, got ".. type(i).. ")")
+	end
+
+	local c = byte(s, i)
+
+	-- determine bytes needed for character, based on RFC 3629
+	-- validate byte 1
+	if c > 0 and c <= 127 then
+		-- UTF8-1
+		return 1
+
+	elseif c >= 194 and c <= 223 then
+		-- UTF8-2
+		local c2 = byte(s, i + 1)
+
+		if not c2 then
+			error("UTF-8 string terminated early")
+		end
+
+		-- validate byte 2
+		if c2 < 128 or c2 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		return 2
+
+	elseif c >= 224 and c <= 239 then
+		-- UTF8-3
+		local c2 = byte(s, i + 1)
+		local c3 = byte(s, i + 2)
+
+		if not c2 or not c3 then
+			error("UTF-8 string terminated early")
+		end
+
+		-- validate byte 2
+		if c == 224 and (c2 < 160 or c2 > 191) then
+			error("Invalid UTF-8 character")
+		elseif c == 237 and (c2 < 128 or c2 > 159) then
+			error("Invalid UTF-8 character")
+		elseif c2 < 128 or c2 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		-- validate byte 3
+		if c3 < 128 or c3 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		return 3
+
+	elseif c >= 240 and c <= 244 then
+		-- UTF8-4
+		local c2 = byte(s, i + 1)
+		local c3 = byte(s, i + 2)
+		local c4 = byte(s, i + 3)
+
+		if not c2 or not c3 or not c4 then
+			error("UTF-8 string terminated early")
+		end
+
+		-- validate byte 2
+		if c == 240 and (c2 < 144 or c2 > 191) then
+			error("Invalid UTF-8 character")
+		elseif c == 244 and (c2 < 128 or c2 > 143) then
+			error("Invalid UTF-8 character")
+		elseif c2 < 128 or c2 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		-- validate byte 3
+		if c3 < 128 or c3 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		-- validate byte 4
+		if c4 < 128 or c4 > 191 then
+			error("Invalid UTF-8 character")
+		end
+
+		return 4
+
+	else
+		error("Invalid UTF-8 character")
+	end
+end
+
+-- returns the number of characters in a UTF-8 string
+local function utf8len (s)
+	-- argument checking
+	if type(s) ~= "string" then
+		for k,v in pairs(s) do print('"',tostring(k),'"',tostring(v),'"') end
+		error("bad argument #1 to 'utf8len' (string expected, got ".. type(s).. ")")
+	end
+
+	local pos = 1
+	local bytes = len(s)
+	local length = 0
+
+	while pos <= bytes do
+		length = length + 1
+		pos = pos + utf8charbytes(s, pos)
+	end
+
+	return length
+end
+
+-- functions identically to string.sub except that i and j are UTF-8 characters
+-- instead of bytes
+local function utf8sub (s, i, j)
+	-- argument defaults
+	j = j or -1
+
+	local pos = 1
+	local bytes = len(s)
+	local length = 0
+
+	-- only set l if i or j is negative
+	local l = (i >= 0 and j >= 0) or utf8len(s)
+	local startChar = (i >= 0) and i or l + i + 1
+	local endChar   = (j >= 0) and j or l + j + 1
+
+	-- can't have start before end!
+	if startChar > endChar then
+		return ""
+	end
+
+	-- byte offsets to pass to string.sub
+	local startByte,endByte = 1,bytes
+
+	while pos <= bytes do
+		length = length + 1
+
+		if length == startChar then
+			startByte = pos
+		end
+
+		pos = pos + utf8charbytes(s, pos)
+
+		if length == endChar then
+			endByte = pos - 1
+			break
+		end
+	end
+
+	if startChar > length then startByte = bytes+1   end
+	if endChar   < 1      then endByte   = 0         end
+
+	return sub(s, startByte, endByte)
+end
+
+--[[
+-- replace UTF-8 characters based on a mapping table
+local function utf8replace (s, mapping)
+	-- argument checking
+	if type(s) ~= "string" then
+		error("bad argument #1 to 'utf8replace' (string expected, got ".. type(s).. ")")
+	end
+	if type(mapping) ~= "table" then
+		error("bad argument #2 to 'utf8replace' (table expected, got ".. type(mapping).. ")")
+	end
+
+	local pos = 1
+	local bytes = len(s)
+	local charbytes
+	local newstr = ""
+
+	while pos <= bytes do
+		charbytes = utf8charbytes(s, pos)
+		local c = sub(s, pos, pos + charbytes - 1)
+
+		newstr = newstr .. (mapping[c] or c)
+
+		pos = pos + charbytes
+	end
+
+	return newstr
+end
+
+
+-- identical to string.upper except it knows about unicode simple case conversions
+local function utf8upper (s)
+	return utf8replace(s, utf8_lc_uc)
+end
+
+-- identical to string.lower except it knows about unicode simple case conversions
+local function utf8lower (s)
+	return utf8replace(s, utf8_uc_lc)
+end
+]]
+
+-- identical to string.reverse except that it supports UTF-8
+local function utf8reverse (s)
+	-- argument checking
+	if type(s) ~= "string" then
+		error("bad argument #1 to 'utf8reverse' (string expected, got ".. type(s).. ")")
+	end
+
+	local bytes = len(s)
+	local pos = bytes
+	local charbytes
+	local newstr = ""
+
+	while pos > 0 do
+		local c = byte(s, pos)
+		while c >= 128 and c <= 191 do
+			pos = pos - 1
+			c = byte(s, pos)
+		end
+
+		charbytes = utf8charbytes(s, pos)
+
+		newstr = newstr .. sub(s, pos, pos + charbytes - 1)
+
+		pos = pos - 1
+	end
+
+	return newstr
+end
+
+-- http://en.wikipedia.org/wiki/Utf8
+-- http://developer.coronalabs.com/code/utf-8-conversion-utility
+local function utf8char(unicode)
+	if unicode <= 0x7F then return char(unicode) end
+
+	if (unicode <= 0x7FF) then
+		local Byte0 = 0xC0 + math.floor(unicode / 0x40);
+		local Byte1 = 0x80 + (unicode % 0x40);
+		return char(Byte0, Byte1);
+	end;
+
+	if (unicode <= 0xFFFF) then
+		local Byte0 = 0xE0 +  math.floor(unicode / 0x1000);
+		local Byte1 = 0x80 + (math.floor(unicode / 0x40) % 0x40);
+		local Byte2 = 0x80 + (unicode % 0x40);
+		return char(Byte0, Byte1, Byte2);
+	end;
+
+	if (unicode <= 0x10FFFF) then
+		local code = unicode
+		local Byte3= 0x80 + (code % 0x40);
+		code       = math.floor(code / 0x40)
+		local Byte2= 0x80 + (code % 0x40);
+		code       = math.floor(code / 0x40)
+		local Byte1= 0x80 + (code % 0x40);
+		code       = math.floor(code / 0x40)
+		local Byte0= 0xF0 + code;
+
+		return char(Byte0, Byte1, Byte2, Byte3);
+	end;
+
+	error 'Unicode cannot be greater than U+10FFFF!'
+end
+
+local shift_6  = 2^6
+local shift_12 = 2^12
+local shift_18 = 2^18
+
+local utf8unicode
+utf8unicode = function(str, i, j, byte_pos)
+	i = i or 1
+	j = j or i
+
+	if i > j then return end
+
+	local ch,bytes
+
+	if byte_pos then
+		bytes = utf8charbytes(str,byte_pos)
+		ch  = sub(str,byte_pos,byte_pos-1+bytes)
+	else
+		ch,byte_pos = utf8sub(str,i,i), 0
+		bytes       = #ch
+	end
+
+	local unicode
+
+	if bytes == 1 then unicode = byte(ch) end
+	if bytes == 2 then
+		local byte0,byte1 = byte(ch,1,2)
+		local code0,code1 = byte0-0xC0,byte1-0x80
+		unicode = code0*shift_6 + code1
+	end
+	if bytes == 3 then
+		local byte0,byte1,byte2 = byte(ch,1,3)
+		local code0,code1,code2 = byte0-0xE0,byte1-0x80,byte2-0x80
+		unicode = code0*shift_12 + code1*shift_6 + code2
+	end
+	if bytes == 4 then
+		local byte0,byte1,byte2,byte3 = byte(ch,1,4)
+		local code0,code1,code2,code3 = byte0-0xF0,byte1-0x80,byte2-0x80,byte3-0x80
+		unicode = code0*shift_18 + code1*shift_12 + code2*shift_6 + code3
+	end
+
+	return unicode,utf8unicode(str, i+1, j, byte_pos+bytes)
+end
+
+-- Returns an iterator which returns the next substring and its byte interval
+local function utf8gensub(str, sub_len)
+	sub_len        = sub_len or 1
+	local byte_pos = 1
+	local length   = #str
+	return function(skip)
+		if skip then byte_pos = byte_pos + skip end
+		local char_count = 0
+		local start      = byte_pos
+		repeat
+			if byte_pos > length then return end
+			char_count  = char_count + 1
+			local bytes = utf8charbytes(str,byte_pos)
+			byte_pos    = byte_pos+bytes
+
+		until char_count == sub_len
+
+		local last  = byte_pos-1
+		local slice = sub(str,start,last)
+		return slice, start, last
+	end
+end
+
+local function binsearch(sortedTable, item, comp)
+	local head, tail = 1, #sortedTable
+	local mid = math.floor((head + tail)/2)
+	if not comp then
+		while (tail - head) > 1 do
+			if sortedTable[tonumber(mid)] > item then
+				tail = mid
+			else
+				head = mid
+			end
+			mid = math.floor((head + tail)/2)
+		end
+	end
+	if sortedTable[tonumber(head)] == item then
+		return true, tonumber(head)
+	elseif sortedTable[tonumber(tail)] == item then
+		return true, tonumber(tail)
+	else
+		return false
+	end
+end
+local function classMatchGenerator(class, plain)
+	local codes = {}
+	local ranges = {}
+	local ignore = false
+	local range = false
+	local firstletter = true
+	local unmatch = false
+
+	local it = utf8gensub(class)
+
+	local skip
+	for c, _, be in it do
+		skip = be
+		if not ignore and not plain then
+			if c == "%" then
+				ignore = true
+			elseif c == "-" then
+				table.insert(codes, utf8unicode(c))
+				range = true
+			elseif c == "^" then
+				if not firstletter then
+					error('!!!')
+				else
+					unmatch = true
+				end
+			elseif c == ']' then
+				break
+			else
+				if not range then
+					table.insert(codes, utf8unicode(c))
+				else
+					table.remove(codes) -- removing '-'
+					table.insert(ranges, {table.remove(codes), utf8unicode(c)})
+					range = false
+				end
+			end
+		elseif ignore and not plain then
+			if c == 'a' then -- %a: represents all letters. (ONLY ASCII)
+				table.insert(ranges, {65, 90}) -- A - Z
+				table.insert(ranges, {97, 122}) -- a - z
+			elseif c == 'c' then -- %c: represents all control characters.
+				table.insert(ranges, {0, 31})
+				table.insert(codes, 127)
+			elseif c == 'd' then -- %d: represents all digits.
+				table.insert(ranges, {48, 57}) -- 0 - 9
+			elseif c == 'g' then -- %g: represents all printable characters except space.
+				table.insert(ranges, {1, 8})
+				table.insert(ranges, {14, 31})
+				table.insert(ranges, {33, 132})
+				table.insert(ranges, {134, 159})
+				table.insert(ranges, {161, 5759})
+				table.insert(ranges, {5761, 8191})
+				table.insert(ranges, {8203, 8231})
+				table.insert(ranges, {8234, 8238})
+				table.insert(ranges, {8240, 8286})
+				table.insert(ranges, {8288, 12287})
+			elseif c == 'l' then -- %l: represents all lowercase letters. (ONLY ASCII)
+				table.insert(ranges, {97, 122}) -- a - z
+			elseif c == 'p' then -- %p: represents all punctuation characters. (ONLY ASCII)
+				table.insert(ranges, {33, 47})
+				table.insert(ranges, {58, 64})
+				table.insert(ranges, {91, 96})
+				table.insert(ranges, {123, 126})
+			elseif c == 's' then -- %s: represents all space characters.
+				table.insert(ranges, {9, 13})
+				table.insert(codes, 32)
+				table.insert(codes, 133)
+				table.insert(codes, 160)
+				table.insert(codes, 5760)
+				table.insert(ranges, {8192, 8202})
+				table.insert(codes, 8232)
+				table.insert(codes, 8233)
+				table.insert(codes, 8239)
+				table.insert(codes, 8287)
+				table.insert(codes, 12288)
+			elseif c == 'u' then -- %u: represents all uppercase letters. (ONLY ASCII)
+				table.insert(ranges, {65, 90}) -- A - Z
+			elseif c == 'w' then -- %w: represents all alphanumeric characters. (ONLY ASCII)
+				table.insert(ranges, {48, 57}) -- 0 - 9
+				table.insert(ranges, {65, 90}) -- A - Z
+				table.insert(ranges, {97, 122}) -- a - z
+			elseif c == 'x' then -- %x: represents all hexadecimal digits.
+				table.insert(ranges, {48, 57}) -- 0 - 9
+				table.insert(ranges, {65, 70}) -- A - F
+				table.insert(ranges, {97, 102}) -- a - f
+			else
+				if not range then
+					table.insert(codes, utf8unicode(c))
+				else
+					table.remove(codes) -- removing '-'
+					table.insert(ranges, {table.remove(codes), utf8unicode(c)})
+					range = false
+				end
+			end
+			ignore = false
+		else
+			if not range then
+				table.insert(codes, utf8unicode(c))
+			else
+				table.remove(codes) -- removing '-'
+				table.insert(ranges, {table.remove(codes), utf8unicode(c)})
+				range = false
+			end
+			ignore = false
+		end
+
+		firstletter = false
+	end
+
+	table.sort(codes)
+
+	local function inRanges(charCode)
+		for _,r in ipairs(ranges) do
+			if r[1] <= charCode and charCode <= r[2] then
+				return true
+			end
+		end
+		return false
+	end
+	if not unmatch then
+		return function(charCode)
+			return binsearch(codes, charCode) or inRanges(charCode)
+		end, skip
+	else
+		return function(charCode)
+			return charCode ~= -1 and not (binsearch(codes, charCode) or inRanges(charCode))
+		end, skip
+	end
+end
+
+--[[
+-- utf8sub with extra argument, and extra result value
+local function utf8subWithBytes (s, i, j, sb)
+	-- argument defaults
+	j = j or -1
+
+	local pos = sb or 1
+	local bytes = len(s)
+	local length = 0
+
+	-- only set l if i or j is negative
+	local l = (i >= 0 and j >= 0) or utf8len(s)
+	local startChar = (i >= 0) and i or l + i + 1
+	local endChar   = (j >= 0) and j or l + j + 1
+
+	-- can't have start before end!
+	if startChar > endChar then
+		return ""
+	end
+
+	-- byte offsets to pass to string.sub
+	local startByte,endByte = 1,bytes
+
+	while pos <= bytes do
+		length = length + 1
+
+		if length == startChar then
+			startByte = pos
+		end
+
+		pos = pos + utf8charbytes(s, pos)
+
+		if length == endChar then
+			endByte = pos - 1
+			break
+		end
+	end
+
+	if startChar > length then startByte = bytes+1   end
+	if endChar   < 1      then endByte   = 0         end
+
+	return sub(s, startByte, endByte), endByte + 1
+end
+]]
+
+local cache = setmetatable({},{
+	__mode = 'kv'
+})
+local cachePlain = setmetatable({},{
+	__mode = 'kv'
+})
+local function matcherGenerator(regex, plain)
+	local matcher = {
+		functions = {},
+		captures = {}
+	}
+	if not plain then
+		cache[regex] =  matcher
+	else
+		cachePlain[regex] = matcher
+	end
+	local function simple(func)
+		return function(cC)
+			if func(cC) then
+				matcher:nextFunc()
+				matcher:nextStr()
+			else
+				matcher:reset()
+			end
+		end
+	end
+	local function star(func)
+		return function(cC)
+			if func(cC) then
+				matcher:fullResetOnNextFunc()
+				matcher:nextStr()
+			else
+				matcher:nextFunc()
+			end
+		end
+	end
+	local function minus(func)
+		return function(cC)
+			if func(cC) then
+				matcher:fullResetOnNextStr()
+			end
+			matcher:nextFunc()
+		end
+	end
+	local function question(func)
+		return function(cC)
+			if func(cC) then
+				matcher:fullResetOnNextFunc()
+				matcher:nextStr()
+			end
+			matcher:nextFunc()
+		end
+	end
+
+	local function capture(id)
+		return function(_)
+			local l = matcher.captures[id][2] - matcher.captures[id][1]
+			local captured = utf8sub(matcher.string, matcher.captures[id][1], matcher.captures[id][2])
+			local check = utf8sub(matcher.string, matcher.str, matcher.str + l)
+			if captured == check then
+				for _ = 0, l do
+					matcher:nextStr()
+				end
+				matcher:nextFunc()
+			else
+				matcher:reset()
+			end
+		end
+	end
+	local function captureStart(id)
+		return function(_)
+			matcher.captures[id][1] = matcher.str
+			matcher:nextFunc()
+		end
+	end
+	local function captureStop(id)
+		return function(_)
+			matcher.captures[id][2] = matcher.str - 1
+			matcher:nextFunc()
+		end
+	end
+
+	local function balancer(str)
+		local sum = 0
+		local bc, ec = utf8sub(str, 1, 1), utf8sub(str, 2, 2)
+		local skip = len(bc) + len(ec)
+		bc, ec = utf8unicode(bc), utf8unicode(ec)
+		return function(cC)
+			if cC == ec and sum > 0 then
+				sum = sum - 1
+				if sum == 0 then
+					matcher:nextFunc()
+				end
+				matcher:nextStr()
+			elseif cC == bc then
+				sum = sum + 1
+				matcher:nextStr()
+			else
+				if sum == 0 or cC == -1 then
+					sum = 0
+					matcher:reset()
+				else
+					matcher:nextStr()
+				end
+			end
+		end, skip
+	end
+
+	matcher.functions[1] = function(_)
+		matcher:fullResetOnNextStr()
+		matcher.seqStart = matcher.str
+		matcher:nextFunc()
+		if (matcher.str > matcher.startStr and matcher.fromStart) or matcher.str >= matcher.stringLen then
+			matcher.stop = true
+			matcher.seqStart = nil
+		end
+	end
+
+	local lastFunc
+	local ignore = false
+	local skip = nil
+	local it = (function()
+		local gen = utf8gensub(regex)
+		return function()
+			return gen(skip)
+		end
+	end)()
+	local cs = {}
+	for c, bs, be in it do
+		skip = nil
+		if plain then
+			table.insert(matcher.functions, simple(classMatchGenerator(c, plain)))
+		else
+			if ignore then
+				if find('123456789', c, 1, true) then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+						lastFunc = nil
+					end
+					table.insert(matcher.functions, capture(tonumber(c)))
+				elseif c == 'b' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+						lastFunc = nil
+					end
+					local b
+					b, skip = balancer(sub(regex, be + 1, be + 9))
+					table.insert(matcher.functions, b)
+				else
+					lastFunc = classMatchGenerator('%' .. c)
+				end
+				ignore = false
+			else
+				if c == '*' then
+					if lastFunc then
+						table.insert(matcher.functions, star(lastFunc))
+						lastFunc = nil
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '+' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+						table.insert(matcher.functions, star(lastFunc))
+						lastFunc = nil
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '-' then
+					if lastFunc then
+						table.insert(matcher.functions, minus(lastFunc))
+						lastFunc = nil
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '?' then
+					if lastFunc then
+						table.insert(matcher.functions, question(lastFunc))
+						lastFunc = nil
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '^' then
+					if bs == 1 then
+						matcher.fromStart = true
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '$' then
+					if be == len(regex) then
+						matcher.toEnd = true
+					else
+						error('invalid regex after ' .. sub(regex, 1, bs))
+					end
+				elseif c == '[' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+					end
+					lastFunc, skip = classMatchGenerator(sub(regex, be + 1))
+				elseif c == '(' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+						lastFunc = nil
+					end
+					table.insert(matcher.captures, {})
+					table.insert(cs, #matcher.captures)
+					table.insert(matcher.functions, captureStart(cs[#cs]))
+					if sub(regex, be + 1, be + 1) == ')' then matcher.captures[#matcher.captures].empty = true end
+				elseif c == ')' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+						lastFunc = nil
+					end
+					local cap = table.remove(cs)
+					if not cap then
+						error('invalid capture: "(" missing')
+					end
+					table.insert(matcher.functions, captureStop(cap))
+				elseif c == '.' then
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+					end
+					lastFunc = function(cC) return cC ~= -1 end
+				elseif c == '%' then
+					ignore = true
+				else
+					if lastFunc then
+						table.insert(matcher.functions, simple(lastFunc))
+					end
+					lastFunc = classMatchGenerator(c)
+				end
+			end
+		end
+	end
+	if #cs > 0 then
+		error('invalid capture: ")" missing')
+	end
+	if lastFunc then
+		table.insert(matcher.functions, simple(lastFunc))
+	end
+
+	table.insert(matcher.functions, function()
+		if matcher.toEnd and matcher.str ~= matcher.stringLen then
+			matcher:reset()
+		else
+			matcher.stop = true
+		end
+	end)
+
+	matcher.nextFunc = function(self)
+		self.func = self.func + 1
+	end
+	matcher.nextStr = function(self)
+		self.str = self.str + 1
+	end
+	matcher.strReset = function(self)
+		local oldReset = self.reset
+		local str = self.str
+		self.reset = function(s)
+			s.str = str
+			s.reset = oldReset
+		end
+	end
+	matcher.fullResetOnNextFunc = function(self)
+		local oldReset = self.reset
+		local func = self.func +1
+		local str = self.str
+		self.reset = function(s)
+			s.func = func
+			s.str = str
+			s.reset = oldReset
+		end
+	end
+	matcher.fullResetOnNextStr = function(self)
+		local oldReset = self.reset
+		local str = self.str + 1
+		local func = self.func
+		self.reset = function(s)
+			s.func = func
+			s.str = str
+			s.reset = oldReset
+		end
+	end
+
+	matcher.process = function(self, str, start)
+
+		self.func = 1
+		start = start or 1
+		self.startStr = (start >= 0) and start or utf8len(str) + start + 1
+		self.seqStart = self.startStr
+		self.str = self.startStr
+		self.stringLen = utf8len(str) + 1
+		self.string = str
+		self.stop = false
+
+		self.reset = function(s)
+			s.func = 1
+		end
+
+		-- local lastPos = self.str
+		-- local lastByte
+		local ch
+		while not self.stop do
+			if self.str < self.stringLen then
+				--[[ if lastPos < self.str then
+					print('last byte', lastByte)
+					ch, lastByte = utf8subWithBytes(str, 1, self.str - lastPos - 1, lastByte)
+					ch, lastByte = utf8subWithBytes(str, 1, 1, lastByte)
+					lastByte = lastByte - 1
+				else
+					ch, lastByte = utf8subWithBytes(str, self.str, self.str)
+				end
+				lastPos = self.str ]]
+				ch = utf8sub(str, self.str,self.str)
+				--print('char', ch, utf8unicode(ch))
+				self.functions[self.func](utf8unicode(ch))
+			else
+				self.functions[self.func](-1)
+			end
+		end
+
+		if self.seqStart then
+			local captures = {}
+			for _,pair in pairs(self.captures) do
+				if pair.empty then
+					table.insert(captures, pair[1])
+				else
+					table.insert(captures, utf8sub(str, pair[1], pair[2]))
+				end
+			end
+			return self.seqStart, self.str - 1, unpack(captures)
+		end
+	end
+
+	return matcher
+end
+
+-- string.find
+local function utf8find(str, regex, init, plain)
+	local matcher = cache[regex] or matcherGenerator(regex, plain)
+	return matcher:process(str, init)
+end
+
+-- string.match
+local function utf8match(str, regex, init)
+	init = init or 1
+	local found = {utf8find(str, regex, init)}
+	if found[1] then
+		if found[3] then
+			return unpack(found, 3)
+		end
+		return utf8sub(str, found[1], found[2])
+	end
+end
+
+-- string.gmatch
+local function utf8gmatch(str, regex, all)
+	regex = (utf8sub(regex,1,1) ~= '^') and regex or '%' .. regex
+	local lastChar = 1
+	return function()
+		local found = {utf8find(str, regex, lastChar)}
+		if found[1] then
+			lastChar = found[2] + 1
+			if found[all and 1 or 3] then
+				return unpack(found, all and 1 or 3)
+			end
+			return utf8sub(str, found[1], found[2])
+		end
+	end
+end
+
+local function replace(repl, args)
+	local ret = ''
+	if type(repl) == 'string' then
+		local ignore = false
+		local num
+		for c in utf8gensub(repl) do
+			if not ignore then
+				if c == '%' then
+					ignore = true
+				else
+					ret = ret .. c
+				end
+			else
+				num = tonumber(c)
+				if num then
+					ret = ret .. args[num]
+				else
+					ret = ret .. c
+				end
+				ignore = false
+			end
+		end
+	elseif type(repl) == 'table' then
+		ret = repl[args[1] or args[0]] or ''
+	elseif type(repl) == 'function' then
+		if #args > 0 then
+			ret = repl(unpack(args, 1)) or ''
+		else
+			ret = repl(args[0]) or ''
+		end
+	end
+	return ret
+end
+-- string.gsub
+local function utf8gsub(str, regex, repl, limit)
+	limit = limit or -1
+	local ret = ''
+	local prevEnd = 1
+	local it = utf8gmatch(str, regex, true)
+	local found = {it()}
+	local n = 0
+	while #found > 0 and limit ~= n do
+		local args = {[0] = utf8sub(str, found[1], found[2]), unpack(found, 3)}
+		ret = ret .. utf8sub(str, prevEnd, found[1] - 1)
+		.. replace(repl, args)
+		prevEnd = found[2] + 1
+		n = n + 1
+		found = {it()}
+	end
+	return ret .. utf8sub(str, prevEnd), n
+end
+
+local utf8 = {}
+utf8.len = utf8len
+utf8.sub = utf8sub
+utf8.reverse = utf8reverse
+utf8.char = utf8char
+utf8.unicode = utf8unicode
+utf8.gensub = utf8gensub
+utf8.byte = utf8unicode
+utf8.find    = utf8find
+utf8.match   = utf8match
+utf8.gmatch  = utf8gmatch
+utf8.gsub    = utf8gsub
+utf8.dump    = dump
+utf8.format = format
+utf8.lower = lower
+utf8.upper = upper
+utf8.rep     = rep
+utf8.charbytes = utf8charbytes
+return utf8
+-----------------------
+
+`
+

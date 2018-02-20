@@ -2268,7 +2268,7 @@ function __printHelper(v)
 
       local tv = type(v)
       if tv == "string" then
-         print("\""..v.."\"") -- used to be backticks
+         print("\""..v.."\"")
       elseif tv == "table" then
          if v.__name == "__lazy_ellipsis_instance" then
             local expand = v()
