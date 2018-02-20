@@ -797,25 +797,21 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 
 	// jea TODO: if the range is not a := range, then leave off
 	// declaring the two locals in the outer do scope.
-	isAssign := true
-	valUnder := false
-	keyUnder := false
+	isDefine := s.Tok == token.DEFINE // vs token.ASSIGN
+	valUnder := value == "_"
+	keyUnder := key == "_"
 
 	addMe := ""
-	if isAssign {
-		if key != "_" {
+	if isDefine {
+		if !keyUnder {
 			if isMap {
 				addMe = fmt.Sprintf("local %s; ", key)
 			} else {
 				addMe = fmt.Sprintf("local %s = 0; ", key)
 			}
-		} else {
-			keyUnder = true
 		}
-		if value != "_" {
+		if !valUnder {
 			addMe += fmt.Sprintf("local %s; ", value)
-		} else {
-			valUnder = true
 		}
 	}
 
