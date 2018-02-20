@@ -223,7 +223,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		for o := range c.p.dependencies {
 			qualifiedName := o.Pkg().Path() + "." + o.Name()
 			if f, ok := o.(*types.Func); ok && f.Type().(*types.Signature).Recv() != nil {
-				deps = append(deps, qualifiedName+"~")
+				//deps = append(deps, qualifiedName+"~")
+				deps = append(deps, qualifiedName+"___tilde_")
 				continue
 			}
 			deps = append(deps, qualifiedName)
@@ -339,7 +340,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						}
 						de.DceObjectFilter = namedRecvType.Obj().Name()
 						if !fun.Name.IsExported() {
-							de.DceMethodFilter = o.Name() + "~"
+							de.DceMethodFilter = o.Name() + "___tilde_" //jea: "~"
 						}
 					}
 					de.DceDeps = collectDependencies(func() {

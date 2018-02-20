@@ -196,7 +196,8 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		for o := range c.p.dependencies {
 			qualifiedName := o.Pkg().Path() + "." + o.Name()
 			if f, ok := o.(*types.Func); ok && f.Type().(*types.Signature).Recv() != nil {
-				deps = append(deps, qualifiedName+"~")
+				//deps = append(deps, qualifiedName+"~")
+				deps = append(deps, qualifiedName+"___tilde_")
 				continue
 			}
 			deps = append(deps, qualifiedName)
@@ -296,7 +297,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			}
 			d.DceObjectFilter = namedRecvType.Obj().Name()
 			if !fun.Name.IsExported() {
-				d.DceMethodFilter = o.Name() + "~"
+				d.DceMethodFilter = o.Name() + "___tilde_" //jea: was: "~"
 			}
 		}
 
@@ -313,12 +314,12 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		c.p.Uses[id] = mainFunc
 		call := &ast.CallExpr{Fun: id}
 		ifStmt := &ast.IfStmt{
-			Cond: c.newIdent("$pkg === $mainPkg", types.Typ[types.Bool]),
+			Cond: c.newIdent("_pkg == _mainPkg", types.Typ[types.Bool]),
 			Body: &ast.BlockStmt{
 				List: []ast.Stmt{
 					&ast.ExprStmt{X: call},
 					&ast.AssignStmt{
-						Lhs: []ast.Expr{c.newIdent("$mainFinished", types.Typ[types.Bool])},
+						Lhs: []ast.Expr{c.newIdent("_mainFinished", types.Typ[types.Bool])},
 						Tok: token.ASSIGN,
 						Rhs: []ast.Expr{c.newConst(types.Typ[types.Bool], constant.MakeBool(true))},
 					},
@@ -352,7 +353,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 				typeName := c.objectName(o)
 				lhs := typeName
 				if isPkgLevel(o) {
-					lhs += " = $pkg." + encodeIdent(o.Name())
+					lhs += " = _pkg." + encodeIdent(o.Name())
 				}
 				size := int64(0)
 				constructor := "null"
@@ -362,19 +363,22 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					for i := 0; i < t.NumFields(); i++ {
 						params[i] = fieldName(t, i) + "_"
 					}
-					constructor = fmt.Sprintf("function(%s) {\n\t\tthis.$val = this;\n\t\tif (arguments.length === 0) {\n", strings.Join(params, ", "))
-					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\t\tthis.%s = %s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+
+					if t.NumFields() == 0 {
+						constructor = fmt.Sprintf("function(self) return self; end")
+					} else {
+						constructor = fmt.Sprintf("function(self, ...)\n\t\t if self == nil then self = {}; end\n")
+						constructor += fmt.Sprintf("\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
+						for i := 0; i < t.NumFields(); i++ {
+							constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_ or %[2]s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+						}
+						constructor += "\t\t return self; \n\t end;\n"
+						//constructor += fmt.Sprintf("\n\t %s.__constructor = %s;\n", typeName, constructor)
 					}
-					constructor += "\t\t\treturn;\n\t\t}\n"
-					for i := 0; i < t.NumFields(); i++ {
-						constructor += fmt.Sprintf("\t\tthis.%[1]s = %[1]s_;\n", fieldName(t, i))
-					}
-					constructor += "\t}"
 				case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 					size = sizes64.Sizeof(t)
 				}
-				c.Printf(`%s = $newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
+				c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			})
 			d.MethodListCode = c.CatchOutput(0, func() {
 				named := o.Type().(*types.Named)
@@ -387,14 +391,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					method := named.Method(i)
 					name := method.Name()
 					if reservedKeywords[name] {
-						name += "$"
+						name += "_"
 					}
 					pkgPath := ""
 					if !method.Exported() {
 						pkgPath = method.Pkg().Path()
 					}
 					t := method.Type().(*types.Signature)
-					entry := fmt.Sprintf(`{prop: "%s", name: "%s", pkg: "%s", typ: $funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+					entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
 					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 						ptrMethods = append(ptrMethods, entry)
 						continue
@@ -402,16 +406,16 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					methods = append(methods, entry)
 				}
 				if len(methods) > 0 {
-					c.Printf("%s.methods = [%s];", c.typeName(0, named), strings.Join(methods, ", "))
+					c.Printf("%s.__methods_desc = {%s};", c.typeName(0, named), strings.Join(methods, ", "))
 				}
 				if len(ptrMethods) > 0 {
-					c.Printf("%s.methods = [%s];", c.typeName(0, types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+					c.Printf("%s.__methods_desc = {%s};", c.typeName(0, types.NewPointer(named)), strings.Join(ptrMethods, ", "))
 				}
 			})
 			switch t := o.Type().Underlying().(type) {
 			case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 				d.TypeInitCode = c.CatchOutput(0, func() {
-					c.Printf("%s.init(%s);", c.objectName(o), c.initArgs(t))
+					c.Printf("%s.init(%s); -- fullpkg.go:418", "__type__"+c.objectName(o), c.initArgs(t))
 				})
 			}
 		})
@@ -425,7 +429,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			DceObjectFilter: t.Name(),
 		}
 		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = []byte(fmt.Sprintf("\t%s = $%sType(%s);\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
+			d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s); -- fullpkg.go:432\n", t.Name(), strings.ToLower(typeKind(t.Type())[5:]), c.initArgs(t.Type())))
 		})
 		typeDecls = append(typeDecls, &d)
 	}
