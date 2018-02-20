@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -147,6 +147,8 @@ func main() {
 		panicOn(err)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
+
+		verb.VerboseVerbose = true
 
 		importPath := ""
 		translation, err := inc.FullPackage([]byte(src), importPath)

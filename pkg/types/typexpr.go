@@ -22,10 +22,10 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	x.mode = invalid
 	x.expr = e
 
-	pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
+	//pp("check.scope = '%#v', e.Name is '%s', check.pkg.scope='%#v'", check.scope, e.Name, check.pkg.scope)
 	//check.scope.Dump()
 
-	pp("chk.pkg.scope = '%s'", check.pkg.scope)
+	//pp("chk.pkg.scope = '%s'", check.pkg.scope)
 	var scope *Scope
 	var obj Object
 	if check.scope == nil {
@@ -36,7 +36,7 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 	//pp("end of check.scope Dump")
 	scope, obj = check.scope.LookupParent(e.Name, check.pos)
 	if e != nil && obj != nil {
-		pp("check.scope.LookupParent for e.Name='%s' got obj = '%s'", e.Name, obj.Name())
+		//pp("check.scope.LookupParent for e.Name='%s' got obj = '%s'", e.Name, obj.Name())
 	}
 	/*
 		// jea add, try at filescope
@@ -54,17 +54,17 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 			check.errorf(e.Pos(), "cannot use _ as value or type")
 		} else {
 			// jea: top level import "fmt" is failing here. hmm...
-			pp("about to report undeclared name '%s', here are the scopes:", e.Name)
+			//pp("about to report undeclared name '%s', here are the scopes:", e.Name)
 			if check.scope != nil {
-				pp("check.scope = '%s' with %v child scopes", check.scope, len(check.scope.children))
+				//pp("check.scope = '%s' with %v child scopes", check.scope, len(check.scope.children))
 			}
 			if check.pkg != nil {
 				//pp("full dump of check.pkg.scope:")
 				//check.pkg.scope.Dump()
 
-				pp("check.pkg.scope = '%s' with %v child scopes", check.pkg.scope, len(check.pkg.scope.children))
+				//pp("check.pkg.scope = '%s' with %v child scopes", check.pkg.scope, len(check.pkg.scope.children))
 				for i, ch := range check.pkg.scope.children {
-					pp(" [%v] child scope: '%s'", i, ch)
+					//pp(" [%v] child scope: '%s'", i, ch)
 				}
 
 			}
@@ -195,8 +195,8 @@ func (check *Checker) funcType(
 ) {
 
 	// jea on re-decl: sig is fresh here, unfilled.
-	pp("top of Checker.funcType, sig = '%s'", sig)
-	pp("ftyp = '%s'", ftyp)
+	//pp("top of Checker.funcType, sig = '%s'", sig)
+	//pp("ftyp = '%s'", ftyp)
 	scope := NewScope(check.scope, token.NoPos, token.NoPos, "function", methodName)
 	scope.isFunc = true
 	if methodName != "" {

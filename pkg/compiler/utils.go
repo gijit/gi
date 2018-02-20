@@ -345,12 +345,12 @@ func (c *funcContext) setType(e ast.Expr, t types.Type) ast.Expr {
 
 func (c *funcContext) pkgVar(pkg *types.Package) string {
 	if pkg == c.p.Pkg {
-		return ""
-		//return "$pkg"
+		return "__pkg"
 	}
 
 	pkgVar, found := c.p.pkgVars[pkg.Path()]
 	if !found {
+		pp("not found!")
 		pkgVar = fmt.Sprintf(`__packages["%s"]`, pkg.Path())
 	}
 	return pkgVar

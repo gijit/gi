@@ -80,7 +80,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	pp("GiImportFunc called with path = '%s'\n", path)
+	fmt.Printf("GiImportFunc called with path = '%s'\n", path)
 
 	var pkg *types.Package
 
@@ -171,8 +171,9 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.
-	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
-	return ic.ActuallyImportPackage(path, "", shadowPath)
+	//shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
+	//return ic.ActuallyImportPackage(path, "", shadowPath)
+	return ic.ActuallyImportPackage(path, "", path)
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {

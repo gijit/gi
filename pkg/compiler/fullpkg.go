@@ -132,6 +132,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			continue
 		}
 		c.p.pkgVars[importedPkg.Path()] = c.newVariableWithLevel(importedPkg.Name(), true)
+		fmt.Printf("importedPkg.Path() = '%s'; importedPkg='%#v'\n", importedPkg.Path(), importedPkg)
 		importedPaths = append(importedPaths, importedPkg.Path())
 	}
 	sort.Strings(importedPaths)

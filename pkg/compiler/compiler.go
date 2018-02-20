@@ -198,7 +198,17 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 		}
 	}
 
-	if _, err := w.Write([]byte("_synthesizeMethods();\nlocal _mainPkg = __packages[\"" + string(mainPkg.ImportPath) + "\"];\n__packages[\"runtime\"]._init();\n _go(_mainPkg._init, {});\n\n end)();\n")); err != nil {
+	// leave off the   __go(__mainPkg._init, {});
+	if _, err := w.Write([]byte(`
+  __synthesizeMethods();
+
+  local __mainPkg = __packages["` + string(mainPkg.ImportPath) + `"];
+  local __rtTemp = __packages["runtime"]; 
+  if __rtTemp ~= nil then _init(); end;
+
+  __mainPkg._init()
+end)();
+`)); err != nil {
 		return err
 	}
 
@@ -245,7 +255,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		}
 	}
 
-	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false, __s = 0, __r; if self ~= nil and self.__blk ~= nil then  __f = self; __c = true; __s = __f.__s; __r = __f.__r; end ::s:: while (true) do\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t_init = function(self)\n\t\t _pkg._init = function() end;\n\t\t-- jea compiler.go:245\n\t\t local __f\n\t\t local __c = false;\n\t\t local __s = 0;\n\t\t local __r;\n\t\t if self ~= nil and self.__blk ~= nil then\n\t\t  __f = self;\n\t\t __c = true;\n\t\t __s = __f.__s;\n\t\t __r = __f.__r;\n\t\t end;\n\t\t ::s::\n\t\t while (true) do\n  --switch (__s)\n if __s == 0 then\n"), minify)); err != nil {
 		return err
 	}
 	for _, d := range filteredDecls {
@@ -253,7 +263,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end; return; end;\n\t\t if __f == nil then __f = { __blk= _init }; end;  __f.__s = __s; __f.__r = __r; return __f;\n\t end;\n\t__pkg._init = _init;\n\treturn __pkg;\nend)();"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= _init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t__pkg._init = _init;\n\t return __pkg;\n end)();\n"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified
