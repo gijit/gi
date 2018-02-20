@@ -731,7 +731,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 	d.DceDeps = collectDependencies(func() {
 		// interface Dog getting codegen here
 		d.DeclCode = c.CatchOutput(0, func() {
-			typeName := "__type__" + c.objectName(o)
+			typeName := "__type__." + c.objectName(o)
 			lhs := typeName
 			if isPkgLevel(o) {
 				// jea: might need to attend to package names
@@ -789,7 +789,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				_ = size
 			}
 			c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported()) //, constructor)
-			//c.Printf(`__type__%s = __newType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
+			//c.Printf(`__type__.%s = __newType(%d, %s, "%s", "%s", "%s.%s", %t, "%s", %t, nil);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported())
 			//c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 
 			// jea: GopherJS can defer init which adds the methods
@@ -867,9 +867,9 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 				pn := c.typeName(0, types.NewPointer(named)) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
-				pn = "__type__" + c.objectName(o)
+				pn = "__type__." + c.objectName(o)
 				// so these are the methods for B (test 102 face_test), but
-				// we'll need to get them to __type__B.__ptr and not to ptrType.
+				// we'll need to get them to __type__.B.__ptr and not to ptrType.
 				c.Printf("%s.ptr.__methods_desc = {%s}; -- incr.go:827 for ptr_methods\n", pn, strings.Join(ptrMethods, ", "))
 			}
 		})
@@ -880,7 +880,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("%s.init(%s); -- incr.go:873", "__type__"+c.objectName(o), c.initArgs(t))
+				c.Printf("%s.init(%s); -- incr.go:873", "__type__."+c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
 				if set_constructor != "" {

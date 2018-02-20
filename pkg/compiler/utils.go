@@ -445,15 +445,15 @@ func (c *funcContext) typeNameReport(level int, ty types.Type) string {
 
 	switch t := ty.(type) {
 	case *types.Basic:
-		return "__type__" + toJavaScriptType(t)
+		return "__type__." + toJavaScriptType(t)
 	case *types.Named:
 		if t.Obj().Name() == "error" {
-			return "__type__error"
+			return "__type__.error"
 		}
-		return "__type__" + c.objectName(t.Obj())
+		return "__type__." + c.objectName(t.Obj())
 	case *types.Interface:
 		if t.Empty() {
-			return "__type__emptyInterface"
+			return "__type__.emptyInterface"
 		}
 	}
 
@@ -490,7 +490,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
 		//fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
-		if res == "__type__anon_sliceType" {
+		if res == "__type__.anon_sliceType" {
 			//panic("where?")
 		}
 	}()
@@ -498,18 +498,18 @@ func (c *funcContext) typeNameWithAnonInfo(
 	case *types.Basic:
 		jst := toJavaScriptType(t)
 		pp("in typeName, basic, calling toJavaScriptType t='%#v', got jst='%s'", t, jst)
-		res = "__type__" + jst
+		res = "__type__." + jst
 		return
 	case *types.Named:
 		if t.Obj().Name() == "error" {
-			res = "__type__error"
+			res = "__type__.error"
 			return
 		}
-		res = "__type__" + c.objectName(t.Obj())
+		res = "__type__." + c.objectName(t.Obj())
 		return
 	case *types.Interface:
 		if t.Empty() {
-			res = "__type__emptyInterface"
+			res = "__type__.emptyInterface"
 			return
 		}
 	}
@@ -522,7 +522,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.initArgs(ty)
 
 		// [6:] takes prefix "__kind" off.
-		low := "__type__anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
+		low := "__type__.anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)

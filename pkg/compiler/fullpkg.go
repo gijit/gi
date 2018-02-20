@@ -421,7 +421,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			switch t := o.Type().Underlying().(type) {
 			case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 				d.TypeInitCode = c.CatchOutput(0, func() {
-					c.Printf("%s.init(%s); -- fullpkg.go:418", "__type__"+c.objectName(o), c.initArgs(t))
+					c.Printf("%s.init(%s); -- fullpkg.go:418", "__type__."+c.objectName(o), c.initArgs(t))
 				})
 			}
 		})

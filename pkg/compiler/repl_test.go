@@ -206,8 +206,8 @@ func Test010Slice(t *testing.T) {
 
 		code := `a:=[]int{1,2,3}`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-	__type__anon_sliceType = __sliceType(__type__int);
-a=__type__anon_sliceType({[0]=1LL,2LL,3LL});`)
+	__type__.anon_sliceType = __sliceType(__type__.int);
+a=__type__.anon_sliceType({[0]=1LL,2LL,3LL});`)
 	})
 }
 
@@ -306,8 +306,8 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__anon_sliceType = __sliceType(__type__string); 
-b = __type__anon_sliceType({[0]="hi", "gophers!"});
+__type__.anon_sliceType = __sliceType(__type__.string); 
+b = __type__.anon_sliceType({[0]="hi", "gophers!"});
 __gi_SetRangeCheck(b, 0, "");
 `)
 	})
@@ -323,9 +323,9 @@ func Test014LenOfSlice(t *testing.T) {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-  	__type__anon_sliceType = __sliceType(__type__string); 
+  	__type__.anon_sliceType = __sliceType(__type__.string); 
   
-  	x = __type__anon_sliceType({[0]="hi", "gophers!"});
+  	x = __type__.anon_sliceType({[0]="hi", "gophers!"});
 
     bb = #x;`)
 	})
@@ -341,8 +341,8 @@ func Test015ArrayCreation(t *testing.T) {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__anon_arrayType = __arrayType(__type__int, 3); 
-x = __type__anon_arrayType({[0]=1LL, 2LL, 3LL});
+__type__.anon_arrayType = __arrayType(__type__.int, 3); 
+x = __type__.anon_arrayType({[0]=1LL, 2LL, 3LL});
 bb = 3LL;`)
 
 		// and empty array with size 3
@@ -350,8 +350,8 @@ bb = 3LL;`)
 		// type already declared above, so will be reused.
 		code = `var x [3]int`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__anon_arrayType = __arrayType(__type__int, 3); 
-x = __type__anon_arrayType();
+__type__.anon_arrayType = __arrayType(__type__.int, 3); 
+x = __type__.anon_arrayType();
 `)
 
 		// upper case names too
@@ -376,8 +376,8 @@ func Test015_5_ArrayCreation(t *testing.T) {
 
 		code := `var x [3]int`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__anon_arrayType = __arrayType(__type__int, 3); 
-x = __type__anon_arrayType();
+__type__.anon_arrayType = __arrayType(__type__.int, 3); 
+x = __type__.anon_arrayType();
 `)
 	})
 }
@@ -397,8 +397,8 @@ func Test016MapCreation(t *testing.T) {
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-  	__type__anon_mapType = __mapType(__type__int, __type__string); 
-  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);
+  	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
+  	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 
 	})
@@ -414,11 +414,11 @@ func Test016bMapCreation(t *testing.T) {
 
 		code := `type Yumo map[int]string; yesso := Yumo{2: "two"}`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-__type__Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
+__type__.Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
 
-__type__Yumo.init(__type__int, __type__string);
+__type__.Yumo.init(__type__.int, __type__.string);
 
-yesso = __makeMap(__type__int.keyFor, {[2LL]="two"}, __type__int, __type__string, __type__Yumo);
+yesso = __makeMap(__type__.int.keyFor, {[2LL]="two"}, __type__.int, __type__.string, __type__.Yumo);
 
 `)
 
@@ -435,9 +435,9 @@ func Test017DeleteFromMap(t *testing.T) {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-  	__type__anon_mapType = __mapType(__type__int, __type__string); 
+  	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
   
-  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);
+  	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 		code = `delete(x, 3)`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `x("delete",3LL);`)
@@ -457,8 +457,8 @@ func Test018ReadFromMap(t *testing.T) {
 		srcs := []string{`x := map[int]string{3:"hello", 4:"gophers"}`, "x3 := x[3]"}
 		expect := []string{`
 
-  	__type__anon_mapType = __mapType(__type__int, __type__string);   
-  	x = __makeMap(__type__int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__int, __type__string, __type__anon_mapType);`,
+  	__type__.anon_mapType = __mapType(__type__.int, __type__.string);   
+  	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);`,
 			`   x3 =  x('get', "3LL", "");`}
 
 		for i, src := range srcs {
@@ -484,9 +484,9 @@ func Test018ReadFromSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		srcs := []string{`x := []int{3, 4}`, "x3 := x[0]"}
-		expect := []string{`  	__type__anon_sliceType = __sliceType(__type__int); 
+		expect := []string{`  	__type__.anon_sliceType = __sliceType(__type__.int); 
   
-  	x = __type__anon_sliceType({[0]=3LL, 4LL});`, `x3 = __gi_GetRangeCheck(x,0);`}
+  	x = __type__.anon_sliceType({[0]=3LL, 4LL});`, `x3 = __gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
 			translation := inc.Tr([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
@@ -533,9 +533,9 @@ func Test020StructTypeDeclarations(t *testing.T) {
 
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
-	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
-  	__type__A.init("", {});  	
-  	 __type__A.__constructor = function(self) 
+	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__.A.init("", {});  	
+  	 __type__.A.__constructor = function(self) 
   		 return self; end;`)
 
 	})
@@ -552,14 +552,14 @@ func Test021StructTypeValues(t *testing.T) {
 		code := `type A struct{}`
 		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
 
-	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
-  	__type__A.init("", {});
-  	 __type__A.__constructor = function(self) 
+	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__.A.init("", {});
+  	 __type__.A.__constructor = function(self) 
   		 return self; end;
 `)
 		code = `var a A`
 		//cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a=__reg:NewInstance("A",{});`)
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a = __type__A.ptr({}, nil);`)
+		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a = __type__.A.ptr({}, nil);`)
 
 	})
 }
@@ -574,10 +574,10 @@ func Test022StructTypeValues(t *testing.T) {
 
 		code := `type A struct{ B int}`
 		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
-	__type__A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
-  	__type__A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__int, __tag= ""}});
+	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
+  	__type__.A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__.int, __tag= ""}});
   	
-  	 __type__A.__constructor = function(self, ...) 
+  	 __type__.A.__constructor = function(self, ...) 
   		 if self == nil then self = {}; end
   			 local B_ = ... ;
   			 self.B = B_ or 0LL;
@@ -588,7 +588,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-a = __type__A.ptr({}, 43LL);
+a = __type__.A.ptr({}, 43LL);
 `)
 		// a=__reg:NewInstance("A",{["B"]=43LL});
 
@@ -1023,8 +1023,8 @@ func Test042LenAtRepl(t *testing.T) {
 
 		code := `a := []int{3}; len(a)`
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
-    __type__anon_sliceType = __sliceType(__type__int);   
- 	a = __type__anon_sliceType({[0]=3LL});
+    __type__.anon_sliceType = __sliceType(__type__.int);   
+ 	a = __type__.anon_sliceType({[0]=3LL});
     print(#a);
 `)
 	})

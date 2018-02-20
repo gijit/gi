@@ -150,8 +150,8 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
-  	b = __type__anon_sliceType({[0]=8LL, 9LL});
+  	__type__.anon_sliceType = __sliceType(__type__.int); -- 'IMMEDIATE' anon type printing.
+  	b = __type__.anon_sliceType({[0]=8LL, 9LL});
   	a = gitesting.SummerAny(__lazy_ellipsis(b));
 `)
 
@@ -177,9 +177,9 @@ func Test062SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-__type__anon_sliceType = __sliceType(__type__int); -- 'IMMEDIATE' anon type printing.
+__type__.anon_sliceType = __sliceType(__type__.int); -- 'IMMEDIATE' anon type printing.
   
-  	a = fmt.Sprintf("yip %#v eee\n", __type__anon_sliceType({[0]=4LL, 5LL, 6LL}));`)
+  	a = fmt.Sprintf("yip %#v eee\n", __type__.anon_sliceType({[0]=4LL, 5LL, 6LL}));`)
 		LoadAndRunTestHelper(t, vm, translation)
 
 		LuaMustString(vm, "a", "yip []interface {}{4, 5, 6} eee\n")
@@ -202,9 +202,9 @@ func Test063SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	__type__anon_sliceType = __sliceType(__type__emptyInterface); 
+  	__type__.anon_sliceType = __sliceType(__type__.emptyInterface); 
 
-     a = fmt.Sprintf("yee %v %v %v haw\n", __lazy_ellipsis(__type__anon_sliceType({[0]=4LL, 5LL, 6LL})));  
+     a = fmt.Sprintf("yee %v %v %v haw\n", __lazy_ellipsis(__type__.anon_sliceType({[0]=4LL, 5LL, 6LL})));  
 			`)
 
 		LoadAndRunTestHelper(t, vm, translation)
@@ -229,8 +229,8 @@ func Test064SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	     __type__anon_sliceType = __sliceType(__type__int); 
-      	 a = fmt.Sprintf("%v %v\n", "hello", __type__anon_sliceType({[0]=4LL, 5LL, 6LL}));
+  	     __type__.anon_sliceType = __sliceType(__type__.int); 
+      	 a = fmt.Sprintf("%v %v\n", "hello", __type__.anon_sliceType({[0]=4LL, 5LL, 6LL}));
         `)
 		LoadAndRunTestHelper(t, vm, translation)
 
@@ -255,9 +255,9 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-     	__type__anon_sliceType = __sliceType(__type__int); 
+     	__type__.anon_sliceType = __sliceType(__type__.int); 
   
-     	fmt.Printf("heya %#v %v\n", "hello", __type__anon_sliceType({[0]=55LL, 56LL}), fmt.Printf);
+     	fmt.Printf("heya %#v %v\n", "hello", __type__.anon_sliceType({[0]=55LL, 56LL}), fmt.Printf);
         `)
 		LoadAndRunTestHelper(t, vm, translation)
 

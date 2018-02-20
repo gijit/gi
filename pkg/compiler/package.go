@@ -229,7 +229,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	if isPointer {
 		namedRecvType = ptr.Elem().(*types.Named)
 	}
-	typeName := "__type__" + c.objectName(namedRecvType.Obj())
+	typeName := "__type__." + c.objectName(namedRecvType.Obj())
 	funName := fun.Name.Name
 	if reservedKeywords[funName] {
 		funName += "_"
@@ -448,7 +448,7 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	if isMethod {
 		// commenting out makes 029 go green... hmmm.
 		// Otherwise we have a missing 'function' word vvv here  in the declaration
-		//        __type__Beagle.ptr.prototype.Write =      (b,with)
+		//        __type__.Beagle.ptr.prototype.Write =      (b,with)
 		//functionWord = ""
 	}
 

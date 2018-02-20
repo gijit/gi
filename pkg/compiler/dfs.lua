@@ -9,6 +9,46 @@
 
 local __dfsTestMode = false
 
+
+function __isBasicTyp(typ)
+   if typ == nil or
+      typ.kind == nil or
+   typ.named then
+      return false
+   end
+   
+   -- we can skip all basic types,
+   -- as they are already defined.
+   --
+   if typ.kind <= 16 or -- __kindComplex128
+      typ.kind == 24 or -- __kindString
+   typ.kind == 26 then  -- __kindUnsafePointer
+      return true
+   end
+   return false
+end
+
+-- a function on nodes to force instantiation of
+-- any types this node depends on, i.e. those
+-- types (not values) that were described but
+-- lazily instantated. Calls self.typ.bloom
+-- on our subtree in depth-first order.
+--
+local function __makeRequiredTypes(self)
+   if self.made then return end;
+   self.made = true;
+   if __isBasicTyp(self.typ) then
+      return -- basic types are always leaf nodes, no children.
+   end
+   
+   if self.children then
+      for _, ch in ipairs(self.children) do
+         __makeRequiredTypes(ch)
+      end
+   end
+   self.typ.bloom(self.typ)
+end
+
 function __newDfsNode(self, name, typ)
    if typ == nil then
       error "typ cannot be nil in __newDfsNode"
@@ -29,11 +69,13 @@ function __newDfsNode(self, name, typ)
    end
    local node= {
       visited=false,
-      children=false, -- lazily put in table, better printing.
+      children=false, -- lazily convert 'children' to a table upon first addition, for better printing.
       dedupChildren={},
       id = self.dfsNextID,
       name=name,
       typ=typ,
+      made=false, -- set to true when a value using the type is instantiated. i.e. when tfun is called.
+      makeRequiredTypes = __makeRequiredTypes,
    }
    self.dfsNextID=self.dfsNextID+1
    self.dfsDedup[typ] = node
@@ -47,22 +89,7 @@ function __newDfsNode(self, name, typ)
    return node
 end
 
-function __isBasicTyp(typ)
-   if typ == nil or
-      typ.kind == nil or
-   typ.named then
-      return false
-   end
-   
-   -- we can skip all basic types,
-   -- as they are already defined.
-   --
-   if typ.kind <= 16 or -- __kindComplex128
-      typ.kind == 24 or -- __kindString
-   typ.kind == 26 then  -- __kindUnsafePointer
-      return
-   end
-end
+
 
 -- par should be a node; e.g. typ.__dfsNode
 function __addChild(self, parTyp, chTyp)

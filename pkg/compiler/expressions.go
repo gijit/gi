@@ -1619,7 +1619,7 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	defer func() {
 		if xprn != nil {
 			pp("formatExprInternal('%s') returning '%s'", format, xprn.str)
-			if xprn.str == `(x_1 = __type__complex128((tonumber((a + b))), 0), __type__complex128(real(x_1) + 1, imag(x_1) + 0))` {
+			if xprn.str == `(x_1 = __type__.complex128((tonumber((a + b))), 0), __type__.complex128(real(x_1) + 1, imag(x_1) + 0))` {
 				panic("where?")
 			}
 		} else {

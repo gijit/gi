@@ -130,6 +130,7 @@ __gijit_tsys = true
 
 __bit = require("bit")
 
+__type__ ={}; -- global repo of types
 __global ={};
 __module ={};
 __packages = {}
@@ -375,7 +376,7 @@ __makeFunc = function(fn)
       -- TODO: port this!
       print("jea TODO: port this, what is __externalize doing???")
       error("NOT DONE: port this!")
-      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__emptyInterface);
+      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__.emptyInterface);
    end;
 end;
 __unused = function(v) end;
@@ -913,26 +914,43 @@ __valueSliceMT = {
 __tfunBasicMT = {
    __name = "__tfunBasicMT",
    __call = function(self, ...)
-      --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
-      --print(debug.traceback())
+      print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
+      print(debug.traceback())
+
+      local args = {...}
+      print("in __tfunBasicMT, start __st on args")
+      __st(args, "args to __tfunBasicMT.__call")
+      print("in __tfunBasicMT,   end __st on args")
+
+      print("in __tfunBasicMT, start __st on self")
+      __st(self, "self")
+      print("in __tfunBasicMT,   end __st on self")
       
-      --print("in __tfunBasicMT, start __st on ...")
-      --__st({...}, "__tfunBasicMT.dots")
-      --print("in __tfunBasicMT,   end __st on ...")
-
-      --print("in __tfunBasicMT, start __st on self")
-      --__st(self, "self")
-      --print("in __tfunBasicMT,   end __st on self")
-
+      local callName = args[1]
+      print("callName is "..callName)
+      if callName == "bloom" then
+         print("bloom call seen!")
+         return
+      end
+      
       local newInstance = {}
       if self ~= nil then
          if self.tfun ~= nil then
-            --print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
+            print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
 
             -- this makes a difference as to whether or
             -- not the ctor receives a nil 'this' or not...
             -- So *don't* set metatable here, let ctor do it.
             -- setmetatable(newInstance, __valueBasicMT)
+
+            -- define (bloom) any lazy types we depend on
+            if self.__dfsNode == nil then
+               error("typ.__dfsNode was nil for type "..self.__str.." at "..__st(self, "self", 0, true))
+            end
+            if not self.__dfsNode.made then
+               -- turn off to bootstrap, TODO: enable this!
+               --self.__dfsNode:makeRequiredTypes()
+            end
             
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
@@ -1654,24 +1672,24 @@ function __methodSet(typ)
 end;
 
 
-__type__bool    = __newType( 1, __kindBool,    "bool",     true, "", false, nil);
-__type__int = __newType( 8, __kindInt,     "int",   true, "", false, nil);
-__type__int8    = __newType( 1, __kindInt8,    "int8",     true, "", false, nil);
-__type__int16   = __newType( 2, __kindInt16,   "int16",    true, "", false, nil);
-__type__int32   = __newType( 4, __kindInt32,   "int32",    true, "", false, nil);
-__type__int64   = __newType( 8, __kindInt64,   "int64",    true, "", false, nil);
-__type__uint    = __newType( 8, __kindUint,    "uint",     true, "", false, nil);
-__type__uint8   = __newType( 1, __kindUint8,   "uint8",    true, "", false, nil);
-__type__uint16  = __newType( 2, __kindUint16,  "uint16",   true, "", false, nil);
-__type__uint32  = __newType( 4, __kindUint32,  "uint32",   true, "", false, nil);
-__type__uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil);
-__type__uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
-__type__float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
-__type__float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
-__type__complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
-__type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
-__type__string  = __newType(16, __kindString,  "string",   true, "", false, nil);
---__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+__type__.bool    = __newType( 1, __kindBool,    "bool",     true, "", false, nil);
+__type__.int = __newType( 8, __kindInt,     "int",   true, "", false, nil);
+__type__.int8    = __newType( 1, __kindInt8,    "int8",     true, "", false, nil);
+__type__.int16   = __newType( 2, __kindInt16,   "int16",    true, "", false, nil);
+__type__.int32   = __newType( 4, __kindInt32,   "int32",    true, "", false, nil);
+__type__.int64   = __newType( 8, __kindInt64,   "int64",    true, "", false, nil);
+__type__.uint    = __newType( 8, __kindUint,    "uint",     true, "", false, nil);
+__type__.uint8   = __newType( 1, __kindUint8,   "uint8",    true, "", false, nil);
+__type__.uint16  = __newType( 2, __kindUint16,  "uint16",   true, "", false, nil);
+__type__.uint32  = __newType( 4, __kindUint32,  "uint32",   true, "", false, nil);
+__type__.uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil);
+__type__.uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
+__type__.float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
+__type__.float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
+__type__.complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
+__type__.complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
+__type__.string  = __newType(16, __kindString,  "string",   true, "", false, nil);
+--__type__.unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 __ptrType = function(elem)
    if elem == nil then
@@ -1857,7 +1875,7 @@ __interfaceType = function(methods)
    end
    return typ;
 end;
-__type__emptyInterface = __interfaceType({});
+__type__.emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__String}, false) }});

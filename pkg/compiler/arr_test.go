@@ -89,9 +89,9 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 		cv.So(string(translation), matchesLuaSrc,
 			`
-  	__type__anon_arrayType = __arrayType(__type__int64, 3); -- 'IMMEDIATE' anon type printing.
+  	__type__.anon_arrayType = __arrayType(__type__.int64, 3); -- 'IMMEDIATE' anon type printing.
   
-  	a = __type__anon_arrayType({[0]=1LL, 3LL, 4LL});
+  	a = __type__.anon_arrayType({[0]=1LL, 3LL, 4LL});
   	__gi_SetRangeCheck(a, 0, (a[0] + (1LL)));
   	__gi_SetRangeCheck(a, 2, (a[2] - (1LL)));
   	b = a[0];

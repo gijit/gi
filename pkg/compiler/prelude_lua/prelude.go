@@ -1834,7 +1834,7 @@ __makeFunc = function(fn)
       -- TODO: port this!
       print("jea TODO: port this, what is __externalize doing???")
       error("NOT DONE: port this!")
-      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__emptyInterface);
+      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__.emptyInterface);
    end;
 end;
 __unused = function(v) end;
@@ -3102,24 +3102,24 @@ function __methodSet(typ)
 end;
 
 
-__type__bool    = __newType( 1, __kindBool,    "bool",     true, "", false, nil);
-__type__int = __newType( 8, __kindInt,     "int",   true, "", false, nil);
-__type__int8    = __newType( 1, __kindInt8,    "int8",     true, "", false, nil);
-__type__int16   = __newType( 2, __kindInt16,   "int16",    true, "", false, nil);
-__type__int32   = __newType( 4, __kindInt32,   "int32",    true, "", false, nil);
-__type__int64   = __newType( 8, __kindInt64,   "int64",    true, "", false, nil);
-__type__uint    = __newType( 8, __kindUint,    "uint",     true, "", false, nil);
-__type__uint8   = __newType( 1, __kindUint8,   "uint8",    true, "", false, nil);
-__type__uint16  = __newType( 2, __kindUint16,  "uint16",   true, "", false, nil);
-__type__uint32  = __newType( 4, __kindUint32,  "uint32",   true, "", false, nil);
-__type__uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil);
-__type__uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
-__type__float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
-__type__float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
-__type__complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
-__type__complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
-__type__string  = __newType(16, __kindString,  "string",   true, "", false, nil);
---__type__unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
+__type__.bool    = __newType( 1, __kindBool,    "bool",     true, "", false, nil);
+__type__.int = __newType( 8, __kindInt,     "int",   true, "", false, nil);
+__type__.int8    = __newType( 1, __kindInt8,    "int8",     true, "", false, nil);
+__type__.int16   = __newType( 2, __kindInt16,   "int16",    true, "", false, nil);
+__type__.int32   = __newType( 4, __kindInt32,   "int32",    true, "", false, nil);
+__type__.int64   = __newType( 8, __kindInt64,   "int64",    true, "", false, nil);
+__type__.uint    = __newType( 8, __kindUint,    "uint",     true, "", false, nil);
+__type__.uint8   = __newType( 1, __kindUint8,   "uint8",    true, "", false, nil);
+__type__.uint16  = __newType( 2, __kindUint16,  "uint16",   true, "", false, nil);
+__type__.uint32  = __newType( 4, __kindUint32,  "uint32",   true, "", false, nil);
+__type__.uint64  = __newType( 8, __kindUint64,  "uint64",   true, "", false, nil);
+__type__.uintptr = __newType( 8, __kindUintptr,    "uintptr",  true, "", false, nil);
+__type__.float32 = __newType( 8, __kindFloat32,    "float32",  true, "", false, nil);
+__type__.float64 = __newType( 8, __kindFloat64,    "float64",  true, "", false, nil);
+__type__.complex64  = __newType( 8, __kindComplex64,  "complex64",   true, "", false, nil);
+__type__.complex128 = __newType(16, __kindComplex128, "complex128",  true, "", false, nil);
+__type__.string  = __newType(16, __kindString,  "string",   true, "", false, nil);
+--__type__.unsafePointer = __newType( 8, __kindUnsafePointer, "unsafe.Pointer", true, "", false, nil);
 
 __ptrType = function(elem, selfDefnSrcCode)
    if elem == nil then
@@ -3305,7 +3305,7 @@ __interfaceType = function(methods, selfDefnSrcCode)
    end
    return typ;
 end;
-__type__emptyInterface = __interfaceType({});
+__type__.emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__String}, false) }});
@@ -4822,4 +4822,3 @@ return utf8
 -----------------------
 
 `
-

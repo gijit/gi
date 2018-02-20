@@ -293,9 +293,9 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	__type__anon_sliceType = __sliceType(__type__int); 
+  	__type__.anon_sliceType = __sliceType(__type__.int); 
   
-  	a = __type__anon_sliceType({[0]=5LL, 6LL, 4LL});
+  	a = __type__.anon_sliceType({[0]=5LL, 6LL, 4LL});
     `)
 
 		LoadAndRunTestHelper(t, vm, translation)
