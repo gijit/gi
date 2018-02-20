@@ -845,9 +845,9 @@ __valueSliceMT = {
    end,
    
    __index = function(t, k)
-
-      print("__valueSliceMT.__index called, k='"..tostring(k).."'");
-      __st(t.__val)
+      
+      --print("__valueSliceMT.__index called, k='"..tostring(k).."'");
+      --__st(t.__val)
       --print("callstack:"..tostring(debug.traceback()))
 
       local ktype = type(k)
@@ -868,10 +868,10 @@ __valueSliceMT = {
          print(debug.traceback())
          error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
       end
-      print("slice access bounds check ok: w = ", w)
-      __st(t.__array, "t.__array")
+      --print("slice access bounds check ok: w = ", w)
+      --__st(t.__array, "t.__array")
       local wv = t.__array[w]
-      print("wv back from t.__array[w] is: "..tostring(wv))
+      --print("wv back from t.__array[w] is: "..tostring(wv))
       return wv
    end,
 
