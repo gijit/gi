@@ -152,15 +152,15 @@ __go = function(fun, args)
       -- finally
 
       __curGoroutine = __noGoroutine;
-      if (__goroutine.exit) then -- also set by runtime.Goexit() --
+      if __goroutine.exit then -- also set by runtime.Goexit() --
          __totalGoroutines=__totalGoroutines-1;
          __goroutine.asleep = true;
       end
-      if (__goroutine.asleep) then
+      if __goroutine.asleep then
          __awakeGoroutines=__awakeGoroutines-1;
-         if (not __mainFinished and __awakeGoroutines == 0 and __checkForDeadlock) then
+         if not __mainFinished and __awakeGoroutines == 0 and __checkForDeadlock then
             console.error("fatal error: all goroutines are asleep - deadlock!");
-            if (__global.process ~= nil) then
+            if __global.process ~= nil then
                __global.process.exit(2);
             end
          end
@@ -169,7 +169,7 @@ __go = function(fun, args)
       -- catch (err)
       local ok, err = unpack(res)
       if not ok then
-         if (not __goroutine.exit) then
+         if not __goroutine.exit then
             -- rethrow
             error(err);
          end
@@ -208,12 +208,12 @@ __runScheduled = function()
 end;
 
 __schedule = function(goroutine) 
-   if (goroutine.asleep) then
+   if goroutine.asleep then
       goroutine.asleep = false;
       __awakeGoroutines=__awakeGoroutines+1;
    end
    __scheduled.push(goroutine);
-   if (__curGoroutine == __noGoroutine) then
+   if __curGoroutine == __noGoroutine then
       __runScheduled();
    end
 end;
@@ -227,22 +227,22 @@ __setTimeout = function(f, t)
 end;
 
 __block = function() 
-   if (__curGoroutine == __noGoroutine) then
+   if __curGoroutine == __noGoroutine then
       __throwRuntimeError("cannot block in JavaScript callback, fix by wrapping code in goroutine");
    end
    __curGoroutine.asleep = true;
 end;
 
 __send = function(chan, value) 
-   if (chan.__closed) then
+   if chan.__closed then
       __throwRuntimeError("send on closed channel");
    end
    local queuedRecv = chan.__recvQueue.shift();
-   if (queuedRecv ~= nil) then
+   if queuedRecv ~= nil then
       queuedRecv({value, true});
       return;
    end
-   if (#chan.__buffer < chan.__capacity) then
+   if #chan.__buffer < chan.__capacity then
       chan.__buffer.push(value);
       return;
    end
@@ -257,7 +257,7 @@ __send = function(chan, value)
    __block();
    return {
       __blk= function() 
-         if (closedDuringSend) then
+         if closedDuringSend then
             __throwRuntimeError("send on closed channel");
          end
       end
@@ -294,14 +294,14 @@ __close = function(chan)
    chan.__closed = true;
    while true do
       local queuedSend = chan.__sendQueue.shift();
-      if (queuedSend == nil) then
+      if queuedSend == nil then
          break;
       end
       queuedSend(true); -- will panic --
    end
    while true do
       local queuedRecv = chan.__recvQueue.shift();
-      if (queuedRecv == nil) then
+      if queuedRecv == nil then
          break;
       end
       queuedRecv({chan.__elem.zero(), false});
