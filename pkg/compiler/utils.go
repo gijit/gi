@@ -437,8 +437,8 @@ func (tns typeNameSetting) String() string {
 	panic("unknown tns")
 }
 
-// re-port typeName, see if it brings back mat_test 501 package level vars/funcs
-func (c *funcContext) typeName(level int, ty types.Type) string {
+// re-port typeName, did not back mat_test 501 package level vars/funcs
+func (c *funcContext) typeNameReport(level int, ty types.Type) string {
 
 	switch t := ty.(type) {
 	case *types.Basic:
@@ -466,8 +466,7 @@ func (c *funcContext) typeName(level int, ty types.Type) string {
 	return anonType.Name()
 }
 
-// re-port typeName, see if it brings back mat_test 501 package level vars/funcs
-func (c *funcContext) typeNameGijit(level int, ty types.Type) (res string) {
+func (c *funcContext) typeName(level int, ty types.Type) (res string) {
 
 	res, _, _, _ = c.typeNameWithAnonInfo(ty)
 	return

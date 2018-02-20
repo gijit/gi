@@ -239,7 +239,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
 __type__anon_sliceType = __sliceType(__type__int);
 a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
-hmm = function() for k, v in pairs(a) do print(k, " ", v);  end end;`)
+hmm = function() for k, v in ipairs(a) do print(k, " ", v);  end end;`)
 	})
 }
 
@@ -256,7 +256,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
   	__type__anon_sliceType = __sliceType(__type__int); 
   	a = __type__anon_sliceType({[0]=1LL, 2LL, 3LL});
-hmm = function() for i, _ in pairs(a) do print(i, __gi_GetRangeCheck(a, i)); end end;`)
+hmm = function() for i, _ in ipairs(a) do print(i, __gi_GetRangeCheck(a, i)); end end;`)
 	})
 }
 

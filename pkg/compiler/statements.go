@@ -769,7 +769,14 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	}
 	key := nameHelper(s.Key)
 	value := nameHelper(s.Value)
-	c.Printf("for %s, %s in pairs(%s) do ", key, value, c.translateExpr(s.X, nil))
+	pairs := "ipairs" // slice, array
+
+	exprType := c.p.TypeOf(s.X)
+	switch exprType.(type) {
+	case *types.Map:
+		pairs = "pairs"
+	}
+	c.Printf("for %s, %s in %s(%s) do ", key, value, pairs, c.translateExpr(s.X, nil))
 
 	prevEV := c.p.escapingVars
 	c.handleEscapingVars(body)
