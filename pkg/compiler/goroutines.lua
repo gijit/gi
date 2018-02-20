@@ -38,7 +38,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
    outerPanicStackDepth = __panicStackDepth;
    outerPanicValue = __panicValue;
 
-   localPanicValue = __curGoroutine.panicStack.pop();
+   local localPanicValue = __curGoroutine.panicStack.pop();
    if localPanicValue ~= nil then
       __panicStackDepth = __getStackDepth();
       __panicValue = localPanicValue;
@@ -53,20 +53,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
                             if deferred == nil then
                                -- The panic reached the top of the stack. Clear it and throw it as a Lua error. --
                                __panicStackDepth = nil;
-                               if localPanicValue.Object.__instanceof == "Error" then
-                                  error(localPanicValue.Object);
-                               end
-                               local msg;
-                               if localPanicValue.__constructor == __type__string then
-                                  msg = localPanicValue.__val;
-                               elseif localPanicValue.Error ~= nil then
-                                  msg = localPanicValue.Error();
-                               elseif localPanicValue.String ~= nil then
-                                  msg = localPanicValue.String();
-                               else 
-                                  msg = localPanicValue;
-                               end
-                               error( Error(msg)); -- jea: was new Error
+                               error(localPanicValue)
                             end
                          end
                          local call = deferred.pop();
