@@ -345,7 +345,10 @@ func (c *funcContext) setType(e ast.Expr, t types.Type) ast.Expr {
 
 func (c *funcContext) pkgVar(pkg *types.Package) string {
 	if pkg == c.p.Pkg {
-		return "__pkg"
+		if !c.topLevelRepl {
+			return "__pkg"
+		}
+		return ""
 	}
 
 	pkgVar, found := c.p.pkgVars[pkg.Path()]

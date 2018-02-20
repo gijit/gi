@@ -176,10 +176,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			fileSet:      fileSet,
 			files:        files,
 		},
-		allVars:     make(map[string]int),
-		flowDatas:   map[*types.Label]*flowData{nil: {}},
-		caseCounter: 1,
-		labelCases:  make(map[*types.Label]int),
+		allVars:      make(map[string]int),
+		flowDatas:    map[*types.Label]*flowData{nil: {}},
+		caseCounter:  1,
+		labelCases:   make(map[*types.Label]int),
+		topLevelRepl: true,
 	}
 	for name := range reservedKeywords {
 		c.allVars[name] = 1

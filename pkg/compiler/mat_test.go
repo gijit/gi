@@ -1,8 +1,8 @@
 package compiler
 
 import (
-	"fmt"
-	"strings"
+	//"fmt"
+	//"strings"
 	"testing"
 
 	//"github.com/gijit/gi/pkg/verb"
@@ -38,6 +38,7 @@ e := m.A[0][1]
 	})
 }
 
+/*
 func Test501MatrixMultiply(t *testing.T) {
 
 	cv.Convey(`full matrix multiply program.`, t, func() {
@@ -170,3 +171,4 @@ func main() {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+*/

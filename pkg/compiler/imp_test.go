@@ -288,6 +288,7 @@ func Test087ShadowRegexp(t *testing.T) {
 		// gotta translate to a.FindStringIndex(), not a:FindStringIndex()
 		// because FindStringIndex doesn't take a first 'self' parameter.
 
+		// expressions.go:864-869 for ':' versus '.' in method calls.
 		cv.So(string(translation), matchesLuaSrc,
 			`
 	a = regexp.MustCompile("llo");

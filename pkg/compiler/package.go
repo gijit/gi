@@ -91,6 +91,8 @@ type funcContext struct {
 	intType types.Type
 
 	TypeNameSetting typeNameSetting
+
+	topLevelRepl bool
 }
 
 type flowData struct {

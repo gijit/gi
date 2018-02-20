@@ -565,7 +565,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				skipCase := c.caseCounter
 				c.caseCounter++
 				resultVar := c.newVariable("_v")
-				c.Printf("if (%s) { %s = true; $s = %d; continue s; }", c.translateExpr(e.X, nil), resultVar, skipCase)
+				// was "continue s;"
+				c.Printf("if (%s) { %s = true; $s = %d; goto s; }", c.translateExpr(e.X, nil), resultVar, skipCase)
 				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
@@ -857,8 +858,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 				isLuar := typesutil.IsLuarObject(declaredFuncRecv)
 
-				//fmt.Printf("\n isLuar='%v', recv = '%#v', declaredFuncRecv = '%#v'\n",
-				//	isLuar, recv, declaredFuncRecv)
+				fmt.Printf("\n isLuar='%v', recv = '%#v', declaredFuncRecv = '%#v'\n",
+					isLuar, recv, declaredFuncRecv)
 
 				if isLuar {
 					// jea: then change back to . for Luar cdata methods. imp_test 087

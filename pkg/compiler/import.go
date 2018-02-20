@@ -171,9 +171,9 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.
-	//shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
-	//return ic.ActuallyImportPackage(path, "", shadowPath)
-	return ic.ActuallyImportPackage(path, "", path)
+	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
+	return ic.ActuallyImportPackage(path, "", shadowPath)
+	//return ic.ActuallyImportPackage(path, "", path)
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
