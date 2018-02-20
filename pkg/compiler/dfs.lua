@@ -12,8 +12,7 @@ local __dfsTestMode = false
 
 function __isBasicTyp(typ)
    if typ == nil or
-      typ.kind == nil or
-   typ.named then
+   typ.kind == nil then
       return false
    end
    
@@ -22,7 +21,9 @@ function __isBasicTyp(typ)
    --
    if typ.kind <= 16 or -- __kindComplex128
       typ.kind == 24 or -- __kindString
-   typ.kind == 26 then  -- __kindUnsafePointer
+      typ.kind == 26 or -- __kindUnsafePointer
+   (typ.kind == 20 and typ.__str == "interface {}") then
+
       return true
    end
    return false

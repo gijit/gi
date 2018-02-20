@@ -927,7 +927,8 @@ __tfunBasicMT = {
       print("in __tfunBasicMT,   end __st on self")
       
       local callName = args[1]
-      print("callName is "..callName)
+      print("callName/args[1] is ")
+      __st(args[1], "args[1]")
       if callName == "bloom" then
          print("bloom call seen!")
          return
