@@ -63,9 +63,9 @@ func (check *Checker) ident(x *operand, e *ast.Ident, def *Named, path []*TypeNa
 				//check.pkg.scope.Dump()
 
 				//pp("check.pkg.scope = '%s' with %v child scopes", check.pkg.scope, len(check.pkg.scope.children))
-				for i, ch := range check.pkg.scope.children {
-					//pp(" [%v] child scope: '%s'", i, ch)
-				}
+				//for i, ch := range check.pkg.scope.children {
+				//pp(" [%v] child scope: '%s'", i, ch)
+				//}
 
 			}
 			check.errorf(e.Pos(), "undeclared name: %s", e.Name)
