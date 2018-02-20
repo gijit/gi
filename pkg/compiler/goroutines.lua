@@ -2,7 +2,7 @@
 
 __stackDepthOffset = 0;
 __getStackDepth = function() 
-  var err = new Error();
+  local err = new Error();
   if (err.stack == nil) then
     return nil;
   end
@@ -15,7 +15,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
     throw jsErr;
   end
   if (jsErr ~= null) then
-    var newErr = null;
+    local newErr = null;
     try {
       __curGoroutine.deferStack.push(deferred);
       __panic(new __jsErrorPtr(jsErr));
@@ -30,7 +30,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
     return;
   end
 
-  __stackDepthOffset--;
+  __stackDepthOffset=__stackDepthOffset-1;
   outerPanicStackDepth = __panicStackDepth;
   outerPanicValue = __panicValue;
 
@@ -50,7 +50,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
           if (localPanicValue.Object instanceof Error) then
             throw localPanicValue.Object;
           end
-          var msg;
+          local msg;
           if (localPanicValue.constructor == __String) then
             msg = localPanicValue.__val;
           elseif (localPanicValue.Error ~= nil) then
@@ -63,7 +63,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
           throw Error(msg); -- jea: was new Error
         end
       end
-      var call = deferred.pop();
+      local call = deferred.pop();
       if (call == nil) then
         __curGoroutine.deferStack.pop();
         if (localPanicValue ~= nil) then
@@ -72,7 +72,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
         end
         return;
       end
-      var r = call[0].apply(call[2], call[1]);
+      local r = call[0].apply(call[2], call[1]);
       if (r && r.__blk ~= nil) then
         deferred.push([r.__blk, {}, r]);
         if (fromPanic) then
@@ -93,7 +93,7 @@ __callDeferred = function(deferred, jsErr, fromPanic)
       __panicStackDepth = outerPanicStackDepth;
       __panicValue = outerPanicValue;
     end
-    __stackDepthOffset++;
+    __stackDepthOffset=__stackDepthOffset+1;
   }
 end;
 
@@ -110,16 +110,16 @@ __recover = function()
 end;
 __throw = function(err)  throw err; end;
 
-__noGoroutine = { asleep: false, exit: false, deferStack: {}, panicStack: {} };
+__noGoroutine = { asleep= false, exit= false, deferStack= {}, panicStack= {} };
 __curGoroutine = __noGoroutine, __totalGoroutines = 0, __awakeGoroutines = 0, __checkForDeadlock = true;
 __mainFinished = false;
 __go = function(fun, args) 
-  __totalGoroutines++;
-  __awakeGoroutines++;
-  var __goroutine = function() 
+   __totalGoroutines=__totalGoroutines+1;
+   __awakeGoroutines=__awakeGoroutines+1;
+  local __goroutine = function() 
     try {
       __curGoroutine = __goroutine;
-      var r = fun.apply(nil, args);
+      local r = fun.apply(nil, args);
       if (r && r.__blk ~= nil) then
         fun = function()  return r.__blk(); end;
         args = {};
@@ -133,17 +133,17 @@ __go = function(fun, args)
     } finally {
       __curGoroutine = __noGoroutine;
       if (__goroutine.exit) then -- also set by runtime.Goexit() --
-        __totalGoroutines--;
+         __totalGoroutines=__totalGoroutines-1;
         __goroutine.asleep = true;
       end
       if (__goroutine.asleep) then
-        __awakeGoroutines--;
-        if (!__mainFinished && __awakeGoroutines == 0 && __checkForDeadlock) then
-          console.error("fatal error: all goroutines are asleep - deadlock!");
-          if (__global.process ~= nil) then
-            __global.process.exit(2);
-          end
-        end
+         __awakeGoroutines=__awakeGoroutines-1;
+         if (!__mainFinished && __awakeGoroutines == 0 && __checkForDeadlock) then
+            console.error("fatal error: all goroutines are asleep - deadlock!");
+            if (__global.process ~= nil) then
+               __global.process.exit(2);
+            end
+         end
       end
     }
   end;
@@ -157,7 +157,7 @@ end;
 __scheduled = {};
 __runScheduled = function() 
   try {
-    var r;
+    local r;
     while ((r = __scheduled.shift()) ~= nil) do
       r();
     end
@@ -171,7 +171,7 @@ end;
 __schedule = function(goroutine) 
   if (goroutine.asleep) then
     goroutine.asleep = false;
-    __awakeGoroutines++;
+    __awakeGoroutines=__awakeGoroutines+1;
   end
   __scheduled.push(goroutine);
   if (__curGoroutine == __noGoroutine) then
@@ -180,9 +180,9 @@ __schedule = function(goroutine)
 end;
 
 __setTimeout = function(f, t) 
-  __awakeGoroutines++;
+   __awakeGoroutines=__awakeGoroutines+1;
   return setTimeout(function() 
-    __awakeGoroutines--;
+        __awakeGoroutines=__awakeGoroutines-1;
     f();
   end, t);
 end;
@@ -198,7 +198,7 @@ __send = function(chan, value)
   if (chan.__closed) then
     __throwRuntimeError("send on closed channel");
   end
-  var queuedRecv = chan.__recvQueue.shift();
+  local queuedRecv = chan.__recvQueue.shift();
   if (queuedRecv ~= nil) then
     queuedRecv([value, true]);
     return;
@@ -217,7 +217,7 @@ __send = function(chan, value)
   end);
   __block();
   return {
-    __blk: function() 
+    __blk= function() 
       if (closedDuringSend) then
         __throwRuntimeError("send on closed channel");
       end
@@ -225,11 +225,11 @@ __send = function(chan, value)
   };
 end;
 __recv = function(chan) 
-  var queuedSend = chan.__sendQueue.shift();
+  local queuedSend = chan.__sendQueue.shift();
   if (queuedSend ~= nil) then
     chan.__buffer.push(queuedSend(false));
   end
-  var bufferedValue = chan.__buffer.shift();
+  local bufferedValue = chan.__buffer.shift();
   if (bufferedValue ~= nil) then
     return [bufferedValue, true];
   end
@@ -237,9 +237,9 @@ __recv = function(chan)
     return [chan.__elem.zero(), false];
   end
 
-  var thisGoroutine = __curGoroutine;
-  var f = { __blk: function()  return this.value; end };
-  var queueEntry = function(v) 
+  local thisGoroutine = __curGoroutine;
+  local f = { __blk= function()  return this.value; end };
+  local queueEntry = function(v) 
     f.value = v;
     __schedule(thisGoroutine);
   end;
@@ -253,14 +253,14 @@ __close = function(chan)
   end
   chan.__closed = true;
   while (true) do
-    var queuedSend = chan.__sendQueue.shift();
+    local queuedSend = chan.__sendQueue.shift();
     if (queuedSend == nil) then
       break;
     end
     queuedSend(true); -- will panic --
   end
   while (true) do
-    var queuedRecv = chan.__recvQueue.shift();
+    local queuedRecv = chan.__recvQueue.shift();
     if (queuedRecv == nil) then
       break;
     end
@@ -268,9 +268,8 @@ __close = function(chan)
   end
 end;
 __select = function(comms)
-   var ready = {};
-   var selection = -1;
-   --for i = 0; i < comms.length; i++) 
+   local ready = {};
+   local selection = -1;
    for i, comm in ipairs(comms) do
       local chan = comm[1];
       --switch (comm.length)
@@ -297,41 +296,47 @@ __select = function(comms)
       end -- end switch
    end
 
-  if (ready.length ~= 0) then
-    selection = ready[Math.floor(Math.random() * ready.length)];
-  end
-  if (selection ~= -1) then
-    var comm = comms[selection];
-    switch (comm.length) {
-    case 0: -- default --
-      return [selection];
-    case 1: -- recv --
-      return [selection, __recv(comm[0])];
-    case 2: -- send --
-      __send(comm[0], comm[1]);
-      return [selection];
+   if #ready  ~= 0 then
+      -- jea NB lua's math.random doesn't return 0.
+      selection = ready[math.random(#ready)]; 
+   end
+   if (selection ~= -1) then
+    local comm = comms[selection];
+    -- switch (comm.length)
+    local comm_len = #comm
+    if comm_len == 0 then
+      -- default --
+       return {selection};
+    elseif comm_len == 1 then
+       -- recv --
+       return {selection, __recv(comm[0])};
+    elseif comm_len == 2 then
+       -- send --
+       __send(comm[0], comm[1]);
+       return {selection};
     end
   end
 
-  var entries = {};
-  var thisGoroutine = __curGoroutine;
-  var f = { __blk: function()  return this.selection; end };
-  var removeFromQueues = function() 
-    for (var i = 0; i < entries.length; i++) {
-      var entry = entries[i];
-      var queue = entry[0];
-      var index = queue.indexOf(entry[1]);
+  local entries = {};
+  local thisGoroutine = __curGoroutine;
+  local f = { __blk= function()  return this.selection; end };
+  local removeFromQueues = function() 
+   for i,entry in ipairs(entries) do
+      local queue = entry[1];
+      local index = queue.indexOf(entry[2]);
       if (index ~= -1) then
-        queue.splice(index, 1);
+        queue.splice(index, 2);
       end
     end
   end;
-  for (var i = 0; i < comms.length; i++) {
+  for i,comm in ipairs(comms) do
     (function(i) 
-      var comm = comms[i];
-      switch (comm.length) {
-      case 1: -- recv --
-        var queueEntry = function(value) 
+      local comm = comms[i];
+      --switch (comm.length)
+      local comm_len = #comm
+      if comm_len == 1 then
+         -- recv --
+        local queueEntry = function(value) 
           f.selection = [i, value];
           removeFromQueues();
           __schedule(thisGoroutine);
@@ -339,9 +344,10 @@ __select = function(comms)
         entries.push([comm[0].__recvQueue, queueEntry]);
         comm[0].__recvQueue.push(queueEntry);
         break;
-      case 2: -- send --
-        var queueEntry = function() 
-          if (comm[0].__closed) then
+      elseif comm_len == 2 then
+        -- send --
+        local queueEntry = function() 
+          if (comm[1].__closed) then
             __throwRuntimeError("send on closed channel");
           end
           f.selection = [i];
@@ -349,8 +355,8 @@ __select = function(comms)
           __schedule(thisGoroutine);
           return comm[1];
         end;
-        entries.push([comm[0].__sendQueue, queueEntry]);
-        comm[0].__sendQueue.push(queueEntry);
+        entries.push([comm[1].__sendQueue, queueEntry]);
+        comm[1].__sendQueue.push(queueEntry);
         break;
       end
     end)(i);
