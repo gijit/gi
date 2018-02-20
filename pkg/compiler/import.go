@@ -80,10 +80,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	fmt.Printf("GiImportFunc called with path = '%s'\n", path)
-	if path == "github.com/gijit/gi/pkg/compiler/shadow/math/rand" {
-		panic("where?")
-	}
+	pp("GiImportFunc called with path = '%s'\n", path)
 
 	var pkg *types.Package
 

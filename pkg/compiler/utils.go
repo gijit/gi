@@ -351,7 +351,7 @@ func (c *funcContext) pkgVar(pkg *types.Package) string {
 
 	pkgVar, found := c.p.pkgVars[pkg.Path()]
 	if !found {
-		pkgVar = fmt.Sprintf(`$packages["%s"]`, pkg.Path())
+		pkgVar = fmt.Sprintf(`__packages["%s"]`, pkg.Path())
 	}
 	return pkgVar
 }
@@ -509,7 +509,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
-		fmt.Printf("whenAnonPrint = %v, for anonType: '%s'.\n", whenAnonPrint, anonType.Name())
+		//fmt.Printf("whenAnonPrint = %v, for anonType: '%s'.\n", whenAnonPrint, anonType.Name())
 		switch whenAnonPrint {
 		case DELAYED:
 			//panic("where?")

@@ -142,7 +142,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		c.Flattened[call] = true
 		importDecls = append(importDecls, &Decl{
 			Vars:     []string{c.p.pkgVars[impPath]},
-			DeclCode: []byte(fmt.Sprintf("\t%s = $packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
+			DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			InitCode: c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }),
 		})
 	}

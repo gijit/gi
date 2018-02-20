@@ -454,12 +454,13 @@ func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) 
 
 	files := []*ast.File{file}
 	file.Name = &ast.Ident{
-		Name: "", // jea: was "/repl", but that seemed to cause scope issues.
+		Name: "main",
 	}
 
 	//tr.CurPkg.Arch,
 	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify)
 	panicOn(err)
+	arch.ImportPath = "main"
 	//pp("archive = '%#v'", tr.CurPkg.Arch)
 	//pp("len(tr.CurPkg.Arch.Declarations)= '%v'", len(tr.CurPkg.Arch.Declarations))
 	//pp("len(tr.CurPkg.Arch.NewCode)= '%v'", len(tr.CurPkg.Arch.NewCodeText))
