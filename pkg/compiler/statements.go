@@ -799,6 +799,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	// declaring the two locals in the outer do scope.
 	isAssign := true
 	valUnder := false
+	keyUnder := false
 
 	addMe := ""
 	if isAssign {
@@ -807,6 +808,7 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 				addMe = fmt.Sprintf("local %s; ", key)
 			} else {
 				addMe = fmt.Sprintf("local %s = 0; ", key)
+				keyUnder = true
 			}
 		}
 		if value != "_" {
@@ -819,14 +821,18 @@ func (c *funcContext) translateForRangeStmt(s *ast.RangeStmt, body *ast.BlockStm
 	if isMap {
 		c.Printf("do %[5]s\n for %[1]s_, %[2]s_ in pairs(%[3]s) do \n %[1]s = %[4]s(%[1]s_);\n %[2]s = %[2]s_;", key, value, target, keycast, addMe)
 	} else {
+		// slice or array
 
 		ipairs = true
 		// eschew ipairs: numeric for is 0 based.
 
 		// for loops AND array indexes in Lua require float64
 		s := fmt.Sprintf("do  %[3]s\n\t local %[1]s_ = 0; local __lim = __lenz(%[2]s);\n\t while %[1]s_ < __lim do\n\t\n", key, target, addMe)
+		if !keyUnder {
+			s += fmt.Sprintf("\t %[1]s = %[1]s_;\n", key)
+		}
 		if !valUnder {
-			s += fmt.Sprintf("\t local %s = %s[%s];\n", value, target, key)
+			s += fmt.Sprintf("\t %s = %s[%s_];\n", value, target, key)
 		}
 		c.Printf("%s", s)
 	}
