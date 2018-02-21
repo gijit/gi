@@ -34,7 +34,8 @@ slc := m.A[1]
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -153,8 +154,8 @@ func MatScaMul(m *Matrix, x float64) (r *Matrix) {
 
 var done bool
 func main() {
-	sz := 500
-	for i := 0; i < 10; i++ {
+	sz := 3
+	for i := 0; i < 1; i++ {
 		a := NewMatrix(sz, sz, true)
 		b := NewMatrix(sz, sz, true)
 		t0 := time.Now()
@@ -174,7 +175,9 @@ func main() {
 		//verb.VerboseVerbose = true
 
 		importPath := ""
-		translation, err := inc.FullPackage([]byte(src), importPath)
+		_ = importPath
+		//translation, err := inc.FullPackage([]byte(src), importPath)
+		translation, err := inc.Tr([]byte(src))
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		fmt.Printf("go original source:")

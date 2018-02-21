@@ -36,10 +36,14 @@ func Test001LuaTranslation(t *testing.T) {
 	inc := NewIncrState(vm, nil)
 
 	cv.Convey("assignment", t, func() {
-		cv.So(string(inc.Tr([]byte("a := 10;"))), matchesLuaSrc, "a = 10LL;")
+		by, err := inc.Tr([]byte("a := 10;"))
+		panicOn(err)
+		cv.So(string(by), matchesLuaSrc, "a = 10LL;")
 		pp("GOOD: past 1st")
 
-		cv.So(string(inc.Tr([]byte("func adder(a, b int) int { return a + b};  sum1 := adder(5,5)"))), matchesLuaSrc,
+		by, err = inc.Tr([]byte("func adder(a, b int) int { return a + b};  sum1 := adder(5,5)"))
+		panicOn(err)
+		cv.So(string(by), matchesLuaSrc,
 			`adder = function(a, b) 
 				         return a + b;
                      end;
@@ -47,11 +51,16 @@ func Test001LuaTranslation(t *testing.T) {
 
 		pp("GOOD: past 2nd")
 
-		cv.So(string(inc.Tr([]byte("sum2 := adder(a,a)"))), matchesLuaSrc,
+		by, err = inc.Tr([]byte("sum2 := adder(a,a)"))
+		panicOn(err)
+		cv.So(string(by), matchesLuaSrc,
 			`sum2 = adder(a, a);`)
 		pp("GOOD: past 3rd")
 
-		cv.So(string(inc.Tr([]byte("func multiplier(a, b int) int { return a * b};  prod1 := multiplier(5,5)"))), matchesLuaSrc,
+		by, err = inc.Tr([]byte("func multiplier(a, b int) int { return a * b};  prod1 := multiplier(5,5)"))
+		panicOn(err)
+
+		cv.So(string(by), matchesLuaSrc,
 			`multiplier = function(a, b) 
 				         return (a * b);
                      end;
@@ -70,7 +79,7 @@ func Test002LuaEvalIncremental(t *testing.T) {
 
 	srcs := []string{"a := 10;", "func adder(a, b int) int { return a + b}; ", "sum := adder(a,a);"}
 	for _, src := range srcs {
-		translation := inc.Tr([]byte(src))
+		translation := inc.trMust([]byte(src))
 		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -96,7 +105,7 @@ func Test004ExpressionsAtRepl(t *testing.T) {
 	inc := NewIncrState(vm, nil)
 
 	cv.Convey("expressions alone at top level", t, func() {
-		cv.So(string(inc.Tr([]byte(`a:=10;`))), matchesLuaSrc, `a=10LL;`)
+		cv.So(string(inc.trMust([]byte(`a:=10;`))), matchesLuaSrc, `a=10LL;`)
 	})
 }
 
@@ -107,8 +116,8 @@ func Test005BacktickStringsToLua(t *testing.T) {
 	inc := NewIncrState(vm, nil)
 
 	cv.Convey("Go backtick delimited strings should translate to Lua", t, func() {
-		cv.So(string(inc.Tr([]byte("s:=`\n\n\"hello\"\n\n`"))), matchesLuaSrc, `s = "\n\n\"hello\"\n\n";`)
-		cv.So(string(inc.Tr([]byte("r:=`\n\n]]\"hello\"\n\n`"))), matchesLuaSrc, `r = "\n\n]]\"hello\"\n\n";`)
+		cv.So(string(inc.trMust([]byte("s:=`\n\n\"hello\"\n\n`"))), matchesLuaSrc, `s = "\n\n\"hello\"\n\n";`)
+		cv.So(string(inc.trMust([]byte("r:=`\n\n]]\"hello\"\n\n`"))), matchesLuaSrc, `r = "\n\n]]\"hello\"\n\n";`)
 	})
 }
 
@@ -120,12 +129,12 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 	inc := NewIncrState(vm, nil)
 
 	cv.Convey("At the repl, `a:=1; a:=2;` is allowed. We disable the traditional Go re-definition checks at the REPL", t, func() {
-		cv.So(string(inc.Tr([]byte("a:=1; a:=2;"))), matchesLuaSrc, `a=1LL; a=2LL;`)
+		cv.So(string(inc.trMust([]byte("a:=1; a:=2;"))), matchesLuaSrc, `a=1LL; a=2LL;`)
 
 		// and in separate calls:
-		cv.So(string(inc.Tr([]byte("r:=`\n\n]]\"hello\"\n\n`"))), matchesLuaSrc, `r = "\n\n]]\"hello\"\n\n";`)
+		cv.So(string(inc.trMust([]byte("r:=`\n\n]]\"hello\"\n\n`"))), matchesLuaSrc, `r = "\n\n]]\"hello\"\n\n";`)
 		// and redefinition of r should work:
-		cv.So(string(inc.Tr([]byte("r:=`a new definition`"))), matchesLuaSrc, `r = "a new definition";`)
+		cv.So(string(inc.trMust([]byte("r:=`a new definition`"))), matchesLuaSrc, `r = "a new definition";`)
 	})
 }
 */
@@ -139,11 +148,11 @@ func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 	cv.Convey("At the repl, in separate commands`a:=1; a=2;` sets a to 2", t, func() {
 
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte("a:=1"))), matchesLuaSrc, `a=1LL;`)
-		cv.So(string(inc.Tr([]byte("b:=2"))), matchesLuaSrc, `b=2LL;`)
+		cv.So(string(inc.trMust([]byte("a:=1"))), matchesLuaSrc, `a=1LL;`)
+		cv.So(string(inc.trMust([]byte("b:=2"))), matchesLuaSrc, `b=2LL;`)
 		// and redefinition of a should work:
 		pp("starting on a=2;")
-		cv.So(string(inc.Tr([]byte("a=2;"))), matchesLuaSrc, `a=2LL;`)
+		cv.So(string(inc.trMust([]byte("a=2;"))), matchesLuaSrc, `a=2LL;`)
 	})
 }
 
@@ -157,7 +166,7 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 
 		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under or at 30")} }`
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a=20LL; hmm = function() if (a > 30LL) then print("over 30"); else print("under or at 30"); end end;`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=20LL; hmm = function() if (a > 30LL) then print("over 30"); else print("under or at 30"); end end;`)
 	})
 }
 
@@ -171,7 +180,7 @@ func Test009NumericalForLoop(t *testing.T) {
 
 		// at top-level
 		code := `for i:=0; i < 10; i++ { i=i+2 }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   		i = 0LL;
   		while (true) do
   			if (not (i < 10LL)) then break; end
@@ -182,7 +191,7 @@ func Test009NumericalForLoop(t *testing.T) {
 
 		// inside a func
 		code = `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a=5LL;
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=5LL;
   	hmm = function() 
   		local i = 0LL;
   		while (true) do
@@ -205,7 +214,7 @@ func Test010Slice(t *testing.T) {
 	cv.Convey("slice literal should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 	__type__.anon_sliceType = __sliceType(__type__.int);
 a=__type__.anon_sliceType({[0]=1LL,2LL,3LL});`)
 	})
@@ -220,7 +229,7 @@ func Test011MapAndRangeForLoop(t *testing.T) {
 	cv.Convey("maps and range for loops should compile into lua", t, func() {
 
 		code := `a:=make(map[int]int); a[1]=10; a[2]=20; ktot:=0; vtot:=0; func hmm() { for k, v := range a { ktot+=k; vtot+=v; } }; hmm();`
-		lua := string(inc.Tr([]byte(code)))
+		lua := string(inc.trMust([]byte(code)))
 		pp("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "ktot", 3)
@@ -238,7 +247,7 @@ func Test012SliceRangeForLoop(t *testing.T) {
 	cv.Convey("range over a slice should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}; tot:=0; func hmm() { for k, v := range a { tot += v; _ = k } }; hmm()`
-		lua := string(inc.Tr([]byte(code)))
+		lua := string(inc.trMust([]byte(code)))
 		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "tot", 6)
@@ -255,7 +264,7 @@ func Test012KeyOnlySliceRangeForLoop(t *testing.T) {
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}; itot:=0;  for i := range a { itot+=i }`
-		lua := string(inc.Tr([]byte(code)))
+		lua := string(inc.trMust([]byte(code)))
 		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "itot", 3)
@@ -272,7 +281,7 @@ func Test012AssignNotDefineRangeForLoop(t *testing.T) {
 	cv.Convey("key only range over a slice should compile into lua", t, func() {
 
 		code := `a:=[]int{1,2,3}; itot:=0; i:=0; for i = range a { itot+=i }`
-		lua := string(inc.Tr([]byte(code)))
+		lua := string(inc.trMust([]byte(code)))
 		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "itot", 3)
@@ -289,7 +298,7 @@ func Test012DoubleRangeLoop(t *testing.T) {
 	cv.Convey("nested range loops", t, func() {
 
 		code := `a:=[]int{1,2,3}; b:=[]int{4,5,6}; vtot:=0; for i := range a { for j := range b { vtot += a[i]*b[j] } }`
-		lua := string(inc.Tr([]byte(code)))
+		lua := string(inc.trMust([]byte(code)))
 		fmt.Printf("lua='%s'", lua)
 		LuaRunAndReport(vm, lua)
 		LuaMustInt64(vm, "vtot", 90)
@@ -305,7 +314,7 @@ func Test013SetAStringSliceToEmptyString(t *testing.T) {
 	cv.Convey("setting a string slice element should compile into lua", t, func() {
 
 		code := `b := []string{"hi","gophers!"}; b[0]=""`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 __type__.anon_sliceType = __sliceType(__type__.string); 
 b = __type__.anon_sliceType({[0]="hi", "gophers!"});
 __gi_SetRangeCheck(b, 0, "");
@@ -322,7 +331,7 @@ func Test014LenOfSlice(t *testing.T) {
 	cv.Convey("len(x) where `x` is a slice should compile", t, func() {
 
 		code := `x := []string{"hi","gophers!"}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   	__type__.anon_sliceType = __sliceType(__type__.string); 
   
   	x = __type__.anon_sliceType({[0]="hi", "gophers!"});
@@ -340,7 +349,7 @@ func Test015ArrayCreation(t *testing.T) {
 	cv.Convey("creating arrays via x := [3]int{1,2,3} where `x` is a slice should compile", t, func() {
 
 		code := `x := [3]int{1,2,3}; bb := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 __type__.anon_arrayType = __arrayType(__type__.int, 3); 
 x = __type__.anon_arrayType({[0]=1LL, 2LL, 3LL});
 bb = 3LL;`)
@@ -349,18 +358,18 @@ bb = 3LL;`)
 
 		// type already declared above, so will be reused.
 		code = `var x [3]int`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 __type__.anon_arrayType = __arrayType(__type__.int, 3); 
 x = __type__.anon_arrayType();
 `)
 
 		// upper case names too
 		code = `LX := len(x)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `LX = 3LL;`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `LX = 3LL;`)
 
 		// printing length
 		code = `println(len(x))`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `print(3LL);`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `print(3LL);`)
 	})
 }
 
@@ -375,7 +384,7 @@ func Test015_5_ArrayCreation(t *testing.T) {
 		// and empty array with size 3
 
 		code := `var x [3]int`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 __type__.anon_arrayType = __arrayType(__type__.int, 3); 
 x = __type__.anon_arrayType();
 `)
@@ -392,11 +401,11 @@ func Test016MapCreation(t *testing.T) {
 
 		// create using make
 		code := `y := make(map[int]string)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `y={};`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `y={};`)
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
   	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
@@ -413,7 +422,7 @@ func Test016bMapCreation(t *testing.T) {
 	cv.Convey(`creating maps new named types should compile`, t, func() {
 
 		code := `type Yumo map[int]string; yesso := Yumo{2: "two"}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 __type__.Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
 
 __type__.Yumo.init(__type__.int, __type__.string);
@@ -434,13 +443,13 @@ func Test017DeleteFromMap(t *testing.T) {
 	cv.Convey(`delete from a map, x := map[int]string{3:"hello", 4:"gophers"}, with delete(x, 3) should remove the key 3 with value "hello"`, t, func() {
 
 		code := `x := map[int]string{3:"hello", 4:"gophers"}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
   
   	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 		code = `delete(x, 3)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `x("delete",3LL);`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `x("delete",3LL);`)
 	})
 }
 
@@ -462,7 +471,7 @@ func Test018ReadFromMap(t *testing.T) {
 			`   x3 =  x('get', "3LL", "");`}
 
 		for i, src := range srcs {
-			translation := inc.Tr([]byte(src))
+			translation := inc.trMust([]byte(src))
 			//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 			fmt.Printf("go:'%s'  -->  '%s' in lua\n", string(src), string(translation))
 			cv.So(string(translation), matchesLuaSrc, expect[i])
@@ -488,7 +497,7 @@ func Test018ReadFromSlice(t *testing.T) {
   
   	x = __type__.anon_sliceType({[0]=3LL, 4LL});`, `x3 = __gi_GetRangeCheck(x,0);`}
 		for i, src := range srcs {
-			translation := inc.Tr([]byte(src))
+			translation := inc.trMust([]byte(src))
 			pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 			//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 			cv.So(string(translation), matchesLuaSrc, expect[i])
@@ -510,7 +519,7 @@ func Test019TopLevelScope(t *testing.T) {
 
 		// at top-level
 		code := `j:=5; for i:=0; i < 3; i++ { j++ }`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
         j = 5LL;
   		i = 0LL;
   		while (true) do
@@ -532,7 +541,7 @@ func Test020StructTypeDeclarations(t *testing.T) {
 	cv.Convey("declaring a struct with `type A struct{}` should compile and pass type checking, and register a prototype", t, func() {
 
 		code := `type A struct{}`
-		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {});  	
   	 __type__.A.__constructor = function(self) 
@@ -550,7 +559,7 @@ func Test021StructTypeValues(t *testing.T) {
 	cv.Convey("Given `type A struct{}`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
 		code := `type A struct{}`
-		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
 
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {});
@@ -558,8 +567,8 @@ func Test021StructTypeValues(t *testing.T) {
   		 return self; end;
 `)
 		code = `var a A`
-		//cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a=__reg:NewInstance("A",{});`)
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `a = __type__.A.ptr({}, nil);`)
+		//cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=__reg:NewInstance("A",{});`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a = __type__.A.ptr({}, nil);`)
 
 	})
 }
@@ -573,7 +582,7 @@ func Test022StructTypeValues(t *testing.T) {
 	cv.Convey("Given `type A struct{ B int }`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
 		code := `type A struct{ B int}`
-		cv.So(string(inc.Tr([]byte(code))), startsWithLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__.int, __tag= ""}});
   	
@@ -587,7 +596,7 @@ func Test022StructTypeValues(t *testing.T) {
   
 `)
 		code = `var a = A{B:43}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 a = __type__.A.ptr({}, 43LL);
 `)
 		// a=__reg:NewInstance("A",{["B"]=43LL});
@@ -607,11 +616,11 @@ func Test023CopyingStructValues(t *testing.T) {
 	cv.Convey("Given `type A struct{ B int }`, when `var a =A{B:23}` and then `cp := a; cp.B = 78` then a.B should still be 23 because a full copy/clone should have been made of a during the `cp := a` operation.", t, func() {
 
 		code := `type A struct{ B int}; var a = A{B:23}`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 a=__reg:NewInstance("A",{["B"]=23});
 `)
 		code = `cp := a`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 cp=_gi_Clone(a);
 `)
 	})
@@ -630,10 +639,10 @@ func Test024MultipleAssignment(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		//cv.So(string(inc.Tr([]byte(src))), matchesLuaSrc, `a, b, c = 1, 2, 3;`)
+		//cv.So(string(inc.trMust([]byte(src))), matchesLuaSrc, `a, b, c = 1, 2, 3;`)
 
 		// verify that it happens correctly.
-		translation := inc.Tr([]byte(src))
+		translation := inc.trMust([]byte(src))
 		//pp("go:'%s'  -->  '%s' in lua\n", src, translation)
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -654,7 +663,7 @@ func Test025ComplexNumbers(t *testing.T) {
 	cv.Convey("a := 6.67428e-11i should compile, since luajit has builtin support for complex number syntax", t, func() {
 
 		code := `a := 6.67428e-11i`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
 	a = 0+6.67428e-11i;`)
 	})
 }
@@ -670,7 +679,7 @@ func Test026LenOfString(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		cv.So(string(translation), matchesLuaSrc, `
 	a = "hi"; b = #a;`)
@@ -708,7 +717,7 @@ book := snoopy.Write("with a pen")`
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		// and verify that it happens correctly
 
 		LuaRunAndReport(vm, string(translation))
@@ -740,7 +749,7 @@ book := snoopy.Write("with a pen")
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -765,7 +774,7 @@ alone1 := m[1]
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -797,7 +806,7 @@ len3 := len(m)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -820,7 +829,7 @@ println("hello")
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		cv.So(string(translation), matchesLuaSrc,
 			`print("hello");`)
@@ -862,7 +871,7 @@ x,y,z,s := f()
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		//		cv.So(string(translation), matchesLuaSrc,
 		//			``)
@@ -901,7 +910,7 @@ default:
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		cv.So(string(translation), matchesLuaSrc,
 			`
@@ -954,7 +963,7 @@ myc := f()
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -988,7 +997,7 @@ default:
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		cv.So(string(translation), matchesLuaSrc,
 			`
@@ -1022,7 +1031,7 @@ func Test042LenAtRepl(t *testing.T) {
 	cv.Convey(`a := []int{3}; len(a)' at the repl, len(a) should give us 1, so it should get wrapped in a print()`, t, func() {
 
 		code := `a := []int{3}; len(a)`
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
     __type__.anon_sliceType = __sliceType(__type__.int);   
  	a = __type__.anon_sliceType({[0]=3LL});
     print(#a);
@@ -1045,7 +1054,7 @@ m := 1%a
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		cv.So(string(translation), matchesLuaSrc,
 			`
@@ -1069,7 +1078,7 @@ func f() {
 }
 f();
 `
-		translation = inc.Tr([]byte(codeWithCatch))
+		translation = inc.trMust([]byte(codeWithCatch))
 
 		fmt.Printf("\n translation='%s'\n", translation)
 
@@ -1103,7 +1112,7 @@ func Test069MethodRedefinitionAllowed(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -1126,7 +1135,7 @@ f()
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		cv.So(string(translation), matchesLuaSrc,
 			`
 a = 2LL;
@@ -1163,7 +1172,7 @@ w := denver.word
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "d", 2)

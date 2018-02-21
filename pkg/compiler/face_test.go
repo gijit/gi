@@ -85,7 +85,8 @@ e := c.Next()
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -158,7 +159,7 @@ func Test101InterfaceConversion(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation,err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 
@@ -237,7 +238,8 @@ func (b *B) Pebbles() {}
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -308,7 +310,8 @@ switch v.(type) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))

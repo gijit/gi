@@ -26,7 +26,8 @@ b := s.val
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -52,7 +53,8 @@ c := *b
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))

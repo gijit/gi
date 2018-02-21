@@ -78,7 +78,7 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n\n translation = '%s'\n\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))

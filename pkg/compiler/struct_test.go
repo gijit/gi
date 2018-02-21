@@ -24,7 +24,7 @@ h := s.hi()
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -52,7 +52,7 @@ func Test120PointersInsideStructs(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// The mutual dependence between __type__.Ragdol and __anon_ptrType
@@ -103,7 +103,7 @@ func Test121PointersInsideStructs(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -165,7 +165,7 @@ func Test122ManyPointersInsideStructs(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -198,7 +198,7 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))

@@ -44,7 +44,8 @@ r0, r1 := f()
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		//*dbg = true
 		pp("translation='%s'", string(translation))
@@ -95,7 +96,8 @@ r0, r1 := f()
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
@@ -118,7 +120,8 @@ func Test035DefersRunWithoutPanic(t *testing.T) {
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
@@ -140,7 +143,8 @@ func Test035bNamedReturnValuesAreReturned(t *testing.T) {
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
@@ -161,7 +165,8 @@ func Test035cNamedReturnValuesDontPolluteGlobalEnv(t *testing.T) {
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
@@ -193,7 +198,8 @@ f()
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
@@ -227,12 +233,16 @@ test1helper()
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 
 		if false {
-			cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+			by, err := inc.Tr([]byte(code))
+			panicOn(err)
+
+			cv.So(string(by), matchesLuaSrc, `
 result = ""
 
 addInt = function(i) 
@@ -298,7 +308,8 @@ test2helper()
 		defer vm.Close()
 
 		inc := NewIncrState(vm, nil)
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))

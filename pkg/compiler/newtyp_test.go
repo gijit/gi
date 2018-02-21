@@ -25,7 +25,8 @@ b := Bean(99)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -51,8 +52,9 @@ c := b.counter
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
-		fmt.Printf("\n translation='%s'\n", translation)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
 
@@ -75,7 +77,8 @@ g := F(3.4)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -97,8 +100,9 @@ g := F(3.4)
 					pval = fmt.Sprintf("%v", r)
 				}
 			}()
-			translation2 := inc.Tr([]byte(code2)) // should panic
-			fmt.Printf("\n translation2='%s'\n", translation2)
+			translation2, err := inc.Tr([]byte(code2)) // should panic
+			panicOn(err)
+			fmt.Printf("\n translation2='%s'\n", string(translation2))
 		}
 		f()
 		cv.So(gotPanic, cv.ShouldBeTrue)
@@ -131,7 +135,8 @@ var f F = 2.5
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -156,7 +161,8 @@ var f F = 2.5
 						pval = fmt.Sprintf("%v", r)
 					}
 				}()
-				translation2 := inc.Tr([]byte(code2)) // should panic
+				translation2, err := inc.Tr([]byte(code2)) // should panic
+				panicOn(err)
 				fmt.Printf("\n translation2='%s'\n", translation2)
 			}
 			f()
@@ -177,7 +183,9 @@ var f F = 2.5
 					pval = fmt.Sprintf("%v", r)
 				}
 			}()
-			translation3 := inc.Tr([]byte(code3)) // should panic, but was not.
+			translation3, err := inc.Tr([]byte(code3)) // should panic, but was not.
+			panicOn(err)
+
 			fmt.Printf("\n translation3='%s'\n", translation3)
 		}
 		f2()
@@ -208,7 +216,7 @@ two := g.F.a;`
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
@@ -234,7 +242,7 @@ type Bean struct{
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation,err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))

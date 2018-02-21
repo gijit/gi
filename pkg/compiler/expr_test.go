@@ -19,7 +19,8 @@ func Test094MathExpressionsShouldWorkAtREPL(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
@@ -44,7 +45,7 @@ func Test095StringExpressionsShouldWorkAtREPL(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)
@@ -70,7 +71,7 @@ func Test096MultipleExpressionsAtOnceAtTheREPL(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n  b = __gijit_ans[1]\n  c = __gijit_ans[2]\n ")...)
@@ -97,7 +98,8 @@ func Test097SingleExpressionAtTheREPL(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		withHelp := append(translation, []byte("\n a = __gijit_ans[0]\n")...)

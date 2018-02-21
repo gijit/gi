@@ -116,9 +116,16 @@ type IncrState struct {
 	PrintAST bool
 }
 
+//  panic on errors, a test helper
+func (tr *IncrState) trMust(src []byte) []byte {
+	by, err := tr.Tr(src)
+	panicOn(err)
+	return by
+}
+
 // Tr: translate from go to Lua, statement by statement or
 // expression by expression
-func (tr *IncrState) Tr(src []byte) []byte {
+func (tr *IncrState) Tr(src []byte) ([]byte, error) {
 
 	// detect the leading '=' and turn it into
 	// __gijit_ans :=
@@ -151,7 +158,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 			"use '%s' as an identifier in gijit, as this may confuse the online type checker.",
 			whichBad)
 		panic(msg)
-		return nil
+		return nil, fmt.Errorf(msg)
 	}
 
 	tr.CurPkg.Arch, err = IncrementallyCompile(tr.CurPkg.Arch, tr.CurPkg.pack.ImportPath, files, tr.CurPkg.fileSet, tr.CurPkg.importContext, tr.minify)
@@ -169,7 +176,7 @@ func (tr *IncrState) Tr(src []byte) []byte {
 	}
 	tr.CurPkg.Arch.NewCodeText = nil
 
-	return res.Bytes()
+	return res.Bytes(), nil
 }
 
 type ImportCError struct {

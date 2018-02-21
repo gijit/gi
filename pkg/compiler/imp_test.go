@@ -18,7 +18,8 @@ func Test050CallFmtSprintf(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -46,7 +47,8 @@ func Test051CallFmtSprintf(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -70,7 +72,8 @@ func Test052CallFmtSprintf(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 		//fmt.Printf("go:'%#v'  -->  '%#v' in lua\n", src, translation)
 
@@ -94,7 +97,8 @@ func Test058CallFmtIncr(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc,
@@ -120,7 +124,8 @@ func Test059CallFmtSummer(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc,
@@ -146,7 +151,8 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -173,7 +179,8 @@ func Test062SprintfOneSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -198,7 +205,7 @@ func Test063SprintfOneSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -225,7 +232,7 @@ func Test064SprintfOneSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -251,7 +258,7 @@ func Test065PrintfItselfAndOneSlice(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -282,7 +289,7 @@ func Test087ShadowRegexp(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 
 		// need the side effect of loading `import "fmt"` package.
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		// gotta translate to a.FindStringIndex(), not a:FindStringIndex()

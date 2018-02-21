@@ -289,7 +289,8 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		pp("stack prior to translation:")
 		DumpLuaStack(vm)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -395,7 +396,8 @@ func testOp(m *myGoTestStruct) string { return "" }
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(src))
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		//		cv.So(string(translation), matchesLuaSrc,
@@ -409,7 +411,8 @@ func testOp(m *myGoTestStruct) string { return "" }
 		})
 
 		src = `s := testOp(ts)`
-		translation = inc.Tr([]byte(src))
+		translation, err = inc.Tr([]byte(src))
+		panicOn(err)
 		pp("got to here, go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		//		cv.So(string(translation), matchesLuaSrc,

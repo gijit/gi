@@ -27,7 +27,11 @@ func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err
 	ssrc := string(src)
 	pp("about to translate Go source '%s'", ssrc)
 
-	translation = string(inc.Tr([]byte(src)))
+	by, err := inc.Tr([]byte(src))
+	if err != nil {
+		return "", err
+	}
+	translation = string(by)
 
 	t2 := strings.TrimSpace(translation)
 	nt2 := len(t2)
@@ -37,7 +41,7 @@ func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err
 		}
 	}
 	p("go:'%s'  -->  '%s'\n", src, t2)
-	return
+	return translation, err
 }
 
 func readHistory(histFn string) (history []string, err error) {

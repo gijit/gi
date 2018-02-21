@@ -21,10 +21,14 @@ func Test201ConvertToFloat64ActuallyDoes(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := string(inc.Tr([]byte(code)))
+		by, err := inc.Tr([]byte(code))
+		panicOn(err)
+		translation := string(by)
 		fmt.Printf("translation = '%s'\n", translation)
 
-		cv.So(string(inc.Tr([]byte(code))), matchesLuaSrc, `
+		by, err = inc.Tr([]byte(code))
+		panicOn(err)
+		cv.So(string(by), matchesLuaSrc, `
 				a = 1LL;
 				b = 2LL;
 				c = (tonumber((a+b)));

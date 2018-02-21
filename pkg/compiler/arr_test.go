@@ -23,7 +23,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// too fragile
@@ -53,7 +53,7 @@ func Test081CloneOfInt64Array(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// too fragile.
@@ -84,7 +84,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc,
@@ -132,7 +132,7 @@ func Test083Int64ArraysCopyByValue(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -167,7 +167,7 @@ func Test084ForRangeOverArrayAndChangeValue(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -197,7 +197,7 @@ func Test085ForRangeOverSliceAndChangeValue(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly

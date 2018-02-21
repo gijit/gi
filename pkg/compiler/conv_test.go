@@ -25,7 +25,7 @@ i := int(f)
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		//cv.So(string(translation), matchesLuaSrc, ``)

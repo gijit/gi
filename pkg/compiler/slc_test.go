@@ -25,7 +25,7 @@ func Test086SlicesPointToArrays(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -68,7 +68,7 @@ func Test088SlicesFromArrays(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		cv.So(string(translation), matchesLuaSrc, `
@@ -112,7 +112,7 @@ func Test089CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -140,7 +140,7 @@ func Test090CopyOntoSameSliceShouldNotDestroy(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
@@ -170,7 +170,7 @@ func Test091AppendSlices(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.Tr([]byte(code))
+		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
