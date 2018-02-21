@@ -2004,7 +2004,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-   print("__sliceType called with elem = ", elem)
+   --print("__sliceType called with elem = ", elem)
    if elem == nil then
       print(debug.traceback())
       error "__sliceType called with nil elem!"
