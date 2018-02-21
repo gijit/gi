@@ -106,7 +106,7 @@ func main() {
 	r := runMultiply(10, 9, 9)
 	fmt.Printf("r='%v'\n", r)
 	t0 := time.Now()
-	fmt.Printf("runMultiply(500,9,9) -> %v\n", int(runMultiply(500, 9, 9)))
+	fmt.Printf("runMultiply(100,9,9) -> %v\n", int(runMultiply(100, 9, 9)))
 	elap := time.Since(t0)
 	fmt.Printf("compiled Go elap = %v\n", elap)
 }
