@@ -306,9 +306,17 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       local vals = ""
       if methods_desc then
          --print("methods_desc is true")
-         --vals = __st(v,"",indent+1,quiet,methods_desc, seen)
-      else 
-         vals = tostring(v)
+         vals = __st(v,"",indent+1,quiet,methods_desc, seen)
+      else
+         local vmt = getmetatable(v)
+         if type(v) == "table" and type(vmt) == "table" then
+            setmetatable(v, nil)
+            vals = tostring(v)
+            setmetatable(v, vmt)
+         else
+            vals = tostring(v)
+         end
+         --vals = __st(v,"",indent+1,true,methods_desc, seen) or ""
       end
       s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..vals.."'\n"
    end
@@ -316,16 +324,18 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       s = pre.."<empty table> " .. addr
    end
 
-   --local mt = getmetatable(t)
    if mt ~= nil then
-      s = s .. "\n"..__st(mt, "mt.of."..name, indent+1, true, methods_desc, seen)
+      s = s or ""
+      local show = __st(mt, "mt.of."..name, indent+1, true, methods_desc, seen) or ""
+      s = s .. "\n"..show
    end
    if not quiet then
       print(s)
    end
    -- restore metamethods
    setmetatable(t, mt)
-   return s
+   print("__st returning '"..tostring(s).."'")
+   return s or ""
 end
 
 
@@ -851,7 +861,7 @@ __valueSliceMT = {
    
    __index = function(t, k)
       
-      print("__valueSliceMT.__index called, k='"..tostring(k).."'");
+      print("__valueSliceMT.__index called, k='"..tostring(k).."'")
       __st(t.__val)
       print("callstack:"..tostring(debug.traceback()))
 
@@ -878,6 +888,8 @@ __valueSliceMT = {
       print("slice access bounds check ok: w = ", w)
       __st(t.__array, "t.__array")
       local wv = t.__array[w]
+      __st(wv, "wv")
+      __st(getmetatable(wv), "metatable.for.wv")
       print("wv back from t.__array[w] is: "..tostring(wv))
       return wv
    end,
@@ -888,16 +900,17 @@ __valueSliceMT = {
    end,
    
    __tostring = function(self, ...)
-     --print("__tostring called from __valueSliceMT")
+      print("__tostring called from __valueSliceMT: "..self.__typ.__str);
 
       local len = tonumber(self.__length) -- convert from LL int
       local off = tonumber(self.__offset)
-     --print("__tostring sees self.__length of ", len, " __offset = ", off)
+      --print("__tostring sees self.__length of ", len, " __offset = ", off)
       local cap = self.__capacity
       --local s = "slice <len=" .. tostring(len) .. "; off=" .. off .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
       local s = self.__constructor.__str.."{"
       local raw = self.__array
-
+      __st(raw, "raw in valueSice tostring")
+      
       -- we want to skip both the _giPrivateRaw and the len
       -- when iterating, which happens automatically if we
       -- iterate on raw, the raw inside private data, and not on the proxy.
@@ -1186,6 +1199,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindSlice then
       
       typ.tfun = function(this, array)
+         print(debug.traceback())
+         print("slice tfun called with array = ")
+         __st(array)
          this.__array = array;
          this.__offset = 0;
          this.__length = __lenz(array)
