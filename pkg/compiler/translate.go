@@ -34,7 +34,7 @@ func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
 	ic := &IncrState{
 		pkgMap: make(map[string]*IncrPkg),
 		vm:     vm,
-		vmCfg:  cfg,
+		cfg:    cfg,
 	}
 	pack := &build.Package{
 		Name:       "main",
@@ -110,7 +110,7 @@ type IncrState struct {
 	// like `import "fmt"` on demand.
 	vm *luajit.State
 
-	vmCfg *GIConfig
+	cfg *GIConfig
 
 	minify   bool
 	PrintAST bool
@@ -129,7 +129,7 @@ func (tr *IncrState) Tr(src []byte) ([]byte, error) {
 
 	// detect the leading '=' and turn it into
 	// __gijit_ans :=
-	src = prependAns(src)
+	src = tr.prependAns(src)
 
 	pp("after prependAns, src = '%s'", src)
 
@@ -434,12 +434,15 @@ var gijitAnsSuffix = []byte("}\n __gijit_printQuoted(__gijit_ans...);")
 
 // at the beginning of src, transform a first '='[^=] into
 // "__gijit_ans := "
-func prependAns(src []byte) []byte {
+func (tr *IncrState) prependAns(src []byte) []byte {
 	nsrc := len(src)
 	leftTrimmed := bytes.TrimLeftFunc(src, unicode.IsSpace)
 	trimmed := bytes.TrimFunc(src, unicode.IsSpace)
 	n := len(leftTrimmed)
 	leftdiff := nsrc - n
+	if tr.cfg.CalculatorMode {
+		return append(gijitAnsPrefix, append(trimmed[leftdiff:], gijitAnsSuffix...)...)
+	}
 	if n > 1 && leftTrimmed[0] == '=' && leftTrimmed[1] != '=' {
 		return append(gijitAnsPrefix, append(trimmed[leftdiff+1:], gijitAnsSuffix...)...)
 	}
