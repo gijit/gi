@@ -2,10 +2,17 @@
 
 local ffi = require("ffi")
 
-ffi.cdef[[
-long long int atoll(const char *nptr);
-]]
-__atoll=ffi.C.atoll
+if jit.os == "Windows" then
+   ffi.cdef[[
+   long long int _atoi64(const char *nptr);
+   ]]
+   __atoll=ffi.C._atoi64
+else
+   ffi.cdef[[
+   long long int atoll(const char *nptr);
+   ]]
+   __atoll=ffi.C.atoll   
+end
 
 -- assume 64-bit int and uint
 int = ffi.typeof(0LL)
