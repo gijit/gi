@@ -1619,23 +1619,24 @@ func (c *funcContext) formatExprInternal(format string, a []interface{}, parens 
 	defer func() {
 		if xprn != nil {
 			pp("formatExprInternal('%s') returning '%s'", format, xprn.str)
-			if xprn.str == `(x_1 = __type__.complex128((tonumber((a + b))), 0), __type__.complex128(real(x_1) + 1, imag(x_1) + 0))` {
-				panic("where?")
-			}
+			//if xprn.str == `r:Get` {
+			//	panic("where?")
+			//}
 		} else {
 			pp("expressions.go:1357, formatExprInternal('%s') returning nil", format)
 		}
 	}()
-
-	for i := range a {
-		str, isStr := a[i].(string)
-		if isStr {
-			pp("a[i=%v] = '%v'", i, str)
-			if i == 1 && a[1] == "Write" {
-				//panic("where?")
+	/*
+		for i := range a {
+			x, isX := a[i].(*expression)
+			if isX {
+				pp("a[i=%v] = '%v'", i, x)
+				//if x.str == "r:Get" {
+				//	panic("where?")
+				//}
 			}
 		}
-	}
+	*/
 	processFormat := func(f func(uint8, uint8, int)) {
 		n := 0
 		for i := 0; i < len(format); i++ {

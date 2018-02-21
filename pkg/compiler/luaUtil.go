@@ -9,9 +9,15 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 )
+
+// shortcut; do
+// *dbg = true
+// to turn on -vv very verbose debug printing.
+var dbg = &verb.VerboseVerbose
 
 type VmConfig struct {
 	PreludePath string
@@ -88,9 +94,6 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 func LuaDoFiles(vm *golua.State, files []string) error {
 	for _, f := range files {
 		pp("LuaDoFiles, f = '%s'", f)
-		if f == "lua.help.lua" {
-			panic("where lua.help.lua?")
-		}
 		interr := vm.LoadString(fmt.Sprintf(`dofile("%s")`, f))
 		if interr != 0 {
 			pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)

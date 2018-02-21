@@ -922,6 +922,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
 	local := "local "
 	if c.parent == nil {
+		pp("c.parent was nil!?! c = '%#v'", c)
 		// global vars won't be local
 		local = ""
 	}
@@ -969,7 +970,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			return fmt.Sprintf("%s%s = %s;", local, tlhs, rhsExpr) // skip $copy
 		}
 	}
-	//pp("rhsExpr = '%#v'", rhsExpr)
+	pp("rhsExpr = '%#v'", rhsExpr)
 
 	isReflectValue := false
 	if named, ok := lhsType.(*types.Named); ok && named.Obj().Pkg() != nil && named.Obj().Pkg().Path() == "reflect" && named.Obj().Name() == "Value" {
@@ -995,12 +996,12 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
 	switch l := lhs.(type) {
 	case *ast.Ident:
-		return fmt.Sprintf("%s = %s;", c.objectName(c.p.ObjectOf(l)), rhsExpr)
+		return fmt.Sprintf("%s%s = %s;", local, c.objectName(c.p.ObjectOf(l)), rhsExpr)
 	case *ast.SelectorExpr:
 		sel, ok := c.p.SelectionOf(l)
 		if !ok {
 			// qualified identifier
-			return fmt.Sprintf("%s = %s;", c.objectName(c.p.Uses[l.Sel]), rhsExpr)
+			return fmt.Sprintf("%s%s = %s;", local, c.objectName(c.p.Uses[l.Sel]), rhsExpr)
 		}
 		fields, jsTag := c.translateSelection(sel, l.Pos())
 		if jsTag != "" {

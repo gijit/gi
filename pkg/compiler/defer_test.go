@@ -3,7 +3,6 @@ package compiler
 import (
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -47,6 +46,7 @@ r0, r1 := f()
 		inc := NewIncrState(vm, nil)
 		translation := inc.Tr([]byte(code))
 
+		*dbg = true
 		pp("translation='%s'", string(translation))
 
 		// too comple and fragile to verify code. Just  verify that it happens correctly
