@@ -863,7 +863,6 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 
 			}
 			if len(ptrMethods) > 0 {
-				c.TypeNameSetting = SKIP_ANON
 				pn := c.typeName(0, types.NewPointer(named)) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
