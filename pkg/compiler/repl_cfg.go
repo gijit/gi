@@ -15,6 +15,7 @@ type GIConfig struct {
 	Verbose        bool
 	VerboseVerbose bool
 	RawLua         bool
+	CalculatorMode bool
 	PreludePath    string
 	IsTestMode     bool
 	NoLiner        bool // for under test/emacs

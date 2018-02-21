@@ -41,6 +41,7 @@ type Repl struct {
 	goPrompt     string
 	goMorePrompt string
 	luaPrompt    string
+	calcPrompt   string
 	isDo         bool
 	isSource     bool
 
@@ -81,6 +82,7 @@ func NewRepl(cfg *GIConfig) *Repl {
 
 	r.reader = bufio.NewReader(os.Stdin)
 	r.goPrompt = "gi> "
+	r.calcPrompt = "calc mode> "
 	//r.goMorePrompt = ">>>    "
 	r.luaPrompt = "raw luajit gi> "
 	r.isDo = false
@@ -92,11 +94,7 @@ func NewRepl(cfg *GIConfig) *Repl {
 			r.prompter.prompter.AppendHistory(r.history[i])
 		}
 	}
-
-	r.prompt = r.goPrompt
-	if r.cfg.RawLua {
-		r.prompt = r.luaPrompt
-	}
+	r.setPrompt()
 	r.prevSrc = ""
 	r.prompterLine = ""
 	return r
@@ -259,14 +257,24 @@ func (r *Repl) Read() (src string, err error) {
 		return "", nil
 	case ":raw", ":r":
 		r.cfg.RawLua = true
+		r.cfg.CalculatorMode = false
 		r.prompt = r.luaPrompt
 		fmt.Printf("Raw LuaJIT language mode.\n")
 		return "", nil
 	case ":go", ":g", ":":
 		r.cfg.RawLua = false
+		r.cfg.CalculatorMode = false
 		r.prompt = r.goPrompt
 		fmt.Printf("Go language mode.\n")
 		return "", nil
+
+	case "==":
+		r.cfg.RawLua = false
+		r.cfg.CalculatorMode = true
+		fmt.Printf("Calculator mode.\n")
+		r.prompt = r.calcPrompt
+		return "", nil
+
 	case ":prelude", ":reload":
 		fmt.Printf("Reloading prelude...\n")
 
@@ -304,7 +312,8 @@ these special commands.
  :rm 3-4         Remove commands 3-4 from history.
  :do <path>      Run dofile(path) on a .lua file.
  :source <path>  Re-play Go code from a file.
- = 3 + 4         The '=' turns gijit into a calculator.
+ = 3 + 4         The '=' calculate expression (one line).
+ ==              Multiple entry calculator mode. ':' to exit.
  import "fmt"    Import the binary, pre-compiled package.
  ctrl-d to exit  History is saved in ~/.gitit.hist
 `)
@@ -362,6 +371,18 @@ these special commands.
 	return src, nil
 }
 
+func (r *Repl) setPrompt() {
+	if r.cfg.CalculatorMode {
+		r.prompt = r.calcPrompt
+		return
+	}
+	if r.cfg.RawLua {
+		r.prompt = r.luaPrompt
+		return
+	}
+	r.prompt = r.goPrompt
+}
+
 func (r *Repl) Eval(src string) error {
 
 	var use string
@@ -373,7 +394,7 @@ func (r *Repl) Eval(src string) error {
 		//fmt.Printf("src = '%s'\n", src)
 		//fmt.Printf("prevSrc = '%s'\n", prevSrc)
 
-		eof, syntaxErr, empty := front.TopLevelParseGoSource([]byte(src))
+		eof, syntaxErr, empty, err := front.TopLevelParseGoSource([]byte(src))
 		if empty {
 			r.prevSrc = ""
 			return nil
@@ -387,7 +408,7 @@ func (r *Repl) Eval(src string) error {
 		}
 		r.prevSrc = ""
 
-		r.prompt = r.goPrompt
+		r.setPrompt()
 		translation, err := translateAndCatchPanic(r.inc, []byte(src))
 		if err != nil {
 			fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(src))
