@@ -1198,7 +1198,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 	var buf bytes.Buffer
 	fset := token.NewFileSet()
 	printer.Fprint(&buf, fset, expr)
-	fmt.Printf("debug: translate Conversion sees expr: '%v'.\n", string(buf.Bytes()))
+	//pp("debug: translate Conversion sees expr: '%v'.\n", string(buf.Bytes()))
 
 	exprType := c.p.TypeOf(expr)
 	if types.Identical(exprType, desiredType) {
