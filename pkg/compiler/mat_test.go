@@ -159,10 +159,10 @@ func MatScaMul(m *Matrix, x float64) (r *Matrix) {
 }
 
 var done bool
-//func main() {
-	sz := 3
+
+func runMultiply(sz, i, j int) float64 {
     var mu *Matrix
-	for i := 0; i < 1; i++ {
+	for k := 0; k < 1; k++ {
 		a := NewMatrix(sz, sz, true)
 		b := NewMatrix(sz, sz, true)
 		//t0 := time.Now()
@@ -173,9 +173,8 @@ var done bool
         //fmt.Printf("%v x %v matrix multiply mu.A[2][2] = %v\n", sz, sz, mu.A[2][2])
 	}
     done = true
-//}
-//main()
-r := mu.A[2][2]
+    return  mu.A[i][j]
+}
 // 3 x 3 matrix multiply mu.A[2][2] = 195
 `
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -191,7 +190,7 @@ r := mu.A[2][2]
 		translation, err := inc.Tr([]byte(src))
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-		if false {
+		if true {
 			fmt.Printf("go original source:")
 			fmt.Printf(strings.Replace(src, "%", "%%", -1))
 			fmt.Printf("\n\n  --> translation to lua -->\n\n")
@@ -202,8 +201,9 @@ r := mu.A[2][2]
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		// for fullpkg
-		//LoadAndRunTestHelper(t, vm, []byte("main()"))
+		t2, err := inc.Tr([]byte("r := runMultiply(3,2,2)"))
+		panicOn(err)
+		LoadAndRunTestHelper(t, vm, t2)
 
 		LuaMustBool(vm, "done", true)
 		LuaMustFloat64(vm, "r", 195)
