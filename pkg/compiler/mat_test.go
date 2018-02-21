@@ -1,13 +1,16 @@
 package compiler
 
 import (
-	//"fmt"
-	//"strings"
+	"fmt"
+	"strings"
 	"testing"
 
 	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
+
+var _ = fmt.Printf
+var _ = strings.HasPrefix
 
 func Test500MatrixDeclOfDoubleSlice(t *testing.T) {
 
@@ -174,7 +177,7 @@ func main() {
 		translation, err := inc.FullPackage([]byte(src), importPath)
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-		fmt.Printf("go origin source:")
+		fmt.Printf("go original source:")
 		fmt.Printf(strings.Replace(src, "%", "%%", -1))
 		fmt.Printf("\n\n  --> translation to lua -->\n\n")
 		fmt.Printf(string(translation))

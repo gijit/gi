@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/token"
@@ -174,6 +175,14 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
 	return ic.ActuallyImportPackage(path, "", shadowPath)
 	//return ic.ActuallyImportPackage(path, "", path)
+}
+
+func omitAnyShadowPathPrefix(path string) string {
+	const prefix = "github.com/gijit/gi/pkg/compiler/shadow/"
+	if strings.HasPrefix(path, prefix) {
+		return path[len(prefix):]
+	}
+	return path
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
