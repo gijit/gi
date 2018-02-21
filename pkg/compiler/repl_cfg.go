@@ -18,6 +18,7 @@ type GIConfig struct {
 	PreludePath    string
 	IsTestMode     bool
 	NoLiner        bool // for under test/emacs
+	NoPrelude      bool
 }
 
 func NewGIConfig() *GIConfig {
@@ -33,6 +34,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GIJIT_PRELUDE_DIR' env var. -prelude overrides this.")
 	fs.BoolVar(&c.IsTestMode, "t", true, "load test mode functions and types")
 	fs.BoolVar(&c.NoLiner, "no-liner", false, "turn off liner, e.g. under emacs")
+	fs.BoolVar(&c.NoPrelude, "np", false, "no prelude; skip loading the prelude .lua files. implies -r raw mode too.")
 }
 
 var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler"
@@ -45,6 +47,10 @@ func init() {
 
 // call c.ValidateConfig() after myflags.Parse()
 func (c *GIConfig) ValidateConfig() error {
+
+	if c.NoPrelude {
+		c.RawLua = true
+	}
 
 	if c.PreludePath == "" {
 		dir := os.Getenv("GIJIT_PRELUDE_DIR")

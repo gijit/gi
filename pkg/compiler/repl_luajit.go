@@ -59,6 +59,7 @@ func NewRepl(cfg *GIConfig) *Repl {
 	vmCfg.PreludePath = cfg.PreludePath
 	vmCfg.Quiet = cfg.Quiet
 	vmCfg.NotTestMode = !cfg.IsTestMode
+	vmCfg.NoPrelude = cfg.NoPrelude
 	vm, err := NewLuaVmWithPrelude(vmCfg)
 	panicOn(err)
 	inc := NewIncrState(vm, vmCfg)

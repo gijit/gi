@@ -23,6 +23,7 @@ type VmConfig struct {
 	PreludePath string
 	Quiet       bool
 	NotTestMode bool // set to true for production, not running under test.
+	NoPrelude   bool
 }
 
 func NewVmConfig() *VmConfig {
@@ -37,6 +38,10 @@ func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
 		cwd, err := os.Getwd()
 		panicOn(err)
 		cfg.PreludePath = cwd
+	}
+
+	if cfg.NoPrelude {
+		return vm, nil
 	}
 
 	// establish prelude location so prelude can know itself.
