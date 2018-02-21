@@ -1076,6 +1076,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       --
       typ.tfun = function(this, v)
          this.__val = v;
+         this.__typ = typ
          setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
@@ -1087,6 +1088,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          --print("strings' tfun called! with v='"..tostring(v).."' and this:")
          --__st(this)
          this.__val = v;
+         this.__typ = typ         
          setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
@@ -1097,6 +1099,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v)
          this.__val = v;
+         this.__typ = typ         
          setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
@@ -1107,6 +1110,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       typ.tfun = function(this, re, im)
          this.__val = re + im*complex(0,1);
+         this.__typ = typ
          setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
@@ -1123,6 +1127,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       typ.tfun = function(this, re, im)
          this.__val = re + im*complex(0,1);
+         this.__typ = typ
          setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
@@ -1159,6 +1164,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             this.__set = setter;
             this.__target = target;
             this.__val = this; -- seems to indicate a non-primitive value.
+            this.__typ = typ
             setmetatable(this, __valuePointerMT)
          end;
       typ.keyFor = __idKey;
@@ -1189,10 +1195,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__val = this;
          this.__constructor = typ
          this.__name = "__sliceValue"
-         -- TODO: come back and fix up Luar.
-         -- must set these for Luar (binary Go translation) to work.
-         --this[__giPrivateRaw] = array
-         --this[__giPrivateSliceProps] = this
+         this.__typ = typ
          setmetatable(this, __valueSliceMT)
       end;
       typ.init = function(elem)
@@ -1210,10 +1213,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__constructor = typ
          this.__length = __lenz(v)
          this.__name = "__arrayValue"
-         -- TODO: come back and fix up Luar
-         -- must set these keys for Luar to work:
-         --this[__giPrivateRaw] = v
-         --this[__giPrivateArrayProps] = this
+         this.__typ = typ         
          setmetatable(this, __valueArrayMT)
       end;
      --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
@@ -1260,7 +1260,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindChan then
       
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         this.__val = v;
+         this.__typ = typ         
+      end;
       typ.wrapped = true;
       typ.keyFor = __idKey;
       typ.init = function(elem, sendOnly, recvOnly)
@@ -1272,7 +1275,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindFunc then 
 
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         this.__val = v;
+         this.__typ = typ         
+      end;
       typ.wrapped = true;
       typ.init = function(params, results, variadic)
          typ.params = params;
@@ -1306,7 +1312,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindMap then 
       
-      typ.tfun = function(this, v) this.__val = v; end;
+      typ.tfun = function(this, v)
+         this.__val = v;
+         this.__typ = typ         
+      end;
       typ.wrapped = true;
       typ.init = function(key, elem)
          typ.key = key;
@@ -1348,6 +1357,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end
             typ.__constructor(this, unpack(skipFirst));
          end
+         this.__typ = typ         
          setmetatable(this, typ.ptr.prototype)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
