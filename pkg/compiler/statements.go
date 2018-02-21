@@ -507,7 +507,7 @@ __defer_func(%s)
 			for _, spec := range decl.Specs {
 				o := c.p.Defs[spec.(*ast.TypeSpec).Name].(*types.TypeName)
 				c.p.typeNames = append(c.p.typeNames, o)
-				c.p.objectNames[o] = c.newVariableWithLevel(o.Name(), true)
+				c.p.objectNames[o] = c.newVariableWithLevel(o.Name(), true, true)
 				c.p.dependencies[o] = true
 			}
 		case token.CONST:

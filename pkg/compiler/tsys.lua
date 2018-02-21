@@ -255,7 +255,13 @@ function __assertIsArray(a)
    end
 end
 
-
+function __addressof(t)
+   local mt = getmetatable(t)
+   setmetatable(t, nil)
+   local addr = tostring(t)
+   setmetatable(t, mt)
+   return addr
+end
 
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
@@ -305,8 +311,8 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       k=k+1
       local vals = ""
       if methods_desc then
-         --print("methods_desc is true")
-         vals = __st(v,"",indent+1,quiet,methods_desc, seen)
+         print("methods_desc is true")
+         vals = __st(v,"",indent+3,quiet,methods_desc, seen)
       else
          local vmt = getmetatable(v)
          if type(v) == "table" and type(vmt) == "table" then
@@ -334,7 +340,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    end
    -- restore metamethods
    setmetatable(t, mt)
-   print("__st returning '"..tostring(s).."'")
+   --print("__st returning '"..tostring(s).."'")
    return s or ""
 end
 
@@ -907,6 +913,9 @@ __valueSliceMT = {
       --print("__tostring sees self.__length of ", len, " __offset = ", off)
       local cap = self.__capacity
       --local s = "slice <len=" .. tostring(len) .. "; off=" .. off .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
+      print("self.__constructor.__str = '"..self.__constructor.__str.."' and full display of self.__constructor:")
+      __st(self.__constructor, "self.__constructor")
+      
       local s = self.__constructor.__str.."{"
       local raw = self.__array
       __st(raw, "raw in valueSice tostring")
@@ -1066,6 +1075,7 @@ __idKey = function(x)
 end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
+   print("__newType called with str = '"..str.."'")
    local typ ={
       __str = str,
    };
@@ -1200,7 +1210,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, array)
          print(debug.traceback())
-         print("slice tfun called with array = ")
+         print("slice tfun for type '"..__addressof(typ).."' called with array = ")
          __st(array)
          this.__array = array;
          this.__offset = 0;
@@ -1585,6 +1595,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       print("bloom called for typ:")
       __st(typ)
    end
+   print("*** returning from __newType with typ=")
+   __st(typ)
    return typ;
 end
 
@@ -1992,7 +2004,7 @@ function __basicValue2kind(v)
 end
 
 __sliceType = function(elem)
-   --print("__sliceType called with elem = ", elem)
+   print("__sliceType called with elem = ", elem)
    if elem == nil then
       print(debug.traceback())
       error "__sliceType called with nil elem!"

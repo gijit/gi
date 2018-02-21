@@ -88,7 +88,8 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 		if tuple, isTuple := c.p.TypeOf(argExprs[0]).(*types.Tuple); isTuple {
 			pp("translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs")
 			c.Printf("\n// utils.go:88 translateArgs: we have 1 argExpr that is a tuple; unpacking it into an expanded argExprs\n")
-			tupleVar := c.newVariable("_tuple")
+			//tupleVar := c.newVariable("_tuple")
+			tupleVar := c.newTypeName("_tuple")
 			c.Printf("%s = %s;", tupleVar, c.translateExpr(argExprs[0], nil))
 			argExprs = make([]ast.Expr, tuple.Len())
 			for i := range argExprs {
@@ -261,8 +262,12 @@ func (c *funcContext) newConst(t types.Type, value constant.Value) ast.Expr {
 	return id
 }
 
+func (c *funcContext) newTypeName(name string) string {
+	return c.newVariableWithLevel(name, false, true)
+}
+
 func (c *funcContext) newVariable(name string) string {
-	return c.newVariableWithLevel(name, false)
+	return c.newVariableWithLevel(name, false, false)
 }
 
 func (c *funcContext) gensym(name string) string {
@@ -270,7 +275,10 @@ func (c *funcContext) gensym(name string) string {
 	return fmt.Sprintf("__gensym_%v_%s", next, name)
 }
 
-func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
+// isType distinguishes between variable names (which at
+// the repl we want to reuse), and typenames which should
+// not be reused.
+func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool, isType bool) string {
 	pp("newVariableWithLevel begins, with name='%s'", name)
 	if name == "" {
 		panic("newVariable: empty name")
@@ -310,10 +318,11 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// Answer, this was generating different tmp variables with different
 	// names. Use a gensym instead.
 
-	if false { // jea add
+	if isType { // jea add
 		if n > 0 {
 			//fmt.Printf("repeated name '%s'! funcContext c = '%#v'", name, c)
 			//fmt.Printf("repeated name '%s'! funcContext c.parent = '%#v'", name, *c.parent)
+			//panic("where?")
 			varName = fmt.Sprintf("%s_%d", name, n)
 		}
 	}
@@ -396,7 +405,7 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 	name, ok := c.p.objectNames[o]
 	pp("utils.go:307, name='%v', ok='%v'", name, ok)
 	if !ok {
-		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o))
+		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o), false)
 		pp("name='%#v', o.Name()='%v'", name, o.Name())
 		c.p.objectNames[o] = name
 	}
@@ -414,7 +423,7 @@ func (c *funcContext) varPtrName(o *types.Var) string {
 
 	name, ok := c.p.varPtrNames[o]
 	if !ok {
-		name = c.newVariableWithLevel(o.Name()+"_ptr", isPkgLevel(o))
+		name = c.newVariableWithLevel(o.Name()+"_ptr", isPkgLevel(o), false)
 		c.p.varPtrNames[o] = name
 	}
 	return name
@@ -460,7 +469,7 @@ func (c *funcContext) typeNameReport(level int, ty types.Type) string {
 	anonType, ok := c.p.anonTypeMap.At(ty).(*types.TypeName)
 	if !ok {
 		c.initArgs(ty) // cause all embedded types to be registered
-		varName := c.newVariableWithLevel(strings.ToLower(typeKind(ty)[6:])+"Type", true)
+		varName := c.newVariableWithLevel(strings.ToLower(typeKind(ty)[6:])+"Type", true, true)
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)
 		c.p.anonTypeMap.Set(ty, anonType)
@@ -486,7 +495,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 
 	whenAnonPrint := c.TypeNameSetting
 
-	pp("in typeNameWithAnonInfo, ty='%#v'; whenAnonPrint=%v", ty, whenAnonPrint)
+	fmt.Printf("in typeNameWithAnonInfo, ty='%v'; whenAnonPrint=%v\n", ty.String(), whenAnonPrint)
 	defer func() {
 		// funcContext.typeName returning with res = 'sliceType'
 		//fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
@@ -519,15 +528,17 @@ func (c *funcContext) typeNameWithAnonInfo(
 		isAnon = true
 
 		// cause all embedded types to be registered
+		fmt.Printf("----- calling c.initArgs(ty)\n")
 		c.initArgs(ty)
+		fmt.Printf("----- back from c.initArgs(ty)\n")
 
 		// [6:] takes prefix "__kind" off.
 		low := "__type__.anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
-		pp("typeKind(ty)='%s', low='%s'", typeKind(ty), low)
+		fmt.Printf("typeKind(ty)='%s', low='%s'\n", typeKind(ty), low)
 
-		varName := c.newVariableWithLevel(low, true)
+		varName := c.newVariableWithLevel(low, true, true)
 
 		anonType = types.NewTypeName(token.NoPos, c.p.Pkg, varName, ty) // fake types.TypeName
 		c.p.anonTypes = append(c.p.anonTypes, anonType)

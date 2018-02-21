@@ -20,6 +20,8 @@ type Matrix struct {
 m := &Matrix{A:[][]float64{[]float64{1,2},[]float64{3,4}}}
 e := m.A[0][1]
 f := m.A[1][1]
+// g is even fast repro than slc
+g:=[][]int{[]int{1,2}}
 slc := m.A[1]
 `
 		// e == 2
@@ -40,11 +42,16 @@ slc := m.A[1]
 		LuaMustFloat64(vm, "e", 2)
 		LuaMustFloat64(vm, "f", 4)
 
+		// bad: [][]int{[0]= [][]int{[0]= 1LL, [1]= 2LL, }, }
+		rawsrc := []byte(`gs = tostring(g)`)
+		LoadAndRunTestHelper(t, vm, rawsrc)
+		LuaMustString(vm, "gs", "[][]int{[0]= []int{[0]= 1LL, [1]= 2LL, }, }")
+
 		// slc was getting an extra [], e.g.
-		// [][]float64{[0]= 3, [1]= 4, }
+		// bad: [][]float64{[0]= 3, [1]= 4, }
 		// when we want
-		// []float64{[0]= 3, [1]= 4, }
-		rawsrc := []byte(`s = tostring(slc)`)
+		// good: []float64{[0]= 3, [1]= 4, }
+		rawsrc = []byte(`s = tostring(slc)`)
 		LoadAndRunTestHelper(t, vm, rawsrc)
 		LuaMustString(vm, "s", "[]float64{[0]= 3, [1]= 4, }")
 	})
