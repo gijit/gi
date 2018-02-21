@@ -152,10 +152,10 @@ runMultiply = function(sz, i, j)
 end;
 
 main = function() 
-   local r = runMultiply(10LL, 9LL, 9LL);
-   print("r=", r);
+   --local r = runMultiply(10LL, 9LL, 9LL);
+   --print("r=", r);
    --t0 = __clone(time.Now(), __type__.time.Time);
-   print("runMultiply(100,9,9) -> ", r)
+   print("runMultiply(100,9,9) -> ", runMultiply(100LL, 9LL, 9LL))
    --local elap = time.Since(__clone(t0, __type__.time.Time));
    --fmt.Printf("compiled Go elap = %v\n", elap);
 end;
