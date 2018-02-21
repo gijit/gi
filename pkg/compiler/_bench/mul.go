@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 	//"math/rand"
 )
 
@@ -104,6 +105,13 @@ func runMultiply(sz, i, j int) float64 {
 func main() {
 	r := runMultiply(10, 9, 9)
 	fmt.Printf("r='%v'\n", r)
+	t0 := time.Now()
+	fmt.Printf("runMultiply(100,9,9) -> %v\n", int(runMultiply(100, 9, 9)))
+	elap := time.Since(t0)
+	fmt.Printf("compiled Go elap = %v\n", elap)
 }
 
 // 3 x 3 matrix multiply mu.A[2,2] = 195
+// runMultiply(10,9,9) -> 54865
+// runMultiply(100,9,9) -> 480371650
+// compiled Go elap = 3.085894ms

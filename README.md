@@ -3,11 +3,8 @@ gijit: a just-in-time trace-compiled golang interpreter
 `gijit` aims at being a scalable Go REPL
 for doing interactive coding and data analysis.
 It is backed by LuaJIT, a Just-in-Time
-trace compiler that provides quite
-nice performance, sometimes even beating
-ahead-of-time compiled Go code. The REPL
-binary is called simply `gi`, as it is a
-"go interpreter".
+trace compiler. The REPL binary is called
+simply `gi`, as it is a "go interpreter".
 
 quick install
 -------------
