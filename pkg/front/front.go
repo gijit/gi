@@ -5,10 +5,11 @@ package front
 
 import (
 	"bytes"
+	"fmt"
 )
 
 // eofSeen is returned true if our the input is incomplete.
-func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool) {
+func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool, err error) {
 
 	// we always start with the full source to parse, it's
 	// never a partial continuation with prior unseen stuff.
@@ -17,7 +18,7 @@ func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool) {
 	// just not be finished yet.
 	sourceCode = bytes.TrimLeft(sourceCode, " \t\n\r")
 	if len(sourceCode) == 0 {
-		return false, false, true
+		return false, false, true, nil
 	}
 
 	var errh ErrorHandler = nil // stop at first error.
@@ -44,11 +45,12 @@ func TopLevelParseGoSource(sourceCode []byte) (eofSeen, errorSeen, empty bool) {
 		case EmptyInput:
 			empty = true
 		default:
-			panic(recov)
+			errorSeen = true
+			err = fmt.Errorf("%v", recov)
 		}
 	}()
 
-	_, err := Parse(base, stream, errh, nil, fileh)
+	_, err = Parse(base, stream, errh, nil, fileh)
 	pp("normal return from Parse(), err = '%v'", err)
 
 	if err == ErrSyntax {
