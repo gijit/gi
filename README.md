@@ -18,6 +18,7 @@ $ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gi
 $ make install
 $ gi
 ~~~
+See https://github.com/gijit/gi/issues/18 for windows install help.
 
 # the dream
 
@@ -88,6 +89,11 @@ most recent status
 
 2018 Feb 21 update
 ------------------
+Releave v1.0.2 brings a calculator mode, for
+multiple lines of diret computation. Enter
+calculator mode with `==` alone on a line,
+and exit with `:` alone.
+
 Release v1.0.0 marks these milestones:
 
 * the full program _bench/mul.go (mat_test 501) builds and runs;
