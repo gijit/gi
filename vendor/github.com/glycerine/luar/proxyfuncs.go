@@ -5,7 +5,7 @@ package luar
 import (
 	"reflect"
 
-	"github.com/glycerine/golua/lua"
+	"github.com/aarzilli/golua/lua"
 )
 
 // Complex pushes a proxy to a Go complex on the stack.
@@ -69,6 +69,12 @@ func ipairsAux(L *lua.State) int {
 // It respects the __ipairs metamethod.
 //
 // It is only useful for compatibility with Lua 5.1.
+//
+// Because it cannot call 'ipairs' for it might recurse infinitely, ProxyIpairs
+// reimplements `ipairsAux` in Go which can be a performance issue in tight
+// loops.
+//
+// You should call 'RegProxyIpairs' instead.
 func ProxyIpairs(L *lua.State) int {
 	// See Lua >=5.2 source code.
 	if L.GetMetaField(1, "__ipairs") {
@@ -82,6 +88,32 @@ func ProxyIpairs(L *lua.State) int {
 	L.PushValue(1)
 	L.PushInteger(0)
 	return 3
+}
+
+// Register a function 'table.name' equivalent to ProxyIpairs that uses 'ipairs'
+// when '__ipairs' is not present.
+//
+// This is much faster than ProxyIpairs.
+func RegProxyIpairs(L *lua.State, table, name string) {
+	L.GetGlobal("ipairs")
+	ref := L.Ref(lua.LUA_REGISTRYINDEX)
+
+	f := func(L *lua.State) int {
+		// See Lua >=5.2 source code.
+		if L.GetMetaField(1, "__ipairs") {
+			L.PushValue(1)
+			L.Call(1, 3)
+			return 3
+		}
+		L.RawGeti(lua.LUA_REGISTRYINDEX, ref)
+		L.PushValue(1)
+		L.Call(1, 3)
+		return 3
+	}
+
+	Register(L, table, Map{
+		name: f,
+	})
 }
 
 // ProxyMethod pushes the proxy method on the stack.
@@ -100,16 +132,6 @@ func ProxyMethod(L *lua.State) int {
 	return 1
 }
 
-func pairsAux(L *lua.State) int {
-	L.CheckType(1, lua.LUA_TTABLE)
-	L.SetTop(2) // Create a 2nd argument if there isn't one.
-	if L.Next(1) != 0 {
-		return 2
-	}
-	L.PushNil()
-	return 1
-}
-
 // ProxyPairs implements Lua 5.2 'pairs' functions.
 // It respects the __pairs metamethod.
 //
@@ -123,7 +145,7 @@ func ProxyPairs(L *lua.State) int {
 	}
 
 	L.CheckType(1, lua.LUA_TTABLE)
-	L.PushGoFunction(pairsAux)
+	L.GetGlobal("next")
 	L.PushValue(1)
 	L.PushNil()
 	return 3
@@ -144,7 +166,9 @@ func ProxyType(L *lua.State) int {
 	}
 	v, _ := valueOfProxy(L, 1)
 
+	pointerLevel := ""
 	for v.Kind() == reflect.Ptr {
+		pointerLevel += "*"
 		v = v.Elem()
 	}
 
@@ -158,7 +182,7 @@ func ProxyType(L *lua.State) int {
 		prefix = "number"
 	}
 
-	L.PushString(prefix + "<" + v.Type().String() + ">")
+	L.PushString(prefix + "<" + pointerLevel + v.Type().String() + ">")
 	return 1
 }
 

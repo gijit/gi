@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	//"strconv"
+	"strconv"
 	"sync"
 
-	"github.com/glycerine/golua/lua"
-	"github.com/glycerine/luar"
+	"github.com/aarzilli/golua/lua"
+	"github.com/stevedonovan/luar"
 )
 
 func Example() {
@@ -129,11 +129,6 @@ func ExampleGoToLua() {
 	// Hello world!
 }
 
-// jea: ExampleInit output based on maps can
-//      change the order of output lines, so
-//  it isn't deterministic. We comment it out
-//  to get repeatable tests.
-/*
 // This example shows how Go slices and maps are marshalled to Lua tables and
 // vice versa.
 //
@@ -185,7 +180,6 @@ end
 	// 3 1600
 	// 2 900
 }
-*/
 
 func ExampleLuaObject_Call() {
 	L := luar.Init()
@@ -266,7 +260,7 @@ func ExampleMakeChan() {
 	L1.SetGlobal("c")
 	L1.GetGlobal("c")
 	var c interface{}
-	_, err := luar.LuaToGo(L1, -1, &c)
+	err := luar.LuaToGo(L1, -1, &c)
 	L1.Pop(1)
 	if err != nil {
 		log.Fatal(err)

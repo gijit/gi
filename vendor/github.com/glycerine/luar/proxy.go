@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/glycerine/golua/lua"
+	"github.com/aarzilli/golua/lua"
 )
 
 // Lua proxy objects for Go slices, maps and structs
@@ -27,8 +27,11 @@ const (
 	cChannelMeta   = "channelMT"
 )
 
-var proxyMap = map[*valueProxy]reflect.Value{}
-var proxymu = &sync.Mutex{}
+var (
+	proxyIdCounter uintptr
+	proxyMap       = map[uintptr]*valueProxy{}
+	proxymu        sync.RWMutex
+)
 
 // commonKind returns the kind to which v1 and v2 can be converted with the
 // least information loss.
@@ -68,7 +71,7 @@ func isValueProxy(L *lua.State, idx int) bool {
 
 func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 	var a interface{}
-	_, err := LuaToGo(L, idx, &a)
+	err := LuaToGo(L, idx, &a)
 	if err != nil {
 		L.RaiseError(err.Error())
 	}
@@ -77,8 +80,8 @@ func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 
 func makeValueProxy(L *lua.State, v reflect.Value, proxyMT string) {
 	// The metatable needs be set up in the Lua state before the proxy is created,
-	// otherwise closing the state will fail on calling the garbage collector.
-	// Not really sure why this happens though...
+	// otherwise closing the state will fail on calling the garbage collector. Not
+	// really sure why this happens though...
 	L.LGetMetaTable(proxyMT)
 	if L.IsNil(-1) {
 		flagValue := func() {
@@ -152,14 +155,16 @@ func makeValueProxy(L *lua.State, v reflect.Value, proxyMT string) {
 			flagValue()
 		}
 	}
-	L.Pop(1)
-	rawptr := L.NewUserdata(typeof((*valueProxy)(nil)).Size())
-	ptr := (*valueProxy)(rawptr)
-	ptr.v = v
-	ptr.t = v.Type()
+
 	proxymu.Lock()
-	proxyMap[ptr] = v
+	id := proxyIdCounter
+	proxyIdCounter++
+	proxyMap[id] = &valueProxy{ v: v, t: v.Type() }
 	proxymu.Unlock()
+
+	L.Pop(1)
+	rawptr := L.NewUserdata(reflect.TypeOf(id).Size())
+	*(*uintptr)(rawptr) = id
 	L.LGetMetaTable(proxyMT)
 	L.SetMetaTable(-2)
 }
@@ -214,8 +219,6 @@ func pushNumberValue(L *lua.State, a interface{}, t1, t2 reflect.Type) {
 
 func slicer(L *lua.State, v reflect.Value, metatable string) lua.LuaGoFunction {
 	return func(L *lua.State) int {
-		// jea TODO: do CheckInteger and ToInteger know how
-		// to respect cdata int64/int?
 		L.CheckInteger(1)
 		L.CheckInteger(2)
 		i := L.ToInteger(1) - 1
@@ -245,8 +248,17 @@ func unsizedKind(v reflect.Value) reflect.Kind {
 }
 
 func valueOfProxy(L *lua.State, idx int) (reflect.Value, reflect.Type) {
-	proxy := (*valueProxy)(L.ToUserdata(idx))
-	return proxy.v, proxy.t
+	proxyId := *(*uintptr)(L.ToUserdata(idx))
+
+	proxymu.RLock()
+	val, ok := proxyMap[proxyId]
+	proxymu.RUnlock()
+
+	if !ok {
+		L.RaiseError(fmt.Sprintf("No value proxy in arg #%d", idx))
+	}
+
+	return val.v, val.t
 }
 
 func valueToComplex(L *lua.State, v reflect.Value) complex128 {

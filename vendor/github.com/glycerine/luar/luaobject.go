@@ -4,7 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/glycerine/golua/lua"
+	"github.com/aarzilli/golua/lua"
 )
 
 // LuaObject encapsulates a Lua object like a table or a function.
@@ -56,7 +56,7 @@ func NewLuaObjectFromValue(L *lua.State, val interface{}) *LuaObject {
 //
 // - If a pointer, then only the first result is stored to that pointer.
 //
-// - If a struct with 'n' fields, then the first n results are stored in the field.
+// - If a struct with 'n' exported fields, then the first 'n' results are stored in the first 'n' exported fields.
 //
 // - If a slice, then all the results are stored in the slice. The slice is re-allocated if necessary.
 //
@@ -105,8 +105,7 @@ func (lo *LuaObject) Call(results interface{}, args ...interface{}) error {
 		if err != nil {
 			return err
 		}
-		_, err = LuaToGo(L, -1, res.Interface())
-		return err
+		return LuaToGo(L, -1, res.Interface())
 
 	case reflect.Slice:
 		residx := L.GetTop() - len(args)
@@ -129,7 +128,7 @@ func (lo *LuaObject) Call(results interface{}, args ...interface{}) error {
 		}
 
 		for i := 0; i < nresults; i++ {
-			_, err = LuaToGo(L, residx+i, res.Index(i).Addr().Interface())
+			err = LuaToGo(L, residx+i, res.Index(i).Addr().Interface())
 			if err != nil {
 				return err
 			}
@@ -152,7 +151,7 @@ func (lo *LuaObject) Call(results interface{}, args ...interface{}) error {
 		residx := L.GetTop() - nresults + 1
 
 		for i := 0; i < nresults; i++ {
-			_, err = LuaToGo(L, residx+i, exportedFields[i].Interface())
+			err = LuaToGo(L, residx+i, exportedFields[i].Interface())
 			if err != nil {
 				return err
 			}
@@ -215,8 +214,7 @@ func (lo *LuaObject) Get(a interface{}, subfields ...interface{}) error {
 		return err
 	}
 	defer lo.l.Pop(1)
-	_, err = LuaToGo(lo.l, -1, a)
-	return err
+	return LuaToGo(lo.l, -1, a)
 }
 
 // GetObject returns the LuaObject indexed at the sequence of 'subfields'.
@@ -422,13 +420,13 @@ func (ti *LuaTableIter) Next(key, value interface{}) bool {
 		}
 	}
 
-	_, err := LuaToGo(L, -2, key)
+	err := LuaToGo(L, -2, key)
 	if err != nil {
 		ti.err = err
 		return false
 	}
 	if value != nil {
-		_, err = LuaToGo(L, -1, value)
+		err = LuaToGo(L, -1, value)
 		if err != nil {
 			ti.err = err
 			return false

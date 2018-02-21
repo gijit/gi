@@ -28,17 +28,13 @@ See golua's homepage for further installation details.
 
 # REPL
 
-An example REPL is available in the `cmd` folder.
+Version 1.x features an example REPL that is available in the `cmd` folder.
 
+# Changelog
 
-# Version 2
+## Luar 2
 
-This is a rewrite of 1.0 with extended features and a cleaner API.
-
-Warning: This is a development version, the API might change in the future.
-
-## Compatibility notice
-
+This is a rewrite of 1.x with extended features and a cleaner API.
 The main differences with the previous version:
 
 - The function prototypes of `GoToLua` and `LuaToGo` are simpler and do not

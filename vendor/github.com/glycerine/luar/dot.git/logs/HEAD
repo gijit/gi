@@ -6,3 +6,9 @@ a992b6f52423167820d7118fd4f665dbdb500327 a992b6f52423167820d7118fd4f665dbdb50032
 a992b6f52423167820d7118fd4f665dbdb500327 a992b6f52423167820d7118fd4f665dbdb500327 glycerine <j.e.aten@gmail.com> 1410664908 -0700	checkout: moving from master to master
 a992b6f52423167820d7118fd4f665dbdb500327 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1514951842 -0600	pull: Fast-forward
 22d247e5366095f491cd83edf779ee99a78f5ead a258c7031e7e375de10ba9442e0dd5d474404249 Jason E. Aten <j.e.aten@gmail.com> 1515290666 -0600	checkout: moving from master to v2
+a258c7031e7e375de10ba9442e0dd5d474404249 a258c7031e7e375de10ba9442e0dd5d474404249 Jason E. Aten <j.e.aten@gmail.com> 1519226409 -0600	checkout: moving from v2 to jea
+a258c7031e7e375de10ba9442e0dd5d474404249 f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226465 -0600	commit: jea: my changes atop of v2
+f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1519226523 -0600	rebase: checkout master
+22d247e5366095f491cd83edf779ee99a78f5ead f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226660 -0600	rebase: aborting
+f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226660 -0600	rebase: updating HEAD
+f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1519226663 -0600	checkout: moving from jea to master

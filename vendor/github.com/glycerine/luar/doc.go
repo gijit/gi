@@ -1,7 +1,7 @@
 /*
 Package luar provides a convenient interface between Lua and Go.
 
-It uses Alessandro Arzilli's golua (https://github.com/glycerine/golua).
+It uses Alessandro Arzilli's golua (https://github.com/aarzilli/golua).
 
 Most Go values can be passed to Lua: basic types, strings, complex numbers,
 user-defined types, pointers, composite types, functions, channels, etc.
