@@ -90,7 +90,7 @@ most recent status
 2018 Feb 21 update
 ------------------
 Releave v1.0.2 brings a calculator mode, for
-multiple lines of diret computation. Enter
+multiple lines of direct computation. Enter
 calculator mode with `==` alone on a line,
 and exit with `:` alone.
 
