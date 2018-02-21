@@ -1075,7 +1075,7 @@ __idKey = function(x)
 end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
-   print("__newType called with str = '"..str.."'")
+   --print("__newType called with str = '"..str.."'")
    local typ ={
       __str = str,
    };
@@ -1595,8 +1595,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       print("bloom called for typ:")
       __st(typ)
    end
-   print("*** returning from __newType with typ=")
-   __st(typ)
+   --print("*** returning from __newType with typ=")
+   --__st(typ)
    return typ;
 end
 
