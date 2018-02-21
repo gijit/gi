@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/aarzilli/golua/lua"
+	"github.com/glycerine/golua/lua"
 )
 
 // Lua proxy objects for Go slices, maps and structs
@@ -71,7 +71,7 @@ func isValueProxy(L *lua.State, idx int) bool {
 
 func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 	var a interface{}
-	err := LuaToGo(L, idx, &a)
+	_, err := LuaToGo(L, idx, &a)
 	if err != nil {
 		L.RaiseError(err.Error())
 	}
@@ -80,8 +80,8 @@ func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 
 func makeValueProxy(L *lua.State, v reflect.Value, proxyMT string) {
 	// The metatable needs be set up in the Lua state before the proxy is created,
-	// otherwise closing the state will fail on calling the garbage collector. Not
-	// really sure why this happens though...
+	// otherwise closing the state will fail on calling the garbage collector.
+	// Not really sure why this happens though...
 	L.LGetMetaTable(proxyMT)
 	if L.IsNil(-1) {
 		flagValue := func() {
@@ -219,6 +219,8 @@ func pushNumberValue(L *lua.State, a interface{}, t1, t2 reflect.Type) {
 
 func slicer(L *lua.State, v reflect.Value, metatable string) lua.LuaGoFunction {
 	return func(L *lua.State) int {
+		// jea TODO: do CheckInteger and ToInteger know how
+		// to respect cdata int64/int?
 		L.CheckInteger(1)
 		L.CheckInteger(2)
 		i := L.ToInteger(1) - 1

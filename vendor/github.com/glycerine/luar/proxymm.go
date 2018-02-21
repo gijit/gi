@@ -14,7 +14,7 @@ import (
 	"math/cmplx"
 	"reflect"
 
-	"github.com/aarzilli/golua/lua"
+	"github.com/glycerine/golua/lua"
 )
 
 func channel__index(L *lua.State) int {
@@ -34,7 +34,7 @@ func channel__index(L *lua.State) int {
 	case "send":
 		f := func(L *lua.State) int {
 			val := reflect.New(t.Elem())
-			err := LuaToGo(L, 1, val.Interface())
+			_, err := LuaToGo(L, 1, val.Interface())
 			if err != nil {
 				L.RaiseError(fmt.Sprintf("channel requires %v value type", t.Elem()))
 			}
@@ -79,7 +79,7 @@ func interface__index(L *lua.State) int {
 func map__index(L *lua.State) int {
 	v, t := valueOfProxy(L, 1)
 	key := reflect.New(t.Key())
-	err := LuaToGo(L, 2, key.Interface())
+	_, err := LuaToGo(L, 2, key.Interface())
 	if err == nil {
 		key = key.Elem()
 		val := v.MapIndex(key)
@@ -138,13 +138,13 @@ func map__ipairs(L *lua.State) int {
 func map__newindex(L *lua.State) int {
 	v, t := valueOfProxy(L, 1)
 	key := reflect.New(t.Key())
-	err := LuaToGo(L, 2, key.Interface())
+	_, err := LuaToGo(L, 2, key.Interface())
 	if err != nil {
 		L.RaiseError(fmt.Sprintf("map requires %v key", t.Key()))
 	}
 	key = key.Elem()
 	val := reflect.New(t.Elem())
-	err = LuaToGo(L, 3, val.Interface())
+	_, err = LuaToGo(L, 3, val.Interface())
 	if err != nil {
 		L.RaiseError(fmt.Sprintf("map requires %v value type", t.Elem()))
 	}
@@ -323,9 +323,9 @@ func number__unm(L *lua.State) int {
 // us.
 func proxy__eq(L *lua.State) int {
 	var a1 interface{}
-	_ = LuaToGo(L, 1, &a1)
+	_, _ = LuaToGo(L, 1, &a1)
 	var a2 interface{}
-	_ = LuaToGo(L, 2, &a2)
+	_, _ = LuaToGo(L, 2, &a2)
 	L.PushBoolean(a1 == a2)
 	return 1
 }
@@ -352,10 +352,13 @@ func slice__index(L *lua.State) int {
 	}
 	if L.IsNumber(2) {
 		idx := L.ToInteger(2)
-		if idx < 1 || idx > v.Len() {
+		// jea: change to 0-based instead of 1-based indexing.
+		//if idx < 1 || idx > v.Len() {
+		if idx < 0 || idx >= v.Len() {
 			L.RaiseError("slice/array get: index out of range")
 		}
-		v := v.Index(idx - 1)
+		//v := v.Index(idx - 1)
+		v := v.Index(idx)
 		GoToLuaProxy(L, v)
 
 	} else if L.IsString(2) {
@@ -371,7 +374,7 @@ func slice__index(L *lua.State) int {
 				args := []reflect.Value{}
 				for i := 1; i <= narg; i++ {
 					elem := reflect.New(v.Type().Elem())
-					err := LuaToGo(L, i, elem.Interface())
+					_, err := LuaToGo(L, i, elem.Interface())
 					if err != nil {
 						L.RaiseError(fmt.Sprintf("slice requires %v value type", v.Type().Elem()))
 					}
@@ -425,7 +428,7 @@ func slice__newindex(L *lua.State) int {
 	}
 	idx := L.ToInteger(2)
 	val := reflect.New(t.Elem())
-	err := LuaToGo(L, 3, val.Interface())
+	_, err := LuaToGo(L, 3, val.Interface())
 	if err != nil {
 		L.RaiseError(fmt.Sprintf("slice requires %v value type", t.Elem()))
 	}
@@ -552,7 +555,7 @@ func struct__newindex(L *lua.State) int {
 		L.RaiseError(fmt.Sprintf("no field named `%s` for type %s", name, v.Type()))
 	}
 	val := reflect.New(field.Type())
-	err := LuaToGo(L, 3, val.Interface())
+	_, err := LuaToGo(L, 3, val.Interface())
 	if err != nil {
 		L.RaiseError(fmt.Sprintf("struct field %v requires %v value type, error with target: %v", name, field.Type(), err))
 	}

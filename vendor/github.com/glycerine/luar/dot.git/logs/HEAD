@@ -12,3 +12,10 @@ f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ea
 22d247e5366095f491cd83edf779ee99a78f5ead f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226660 -0600	rebase: aborting
 f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226660 -0600	rebase: updating HEAD
 f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1519226663 -0600	checkout: moving from jea to master
+22d247e5366095f491cd83edf779ee99a78f5ead f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519226879 -0600	checkout: moving from master to jea
+f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1519226936 -0600	checkout: moving from jea to master
+22d247e5366095f491cd83edf779ee99a78f5ead f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 Jason E. Aten <j.e.aten@gmail.com> 1519227153 -0600	checkout: moving from master to jea
+f66ec3ac1c34fae86f66ad936e3d6b1ade4f27e1 22d247e5366095f491cd83edf779ee99a78f5ead Jason E. Aten <j.e.aten@gmail.com> 1519227215 -0600	rebase: checkout sd/master
+22d247e5366095f491cd83edf779ee99a78f5ead e9af524d078cd3c176ffd1111a90c87ceec95325 Jason E. Aten <j.e.aten@gmail.com> 1519227983 -0600	rebase: jea: my changes atop of v2
+e9af524d078cd3c176ffd1111a90c87ceec95325 e9af524d078cd3c176ffd1111a90c87ceec95325 Jason E. Aten <j.e.aten@gmail.com> 1519227983 -0600	rebase finished: returning to refs/heads/jea
+e9af524d078cd3c176ffd1111a90c87ceec95325 e9af524d078cd3c176ffd1111a90c87ceec95325 Jason E. Aten <j.e.aten@gmail.com> 1519228021 -0600	checkout: moving from jea to master

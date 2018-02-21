@@ -9,5 +9,5 @@
 	url = https://github.com/stevedonovan/luar
 	fetch = +refs/heads/*:refs/remotes/sd/*
 [remote "origin"]
-	url = git@github.com:glcyerine/luar
+	url = git@github.com:glycerine/luar
 	fetch = +refs/heads/*:refs/remotes/origin/*
