@@ -88,43 +88,20 @@ most recent status
 
 2018 Feb 21 update
 ------------------
-v0.9.18 has great progress getting full program to run.
+v0.9.19 has great progress getting full program to run.
 A crude matrix multiplication whole program (mat_test 501)
-now executes correctly.
+now executes correctly, albiet slowly and untuned.
 
-There is much tuning to do since we see weird slowdown. This is not
-all due to the typesystem either. We're using integer
-indexes instead of float64, so that likely explains some
-of the difference (all that extra int->float conversion),
-but also the standalone LuaJIT and the `gijit` perf should be
-identical. For 100x100 case, we were 10x slower for the same
-exact Lua code run under `gi` versus under standalone build
-of LuaJIT. Investigation in progress.
 ~~~
 `runMultiply(500,9,9) -> 301609258250` from `_bench/mul.go`/`_bench/mul.lua`
 (a) took 342.456726ms  on Go
-(b) took 7 seconds     on standalone build of LuaJIT (20x slower)
-(b) took much more than 60 seconds...
-    not sure why, maybe the JIT got turned off somehow? should be
-    just the same as the standalone build of LuaJIT.
-
-`runMultiply(100,9,9) -> 480371650`
-(a) 3.085894ms in compiled Go
-(b) <1 second on standalone LuaJIT
-(c) 8 seconds when run inside `gi`.
+(b) took 7 seconds     on gijit (about 20x slower)
 ~~~
 
-Mystery solved: It turns out this slowdown between gi and standalone
-LuaJIT was due to Luar. When we don't load Luar, things
-run massively faster.  Luar provides for binary
-access to Go binary packages, but we will need to
-tune it to not slow down code not using Go
-binaries via reflection. The `gi -np` switch
-skips loading Luar and the prelude (stands for
-"no prelude").
-
 See https://github.com/stevedonovan/luar issue #23 to
-follow.
+follow some tuning -- we omit Luar's type() override
+with `ProxyType()` to retain LuaJIT performance on
+the matrix 501 example.
 
 2018 Feb 18 update
 ------------------
