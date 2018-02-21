@@ -2,12 +2,6 @@ package main
 
 // matrix multiplication benchmark
 
-import (
-	"fmt"
-	"time"
-	//"math/rand"
-)
-
 type Matrix struct {
 	A    [][]float64
 	Nrow int
@@ -45,8 +39,7 @@ func NewMatrix(nrow, ncol int, fill bool) *Matrix {
 // m1 x m2 matrix multiplication
 func mult(m1, m2 *Matrix) (r *Matrix) {
 	if m1.Ncol != m2.Nrow {
-		panic(fmt.Sprintf(
-			"incompatible: m1.Ncol=%v, m2.Nrow=%v", m1.Ncol, m2.Nrow))
+		panic("incompatible dimensions: ")
 	}
 	r = NewMatrix(m1.Nrow, m2.Ncol, false)
 	nr1 := m1.Nrow
@@ -104,11 +97,7 @@ func runMultiply(sz, i, j int) float64 {
 
 func main() {
 	r := runMultiply(10, 9, 9)
-	fmt.Printf("r='%v'\n", r)
-	t0 := time.Now()
-	fmt.Printf("runMultiply(100,9,9) -> %v\n", int(runMultiply(100, 9, 9)))
-	elap := time.Since(t0)
-	fmt.Printf("compiled Go elap = %v\n", elap)
+	println("r=", r)
 }
 
 // 3 x 3 matrix multiply mu.A[2,2] = 195
