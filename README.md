@@ -289,7 +289,7 @@ See the top of this README for the latest update.
 ------------------
 v0.9.19 has great progress getting full program to run.
 A crude matrix multiplication whole program (mat_test 501)
-now executes correctly, albiet slowly and untuned.
+now executes correctly, albeit slowly and untuned.
 
 ~~~
 `runMultiply(500,9,9) -> 301609258250` from `_bench/mul.go`/`_bench/mul.lua`
