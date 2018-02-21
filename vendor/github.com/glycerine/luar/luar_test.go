@@ -964,7 +964,7 @@ end
 
 	var a interface{}
 	L.GetGlobal("foo")
-	err := LuaToGo(L, -1, &a)
+	_, err := LuaToGo(L, -1, &a)
 	if err != nil {
 		t.Error(err)
 	}
@@ -979,7 +979,7 @@ end
 	}
 
 	lo2 := NewLuaObjectFromName(L, "_G")
-	err = LuaToGo(L, -1, &lo2)
+	_, err = LuaToGo(L, -1, &lo2)
 	if err != nil {
 		t.Error(err)
 	}

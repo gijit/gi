@@ -123,6 +123,9 @@ binaries via reflection. The `gi -np` switch
 skips loading Luar and the prelude (stands for
 "no prelude").
 
+See https://github.com/stevedonovan/luar issue #23 to
+follow.
+
 2018 Feb 18 update
 ------------------
 As of `gigit` v0.9.15, Complex numbers

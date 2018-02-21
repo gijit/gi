@@ -172,7 +172,7 @@ func Init() *lua.State {
 		"type":  ProxyType,
 	})
 	// 'ipairs' needs a special case for performance reasons.
-	RegProxyIpairs(L, "", "ipairs")
+	// RegProxyIpairs(L, "", "ipairs")
 	return L
 }
 
