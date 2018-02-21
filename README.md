@@ -77,12 +77,13 @@ Needs at least go1.9. Works on Mac OSX and Linux and Windows. On windows you'll 
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi
 $ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
-$ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18
-   for notes on installing both mingw64 and make, which are pre-requisites.)
+$ (On windows: run `windows.bat` to build libluajit.a ; note pre-reqs below.)
+   
 $ make install
 $ gi
 ~~~
-
+See https://github.com/gijit/gi/issues/18 for windows install help.
+Install both mingw64 and make before building gijit. These are prerequisites.
 
 most recent status
 ------------------
