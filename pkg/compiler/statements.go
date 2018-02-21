@@ -921,6 +921,9 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
 	local := "local "
+	if !define {
+		local = ""
+	}
 	if c.parent == nil {
 		pp("c.parent was nil!?! c = '%#v'", c)
 		// global vars won't be local
