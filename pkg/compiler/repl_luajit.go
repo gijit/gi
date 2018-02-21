@@ -312,7 +312,7 @@ these special commands.
  :rm 3-4         Remove commands 3-4 from history.
  :do <path>      Run dofile(path) on a .lua file.
  :source <path>  Re-play Go code from a file.
- = 3 + 4         The '=' calculate expression (one line).
+ = 3 + 4         Calculate the expression after the '=' (one line).
  ==              Multiple entry calculator mode. ':' to exit.
  import "fmt"    Import the binary, pre-compiled package.
  ctrl-d to exit  History is saved in ~/.gitit.hist
