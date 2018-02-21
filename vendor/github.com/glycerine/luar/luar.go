@@ -169,10 +169,12 @@ func Init() *lua.State {
 	})
 	Register(L, "", Map{
 		"pairs": ProxyPairs,
-		"type":  ProxyType,
+		// jea: Using ProxyType is huge 10x performance loss for LuaJIT.
+		// So try not to use it.
+		//"type": ProxyType,
 	})
 	// 'ipairs' needs a special case for performance reasons.
-	// RegProxyIpairs(L, "", "ipairs")
+	RegProxyIpairs(L, "", "ipairs")
 	return L
 }
 
