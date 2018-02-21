@@ -87,7 +87,7 @@ var done bool
 
 func runMultiply(sz, i, j int) float64 {
 	var mu *Matrix
-	for i := 0; i < 1; i++ {
+	for k := 0; k < 1; k++ {
 		a := NewMatrix(sz, sz, true)
 		b := NewMatrix(sz, sz, true)
 		//t0 := time.Now()
@@ -102,7 +102,7 @@ func runMultiply(sz, i, j int) float64 {
 }
 
 func main() {
-	r := runMultiply(3, 2, 2)
+	r := runMultiply(10, 9, 9)
 	fmt.Printf("r='%v'\n", r)
 }
 

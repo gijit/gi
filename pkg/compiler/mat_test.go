@@ -208,5 +208,13 @@ func runMultiply(sz, i, j int) float64 {
 		LuaMustBool(vm, "done", true)
 		LuaMustFloat64(vm, "r", 195)
 		cv.So(true, cv.ShouldBeTrue)
+
+		t3, err := inc.Tr([]byte("r2 := runMultiply(10,9,9)"))
+		panicOn(err)
+		LoadAndRunTestHelper(t, vm, t3)
+
+		LuaMustFloat64(vm, "r2", 54865)
+		cv.So(true, cv.ShouldBeTrue)
+
 	})
 }
