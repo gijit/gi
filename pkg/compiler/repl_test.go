@@ -9,8 +9,6 @@ import (
 	luajit "github.com/glycerine/golua/lua"
 )
 
-var defaultTestMode bool
-
 func init() {
 	defaultTestMode = true
 }

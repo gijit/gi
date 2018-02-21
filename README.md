@@ -113,7 +113,15 @@ of LuaJIT. Investigation in progress.
 (b) <1 second on standalone LuaJIT
 (c) 8 seconds when run inside `gi`.
 ~~~
-No profiling or tuning has been done yet.
+
+Mystery solved: It turns out this slowdown between gi and standalone
+LuaJIT was due to Luar. When we don't load Luar, things
+run massively faster.  Luar provides for binary
+access to Go binary packages, but we will need to
+tune it to not slow down code not using Go
+binaries via reflection. The `gi -np` switch
+skips loading Luar and the prelude (stands for
+"no prelude").
 
 2018 Feb 18 update
 ------------------

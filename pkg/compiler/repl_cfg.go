@@ -22,6 +22,8 @@ type GIConfig struct {
 	NoLuar         bool
 }
 
+var defaultTestMode bool // set to true by init() for tests, in repl_test.go.
+
 func NewGIConfig() *GIConfig {
 	return &GIConfig{
 		IsTestMode: defaultTestMode, // under tests, is set to true

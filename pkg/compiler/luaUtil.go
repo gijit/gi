@@ -29,6 +29,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	}
 
 	if cfg.NoPrelude || cfg.NoLuar {
+		fmt.Printf("loading LuaJIT vm without Luar.\n")
 		vm = golua.NewState()
 		vm.OpenLibs()
 		return vm, nil
