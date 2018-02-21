@@ -802,8 +802,8 @@ __valueArrayMT = {
          print(debug.traceback())
          error("read from array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
       end
-      print("array access bounds check ok.")
-      __st(t.__array, "t.__array")
+      --print("array access bounds check ok.")
+      --__st(t.__array, "t.__array")
       return t.__array[k]
    end,
 
@@ -867,14 +867,14 @@ __valueSliceMT = {
    
    __index = function(t, k)
       
-      print("__valueSliceMT.__index called, k='"..tostring(k).."'")
-      __st(t.__val)
-      print("callstack:"..tostring(debug.traceback()))
+      --print("__valueSliceMT.__index called, k='"..tostring(k).."'")
+      --__st(t.__val)
+      --print("callstack:"..tostring(debug.traceback()))
 
       local ktype = type(k)
       if ktype == "string" then
-         print("we have string key, doing rawget on t")
-         __st(t, "t")
+         --print("we have string key, doing rawget on t")
+         --__st(t, "t")
          return rawget(t,k)
       elseif ktype == "table" then
          print("callstack:"..tostring(debug.traceback()))
@@ -886,17 +886,17 @@ __valueSliceMT = {
          k = tonumber(k)
       end
       local w = t.__offset + k
-      print("index slice with w = "..type(w).." value: "..tostring(w))
+      --print("index slice with w = "..type(w).." value: "..tostring(w))
       if k < 0 or k >= t.__capacity then
          print(debug.traceback())
          error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
       end
-      print("slice access bounds check ok: w = ", w)
-      __st(t.__array, "t.__array")
+      --print("slice access bounds check ok: w = ", w)
+      --__st(t.__array, "t.__array")
       local wv = t.__array[w]
-      __st(wv, "wv")
-      __st(getmetatable(wv), "metatable.for.wv")
-      print("wv back from t.__array[w] is: "..tostring(wv))
+      --__st(wv, "wv")
+      --__st(getmetatable(wv), "metatable.for.wv")
+      --print("wv back from t.__array[w] is: "..tostring(wv))
       return wv
    end,
 
@@ -906,19 +906,19 @@ __valueSliceMT = {
    end,
    
    __tostring = function(self, ...)
-      print("__tostring called from __valueSliceMT: "..self.__typ.__str);
+      --print("__tostring called from __valueSliceMT: "..self.__typ.__str);
 
       local len = tonumber(self.__length) -- convert from LL int
       local off = tonumber(self.__offset)
       --print("__tostring sees self.__length of ", len, " __offset = ", off)
       local cap = self.__capacity
       --local s = "slice <len=" .. tostring(len) .. "; off=" .. off .. "; cap=" .. cap ..  "> is "..self.__constructor.__str.."{"
-      print("self.__constructor.__str = '"..self.__constructor.__str.."' and full display of self.__constructor:")
-      __st(self.__constructor, "self.__constructor")
+      --print("self.__constructor.__str = '"..self.__constructor.__str.."' and full display of self.__constructor:")
+      --__st(self.__constructor, "self.__constructor")
       
       local s = self.__constructor.__str.."{"
       local raw = self.__array
-      __st(raw, "raw in valueSice tostring")
+      --__st(raw, "raw in valueSice tostring")
       
       -- we want to skip both the _giPrivateRaw and the len
       -- when iterating, which happens automatically if we
@@ -1209,9 +1209,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindSlice then
       
       typ.tfun = function(this, array)
-         print(debug.traceback())
-         print("slice tfun for type '"..__addressof(typ).."' called with array = ")
-         __st(array)
+         --print(debug.traceback())
+         --print("slice tfun for type '"..__addressof(typ).."' called with array = ")
+         --__st(array)
          this.__array = array;
          this.__offset = 0;
          this.__length = __lenz(array)
@@ -1438,7 +1438,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.fields = fields;
          __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-            __st(f,"f")
+           --__st(f,"f")
             if not f.__typ.comparable then
                typ.comparable = false;
                break;
@@ -1697,8 +1697,8 @@ function __methodSet(typ)
       -- above may have made duplicates, now dedup
       --print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
-         print("m is ")
-         __st(m,"m")
+         --print("m is ")
+        --__st(m,"m")
          if base[m.__name] == nil then
             base[m.__name] = m;
          end
