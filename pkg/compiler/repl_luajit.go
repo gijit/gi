@@ -25,7 +25,7 @@ func (cfg *GIConfig) LuajitMain() {
 
 type Repl struct {
 	inc   *IncrState
-	vmCfg *VmConfig
+	vmCfg *GIConfig
 	vm    *golua.State
 
 	t0 time.Time
@@ -55,14 +55,9 @@ type Repl struct {
 
 func NewRepl(cfg *GIConfig) *Repl {
 
-	vmCfg := NewVmConfig()
-	vmCfg.PreludePath = cfg.PreludePath
-	vmCfg.Quiet = cfg.Quiet
-	vmCfg.NotTestMode = !cfg.IsTestMode
-	vmCfg.NoPrelude = cfg.NoPrelude
-	vm, err := NewLuaVmWithPrelude(vmCfg)
+	vm, err := NewLuaVmWithPrelude(cfg)
 	panicOn(err)
-	inc := NewIncrState(vm, vmCfg)
+	inc := NewIncrState(vm, cfg)
 
 	r := &Repl{cfg: cfg, vm: vm, inc: inc}
 	r.home = os.Getenv("HOME")

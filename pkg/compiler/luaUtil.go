@@ -19,29 +19,21 @@ import (
 // to turn on -vv very verbose debug printing.
 var dbg = &verb.VerboseVerbose
 
-type VmConfig struct {
-	PreludePath string
-	Quiet       bool
-	NotTestMode bool // set to true for production, not running under test.
-	NoPrelude   bool
-}
-
-func NewVmConfig() *VmConfig {
-	return &VmConfig{}
-}
-
-func NewLuaVmWithPrelude(cfg *VmConfig) (*golua.State, error) {
-	vm := luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
-
+func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
+	var vm *golua.State
 	if cfg == nil {
-		cfg = NewVmConfig()
+		cfg = NewGIConfig()
 		cwd, err := os.Getwd()
 		panicOn(err)
 		cfg.PreludePath = cwd
 	}
 
-	if cfg.NoPrelude {
+	if cfg.NoPrelude || cfg.NoLuar {
+		vm = golua.NewState()
+		vm.OpenLibs()
 		return vm, nil
+	} else {
+		vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
 	}
 
 	// establish prelude location so prelude can know itself.

@@ -9,6 +9,12 @@ import (
 	luajit "github.com/glycerine/golua/lua"
 )
 
+var defaultTestMode bool
+
+func init() {
+	defaultTestMode = true
+}
+
 var matchesLuaSrc = cv.ShouldMatchModuloWhiteSpaceAndLuaComments
 var startsWithLuaSrc = cv.ShouldStartWithModuloWhiteSpaceAndLuaComments
 

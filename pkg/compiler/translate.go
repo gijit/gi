@@ -25,16 +25,16 @@ import (
 )
 
 // the incremental translation state
-func NewIncrState(vm *luajit.State, vmCfg *VmConfig) *IncrState {
+func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
 
-	if vmCfg == nil {
-		vmCfg = NewVmConfig()
+	if cfg == nil {
+		cfg = NewGIConfig()
 	}
 
 	ic := &IncrState{
 		pkgMap: make(map[string]*IncrPkg),
 		vm:     vm,
-		vmCfg:  vmCfg,
+		vmCfg:  cfg,
 	}
 	pack := &build.Package{
 		Name:       "main",
@@ -110,7 +110,7 @@ type IncrState struct {
 	// like `import "fmt"` on demand.
 	vm *luajit.State
 
-	vmCfg *VmConfig
+	vmCfg *GIConfig
 
 	minify   bool
 	PrintAST bool

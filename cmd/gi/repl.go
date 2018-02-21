@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s command line flag error: '%s'", ProgramName, err)
 	}
-
 	if !cfg.Quiet {
 		fmt.Printf(
 			`====================
