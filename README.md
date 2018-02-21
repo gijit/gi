@@ -88,56 +88,18 @@ most recent status
 
 2018 Feb 21 update
 ------------------
-v0.9.19 has great progress getting full program to run.
-A crude matrix multiplication whole program (mat_test 501)
-now executes correctly, albiet slowly and untuned.
+Release v1.0.0 marks these milestones:
 
-~~~
-`runMultiply(500,9,9) -> 301609258250` from `_bench/mul.go`/`_bench/mul.lua`
-(a) took 342.456726ms  on Go
-(b) took 7 seconds     on gijit (about 20x slower)
-~~~
+* the full program _bench/mul.go (mat_test 501) builds and runs;
+  with no imported packages used.
+* `gijit` have much improved complex number support.
+* `gijit` runs on Windows now, as well as OSX and Linux.
 
-See https://github.com/stevedonovan/luar issue #23 to
-follow some tuning -- we omit Luar's type() override
-with `ProxyType()` to retain LuaJIT performance on
-the matrix 501 example.
+Limitations not yet addressed:
 
-2018 Feb 18 update
-------------------
-As of `gigit` v0.9.15, Complex numbers
-fully supported, with all of the `cmplx` library
-funtions available. The underlying complex.lua
-library works at LuaJIT natively.
-
-There's still some cruft to clear out
-in the compiler from all the javascript
-support that is no longer needed. So
-complex number interactive use is still
-a little awkward, but this can be
-quickly improved.
-
-The revamped type system supports the
-matrix multiplication benchmark.
-
-Building on Windows, alongside OSX
-and Linux, now works.
-
-2018 Feb 14 update
-------------------
-`gijit` was successfully built on Windows10,
-and this same approach will probably work on
-earlier Windows versions.
-
-See https://github.com/gijit/gi/issues/18
-for my notes on getting mingw64 installed, and
-see the `windows` branch of this repo.
-
-OpenBLAS and sci-lua are vendored for matrix
-operations. The docs are http://scilua.org/.
-Also from sci-lua, some benchmarks showing
-LuaJIT can be as fast as C. LuaJIT is typically faster
-than Julia 0.4.1.
+* import of packages (e.g. import "fmt") on linux
+  doesn't appear to be working.
+* imports of binary Go packages in general need some help.
 
 # overview
 
@@ -310,8 +272,62 @@ a power tool that fits the job
 in general) like a glove.
 
 
-status
+status update history
 ------
+See the top of this README for the latest update.
+
+2018 Feb 20 update
+------------------
+v0.9.19 has great progress getting full program to run.
+A crude matrix multiplication whole program (mat_test 501)
+now executes correctly, albiet slowly and untuned.
+
+~~~
+`runMultiply(500,9,9) -> 301609258250` from `_bench/mul.go`/`_bench/mul.lua`
+(a) took 342.456726ms  on Go
+(b) took 5-7 seconds     on gijit (about 20x slower)
+~~~
+
+See https://github.com/stevedonovan/luar issue #23 to
+follow some tuning -- we omit Luar's type() override
+with `ProxyType()` to retain LuaJIT performance on
+the matrix 501 example.
+
+2018 Feb 18 update
+------------------
+As of `gigit` v0.9.15, Complex numbers
+fully supported, with all of the `cmplx` library
+funtions available. The underlying complex.lua
+library works at LuaJIT natively.
+
+There's still some cruft to clear out
+in the compiler from all the javascript
+support that is no longer needed. So
+complex number interactive use is still
+a little awkward, but this can be
+quickly improved.
+
+The revamped type system supports the
+matrix multiplication benchmark.
+
+Building on Windows, alongside OSX
+and Linux, now works.
+
+2018 Feb 14 update
+------------------
+`gijit` was successfully built on Windows10,
+and this same approach will probably work on
+earlier Windows versions.
+
+See https://github.com/gijit/gi/issues/18
+for my notes on getting mingw64 installed, and
+see the `windows` branch of this repo.
+
+OpenBLAS and sci-lua are vendored for matrix
+operations. The docs are http://scilua.org/.
+Also from sci-lua, some benchmarks showing
+LuaJIT can be as fast as C. LuaJIT is typically faster
+than Julia 0.4.1.
 
 2018 Feb 12 update
 ------------------
