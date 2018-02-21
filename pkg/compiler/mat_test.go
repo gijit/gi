@@ -14,6 +14,12 @@ var _ = strings.HasPrefix
 
 func Test500MatrixDeclOfDoubleSlice(t *testing.T) {
 
+	// The root cause here was that the name of the anonymous
+	// type for the slice was getting repeated. utils.go:321
+	// got the distinction between variable names for variables
+	// (which don't get _1 added) and names for types (which
+	// do get _1 added) as a result. This fixed the bug.
+	//
 	cv.Convey(`[][]float inside matrix struct`, t, func() {
 
 		src := `
@@ -23,7 +29,7 @@ type Matrix struct {
 m := &Matrix{A:[][]float64{[]float64{1,2},[]float64{3,4}}}
 e := m.A[0][1]
 f := m.A[1][1]
-// g is even fast repro than slc
+// g is even faster repro than slc
 g:=[][]int{[]int{1,2}}
 slc := m.A[1]
 `
@@ -164,13 +170,13 @@ var done bool
 		//elap := time.Since(t0)
 		//fmt.Printf("%v x %v matrix multiply in Go took %v msec\n",
 		//	sz, sz, int(elap/time.Millisecond))
-        //fmt.Printf("%v x %v matrix multiply mu.A[2,2] = %v\n", sz, sz, mu.A[2][2])
+        //fmt.Printf("%v x %v matrix multiply mu.A[2][2] = %v\n", sz, sz, mu.A[2][2])
 	}
     done = true
 //}
 //main()
 r := mu.A[2][2]
-// 3 x 3 matrix multiply mu.A[2,2] = 195
+// 3 x 3 matrix multiply mu.A[2][2] = 195
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -185,12 +191,13 @@ r := mu.A[2][2]
 		translation, err := inc.Tr([]byte(src))
 		panicOn(err)
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
-		fmt.Printf("go original source:")
-		fmt.Printf(strings.Replace(src, "%", "%%", -1))
-		fmt.Printf("\n\n  --> translation to lua -->\n\n")
-		fmt.Printf(string(translation))
-		fmt.Printf("\n\n")
-
+		if false {
+			fmt.Printf("go original source:")
+			fmt.Printf(strings.Replace(src, "%", "%%", -1))
+			fmt.Printf("\n\n  --> translation to lua -->\n\n")
+			fmt.Printf(string(translation))
+			fmt.Printf("\n\n")
+		}
 		//cv.So(string(translation), matchesLuaSrc, ``)
 
 		LoadAndRunTestHelper(t, vm, translation)
