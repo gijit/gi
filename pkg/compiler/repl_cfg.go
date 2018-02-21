@@ -37,7 +37,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.VerboseVerbose, "vv", false, "show even more verbose debug prints")
 	fs.BoolVar(&c.RawLua, "r", false, "raw mode: skip all translation, type raw Lua to LuaJIT with our prelude installed")
 	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GIJIT_PRELUDE_DIR' env var. -prelude overrides this.")
-	fs.BoolVar(&c.IsTestMode, "t", true, "load test mode functions and types")
+	fs.BoolVar(&c.IsTestMode, "t", false, "load test mode functions and types")
 	fs.BoolVar(&c.NoLiner, "no-liner", false, "turn off liner, e.g. under emacs")
 	fs.BoolVar(&c.NoPrelude, "np", false, "no prelude; skip loading the prelude .lua files and Luar. implies -r raw mode too.")
 }
