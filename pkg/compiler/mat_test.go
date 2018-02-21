@@ -61,7 +61,6 @@ slc := m.A[1]
 	})
 }
 
-/*
 func Test501MatrixMultiply(t *testing.T) {
 
 	cv.Convey(`full matrix multiply program.`, t, func() {
@@ -75,7 +74,6 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
 )
 
 type Matrix struct {
@@ -99,11 +97,13 @@ func NewMatrix(nrow, ncol int, fill bool) *Matrix {
 	for i := range m.A {
 		m.A[i] = make([]float64, ncol)
 	}
+    next:=2.0
 	if fill {
 		for i := range m.A {
 			for j := range m.A[i] {
-				m.A[i][j] =
-					float64(rand.Intn(100)) / float64(2.0+rand.Intn(100))
+				m.A[i][j] = next
+                next++
+					//float64(rand.Intn(100)) / float64(2.0+rand.Intn(100))
 			}
 		}
 	}
@@ -153,19 +153,24 @@ func MatScaMul(m *Matrix, x float64) (r *Matrix) {
 }
 
 var done bool
-func main() {
+//func main() {
 	sz := 3
+    var mu *Matrix
 	for i := 0; i < 1; i++ {
 		a := NewMatrix(sz, sz, true)
 		b := NewMatrix(sz, sz, true)
-		t0 := time.Now()
-		mult(a, b)
-		elap := time.Since(t0)
-		fmt.Printf("%v x %v matrix multiply in Go took %v msec\n",
-			sz, sz, int(elap/time.Millisecond))
+		//t0 := time.Now()
+		mu = mult(a, b)
+		//elap := time.Since(t0)
+		//fmt.Printf("%v x %v matrix multiply in Go took %v msec\n",
+		//	sz, sz, int(elap/time.Millisecond))
+        //fmt.Printf("%v x %v matrix multiply mu.A[2,2] = %v\n", sz, sz, mu.A[2][2])
 	}
     done = true
-}
+//}
+//main()
+r := mu.A[2][2]
+// 3 x 3 matrix multiply mu.A[2,2] = 195
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -190,10 +195,11 @@ func main() {
 
 		LoadAndRunTestHelper(t, vm, translation)
 
-		LoadAndRunTestHelper(t, vm, []byte("main()"))
+		// for fullpkg
+		//LoadAndRunTestHelper(t, vm, []byte("main()"))
 
 		LuaMustBool(vm, "done", true)
+		LuaMustFloat64(vm, "r", 195)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
-*/
