@@ -86,6 +86,26 @@ $ gi
 most recent status
 ------------------
 
+2018 Feb 21 update
+------------------
+v0.9.18 has great progress getting full program to run. There
+is much tuning to do since we see wierd slowdown. This is not
+all due to the typesystem either. We're using integer
+indexes instead of float64, so that likely explains some
+of the difference (all that extra int->float conversion),
+but also the standalone LuaJIT and the `gijit` perf should be
+identical. For 100x100 case, we were 7x slower for the same
+exact Lua code run under `gi` versus under standalone build
+of LuaJIT. Investigation in progress.
+~~~
+`runMultiply(500,9,9) -> 301609258250` from `_bench/mul.go`/`_bench/mul.lua`
+(a) took 342.456726ms  on Go
+(b) took 7 seconds     on standalone build of LuaJIT (20x slower)
+(b) took much more than 60 seconds...
+    not sure why, maybe the JIT got turned off somehow? should be
+    just the same as the standalone build of LuaJIT.
+~~~
+
 2018 Feb 18 update
 ------------------
 As of `gigit` v0.9.15, Complex numbers

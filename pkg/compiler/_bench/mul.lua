@@ -1,3 +1,4 @@
+dofile 'tsys.lua'
 
 --__go_import "math/rand"
 --__go_import "fmt"
