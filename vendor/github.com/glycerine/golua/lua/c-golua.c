@@ -4,6 +4,7 @@
 #define LJ_HASFFI 1
 #include "luajit-ffi-ctypeid.h"
 #include <stdint.h>
+#include <stdlib.h> // _atoi64 on windows, atoll on posix.
 #include  <stdio.h>
 #include "_cgo_export.h"
 
@@ -14,6 +15,16 @@
 
 static const char GoStateRegistryKey = 'k'; //golua registry key
 static const char PanicFIDRegistryKey = 'k';
+
+/* makes sure we compile in atoll/_atoi64 if available.*/
+long long int wrapAtoll(const char *nptr)
+{
+#if _WIN32 || _WIN64
+  return _atoi64(nptr);
+#else
+  return atoll(nptr);
+#endif
+}
 
 /* taken from lua5.2 source */
 void *testudata(lua_State *L, int ud, const char *tname)
