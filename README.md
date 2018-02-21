@@ -92,7 +92,7 @@ Release v1.0.0 marks these milestones:
 
 * the full program _bench/mul.go (mat_test 501) builds and runs;
   with no imported packages used.
-* `gijit` have much improved complex number support.
+* `gijit` has much improved complex number support.
 * `gijit` runs on Windows now, as well as OSX and Linux.
 
 Limitations not yet addressed:
