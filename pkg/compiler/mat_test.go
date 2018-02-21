@@ -17,10 +17,13 @@ func Test500MatrixDeclOfDoubleSlice(t *testing.T) {
 type Matrix struct {
 	A    [][]float64
 }
-m := &Matrix{A:[][]float64{[]float64{1,2}}}
+m := &Matrix{A:[][]float64{[]float64{1,2},[]float64{3,4}}}
 e := m.A[0][1]
+f := m.A[1][1]
+slc := m.A[1]
 `
 		// e == 2
+		// f == 4
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -35,6 +38,15 @@ e := m.A[0][1]
 		LoadAndRunTestHelper(t, vm, translation)
 
 		LuaMustFloat64(vm, "e", 2)
+		LuaMustFloat64(vm, "f", 4)
+
+		// slc was getting an extra [], e.g.
+		// [][]float64{[0]= 3, [1]= 4, }
+		// when we want
+		// []float64{[0]= 3, [1]= 4, }
+		rawsrc := []byte(`s = tostring(slc)`)
+		LoadAndRunTestHelper(t, vm, rawsrc)
+		LuaMustString(vm, "s", "[]float64{[0]= 3, [1]= 4, }")
 	})
 }
 
