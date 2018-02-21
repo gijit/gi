@@ -882,7 +882,7 @@ __valueSliceMT = {
       elseif ktype == "cdata" then
          -- we may be called with 0LL, but arrays in Lua
          -- must be indexed with float64, so we'll convert
-         print("converting ktype cdata into number...k='"..tonumber(k).."'")
+         --print("converting ktype cdata into number...k='"..tonumber(k).."'")
          k = tonumber(k)
       end
       local w = t.__offset + k
