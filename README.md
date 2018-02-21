@@ -100,6 +100,9 @@ Limitations not yet addressed:
 * import of packages (e.g. import "fmt") on linux
   doesn't appear to be working.
 * imports of binary Go packages in general need some help.
+* chan/select/goroutines are not implemented; init()
+  functions and full ahead-of-time compile of packages
+  is not done.
 
 # overview
 
