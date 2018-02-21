@@ -310,7 +310,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool) string {
 	// Answer, this was generating different tmp variables with different
 	// names. Use a gensym instead.
 
-	if true { // jea add
+	if false { // jea add
 		if n > 0 {
 			//fmt.Printf("repeated name '%s'! funcContext c = '%#v'", name, c)
 			//fmt.Printf("repeated name '%s'! funcContext c.parent = '%#v'", name, *c.parent)

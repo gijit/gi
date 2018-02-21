@@ -1131,8 +1131,8 @@ f()
 			`
 a = 2LL;
 f = function()
-  local a_1 = 1LL;
-  return a_1;
+  local a = 1LL;
+  return a;
 end;
 f();
 `)
