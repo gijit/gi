@@ -36,7 +36,7 @@ https://github.com/gijit/gi/blob/master/LICENSE
   [ gigit/gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop.]
   [ at the gi> prompt, type ctrl-d to exit.]
-  [ at the gi> prompt, type :help for special commands.]
+  [ at the gi> :?   or :help for help.]
   [ $ gi -h for flag help, when first launching gijit.]
   [ $ gi -q to start quietly, without this banner.]
 ====================
