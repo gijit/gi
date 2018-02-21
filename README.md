@@ -109,7 +109,7 @@ Limitations not yet addressed:
 * imports of binary Go packages in general need some help.
 * chan/select/goroutines are not implemented; init()
   functions and full ahead-of-time compile of packages
-  is not done.
+  are not done.
 
 # overview
 
