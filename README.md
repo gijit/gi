@@ -382,19 +382,18 @@ cleanly re-defining struct types at the REPL.
 
 * the ability to import binary Go packages. Call into native Go code from the REPL.
 
-* use Go as a calculator. Just start the line with '='.
-
+* use Go as a calculator. Just start the line with `=`.
+  Use `==` to enter calculator mode where multiple
+  direct math expressions can be evaluated. Return
+  to go mode with `:`.
+ 
 * structs, interfaces, pointers, defer are all available.
 
 * current limitation: no `go`/`select`/`chan` implementation.
 
-* portable. Doesn't depend on Go's linux-only plugin system.
-We run on OSX and Linux.
+* portable. Doesn't depend on Go's plugin system, or on
+recompiling everything every time. We run on OSX and Linux and Windows.
 
-Theoretically, `gijit` should build on Windows, since both Go
-and LuaJIT are regularly used on Windows. I don't have resources
-to confirm this and figure out the right build flags. (See
-https://github.com/gijit/gi/issues/18 if you do.)
 
 
 # demo
