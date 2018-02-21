@@ -768,10 +768,13 @@ __valueArrayMT = {
    end,
    
    __index = function(t, k)
-      --print("__valueArrayMT.__index called, k='"..tostring(k).."'")
+      print("__valueArrayMT.__index called, k='"..tostring(k).."'")
       local ktype = type(k)
       if ktype == "string" then
-            return rawget(t,k)
+         print("ktype was string, doing rawget??? why?")
+         print(debug.traceback())
+         error("where is this used?")
+         return rawget(t,k)
       elseif type(k) == "table" then
          print("callstack:"..tostring(debug.traceback()))
          error("table as key not supported in __valueArrayMT")
@@ -783,8 +786,9 @@ __valueArrayMT = {
          print(debug.traceback())
          error("read from array error: access out-of-bounds; "..tostring(k).." is outside [0, "  .. tostring(#t) .. ")")
       end
-      --print("array access bounds check ok.")
-      return t.__val[k]
+      print("array access bounds check ok.")
+      __st(t.__array, "t.__array")
+      return t.__array[k]
    end,
 
    __len = function(t)
@@ -847,14 +851,14 @@ __valueSliceMT = {
    
    __index = function(t, k)
       
-      --print("__valueSliceMT.__index called, k='"..tostring(k).."'");
-      --__st(t.__val)
-      --print("callstack:"..tostring(debug.traceback()))
+      print("__valueSliceMT.__index called, k='"..tostring(k).."'");
+      __st(t.__val)
+      print("callstack:"..tostring(debug.traceback()))
 
       local ktype = type(k)
       if ktype == "string" then
-         --print("we have string key, doing rawget on t")
-         --__st(t, "t")
+         print("we have string key, doing rawget on t")
+         __st(t, "t")
          return rawget(t,k)
       elseif ktype == "table" then
          print("callstack:"..tostring(debug.traceback()))
@@ -862,17 +866,19 @@ __valueSliceMT = {
       elseif ktype == "cdata" then
          -- we may be called with 0LL, but arrays in Lua
          -- must be indexed with float64, so we'll convert
+         print("converting ktype cdata into number...k='"..tonumber(k).."'")
          k = tonumber(k)
       end
       local w = t.__offset + k
+      print("index slice with w = "..type(w).." value: "..tostring(w))
       if k < 0 or k >= t.__capacity then
          print(debug.traceback())
          error("slice error: access out-of-bounds, k="..tostring(k).."; cap="..tostring(t.__capacity))
       end
-      --print("slice access bounds check ok: w = ", w)
-      --__st(t.__array, "t.__array")
+      print("slice access bounds check ok: w = ", w)
+      __st(t.__array, "t.__array")
       local wv = t.__array[w]
-      --print("wv back from t.__array[w] is: "..tostring(wv))
+      print("wv back from t.__array[w] is: "..tostring(wv))
       return wv
    end,
 
