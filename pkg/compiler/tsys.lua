@@ -368,6 +368,7 @@ function __mapAndJoinStrings(splice, arr, fun)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
+   print(debug.traceback())
    local zval = arr[0]
    if zval ~= nil then
       bump = 1
@@ -406,7 +407,7 @@ __makeFunc = function(fn)
       -- TODO: port this!
       print("jea TODO: port this, what is __externalize doing???")
       error("NOT DONE: port this!")
-      --return __externalize(fn(this, (__sliceType({},__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__.emptyInterface);
+      --return __externalize(fn(this, (__sliceType(__jsObjectPtr))(__global.Array.prototype.slice.call(arguments, {}))), __type__.emptyInterface);
    end;
 end;
 __unused = function(v) end;
@@ -969,7 +970,7 @@ __tfunBasicMT = {
       --print("in __tfunBasicMT,   end __st on self")
 
       -- args1 will have the empty instance if typ is invoked as, e.g.
-      --    s = __type__.S({}, 0LL);
+      --    s = __type__.S(0LL);
       -- Since we just replace it with newInstance anyway, change that in expressions.go:289 and :349
       -- to just be
       --    s = __type__.S(0LL);
@@ -1230,6 +1231,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = constructor  or
          function(getter, setter, target)
             local this={};
+            print("in tfun for pointer: ",debug.traceback())
             print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             -- sanity checks
             if setter ~= nil and type(setter) ~= "function" then
@@ -1253,7 +1255,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          __dfsGlobal:addChild(typ, elem)
          typ.elem = elem;
          typ.wrapped = (elem.kind == __kindArray);
-         typ.__nil = typ({}, __throwNilPointerError, __throwNilPointerError);
+         typ.__nil = typ(__throwNilPointerError, __throwNilPointerError);
       end;
 
    elseif kind ==  __kindSlice then
@@ -1285,7 +1287,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.init = function(elem)
          typ.elem = elem;
          typ.comparable = false;
-         typ.__nil = typ({},{});
+         typ.__nil = typ({});
       end;
       
    elseif kind ==  __kindArray then
@@ -1389,10 +1391,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.keyFor = __ifaceKeyFor;
       typ.init = function(methods)
-         --print("top of init() for kindInterface, methods= ")
-         --__st(methods)
-         --print("and also at top of init() for kindInterface, typ= ")
-         --__st(typ)
+         print("top of init() for kindInterface, methods= ")
+         __st(methods)
+         print("and also at top of init() for kindInterface, typ= ")
+         __st(typ)
          typ.methods = methods;
          for _, m in pairs(methods) do
             -- TODO:
@@ -1448,10 +1450,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype = {__name="methodSet for "..str,
                        __typ = typ,
                        __tostring=function(instance)
-                          print("__tostring called for struct value with typ:")
-                          __st(typ)
-                          print("__tostring has instance:")
-                          __st(instance)
+                          --print("__tostring called for struct value with typ:")
+                          --__st(typ)
+                          --print("__tostring has instance:")
+                          --__st(instance)
 
                           local s=typ.__str .. "{";
                           for _,fld in ipairs(typ.fields) do
@@ -1468,8 +1470,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          __st(structTarget, "structTarget")
          local args = {...}
-         __st(args, "args to ctor")
-         __st(args[1], "args[1]")
+         __st(args, "args to ctor after structTarget")
 
          --print("callstack:")
          --print(debug.traceback())
@@ -1479,7 +1480,27 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__typ = typ.ptr
          this.__target = structTarget
 
-         setmetatable(this, typ.ptr.prototype)
+         local __personalPointerMT = {
+            __name = "personalPointerMT",
+            __target = structTarget,
+            __newindex = function(t, k, v)
+               print("personal pointerMT __newindex called, k=", k,  ", with val=", v)
+               if structTarget[k] == nil then
+                  error("no such field '"..k.."' in "..str)
+               end
+               structTarget[k] = v
+            end,
+            __index = function(t, k)
+               print("personal pointerMT: __index called, k=",k)
+               return structTarget[k]
+            end,
+            __tostring = function(t)
+               print("personal pointerMT: tostring called")
+               return "&" .. tostring(structTarget)
+            end,
+         }
+         setmetatable(this, __personalPointerMT)
+         setmetatable(__personalPointerMT, typ.ptr.prototype)
          return this;
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
@@ -2029,7 +2050,7 @@ end;
 __type__.emptyInterface = __interfaceType({});
 __ifaceNil = {};
 __error = __newType(8, __kindInterface, "error", true, "", false, nil);
-__error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__String}, false) }});
+__error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__type__.string}, false) }});
 
 __mapTypes = {};
 __mapType = function(key, elem)

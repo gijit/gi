@@ -18,6 +18,7 @@ type S struct{
 }
 var s S
 a := &s
+read := a.val
 a.val = 10
 b := s.val
 `
@@ -34,6 +35,7 @@ b := s.val
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "b", 10)
+		LuaMustInt64(vm, "read", 0)
 
 	})
 }
