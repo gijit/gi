@@ -940,13 +940,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			if typesutil.IsJsObject(c.p.TypeOf(l.Index)) {
 				c.p.errList = append(c.p.errList, types.Error{Fset: c.p.fileSet, Pos: l.Index.Pos(), Msg: "cannot use js.Object as map key"})
 			}
-			// jea: map assignment in lua:
-			dq := ``
-			switch t.Key().(type) {
-			case *types.Basic:
-				dq = `"`
-			}
-			return fmt.Sprintf(`%s[%s%s%s] = %s;`, c.translateExpr(l.X, nil), dq, c.translateImplicitConversionWithCloning(l.Index, t.Key()), dq, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			return fmt.Sprintf(`%s[%s] = %s;`, c.translateExpr(l.X, nil), c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 			// jea replace next 2 lines with the above
 			//keyVar := c.newVariable("_key")
 			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(0, t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
@@ -954,23 +948,23 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	}
 
 	lhsType := c.p.TypeOf(lhs)
-	//pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
+	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
-		//pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
+		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
 		return fmt.Sprintf("%s%s = %s;", local, c.translateExpr(lhs, nil), rhsExpr) // skip $copy
 	}
 	if _, ok := rhs.(*ast.BasicLit); ok && define {
 		if lhsType == nil {
 			if ident, ok := lhs.(*ast.Ident); ok {
-				return fmt.Sprintf("%s%s = %s;", local, ident.Name, rhsExpr) // skip $copy
+				return fmt.Sprintf("%s%s = %s; -- statements.go:966", local, ident.Name, rhsExpr) // skip $copy
 			}
 			panic("what goes here?")
 		} else {
 			//pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
 			tlhs := c.translateExpr(lhs, nil)
 			//pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
-			return fmt.Sprintf("%s%s = %s;", local, tlhs, rhsExpr) // skip $copy
+			return fmt.Sprintf("%s%s = %s; -- statements.go:973", local, tlhs, rhsExpr) // skip $copy
 		}
 	}
 	pp("rhsExpr = '%#v'", rhsExpr)
@@ -980,9 +974,12 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		isReflectValue = true
 	}
 	if !isReflectValue { // this is a performance hack, but it is safe since reflect.Value has no exported fields and the reflect package does not violate this assumption
+		pp("not a refelct value")
 		switch lhsType.Underlying().(type) {
 		case *types.Array, *types.Struct:
+			pp("not a refelct value, underlying is array or struct")
 			if define {
+				pp("define is true, not a refelct value, underlying is array or struct")
 				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
 				pp("debug __gi_clone2 arg: c.typeName(0, lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
@@ -997,9 +994,12 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		}
 	}
 
+	pp("lhs type is '%T'", lhs) // *ast.Ident for instance
 	switch l := lhs.(type) {
 	case *ast.Ident:
-		return fmt.Sprintf("%s%s = %s;", local, c.objectName(c.p.ObjectOf(l)), rhsExpr)
+		asn := fmt.Sprintf("%s%s = %s;", local, c.objectName(c.p.ObjectOf(l)), rhsExpr)
+		pp("lhs is *ast.Ident, asn = '%s'", asn)
+		return asn
 	case *ast.SelectorExpr:
 		sel, ok := c.p.SelectionOf(l)
 		if !ok {
