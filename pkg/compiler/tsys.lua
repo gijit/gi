@@ -358,7 +358,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       k=k+1
       local vals = ""
       if methods_desc then
-         print("methods_desc is true")
+        --print("methods_desc is true")
          vals = __st(v,"",indent+3,quiet,methods_desc, seen)
       else
          local vmt = getmetatable(v)
@@ -830,7 +830,7 @@ __valueArrayMT = {
    end,
    
    __index = function(t, k)
-      print("__valueArrayMT.__index called, k='"..tostring(k).."'")
+     --print("__valueArrayMT.__index called, k='"..tostring(k).."'")
       local ktype = type(k)
       if ktype == "string" then
          print("ktype was string, doing rawget??? why?")
@@ -1038,7 +1038,7 @@ __tfunBasicMT = {
          end
       else
          local newInstance = {}
-         print("in __tfunBasicMT, made newInstance = ")
+        --print("in __tfunBasicMT, made newInstance = ")
          --__st(newInstance,"newInstance")
          
          setmetatable(newInstance, __valueBasicMT)
@@ -1071,8 +1071,8 @@ __valuePointerMT = {
    end,
 
    __tostring = function(t)
-      print("__valuePointerMT: tostring called")
-      __st(t, "t")
+      --print("__valuePointerMT: tostring called")
+      --__st(t, "t")
       if t == nil then return "<__valuePointer nil pointer>" end
       -- avoid getting messed up by metatable intercept, do a rawget.
       local typ = rawget(t, "__typ")
@@ -1092,7 +1092,7 @@ __valuePointerMT = {
 __valueMapMT = {
    __name = "__valueMapMT",
    __tostring = function(t)
-      print("__valueMapMT: tostring called")
+     --print("__valueMapMT: tostring called")
       return tostring(t.__val)
    end
 }
@@ -1119,7 +1119,7 @@ end;
 
 
 __synthesizeMethods = function()
-   print("__synthesizeMethods called! we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
+  --print("__synthesizeMethods called! we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
    __ipairsZeroCheck(__methodSynthesizers)
    for i,f in ipairs(__methodSynthesizers) do
       f();
@@ -1266,8 +1266,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = constructor  or
          function(getter, setter, target)
             local this={};
-            print("in tfun for pointer: ",debug.traceback())
-            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+           --print("in tfun for pointer: ",debug.traceback())
+           --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             -- sanity checks
             if setter ~= nil and type(setter) ~= "function" then
                error "setter must be function"
@@ -1426,10 +1426,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.keyFor = __ifaceKeyFor;
       typ.init = function(methods)
-         print("top of init() for kindInterface, methods= ")
-         __st(methods)
-         print("and also at top of init() for kindInterface, typ= ")
-         __st(typ)
+         --print("top of init() for kindInterface, methods= ")
+         --__st(methods)
+         --print("and also at top of init() for kindInterface, typ= ")
+         --__st(typ)
          typ.methods = methods;
          for _, m in pairs(methods) do
             -- TODO:
@@ -1503,10 +1503,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       local ctor = function(structTarget, ...)
          local this={};
-         print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
-         __st(structTarget, "structTarget")
-         local args = {...}
-         __st(args, "args to ctor after structTarget")
+         --print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         --__st(structTarget, "structTarget")
+         --local args = {...}
+         --__st(args, "args to ctor after structTarget")
 
          --print("callstack:")
          --print(debug.traceback())
@@ -1514,38 +1514,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__get = function() return structTarget; end;
          this.__set = function(v) typ.copy(structTarget, v); end;
          this.__typ = typ.ptr
-         this.__target = structTarget
-         --this.__val = this
-         this.__val = structTarget
-         
-         local __personalPointerMT = {
-            __name = "personalPointerMT",
-            __target = this.__val,
-            __newindex = function(t, k, v)
-               print("personal pointerMT __newindex called, k=", k,  ", with val=", v)
-               if this.__val[k] == nil then
-                  error("no such field '"..k.."' in "..str)
-               end
-               this.__val[k] = v
-            end,
-            __index = function(t, k)
-               print("personal pointerMT: __index called, k=",k)
-               
-               --print("DEBUG ONLY: TODO remove the return nil below!!!")
-               --return nil
-               --if this.__val[k] == nil then
-               --   error("no such field '"..k.."' in "..str.."  TODO: handle nil pointer fields")
-               --end
-               return this.__val[k]
-            end,
-            __tostring = function(t)
-               print("personal pointerMT: tostring called")
-               return "&" .. tostring(this.__val)
-            end,
-         }
+         --this.__target = structTarget
+         this.__val = structTarget         
          setmetatable(this, typ.ptr.prototype)
-         --setmetatable(this, __personalPointerMT)
-         --setmetatable(__personalPointerMT, typ.ptr.prototype)
          return this;
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
@@ -1558,8 +1529,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                            __typ = typ.ptr,
                            
                            __tostring=function(instance)
-                              print("in pointer-to-struct __tostring, with instance=")
-                              __st(instance,"instance")
+                              --print("in pointer-to-struct __tostring, with instance=")
+                              --__st(instance,"instance")
                               -- refer out to the value __tostring
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
@@ -1567,7 +1538,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       --typ.ptr.prototype.__index = typ.ptr.prototype
       
       typ.ptr.prototype.__index = function(this, k)
-         print("struct.ptr.prototype.__index called, k='"..k.."'")
+         --print("struct.ptr.prototype.__index called, k='"..k.."'")
          return this.__val[k]
       end
       
@@ -1621,11 +1592,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end)
          end;
          typ.copy = function(dst, src)
-            print("top of typ.copy for structs, here is dst then src:")
-            __st(dst, "dst")
-            __st(src, "src")
-            print("fields:")
-            __st(fields,"fields")
+            --print("top of typ.copy for structs, here is dst then src:")
+            --__st(dst, "dst")
+            --__st(src, "src")
+            --print("fields:")
+            --__st(fields,"fields")
             __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.__typ.kind
@@ -1634,10 +1605,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                sw2 ==  __kindStruct then 
                   f.__typ.copy(dst[f.__prop], src[f.__prop]);
                else
-                  print("copying field '"..f.__prop.."'")
-                  __st(dst, "dst prior to copy")
+                  --print("copying field '"..f.__prop.."'")
+                  --__st(dst, "dst prior to copy")
                   dst[f.__prop] = src[f.__prop];
-                  __st(dst, "dst after copy")
+                  --__st(dst, "dst after copy")
                end
             end
          end;
@@ -1741,7 +1712,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindArray then
       
       typ.zero = function()
-        --print("in zero() for array...")
+         --print("in zero() for array...")
          return __newAnyArrayValue(typ.elem, typ.len)
       end;
 
