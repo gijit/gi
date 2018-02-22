@@ -256,6 +256,12 @@ readtop:
 		}
 		fmt.Printf("\n")
 		return "", nil
+	case ":ls":
+		r.displayUserVar()
+		goto readtop
+	case ":gls":
+		r.displayAllVar()
+		goto readtop
 	case ":r":
 		r.cfg.RawLua = true
 		r.cfg.CalculatorMode = false
@@ -314,6 +320,8 @@ these special commands.
  :rm 3-4         Remove commands 3-4 from history.
  :do <path>      Run dofile(path) on a .lua file.
  :source <path>  Re-play Go code from a file.
+ :ls             List all global user variables.
+ :gls            List all global variables (include __ prefixed).
  = 3 + 4         Calculate the expression after the '=' (one line).
  ==              Multiple entry calculator mode. ':' to exit.
  import "fmt"    Import the binary, pre-compiled package.
@@ -472,4 +480,29 @@ func (r *Repl) Eval(src string) error {
 	fmt.Printf("elapsed: '%v'\n", r.t1.Sub(r.t0))
 
 	return nil
+}
+
+// :ls implementation
+func (r *Repl) displayUserVar() {
+	err := LuaDoString(r.vm, `
+for k,v in pairs(_G) do
+   local uscore = 95 -- "_"
+   if #k > 2 and string.byte(k,1,1)==uscore and string.byte(k,2,2) == uscore then
+      -- we omit __ prefixed methods/values
+   else
+      print(tostring(k).." : "..tostring(v))
+   end
+end
+`)
+	panicOn(err)
+}
+
+// :gls implementation
+func (r *Repl) displayAllVar() {
+	err := LuaDoString(r.vm, `
+for k,v in pairs(_G) do
+   print(tostring(k).." : "..tostring(v))
+end
+`)
+	panicOn(err)
 }
