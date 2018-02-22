@@ -313,7 +313,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		return c.formatExpr("(%s)", fun)
 
 	case *ast.UnaryExpr:
-		pp("we have UnaryExpr:  *ast.UnaryExpr: '%#v'", e)
+		pp("we have UnaryExpr:  *ast.UnaryExpr: '%#v', with typeName='%s'", e, c.typeName(0, c.p.TypeOf(e)))
 		t := c.p.TypeOf(e.X)
 		switch e.Op {
 		case token.AND:
