@@ -957,12 +957,12 @@ __tfunBasicMT = {
       --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       --print(debug.traceback())
 
-      print("debug, __tfunBasicMT itself as a table is:")
-      __st(__tfunBasicMT, "__tfunBasicMT")
+      --print("debug, __tfunBasicMT itself as a table is:")
+      --__st(__tfunBasicMT, "__tfunBasicMT")
       local args = {...}
-      print("in __tfunBasicMT, start __st on args")
-      __st(args, "args to __tfunBasicMT.__call")
-      print("in __tfunBasicMT,   end __st on args")
+      --print("in __tfunBasicMT, start __st on args")
+      --__st(args, "args to __tfunBasicMT.__call")
+      --print("in __tfunBasicMT,   end __st on args")
 
       --print("in __tfunBasicMT, start __st on self")
       --__st(self, "self")
@@ -1225,7 +1225,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+         --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
          function(getter, setter, target)
@@ -1425,17 +1425,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(...)
          local this={};
          local args = {...}
-         print("top of simple kindStruct tfun, this, then args, are:")
-         __st(this, "this")
+         print("top of simple kindStruct tfun, args are:")
          __st(args, "args")
          __st(args[1], "args[1]") -- empty table, going to be the result?
-         this.__typ = typ
          
          if typ.__constructor ~= nil then
-            --print("simple kindStruct: typ.__constructor was not nil, is")
-            --__st(typ.__constructor, "typ.__constructor")
-            typ.__constructor(this, ...);
+            print("simple kindStruct: typ.__constructor was not nil, is")
+            __st(typ.__constructor, "typ.__constructor")
+            this = typ.__constructor(...);
          end
+         this.__typ = typ
          setmetatable(this, typ.prototype)
          return this
       end;
