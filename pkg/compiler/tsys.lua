@@ -371,7 +371,12 @@ function __st(t, name, indent, quiet, methods_desc, seen)
          end
          --vals = __st(v,"",indent+1,true,methods_desc, seen) or ""
       end
-      s = s..pre.." "..tostring(k).. " key: '"..tostring(i).."' val: '"..vals.."'\n"
+      local ty = type(i)
+      if ty == "cdata" then
+         ty = tostring(__ffi.typeof(i))
+      end
+      print("debug: ty is '",ty,"'")
+      s = s..pre.." "..tostring(k).. " key ("..ty.."): '"..tostring(i).."' val: '"..vals.."'\n"
    end
    if k == 0 then
       s = pre.."<empty table> " .. addr
