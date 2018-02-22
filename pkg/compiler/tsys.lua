@@ -1033,7 +1033,7 @@ __valuePointerMT = {
    end,
 
    __tostring = function(t)
-      --print("__valuePointerMT: tostring called")
+      print("__valuePointerMT: tostring called")
       if t == nil then return "<__valuePointer nil pointer>" end
       -- avoid getting messed up by metatable intercept, do a rawget.
       local str =  rawget(t,"__str")
@@ -1207,7 +1207,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-         --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+         print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
          function(this, wat, getter, setter, target)
@@ -1417,10 +1417,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype = {__name="methodSet for "..str,
                        __typ = typ,
                        __tostring=function(instance)
-                          --print("__tostring called for struct value with typ:")
-                          --__st(typ)
-                          --print("__tostring has instance:")
-                          --__st(instance)
+                          print("__tostring called for struct value with typ:")
+                          __st(typ)
+                          print("__tostring has instance:")
+                          __st(instance)
 
                           local s=typ.__str .. "{";
                           for _,fld in ipairs(typ.fields) do
@@ -1432,18 +1432,21 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype.__index = typ.prototype
       
       
-      local ctor = function(this, ...)
-         print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+      local ctor = function(this, structTarget, ...)
+         print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         __st(structTarget, "structTarget")
          local args = {...}
-         --__st(args, "args to ctor")
-         --__st(args[1], "args[1]")
+         __st(args, "args to ctor")
+         __st(args[1], "args[1]")
 
          --print("callstack:")
          --print(debug.traceback())
          
-         this.__get = function() return this; end;
-         this.__set = function(v) typ.copy(this, v); end;
+         this.__get = function() return structTarget; end;
+         this.__set = function(v) typ.copy(structTarget, v); end;
          this.__typ = typ.ptr
+         this.__target = structTarget
+
          setmetatable(this, typ.ptr.prototype)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
@@ -1456,8 +1459,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                            __typ = typ.ptr,
                            
                            __tostring=function(instance)
+                              print("in pointer-to-struct __tostring, with instance=")
+                              __st(instance,"instance")
                               -- refer out to the value __tostring
-                              return "&" .. typ.prototype.__tostring(instance)
+                              return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
       }
       typ.ptr.prototype.__index = typ.ptr.prototype

@@ -330,7 +330,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				pp("after translateExpr on underlying struct or array, type of t = '%#v'", t)
 				// jea: gopherjs didn't represent struct values directly?? try
 				// wrapping with a newDataPointer or other pointer generating construct...
-				return c.formatExpr("__newDataPointer(%s   , %s)", te, c.typeName(0, c.p.TypeOf(e)))
+				return c.formatExpr("%s(%s)", c.typeName(0, c.p.TypeOf(e)), te)
 				// gopherjs:
 				// return c.translateExpr(e.X)
 			}
