@@ -118,6 +118,7 @@ func (r *Repl) Read() (src string, err error) {
 
 	var by []byte
 
+readtop:
 	if r.cfg.NoLiner {
 		if r.prompt != "" {
 			fmt.Printf(r.prompt)
@@ -255,12 +256,13 @@ func (r *Repl) Read() (src string, err error) {
 		}
 		fmt.Printf("\n")
 		return "", nil
-	case ":raw", ":r":
+	case ":r":
 		r.cfg.RawLua = true
 		r.cfg.CalculatorMode = false
 		r.prompt = r.luaPrompt
 		fmt.Printf("Raw LuaJIT language mode.\n")
-		return "", nil
+		goto readtop
+
 	case ":go", ":g", ":":
 		r.cfg.RawLua = false
 		r.cfg.CalculatorMode = false
@@ -300,7 +302,7 @@ these special commands.
  :v              Turn on verbose debug printing.
  :vv             Turn on very verbose printing.
  :q              Quiet the debug prints (default).
- :r or :raw      Change to raw-luajit entry mode.
+ :r              Change to raw-luajit Lua entry mode.
  :g or :go       Change back from raw to default Go mode.
  :ast            Print the Go AST prior to translation.
  :noast          Stop printing the Go AST.
@@ -423,7 +425,7 @@ func (r *Repl) Eval(src string) error {
 		use = translation
 
 	} else {
-		// :r/raw mode
+		// raw mode, under :r
 		use = src
 	}
 
