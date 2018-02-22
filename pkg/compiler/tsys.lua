@@ -996,8 +996,8 @@ __tfunBasicMT = {
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
                local sz = self.zero()
-               print("tfun sees no args and we have a typ.zero() method, so invoking self.zero() got back sz=")
-               __st(sz, "sz")
+               --print("tfun sees no args and we have a typ.zero() method, so invoking self.zero() got back sz=")
+               --__st(sz, "sz")
                return self.tfun(sz)
             else
                return self.tfun(...)
@@ -1006,7 +1006,7 @@ __tfunBasicMT = {
       else
          local newInstance = {}
          print("in __tfunBasicMT, made newInstance = ")
-         __st(newInstance,"newInstance")
+         --__st(newInstance,"newInstance")
          
          setmetatable(newInstance, __valueBasicMT)
 
