@@ -16,6 +16,9 @@ __minifs = {}
 __ffi = require "ffi"
 local __osname = __ffi.os == "Windows" and "windows" or "unix"
 
+-- a __ namespace binding so it is usable from Go
+__tostring = tostring
+
 local __dq = function(str)
    if type(str) == "string" then
       return '"'..str..'"'

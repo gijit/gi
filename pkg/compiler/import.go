@@ -114,7 +114,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 				"Incr":      Incr,
 
 				// don't intercept tostring, let lua get it.
-				//"tostring":  GitestingTostring,
+				//"__tostring":  GitestingTostring,
 			})
 
 			ic.CurPkg.importContext.Packages[path] = pkg
@@ -273,7 +273,7 @@ func getFunForSumArrayInt64(pkg *types.Package) *types.Func {
 	return fun
 }
 
-func getFunForTostring(pkg *types.Package) *types.Func {
+func getFunFor__tostring(pkg *types.Package) *types.Func {
 	// func Tostring(a interface{}) string
 	var recv *types.Var
 	str := types.Typ[types.String]
@@ -282,7 +282,21 @@ func getFunForTostring(pkg *types.Package) *types.Func {
 	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", emptyInterface))
 	variadic := false
 	sig := types.NewSignature(recv, params, results, variadic)
-	fun := types.NewFunc(token.NoPos, pkg, "tostring", sig)
+	fun := types.NewFunc(token.NoPos, pkg, "__tostring", sig)
+	return fun
+}
+
+// make the lua __st (show table) utility available in Go land.
+func getFunFor__st(pkg *types.Package) *types.Func {
+	// func __st(a interface{}) string
+	var recv *types.Var
+	str := types.Typ[types.String]
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", str))
+	emptyInterface := types.NewInterface(nil, nil)
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", emptyInterface))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "__st", sig)
 	return fun
 }
 

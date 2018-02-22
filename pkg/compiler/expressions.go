@@ -181,8 +181,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		// jea: this depends on the initializers!
-		//pp("expressions.go:118 we have an *ast.CompositeLit: '%#v'", e)
+		pp("expressions.go we have an *ast.CompositeLit: '%#v'", e)
 		if ptrType, isPointer := exprType.(*types.Pointer); isPointer {
+			pp("isPointer is true")
 			exprType = ptrType.Elem()
 		}
 
@@ -285,7 +286,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("%s.ptr({}, %s)", c.typeName(0, exprType), sele)
+			return c.formatExpr("%s({}, %s)", c.typeName(0, exprType), sele)
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(0, exprType), strings.Join(vals, ", "))
@@ -1426,8 +1427,8 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {
 			pp("YYY 7 translateImplicitConversion exiting early")
 			//return c.formatExpr("%1e.__constructor.__elem(%1e)", expr)
-			return c.formatExpr("%1e.__typ.elem(%1e)", expr)
-			//return c.formatExpr("(%1e)", expr)
+			//return c.formatExpr("%1e.__typ.elem(%1e)", expr)
+			return c.formatExpr("(%1e)", expr)
 		}
 	}
 	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v', exprType='%v'", expr, exprType)
