@@ -43,7 +43,7 @@ func Test511SlicesShouldBeViewable(t *testing.T) {
 	cv.Convey(`tostring([]string{"a","b"}) should stringify the slice`, t, func() {
 
 		code := `
-chk := tostring([]string{"a","b"})
+chk := __tostring([]string{"a","b"})
 `
 		// c0 should be 4, a1 should be 4
 		vm, err := NewLuaVmWithPrelude(nil)
