@@ -33,7 +33,7 @@ chk2 := __tostring(&s)
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustString(vm, "chk", `main.S{b: 23LL, }`)
-		LuaMustString(vm, "chk2", `&main.Str{b: 23LL, }`)
+		LuaMustString(vm, "chk2", `&main.S{b: 23LL, }`)
 
 	})
 }
