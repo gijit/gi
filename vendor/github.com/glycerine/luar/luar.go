@@ -1454,6 +1454,8 @@ func dumpTableString(L *lua.State, index int) (s string) {
 
 func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (n int, offset int, t reflect.Type) {
 	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
+	pp("stack:\n%s\n", string(debug.Stack()))
+
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
@@ -1463,11 +1465,12 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	// __length
 	getfield(L, idx, "__length")
 	if L.IsNil(-1) {
+		pp("yikes. __length not found, panicing.")
 		panic("what? should be a `__length` member of a gijit slice")
 	}
 	n = int(L.ToNumber(-1))
 	L.Pop(1)
-	pp("copyGiTableToSlice after getting __length=%v, stack is:", n)
+	pp("giSliceGetRawHelper after getting __length=%v, stack is:", n)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
@@ -1479,7 +1482,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 	offset = int(L.ToNumber(-1))
 	L.Pop(1)
-	pp("copyGiTableToSlice after getting __offset=%v, stack is:", offset)
+	pp("giSliceGetRawHelper after getting __offset=%v, stack is:", offset)
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}

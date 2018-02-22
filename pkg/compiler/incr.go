@@ -29,6 +29,9 @@ func addPreludeToNewPkg(pkg *types.Package) {
 	//
 	scope := pkg.Scope()
 	scope.Insert(getFunForGijitPrintQuoted(pkg))
+
+	// allow tostring from Go, to call the Lua builtin.
+	scope.Insert(getFunForTostring(pkg))
 }
 
 func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {

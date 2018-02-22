@@ -94,8 +94,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			pkg.MarkComplete()
 			scope := pkg.Scope()
 
-			fun := getFunForSumArrayInt64(pkg)
-			scope.Insert(fun)
+			suma := getFunForSumArrayInt64(pkg)
+			scope.Insert(suma)
 
 			summer := getFunForSummer(pkg)
 			scope.Insert(summer)
@@ -112,6 +112,9 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 				"Summer":    Summer,
 				"SummerAny": SummerAny,
 				"Incr":      Incr,
+
+				// don't intercept tostring, let lua get it.
+				//"tostring":  GitestingTostring,
 			})
 
 			ic.CurPkg.importContext.Packages[path] = pkg
@@ -269,6 +272,27 @@ func getFunForSumArrayInt64(pkg *types.Package) *types.Func {
 	fun := types.NewFunc(token.NoPos, pkg, "SumArrayInt64", sig)
 	return fun
 }
+
+func getFunForTostring(pkg *types.Package) *types.Func {
+	// func Tostring(a interface{}) string
+	var recv *types.Var
+	str := types.Typ[types.String]
+	results := types.NewTuple(types.NewVar(token.NoPos, pkg, "", str))
+	emptyInterface := types.NewInterface(nil, nil)
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "a", emptyInterface))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "tostring", sig)
+	return fun
+}
+
+// vestigial: use direct lua tostring instead!
+/*
+func GitestingTostring(a interface{}) string {
+	fmt.Printf("GitestingTostring called with arg: '%#v'\n", a)
+	return fmt.Sprintf("%#v", a)
+}
+*/
 
 func Incr(a int) int {
 	fmt.Printf("\nYAY Incr(a) called! with a = '%v'\n", a)
