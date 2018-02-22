@@ -1473,7 +1473,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             this={}
          end
          this.__typ = typ;
-         this.__val = this; -- infinite loop: personal pointerMT: __index called, k=	__val
+         this.__val = this;
          setmetatable(this, typ.prototype)
          return this
       end;
@@ -1515,18 +1515,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__set = function(v) typ.copy(structTarget, v); end;
          this.__typ = typ.ptr
          this.__target = structTarget
-         --this.__val = this -- or structTarget? -- inf loop personal pointerMT: __index called, k=	Next
-         this.__val = structTarget -- inf loop quietly.
+         --this.__val = this
+         this.__val = structTarget -- inf loop quietly. hmm???
          
          local __personalPointerMT = {
             __name = "personalPointerMT",
             __target = structTarget,
             __newindex = function(t, k, v)
                print("personal pointerMT __newindex called, k=", k,  ", with val=", v)
-               if k == 0 then
-                  -- set the pointer value
-                  structTarget = v
-               end
                if structTarget[k] == nil then
                   error("no such field '"..k.."' in "..str)
                end
@@ -1534,10 +1530,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end,
             __index = function(t, k)
                print("personal pointerMT: __index called, k=",k)
-               if k == 0 then
-                  -- return the pointer value
-                  return structTarget
-               end
+               
+               --print("DEBUG ONLY: TODO remove the return nil below!!!")
+               --return nil
+               --if structTarget[k] == nil then
+               --   error("no such field '"..k.."' in "..str.."  TODO: handle nil pointer fields")
+               --end
                return structTarget[k]
             end,
             __tostring = function(t)

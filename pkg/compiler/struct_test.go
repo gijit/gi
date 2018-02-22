@@ -223,7 +223,6 @@ func Test124ValueFromStructPointer(t *testing.T) {
     mem := inst.b
 `
 
-		*dbg = true
 		// mem should be 5
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)

@@ -47,7 +47,6 @@ r0, r1 := f()
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
 
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 
 		// too comple and fragile to verify code. Just  verify that it happens correctly

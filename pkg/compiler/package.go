@@ -244,7 +244,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		if joinedParams == "" {
 			jp = ""
 		}
-		fmt.Fprintf(code, "\t%s.prototype.%s = function(this %s)  return this.__val.%s(this %s); end;\n", typeName, funName, jp, funName, jp)
+		fmt.Fprintf(code, "\t%[1]s.prototype.%[2]s = function(this %[3]s)  return %[1]s.ptr.prototype.%[2]s(this.__val %[3]s); end;\n", typeName, funName, jp)
 
 		signatureDetail = c.getMethodDetailsSig(o)
 		// add to struct
