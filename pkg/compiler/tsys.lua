@@ -16,6 +16,13 @@ __minifs = {}
 __ffi = require "ffi"
 local __osname = __ffi.os == "Windows" and "windows" or "unix"
 
+local __dq = function(str)
+   if type(str) == "string" then
+      return '"'..str..'"'
+   end
+   return tostring(str)
+end
+
 local __system = ({
 	windows	= {
 		getcwd	= "_getcwd",
@@ -1367,9 +1374,24 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       -- metatable for instances of the struct; this is
       -- equivalent to the prototype in js.
       --
-      typ.prototype = {__name="methodSet for "..str, __typ = typ}
-      typ.prototype.__index = typ.prototype
+      typ.prototype = {__name="methodSet for "..str,
+                       __typ = typ,
+                       __tostring=function(instance)
+                          print("__tostring called for struct value with typ:")
+                          --__st(typ)
+                          --print("__tostring has instance:")
+                          --__st(instance)
 
+                          local s=typ.__str .. "{";
+                          for _,fld in ipairs(typ.fields) do
+                             s=s..fld.__name..": "..__dq(instance[fld.__name])..", ";
+                          end
+                          return s.."}";
+                       end,
+      }
+      typ.prototype.__index = typ.prototype
+      
+      
       local ctor = function(this, ...)
          --print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          local args = {...}
@@ -1398,7 +1420,14 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
-      typ.ptr.prototype = {__name="methodSet for "..typ.ptr.__str, __typ = typ.ptr}
+      typ.ptr.prototype = {__name="methodSet for "..typ.ptr.__str,
+                           __typ = typ.ptr,
+                           
+                           __tostring=function(instance)
+                              -- refer out to the value __tostring
+                              return "&" .. typ.prototype.__tostring(instance)
+                           end,
+      }
       typ.ptr.prototype.__index = typ.ptr.prototype
 
       -- incrementally expand the method set. Full
