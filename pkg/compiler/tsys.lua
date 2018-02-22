@@ -1525,11 +1525,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end)
          end;
          typ.copy = function(dst, src)
-            --print("top of typ.copy for structs, here is dst then src:")
-            --__st(dst, "dst")
-            --__st(src, "src")
-            --print("fields:")
-            --__st(fields,"fields")
+            print("top of typ.copy for structs, here is dst then src:")
+            __st(dst, "dst")
+            __st(src, "src")
+            print("fields:")
+            __st(fields,"fields")
             __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.__typ.kind
@@ -1542,7 +1542,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                end
             end
          end;
-         --print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
+         
+         print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
          __ipairsZeroCheck(fields)
