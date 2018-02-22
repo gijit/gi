@@ -1426,8 +1426,8 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 		if _, isStruct := exprType.Underlying().(*types.Struct); isStruct {
 			pp("YYY 7 translateImplicitConversion exiting early")
 			//return c.formatExpr("%1e.__constructor.__elem(%1e)", expr)
-			//return c.formatExpr("%1e.__typ.elem(%1e)", expr)
-			return c.formatExpr("(%1e)", expr)
+			return c.formatExpr("%1e.__typ.elem(%1e)", expr)
+			//return c.formatExpr("(%1e)", expr)
 		}
 	}
 	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v', exprType='%v'", expr, exprType)

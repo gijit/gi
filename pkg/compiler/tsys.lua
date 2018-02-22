@@ -1036,7 +1036,7 @@ __valueStructMT = {
    __name = "__valueStructMT",
    
    __tostring = function(t)
-      --print("__valueStructMT: tostring called")
+      print("__valueStructMT: tostring called")
       return tostring(t.__val)
    end
 }
@@ -1045,7 +1045,7 @@ __valueStructMT = {
 __valueMapMT = {
    __name = "__valueMapMT",
    __tostring = function(t)
-      --print("__valueMapMT: tostring called")
+      print("__valueMapMT: tostring called")
       return tostring(t.__val)
    end
 }
