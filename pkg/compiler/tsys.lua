@@ -1032,6 +1032,46 @@ __valuePointerMT = {
 }
 
 
+__valueStructMT = {
+   __name = "__valueStructMT",
+   
+   __newindex = function(t, k, v)
+     --print("__valueStructMT: __newindex called, calling set() with val=", v)
+      return t.__val
+   end,
+
+   __index = function(t, k)
+     --print("__valueStructMT: __index called, doing get()")       
+      return t.__val
+   end,
+
+   __tostring = function(t)
+      --print("__valueStructMT: tostring called")
+      return tostring(t.__val)
+   end
+}
+
+
+__valueMapMT = {
+   __name = "__valueMapMT",
+   
+   __newindex = function(t, k, v)
+     --print("__valueMapMT: __newindex called, calling set() with val=", v)
+      return t.__val
+   end,
+
+   __index = function(t, k)
+     --print("__valueMapMT: __index called, doing get()")       
+      return t.__val
+   end,
+
+   __tostring = function(t)
+      --print("__valueMapMT: tostring called")
+      return tostring(t.__val)
+   end
+}
+
+
 
 function __newAnyArrayValue(elem, len)
    local array = {}
@@ -1301,7 +1341,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v)
          this.__val = v;
-         this.__typ = typ         
+         this.__typ = typ
+         setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
       typ.keyFor = __idKey;
@@ -1316,7 +1357,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
       typ.tfun = function(this, v)
          this.__val = v;
-         this.__typ = typ         
+         this.__typ = typ
+         setmetatable(this, __valueBasicMT)
       end;
       typ.wrapped = true;
       typ.init = function(params, results, variadic)
@@ -1353,7 +1395,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(this, v)
          this.__val = v;
-         this.__typ = typ         
+         this.__typ = typ
+         setmetatable(this, __valueMapMT)
       end;
       typ.wrapped = true;
       typ.init = function(key, elem)
@@ -1367,6 +1410,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = function(this, v)
          --print("top of simple kindStruct tfun")
          this.__val = v;
+         this.__typ = typ
+         setmetatable(this, __valueStructMT)
       end;
       typ.wrapped = true;
 
@@ -1377,7 +1422,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype = {__name="methodSet for "..str,
                        __typ = typ,
                        __tostring=function(instance)
-                          print("__tostring called for struct value with typ:")
+                          --print("__tostring called for struct value with typ:")
                           --__st(typ)
                           --print("__tostring has instance:")
                           --__st(instance)
