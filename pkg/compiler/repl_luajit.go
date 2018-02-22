@@ -490,7 +490,10 @@ for k,v in pairs(_G) do
    if #k > 2 and string.byte(k,1,1)==uscore and string.byte(k,2,2) == uscore then
       -- we omit __ prefixed methods/values
    else
-      print(tostring(k).." : "..tostring(v))
+      if __built_in_starting_symbol_list == nil or 
+         not __built_in_starting_symbol_list[k] then
+            print(tostring(k).." : "..tostring(v))
+      end
    end
 end
 `)
@@ -502,6 +505,16 @@ func (r *Repl) displayAllVar() {
 	err := LuaDoString(r.vm, `
 for k,v in pairs(_G) do
    print(tostring(k).." : "..tostring(v))
+end
+`)
+	panicOn(err)
+}
+
+func (r *Repl) setBuiltinList() {
+	err := LuaDoString(r.vm, `
+__built_in_starting_symbol_list={};
+for k,_ in pairs(_G) do
+   __built_in_starting_symbol_list[k]=true;
 end
 `)
 	panicOn(err)

@@ -368,7 +368,7 @@ function __mapAndJoinStrings(splice, arr, fun)
    local newarr = {}
    -- handle a zero argument, if present.
    local bump = 0
-   print(debug.traceback())
+   --print(debug.traceback())
    local zval = arr[0]
    if zval ~= nil then
       bump = 1
@@ -1439,7 +1439,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          else
             this={}
          end
-         this.__typ = typ
+         this.__typ = typ;
+         this.__val = this; -- infinite loop: personal pointerMT: __index called, k=	__val
          setmetatable(this, typ.prototype)
          return this
       end;
@@ -1481,7 +1482,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__set = function(v) typ.copy(structTarget, v); end;
          this.__typ = typ.ptr
          this.__target = structTarget
-
+         --this.__val = this -- or structTarget? -- inf loop personal pointerMT: __index called, k=	Next
+         this.__val = structTarget -- inf loop quietly.
+         
          local __personalPointerMT = {
             __name = "personalPointerMT",
             __target = structTarget,
@@ -1958,6 +1961,7 @@ function __Chan(elem, capacity)
    this.__sendQueue = {};
    this.__recvQueue = {};
    this.__closed = false;
+   this.__val = this -- jea add, should it be here?
    return this
 end;
 __chanNil = __Chan(nil, 0);
