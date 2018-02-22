@@ -375,7 +375,6 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       if ty == "cdata" then
          ty = tostring(__ffi.typeof(i))
       end
-      print("debug: ty is '",ty,"'")
       s = s..pre.." "..tostring(k).. " key ("..ty.."): '"..tostring(i).."' val: '"..vals.."'\n"
    end
    if k == 0 then
@@ -1093,15 +1092,6 @@ __valuePointerMT = {
 -- a __valueStructMT shouldn't be needed/used, instead the methodSet should
 -- be the MT for any struct, even if it is emtpy of methods.
 -- a.k.a. this is now called prototype
-
-__valueMapMT = {
-   __name = "__valueMapMT",
-   __tostring = function(t)
-      print("__valueMapMT: tostring called")
-      return tostring(t.__val)
-   end
-}
-
 
 
 function __newAnyArrayValue(elem, len)
@@ -2099,15 +2089,28 @@ __mapType = function(key, elem)
    return typ;
 end;
 
+__valueMapMT = {
+   __name = "__valueMapMT",
+   __tostring = function(t)
+      print("__valueMapMT: tostring called")
+      return tostring(t.__val)
+   end
+}
+
 __makeMap = function(keyForFunc, entries, keyType, elemType, mapType)
-   local m={};
+   local mty = __mapType(keyType, elemType)
+   local m= mty();
+   __st(m, "m in __makeMap")
+   
    for k, e in pairs(entries) do
       local key = keyForFunc(k)
       --print("using key ", key, " for k=", k)
       m[key] = e;
    end
-   local mp = _gi_NewMap(keyType, elemType, m);
+   --local mp = _gi_NewMap(keyType, elemType, m);
    --setmetatable(mp, mapType)
+   
+   setmetatable(mp, __valueMapMT)
    return mp
 end;
 
