@@ -1516,35 +1516,36 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__typ = typ.ptr
          this.__target = structTarget
          --this.__val = this
-         this.__val = structTarget -- inf loop quietly. hmm???
+         this.__val = structTarget
          
          local __personalPointerMT = {
             __name = "personalPointerMT",
-            __target = structTarget,
+            __target = this.__val,
             __newindex = function(t, k, v)
                print("personal pointerMT __newindex called, k=", k,  ", with val=", v)
-               if structTarget[k] == nil then
+               if this.__val[k] == nil then
                   error("no such field '"..k.."' in "..str)
                end
-               structTarget[k] = v
+               this.__val[k] = v
             end,
             __index = function(t, k)
                print("personal pointerMT: __index called, k=",k)
                
                --print("DEBUG ONLY: TODO remove the return nil below!!!")
                --return nil
-               --if structTarget[k] == nil then
+               --if this.__val[k] == nil then
                --   error("no such field '"..k.."' in "..str.."  TODO: handle nil pointer fields")
                --end
-               return structTarget[k]
+               return this.__val[k]
             end,
             __tostring = function(t)
                print("personal pointerMT: tostring called")
-               return "&" .. tostring(structTarget)
+               return "&" .. tostring(this.__val)
             end,
          }
-         setmetatable(this, __personalPointerMT)
-         setmetatable(__personalPointerMT, typ.ptr.prototype)
+         setmetatable(this, typ.ptr.prototype)
+         --setmetatable(this, __personalPointerMT)
+         --setmetatable(__personalPointerMT, typ.ptr.prototype)
          return this;
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
@@ -1563,8 +1564,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
       }
-      typ.ptr.prototype.__index = typ.ptr.prototype
-
+      --typ.ptr.prototype.__index = typ.ptr.prototype
+      
+      typ.ptr.prototype.__index = function(this, k)
+         print("struct.ptr.prototype.__index called, k='"..k.."'")
+         return this.__val[k]
+      end
+      
       -- incrementally expand the method set. Full
       -- signature details are passed in det.
       
