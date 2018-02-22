@@ -787,7 +787,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					//for i := 0; i < t.NumFields(); i++ {
 					//	constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
 					//}
-					constructor += "\t\t print(\"constructor returning! self=\",self); return self; \n\t end;\n"
+					constructor += "\t\t\t return self; \n\t\t end;\n"
 				}
 				set_constructor = fmt.Sprintf("\n\t %s.__constructor = %s;\n", typeName, constructor)
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
