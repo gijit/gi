@@ -1039,13 +1039,15 @@ __valuePointerMT = {
 
    __tostring = function(t)
       print("__valuePointerMT: tostring called")
+      __st(t, "t")
       if t == nil then return "<__valuePointer nil pointer>" end
       -- avoid getting messed up by metatable intercept, do a rawget.
-      local str =  rawget(t,"__str")
-      if str == nil then
-         return "<__valuePointer with __str nil>"
+      local typ = rawget(t, "__typ")
+      if typ == nil then
+         print(debug.traceback())
+         error("must have __typ set on pointer target")
       end
-      local ret = str .. "{" .. tostring(t.__get()) .. "}"
+      local ret = __starToAsterisk(typ.__str) .. "{" .. tostring(t.__get()) .. "}"
       return ret
    end
 }
@@ -1485,6 +1487,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             __target = structTarget,
             __newindex = function(t, k, v)
                print("personal pointerMT __newindex called, k=", k,  ", with val=", v)
+               if k == 0 then
+                  -- set the pointer value
+                  structTarget = v
+               end
                if structTarget[k] == nil then
                   error("no such field '"..k.."' in "..str)
                end
@@ -1492,6 +1498,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end,
             __index = function(t, k)
                print("personal pointerMT: __index called, k=",k)
+               if k == 0 then
+                  -- return the pointer value
+                  return structTarget
+               end
                return structTarget[k]
             end,
             __tostring = function(t)
