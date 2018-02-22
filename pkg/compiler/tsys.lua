@@ -1514,8 +1514,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__get = function() return structTarget; end;
          this.__set = function(v) typ.copy(structTarget, v); end;
          this.__typ = typ.ptr
-         --this.__target = structTarget
-         this.__val = structTarget         
+         this.__target = structTarget
+         this.__val = structTarget -- or should this be this.__val = this?
          setmetatable(this, typ.ptr.prototype)
          return this;
       end
@@ -1534,13 +1534,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                               -- refer out to the value __tostring
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
+                           __index = function(this, k)
+                              --print("struct.ptr.prototype.__index called, k='"..k.."'")
+                              return this.__val[k]
+                           end,
+                           __newindex = function(this, k, v)
+                              --print("struct.ptr.prototype.__newindex called, k='"..k.."'")
+                              this.__val[k] = v
+                           end,
+                           
       }
-      --typ.ptr.prototype.__index = typ.ptr.prototype
-      
-      typ.ptr.prototype.__index = function(this, k)
-         --print("struct.ptr.prototype.__index called, k='"..k.."'")
-         return this.__val[k]
-      end
       
       -- incrementally expand the method set. Full
       -- signature details are passed in det.
