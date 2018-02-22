@@ -1423,16 +1423,17 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindStruct then
       
       typ.tfun = function(...)
-         local this={};
          local args = {...}
-         print("top of simple kindStruct tfun, args are:")
-         __st(args, "args")
-         __st(args[1], "args[1]") -- empty table, going to be the result?
+         --print("top of simple kindStruct tfun, args are:")
+         --__st(args, "args")
          
+         local this
          if typ.__constructor ~= nil then
-            print("simple kindStruct: typ.__constructor was not nil, is")
-            __st(typ.__constructor, "typ.__constructor")
+            --print("simple kindStruct: typ.__constructor was not nil, is")
+            --__st(typ.__constructor, "typ.__constructor")
             this = typ.__constructor(...);
+         else
+            this={}
          end
          this.__typ = typ
          setmetatable(this, typ.prototype)
