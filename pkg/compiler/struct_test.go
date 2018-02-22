@@ -209,3 +209,33 @@ func Test123PointersInsideStructStartsNil(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test124ValueFromStructPointer(t *testing.T) {
+
+	cv.Convey(`a value cloned from a struct pointers should have a copy of the members`, t, func() {
+
+		code := `
+    type B struct {
+           b int
+    }
+    ptr := &B{b:5}
+    inst := *ptr
+    mem := inst.b
+`
+
+		// mem should be 5
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustBeNil(vm, "p")
+		LuaMustInt(vm, "mem", 5)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
