@@ -1014,7 +1014,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 		}
 		return fmt.Sprintf("%s.%s = %s;", c.translateExpr(l.X, nil), strings.Join(fields, "."), rhsExpr)
 	case *ast.StarExpr:
-		return fmt.Sprintf("%s[0] = %s;", c.translateExpr(l.X, nil), rhsExpr)
+		return fmt.Sprintf("%s.__set(%s);", c.translateExpr(l.X, nil), rhsExpr)
 		//return fmt.Sprintf("%s.$set(%s);", c.translateExpr(l.X, nil), rhsExpr)
 	case *ast.IndexExpr:
 		switch t := c.p.TypeOf(l.X).Underlying().(type) {

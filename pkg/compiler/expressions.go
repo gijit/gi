@@ -923,8 +923,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			return c.translateExpr(e.X, nil)
 		}
 		// jea: pointer dereference
-		return c.formatExpr("%e[0]", e.X) // any key will do.
-		//return c.formatExpr("%e.$get()", e.X)
+		//return c.formatExpr("%e[0]", e.X) // any key will do.
+		return c.formatExpr("%e.__get()", e.X)
 
 	case *ast.TypeAssertExpr:
 		if e.Type == nil {
@@ -1351,7 +1351,7 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 			ptrVar := c.newVariable("_ptr")
 			getterConv := c.translateConversion(c.setType(&ast.StarExpr{X: c.newIdent(ptrVar, exprType)}, exprTypeElem), t.Elem())
 			setterConv := c.translateConversion(c.newIdent("$v", t.Elem()), exprTypeElem)
-			return c.formatExpr("(%1s = %2e, new %3s(function() { return %4s; }, function($v) { %1s.$set(%5s); }, %1s.$target))", ptrVar, expr, c.typeName(0, desiredType), getterConv, setterConv)
+			return c.formatExpr("(%3s(function() return %4s; end, function(__v)  %1s.__set(%5s); end, %1s.__target))", ptrVar, expr, c.typeName(0, desiredType), getterConv, setterConv)
 		}
 
 	case *types.Interface:
