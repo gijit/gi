@@ -1207,11 +1207,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindPtr then
 
       if constructor ~= nil then
-        --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
+         --print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
          function(this, wat, getter, setter, target)
-           --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
+           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
             --__st(this, "this")
             --print("wat, 2nd arg to ctor, is:")
             --__st(wat, "wat")
@@ -1823,7 +1823,7 @@ __newDataPointer = function(data, constructor)
 --      print("struct recognized in __newDataPointer")
 --      return data;
 --   end
-   return constructor(function() return data; end, function(v) data = v; end);
+   return constructor(function() return data; end, function(v) data = v; end, data);
 end;
 
 __indexPtr = function(array, index, constructor)

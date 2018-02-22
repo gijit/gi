@@ -328,7 +328,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				te := c.translateExpr(e.X, nil)
 				pp("after translateExpr on e.X underlying struct or array, te = '%#v'", te)
 				pp("after translateExpr on underlying struct or array, type of t = '%#v'", t)
-				return te
+				// jea: gopherjs didn't represent struct values directly?? try
+				// wrapping with a newDataPointer or other pointer generating construct...
+				return c.formatExpr("__newDataPointer(%s   , %s)", te, c.typeName(0, c.p.TypeOf(e)))
+				// gopherjs:
+				// return c.translateExpr(e.X)
 			}
 			pp("underlying is not struct nor array")
 
@@ -1399,7 +1403,9 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 	pp("exprType = '%v'", exprType)
 	if types.Identical(exprType, desiredType) {
 		pp("YYY 2 translateImplicitConversion exiting early, b/c types are identical, exprType='%#v' and desiredType='%#v'. expr ='%#v'", exprType, desiredType, expr)
-		return c.translateExpr(expr, nil)
+		ret := c.translateExpr(expr, nil)
+		pp("end of YYY 2, ret = '%#v'/'%s'", ret, ret)
+		return ret
 	}
 
 	basicExprType, isBasicExpr := exprType.Underlying().(*types.Basic)

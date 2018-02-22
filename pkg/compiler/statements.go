@@ -950,6 +950,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	lhsType := c.p.TypeOf(lhs)
 	pp("lhsType = '%#v'/  lhs=%#v/%T; define=%v.  c='%#v'\n", lhsType, lhs, lhs, define, c)
 	rhsExpr := c.translateImplicitConversion(rhs, lhsType)
+	pp("rhsExpr = '%#v'/'%s'", rhsExpr, rhsExpr)
 	if _, ok := rhs.(*ast.CompositeLit); ok && define {
 		pp("we see a CompositLit, calling translateExpr on it, lhs='%#v', rhsExpr='%#v'", lhs, rhsExpr)
 		return fmt.Sprintf("%s%s = %s;", local, c.translateExpr(lhs, nil), rhsExpr) // skip $copy
@@ -997,6 +998,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	pp("lhs type is '%T'", lhs) // *ast.Ident for instance
 	switch l := lhs.(type) {
 	case *ast.Ident:
+		pp("lhs is *ast.Ident")
 		asn := fmt.Sprintf("%s%s = %s;", local, c.objectName(c.p.ObjectOf(l)), rhsExpr)
 		pp("lhs is *ast.Ident, asn = '%s'", asn)
 		return asn

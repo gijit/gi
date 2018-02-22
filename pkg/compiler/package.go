@@ -356,12 +356,10 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			// from the start, so we get the receiver name 'r' correct,
 			// and don't face collisions with vars that happened to
 			// be named 'self'.
-			//
-			//this := "self"
-			//if isWrapped(c.p.TypeOf(recv)) {
-			// this = "this.$val"
-			//}
-			//c.Printf("%s = %s;", c.translateExpr(recv, nil), this)
+
+			if isWrapped(c.p.TypeOf(recv)) {
+				c.Printf("%[1]s = %[1]s.__val; -- isWrapped(recv) true at package.go:361\n", recvName)
+			}
 		}
 
 		c.translateStmtList(body.List)

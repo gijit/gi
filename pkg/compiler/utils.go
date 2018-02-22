@@ -731,6 +731,12 @@ func nameHelper(expr ast.Expr) string {
 	return "_"
 }
 
+// structs: false
+// arrays, chan, map, func: true
+// pointers to arrays: true
+// pointers to other: false
+// basic types: complex or untyped nil: false
+//   other basic: true
 func isWrapped(ty types.Type) bool {
 	switch t := ty.Underlying().(type) {
 	case *types.Basic:
