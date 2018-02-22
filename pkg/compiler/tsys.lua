@@ -150,6 +150,10 @@ __pkg = {};
 -- length of array, counting [0] if present,
 -- but trusting __len if metamethod avail.
 function __lenz(array)
+   if array == nil then
+      print(debug.traceback())
+      error("cannot call __lenz with nil array")
+   end
    local n = #array
    local mt = getmetatable(array)
    if mt ~= nil and mt.__len ~= nil then
@@ -517,8 +521,7 @@ __subslice = function(slice, low, high, max)
       __throwRuntimeError("slice bounds out of range");
    end
    
-   local s = {}
-   slice.__constructor.tfun(s, slice.__array);
+   local s = slice.__constructor.tfun(slice.__array);
    s.__offset = slice.__offset + low;
    s.__length = slice.__length - low;
    s.__capacity = slice.__capacity - low;
@@ -696,8 +699,7 @@ __internalAppend = function(slice, array, offset, length)
    --print("jea debug, __internalAppend, after copying over array:")
    --__st(newArray)
 
-   local newSlice ={}
-   slice.__constructor.tfun(newSlice, newArray);
+   local newSlice = slice.__constructor.tfun(newArray);
    newSlice.__offset = newOffset;
    newSlice.__length = newLength;
    newSlice.__capacity = newCapacity;
@@ -971,12 +973,10 @@ __tfunBasicMT = {
       -- Since we just replace it with newInstance anyway, change that in expressions.go:289 and :349
       -- to just be
       --    s = __type__.S(0LL);
-      local newInstance = {}
-      print("in __tfunBasicMT, made newInstance = ")
-      __st(newInstance,"newInstance")
+      
       if self ~= nil then
          if self.tfun ~= nil then
-            --print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
+            --print("calling tfun! -- let constructors set metatables if they wish to")
 
             -- this makes a difference as to whether or
             -- not the ctor receives a nil 'this' or not...
@@ -997,12 +997,16 @@ __tfunBasicMT = {
                local sz = self.zero()
                print("tfun sees no args and we have a typ.zero() method, so invoking self.zero() got back sz=")
                __st(sz, "sz")
-               self.tfun(newInstance, sz)
+               return self.tfun(sz)
             else
-               self.tfun(newInstance, ...)
+               return self.tfun(...)
             end
          end
       else
+         local newInstance = {}
+         print("in __tfunBasicMT, made newInstance = ")
+         __st(newInstance,"newInstance")
+         
          setmetatable(newInstance, __valueBasicMT)
 
          if self ~= nil then
@@ -1136,22 +1140,26 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       -- all table based values, that have: this.__val == this;
       -- and no .wrapped field.
       --
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          this.__val = v;
-         this.__typ = typ
-         setmetatable(this, __valueBasicMT)
+         this.__typ = typ;
+         setmetatable(this, __valueBasicMT);
+         return this;
       end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
 
    elseif kind == __kindString then
       
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          --print("strings' tfun called! with v='"..tostring(v).."' and this:")
          --__st(this)
          this.__val = v;
          this.__typ = typ         
          setmetatable(this, __valueBasicMT)
+         return this;
       end;
       typ.wrapped = true;
       typ.keyFor = __identity; -- function(x) return "_" .. x; end;
@@ -1159,10 +1167,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind == __kindFloat32 or
    kind == __kindFloat64 then
       
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          this.__val = v;
          this.__typ = typ         
          setmetatable(this, __valueBasicMT)
+         return this;
       end;
       typ.wrapped = true;
       typ.keyFor = function(x) return __floatKey(x); end;
@@ -1170,36 +1180,44 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindComplex64 then
 
-      typ.tfun = function(this, re, im)
+      typ.tfun = function(re, im)
+         local this = {};
          this.__val = re + im*complex(0,1);
-         this.__typ = typ
-         setmetatable(this, __valueBasicMT)
+         this.__typ = typ;
+         setmetatable(this, __valueBasicMT);
+         return this;
       end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
-      --    typ.tfun = function(this, real, imag)
+      --    typ.tfun = function(real, imag)
+      --      local this={};
       --      this.__real = __fround(real);
       --      this.__imag = __fround(imag);
       --      this.__val = this;
+      --      return this;
       --    end;
       --    typ.keyFor = function(x) return x.__real .. "_" .. x.__imag; end;
 
    elseif kind ==  __kindComplex128 then
 
-      typ.tfun = function(this, re, im)
+      typ.tfun = function(re, im)
+         local this = {}
          this.__val = re + im*complex(0,1);
          this.__typ = typ
          setmetatable(this, __valueBasicMT)
+         return this
       end;
       typ.wrapped = true;
       typ.keyFor = function(x) return tostring(x); end;
       
-      --     typ.tfun = function(this, real, imag)
+      --     typ.tfun = function(real, imag)
+      --        local this={};
       --        this.__real = real;
       --        this.__imag = imag;
       --        this.__val = this;
       --        this.__constructor = typ
+      --        return this;
       --     end;
       --     typ.keyFor = __identity --function(x) return x.__real .. "_" .. x.__imag; end;
       --    
@@ -1210,11 +1228,9 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          print("in newType kindPtr, constructor is not-nil: "..tostring(constructor))
       end
       typ.tfun = constructor  or
-         function(this, wat, getter, setter, target)
-           print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'; this:")
-            --__st(this, "this")
-            --print("wat, 2nd arg to ctor, is:")
-            --__st(wat, "wat")
+         function(getter, setter, target)
+            local this={};
+            print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             -- sanity checks
             if setter ~= nil and type(setter) ~= "function" then
                error "setter must be function"
@@ -1228,6 +1244,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             this.__val = this; -- seems to indicate a non-primitive value.
             this.__typ = typ
             setmetatable(this, __valuePointerMT)
+            return this;
          end;
       typ.keyFor = __idKey;
       
@@ -1241,7 +1258,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindSlice then
       
-      typ.tfun = function(this, array)
+      typ.tfun = function(array)
+         local this={};
          --print(debug.traceback())
          --print("slice tfun for type '"..__addressof(typ).."' called with array = ")
          --__st(array)
@@ -1262,6 +1280,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__name = "__sliceValue"
          this.__typ = typ
          setmetatable(this, __valueSliceMT)
+         return this
       end;
       typ.init = function(elem)
          typ.elem = elem;
@@ -1270,7 +1289,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end;
       
    elseif kind ==  __kindArray then
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          --print("in tfun ctor function for __kindArray, this="..tostring(this).." and v="..tostring(v))
          this.__val = v;
          this.__array = v; -- like slice, to reuse ipairs method.
@@ -1280,13 +1300,16 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__name = "__arrayValue"
          this.__typ = typ         
          setmetatable(this, __valueArrayMT)
+         return this
       end;
      --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
       typ.wrapped = true;
-      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(this, array)
+      typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
+                             local this={};
                              this.__get = function() return array; end;
                              this.__set = function(v) typ.copy(this, v); end;
                              this.__val = array;
+                             return this
       end);
       
       -- track the dependency between types
@@ -1325,10 +1348,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindChan then
       
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          this.__val = v;
          this.__typ = typ
          setmetatable(this, __valueBasicMT)
+         return this
       end;
       typ.wrapped = true;
       typ.keyFor = __idKey;
@@ -1341,10 +1366,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
 
    elseif kind ==  __kindFunc then 
 
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          this.__val = v;
          this.__typ = typ
          setmetatable(this, __valueBasicMT)
+         return this;
       end;
       typ.wrapped = true;
       typ.init = function(params, results, variadic)
@@ -1379,10 +1406,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindMap then 
       
-      typ.tfun = function(this, v)
+      typ.tfun = function(v)
+         local this={};
          this.__val = v;
          this.__typ = typ
          setmetatable(this, __valueMapMT)
+         return this;
       end;
       typ.wrapped = true;
       typ.init = function(key, elem)
@@ -1393,7 +1422,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindStruct then
       
-      typ.tfun = function(this, ...)
+      typ.tfun = function(...)
+         local this={};
          local args = {...}
          print("top of simple kindStruct tfun, this, then args, are:")
          __st(this, "this")
@@ -1407,6 +1437,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             typ.__constructor(this, ...);
          end
          setmetatable(this, typ.prototype)
+         return this
       end;
       typ.wrapped = true;
 
@@ -1432,7 +1463,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.prototype.__index = typ.prototype
       
       
-      local ctor = function(this, structTarget, ...)
+      local ctor = function(structTarget, ...)
+         local this={};
          print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          __st(structTarget, "structTarget")
          local args = {...}
@@ -1448,6 +1480,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__target = structTarget
 
          setmetatable(this, typ.ptr.prototype)
+         return this;
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
       -- __newType sets typ.comparable = true
