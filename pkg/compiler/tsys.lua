@@ -16,6 +16,39 @@ __minifs = {}
 __ffi = require "ffi"
 local __osname = __ffi.os == "Windows" and "windows" or "unix"
 
+__built_in_starting_symbol_list={};
+
+function __storeBuiltins()
+   for k,_ in pairs(_G) do
+      __built_in_starting_symbol_list[k]=true;
+   end
+end
+__storeBuiltins()
+
+function __gls()
+   local i = 0
+   for k,v in pairs(_G) do
+      i=i+1
+      print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
+   end
+end
+
+function __ls()
+   local i = 0
+   for k,v in pairs(_G) do
+      local uscore = 95 -- "_"
+      if #k > 2 and string.byte(k,1,1)==uscore and string.byte(k,2,2) == uscore then
+         -- we omit __ prefixed methods/values
+      else
+         if __built_in_starting_symbol_list == nil or 
+         not __built_in_starting_symbol_list[k] then
+            i=i+1
+            print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
+         end
+      end
+   end
+end
+
 -- a __ namespace binding so it is usable from Go
 __tostring = tostring
 

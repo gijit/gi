@@ -300,13 +300,12 @@ func getFunFor__st(pkg *types.Package) *types.Func {
 	return fun
 }
 
-// vestigial: use direct lua tostring instead!
-/*
-func GitestingTostring(a interface{}) string {
-	fmt.Printf("GitestingTostring called with arg: '%#v'\n", a)
-	return fmt.Sprintf("%#v", a)
+func getFunFor__ls(pkg *types.Package) *types.Func {
+	// func __ls()
+	sig := types.NewSignature(nil, nil, nil, false)
+	fun := types.NewFunc(token.NoPos, pkg, "__ls", sig)
+	return fun
 }
-*/
 
 func Incr(a int) int {
 	fmt.Printf("\nYAY Incr(a) called! with a = '%v'\n", a)

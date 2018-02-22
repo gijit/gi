@@ -57,6 +57,7 @@ type Repl struct {
 func NewRepl(cfg *GIConfig) *Repl {
 
 	vm, err := NewLuaVmWithPrelude(cfg)
+
 	panicOn(err)
 	inc := NewIncrState(vm, cfg)
 
@@ -484,38 +485,12 @@ func (r *Repl) Eval(src string) error {
 
 // :ls implementation
 func (r *Repl) displayUserVar() {
-	err := LuaDoString(r.vm, `
-for k,v in pairs(_G) do
-   local uscore = 95 -- "_"
-   if #k > 2 and string.byte(k,1,1)==uscore and string.byte(k,2,2) == uscore then
-      -- we omit __ prefixed methods/values
-   else
-      if __built_in_starting_symbol_list == nil or 
-         not __built_in_starting_symbol_list[k] then
-            print(tostring(k).." : "..tostring(v))
-      end
-   end
-end
-`)
+	err := LuaDoString(r.vm, `__ls()`)
 	panicOn(err)
 }
 
 // :gls implementation
 func (r *Repl) displayAllVar() {
-	err := LuaDoString(r.vm, `
-for k,v in pairs(_G) do
-   print(tostring(k).." : "..tostring(v))
-end
-`)
-	panicOn(err)
-}
-
-func (r *Repl) setBuiltinList() {
-	err := LuaDoString(r.vm, `
-__built_in_starting_symbol_list={};
-for k,_ in pairs(_G) do
-   __built_in_starting_symbol_list[k]=true;
-end
-`)
+	err := LuaDoString(r.vm, `__gls()`)
 	panicOn(err)
 }
