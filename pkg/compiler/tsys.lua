@@ -1035,16 +1035,6 @@ __valuePointerMT = {
 __valueStructMT = {
    __name = "__valueStructMT",
    
-   __newindex = function(t, k, v)
-     --print("__valueStructMT: __newindex called, calling set() with val=", v)
-      return t.__val
-   end,
-
-   __index = function(t, k)
-     --print("__valueStructMT: __index called, doing get()")       
-      return t.__val
-   end,
-
    __tostring = function(t)
       --print("__valueStructMT: tostring called")
       return tostring(t.__val)
@@ -1054,17 +1044,6 @@ __valueStructMT = {
 
 __valueMapMT = {
    __name = "__valueMapMT",
-   
-   __newindex = function(t, k, v)
-     --print("__valueMapMT: __newindex called, calling set() with val=", v)
-      return t.__val
-   end,
-
-   __index = function(t, k)
-     --print("__valueMapMT: __index called, doing get()")       
-      return t.__val
-   end,
-
    __tostring = function(t)
       --print("__valueMapMT: tostring called")
       return tostring(t.__val)
@@ -1538,7 +1517,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                sw2 ==  __kindStruct then 
                   f.__typ.copy(dst[f.__prop], src[f.__prop]);
                else
+                  print("copying field '"..f.__prop.."'")
+                  __st(dst, "dst prior to copy")
                   dst[f.__prop] = src[f.__prop];
+                  __st(dst, "dst after copy")
                end
             end
          end;
