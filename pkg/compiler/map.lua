@@ -219,7 +219,7 @@ _intentionalNilValue = {}
  }
  
 function _gi_NewMap(keyType, valType, x)
-   assert(type(x) == 'table', 'bad parameter #1: must be table')
+   assert(type(x) == 'table', 'bad parameter #3: must be table')
 
    local proxy = {}
    proxy["Typeof"]="_gi_Map"

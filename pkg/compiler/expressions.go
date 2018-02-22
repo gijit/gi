@@ -754,7 +754,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case *ast.Ident:
 			obj := c.p.Uses[f]
 			if o, ok := obj.(*types.Builtin); ok {
-				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid())
+				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid(), exprType)
 			}
 			if typesutil.IsJsPackage(obj.Pkg()) && obj.Name() == "InternalObject" {
 				return c.translateExpr(e.Args[0], nil)
@@ -1074,7 +1074,7 @@ func (c *funcContext) makeReceiver(e *ast.SelectorExpr) *expression {
 	return recv
 }
 
-func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args []ast.Expr, ellipsis bool) *expression {
+func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args []ast.Expr, ellipsis bool, exprType types.Type) *expression {
 	switch name {
 	case "new":
 		t := sig.Results().At(0).Type().(*types.Pointer)
@@ -1100,12 +1100,18 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 				t, args[1])
 
 		case *types.Map:
-			if len(args) == 2 && c.p.Types[args[1]].Value == nil {
-				return c.formatExpr(`((%1f < 0 || %1f > 2147483647) ? error("makemap: size out of range") : {})`, args[1])
-			}
+			//if len(args) == 2 && c.p.Types[args[1]].Value == nil {
+			//	return c.formatExpr(`((%1f < 0 || %1f > 2147483647) ? error("makemap: size out of range") : {})`, args[1])
+			//}
+
 			// return c.formatExpr("{}") // gopherjs
-			return c.formatExpr("{}")
-			//return c.formatExpr(`_gi_NewMap("%s", "%s", {})`, c.typeName(0, argType.Key()), c.typeName(0, argType.Elem()))
+			// jea: we at least need a metatable for tostring, etc... so this minimal won't do.
+			//return c.formatExpr("{}")
+
+			// __makeMap(keyForFunc, entries, keyType, elemType, mapType)
+			t := exprType.Underlying().(*types.Map)
+			return c.formatExpr("__makeMap(%s.keyFor, {}, %s, %s, %s)", c.typeName(0, t.Key()), c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
+			//return c.formatExpr(`_gi_NewMap(%s, %s, {})`, c.typeName(0, argType.Key()), c.typeName(0, argType.Elem()))
 		case *types.Chan:
 			length := "0"
 			if len(args) == 2 {

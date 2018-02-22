@@ -1097,7 +1097,7 @@ __valuePointerMT = {
 __valueMapMT = {
    __name = "__valueMapMT",
    __tostring = function(t)
-     --print("__valueMapMT: tostring called")
+      print("__valueMapMT: tostring called")
       return tostring(t.__val)
    end
 }
