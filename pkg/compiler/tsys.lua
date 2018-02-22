@@ -1402,8 +1402,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__typ = typ
          
          if typ.__constructor ~= nil then
-            print("simple kindStruct: typ.__constructor was not nil, is")
-            __st(typ.__constructor, "typ.__constructor")
+            --print("simple kindStruct: typ.__constructor was not nil, is")
+            --__st(typ.__constructor, "typ.__constructor")
             typ.__constructor(this, ...);
          end
          setmetatable(this, typ.prototype)
@@ -1819,9 +1819,10 @@ end;
 
 __newDataPointer = function(data, constructor)
    print("__newDataPointer called")
-   if constructor.elem.kind == __kindStruct then
-      return data;
-   end
+--   if constructor.elem.kind == __kindStruct then
+--      print("struct recognized in __newDataPointer")
+--      return data;
+--   end
    return constructor(function() return data; end, function(v) data = v; end);
 end;
 
