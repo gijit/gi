@@ -12,15 +12,13 @@ func Test510StructsShouldBeViewable(t *testing.T) {
 	cv.Convey(`__tostring(str) where str is a struct, should print the struct's fields`, t, func() {
 
 		code := `
-type Str struct {
- s string
- i int
- S string
- I int
+type S struct {
+   b int
 }
-var str Str;
-chk := __tostring(str)
-chk2 := __tostring(&str)
+var s S;
+s.b = 23
+chk := __tostring(s)
+chk2 := __tostring(&s)
 `
 		// c0 should be 4, a1 should be 4
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -34,8 +32,8 @@ chk2 := __tostring(&str)
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustString(vm, "chk", `main.Str{s: "", i: 0LL, S: "", I: 0LL, }`)
-		LuaMustString(vm, "chk2", `&main.Str{s: "", i: 0LL, S: "", I: 0LL, }`)
+		LuaMustString(vm, "chk", `main.S{b: 23LL, }`)
+		LuaMustString(vm, "chk2", `&main.Str{b: 23LL, }`)
 
 	})
 }

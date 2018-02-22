@@ -286,7 +286,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("%s({}, %s)", c.typeName(0, exprType), sele)
+			return c.formatExpr("%s(%s)", c.typeName(0, exprType), sele)
+			//return c.formatExpr("%s({}, %s)", c.typeName(0, exprType), sele)
+
 			// first lua attempt:
 			//vals := structFieldNameValuesForLua(t, elements)
 			//return c.formatExpr(`__reg:NewInstance("%s",{%s})`, c.typeName(0, exprType), strings.Join(vals, ", "))
@@ -311,18 +313,24 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		return c.formatExpr("(%s)", fun)
 
 	case *ast.UnaryExpr:
-		pp("expressions.go:229 we have a *ast.UnaryExpr: '%#v'", e)
+		pp("we have UnaryExpr:  *ast.UnaryExpr: '%#v'", e)
 		t := c.p.TypeOf(e.X)
 		switch e.Op {
 		case token.AND:
+			pp("we have token.AND, exprType = '%#v", exprType)
 			if typesutil.IsJsObject(exprType) {
 				return c.formatExpr("%e.object", e.X)
 			}
 
 			switch t.Underlying().(type) {
 			case *types.Struct, *types.Array:
-				return c.translateExpr(e.X, nil)
+				pp("underlying is struct or array")
+				te := c.translateExpr(e.X, nil)
+				pp("after translateExpr on e.X underlying struct or array, te = '%#v'", te)
+				pp("after translateExpr on underlying struct or array, type of t = '%#v'", t)
+				return te
 			}
+			pp("underlying is not struct nor array")
 
 			switch x := astutil.RemoveParens(e.X).(type) {
 			case *ast.CompositeLit:
@@ -335,9 +343,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				// basic taking address of value to get pointer. See ptr_test.go, test 099.
 				//return c.formatExpr(`__ptrType(function() return %1s; end, function(v) %2s; end, "%s")`, c.objectName(obj), c.translateAssign(x, c.newIdent("v", exprType), false), starToAmp(exprType.String()))
 
+				pp("basic taking address of value to get pointer...")
 				pp("c.typeName(0, exprType) = '%v'", c.typeName(0, exprType))
 				pp("exprType = '%#v'", exprType)
-				return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(0, exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
+				return c.formatExpr(`%2s(function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(0, exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
+				//return c.formatExpr(`%2s({}, function() return %3s; end, function(__v) %4s end, %3s)`, c.varPtrName(obj), c.typeName(0, exprType), c.objectName(obj), c.translateAssign(x, c.newIdent("__v", exprType), false))
 
 			case *ast.SelectorExpr:
 				sel, ok := c.p.SelectionOf(x)
@@ -933,7 +943,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		pp("under *ast.Ident, obj='%#v'/%T", obj, obj)
 		switch o := obj.(type) {
 		case *types.Var, *types.Const:
-			pp("jea debug, line 740 expressions.go")
+			pp("jea debug, line 937 expressions.go")
 			return c.formatExpr("%s", c.objectName(o))
 		case *types.Func:
 			return c.formatExpr("%s", c.objectName(o))
@@ -1378,7 +1388,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 }
 
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
-	//fmt.Printf("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
+	pp("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
 
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")
@@ -1428,7 +1438,7 @@ func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType typ
 			pp("YYY 7 translateImplicitConversion exiting early")
 			//return c.formatExpr("%1e.__constructor.__elem(%1e)", expr)
 			//return c.formatExpr("%1e.__typ.elem(%1e)", expr)
-			return c.formatExpr("(%1e)", expr)
+			return c.formatExpr("(((%1e)))", expr)
 		}
 	}
 	pp("bottom of expressions.go:1250 calling c.translateExpr, for expr='%#v', exprType='%v'", expr, exprType)

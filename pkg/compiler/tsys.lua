@@ -955,16 +955,25 @@ __tfunBasicMT = {
       --print("jea debug: __tfunBasicMT.__call() invoked") -- , self='"..tostring(self).."' with tfun = ".. tostring(self.tfun).. " and args=")
       --print(debug.traceback())
 
-      --local args = {...}
-      --print("in __tfunBasicMT, start __st on args")
-      --__st(args, "args to __tfunBasicMT.__call")
-      --print("in __tfunBasicMT,   end __st on args")
+      print("debug, __tfunBasicMT itself as a table is:")
+      __st(__tfunBasicMT, "__tfunBasicMT")
+      local args = {...}
+      print("in __tfunBasicMT, start __st on args")
+      __st(args, "args to __tfunBasicMT.__call")
+      print("in __tfunBasicMT,   end __st on args")
 
       --print("in __tfunBasicMT, start __st on self")
       --__st(self, "self")
       --print("in __tfunBasicMT,   end __st on self")
-      
+
+      -- args1 will have the empty instance if typ is invoked as, e.g.
+      --    s = __type__.S({}, 0LL);
+      -- Since we just replace it with newInstance anyway, change that in expressions.go:289 and :349
+      -- to just be
+      --    s = __type__.S(0LL);
       local newInstance = {}
+      print("in __tfunBasicMT, made newInstance = ")
+      __st(newInstance,"newInstance")
       if self ~= nil then
          if self.tfun ~= nil then
             --print("calling tfun! -- let constructors set metatables if they wish to. our newInstance is an empty table="..tostring(newInstance))
@@ -985,8 +994,10 @@ __tfunBasicMT = {
             
             -- get zero value if no args
             if #{...} == 0 and self.zero ~= nil then
-              --print("tfun sees no args and we have a typ.zero() method, so invoking it")
-               self.tfun(newInstance, self.zero())
+               local sz = self.zero()
+               print("tfun sees no args and we have a typ.zero() method, so invoking self.zero() got back sz=")
+               __st(sz, "sz")
+               self.tfun(newInstance, sz)
             else
                self.tfun(newInstance, ...)
             end
@@ -1034,16 +1045,9 @@ __valuePointerMT = {
    end
 }
 
-
-__valueStructMT = {
-   __name = "__valueStructMT",
-   
-   __tostring = function(t)
-      print("__valueStructMT: tostring called")
-      return tostring(t.__val)
-   end
-}
-
+-- a __valueStructMT shouldn't be needed/used, instead the methodSet should
+-- be the MT for any struct, even if it is emtpy of methods.
+-- a.k.a. this is now called prototype
 
 __valueMapMT = {
    __name = "__valueMapMT",
@@ -1389,11 +1393,20 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindStruct then
       
-      typ.tfun = function(this, v)
-         --print("top of simple kindStruct tfun")
-         this.__val = v;
+      typ.tfun = function(this, ...)
+         local args = {...}
+         print("top of simple kindStruct tfun, this, then args, are:")
+         __st(this, "this")
+         __st(args, "args")
+         __st(args[1], "args[1]") -- empty table, going to be the result?
          this.__typ = typ
-         setmetatable(this, __valueStructMT)
+         
+         if typ.__constructor ~= nil then
+            print("simple kindStruct: typ.__constructor was not nil, is")
+            __st(typ.__constructor, "typ.__constructor")
+            typ.__constructor(this, ...);
+         end
+         setmetatable(this, typ.prototype)
       end;
       typ.wrapped = true;
 
@@ -1420,7 +1433,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       
       local ctor = function(this, ...)
-         --print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         print("top of struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
          local args = {...}
          --__st(args, "args to ctor")
          --__st(args[1], "args[1]")
@@ -1430,15 +1443,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          this.__get = function() return this; end;
          this.__set = function(v) typ.copy(this, v); end;
-         if typ.__constructor ~= nil then
-            -- have to skip the first empty table...
-            local skipFirst = {}
-            for i,v in ipairs(args) do
-               if i > 1 then table.insert(skipFirst, v) end
-            end
-            typ.__constructor(this, unpack(skipFirst));
-         end
-         this.__typ = typ         
+         this.__typ = typ.ptr
          setmetatable(this, typ.ptr.prototype)
       end
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, pkg, exported, ctor);
@@ -1528,7 +1533,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             end
          end;
          
-         print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
+         --print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
          __ipairsZeroCheck(fields)
@@ -1813,6 +1818,7 @@ __ptrType = function(elem)
 end;
 
 __newDataPointer = function(data, constructor)
+   print("__newDataPointer called")
    if constructor.elem.kind == __kindStruct then
       return data;
    end
