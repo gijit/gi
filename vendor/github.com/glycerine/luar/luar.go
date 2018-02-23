@@ -1022,16 +1022,18 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	return n, nil
 }
 
-func dereferenceGijitStructPointerToStruct(L *lua.State) {
-	top := L.GetTop()
-	if top == 0 {
+// if we find a pointer-to-struct at idx, we dereference
+// it, replacing the pointer by the struct table at idx.
+func dereferenceGijitStructPointerToStruct(L *lua.State, idx int) {
+
+	if idx == 0 {
 		return
 	}
-	if L.Type(-1) != lua.LUA_TTABLE {
+	if L.Type(idx) != lua.LUA_TTABLE {
 		return
 	}
 
-	getfield(L, -1, "__name")
+	getfield(L, idx, "__name")
 	if L.IsNil(-1) {
 		L.Pop(1)
 		return
@@ -1054,9 +1056,9 @@ func dereferenceGijitStructPointerToStruct(L *lua.State) {
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
-	L.Remove(-2)
+	L.Replace(idx)
 
-	pp("-- dereferenceGijitStructPointerToStruct, after Remove(-2), here is stack:")
+	pp("-- dereferenceGijitStructPointerToStruct, after Replace(idx), here is stack:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
 	}
@@ -1079,7 +1081,8 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		DumpLuaStack(L)
 	}
 
-	dereferenceGijitStructPointerToStruct(L)
+	top := L.GetTop()
+	dereferenceGijitStructPointerToStruct(L, top)
 	pp("-- in luaToGo, after dereferenceGijitStructPointerToStruct(), here is stack:")
 	if verb.VerboseVerbose {
 		DumpLuaStack(L)
