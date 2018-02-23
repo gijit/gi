@@ -89,8 +89,6 @@ __stringToBytes = function(str)
    return __newByteArray(str)
 end;
 
---
-
 __bytesToString = function(ba)
    return tostring(ba)
 end;
