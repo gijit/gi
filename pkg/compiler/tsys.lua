@@ -91,7 +91,7 @@ function __glst()
 end
 
 
--- a __ namespace binding so it is usable from Go
+-- a __ namespace binding so __tostring is usable from Go
 __tostring = tostring
 
 local __dq = function(str)
@@ -706,9 +706,8 @@ __pointerOfStructConversion = function(obj, typ)
             set= function(value) obj[fieldProp] = value; end
          };
       end
-      -- fields must be an array for this to work.
-      for i=0,#typ.elem.fields-1 do
-         helper(typ.elem.fields[i].__prop);
+      for _,f in ipairs(typ.elem.fields) do
+         helper(f.__prop);
       end
       
       proxy = Object.create(typ.prototype, properties);
@@ -1423,12 +1422,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          -- jea: nilCheck allows asserting that a pointer is not nil before accessing it.
          -- jea: what seems odd is that the state of the pointer is
          -- here defined on the type itself, and not on the particular instance of the
-         -- pointer. But perhaps this is javascript's prototypal inheritence in action.
+         -- pointer. But perhaps this is javascript's prototypal inheritance in action.
          --
          -- gopherjs uses them in comma expressions. example, condensed:
          --     p$1 = new ptrType(...); sa$3.Port = (p$1.nilCheck, p$1[0])
          --
-         -- Since comma expressions are not (efficiently) supported in Lua, let
+         -- Since comma expressions are not (efficiently) supported in Lua, lets
          -- implement the nil check in a different manner.
          -- js: Object.defineProperty(typ.ptr.__nil, "nilCheck", { get= __throwNilPointerError end);
       end;
@@ -1533,11 +1532,23 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       end;
       
    elseif kind ==  __kindStruct then
+
+      -- provides a way to inject the fields from __structType(),
+      -- centralizes the finishing up of struct value construction.
+      typ.finishStructValueCreation=function(this, fields, args)
+         this.__val = this;
+         for i,fld in ipairs(fields) do
+            this[fld.__prop] = args[i] or fld.__typ.zero();
+         end         
+         this.__name = "__structValue";
+         this.__typ = typ;
+         setmetatable(this, typ.prototype)
+      end
       
       typ.tfun = function(...)
          local args = {...}
-         print("top of simple kindStruct tfun, args are:")
-         __st(args, "args")
+         --print("top of simple kindStruct tfun, args are:")
+         --__st(args, "args")
          
          local this
          if typ.__constructor ~= nil then
@@ -1545,12 +1556,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             --__st(typ.__constructor, "typ.__constructor")
             this = typ.__constructor(...);
          else
+            --print("simple kindStruct: typ.__constructor was nil, typ.fields:")
+            --__st(typ.fields, "typ.fields")
+            --__st(typ.fields[1], "typ.fields[1]")
+            --__st(typ.fields[1].__typ, "typ.fields[1].__typ")
             this={}
          end
-         this.__name = "__structValue"
-         this.__typ = typ;
-         this.__val = this;
-         setmetatable(this, typ.prototype)
+         typ.finishStructValueCreation(this, typ.fields, args)
          return this
       end;
       typ.wrapped = true;
@@ -1682,9 +1694,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          
          typ.pkgPath = pkgPath;
          typ.fields = fields;
-         __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-            --__st(f,"f")
             if not f.__typ.comparable then
                typ.comparable = false;
                break;
@@ -1702,7 +1712,6 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
             --__st(src, "src")
             --print("fields:")
             --__st(fields,"fields")
-            __ipairsZeroCheck(fields)
             for _, f in ipairs(fields) do
                local sw2 = f.__typ.kind
                
@@ -1721,7 +1730,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          --print("jea debug: on __kindStruct: set .copy on typ to .copy=", typ.copy)
          -- /* nil value */
          local properties = {};
-         __ipairsZeroCheck(fields)
+
          for i,f in ipairs(fields) do
             properties[f.__prop] = { get= __throwNilPointerError, set= __throwNilPointerError };
          end;
@@ -1916,10 +1925,6 @@ function __methodSet(typ)
          
          if knd == __kindStruct then
             
-            -- assume that e.__typ.fields must be an array!
-            -- TODO: remove this assert after confirmation.
-            __assertIsArray(e.__typ.fields)
-            __ipairsZeroCheck(e.__typ.fields)
             for i,f in ipairs(e.__typ.fields) do
                if f.anonymous then
                   local fTyp = f.__typ;
@@ -2574,8 +2579,6 @@ function field2strHelper(f)
 end
 
 function typeKeyHelper(f)
-   __st(f, "f")
-   print(debug.traceback())
    return f.__name .. "," .. f.__typ.id .. "," .. f.__tag;
 end
 
@@ -2592,18 +2595,11 @@ __structType = function(pkgPath, fields)
          str = "struct { " .. __mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
       end
       
-      typ = __newType(0, __kindStruct, str, false, "", false, function()
+      typ = __newType(0, __kindStruct, str, false, "", false, function(...)
                          local this = {}
-                         this.__val = this;
-                         for i = 0, #fields-1 do
-                            local f = fields[i];
-                            local arg = arguments[i];
-                            if arg ~= nil then
-                               this[f.__prop] = arg
-                            else
-                               this[f.__prop] = f.__typ.zero();
-                            end
-                         end
+                         local args = {...}
+                         local typ = __structTypes[typeKey]
+                         typ.finishStructValueCreation(this, fields, args)
                          return this
       end);
       __structTypes[typeKey] = typ;
@@ -2645,8 +2641,7 @@ __equal = function(a, b, typ)
       
    elseif sw == __kindStruct then
       
-      for i = 0,#(typ.fields)-1 do
-         local f = typ.fields[i];
+      for i,f in ipairs(typ.fields) do
          if  not __equal(a[f.__prop], b[f.__prop], f.__typ) then
             return false;
          end
