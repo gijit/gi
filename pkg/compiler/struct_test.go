@@ -211,7 +211,7 @@ func Test125AnonymousStructType(t *testing.T) {
 
 	cv.Convey(`an anonymous struct type should be usable`, t, func() {
 
-		code := `var a struct {x int; nm string}`
+		code := `var a struct {x int; nm string}; s := __tostring(a);`
 		// tsys.lua:2577: attempt to concatenate field 'tag' (a nil value)
 
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -223,7 +223,7 @@ func Test125AnonymousStructType(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		LuaRunAndReport(vm, string(translation))
-		//LuaMustInt64(vm, "mem", 5)
+		LuaMustString(vm, "s", `&struct { x int; nm string }{x: 0LL, nm: "", }`)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }

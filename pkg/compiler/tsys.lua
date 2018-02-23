@@ -2566,15 +2566,17 @@ end;
 
 function field2strHelper(f)
    local tag = ""
-   if f.tag ~= "" then
-      tag = string.gsub(f.tag, "\\", "\\\\")
+   if f.__tag ~= "" then
+      tag = string.gsub(f.__tag, "\\", "\\\\")
       tag = string.gsub(tag, "\"", "\\\"")
    end
    return f.__name .. " " .. f.__typ.__str .. tag
 end
 
 function typeKeyHelper(f)
-   return f.__name .. "," .. f.__typ.id .. "," .. f.tag;
+   __st(f, "f")
+   print(debug.traceback())
+   return f.__name .. "," .. f.__typ.id .. "," .. f.__tag;
 end
 
 __structTypes = {};
