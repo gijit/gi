@@ -750,9 +750,28 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			switch t := o.Type().Underlying().(type) {
 			case *types.Struct:
 				pp("incr.go:580, in a Struct")
+
+				// avoid collision between self and parameter names
+				// in the constructor definition. Use self_ or self__
+				// if necessary.
+				selfVar := "self"
+				clean := false
+			outerCleanCheck:
+				for !clean {
+					for i := 0; i < t.NumFields(); i++ {
+						if fieldName(t, i) == selfVar {
+							selfVar = selfVar + "_"
+							continue outerCleanCheck
+						}
+					}
+					clean = true
+				}
+
 				params := make([]string, t.NumFields())
+				prefixedParams := make([]string, t.NumFields())
 				for i := 0; i < t.NumFields(); i++ {
 					params[i] = fieldName(t, i) + "_"
+					prefixedParams[i] = fmt.Sprintf("%s.%s", selfVar, fieldName(t, i))
 				}
 
 				// have pointer types printed after the type they point to.
@@ -773,10 +792,10 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					//constructor = fmt.Sprintf("function(self) %s\n\t\t self.__gi_val=self; return self; end", diag)
 					constructor = fmt.Sprintf("function() %s\n\t\t return {}; end", diag)
 				} else {
-					constructor = fmt.Sprintf("function(...) %s\n\t\t local self = {};\n", diag)
+					constructor = fmt.Sprintf("function(...) %s\n\t\t local %s = {};\n", diag, selfVar)
 					//constructor = fmt.Sprintf("function(...) %s\n\t\t local self = {}; end\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
 
-					constructor += fmt.Sprintf("\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
+					constructor += fmt.Sprintf("\t\t\t local %s = ... ;\n", strings.Join(prefixedParams, ", "))
 					for i := 0; i < t.NumFields(); i++ {
 
 						// the translateExpr call here is what
@@ -784,12 +803,12 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 						// generates the deferred 'anon_ptrType' and sibling type
 						// variables for any pointers in the members.
 						//
-						constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_ or %[2]s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+						constructor += fmt.Sprintf("\t\t\t %[3]s.%[1]s = %[3]s.%[1]s or %[2]s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String(), selfVar)
 					}
 					//for i := 0; i < t.NumFields(); i++ {
 					//	constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_;\n", fieldName(t, i))
 					//}
-					constructor += "\t\t\t return self; \n\t\t end;\n"
+					constructor += fmt.Sprintf("\t\t\t return %s; \n\t\t end;\n", selfVar)
 				}
 				set_constructor = fmt.Sprintf("\n\t %s.__constructor = %s;\n", typeName, constructor)
 			case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:

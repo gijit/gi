@@ -1,5 +1,6 @@
 --
--- tsys.lua the type system for gijit.
+-- tsys.lua provides the type system for gijit.
+--
 -- It started life as a port of the GopherJS type
 -- system to LuaJIT, and still shows some
 -- javascript vestiges.
@@ -218,6 +219,12 @@ __gijit_tsys = true
 --                                   'constructor' -> typ.__constructor
 
 __bit = require("bit")
+
+-- ===========================
+--
+-- begin actual type system stuff
+--
+-- ===========================
 
 __type__ ={}; -- global repo of types
 __global ={};

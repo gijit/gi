@@ -110,23 +110,23 @@ func Test121PointersInsideStructs(t *testing.T) {
 
 		cv.So(string(translation), matchesLuaSrc, `
 	__type__.Ragdoll = __newType(0, __kindStruct, "main.Ragdoll", true, "main", true, nil);
-	
-	__type__.anon_ptrType = __ptrType(__type__.Ragdoll); -- 'DELAYED' anon type printing. utils.go:506
-
-	__type__.Ragdoll.init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= __type__.anon_ptrType, __tag= ""}}); -- incr.go:873
-	
-	 __type__.Ragdoll.__constructor = function(...) 
-		 local self = {};
-			 local Andy_ = ... ;
-			 self.Andy = Andy_ or __type__.anon_ptrType.__nil;
-			 return self; 
-		 end;
-;
-
-
-		doll = __type__.Ragdoll(__type__.anon_ptrType.__nil);
-	doll.Andy = __type__.anon_ptrType(doll);
-	same = doll.Andy == __type__.anon_ptrType(doll);
+  	
+  	__type__.anon_ptrType = __ptrType(__type__.Ragdoll); 
+  
+  	__type__.Ragdoll.init("", {{__prop= "Andy", __name= "Andy", __anonymous= false, __exported= true, __typ= __type__.anon_ptrType, __tag= ""}}); 
+  	
+  	 __type__.Ragdoll.__constructor = function(...) 
+  		 local self = {};
+  			 local Andy_ = ... ;
+  			 self.Andy = Andy_ or __type__.anon_ptrType.__nil;
+  			 return self; 
+  		 end;
+  ;
+  
+  
+  		doll = __type__.Ragdoll.ptr(__type__.anon_ptrType.__nil);
+  	doll.Andy = doll;
+  	same = doll.Andy == doll;
 `)
 
 		// and verify that it happens correctly
