@@ -2578,13 +2578,13 @@ function __field2strHelper(f)
    return f.__name .. " " .. f.__typ.__str .. tag
 end
 
-function typeKeyHelper(f)
+function __typeKeyHelper(f)
    return f.__name .. "," .. f.__typ.id .. "," .. f.__tag;
 end
 
 __structTypes = {};
 __structType = function(pkgPath, fields)
-   local typeKey = __mapAndJoinStrings("_", fields, typeKeyHelper)
+   local typeKey = __mapAndJoinStrings("_", fields, __typeKeyHelper)
 
    local typ = __structTypes[typeKey];
    if typ == nil then

@@ -37,6 +37,12 @@ func init() {
 	for _, w := range []string{"and", "break", "do", "else", "elseif", "", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"} {
 		reservedKeywords[w] = true
 	}
+
+	// lua/gijit system already in-use method names
+	for _, w := range []string{"_G", "_VERSION", "assert", "bit", "byte", "cmath", "collectgarbage", "complex", "complex128", "complex64", "coroutine", "debug", "dofile", "error", "float32", "float64", "gcinfo", "getfenv", "getmetatable", "golua_default_msghandler", "imag", "int", "int16", "int32", "int64", "int8", "io", "ipairs", "jit", "load", "loadfile", "loadstring", "luar", "math", "module", "newproxy", "next", "os", "package", "pairs", "panic", "pcall", "print", "rawequal", "rawget", "rawlen", "rawset", "real", "recover", "require", "select", "setfenv", "setmetatable", "string", "table", "tonumber", "tostring", "type", "uint", "uint16", "uint32", "uint64", "uint8", "unpack", "xpcall"} {
+		reservedKeywords[w] = true
+	}
+
 }
 
 type ErrorList []error
