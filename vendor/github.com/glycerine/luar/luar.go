@@ -170,7 +170,8 @@ func Init() *lua.State {
 	Register(L, "", Map{
 		"pairs": ProxyPairs,
 		// jea: Using ProxyType is huge 10x performance loss for LuaJIT.
-		// So try not to use it.
+		// So try not to use it. A developer on the project
+		// reports that it is entirely cosmetic anyhow.
 		//"type": ProxyType,
 	})
 	// 'ipairs' needs a special case for performance reasons.
@@ -921,6 +922,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	}
 	nm := L.ToString(-1)
 	if nm != "__lazy_ellipsis_instance" {
+		L.Pop(1)
 		return 0, nil
 	}
 	L.Pop(1)
@@ -965,7 +967,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 		fmt.Printf("lazy ellipsis: early exit, could not get length of object on top of stack\n")
 		return -1, err
 	}
-	// 88888888888888888
+
 	fmt.Printf("lazy elip: back safe from getting n=%v\n", n)
 	if n <= 0 {
 		// empty? just clear ourselves off the stack
@@ -1020,6 +1022,36 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	return n, nil
 }
 
+var errNotGijitStructPtr = fmt.Errorf("top of stack was not a gijit pointer-to-struct")
+
+func dereferenceGijitStructPointerToStruct(L *lua.State) error {
+	top := L.GetTop()
+	if top == 0 {
+		return errNotGijitStructPtr
+	}
+	if L.Type(-1) != lua.LUA_TTABLE {
+		return errNotGijitStructPtr
+	}
+	getfield(L, -1, "__val")
+	if L.IsNil(-1) {
+		L.Pop(1)
+		return errNotGijitStructPtr
+	}
+
+	pp("-- dereferenceGijitStructPointerToStruct, after getting __val to top, here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+	L.Remove(-2)
+
+	pp("-- dereferenceGijitStructPointerToStruct, after Remove(-2), here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	return nil
+}
+
 func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (xtraExpandedCount int, err error) {
 
 	pp("-- top of luaToGo, here is stack:")
@@ -1030,6 +1062,18 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 	expandCount, err := expandLazyEllipsis(L, idx)
 	if err != nil {
 		return 0, err
+	}
+
+	pp("-- in luaToGo, after expandLazyEllipsis(), here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
+
+	dereferenceGijitStructPointerToStruct(L)
+
+	pp("-- in luaToGo, after dereferenceGijitStructPointerToStruct(), here is stack:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
 	}
 
 	if expandCount > 0 {
