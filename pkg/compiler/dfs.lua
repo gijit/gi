@@ -283,13 +283,13 @@ function __testDFS()
 
       s:showDFSOrder()
 
-      expectEq(s.dfsOrder[1], c)
-      expectEq(s.dfsOrder[2], e)
-      expectEq(s.dfsOrder[3], f)
-      expectEq(s.dfsOrder[4], d)
-      expectEq(s.dfsOrder[5], b)
-      expectEq(s.dfsOrder[6], a)
-      expectEq(s.dfsOrder[7], g)
+      __expectEq(s.dfsOrder[1], c)
+      __expectEq(s.dfsOrder[2], e)
+      __expectEq(s.dfsOrder[3], f)
+      __expectEq(s.dfsOrder[4], d)
+      __expectEq(s.dfsOrder[5], b)
+      __expectEq(s.dfsOrder[6], a)
+      __expectEq(s.dfsOrder[7], g)
    end
    
 end

@@ -242,7 +242,7 @@ function cmath.Tan(c)
 end
 
 -- Program to subtract nearest integer multiple of PI
-function reducePi(x) -- takes float64, returns float64
+function __reducePi(x) -- takes float64, returns float64
    -- extended precision value of PI:
    local DP1 = 3.14159265160560607910E0   -- ?? 0x400921fb54000000
    local DP2 = 1.98418714791870343106E-9  -- ?? 0x3e210b4610000000
@@ -258,11 +258,11 @@ function reducePi(x) -- takes float64, returns float64
 end
 
 -- Taylor series expansion for cosh(2y) - cos(2x)
-function tanSeries(z) -- takes complex128, returns float64
+function __tanSeries(z) -- takes complex128, returns float64
    local MACHEP = 1.0 / tonumber(bit.lshift(1LL, 53))
    local x = abs(2 * real(z))
    local y = abs(2 * imag(z))
-   x = reducePi(x)
+   x = __reducePi(x)
    x = x * x
    y = y * y
    local x2=1
@@ -323,7 +323,7 @@ function cmath.Cot(x)
    local xr, xi = real(x), imag(x)
    local d = cosh(2*xi) - cos(2*xr)
 	if abs(d) < 0.25 then
-		d = tanSeries(x)
+		d = __tanSeries(x)
 	end
 	if d == 0 then
 		return Inf

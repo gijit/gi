@@ -2,7 +2,7 @@
 
 
 -- compare by value
-function ValEq(a,b)   
+function __ValEq(a,b)   
    local aty = type(a)
    local bty = type(b)
    if aty ~= bty then
@@ -16,7 +16,7 @@ function ValEq(a,b)
             -- b doesn't have key ka in it.
             return false
          end
-         if not ValEq(vb, va) then
+         if not __ValEq(vb, va) then
             return false
          end
       end
@@ -27,21 +27,21 @@ function ValEq(a,b)
 end
 
 --[[
-print(ValEq(0,0))
-print(ValEq(0,1))
-print(ValEq({},{}))
-print(ValEq({a=1},{a=1}))
-print(ValEq({a=1},{a=2}))
-print(ValEq({a=1},{b=1}))
-print(ValEq({a=1,b=2},{a=1,b=2}))
-print(ValEq({a=1,b={c=2}},{a=1,b={c=2}}))
-print(ValEq({a=1,b={c=2}},{a=1,b={c=3}}))
-print(ValEq("hi","hi"))
-print(ValEq("he","hi"))
+print(__ValEq(0,0))
+print(__ValEq(0,1))
+print(__ValEq({},{}))
+print(__ValEq({a=1},{a=1}))
+print(__ValEq({a=1},{a=2}))
+print(__ValEq({a=1},{b=1}))
+print(__ValEq({a=1,b=2},{a=1,b=2}))
+print(__ValEq({a=1,b={c=2}},{a=1,b={c=2}}))
+print(__ValEq({a=1,b={c=2}},{a=1,b={c=3}}))
+print(__ValEq("hi","hi"))
+print(__ValEq("he","hi"))
 --]]
 
-function expectEq(a, b)
-   if not ValEq(a,b) then
-      error("expectEq failure: a='"..tostring(a).."' was not equal to b='"..tostring(b).."', of type "..type(b))
+function __expectEq(a, b)
+   if not __ValEq(a,b) then
+      error("__expectEq failure: a='"..tostring(a).."' was not equal to b='"..tostring(b).."', of type "..type(b))
    end
 end

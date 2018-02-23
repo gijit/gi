@@ -2569,7 +2569,7 @@ end;
 
 
 
-function field2strHelper(f)
+function __field2strHelper(f)
    local tag = ""
    if f.__tag ~= "" then
       tag = string.gsub(f.__tag, "\\", "\\\\")
@@ -2592,7 +2592,7 @@ __structType = function(pkgPath, fields)
       if #fields == 0 then
          str = "struct {}";
       else
-         str = "struct { " .. __mapAndJoinStrings("; ", fields, field2strHelper) .. " }";
+         str = "struct { " .. __mapAndJoinStrings("; ", fields, __field2strHelper) .. " }";
       end
       
       typ = __newType(0, __kindStruct, str, false, "", false, function(...)
