@@ -254,7 +254,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			joined := strings.Join(entries, ", ")
 			pp("joined = '%#v'", joined)
 			//return c.formatExpr(`_gi_NewMap("%s", "%s", {%s})`, c.typeName(0, t.Key()), c.typeName(0, t.Elem()), joined)
-			return c.formatExpr("__makeMap(%s.keyFor, {%s}, %s, %s, %s)", c.typeName(0, t.Key()), joined, c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
+			return c.formatExpr("__makeMap({%s}, %s, %s, %s)", joined, c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
 		case *types.Struct:
 			pp("in expressions.go, for *types.Struct")
 			elements := make([]string, t.NumFields())
@@ -1110,7 +1110,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 
 			// __makeMap(keyForFunc, entries, keyType, elemType, mapType)
 			t := exprType.Underlying().(*types.Map)
-			return c.formatExpr("__makeMap(%s.keyFor, {}, %s, %s, %s)", c.typeName(0, t.Key()), c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
+			return c.formatExpr("__makeMap({}, %s, %s, %s)", c.typeName(0, t.Key()), c.typeName(0, t.Elem()), c.typeName(0, exprType))
 			//return c.formatExpr(`_gi_NewMap(%s, %s, {})`, c.typeName(0, argType.Key()), c.typeName(0, argType.Elem()))
 		case *types.Chan:
 			length := "0"

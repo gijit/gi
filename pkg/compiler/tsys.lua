@@ -1438,17 +1438,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindMap then 
       
-      typ.tfun = constructor or function(entries)
+      typ.tfun = function(entries)
          print("map tfun called, entries = "..tostring(entries))
          local this={};
+         this.__typ = typ         
+         this.__val = {}; --no meta names, so clean. No accidental collisions.
 
-         -- let __val be a completely separate map, so no
-         -- possible key collisions, with __typ or any
-         -- other meta name.         
-         this.__val = {};
-         
-         this.keyForFunc = typ.keyFor
-         local keyForFunc = typ.keyFor
+         local kff = typ.elem.keyFor
          this.nilKeyStored = false
          
          local len=0
@@ -1457,7 +1453,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                this.nilKeyStored = true
                this.nilValue = e or __intentionalNilValue
             else 
-               local key = keyForFunc(k)
+               local key = kff(k)
                --print("using key ", key, " for k=", k)
                this.__val[key] = e or __intentionalNilValue;
             end
@@ -1465,8 +1461,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          end
          
          this.len=len;
+         this.keyType=typ.key
+         this.elemType=typ.elem
+         this.zeroValue = typ.elem.zero()
          
-         this.__typ = typ;
          setmetatable(this, __valueMapMT);
          return this;
                                 end;
@@ -2098,42 +2096,45 @@ __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__type__.string}, false) }});
 
 __mapTypes = {};
-__mapType = function(key, elem, keyForFunc, mType)
+__mapType = function(key, elem, mType)
    local typeKey = key.id .. "_" .. elem.id;
    local typ = __mapTypes[typeKey];
    if typ == nil then
-      
-      local ctor =function(entries)
-         print("map ctor called, v = "..tostring(v))
-         local this={};
 
-         -- the central key:value map is in __val
-         this.__val = {}; --no meta names, so clean. No accidental collisions.
-         local len=0;
-         for k, e in pairs(entries) do
-            if k == nil then
-               this.nilKeyStored = true;
-               this.nilValue = e or __intentionalNilValue;
-            else 
-               local key = keyForFunc(k);
-               --print("using key ", key, " for k=", k)
-               this.__val[key] = e or __intentionalNilValue;
-            end
-            len=len+1
-         end
-         
-         this.len=len
-         this.__typ = typ
-         this.keyType=key
-         this.elemType=elem
-         this.keyForFunc = keyForFunc
-         this.zeroValue = elem.zero()
-         
-         this.nilKeyStored = false
-         setmetatable(this, __valueMapMT)
-         return this;
-      end;
-      typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, ctor);
+      -- moved inside __newType, unified. so pass nil to __newType ctor (last param)
+--       local ctor =function(entries)
+--          print("map ctor called, v = "..tostring(v))
+--          local this={};
+--          local typ = __mapTypes[typeKey]
+--          this.__typ = typ         
+--          this.__val = {}; --no meta names, so clean. No accidental collisions.
+-- 
+--          local kff = key.keyFor
+--          this.nilKeyStored = false
+--          
+--          local len=0;
+--          for k, e in pairs(entries) do
+--             if k == nil then
+--                this.nilKeyStored = true;
+--                this.nilValue = e or __intentionalNilValue;
+--             else
+--                local key = kff(k);
+--                --print("using key ", key, " for k=", k)
+--                this.__val[key] = e or __intentionalNilValue;
+--             end
+--             len=len+1
+--          end
+--          
+--          this.len=len
+--          this.keyType=key
+--          this.elemType=elem
+--          this.zeroValue = elem.zero()
+--          
+--          setmetatable(this, __valueMapMT)
+--          return this;
+--       end;
+      
+      typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
       __mapTypes[typeKey] = typ;
 
       __dfsGlobal:addChild(typ, key)
@@ -2255,10 +2256,15 @@ __valueMapMT = {
       -- or nil to end iteration
 
       local function stateless_iter(t, k)
+         print("map stateless_iter called, with k ="..tostring(k))
+         __st(k, "k")
+         
          local v
          --  Implement your own key,value selection logic in place of next
          local ks = tostring(k)
          ks, v = next(t.__val, tostring(k))
+         print("map iter, back from next(t.__val, tostring(k)), ks=")
+         __st(ks, "ks")
          if v then return ks,v end
       end
 
@@ -2338,8 +2344,8 @@ __valueMapMT = {
    
 }
 
-__makeMap = function(keyForFunc, entries, keyType, elemType, mType)
-   local mty = __mapType(keyType, elemType, keyForFunc)
+__makeMap = function(entries, keyType, elemType, mType)
+   local mty = __mapType(keyType, elemType, mType)
    local m = mty(entries);   
    __st(m, "m in __makeMap")
    return m
