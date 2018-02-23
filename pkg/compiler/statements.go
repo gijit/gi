@@ -949,7 +949,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 					dq = ``
 				}
 			}
-			return fmt.Sprintf(`%s[%[2]s%s%[2]s] = %s;`, c.translateExpr(l.X, nil), dq, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
+			return fmt.Sprintf(`%[1]s[  %[2]s%[3]s%[2]s  ] = %[4]s;`, c.translateExpr(l.X, nil), dq, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateImplicitConversionWithCloning(rhs, t.Elem()))
 			// jea replace next 2 lines with the above
 			//keyVar := c.newVariable("_key")
 			//return fmt.Sprintf(`%s = %s; (%s || $throwRuntimeError("assignment to entry in nil map"))[%s.keyFor(%s)] = { k: %s, v: %s };`, keyVar, c.translateImplicitConversionWithCloning(l.Index, t.Key()), c.translateExpr(l.X), c.typeName(0, t.Key()), keyVar, keyVar, c.translateImplicitConversionWithCloning(rhs, t.Elem()))
