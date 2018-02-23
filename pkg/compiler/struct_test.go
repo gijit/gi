@@ -206,3 +206,24 @@ func Test124ValueFromStructPointer(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test125AnonymousStructType(t *testing.T) {
+
+	cv.Convey(`an anonymous struct type should be usable`, t, func() {
+
+		code := `var a struct {x int; nm string}`
+		// tsys.lua:2577: attempt to concatenate field 'tag' (a nil value)
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		LuaRunAndReport(vm, string(translation))
+		//LuaMustInt64(vm, "mem", 5)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

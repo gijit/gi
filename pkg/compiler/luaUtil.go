@@ -362,12 +362,14 @@ func LuaRunAndReport(vm *golua.State, s string) {
 		fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
 		DumpLuaStack(vm)
 		vm.Pop(1)
+		panic("error printed above")
 	} else {
 		err := vm.Call(0, 0)
 		if err != nil {
 			fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
 			DumpLuaStack(vm)
 			vm.Pop(1)
+			panic(err)
 		}
 	}
 }
