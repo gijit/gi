@@ -405,13 +405,16 @@ func Test016MapCreation(t *testing.T) {
 
 		// create using make
 		code := `y := make(map[int]string)`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `y={};`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
+	__type__.anon_mapType = __mapType(__type__.int, __type__.string);
+	y = __makeMap({}, __type__.int, __type__.string, __type__.anon_mapType);
+`)
 
 		// create with literal
 		code = `x := map[int]string{3:"hello", 4:"gophers"}`
 		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
-  	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
+  	x = __makeMap({[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 
 	})
@@ -431,7 +434,7 @@ __type__.Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
 
 __type__.Yumo.init(__type__.int, __type__.string);
 
-yesso = __makeMap(__type__.int.keyFor, {[2LL]="two"}, __type__.int, __type__.string, __type__.Yumo);
+yesso = __makeMap({[2LL]="two"}, __type__.int, __type__.string, __type__.Yumo);
 
 `)
 
@@ -450,7 +453,7 @@ func Test017DeleteFromMap(t *testing.T) {
 		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
   	__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
   
-  	x = __makeMap(__type__.int.keyFor, {[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
+  	x = __makeMap({[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 		code = `delete(x, 3)`
 		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `x("delete",3LL);`)
