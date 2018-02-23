@@ -550,8 +550,8 @@ func Test020StructTypeDeclarations(t *testing.T) {
 		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {});  	
-  	 __type__.A.__constructor = function(self) 
-  		 return self; end;`)
+  	 __type__.A.__constructor = function() 
+  		 return {}; end;`)
 
 	})
 }
@@ -569,12 +569,12 @@ func Test021StructTypeValues(t *testing.T) {
 
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {});
-  	 __type__.A.__constructor = function(self) 
-  		 return self; end;
+  	 __type__.A.__constructor = function() 
+  		 return {}; end;
 `)
 		code = `var a A`
 		//cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=__reg:NewInstance("A",{});`)
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a = __type__.A.ptr({}, nil);`)
+		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a = __type__.A(nil);`)
 
 	})
 }
@@ -592,8 +592,8 @@ func Test022StructTypeValues(t *testing.T) {
 	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
   	__type__.A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__.int, __tag= ""}});
   	
-  	 __type__.A.__constructor = function(self, ...) 
-  		 if self == nil then self = {}; end
+  	 __type__.A.__constructor = function(...) 
+  		     local self = {};
   			 local B_ = ... ;
   			 self.B = B_ or 0LL;
   		 return self; 
@@ -603,7 +603,7 @@ func Test022StructTypeValues(t *testing.T) {
 `)
 		code = `var a = A{B:43}`
 		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
-a = __type__.A.ptr({}, 43LL);
+a = __type__.A(43LL);
 `)
 		// a=__reg:NewInstance("A",{["B"]=43LL});
 
