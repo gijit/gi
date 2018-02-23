@@ -1439,9 +1439,17 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindMap then 
       
       typ.tfun = function(v)
+         print("map tfun called, v = "..tostring(v))
          local this={};
-         this.__val = v;
+         
+         -- let __val be a completely empty map, so no
+         -- possible key collisions, with __typ or any
+         -- other meta name.
+         
+         this.__val = {};
          this.__typ = typ
+         this.len = 0
+         this.nilKeyStored = false
          setmetatable(this, __valueMapMT)
          return this;
       end;
@@ -2089,29 +2097,219 @@ __mapType = function(key, elem)
    return typ;
 end;
 
+-- stored as map value in place of nil, so
+-- we can recognized stored nil values in maps.
+__intentionalNilValue = {}
+
 __valueMapMT = {
    __name = "__valueMapMT",
-   __tostring = function(t)
-      print("__valueMapMT: tostring called")
-      return tostring(t.__val)
-   end
+
+   __newindex = function(t, k, v)
+       local len = t.len
+       --print("map newindex called for key", k, " len at start is ", len)
+
+       if k == nil then
+          if t.nilKeyStored then
+             -- replacement, no change in len.
+          else
+             -- new key
+             t.len = len + 1
+             t.nilKeyStored = true
+          end
+          t.nilValue = v
+          return
+       end
+
+       -- invar: k is not nil
+
+       local ks = tostring(k)
+       if v ~= nil then
+          if t.__val[ks] == nil then
+             -- new key
+             t.len = len + 1
+          end
+          t.__val[ks] = v
+          return
+
+       else
+          -- invar: k is not nil. v is nil.
+
+          if t.__val[ks] == nil then
+             -- new key
+             t.len = len + 1
+          end
+          t.__val[ks] = __intentionalNilValue
+          return
+      end
+      --print("len at end of newindex is ", len)
+    end,
+
+    __index = function(t, k)
+       -- Instead of __index,
+       -- use __call('get', ...) for two valued return and
+       --  proper zero-value return upon not present.
+       -- __index only ever returns one value[1].
+       -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
+              
+       --print("__index called for key", k)
+       if k == nil then
+          if t.nilKeyStored then
+             return t.nilValue
+          else
+             -- TODO: if zeroValue wasn't set (e.g. in __makeMap), then
+             -- set it somehow...
+             return t.zeroValue
+          end
+       end
+
+       -- k is not nil.
+
+       local ks = tostring(k)
+       local val = t.__val[ks]
+       if val == __intentionalNilValue then
+          return nil
+       end
+       return val
+    end,
+
+    __tostring = function(t)
+       --print("__tostring for map called")
+       local len = t.len
+       local s = "map["..t.keyType.__str.. "]"..t.elemType.__str.."{"
+       local r = t.__val
+       
+       local vquo = ""
+       if len > 0 and t.elemType.__str == "string" then
+          vquo = '"'
+       end
+       local kquo = ""
+       if len > 0 and t.keyType.__str == "string" then
+          kquo = '"'
+       end
+       
+       for i, v in pairs(r) do
+          s = s .. kquo..tostring(i)..kquo.. ": " .. vquo..tostring(v) ..vquo.. ", "
+       end
+       return s .. "}"
+    end,
+
+    __len = function(t)
+       -- this does get called by the # operation(!)
+       -- print("len called")
+       return t.len
+    end,
+
+    __pairs = function(t)
+       -- print("__pairs called!")
+       -- this makes a _giMap work in a for k,v in pairs() do loop.
+
+       -- Iterator function takes the table and an index and returns the next index and associated value
+       -- or nil to end iteration
+
+       local function stateless_iter(t, k)
+           local v
+           --  Implement your own key,value selection logic in place of next
+           local ks = tostring(k)
+           ks, v = next(t.__val, tostring(k))
+           if v then return ks,v end
+       end
+
+       -- Return an iterator function, the table, starting point
+       return stateless_iter, t, nil
+    end,
+
+    __call = function(t, ...)
+        --print("__call() invoked, with ... = ", ...)
+        local oper, k, zeroVal = ...
+        --print("oper is", oper)
+        --print("key is ", k)
+
+        -- we use __call('get', k, zeroVal) instead of __index
+        -- so that we can return multiple values
+        -- to match Go's "a, ok := mymap[k]" call.
+        
+        if oper == "get" then
+
+           --print("get called for key", k)
+           if k == nil then
+              local props = t[_giPrivateMapProps]
+              if props.nilKeyStored then
+                 return props.nilValue, true;
+              else
+                 -- key not present returns the zero value for the value.
+                 return zeroVal, false;
+              end
+           end
+           
+           -- k is not nil.
+           local ks = tostring(k)      
+           local val = t.__val[ks]
+           if val == __intentionalNilValue then
+              --print("val is the __intentionalNilValue")
+              return nil, true;
+
+           elseif val == nil then
+              -- key not present
+              --print("key not present, zeroVal=", zeroVal)
+              --for i,v in pairs(t.__val) do
+              --   print("debug: i=", i, "  v=", v)
+              --end
+              return zeroVal, false;
+           end
+           
+           return val, true
+           
+        elseif oper == "delete" then
+
+           -- the hash table delete operation
+
+           local props = t[_giPrivateMapProps]              
+           local len = props.len
+           --print("delete called for key", k, " len at start is ", len)
+                      
+           if k == nil then
+
+              if props.nilKeyStored then
+                 props.nilKeyStored = false
+                 props.nilVaue = nil
+                 props.len = len -1
+              end
+
+              --print("len at end of delete is ", props.len)              
+              return
+           end
+
+           local ks = tostring(k)           
+           if t.__val[ks] == nil then
+              -- key not present
+              return
+           end
+           
+           -- key present and key is not nil
+           t.__val[ks] = nil
+           props.len = len - 1
+           
+           --print("len at end of delete is ", props.len)
+        end
+    end
+   
 }
 
 __makeMap = function(keyForFunc, entries, keyType, elemType, mapType)
    local mty = __mapType(keyType, elemType)
-   local m= mty();
+   local m = mty();
+   m.zeroValue = elemType.zero()
+   m.keyType = keyType
+   m.elemType = elemType
+   
    __st(m, "m in __makeMap")
    
    for k, e in pairs(entries) do
       local key = keyForFunc(k)
       --print("using key ", key, " for k=", k)
-      m[key] = e;
+      m.__val[key] = e;
    end
-   --local mp = _gi_NewMap(keyType, elemType, m);
-   --setmetatable(mp, mapType)
-   
-   setmetatable(mp, __valueMapMT)
-   return mp
+   return m
 end;
 
 
