@@ -56,7 +56,12 @@ local __dq = function(str)
    if type(str) == "string" then
       return '"'..str..'"'
    end
-   return tostring(str)
+   -- avoid infinite loops.
+   local mt = getmetatable(str)
+   setmetatable(str, nil)
+   local s = tostring(str)
+   setmetatable(str, mt)
+   return s
 end
 
 local __system = ({
@@ -1550,6 +1555,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                               --print("in pointer-to-struct __tostring, with instance=")
                               --__st(instance,"instance")
                               -- refer out to the value __tostring
+
+                              -- avoid infinite loop...
+                              if instance == instance.target then
+                                 return("<avoid inf loop>");
+                              end
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
                            __index = function(this, k)

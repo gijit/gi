@@ -286,7 +286,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if len(elements) > 0 {
 				sele = strings.Join(elements, ", ")
 			}
-			return c.formatExpr("%s(%s)", c.typeName(0, exprType), sele)
+
+			return c.formatExpr("%s.ptr(%s)", c.typeName(0, exprType), sele)
+			//return c.formatExpr("%s(%s)", c.typeName(0, exprType), sele)
 			//return c.formatExpr("%s({}, %s)", c.typeName(0, exprType), sele)
 
 			// first lua attempt:
@@ -330,7 +332,12 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				pp("after translateExpr on underlying struct or array, type of t = '%#v'", t)
 				// jea: gopherjs didn't represent struct values directly?? try
 				// wrapping with a newDataPointer or other pointer generating construct...
-				return c.formatExpr("%s(%s)", c.typeName(0, c.p.TypeOf(e)), te)
+				//return c.formatExpr("%s(%s)", c.typeName(0, c.p.TypeOf(e)), te)
+				// Arg. It turns out:
+				// The problem with the above comes  when comparing points to a struct... two
+				// points to the same struct have to be equal. Test 121 in struct_test.go.
+
+				return c.translateExpr(e.X, nil)
 				// gopherjs:
 				// return c.translateExpr(e.X)
 			}
