@@ -1611,7 +1611,19 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
                            __index = function(this, k)
-                              --print("struct.ptr.prototype.__index called, k='"..k.."'")
+                              print("struct.ptr.prototype.__index called, k='"..k.."'")
+                              -- check methodsets first, then fields.
+                              -- check *T:
+                              local meth = typ.ptr.prototype[k]
+                              if meth ~= nil then
+                                 return meth
+                              end
+                              -- check T:
+                              meth = typ.prototype[k]
+                              if meth ~= nil then
+                                 return meth
+                              end
+                              -- default to fields on __val
                               return this.__val[k]
                            end,
                            __newindex = function(this, k, v)

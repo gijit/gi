@@ -792,7 +792,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 					//constructor = fmt.Sprintf("function(self) %s\n\t\t self.__gi_val=self; return self; end", diag)
 					constructor = fmt.Sprintf("function() %s\n\t\t return {}; end", diag)
 				} else {
-					constructor = fmt.Sprintf("function(...) %s\n\t\t\t local %s = {};\n", diag, selfVar)
+					constructor = fmt.Sprintf("function(...) %[1]s\n\t\t\t local %[2]s = {};\n", diag, selfVar)
 					//constructor = fmt.Sprintf("function(...) %s\n\t\t local self = {}; end\n\t\t local args={...};\n\t\t if #args == 0 then\n", diag)
 
 					constructor += fmt.Sprintf("\t\t\t %s = ... ;\n", strings.Join(prefixedParams, ", "))
