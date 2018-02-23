@@ -1453,7 +1453,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                this.nilKeyStored = true
                this.nilValue = e or __intentionalNilValue
             else 
-               local key = kff(k)
+               local key = tostring(kff(k)) -- must be a string!
                --print("using key ", key, " for k=", k)
                this.__val[key] = e or __intentionalNilValue;
             end
