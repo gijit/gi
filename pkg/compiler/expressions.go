@@ -287,7 +287,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				sele = strings.Join(elements, ", ")
 			}
 
-			return c.formatExpr("%s.ptr(%s)", c.typeName(0, exprType), sele)
+			return c.formatExpr("%s.ptrToNewlyConstructed(%s)", c.typeName(0, exprType), sele)
 			//return c.formatExpr("%s(%s)", c.typeName(0, exprType), sele)
 			//return c.formatExpr("%s({}, %s)", c.typeName(0, exprType), sele)
 

@@ -95,9 +95,13 @@ end
 __tostring = tostring
 
 local __dq = function(str)
-   if type(str) == "string" then
+   local ty = type(str)
+   if ty == "string" then
       return '"'..str..'"'
+   elseif ty ~= "table" then
+      return tostring(str)
    end
+   
    -- avoid infinite loops.
    local mt = getmetatable(str)
    setmetatable(str, nil)
@@ -1532,8 +1536,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.tfun = function(...)
          local args = {...}
-         --print("top of simple kindStruct tfun, args are:")
-         --__st(args, "args")
+         print("top of simple kindStruct tfun, args are:")
+         __st(args, "args")
          
          local this
          if typ.__constructor ~= nil then
@@ -1574,10 +1578,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       local ctor = function(structTarget, ...)
          local this={};
-         --print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
-         --__st(structTarget, "structTarget")
-         --local args = {...}
-         --__st(args, "args to ctor after structTarget")
+         print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         __st(structTarget, "structTarget")
+         local args = {...}
+         __st(args, "args to ctor after structTarget")
 
          --print("callstack:")
          --print(debug.traceback())
@@ -1596,6 +1600,13 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       -- pointers have their own method sets, but *T can call elem methods in Go.
       typ.ptr.elem = typ;
+      
+      typ.ptrToNewlyConstructed = function(...)
+         -- built a new struct from scratch, return a pointer to it.
+         local structValue = typ(...)
+         return typ.ptr(structValue)
+      end
+      
       typ.ptr.prototype = {__name="methodSet for "..typ.ptr.__str,
                            __typ = typ.ptr,
                            
@@ -1612,6 +1623,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                            end,
                            __index = function(this, k)
                               print("struct.ptr.prototype.__index called, k='"..k.."'")
+                              print(debug.traceback())
                               -- check methodsets first, then fields.
                               -- check *T:
                               local meth = typ.ptr.prototype[k]
