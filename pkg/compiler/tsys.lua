@@ -1591,10 +1591,10 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       local ctor = function(structTarget, ...)
          local this={};
-         print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
-         __st(structTarget, "structTarget")
+         --print("top of pointer-to-struct ctor, this="..tostring(this).."; typ.__constructor = "..tostring(typ.__constructor))
+         --__st(structTarget, "structTarget")
          local args = {...}
-         __st(args, "args to ctor after structTarget")
+         --__st(args, "args to ctor after structTarget")
 
          --print("callstack:")
          --print(debug.traceback())
