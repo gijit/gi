@@ -1622,7 +1622,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                               return "&" .. typ.prototype.__tostring(instance.__target)
                            end,
                            __index = function(this, k)
-                              print("struct.ptr.prototype.__index called, k='"..k.."'")
+                              --print("struct.ptr.prototype.__index called, k='"..k.."'")
                               --print(debug.traceback())
                               -- check methodsets first, then fields.
                               -- check *T:
