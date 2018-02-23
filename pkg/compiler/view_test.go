@@ -32,7 +32,15 @@ chk2 := __tostring(&s)
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustString(vm, "chk", `main.S{b: 23LL, }`)
+		// By rights, chk should say `main.S{b: 23LL, }`.
+		// But `&main.S{b: 23LL, }` is correct because
+		// in order for pointer comparison to work
+		// (and have two pointers to the same strut
+		// have equal values), even a basic struct
+		// must need be a pointer. *shrug*. That
+		// was the GopherJS design. It works, so
+		// we keep it.
+		LuaMustString(vm, "chk", `&main.S{b: 23LL, }`)
 		LuaMustString(vm, "chk2", `&main.S{b: 23LL, }`)
 
 	})
