@@ -202,7 +202,7 @@ func Test124ValueFromStructPointer(t *testing.T) {
 
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustInt(vm, "mem", 5)
+		LuaMustInt64(vm, "mem", 5)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
