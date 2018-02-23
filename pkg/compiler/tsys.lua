@@ -1623,7 +1623,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                            end,
                            __index = function(this, k)
                               print("struct.ptr.prototype.__index called, k='"..k.."'")
-                              print(debug.traceback())
+                              --print(debug.traceback())
                               -- check methodsets first, then fields.
                               -- check *T:
                               local meth = typ.ptr.prototype[k]
