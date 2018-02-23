@@ -90,7 +90,7 @@ most recent status
 
 2018 Feb 23 update
 ------------------
-Release v1.0.3 fixes a bunch of subtle corner
+Release v1.0.7 fixes a bunch of subtle corner
 cases in the type system implementation, making
 it much more robust.
 
