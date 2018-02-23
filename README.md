@@ -20,7 +20,7 @@ $ gi
 ~~~
 See https://github.com/gijit/gi/issues/18 for windows install help.
 
-For v1.0.9, there is a Windows10 pre-compiled binary here https://github.com/gijit/gi/releases/download/v1.0.9/
+For v1.0.9, there is a Windows10 pre-compiled binary here https://github.com/gijit/gi/releases/tag/v1.0.9
 
 # the dream
 
@@ -75,7 +75,7 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 Needs at least go1.9. Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
 
-[Update: I put a v1.0.9 binary here https://github.com/gijit/gi/releases/download/v1.0.9/ ; compiled on Windows10. Let me know if it works for you.]
+[Update: I put a v1.0.9 binary here https://github.com/gijit/gi/releases/tag/v1.0.9 ; compiled on Windows10. Let me know if it works for you.]
 
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
