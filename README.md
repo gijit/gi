@@ -88,9 +88,15 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 Feb 23 update
+------------------
+Release v1.0.3 fixes a bunch of subtle corner
+cases in the type system implementation, making
+it much more robust.
+
 2018 Feb 21 update
 ------------------
-Releave v1.0.2 brings a calculator mode, for
+Release v1.0.2 brings a calculator mode, for
 multiple lines of direct computation. Enter
 calculator mode with `==` alone on a line,
 and exit with `:` alone.
