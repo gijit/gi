@@ -104,7 +104,6 @@ e := c.Next()
 	})
 }
 
-/* WIP
 func Test101InterfaceConversion(t *testing.T) {
 
 	// work in progress
@@ -134,6 +133,8 @@ func Test101InterfaceConversion(t *testing.T) {
 			v int
 		}
 
+        // S implements Counter, Bad does not.
+
 		//func main() {
 
 			s := &S{}
@@ -147,9 +148,9 @@ func Test101InterfaceConversion(t *testing.T) {
 			bad := &Bad{}
 
 			asCounter_bad, bad_ok := interface{}(bad).(Counter)
-			acbIsNil := asCounter_bad == nil
+			badIsNil := asCounter_bad == nil
 
-			fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, acbIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, acbIsNil, bad_ok)
+			fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, badIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, badIsNil, bad_ok)
 			// s_ok=true, asCounter_s=&{2}, sNil=false, a=1, b=2, acbIsNil=true, bad_ok=false
 
 		//}
@@ -159,9 +160,8 @@ func Test101InterfaceConversion(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation,err := inc.Tr([]byte(code))
+		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
-
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
@@ -172,13 +172,12 @@ func Test101InterfaceConversion(t *testing.T) {
 		LuaMustInt64(vm, "a", 1)
 		LuaMustInt64(vm, "b", 2)
 
-		LuaMustBool(vm, "abcIsNil", true)
+		LuaMustBool(vm, "badIsNil", true)
 		LuaMustBool(vm, "bad_ok", false)
 
 	})
 
 }
-*/
 
 func Test102InterfaceMethodset(t *testing.T) {
 
