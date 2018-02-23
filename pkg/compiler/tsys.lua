@@ -2153,6 +2153,8 @@ end;
 -- stored as map value in place of nil, so
 -- we can recognized stored nil values in maps.
 __intentionalNilValue = {}
+__start_new_map_iter_after_nil={}
+__map_iter_with_nil_key={}
 
 __valueMapMT = {
    __name = "__valueMapMT",
@@ -2175,7 +2177,8 @@ __valueMapMT = {
 
       -- invar: k is not nil
 
-      local ks = tostring(k)
+      local ks = t.__typ.elem.keyFor(k)
+      --local ks = tostring(k)
       if v ~= nil then
          if t.__val[ks] == nil then
             -- new key
@@ -2216,8 +2219,10 @@ __valueMapMT = {
       end
       
       -- k is not nil.
+
+      local ks = t.__typ.elem.keyFor(k)      
+      --local ks = tostring(k)
       
-      local ks = tostring(k)
       local val = t.__val[ks]
       if val == __intentionalNilValue then
          return nil
@@ -2260,19 +2265,46 @@ __valueMapMT = {
       -- or nil to end iteration
 
       local function stateless_iter(t, k)
+         
          print("map stateless_iter called, with k ="..tostring(k))
          __st(k, "k")
-         
-         local v
-         --  Implement your own key,value selection logic in place of next
-         local ks = tostring(k)
-         ks, v = next(t.__val, tostring(k))
-         print("map iter, back from next(t.__val, tostring(k)), ks=")
-         __st(ks, "ks")
-         if v then return ks,v end
-      end
 
-      -- Return an iterator function, the table, starting point
+         --if k == __map_iter_with_nil_key then
+         --   t.nilKeyStored
+         --end
+         if k == __start_new_map_iter_after_nil then
+            return next(t.__val, nil)
+         end
+         
+         --  Implement your own key,value selection logic in place of next
+         
+         -- we need to account for the fact that a nil key can be stored.
+         -- a) how to start
+         -- b) how to replace the __intentionalNilValue value and keep going
+         -- c) how to finish.
+         -- d) how to turn stored string keys back into their key type. Actually
+         --    this is handled by front end generated code, so we don't need
+         --    to worry about that here.
+
+         -- early termination is a problem: if we have nil key in our map,
+         -- then the Lua for loop will terminate. So we'll miss that key.
+         -- So I think we need to write our while loop.
+         
+         -- for now, just get a basic iteration going.
+         
+         local nextKey
+         local nextVal
+         nextKey, nextVal = next(t.__val, k)
+         print("map iter, back from next(t.__val, k), is")
+
+         __st(nextKey, "nextKey")
+         __st(nextVal, "nextVal")
+         
+         return nextKey, nextVal
+      end
+      
+      -- Return an iterator function, the table, starting point (nil
+      -- tells next to start).
       return stateless_iter, t, nil
    end,
 
