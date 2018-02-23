@@ -1081,13 +1081,6 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		DumpLuaStack(L)
 	}
 
-	top := L.GetTop()
-	dereferenceGijitStructPointerToStruct(L, top)
-	pp("-- in luaToGo, after dereferenceGijitStructPointerToStruct(), here is stack:")
-	if verb.VerboseVerbose {
-		DumpLuaStack(L)
-	}
-
 	if expandCount > 0 {
 		xtraExpandedCount = expandCount - 1
 	}
@@ -1095,6 +1088,21 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		pp("expandCount from lazy ellipsis was %v; stack:\n%s\n", expandCount, string(debug.Stack()))
 
 	}
+
+	// dereference pointers-to-gijit-structs into gijit-structs.
+	top := L.GetTop()
+	chk := 1 // always check at least the top of stack.
+	if expandCount > 0 {
+		chk = expandCount // check all expanded ellipsis arguments.
+	}
+	for i := 0; i < chk; i++ {
+		dereferenceGijitStructPointerToStruct(L, top-i)
+		pp("-- in luaToGo, after dereferenceGijitStructPointerToStruct(L, %v), here is stack:", top-i)
+		if verb.VerboseVerbose {
+			DumpLuaStack(L)
+		}
+	}
+
 	// Derefence 'v' until a non-pointer.
 	// This initializes the values, which will be useless effort if the conversion
 	// fails.
