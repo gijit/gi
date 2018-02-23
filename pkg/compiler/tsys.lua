@@ -2097,6 +2097,10 @@ __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}
 
 __mapTypes = {};
 __mapType = function(key, elem, mType)
+   if key.id == nil then
+      print("key.id was nil in __mapType. trace:")
+      print(debug.traceback())
+   end
    local typeKey = key.id .. "_" .. elem.id;
    local typ = __mapTypes[typeKey];
    if typ == nil then
