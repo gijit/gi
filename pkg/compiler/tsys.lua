@@ -1547,6 +1547,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          else
             this={}
          end
+         this.__name = "__structValue"
          this.__typ = typ;
          this.__val = this;
          setmetatable(this, typ.prototype)
@@ -1591,6 +1592,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__typ = typ.ptr
          this.__target = structTarget
          this.__val = structTarget -- or should this be this.__val = this?
+         this.__name = "__pointerToStructValue"
          setmetatable(this, typ.ptr.prototype)
          return this;
       end
