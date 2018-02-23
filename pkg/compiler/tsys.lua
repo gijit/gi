@@ -1495,7 +1495,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindMap then 
       
       typ.tfun = function(entries)
-         print("map tfun called, entries = "..tostring(entries))
+        --print("map tfun called, entries = "..tostring(entries))
          local this={};
          this.__typ = typ         
          this.__val = {}; --no meta names, so clean. No accidental collisions.
@@ -2008,7 +2008,7 @@ __ptrType = function(elem)
 end;
 
 __newDataPointer = function(data, constructor)
-   print("__newDataPointer called")
+  --print("__newDataPointer called")
    --   if constructor.elem.kind == __kindStruct then
    --      print("struct recognized in __newDataPointer")
    --      return data;
