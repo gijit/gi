@@ -1438,11 +1438,11 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
    elseif kind ==  __kindMap then 
       
-      typ.tfun = function(v)
+      typ.tfun = constructor or function(entries)
          print("map tfun called, v = "..tostring(v))
          local this={};
          
-         -- let __val be a completely empty map, so no
+         -- let __val be a completely separate map, so no
          -- possible key collisions, with __typ or any
          -- other meta name.
          
@@ -2081,11 +2081,37 @@ __error = __newType(8, __kindInterface, "error", true, "", false, nil);
 __error.init({{__prop= "Error", __name= "Error", __pkg= "", __typ= __funcType({}, {__type__.string}, false) }});
 
 __mapTypes = {};
-__mapType = function(key, elem)
+__mapType = function(key, elem, keyForFunc, mType)
    local typeKey = key.id .. "_" .. elem.id;
    local typ = __mapTypes[typeKey];
    if typ == nil then
-      typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, nil);
+      
+      local ctor =function(entries)
+         print("map ctor called, v = "..tostring(v))
+         local this={};
+
+         -- the central key:value map is in __val
+         this.__val = {}; --no meta names, so clean. No accidental collisions.
+         local len=0
+         for k, e in pairs(entries) do
+            local key = keyForFunc(k)
+            --print("using key ", key, " for k=", k)
+            m.__val[key] = e;
+            len=len+1
+         end
+         
+         this.len=len
+         this.__typ = typ
+         this.keyType=key
+         this.elemType=elem
+         this.keyForFunc = keyForFunc
+         this.zeroValue = elemType.zero()
+         
+         this.nilKeyStored = false
+         setmetatable(this, __valueMapMT)
+         return this;
+      end;
+      typ = __newType(8, __kindMap, "map[" .. key.__str .. "]" .. elem.__str, false, "", false, ctor);
       __mapTypes[typeKey] = typ;
 
       __dfsGlobal:addChild(typ, key)
@@ -2200,8 +2226,8 @@ __valueMapMT = {
     end,
 
     __pairs = function(t)
-       -- print("__pairs called!")
-       -- this makes a _giMap work in a for k,v in pairs() do loop.
+       print("map __pairs called!")
+       -- this makes a map work in a for k,v in pairs() do loop.
 
        -- Iterator function takes the table and an index and returns the next index and associated value
        -- or nil to end iteration
@@ -2232,9 +2258,8 @@ __valueMapMT = {
 
            --print("get called for key", k)
            if k == nil then
-              local props = t[_giPrivateMapProps]
-              if props.nilKeyStored then
-                 return props.nilValue, true;
+              if t.nilKeyStored then
+                 return t.nilValue, true;
               else
                  -- key not present returns the zero value for the value.
                  return zeroVal, false;
@@ -2262,20 +2287,16 @@ __valueMapMT = {
         elseif oper == "delete" then
 
            -- the hash table delete operation
-
-           local props = t[_giPrivateMapProps]              
-           local len = props.len
-           --print("delete called for key", k, " len at start is ", len)
-                      
+           
            if k == nil then
 
-              if props.nilKeyStored then
-                 props.nilKeyStored = false
-                 props.nilVaue = nil
-                 props.len = len -1
+              if t.nilKeyStored then
+                 t.nilKeyStored = false
+                 t.nilVaue = nil
+                 t.len = t.len -1
               end
 
-              --print("len at end of delete is ", props.len)              
+              --print("len at end of delete is ", t.len)              
               return
            end
 
@@ -2287,28 +2308,18 @@ __valueMapMT = {
            
            -- key present and key is not nil
            t.__val[ks] = nil
-           props.len = len - 1
+           t.len = t.len - 1
            
-           --print("len at end of delete is ", props.len)
+           --print("len at end of delete is ", t.len)
         end
     end
    
 }
 
-__makeMap = function(keyForFunc, entries, keyType, elemType, mapType)
-   local mty = __mapType(keyType, elemType)
-   local m = mty();
-   m.zeroValue = elemType.zero()
-   m.keyType = keyType
-   m.elemType = elemType
-   
+__makeMap = function(keyForFunc, entries, keyType, elemType, mType)
+   local mty = __mapType(keyType, elemType, keyForFunc)
+   local m = mty(entries);   
    __st(m, "m in __makeMap")
-   
-   for k, e in pairs(entries) do
-      local key = keyForFunc(k)
-      --print("using key ", key, " for k=", k)
-      m.__val[key] = e;
-   end
    return m
 end;
 
