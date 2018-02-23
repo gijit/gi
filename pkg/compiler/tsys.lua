@@ -2472,7 +2472,7 @@ __valueMapMT = {
 __makeMap = function(entries, keyType, elemType, mType)
    local mty = __mapType(keyType, elemType, mType)
    local m = mty(entries);   
-   __st(m, "m in __makeMap")
+   --__st(m, "m in __makeMap")
    return m
 end;
 
