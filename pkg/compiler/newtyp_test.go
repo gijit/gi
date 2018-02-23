@@ -224,31 +224,3 @@ two := g.F.a;`
 		LuaMustInt64(vm, "two", 2)
 	})
 }
-
-/*
-// unfinished
-func Test110TypesHavePackagePath(t *testing.T) {
-
-	cv.Convey(`types at the repl have the "main" package (or whatever package we are working in) short name AND full path attached to their type, so we can distinguish types with the same name that come from different packages (even vendored) whose ultimate paths differ`, t, func() {
-
-		code := `
-type Bean struct{
-  counter int
-}
-
-`
-		vm, err := NewLuaVmWithPrelude(nil)
-		panicOn(err)
-		defer vm.Close()
-		inc := NewIncrState(vm, nil)
-
-		translation,err := inc.Tr([]byte(code))
-		fmt.Printf("\n translation='%s'\n", translation)
-
-		LuaRunAndReport(vm, string(translation))
-
-//		LuaMustInt64(vm, "c", 3)
-
-	})
-}
-*/
