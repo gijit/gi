@@ -60,33 +60,33 @@ local __dq = function(str)
 end
 
 local __system = ({
-	windows	= {
-		getcwd	= "_getcwd",
-		chdir	= "_chdir",
-		maxpath	= 260,
-	},
-	unix	= {
-		getcwd	= "getcwd",
-		chdir	= "chdir",
-		maxpath	= 4096,
-	}
-})[__osname]
+      windows	= {
+         getcwd	= "_getcwd",
+         chdir	= "_chdir",
+         maxpath	= 260,
+      },
+      unix	= {
+         getcwd	= "getcwd",
+         chdir	= "chdir",
+         maxpath	= 4096,
+      }
+                 })[__osname]
 
 __ffi.cdef(
-	[[
+   [[
 		char   *]] .. __system.getcwd .. [[ ( char *buf, size_t size );
 		int		]] .. __system.chdir  .. [[ ( const char *path );
 		]]
 )
 
 __minifs.getcwd = function ()
-	local buff = __ffi.new("char[?]", __system.maxpath)
-	__ffi.C[__system.getcwd](buff, __system.maxpath)
-	return __ffi.string(buff)
+   local buff = __ffi.new("char[?]", __system.maxpath)
+   __ffi.C[__system.getcwd](buff, __system.maxpath)
+   return __ffi.string(buff)
 end
 
 __minifs.chdir = function (path)
-	return __ffi.C[__system.chdir](path) == 0
+   return __ffi.C[__system.chdir](path) == 0
 end
 
 -- Ugh, it renames.
@@ -358,7 +358,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       k=k+1
       local vals = ""
       if methods_desc then
-        --print("methods_desc is true")
+         --print("methods_desc is true")
          vals = __st(v,"",indent+3,quiet,methods_desc, seen)
       else
          local vmt = getmetatable(v)
@@ -676,7 +676,7 @@ __appendSlice = function(slice, toAppend)
    -- recognize and resolve the ellipsis.
    if type(toAppend) == "table" then
       if toAppend.__name == "__lazy_ellipsis_instance" then
-        --print("resolving lazy ellipsis.")
+         --print("resolving lazy ellipsis.")
          toAppend = toAppend() -- resolve the lazy reference.
       end
    end
@@ -834,7 +834,7 @@ __valueArrayMT = {
    end,
    
    __index = function(t, k)
-     --print("__valueArrayMT.__index called, k='"..tostring(k).."'")
+      --print("__valueArrayMT.__index called, k='"..tostring(k).."'")
       local ktype = type(k)
       if ktype == "string" then
          print("ktype was string, doing rawget??? why?")
@@ -862,7 +862,7 @@ __valueArrayMT = {
    end,
    
    __tostring = function(self, ...)
-     --print("__tostring called from __valueArrayMT")
+      --print("__tostring called from __valueArrayMT")
       if type(self.__val) == "string" then
          return '"'..self.__val..'"'
       end
@@ -951,7 +951,7 @@ __valueSliceMT = {
    end,
 
    __len = function(t)
-     --print("__valueSliceMT metamethod __len called, returning ", t.__length)
+      --print("__valueSliceMT metamethod __len called, returning ", t.__length)
       return t.__length
    end,
    
@@ -1042,7 +1042,7 @@ __tfunBasicMT = {
          end
       else
          local newInstance = {}
-        --print("in __tfunBasicMT, made newInstance = ")
+         --print("in __tfunBasicMT, made newInstance = ")
          --__st(newInstance,"newInstance")
          
          setmetatable(newInstance, __valueBasicMT)
@@ -1065,12 +1065,12 @@ __valuePointerMT = {
    __name = "__valuePointerMT",
    
    __newindex = function(t, k, v)
-     --print("__valuePointerMT: __newindex called, calling set() with val=", v)
+      --print("__valuePointerMT: __newindex called, calling set() with val=", v)
       return t.__set(v)
    end,
 
    __index = function(t, k)
-     --print("__valuePointerMT: __index called, doing get()")       
+      --print("__valuePointerMT: __index called, doing get()")       
       return t.__get()
    end,
 
@@ -1114,7 +1114,7 @@ end;
 
 
 __synthesizeMethods = function()
-  --print("__synthesizeMethods called! we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
+   --print("__synthesizeMethods called! we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
    __ipairsZeroCheck(__methodSynthesizers)
    for i,f in ipairs(__methodSynthesizers) do
       f();
@@ -1261,8 +1261,8 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       typ.tfun = constructor  or
          function(getter, setter, target)
             local this={};
-           --print("in tfun for pointer: ",debug.traceback())
-           --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
+            --print("in tfun for pointer: ",debug.traceback())
+            --print("pointer typ.tfun which is same as constructor called! getter='"..tostring(getter).."'; setter='"..tostring(setter).."; target = '"..tostring(target).."'")
             -- sanity checks
             if setter ~= nil and type(setter) ~= "function" then
                error "setter must be function"
@@ -1334,7 +1334,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          setmetatable(this, __valueArrayMT)
          return this
       end;
-     --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
+      --print("in newType for array, and typ.tfun = "..tostring(typ.tfun))
       typ.wrapped = true;
       typ.ptr = __newType(4, __kindPtr, "*" .. str, false, "", false, function(array)
                              local this={};
@@ -1348,7 +1348,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       __dfsGlobal:addChild(typ.ptr, typ)
       
       typ.init = function(elem, len)
-        --print("init() called for array.")
+         --print("init() called for array.")
          typ.elem = elem;
          typ.len = len;
          typ.comparable = elem.comparable;
@@ -1469,7 +1469,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          this.__typ = typ;
          setmetatable(this, __valueMapMT);
          return this;
-      end;
+                                end;
       typ.wrapped = true;
       typ.init = function(key, elem)
          typ.key = key;
@@ -1570,7 +1570,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       -- a) for pointer
       typ.ptr.__addToMethods=function(det)
-        --print("typ.ptr.__addToMethods called, existing methods:")
+         --print("typ.ptr.__addToMethods called, existing methods:")
          --__st(typ.ptr.methods, "typ.ptr.methods")
          --__st(det, "det")
          if typ.ptr.methods == nil then
@@ -1602,7 +1602,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.fields = fields;
          __ipairsZeroCheck(fields)
          for i,f in ipairs(fields) do
-           --__st(f,"f")
+            --__st(f,"f")
             if not f.__typ.comparable then
                typ.comparable = false;
                break;
@@ -1778,7 +1778,7 @@ function __methodSet(typ)
    local isPtr = (typ.kind == __kindPtr);
    --print("__methodSet called with typ=")
    --__st(typ)
-  --print("__methodSet sees isPtr=", isPtr)
+   --print("__methodSet sees isPtr=", isPtr)
    
    if isPtr  and  typ.elem.kind == __kindInterface then
       -- jea: I assume this is because pointers to interfaces don't themselves have methods.
@@ -1799,13 +1799,13 @@ function __methodSet(typ)
    
    local seen = {};
 
-  --print("top of while, #current is", #current)
+   --print("top of while, #current is", #current)
    while #current > 0 do
       local next = {};
       local mset = {};
       
       for _,e in pairs(current) do
-        --print("e from pairs(current) is:")
+         --print("e from pairs(current) is:")
          --__st(e,"e")
          --__st(e.__typ,"e.__typ")
          if seen[e.__typ.__str] then
@@ -1866,7 +1866,7 @@ function __methodSet(typ)
       --print("at dedup, #mset = " .. tostring(#mset))
       for _, m in pairs(mset) do
          --print("m is ")
-        --__st(m,"m")
+         --__st(m,"m")
          if base[m.__name] == nil then
             base[m.__name] = m;
          end
@@ -1922,10 +1922,10 @@ end;
 
 __newDataPointer = function(data, constructor)
    print("__newDataPointer called")
---   if constructor.elem.kind == __kindStruct then
---      print("struct recognized in __newDataPointer")
---      return data;
---   end
+   --   if constructor.elem.kind == __kindStruct then
+   --      print("struct recognized in __newDataPointer")
+   --      return data;
+   --   end
    return constructor(function() return data; end, function(v) data = v; end, data);
 end;
 
@@ -2016,16 +2016,16 @@ __funcType = function(params, results, variadic)
    -- "parm_1,16__results_16,9__variadic_false"
    --
    local typeKey = "parm_" .. __mapAndJoinStrings(",", params, function(p)
-                                          if p.id == nil then
-                                             error("no id for p=",p);
-                                          end;
-                                          return p.id;
-   end) .. "__results_" .. __mapAndJoinStrings(",", results, function(r)
-                                                 if r.id == nil then
-                                                    error("no id for r=",r);
-                                                 end;
-                                                 return r.id;
-                                             end) .. "__variadic_" .. tostring(variadic);
+                                                     if p.id == nil then
+                                                        error("no id for p=",p);
+                                                     end;
+                                                     return p.id;
+                                                 end) .. "__results_" .. __mapAndJoinStrings(",", results, function(r)
+                                                                                                if r.id == nil then
+                                                                                                   error("no id for r=",r);
+                                                                                                end;
+                                                                                                return r.id;
+                                                                                            end) .. "__variadic_" .. tostring(variadic);
    --print("typeKey is '"..typeKey.."'")
    local typ = __funcTypes[typeKey];
    if typ == nil then
@@ -2038,7 +2038,7 @@ __funcType = function(params, results, variadic)
       if #results == 1 then
          str = str .. " " .. results[1].__str;
       elseif #results > 1 then
-            str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
+         str = str .. " (" .. __mapAndJoinStrings(", ", results, function(r) return r.__str; end) .. ")";
       end
       
       typ = __newType(4, __kindFunc, str, false, "", false, nil);
@@ -2153,188 +2153,188 @@ __valueMapMT = {
    __name = "__valueMapMT",
 
    __newindex = function(t, k, v)
-       local len = t.len
-       --print("map newindex called for key", k, " len at start is ", len)
+      local len = t.len
+      --print("map newindex called for key", k, " len at start is ", len)
 
-       if k == nil then
-          if t.nilKeyStored then
-             -- replacement, no change in len.
-          else
-             -- new key
-             t.len = len + 1
-             t.nilKeyStored = true
-          end
-          t.nilValue = v
-          return
-       end
+      if k == nil then
+         if t.nilKeyStored then
+            -- replacement, no change in len.
+         else
+            -- new key
+            t.len = len + 1
+            t.nilKeyStored = true
+         end
+         t.nilValue = v
+         return
+      end
 
-       -- invar: k is not nil
+      -- invar: k is not nil
 
-       local ks = tostring(k)
-       if v ~= nil then
-          if t.__val[ks] == nil then
-             -- new key
-             t.len = len + 1
-          end
-          t.__val[ks] = v
-          return
+      local ks = tostring(k)
+      if v ~= nil then
+         if t.__val[ks] == nil then
+            -- new key
+            t.len = len + 1
+         end
+         t.__val[ks] = v
+         return
 
-       else
-          -- invar: k is not nil. v is nil.
+      else
+         -- invar: k is not nil. v is nil.
 
-          if t.__val[ks] == nil then
-             -- new key
-             t.len = len + 1
-          end
-          t.__val[ks] = __intentionalNilValue
-          return
+         if t.__val[ks] == nil then
+            -- new key
+            t.len = len + 1
+         end
+         t.__val[ks] = __intentionalNilValue
+         return
       end
       --print("len at end of newindex is ", len)
-    end,
+   end,
+   
+   __index = function(t, k)
+      -- Instead of __index,
+      -- use __call('get', ...) for two valued return and
+      --  proper zero-value return upon not present.
+      -- __index only ever returns one value[1].
+      -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
+      
+      --print("__index called for key", k)
+      if k == nil then
+         if t.nilKeyStored then
+            return t.nilValue
+         else
+            -- TODO: if zeroValue wasn't set (e.g. in __makeMap), then
+            -- set it somehow...
+            return t.zeroValue
+         end
+      end
+      
+      -- k is not nil.
+      
+      local ks = tostring(k)
+      local val = t.__val[ks]
+      if val == __intentionalNilValue then
+         return nil
+      end
+      return val
+   end,
+   
+   __tostring = function(t)
+      --print("__tostring for map called")
+      local len = t.len
+      local s = "map["..t.keyType.__str.. "]"..t.elemType.__str.."{"
+      local r = t.__val
+      
+      local vquo = ""
+      if len > 0 and t.elemType.__str == "string" then
+         vquo = '"'
+      end
+      local kquo = ""
+      if len > 0 and t.keyType.__str == "string" then
+         kquo = '"'
+      end
+      
+      for i, v in pairs(r) do
+         s = s .. kquo..tostring(i)..kquo.. ": " .. vquo..tostring(v) ..vquo.. ", "
+      end
+      return s .. "}"
+   end,
+   
+   __len = function(t)
+      -- this does get called by the # operation(!)
+      -- print("len called")
+      return t.len
+   end,
 
-    __index = function(t, k)
-       -- Instead of __index,
-       -- use __call('get', ...) for two valued return and
-       --  proper zero-value return upon not present.
-       -- __index only ever returns one value[1].
-       -- reference: [1] http://lua-users.org/lists/lua-l/2007-07/msg00182.html
-              
-       --print("__index called for key", k)
-       if k == nil then
-          if t.nilKeyStored then
-             return t.nilValue
-          else
-             -- TODO: if zeroValue wasn't set (e.g. in __makeMap), then
-             -- set it somehow...
-             return t.zeroValue
-          end
-       end
+   __pairs = function(t)
+      print("map __pairs called!")
+      -- this makes a map work in a for k,v in pairs() do loop.
 
-       -- k is not nil.
+      -- Iterator function takes the table and an index and returns the next index and associated value
+      -- or nil to end iteration
 
-       local ks = tostring(k)
-       local val = t.__val[ks]
-       if val == __intentionalNilValue then
-          return nil
-       end
-       return val
-    end,
+      local function stateless_iter(t, k)
+         local v
+         --  Implement your own key,value selection logic in place of next
+         local ks = tostring(k)
+         ks, v = next(t.__val, tostring(k))
+         if v then return ks,v end
+      end
 
-    __tostring = function(t)
-       --print("__tostring for map called")
-       local len = t.len
-       local s = "map["..t.keyType.__str.. "]"..t.elemType.__str.."{"
-       local r = t.__val
-       
-       local vquo = ""
-       if len > 0 and t.elemType.__str == "string" then
-          vquo = '"'
-       end
-       local kquo = ""
-       if len > 0 and t.keyType.__str == "string" then
-          kquo = '"'
-       end
-       
-       for i, v in pairs(r) do
-          s = s .. kquo..tostring(i)..kquo.. ": " .. vquo..tostring(v) ..vquo.. ", "
-       end
-       return s .. "}"
-    end,
+      -- Return an iterator function, the table, starting point
+      return stateless_iter, t, nil
+   end,
 
-    __len = function(t)
-       -- this does get called by the # operation(!)
-       -- print("len called")
-       return t.len
-    end,
+   __call = function(t, ...)
+      --print("__call() invoked, with ... = ", ...)
+      local oper, k, zeroVal = ...
+      --print("oper is", oper)
+      --print("key is ", k)
 
-    __pairs = function(t)
-       print("map __pairs called!")
-       -- this makes a map work in a for k,v in pairs() do loop.
+      -- we use __call('get', k, zeroVal) instead of __index
+      -- so that we can return multiple values
+      -- to match Go's "a, ok := mymap[k]" call.
+      
+      if oper == "get" then
 
-       -- Iterator function takes the table and an index and returns the next index and associated value
-       -- or nil to end iteration
+         --print("get called for key", k)
+         if k == nil then
+            if t.nilKeyStored then
+               return t.nilValue, true;
+            else
+               -- key not present returns the zero value for the value.
+               return zeroVal, false;
+            end
+         end
+         
+         -- k is not nil.
+         local ks = tostring(k)      
+         local val = t.__val[ks]
+         if val == __intentionalNilValue then
+            --print("val is the __intentionalNilValue")
+            return nil, true;
 
-       local function stateless_iter(t, k)
-           local v
-           --  Implement your own key,value selection logic in place of next
-           local ks = tostring(k)
-           ks, v = next(t.__val, tostring(k))
-           if v then return ks,v end
-       end
+         elseif val == nil then
+            -- key not present
+            --print("key not present, zeroVal=", zeroVal)
+            --for i,v in pairs(t.__val) do
+            --   print("debug: i=", i, "  v=", v)
+            --end
+            return zeroVal, false;
+         end
+         
+         return val, true
+         
+      elseif oper == "delete" then
 
-       -- Return an iterator function, the table, starting point
-       return stateless_iter, t, nil
-    end,
+         -- the hash table delete operation
+         
+         if k == nil then
 
-    __call = function(t, ...)
-        --print("__call() invoked, with ... = ", ...)
-        local oper, k, zeroVal = ...
-        --print("oper is", oper)
-        --print("key is ", k)
+            if t.nilKeyStored then
+               t.nilKeyStored = false
+               t.nilVaue = nil
+               t.len = t.len -1
+            end
 
-        -- we use __call('get', k, zeroVal) instead of __index
-        -- so that we can return multiple values
-        -- to match Go's "a, ok := mymap[k]" call.
-        
-        if oper == "get" then
+            --print("len at end of delete is ", t.len)              
+            return
+         end
 
-           --print("get called for key", k)
-           if k == nil then
-              if t.nilKeyStored then
-                 return t.nilValue, true;
-              else
-                 -- key not present returns the zero value for the value.
-                 return zeroVal, false;
-              end
-           end
-           
-           -- k is not nil.
-           local ks = tostring(k)      
-           local val = t.__val[ks]
-           if val == __intentionalNilValue then
-              --print("val is the __intentionalNilValue")
-              return nil, true;
-
-           elseif val == nil then
-              -- key not present
-              --print("key not present, zeroVal=", zeroVal)
-              --for i,v in pairs(t.__val) do
-              --   print("debug: i=", i, "  v=", v)
-              --end
-              return zeroVal, false;
-           end
-           
-           return val, true
-           
-        elseif oper == "delete" then
-
-           -- the hash table delete operation
-           
-           if k == nil then
-
-              if t.nilKeyStored then
-                 t.nilKeyStored = false
-                 t.nilVaue = nil
-                 t.len = t.len -1
-              end
-
-              --print("len at end of delete is ", t.len)              
-              return
-           end
-
-           local ks = tostring(k)           
-           if t.__val[ks] == nil then
-              -- key not present
-              return
-           end
-           
-           -- key present and key is not nil
-           t.__val[ks] = nil
-           t.len = t.len - 1
-           
-           --print("len at end of delete is ", t.len)
-        end
-    end
+         local ks = tostring(k)           
+         if t.__val[ks] == nil then
+            -- key not present
+            return
+         end
+         
+         -- key present and key is not nil
+         t.__val[ks] = nil
+         t.len = t.len - 1
+         
+         --print("len at end of delete is ", t.len)
+      end
+   end
    
 }
 
@@ -2532,22 +2532,22 @@ __equal = function(a, b, typ)
 end;
 
 __interfaceIsEqual = function(a, b)
-  --print("top of __interfaceIsEqual! a is:")
+   --print("top of __interfaceIsEqual! a is:")
    --__st(a,"a")
-  --print("top of __interfaceIsEqual! b is:")   
+   --print("top of __interfaceIsEqual! b is:")   
    --__st(b,"b")
    if a == nil or b == nil then
-     --print("one or both is nil")
+      --print("one or both is nil")
       if a == nil and b == nil then
-        --print("both are nil")
+         --print("both are nil")
          return true
       else
-        --print("one is nil, one is not")
+         --print("one is nil, one is not")
          return false
       end
    end
    if a == __ifaceNil  or  b == __ifaceNil then
-     --print("one or both is __ifaceNil")
+      --print("one or both is __ifaceNil")
       return a == b;
    end
    if a.constructor ~= b.constructor then
@@ -2583,9 +2583,9 @@ __assertType = function(value, typ, returnTuple)
          ok = true;
          local valueMethodSet = __methodSet(value.__typ);
          local interfaceMethods = typ.methods;
-        --print("valueMethodSet is")
+         --print("valueMethodSet is")
          --__st(valueMethodSet)
-        --print("interfaceMethods is")
+         --print("interfaceMethods is")
          --__st(interfaceMethods)
 
          __ipairsZeroCheck(interfaceMethods)
@@ -2593,19 +2593,19 @@ __assertType = function(value, typ, returnTuple)
          for _, tm in ipairs(interfaceMethods) do            
             local found = false;
             for _, vm in ipairs(valueMethodSet) do
-              --print("checking vm against tm, where tm=")
+               --print("checking vm against tm, where tm=")
                --__st(tm)
-              --print("and vm=")
+               --print("and vm=")
                --__st(vm)
                
                if vm.__name == tm.__name  and  vm.pkg == tm.pkg  and  vm.__typ == tm.__typ then
-                 --print("match found against vm and tm.")
+                  --print("match found against vm and tm.")
                   found = true;
                   break;
                end
             end
             if  not found then
-              --print("match *not* found for tm.__name = '"..tm.__name.."'")
+               --print("match *not* found for tm.__name = '"..tm.__name.."'")
                ok = false;
                typ.missingMethodFor[valueTypeString] = tm.__name;
                break;
@@ -2750,19 +2750,19 @@ end
 
 function __printHelper(v)
 
-      local tv = type(v)
-      if tv == "string" then
-         print("\""..v.."\"") -- used to be backticks
-      elseif tv == "table" then
-         if v.__name == "__lazy_ellipsis_instance" then
-            local expand = v()
-            for _,c in pairs(expand) do
-               __printHelper(c)
-            end
-            return
+   local tv = type(v)
+   if tv == "string" then
+      print("\""..v.."\"") -- used to be backticks
+   elseif tv == "table" then
+      if v.__name == "__lazy_ellipsis_instance" then
+         local expand = v()
+         for _,c in pairs(expand) do
+            __printHelper(c)
          end
+         return
       end
-      print(v)
+   end
+   print(v)
 end
 
 function __gijit_printQuoted(...)
