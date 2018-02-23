@@ -125,7 +125,7 @@ func Test005BacktickStringsToLua(t *testing.T) {
 	})
 }
 
-/* we've had to disable this to get the type system working, for now.
+// we've had to disable this to get the type system working, for now.
 func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)
@@ -141,7 +141,6 @@ func Test006RedefinitionOfVariablesAllowed(t *testing.T) {
 		cv.So(string(inc.trMust([]byte("r:=`a new definition`"))), matchesLuaSrc, `r = "a new definition";`)
 	})
 }
-*/
 
 func Test007SettingPreviouslyDefinedVariables(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
