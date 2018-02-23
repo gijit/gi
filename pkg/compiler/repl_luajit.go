@@ -258,10 +258,16 @@ readtop:
 		fmt.Printf("\n")
 		return "", nil
 	case ":ls":
-		r.displayUserVar()
+		r.displayCmd(`ls`)
 		goto readtop
 	case ":gls":
-		r.displayAllVar()
+		r.displayCmd(`gls`)
+		goto readtop
+	case ":glst":
+		r.displayCmd(`glst`)
+		goto readtop
+	case ":lst":
+		r.displayCmd(`lst`)
 		goto readtop
 	case ":r":
 		r.cfg.RawLua = true
@@ -483,14 +489,8 @@ func (r *Repl) Eval(src string) error {
 	return nil
 }
 
-// :ls implementation
-func (r *Repl) displayUserVar() {
-	err := LuaDoString(r.vm, `__ls()`)
-	panicOn(err)
-}
-
-// :gls implementation
-func (r *Repl) displayAllVar() {
-	err := LuaDoString(r.vm, `__gls()`)
+// :ls, :gls, :lst, :glst implementation
+func (r *Repl) displayCmd(cmd string) {
+	err := LuaDoString(r.vm, `__`+cmd+`()`)
 	panicOn(err)
 }

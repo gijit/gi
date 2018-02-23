@@ -17,37 +17,78 @@ __ffi = require "ffi"
 local __osname = __ffi.os == "Windows" and "windows" or "unix"
 
 __built_in_starting_symbol_list={};
+__built_in_starting_type_list={};
 
 function __storeBuiltins()
    for k,_ in pairs(_G) do
       __built_in_starting_symbol_list[k]=true;
    end
+   for k,_ in pairs(__type__) do
+      __built_in_starting_type_list[k]=true;
+   end
 end
-__storeBuiltins()
 
+function __sorted_keys(t)
+   local r = {}
+   for k,_ in pairs(t) do
+      table.insert(r, k)
+   end
+   table.sort(r)
+   return r
+end
+
+-- list all global vars
 function __gls()
    local i = 0
-   for k,v in pairs(_G) do
+   for _,k in ipairs(__sorted_keys(_G)) do
+      local v = _G[k]      
       i=i+1
       print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
    end
 end
 
+-- list user vars
 function __ls()
    local i = 0
-   for k,v in pairs(_G) do
+   for _,k in ipairs(__sorted_keys(_G)) do
       local uscore = 95 -- "_"
       if #k > 2 and string.byte(k,1,1)==uscore and string.byte(k,2,2) == uscore then
          -- we omit __ prefixed methods/values
       else
          if __built_in_starting_symbol_list == nil or 
          not __built_in_starting_symbol_list[k] then
+            
+            local v = _G[k]
             i=i+1
             print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
          end
       end
    end
 end
+
+-- list types
+function __lst()
+   local i = 0
+   for _,k in ipairs(__sorted_keys(__type__)) do
+      if __built_in_starting_type_list == nil or 
+      not __built_in_starting_type_list[k] then
+         local v = __type__[k]
+         i=i+1
+         print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
+      end
+   end
+end
+
+-- global list types
+function __glst()
+   local i = 0
+   for _,k in ipairs(__sorted_keys(__type__)) do
+      local v = __type__[k]
+      i=i+1
+      print("["..tostring(i).."] "..tostring(k).." : "..tostring(v))
+   end
+end
+
 
 -- a __ namespace binding so it is usable from Go
 __tostring = tostring
@@ -2827,3 +2868,6 @@ function __gijit_printQuoted(...)
       __printHelper(v)
    end
 end
+
+-- last thing, so we store all types/vars defined so far
+__storeBuiltins()

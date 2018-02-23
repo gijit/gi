@@ -300,10 +300,12 @@ func getFunFor__st(pkg *types.Package) *types.Func {
 	return fun
 }
 
-func getFunFor__ls(pkg *types.Package) *types.Func {
+// and __ls, __gls, __lst, __glst; all functions with no arguments
+// and no results, just side effect of displaying info.
+func getFunFor__replUtil(cmd string, pkg *types.Package) *types.Func {
 	// func __ls()
 	sig := types.NewSignature(nil, nil, nil, false)
-	fun := types.NewFunc(token.NoPos, pkg, "__ls", sig)
+	fun := types.NewFunc(token.NoPos, pkg, cmd, sig)
 	return fun
 }
 
