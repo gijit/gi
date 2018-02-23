@@ -20,7 +20,7 @@ $ gi
 ~~~
 See https://github.com/gijit/gi/issues/18 for windows install help.
 
-For v1.0.9, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; however you'll still need to `go get` the source code using the command above in order to make the prelude .lua files avaialable.
+For v1.0.9, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; however you'll still need to set your `GOPATH` and ` go get -d github.com/gijit/gi/cmd/gi` the source code using the command above in order to make the prelude .lua files avaialable.
 
 # the dream
 
