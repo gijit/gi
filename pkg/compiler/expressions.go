@@ -1341,9 +1341,9 @@ func (c *funcContext) translateConversion(expr ast.Expr, desiredType types.Type)
 		case *types.Basic:
 			if isString(et) {
 				if types.Identical(t.Elem().Underlying(), types.Typ[types.Rune]) {
-					return c.formatExpr("%s($stringToRunes(%e))", c.typeName(0, desiredType), expr)
+					return c.formatExpr("%s(__stringToRunes(%e))", c.typeName(0, desiredType), expr)
 				}
-				return c.formatExpr("%s($stringToBytes(%e))", c.typeName(0, desiredType), expr)
+				return c.formatExpr("%s(__stringToBytes(%e))", c.typeName(0, desiredType), expr)
 			}
 		case *types.Array, *types.Pointer:
 			return c.formatExpr("%s(%e)", c.typeName(0, desiredType), expr)
