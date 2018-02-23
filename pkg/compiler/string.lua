@@ -1,25 +1,4 @@
 
-__stringToBytes = function(str)
-  local array = Uint8Array(#str);
-  for i = 0,#str-1 do
-    array[i] = str.charCodeAt(i);
-  end
-  return array;
-end;
-
---
-
-__bytesToString = function(e)
-  if #slice == 0 then
-    return "";
-  end
-  local str = "";
-  for i = 0,#slice-1,10000 do
-    str = str .. String.fromCharCode.apply(nil, slice.__array.subarray(slice.__offset + i, slice.__offset + __min(slice.__length, i + 10000)));
-  end
-  return str;
-end;
-
 __stringToRunes = function(str)
   local array = Int32Array(#str);
   local rune, j = 0;

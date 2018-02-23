@@ -42,3 +42,55 @@ float32 = ffi.typeof("float")
 -- a=int(-9223372036854775808LL)
 
 -- to use cdata as hash keys... tostring() to make them strings first.
+
+----------------------------------
+----------------------------------
+--
+-- ffi dependent string/byte stuff
+--
+----------------------------------
+----------------------------------
+
+-- __newByteArray is created from vals, which
+-- can be a table, an empty table, or
+-- a string. If it is a string, then to
+-- quote from the ffi docs at http://luajit.org/ext_ffi_semantics.html
+--
+-- "Byte arrays may also be initialized with
+--  a Lua string. This copies the whole string
+--  plus a terminating zero-byte. The copy stops
+--  early only if the array has a known, fixed size."
+--
+function __newByteArray(vals)
+   vals = vals or {}
+   local sz = #vals
+   local res= {
+      __bytes = ffi.new("char["..sz.."]", vals),
+      __sz=sz,
+      __name="__valueByteArray",
+   }
+   setmetatable(res, {
+                   __index = function(me, i)
+                      return me.__bytes[i]
+                   end,
+                   __len=function(me)
+                      --print("__length on byteArray called")
+                      return me.__sz
+                   end,
+                   __tostring=function(me)
+                      --print("__tostring on byteArray called")
+                      return string.sub(ffi.string(me.__bytes), 1, me.__sz)
+                   end,
+   })
+   return res
+end
+
+__stringToBytes = function(str)
+   return __newByteArray(str)
+end;
+
+--
+
+__bytesToString = function(ba)
+   return tostring(ba)
+end;
