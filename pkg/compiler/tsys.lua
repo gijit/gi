@@ -1439,18 +1439,35 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    elseif kind ==  __kindMap then 
       
       typ.tfun = constructor or function(entries)
-         print("map tfun called, v = "..tostring(v))
+         print("map tfun called, entries = "..tostring(entries))
          local this={};
-         
+
          -- let __val be a completely separate map, so no
          -- possible key collisions, with __typ or any
-         -- other meta name.
-         
+         -- other meta name.         
          this.__val = {};
-         this.__typ = typ
-         this.len = 0
+         
+         this.keyForFunc = typ.keyFor
+         local keyForFunc = typ.keyFor
          this.nilKeyStored = false
-         setmetatable(this, __valueMapMT)
+         
+         local len=0
+         for k, e in pairs(entries) do
+            if k == nil then
+               this.nilKeyStored = true
+               this.nilValue = e or __intentionalNilValue
+            else 
+               local key = keyForFunc(k)
+               --print("using key ", key, " for k=", k)
+               this.__val[key] = e or __intentionalNilValue;
+            end
+            len=len+1;
+         end
+         
+         this.len=len;
+         
+         this.__typ = typ;
+         setmetatable(this, __valueMapMT);
          return this;
       end;
       typ.wrapped = true;
@@ -2092,11 +2109,16 @@ __mapType = function(key, elem, keyForFunc, mType)
 
          -- the central key:value map is in __val
          this.__val = {}; --no meta names, so clean. No accidental collisions.
-         local len=0
+         local len=0;
          for k, e in pairs(entries) do
-            local key = keyForFunc(k)
-            --print("using key ", key, " for k=", k)
-            m.__val[key] = e;
+            if k == nil then
+               this.nilKeyStored = true;
+               this.nilValue = e or __intentionalNilValue;
+            else 
+               local key = keyForFunc(k);
+               --print("using key ", key, " for k=", k)
+               this.__val[key] = e or __intentionalNilValue;
+            end
             len=len+1
          end
          
@@ -2105,7 +2127,7 @@ __mapType = function(key, elem, keyForFunc, mType)
          this.keyType=key
          this.elemType=elem
          this.keyForFunc = keyForFunc
-         this.zeroValue = elemType.zero()
+         this.zeroValue = elem.zero()
          
          this.nilKeyStored = false
          setmetatable(this, __valueMapMT)
