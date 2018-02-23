@@ -565,17 +565,14 @@ func Test021StructTypeValues(t *testing.T) {
 	cv.Convey("Given `type A struct{}`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
 		code := `type A struct{}`
-		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
+		output := string(inc.trMust([]byte(code)))
+		LuaRunAndReport(vm, output)
 
-	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
-  	__type__.A.init("", {});
-  	 __type__.A.__constructor = function() 
-  		 return {}; end;
-`)
 		code = `var a A`
-		//cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=__reg:NewInstance("A",{});`)
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a = __type__.A(nil);`)
+		output = string(inc.trMust([]byte(code)))
+		LuaRunAndReport(vm, output)
 
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 
@@ -588,25 +585,17 @@ func Test022StructTypeValues(t *testing.T) {
 	cv.Convey("Given `type A struct{ B int }`, when `var a A` is declared, a struct value should be compiled on the lua back end.", t, func() {
 
 		code := `type A struct{ B int}`
-		cv.So(string(inc.trMust([]byte(code))), startsWithLuaSrc, `
-	__type__.A = __newType(0, __kindStruct, "main.A", true, "main", true, nil);
-  	__type__.A.init("", {{__prop= "B", __name= "B", __anonymous= false, __exported= true, __typ= __type__.int, __tag= ""}});
-  	
-  	 __type__.A.__constructor = function(...) 
-  		     local self = {};
-  			 local B_ = ... ;
-  			 self.B = B_ or 0LL;
-  		 return self; 
-  	 end;
-  ;
-  
-`)
-		code = `var a = A{B:43}`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
-a = __type__.A(43LL);
-`)
-		// a=__reg:NewInstance("A",{["B"]=43LL});
+		output := string(inc.trMust([]byte(code)))
+		pp("output = '%s'", output)
+		LuaRunAndReport(vm, output)
 
+		code = `var a = A{B:43}; ab := a.B;`
+		output = string(inc.trMust([]byte(code)))
+		pp("output = '%s'", output)
+		LuaRunAndReport(vm, output)
+
+		LuaMustInt64(vm, "ab", 43)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 
