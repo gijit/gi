@@ -150,7 +150,7 @@ func Test101InterfaceConversion(t *testing.T) {
 			asCounter_bad, bad_ok := interface{}(bad).(Counter)
 			badIsNil := asCounter_bad == nil
 
-			fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, badIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, badIsNil, bad_ok)
+			// fmt.Printf("s_ok=%v, asCounter_s=%v, sNil=%v, a=%v, b=%v, badIsNil=%v, bad_ok=%v\n", s_ok, asCounter_s, sNil, a, b, badIsNil, bad_ok)
 			// s_ok=true, asCounter_s=&{2}, sNil=false, a=1, b=2, acbIsNil=true, bad_ok=false
 
 		//}
