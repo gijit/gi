@@ -20,6 +20,16 @@ import (
 // to turn on -vv very verbose debug printing.
 var dbg = &verb.VerboseVerbose
 
+func NewLuaStateOnNewGoroutine(cfg *GIConfig) (vm *golua.State, err error) {
+	done := make(chan bool)
+	go func() {
+		vm, err = NewLuaVmWithPrelude(cfg)
+		done <- true
+	}()
+	<-done
+	return
+}
+
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	var vm *golua.State
 	if cfg == nil {
