@@ -389,5 +389,16 @@ func Test606MakeChannel(t *testing.T) {
 		got := <-ch
 		cv.So(got, cv.ShouldEqual, 17)
 
+		// send from Go, receive in Lua
+		ch <- 9
+
+		code = `nine := <- ch;`
+		translation, err = inc.Tr([]byte(code))
+		panicOn(err)
+		//*dbg = true
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "nine", 9)
+
 	})
 }
