@@ -317,6 +317,7 @@ end;
 
 __Infinity = math.huge
 
+-- the __kind numbers must be kept in sync with rtyp.go.
 -- returned by __basicValue2kind(v) on unrecognized kind.
 __kindUnknown = -1;
 
@@ -346,6 +347,36 @@ __kindSlice = 23;
 __kindString = 24;
 __kindStruct = 25;
 __kindUnsafePointer = 26;
+
+__kind2str = {
+   [1]="__kindBool",
+   [2]="__kindInt",
+   [3]="__kindInt8",
+   [4]="__kindInt16",
+   [5]="__kindInt32",
+   [6]="__kindInt64",
+   [7]="__kindUint",
+   [8]="__kindUint8",
+   [9]="__kindUint16",
+   [10]="__kindUint32",
+   [11]="__kindUint64",
+   [12]="__kindUintptr",
+   [13]="__kindFloat32",
+   [14]="__kindFloat64",
+   [15]="__kindComplex64",
+   [16]="__kindComplex128",
+   [17]="__kindArray",
+   [18]="__kindChan",
+   [19]="__kindFunc",
+   [20]="__kindInterface",
+   [21]="__kindMap",
+   [22]="__kindPtr",
+   [23]="__kindSlice",
+   [24]="__kindString",
+   [25]="__kindStruct",
+   [26]="__kindUnsafePointer",
+}
+
 
 -- jea: sanity check my assumption by comparing
 -- length with #a
@@ -2071,25 +2102,73 @@ __chanType = function(elem, sendOnly, recvOnly)
 end;
 
 -- return the (un-named so as to be interoperable)
--- reflect Type that corresponds to tsys type 't'.
-function __gijitTypeToGoType(t)
-   -- stubbed
-   return __rtypbasic.__kindInt
+-- reflect Type that corresponds to tsys type 'typ'.
+function __gijitTypeToGoType(typ)
+
+   local kstring = __kind2str[typ.kind]
+   local rtyp = __rtyp[kstring]
+   if rtyp ~= nil then
+      -- basic type, return straight away
+      return rtyp
+   end
+   -- recurse to construct un-named/compound types
+
+   if kind ==  __kindPtr then
+      return reflect.PtrTo(__gijitTypeToGoType(typ.elem))
+   
+   elseif kind ==  __kindSlice then
+      return reflect.SliceOf(__gijitTypeToGoType(typ.elem))   
+      
+   elseif kind ==  __kindArray then
+      return reflect.ArrayOf(typ.len, __gijitTypeToGoType(typ.elem))
+      
+   elseif kind ==  __kindChan then
+      local dir = 3 -- both by default
+      if typ.sendOnly then
+         dir = 2
+      elseif typ.recvOnly then
+         dir = 1
+      end
+      return reflect.ChanOf(dir, __gijitTypeToGoType(typ.elem))
+      
+   elseif kind ==  __kindMap then 
+      return reflect.MapOf(__gijitTypeToGoType(typ.key), __gijitTypeToGoType(typ.elem))
+
+      --- TODO: finish the rest
+
+   elseif kind ==  __kindFunc then 
+      error("TODO: finish func types")
+
+   elseif kind ==  __kindInterface then 
+      error("TODO: finish interface types")
+            
+   elseif kind ==  __kindStruct then
+      error("TODO: finish struct types")
+      for i,fld in ipairs(fields) do
+         this[fld.__prop] = args[i] or fld.__typ.zero();
+      end         
+   else
+      error("invalid kind: " .. tostring(kind));
+   end  
 end
 
+__theNilChan={}
+
 function __Chan(elem, capacity, elemReflectType)
-   return {}
-   --[[
+   if elem == nil then
+      return __theNilChan
+   end
    print("__Chan called")
    print(debug.traceback())
-   local dir = 1 -- direction: 1=recv, 2=send, 3=both.
+   local dir = 3 -- direction: 1=recv, 2=send, 3=both.
    local elemty = __gijitTypeToGoType(elem)
    local chtype = reflect.ChanOf(dir, elemty)
    local ch = reflect.MakeChan(chtype, capacity)
    
    local this = {}
    this.__native = ch
-   
+
+   -- gopherJS stuff below
    if capacity < 0  or  capacity > 2147483647 then
       __throwRuntimeError("makechan: size out of range");
    end
@@ -2101,7 +2180,6 @@ function __Chan(elem, capacity, elemReflectType)
    this.__closed = false;
    this.__val = this
    return this
-   --]]
 end;
 
 

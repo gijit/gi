@@ -7,6 +7,35 @@ import (
 	"unsafe"
 )
 
+// must be kept in sync with tsys.lua
+const __kindUnknown = -1
+const __kindBool = 1
+const __kindInt = 2
+const __kindInt8 = 3
+const __kindInt16 = 4
+const __kindInt32 = 5
+const __kindInt64 = 6
+const __kindUint = 7
+const __kindUint8 = 8
+const __kindUint16 = 9
+const __kindUint32 = 10
+const __kindUint64 = 11
+const __kindUintptr = 12
+const __kindFloat32 = 13
+const __kindFloat64 = 14
+const __kindComplex64 = 15
+const __kindComplex128 = 16
+const __kindArray = 17
+const __kindChan = 18
+const __kindFunc = 19
+const __kindInterface = 20
+const __kindMap = 21
+const __kindPtr = 22
+const __kindSlice = 23
+const __kindString = 24
+const __kindStruct = 25
+const __kindUnsafePointer = 26
+
 // generate the basic reflect types,
 // for use in tsys.lua when constructing
 // unnamed channel types to pass values on.
@@ -38,5 +67,5 @@ func registerBasicReflectTypes(vm *golua.State) {
 	m["__kindComplex64"] = reflect.TypeOf(complex64(0))
 	m["__kindComplex128"] = reflect.TypeOf(complex128(0))
 
-	luar.Register(vm, "__rtypbasic", m)
+	luar.Register(vm, "__rtyp", m)
 }
