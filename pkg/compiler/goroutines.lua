@@ -258,9 +258,22 @@ __send_GopherJS = function(chan, value)
    };
 end;
 
-__recv = function(chan)
-   --print("__recv called!")
+__recv = function(wchan)
+   print("__recv called! wchan=")
+   __st(wchan, "wchan")
+   if wchan == nil then
+      error("cannot read from nil channel")
+   end
 
+   -- unwrap
+   local chan = wchan.__native
+   if chan == nil then
+      error("wchan.native was nil / cannot read from nil channel")
+   end
+
+   -- unwrap
+   local chan = wchan.native
+   
    local ch = reflect.ValueOf(chan)
    local rv, ok = ch.Recv();
    -- rv is userdata, a reflect.Value. Convert to
@@ -270,8 +283,20 @@ __recv = function(chan)
    return {v, ok}
 end
 
-__send = function(chan, value)
-   --print("__send called! value=", value)
+__send = function(wchan, value)
+   print("__send called! value=", value)
+   __st(value, "value")
+   __st(wchan, "wchan")
+   if wchan == nil then
+      error("cannot send on nil channel")
+   end
+
+   -- unwrap
+   local chan = wchan.__native
+   if chan == nil then
+      error("wchan.native was nil / cannot send on nil channel")
+   end
+   
    local ch = reflect.ValueOf(chan)
    local v = reflect.ValueOf(value)
    local cv = v.Convert(reflect.TypeOf(chan).Elem())

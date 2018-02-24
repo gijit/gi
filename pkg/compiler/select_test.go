@@ -249,7 +249,6 @@ for i := 0; i < 2; i++ {
 `
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 
 		go func() {
@@ -355,21 +354,18 @@ func Test606MakeChannel(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 
-		// first run instantiates the main package so we can add 'ch' to it.
-		code := `b := make(chan int, 1)`
+		code := `ch := make(chan int, 1); ch <- 23; a := <- ch`
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
+		*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 
-		// get the channel
-		vm.GetGlobal("b")
-		top := vm.GetTop()
-		if vm.IsNil(top) {
-			panic(fmt.Sprintf("global variable 'b' is nil"))
-		}
-		//		bCh := vm.CdataToInt64(top)
+		LuaMustInt64(vm, "a", 23)
+
+		// write method to get the channel out of the vm
+		//  and interact with it in Go
 
 		// verify it is a buffered chan
 		//		bCh <- 1
