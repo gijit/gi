@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sort"
 	"strings"
@@ -451,3 +452,52 @@ func sumArrayInt64(a [3]int64) (tot int64) {
 //func __subslice(t, low, hi, cap) {
 //
 //}
+
+func getChannelFromGlobal(vm *golua.State, varname string) (interface{}, error) {
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	if vm.IsNil(top) {
+		return nil, fmt.Errorf("global variable '%s' is nil", varname)
+	}
+	// is it a table or a cdata. if table, look for t.__native
+	// to get the actual Go channel.
+
+	//*dbg = true
+	pp("before optional unwrappng, stack: '%s'", DumpLuaStackAsString(vm))
+
+	// write method to get the channel out of the vm
+	//  and interact with it in Go
+
+	t := vm.Type(top)
+	switch t {
+	case golua.LUA_TTABLE:
+		vm.GetField(top, "__native")
+		if vm.IsNil(-1) {
+			return nil, fmt.Errorf("no __native field, table on '%s' was not a table-wrapped channel", varname)
+		}
+		// okay. cleanup.
+		vm.Remove(-2)
+	case golua.LUA_TUSERDATA:
+		// okay
+	default:
+		return nil, fmt.Errorf("expected table-enclosed Go channel or direct USERDATA with channel pointer; '%s' was neither", varname)
+	}
+
+	pp("after (unwrapping optionally) stack: '%s'", DumpLuaStackAsString(vm))
+
+	top = vm.GetTop()
+	var i interface{}
+	_, err := luar.LuaToGo(vm, top, &i)
+	panicOn(err)
+
+	pp("after LuaToGo,  stack: '%s'", DumpLuaStackAsString(vm))
+
+	// i = '&reflect.Value{typ:(*reflect.rtype)(0x45c8d40), ptr:(unsafe.Pointer)(0xc4200620e0), flag:0x12}'
+	//fmt.Printf("i = '%#v'\n", i)
+
+	// reflect: call of reflect.Value.Elem on chan Value
+	// fmt.Printf("i.Elem().Type() = '%[1]T'/'%[1]#v'\n", i.(*reflect.Value).Elem().Type())
+
+	//fmt.Printf("i.Type() = '%[1]T'/'%[1]#v'\n", (*i.(*reflect.Value)).Interface())
+	return (*i.(*reflect.Value)).Interface(), nil
+}
