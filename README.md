@@ -94,10 +94,11 @@ most recent status
 
 2018 Feb 24 update
 ------------------
-Release v1.0.14 brings the ability to make native
+Release v1.0.15 brings the ability to make native
 Go channels via reflection for basic types, and then
 use those channels in send, receive, and `select`
-operations.  Goroutines are still TODO.
+operations to communicate between interpreted and
+pre-compiled Go code.  Goroutines are still TODO.
 
 2018 Feb 23 update
 ------------------
