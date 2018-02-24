@@ -398,5 +398,9 @@ func Test606MakeChannel(t *testing.T) {
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "nine", 9)
 
+		//note this utility: can be used to generate a chan interface{}
+		//luar.MakeChan(L1)
+		//var c interface{}
+		//_, err := luar.LuaToGo(L1, -1, &c)
 	})
 }
