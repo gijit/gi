@@ -26,11 +26,29 @@ func Test201ConvertToFloat64ActuallyDoes(t *testing.T) {
 		translation := string(by)
 		fmt.Printf("translation = '%s'\n", translation)
 
-		by, err = inc.Tr([]byte(code))
-		panicOn(err)
-		//cv.So(string(by), matchesLuaSrc, ``)
 		LuaRunAndReport(vm, translation)
 		LuaMustFloat64(vm, "c", 3.0)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test203ConvertBytesToStringAndBack(t *testing.T) {
+
+	cv.Convey(`a:=[]byte("hi"); b:=string(a); should result in "hi" back in b.`, t, func() {
+
+		code := `a:=[]byte("hi"); b:=string(a);`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		by, err := inc.Tr([]byte(code))
+		panicOn(err)
+		translation := string(by)
+		fmt.Printf("translation = '%s'\n", translation)
+
+		LuaRunAndReport(vm, translation)
+		LuaMustString(vm, "b", "hi")
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
