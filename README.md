@@ -94,8 +94,10 @@ most recent status
 
 2018 Feb 24 update
 ------------------
-Release v1.0.12 brings `select` as well as send and
-receive on channels that were allocated in Go.
+Release v1.0.12 brings the ability to make native
+Go channels via reflection for basic types, and then
+use those channels in send, receive, and `select`
+operations.  Goroutines are still TODO.
 
 2018 Feb 23 update
 ------------------
