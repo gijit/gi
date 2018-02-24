@@ -272,6 +272,7 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, varname))
 	}
+	vm.Pop(1)
 }
 
 func LuaInGlobalEnv(vm *golua.State, varname string) bool {
@@ -309,6 +310,7 @@ func LuaMustFloat64(vm *golua.State, varname string, expect float64) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value, varname))
 	}
+	vm.Pop(1)
 }
 
 func LuaMustString(vm *golua.State, varname string, expect string) {
@@ -322,6 +324,7 @@ func LuaMustString(vm *golua.State, varname string, expect string) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_string))
 	}
+	vm.Pop(1)
 }
 
 func LuaMustBool(vm *golua.State, varname string, expect bool) {
@@ -335,6 +338,7 @@ func LuaMustBool(vm *golua.State, varname string, expect bool) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v, got value '%s' -> '%v'", expect, varname, value_bool))
 	}
+	vm.Pop(1)
 }
 
 func LuaMustBeNil(vm *golua.State, varname string) {
@@ -345,7 +349,7 @@ func LuaMustBeNil(vm *golua.State, varname string) {
 		panic(fmt.Sprintf("expected varname '%s' to "+
 			"be nil, but was '%s' instead.", varname, alt))
 	}
-
+	vm.Pop(1)
 }
 func LuaIsNil(vm *golua.State, varname string) (bool, string) {
 

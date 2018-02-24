@@ -84,7 +84,7 @@ func Test601SendOnChannel(t *testing.T) {
 		chVar := types.NewVar(token.NoPos, pkg, "ch", types.NewChan(types.SendRecv, nt64))
 		scope.Insert(chVar)
 
-		code = `ch <- 6; send:=true;`
+		code = `pre:= true; ch <- 6; send:=true;`
 
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
@@ -95,7 +95,7 @@ func Test601SendOnChannel(t *testing.T) {
 
 		a := <-ch
 		fmt.Printf("a received! a = %v\n", a)
-		//LuaMustBool(vm, "sent", true)
 		cv.So(a, cv.ShouldEqual, 6)
+		LuaMustBool(vm, "pre", true)
 	})
 }
