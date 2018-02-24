@@ -84,7 +84,7 @@ func Test601SendOnChannel(t *testing.T) {
 		chVar := types.NewVar(token.NoPos, pkg, "ch", types.NewChan(types.SendRecv, nt64))
 		scope.Insert(chVar)
 
-		code = `pre:= true; ch <- 6; send:=true;`
+		code = `pre:= true; ch <- 6;`
 
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
@@ -96,6 +96,59 @@ func Test601SendOnChannel(t *testing.T) {
 		a := <-ch
 		fmt.Printf("a received! a = %v\n", a)
 		cv.So(a, cv.ShouldEqual, 6)
+		LuaMustBool(vm, "pre", true)
+	})
+}
+
+func Test602BlockingSendOnChannel(t *testing.T) {
+
+	cv.Convey(`in Lua, send to an unbuffered channel`, t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		ch := make(chan int)
+
+		luar.Register(vm, "", luar.Map{
+			"ch": ch,
+		})
+
+		// first run instantiates the main package so we can add 'ch' to it.
+		code := `b := 3`
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 3)
+
+		// allow ch to type check
+		pkg := inc.pkgMap["main"].Arch.Pkg
+		scope := pkg.Scope()
+		nt64 := types.Typ[types.Int64]
+		chVar := types.NewVar(token.NoPos, pkg, "ch", types.NewChan(types.SendRecv, nt64))
+		scope.Insert(chVar)
+
+		var a int
+		done := make(chan bool)
+		go func() {
+			a = <-ch
+			close(done)
+		}()
+
+		code = `pre:= true; ch <- 7;`
+
+		translation, err = inc.Tr([]byte(code))
+		panicOn(err)
+
+		pp("translation='%s'", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		<-done
+		fmt.Printf("a received! a = %v\n", a)
+		cv.So(a, cv.ShouldEqual, 7)
 		LuaMustBool(vm, "pre", true)
 	})
 }
