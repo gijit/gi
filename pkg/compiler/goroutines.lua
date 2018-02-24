@@ -319,7 +319,7 @@ __select = function(comms)
          print("comm_len is 0/default at i =", i)
          newCase.Dir  = 3
          table.insert(cases, newCase)
-         casesType[i]="d"
+         casesType[i-1]="d"
                       
       elseif comm_len == 1 then
          -- recv --
@@ -329,9 +329,8 @@ __select = function(comms)
          print("newCase is ", newCase)
          fmt.Printf("newCase is %#v\n", newCase)
          fmt.Printf("newCase.dir is %#v\n", newCase.Dir)
-         fmt.Printf("reflect.SelectRecv = '%#v'\n", reflect.SelectRecv)
          table.insert(cases, newCase)
-         casesType[i]="r"
+         casesType[i-1]="r"
          
       elseif comm_len == 2 then
          -- send --
@@ -340,8 +339,11 @@ __select = function(comms)
          newCase.Chan = reflect.ValueOf(comm[1])
          newCase.Dir  = 1
          newCase.Send = reflect.ValueOf(comm[2]) -- maybe comm[2]? or?
+         __st(comm, "comm in send case")
+         fmt.Printf("in send, newCase.Send is %#v\n", newCase.Send)
+         
          table.insert(cases, newCase)
-         casesType[i]="s"
+         casesType[i-1]="s"
          
       end -- end switch
    end
@@ -352,8 +354,11 @@ __select = function(comms)
    print("back from reflect.Select, we got: recvOk=", recvOk)
 
    local recvVal = nil
-   if casesType[chosen]=="r" then
+   __st(casesType, "casesType")
+   print("chosen is ", chosen, " and casesType[chosen]= ", casesType[tonumber(chosen)])
+   if casesType[tonumber(chosen)]=="r" then
       recvVal = recv.Interface()
+      print("recvVal in receive case is ", recvVal)
    end
    return {chosen, {recvVal, recvOk}};
 end
