@@ -259,8 +259,8 @@ __send_GopherJS = function(chan, value)
 end;
 
 __recv = function(wchan)
-   print("__recv called! wchan=")
-   __st(wchan, "wchan")
+   --print("__recv called! wchan=")
+   --__st(wchan, "wchan")
    if wchan == nil then
       error("cannot read from nil channel")
    end
@@ -283,9 +283,9 @@ __recv = function(wchan)
 end
 
 __send = function(wchan, value)
-   print("__send called! value=", value)
-   __st(value, "value")
-   __st(wchan, "wchan")
+   --print("__send called! value=", value)
+   --__st(value, "value")
+   --__st(wchan, "wchan")
    if wchan == nil then
       error("cannot send on nil channel")
    end
@@ -309,7 +309,7 @@ end
 --       the content of comms.
 --
 __select = function(comms)
-   print("__select called!")
+   --print("__select called!")
    --__st(comms, "comms")
    
    --__st(comms[1], "comms[1]")
