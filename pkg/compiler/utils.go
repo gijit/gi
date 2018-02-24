@@ -389,7 +389,7 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 		c.p.dependencies[o] = true
 
 		if o.Pkg() != c.p.Pkg || (isVarOrConst(o) && o.Exported()) {
-			// jea, foregoing pkg vars with the $Pkg. prefix, for now.
+			// jea, foregoing pkg vars with the __Pkg. prefix, for now.
 			// return o.Name() // jea was this, until we needed fmt.Sprintf
 			// jea debug here for fmt.Sprintf
 			pp("o.Pkg() = '%#v', o.Name()='%#v'", o.Pkg(), o.Name())
@@ -842,7 +842,7 @@ func getJsTag(tag string) string {
 }
 
 func needsSpace(c byte) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_' || c == '$'
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'
 }
 
 func removeWhitespace(b []byte, minify bool) []byte {
@@ -907,7 +907,7 @@ func rangeCheck(pattern string, constantIndex, array bool) string {
 	//panic("where?")
 	return "__gi_GetRangeCheck(%1e, %2f)"
 	/*
-		lengthProp := "$length"
+		lengthProp := "__length"
 		if array {
 			lengthProp = "length"
 		}
@@ -915,7 +915,7 @@ func rangeCheck(pattern string, constantIndex, array bool) string {
 		if !constantIndex {
 			check = "(%2f < 0 || " + check + ")"
 		}
-		return "(" + check + ` ? ($throwRuntimeError("index out of range"), undefined) : ` + pattern + ")"
+		return "(" + check + ` ? (__throwRuntimeError("index out of range"), undefined) : ` + pattern + ")"
 	*/
 }
 
@@ -929,7 +929,7 @@ func endsWithReturn(stmts []ast.Stmt) bool {
 }
 
 func encodeIdent(name string) string {
-	return strings.Replace(url.QueryEscape(name), "%", "$", -1)
+	return strings.Replace(url.QueryEscape(name), "%", "_", -1)
 }
 
 func stripOuterParen(s string) (r string) {

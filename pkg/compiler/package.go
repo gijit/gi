@@ -377,12 +377,12 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 	// jea temp disable with false
 	if false {
 		if len(c.Flattened) != 0 {
-			c.localVars = append(c.localVars, "$s")
-			prefix = prefix + " $s = 0;"
+			c.localVars = append(c.localVars, "__s")
+			prefix = prefix + " __s = 0;"
 		}
 
 		if c.HasDefer {
-			c.localVars = append(c.localVars, "$deferred")
+			c.localVars = append(c.localVars, "__deferred")
 			suffix = " }" + suffix
 			if len(c.Blocking) != 0 {
 				suffix = " }" + suffix
@@ -397,30 +397,30 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 			}
 			var stores, loads string
 			for _, v := range c.localVars {
-				loads += fmt.Sprintf("%s = $f.%s; ", v, v)
-				stores += fmt.Sprintf("$f.%s = %s; ", v, v)
+				loads += fmt.Sprintf("%s = __f.%s; ", v, v)
+				stores += fmt.Sprintf("__f.%s = %s; ", v, v)
 			}
-			prefix = prefix + " var $f, $c = false; if (this !== undefined && this.$blk !== undefined) { $f = this; $c = true; " + loads + "}"
-			suffix = " if ($f === undefined) { $f = { $blk: " + funcRef + " }; } " + stores + "return $f;" + suffix
+			prefix = prefix + " var __f, __c = false; if (this !== undefined && this.__blk !== undefined) { __f = this; __c = true; " + loads + "}"
+			suffix = " if (__f === undefined) { __f = { __blk: " + funcRef + " }; } " + stores + "return __f;" + suffix
 		}
 
 		if c.HasDefer {
-			prefix = prefix + " var $err = null; try {"
-			deferSuffix := " } catch(err) { $err = err;"
+			prefix = prefix + " var __err = null; try {"
+			deferSuffix := " } catch(err) { __err = err;"
 			if len(c.Blocking) != 0 {
-				//deferSuffix += " $s = -1;"
+				//deferSuffix += " __s = -1;"
 			}
 			if c.resultNames == nil && c.sig.Results().Len() > 0 {
 				deferSuffix += fmt.Sprintf(" return%s;", c.translateResults(nil))
 			}
-			deferSuffix += " } finally { $callDeferred($deferred, $err);"
+			deferSuffix += " } finally { __callDeferred(__deferred, __err);"
 			if c.resultNames != nil {
 				namedNames = strings.Join(preComputedNamedNames, ", ") //fmt.Sprintf("{%s}", c.translateResultsAllQuoted(c.resultNames))
 				zeroret = strings.Join(preComputedZeroRet, ", ")
-				deferSuffix += fmt.Sprintf(" if (!$curGoroutine.asleep) { return %s; }", c.translateResults(c.resultNames))
+				deferSuffix += fmt.Sprintf(" if (!__curGoroutine.asleep) { return %s; }", c.translateResults(c.resultNames))
 			}
 			if len(c.Blocking) != 0 {
-				deferSuffix += " if($curGoroutine.asleep) {"
+				deferSuffix += " if(__curGoroutine.asleep) {"
 			}
 			suffix = deferSuffix + suffix
 		}
@@ -470,7 +470,7 @@ end
 			functionWord, functionName, zeroret, namedNames, formals,
 			bodyOutput, functionName), recvName
 
-		//prefix = prefix + " $deferred = []; $deferred.index = $curGoroutine.deferStack.length; $curGoroutine.deferStack.push($deferred);"
+		//prefix = prefix + " __deferred = []; __deferred.index = __curGoroutine.deferStack.length; __curGoroutine.deferStack.push(__deferred);"
 	}
 
 	if prefix != "" {
