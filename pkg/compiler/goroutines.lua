@@ -266,14 +266,13 @@ __recv = function(wchan)
    end
 
    -- unwrap
-   local chan = wchan.__native
-   if chan == nil then
-      error("wchan.native was nil / cannot read from nil channel")
+   if wchan.__native == nil then
+      -- may not be wrapped; if native Go channel supplied
+      chan = wchan
+   else
+      chan = wchan.__native.Interface()
    end
 
-   -- unwrap
-   local chan = wchan.native
-   
    local ch = reflect.ValueOf(chan)
    local rv, ok = ch.Recv();
    -- rv is userdata, a reflect.Value. Convert to
@@ -292,11 +291,13 @@ __send = function(wchan, value)
    end
 
    -- unwrap
-   local chan = wchan.__native
-   if chan == nil then
-      error("wchan.native was nil / cannot send on nil channel")
+   if wchan.__native == nil then
+      -- may not be wrapped; if native Go channel supplied
+      chan = wchan
+   else
+      chan = wchan.__native.Interface()
    end
-   
+
    local ch = reflect.ValueOf(chan)
    local v = reflect.ValueOf(value)
    local cv = v.Convert(reflect.TypeOf(chan).Elem())

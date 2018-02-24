@@ -358,7 +358,7 @@ func Test606MakeChannel(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
-		*dbg = true
+		//*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 
