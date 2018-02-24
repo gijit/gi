@@ -205,7 +205,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 					entryVar := c.newVariable("_entry")
 					c.Printf("%s = %s[%s[%s]];", entryVar, refVar, keysVar, iVar)
 					c.translateStmt(&ast.IfStmt{
-						Cond: c.newIdent(entryVar+" === undefined", types.Typ[types.Bool]),
+						Cond: c.newIdent(entryVar+" == nil", types.Typ[types.Bool]),
 						Body: &ast.BlockStmt{List: []ast.Stmt{&ast.BranchStmt{Tok: token.CONTINUE}}},
 					}, nil)
 					if !isBlank(s.Key) {
@@ -553,12 +553,12 @@ __defer_func(%s)
 				channels = append(channels, "[]")
 				hasDefault = true
 			case *ast.ExprStmt:
-				channels = append(channels, c.formatExpr("[%e]", astutil.RemoveParens(comm.X).(*ast.UnaryExpr).X).String())
+				channels = append(channels, c.formatExpr("{%e}", astutil.RemoveParens(comm.X).(*ast.UnaryExpr).X).String())
 			case *ast.AssignStmt:
-				channels = append(channels, c.formatExpr("[%e]", astutil.RemoveParens(comm.Rhs[0]).(*ast.UnaryExpr).X).String())
+				channels = append(channels, c.formatExpr("{%e}", astutil.RemoveParens(comm.Rhs[0]).(*ast.UnaryExpr).X).String())
 			case *ast.SendStmt:
 				chanType := c.p.TypeOf(comm.Chan).Underlying().(*types.Chan)
-				channels = append(channels, c.formatExpr("[%e, %s]", comm.Chan, c.translateImplicitConversionWithCloning(comm.Value, chanType.Elem())).String())
+				channels = append(channels, c.formatExpr("{%e, %s}", comm.Chan, c.translateImplicitConversionWithCloning(comm.Value, chanType.Elem())).String())
 			default:
 				panic(fmt.Sprintf("unhandled: %T", comm))
 			}
@@ -586,14 +586,14 @@ __defer_func(%s)
 
 		selectCall := c.setType(&ast.CallExpr{
 			Fun:  c.newIdent("__select", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", types.NewInterface(nil, nil))), types.NewTuple(types.NewVar(0, nil, "", types.Typ[types.Int])), false)),
-			Args: []ast.Expr{c.newIdent(fmt.Sprintf("[%s]", strings.Join(channels, ", ")), types.NewInterface(nil, nil))},
+			Args: []ast.Expr{c.newIdent(fmt.Sprintf("{%s}", strings.Join(channels, ", ")), types.NewInterface(nil, nil))},
 		}, types.Typ[types.Int])
 		c.Blocking[selectCall] = !hasDefault
 		c.Printf("%s = %s;", selectionVar, c.translateExpr(selectCall, nil))
 
 		if len(caseClauses) != 0 {
 			translateCond := func(cond ast.Expr, desiredType types.Type) *expression {
-				return c.formatExpr("%s[0] === %e", selectionVar, cond)
+				return c.formatExpr("%s[0] == %e", selectionVar, cond)
 			}
 			c.translateBranchingStmt(caseClauses, nil, true, translateCond, label, flattened)
 		}
@@ -713,6 +713,7 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 	}()
 
 	gotoLabel := ""
+	_ = gotoLabel
 	if !flatten {
 		if label != nil {
 			c.Printf("::%s::", label.Name())
@@ -721,11 +722,13 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 			gotoLabel = c.gensym("label_")
 		}
 	}
-	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
+	c.Printf("while (true) do")
+	//c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
 	c.Indent(func() {
 		condStr := cond()
 		if condStr != "true" {
-			c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then __s = %d; continue; end ", condStr, data.endCase))
+			c.Printf("if (not (%s)) then break; end", condStr)
+			//c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then __s = %d; continue; end ", condStr, data.endCase))
 		}
 
 		prevEV := c.p.escapingVars
@@ -748,7 +751,8 @@ func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockSt
 
 		c.p.escapingVars = prevEV
 	})
-	c.PrintCond(!flatten, " end ", fmt.Sprintf("__s = %d; goto %s; case %d:", data.beginCase, data.endCase, gotoLabel))
+	c.Printf(" end ")
+	//c.PrintCond(!flatten, " end ", fmt.Sprintf("__s = %d; goto %s; case %d:", data.beginCase, data.endCase, gotoLabel))
 }
 
 func (c *funcContext) getKeyCast(key ast.Expr) string {

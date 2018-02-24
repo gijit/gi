@@ -249,6 +249,7 @@ for i := 0; i < 2; i++ {
 `
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
+		*dbg = true
 		pp("translation='%s'", string(translation))
 
 		go func() {

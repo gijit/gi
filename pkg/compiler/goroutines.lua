@@ -278,6 +278,30 @@ __send = function(chan, value)
    ch.Send(cv);
 end
 
+__select = function(comms)
+   print("__select called!")
+   __st(comms, "comms")
+   local ready = {};
+   local selection = -1;
+   for i, comm in ipairs(comms) do
+      local chan = comm[1];
+      --switch (comm.length)
+      local comm_len = #comm
+      if comm_len == 0 then
+         -- default --
+         selection = i-1;
+         break;
+      elseif comm_len == 1 then
+         -- recv --
+
+      elseif comm_len == 2 then
+         -- send --
+
+      end -- end switch
+   end
+
+end
+
 -- gopherJs port: __recv
 __recv__GopherJS = function(chan) 
    local queuedSend = chan.__sendQueue.shift();
@@ -324,7 +348,7 @@ __close = function(chan)
    end
 end;
 
-__select = function(comms)
+__select_GopherJS = function(comms)
    local ready = {};
    local selection = -1;
    for i, comm in ipairs(comms) do
