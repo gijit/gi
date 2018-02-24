@@ -30,7 +30,7 @@ func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
 	if cfg == nil {
 		cfg = NewGIConfig()
 	}
-	goro, err := NewGoro(&GoroConfig{GiCfg: cfg})
+	goro, err := NewGoro(vm, &GoroConfig{GiCfg: cfg})
 	panicOn(err)
 	ic := &IncrState{
 		goro:   goro,

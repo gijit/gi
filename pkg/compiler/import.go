@@ -102,7 +102,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	pp("GiImportFunc called with path = '%s'\n", path)
+	fmt.Printf("GiImportFunc called with path = '%s'\n", path)
 
 	var pkg *types.Package
 	t0 := ic.goro.newTicket()
@@ -110,6 +110,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	switch path {
 	case "gitesting":
 		// test only:
+		fmt.Printf("ic.cfg.IsTestMode = %v\n", ic.cfg.IsTestMode)
 		if ic.cfg.IsTestMode {
 			//fmt.Print("\n registering gitesting.SumArrayInt64! \n")
 			pkg = types.NewPackage("gitesting", "gitesting")
@@ -134,6 +135,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			t0.regmap["SummerAny"] = SummerAny
 			t0.regmap["Incr"] = Incr
 			panicOn(t0.Do())
+			fmt.Printf("jea debug, gitesting registration done\n")
 
 			ic.CurPkg.importContext.Packages[path] = pkg
 			return &Archive{

@@ -81,13 +81,9 @@ type GoroConfig struct {
 	GiCfg *GIConfig
 }
 
-func NewGoro(cfg *GoroConfig) (*Goro, error) {
+func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 	if cfg == nil {
 		cfg = &GoroConfig{}
-	}
-	vm, err := NewLuaVmWithPrelude(cfg.GiCfg)
-	if err != nil {
-		return nil, err
 	}
 	r := &Goro{
 		cfg:      cfg,
@@ -113,6 +109,7 @@ func (r *Goro) Start() {
 
 				if len(t.regmap) > 0 {
 					luar.Register(r.vm, t.regns, t.regmap)
+					fmt.Printf("jea debug, back from luar.Register with regns: '%s', map: '%#v'\n", t.regns, t.regmap)
 				}
 
 				if len(t.run) > 0 {
