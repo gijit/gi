@@ -2,11 +2,13 @@ package compiler
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	cv "github.com/glycerine/goconvey/convey"
+	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 )
 
@@ -324,7 +326,6 @@ done = true
 `
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 
 		go func() {
@@ -364,12 +365,90 @@ func Test606MakeChannel(t *testing.T) {
 
 		LuaMustInt64(vm, "a", 23)
 
+		// get the 'ch' channel out and use it in Go.
+		varname := "ch"
+		vm.GetGlobal(varname)
+		top := vm.GetTop()
+		if vm.IsNil(top) {
+			panic(fmt.Sprintf("global variable '%s' is nil", varname))
+		}
+		// is it a table or a cdata. if table, look for t.__native
+		// to get the actual Go channel.
+
+		*dbg = true
+		pp("before optional unwrappng, stack: '%s'", DumpLuaStackAsString(vm))
+
 		// write method to get the channel out of the vm
 		//  and interact with it in Go
 
-		// verify it is a buffered chan
-		//		bCh <- 1
-		//		get := <-bCh
+		t := vm.Type(top)
+		switch t {
+		case golua.LUA_TTABLE:
+			vm.GetField(top, "__native")
+			if vm.IsNil(-1) {
+				panic("no __native field, ch was not a table-wrapped channel")
+			}
+			vm.Remove(-2)
+		case golua.LUA_TUSERDATA:
+			// okay
+		default:
+			panic("expected table-enclosed Go channel or direct USERDATA with channel pointer")
+		}
 
+		pp("after (unwrapping optionally) stack: '%s'", DumpLuaStackAsString(vm))
+
+		top = vm.GetTop()
+		var i interface{}
+		//var ch chan int
+		//pch := &ch
+		//ich := interface{}(pch)
+		//ich := reflect.ValueOf(pch)
+		_, err = luar.LuaToGo(vm, top, &i)
+		panicOn(err)
+
+		// i = '&reflect.Value{typ:(*reflect.rtype)(0x45c8d40), ptr:(unsafe.Pointer)(0xc4200620e0), flag:0x12}'
+		fmt.Printf("i = '%#v'\n", i)
+
+		//rf = reflect.NewAt(rf.Type(),
+		var _ = reflect.Copy
+		fmt.Printf("i.Type() = '%[1]T'/'%[1]#v'\n", i.(*reflect.Value).Type())
+
+		// temp:
+		vm.Pop(1)
+		// do a positive control first: push what we know is a channel, and get it back out.
+
+		pp("stack prior to MakeChan: '%s'", DumpLuaStackAsString(vm))
+
+		// MakeChan creates a 'chan interface{}' proxy and pushes it on the stack.
+		// Optional argument: size (number)
+		// Returns: proxy (chan interface{})
+		vm.PushNumber(1)
+
+		pp("stack after PushNumber(1): '%s'", DumpLuaStackAsString(vm))
+
+		luar.MakeChan(vm)
+		vm.SetGlobal("c2")
+		vm.GetGlobal("c2")
+		var ii interface{}
+
+		pp("stack prior to LuaToGo: '%s'", DumpLuaStackAsString(vm))
+
+		vm.Remove(-2)
+		pp("stack after Remove(-2) to get rid of the channel size: '%s'", DumpLuaStackAsString(vm))
+
+		_, err = luar.LuaToGo(vm, -1, &ii)
+		panicOn(err)
+
+		pp("stack after to LuaToGo: '%s'", DumpLuaStackAsString(vm))
+
+		pp("ii = '%#v'", ii) // ii = '(chan interface {})(0xc420066e40)'
+
+		var pci chan interface{} = ii.(chan interface{})
+
+		pp("pci = '%#v'", pci)
+		// verify it is a buffered chan
+		pci <- 1
+		get := <-pci
+		cv.So(get, cv.ShouldEqual, 1)
 	})
 }
