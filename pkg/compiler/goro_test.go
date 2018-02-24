@@ -22,8 +22,11 @@ func Test700StartGoroutine(t *testing.T) {
 
 		t0 := r.newTicket()
 
-		ch := make(chan int, 1)
-		ch <- 57
+		// key change: an *unbuffer* channel
+		ch := make(chan int)
+		go func() {
+			ch <- 57
+		}()
 
 		t0.regmap["ch"] = ch
 

@@ -135,7 +135,6 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			t0.regmap["SummerAny"] = SummerAny
 			t0.regmap["Incr"] = Incr
 			panicOn(t0.Do())
-			fmt.Printf("jea debug, gitesting registration done\n")
 
 			ic.CurPkg.importContext.Packages[path] = pkg
 			return &Archive{

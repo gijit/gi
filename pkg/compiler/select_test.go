@@ -357,7 +357,6 @@ func Test606MakeChannel(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 
@@ -380,7 +379,6 @@ func Test606MakeChannel(t *testing.T) {
 		code = `ch <- 17;`
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 
@@ -393,7 +391,6 @@ func Test606MakeChannel(t *testing.T) {
 		code = `nine := <- ch;`
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "nine", 9)
