@@ -288,9 +288,11 @@ __select = function(comms)
    
    __st(comms[1], "comms[1]")
    __st(comms[2], "comms[2]")
+   __st(comms[3], "comms[3]")
    
    __st(comms[1][1], "comms[1][1]")
    __st(comms[2][1], "comms[2][1]")
+   __st(comms[3][1], "comms[3][1]")
 
    local c1 = reflect.ValueOf(comms[1][1])
    local c2 = reflect.ValueOf(comms[2][1])
@@ -302,6 +304,7 @@ __select = function(comms)
    print("c2 = "..tostring(c2))
 
    local cases = {}
+   local casesType = {}
    local rty = reflect.TypeOf(__refSelCaseVal).Elem()
    
     for i, comm in ipairs(comms) do
@@ -316,7 +319,8 @@ __select = function(comms)
          print("comm_len is 0/default at i =", i)
          newCase.Dir  = 3
          table.insert(cases, newCase)
-         
+         casesType[i]="d"
+                      
       elseif comm_len == 1 then
          -- recv --
          print("comm_len is 1/recv at i =", i)
@@ -327,6 +331,7 @@ __select = function(comms)
          fmt.Printf("newCase.dir is %#v\n", newCase.Dir)
          fmt.Printf("reflect.SelectRecv = '%#v'\n", reflect.SelectRecv)
          table.insert(cases, newCase)
+         casesType[i]="r"
          
       elseif comm_len == 2 then
          -- send --
@@ -336,16 +341,21 @@ __select = function(comms)
          newCase.Dir  = 1
          newCase.Send = reflect.ValueOf(comm[2]) -- maybe comm[2]? or?
          table.insert(cases, newCase)
+         casesType[i]="s"
          
       end -- end switch
    end
    
    local chosen, recv, recvOk = reflect.Select(cases)
    print("back from reflect.Select, we got: chosen=", chosen)
-   print("back from reflect.Select, we got:   recv=", recv.Interface())
+   print("back from reflect.Select, we got:   recv=", recv)
    print("back from reflect.Select, we got: recvOk=", recvOk)
-   
-   return {chosen, {recv.Interface(), recvOk}};
+
+   local recvVal = nil
+   if casesType[chosen]=="r" then
+      recvVal = recv.Interface()
+   end
+   return {chosen, {recvVal, recvOk}};
 end
 
 -- gopherJs port: __recv

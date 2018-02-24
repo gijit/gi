@@ -265,3 +265,83 @@ for i := 0; i < 2; i++ {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test605Select(t *testing.T) {
+
+	cv.Convey(`in Lua, select with send and recv`, t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		chInt := make(chan int)
+		chStr := make(chan string)
+
+		luar.Register(vm, "", luar.Map{
+			"chInt": chInt,
+			"chStr": chStr,
+		})
+
+		// first run instantiates the main package so we can add 'ch' to it.
+		code := `b := 3`
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 3)
+
+		// allow channels to type check
+		pkg := inc.pkgMap["main"].Arch.Pkg
+		scope := pkg.Scope()
+
+		nt := types.Typ[types.Int]
+		chIntVar := types.NewVar(token.NoPos, pkg, "chInt", types.NewChan(types.SendRecv, nt))
+		scope.Insert(chIntVar)
+
+		stringType := types.Typ[types.String]
+		chStrVar := types.NewVar(token.NoPos, pkg, "chStr", types.NewChan(types.SendRecv, stringType))
+		scope.Insert(chStrVar)
+
+		code = `
+a := 0
+b := 0
+c := 0
+igot := 0
+done := false
+
+for a ==0 || b==0 || c==0 {
+  select {
+    case igot = <- chInt:
+       a=1
+    case chStr <- "yumo":
+       //send happend
+       b=1
+    default:
+       c=1
+  }
+}
+done = true
+`
+		translation, err = inc.Tr([]byte(code))
+		panicOn(err)
+		//*dbg = true
+		pp("translation='%s'", string(translation))
+
+		go func() {
+			chInt <- 43
+		}()
+		strReceived := ""
+		go func() {
+			strReceived = <-chStr
+		}()
+		LuaRunAndReport(vm, string(translation))
+
+		cv.So(strReceived, cv.ShouldEqual, "yumo")
+		LuaMustInt64(vm, "igot", 43)
+
+		LuaMustInt64(vm, "a", 1)
+		LuaMustInt64(vm, "b", 1)
+		LuaMustInt64(vm, "c", 1)
+	})
+}
