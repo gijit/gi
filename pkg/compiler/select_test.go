@@ -409,9 +409,20 @@ func Test606MakeChannel(t *testing.T) {
 		// i = '&reflect.Value{typ:(*reflect.rtype)(0x45c8d40), ptr:(unsafe.Pointer)(0xc4200620e0), flag:0x12}'
 		fmt.Printf("i = '%#v'\n", i)
 
+		// reflect: call of reflect.Value.Elem on chan Value
+		// fmt.Printf("i.Elem().Type() = '%[1]T'/'%[1]#v'\n", i.(*reflect.Value).Elem().Type())
+
+		fmt.Printf("i.Type() = '%[1]T'/'%[1]#v'\n", (*i.(*reflect.Value)).Interface())
+
+		var ci chan int = (*i.(*reflect.Value)).Interface().(chan int)
+
+		// verify as buffered
+		ci <- 1
+		geti := <-ci
+		pp("geti = '%v'", geti)
+
 		//rf = reflect.NewAt(rf.Type(),
 		var _ = reflect.Copy
-		fmt.Printf("i.Type() = '%[1]T'/'%[1]#v'\n", i.(*reflect.Value).Type())
 
 		// temp:
 		vm.Pop(1)
