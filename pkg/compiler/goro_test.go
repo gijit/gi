@@ -66,3 +66,51 @@ func Test700StartGoroutine(t *testing.T) {
 
 	})
 }
+
+func Test701StartTwoGoroutines(t *testing.T) {
+
+	cv.Convey(`start two goroutines that communicate`, t, func() {
+
+		r0, err := NewGoro(nil, nil)
+		panicOn(err)
+
+		r1, err := NewGoro(nil, nil)
+		panicOn(err)
+
+		t0 := r0.newTicket()
+		t1 := r1.newTicket()
+
+		// Big question:
+		// how do these two vms learn about their shared channel?
+
+		// the go func itself is a closure, typically grabbing
+		// all the variables it sees in scope.
+
+		code0 := `ch := make(chan int)`
+		inc := NewIncrState(r.vm, nil)
+		translation0, err := inc.Tr([]byte(code))
+		panicOn(err)
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(r.vm, string(translation))
+		LuaMustInt64(r.vm, "b", 3)
+
+		code1 = `a := <- ch;`
+
+		translation, err = inc.Tr([]byte(code))
+		panicOn(err)
+
+		pp("translation='%s'", string(translation))
+
+		t0.run = translation
+
+		t0.varname["a"] = true
+
+		// execute the `a := <- ch;`
+		panicOn(t0.Do())
+
+		ai := t0.varname["a"].(int64)
+
+		cv.So(ai, cv.ShouldEqual, 57)
+
+	})
+}
