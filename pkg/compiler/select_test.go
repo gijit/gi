@@ -338,10 +338,11 @@ done = true
 		LuaRunAndReport(vm, string(translation))
 
 		cv.So(strReceived, cv.ShouldEqual, "yumo")
-		LuaMustInt64(vm, "igot", 43)
 
 		LuaMustInt64(vm, "a", 1)
 		LuaMustInt64(vm, "b", 1)
 		LuaMustInt64(vm, "c", 1)
+		LuaMustBool(vm, "done", true)
+		LuaMustInt64(vm, "igot", 43)
 	})
 }
