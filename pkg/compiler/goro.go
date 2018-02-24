@@ -5,23 +5,49 @@ import (
 
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/idem"
-	//"github.com/glycerine/luar"
+	"github.com/glycerine/luar"
 )
 
 type ticket struct {
-	// what to do first, optional
-	runme  []byte
-	runErr error
+	myGoro *Goro
 
-	// what to fetch for return, optional
-	varname    string
+	//input
+	// register these vars, optional
+	regns  string
+	regmap luar.Map
+
+	//input
+	// what to do after any registrations, optional
+	run []byte
+
+	//input
+	// what to fetch for return, optional;
+	// one of register, run, or varname should be
+	// set. Else no point in making the Do ticket call.
+	varname    map[string]interface{}
 	gettyp     GetType
 	leaveOnTop bool
-	getErr     error
-	getResult  interface{}
+
+	//output
+	runErr error
+	getErr error
+	// the values in the varname map are output too.
 
 	// closed when txn complete
 	done chan struct{}
+}
+
+func (r *Goro) newTicket() *ticket {
+	if r == nil {
+		panic("newTicket cannot be called on nil Goro r")
+	}
+	t := &ticket{
+		myGoro:  r,
+		regmap:  make(luar.Map),
+		varname: make(map[string]interface{}),
+		done:    make(chan struct{}),
+	}
+	return t
 }
 
 // There's only one incremental compiler state; it
@@ -45,10 +71,10 @@ const (
 // act as a thread-safe proxy to a lua state
 // vm running on its own goroutine.
 type Goro struct {
-	cfg  *GoroConfig
-	vm   *golua.State
-	halt *idem.Halter
-	Do   chan *ticket
+	cfg      *GoroConfig
+	vm       *golua.State
+	halt     *idem.Halter
+	doticket chan *ticket
 }
 
 type GoroConfig struct {
@@ -64,10 +90,10 @@ func NewGoro(cfg *GoroConfig) (*Goro, error) {
 		return nil, err
 	}
 	r := &Goro{
-		cfg:  cfg,
-		vm:   vm,
-		halt: idem.NewHalter(),
-		Do:   make(chan *ticket),
+		cfg:      cfg,
+		vm:       vm,
+		halt:     idem.NewHalter(),
+		doticket: make(chan *ticket),
 	}
 	r.Start()
 	return r, nil
@@ -82,10 +108,15 @@ func (r *Goro) Start() {
 			select {
 			case <-r.halt.ReqStop.Chan:
 				return
-			case t := <-r.Do:
+			case t := <-r.doticket:
 				startTop := r.vm.GetTop()
-				if len(t.runme) > 0 {
-					s := string(t.runme)
+
+				if len(t.regmap) > 0 {
+					luar.Register(r.vm, t.regns, t.regmap)
+				}
+
+				if len(t.run) > 0 {
+					s := string(t.run)
 
 					interr := r.vm.LoadString(s)
 					if interr != 0 {
@@ -104,22 +135,29 @@ func (r *Goro) Start() {
 					}
 
 				}
-				if t.varname != "" {
-					r.vm.GetGlobal(t.varname)
-					if r.vm.IsNil(-1) {
-						r.vm.Pop(1)
-						t.getErr = fmt.Errorf("not found: '%s'", t.varname)
-					} else {
-						switch t.gettyp {
-						case GetInt64:
-							t.getResult = r.vm.CdataToInt64(-1)
-						case GetString:
-							t.getResult = r.vm.ToString(-1)
-						case GetChan:
-							t.getResult, t.getErr = getChannelFromGlobal(r.vm, t.varname, true)
+				if len(t.varname) > 0 {
+					for key := range t.varname {
+						if key == "" {
+							continue
 						}
-						if !t.leaveOnTop {
+						r.vm.GetGlobal(key)
+						if r.vm.IsNil(-1) {
 							r.vm.Pop(1)
+							t.getErr = fmt.Errorf("not found: '%s'", t.varname)
+							break
+						} else {
+							switch t.gettyp {
+							case GetInt64:
+								t.varname[key] = r.vm.CdataToInt64(-1)
+							case GetString:
+								t.varname[key] = r.vm.ToString(-1)
+							case GetChan:
+								r.vm.Pop(1)
+								t.varname[key], t.getErr = getChannelFromGlobal(r.vm, key, true)
+							}
+							if !t.leaveOnTop {
+								r.vm.Pop(1)
+							}
 						}
 					}
 				}
@@ -127,4 +165,20 @@ func (r *Goro) Start() {
 			}
 		}
 	}()
+}
+
+func (r *Goro) do(t *ticket) {
+	r.doticket <- t
+	<-t.done
+}
+
+func (t *ticket) Do() error {
+	t.myGoro.do(t)
+	if t.runErr != nil {
+		return t.runErr
+	}
+	if t.getErr != nil {
+		return t.getErr
+	}
+	return nil
 }

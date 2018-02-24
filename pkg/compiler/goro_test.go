@@ -17,42 +17,34 @@ func Test700StartGoroutine(t *testing.T) {
 		r, err := NewGoro(nil)
 		panicOn(err)
 
-		r2, err := NewGoro(nil)
+		//r2, err := NewGoro(nil)
+		//panicOn(err)
+
+		t0 := r.newTicket()
+
+		ch := make(chan int, 1)
+		ch <- 57
+
+		t0.regmap["ch"] = ch
+
+		code := `a := <- ch;`
+
+		inc := NewIncrState(r.vm, nil)
+		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
-		_, _ = r, r2
-		/*
-			ch := make(chan int, 1)
-			ch <- 57
 
-			luar.Register(vm, "", luar.Map{
-				"ch": ch,
-			})
+		pp("translation='%s'", string(translation))
 
-			code := `b := 3`
-			inc := NewIncrState(vm, nil)
-			translation, err := inc.Tr([]byte(code))
-			panicOn(err)
-			pp("translation='%s'", string(translation))
-			LuaRunAndReport(vm, string(translation))
-			LuaMustInt64(vm, "b", 3)
+		t0.run = translation
 
-			// allow ch to type check
-			pkg := inc.pkgMap["main"].Arch.Pkg
-			scope := pkg.Scope()
-			nt64 := types.Typ[types.Int64]
-			chVar := types.NewVar(token.NoPos, pkg, "ch", types.NewChan(types.SendRecv, nt64))
-			scope.Insert(chVar)
+		t0.varname["a"] = true
 
-			code = `a := <- ch;`
+		// execute the `a := <- ch;`
+		panicOn(t0.Do())
 
-			translation, err = inc.Tr([]byte(code))
-			panicOn(err)
+		ai := t0.varname["a"].(int)
 
-			pp("translation='%s'", string(translation))
+		cv.So(ai, cv.ShouldEqual, 57)
 
-			LuaRunAndReport(vm, string(translation))
-			LuaMustInt64(vm, "a", 57)
-			cv.So(true, cv.ShouldBeTrue)
-		*/
 	})
 }

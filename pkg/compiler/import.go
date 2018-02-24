@@ -93,9 +93,9 @@ func (ic *IncrState) EnableImportsFromLua() {
 	goImportFromLua := func(path string) {
 		ic.GiImportFunc(path)
 	}
-	luar.Register(ic.vm, "", luar.Map{
-		"__go_import": goImportFromLua,
-	})
+	t0 := ic.goro.newTicket()
+	t0.regmap["__go_import"] = goImportFromLua
+	panicOn(t0.Do())
 
 }
 
@@ -105,6 +105,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	pp("GiImportFunc called with path = '%s'\n", path)
 
 	var pkg *types.Package
+	t0 := ic.goro.newTicket()
 
 	switch path {
 	case "gitesting":
@@ -127,16 +128,12 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			incr := getFunForIncr(pkg)
 			scope.Insert(incr)
 
-			luar.Register(ic.vm, "gitesting", luar.Map{
-				"SumArrayInt64": sumArrayInt64,
-				//"__giClone":     __giClone,
-				"Summer":    Summer,
-				"SummerAny": SummerAny,
-				"Incr":      Incr,
-
-				// don't intercept tostring, let lua get it.
-				//"__tostring":  GitestingTostring,
-			})
+			t0.regns = "gitesting"
+			t0.regmap["SumArrayInt64"] = sumArrayInt64
+			t0.regmap["Summer"] = Summer
+			t0.regmap["SummerAny"] = SummerAny
+			t0.regmap["Incr"] = Incr
+			panicOn(t0.Do())
 
 			ic.CurPkg.importContext.Packages[path] = pkg
 			return &Archive{
@@ -147,52 +144,53 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
 	case "bytes":
-		luar.Register(ic.vm, "bytes", shadow_bytes.Pkg)
+		t0.regmap["bytes"] = shadow_bytes.Pkg
 	case "fmt":
-		luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
+		t0.regmap["fmt"] = shadow_fmt.Pkg
 	case "io":
-		luar.Register(ic.vm, "io", shadow_io.Pkg)
+		t0.regmap["io"] = shadow_io.Pkg
 	case "math":
-		luar.Register(ic.vm, "math", shadow_math.Pkg)
+		t0.regmap["math"] = shadow_math.Pkg
 	case "math/rand":
-		luar.Register(ic.vm, "rand", shadow_math_rand.Pkg)
+		t0.regmap["rand"] = shadow_math_rand.Pkg
 	case "os":
-		luar.Register(ic.vm, "os", shadow_os.Pkg)
+		t0.regmap["os"] = shadow_os.Pkg
 	case "reflect":
-		luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
+		t0.regmap["reflect"] = shadow_reflect.Pkg
 	case "regexp":
-		luar.Register(ic.vm, "regexp", shadow_regexp.Pkg)
+		t0.regmap["regexp"] = shadow_regexp.Pkg
 	case "time":
-		luar.Register(ic.vm, "time", shadow_time.Pkg)
+		t0.regmap["time"] = shadow_time.Pkg
 	case "io/ioutil":
-		luar.Register(ic.vm, "ioutil", shadow_ioutil.Pkg)
+		t0.regmap["ioutil"] = shadow_ioutil.Pkg
 
 		// gonum:
 	case "gonum.org/v1/gonum/blas":
-		luar.Register(ic.vm, "blas", shadow_blas.Pkg)
+		t0.regmap["blas"] = shadow_blas.Pkg
 	case "gonum.org/v1/gonum/fd":
-		luar.Register(ic.vm, "fd", shadow_fd.Pkg)
+		t0.regmap["fd"] = shadow_fd.Pkg
 	case "gonum.org/v1/gonum/floats":
-		luar.Register(ic.vm, "floats", shadow_floats.Pkg)
+		t0.regmap["floats"] = shadow_floats.Pkg
 	case "gonum.org/v1/gonum/graph":
-		luar.Register(ic.vm, "graph", shadow_graph.Pkg)
+		t0.regmap["graph"] = shadow_graph.Pkg
 	case "gonum.org/v1/gonum/integrate":
-		luar.Register(ic.vm, "integrate", shadow_integrate.Pkg)
+		t0.regmap["integrate"] = shadow_integrate.Pkg
 	case "gonum.org/v1/gonum/lapack":
-		luar.Register(ic.vm, "lapack", shadow_lapack.Pkg)
+		t0.regmap["lapack"] = shadow_lapack.Pkg
 	case "gonum.org/v1/gonum/mat":
-		luar.Register(ic.vm, "mat", shadow_mat.Pkg)
+		t0.regmap["mat"] = shadow_mat.Pkg
 	case "gonum.org/v1/gonum/optimize":
-		luar.Register(ic.vm, "optimize", shadow_optimize.Pkg)
+		t0.regmap["optimize"] = shadow_optimize.Pkg
 	case "gonum.org/v1/gonum/stat":
-		luar.Register(ic.vm, "stat", shadow_stat.Pkg)
+		t0.regmap["stat"] = shadow_stat.Pkg
 	case "gonum.org/v1/gonum/unit":
-		luar.Register(ic.vm, "unit", shadow_unit.Pkg)
+		t0.regmap["unit"] = shadow_unit.Pkg
 
 	default:
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)
 	}
+	panicOn(t0.Do())
 
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.

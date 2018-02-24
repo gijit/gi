@@ -30,10 +30,11 @@ func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
 	if cfg == nil {
 		cfg = NewGIConfig()
 	}
-
+	goro, err := NewGoro(&GoroConfig{GiCfg: cfg})
+	panicOn(err)
 	ic := &IncrState{
+		goro:   goro,
 		pkgMap: make(map[string]*IncrPkg),
-		vm:     vm,
 		cfg:    cfg,
 	}
 	pack := &build.Package{
@@ -108,7 +109,10 @@ type IncrState struct {
 
 	// the vm lets us add import bindings
 	// like `import "fmt"` on demand.
-	vm *luajit.State
+	// Update: But this is now per-goroutine,
+	// needing syncrhonization, so front end doesn't get to touch.
+	// vm *luajit.State
+	goro *Goro
 
 	cfg *GIConfig
 

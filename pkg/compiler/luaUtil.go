@@ -22,10 +22,12 @@ var dbg = &verb.VerboseVerbose
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	var vm *golua.State
-	if cfg == nil {
-		cfg = NewGIConfig()
+	if cfg == nil || cfg.PreludePath == "" {
 		cwd, err := os.Getwd()
 		panicOn(err)
+		if cfg == nil {
+			cfg = NewGIConfig()
+		}
 		cfg.PreludePath = cwd
 	}
 
@@ -47,6 +49,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	}
 
 	// load prelude
+	fmt.Printf("cfg = '%#v'\n", cfg)
 	files, err := FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 	panicOn(err)
 	if err != nil {
