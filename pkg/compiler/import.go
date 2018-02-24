@@ -82,33 +82,14 @@ func (ic *IncrState) EnableImportsFromLua() {
 	luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
 	luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
 
-	// senders
-	refSelCaseSendVal := reflect.SelectCase{
-		Dir: reflect.SelectSend,
-	}
+	// give goroutines.lua something to clone
+	// to generate select cases.
+	refSelCaseVal := reflect.SelectCase{}
+
 	luar.Register(ic.vm, "", luar.Map{
-		"__refSelCaseSendVal": refSelCaseSendVal,
+		"__refSelCaseVal": refSelCaseVal,
 	})
 
-	// receivers
-	refSelCaseRecvVal0 := reflect.SelectCase{
-		Dir: reflect.SelectRecv,
-	}
-	refSelCaseRecvVal1 := reflect.SelectCase{
-		Dir: reflect.SelectRecv,
-	}
-	luar.Register(ic.vm, "", luar.Map{
-		"__refSelCaseRecvVal0": refSelCaseRecvVal0,
-		"__refSelCaseRecvVal1": refSelCaseRecvVal1,
-	})
-
-	// default
-	refSelCaseDefaultVal := reflect.SelectCase{
-		Dir: reflect.SelectDefault,
-	}
-	luar.Register(ic.vm, "", luar.Map{
-		"__refSelCaseDefaultVal": refSelCaseDefaultVal,
-	})
 }
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
