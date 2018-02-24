@@ -80,6 +80,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 
 	// channel ops need reflect, so import it always.
 	luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
+	luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
 
 	// senders
 	refSelCaseSendVal := reflect.SelectCase{

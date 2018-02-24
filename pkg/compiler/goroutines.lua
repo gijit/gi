@@ -301,32 +301,44 @@ __select = function(comms)
    print("c1 = "..tostring(c1))
    print("c2 = "..tostring(c2))
 
- --[[
+   local cases = {}
+   
     for i, comm in ipairs(comms) do
       local chan = comm[1];
       --switch (comm.length)
       local comm_len = #comm
       if comm_len == 0 then
          -- default --
-         selection = i-1;
-         break;
+         print("comm_len is 0/default at i =", i)
+
       elseif comm_len == 1 then
          -- recv --
-
+         print("comm_len is 1/recv at i =", i)
+         local rty = reflect.TypeOf(__refSelCaseRecvVal0).Elem()
+         print("rty is ", rty)
+         local newCase = reflect.New(rty).Interface()
+         newCase.Chan = reflect.ValueOf(comm[1])
+         newCase.Dir  = 2
+         print("newCase is ", newCase)
+         fmt.Printf("newCase is %#v\n", newCase)
+         fmt.Printf("newCase.dir is %#v\n", newCase.Dir)
+         fmt.Printf("reflect.SelectRecv = '%#v'\n", reflect.SelectRecv)
+         table.insert(cases, newCase)
+         
       elseif comm_len == 2 then
          -- send --
+         print("comm_len is 2/send at i =", i)
 
       end -- end switch
    end
- --]]
    
-   __refSelCaseRecvVal0.Chan = c1
-   __refSelCaseRecvVal1.Chan = c2
+--   __refSelCaseRecvVal0.Chan = c1
+--   __refSelCaseRecvVal1.Chan = c2
 
-   local cases = {
-      __refSelCaseRecvVal0,
-      __refSelCaseRecvVal1,
-   }
+--   local cases = {
+--      __refSelCaseRecvVal0,
+--      __refSelCaseRecvVal1,
+--   }
    
    local chosen, recv, recvOk = reflect.Select(cases)
    print("back from reflect.Select, we got: chosen=", chosen)
