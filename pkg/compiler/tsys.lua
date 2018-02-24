@@ -2158,8 +2158,8 @@ function __Chan(elem, capacity, elemReflectType)
    if elem == nil then
       return __theNilChan
    end
-   print("__Chan called")
-   print(debug.traceback())
+   --print("__Chan called")
+   --print(debug.traceback())
    local dir = 3 -- direction: 1=recv, 2=send, 3=both.
    local elemty = __gijitTypeToGoType(elem)
    local chtype = reflect.ChanOf(dir, elemty)
