@@ -346,3 +346,34 @@ done = true
 		LuaMustInt64(vm, "igot", 43)
 	})
 }
+
+func Test606MakeChannel(t *testing.T) {
+
+	cv.Convey(`in Lua, make a new channel`, t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		// first run instantiates the main package so we can add 'ch' to it.
+		code := `b := make(chan int, 1)`
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+
+		// get the channel
+		vm.GetGlobal("b")
+		top := vm.GetTop()
+		if vm.IsNil(top) {
+			panic(fmt.Sprintf("global variable 'b' is nil"))
+		}
+		//		bCh := vm.CdataToInt64(top)
+
+		// verify it is a buffered chan
+		//		bCh <- 1
+		//		get := <-bCh
+
+	})
+}

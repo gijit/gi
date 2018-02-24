@@ -92,6 +92,11 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 Feb 24 update
+------------------
+Release v1.0.12 brings `select` as well as send and
+receive on channels that were allocated in Go.
+
 2018 Feb 23 update
 ------------------
 Release v1.0.7 fixes a bunch of subtle corner

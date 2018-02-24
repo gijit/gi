@@ -35,6 +35,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		return vm, nil
 	} else {
 		vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
+		registerLuarReqs(vm)
 	}
 
 	// establish prelude location so prelude can know itself.

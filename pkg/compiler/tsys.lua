@@ -2070,7 +2070,42 @@ __chanType = function(elem, sendOnly, recvOnly)
    return typ;
 end;
 
-function __Chan(elem, capacity)
+-- return the (un-named so as to be interoperable)
+-- reflect Type that corresponds to tsys type 't'.
+function __gijitTypeToGoType(t)
+   -- stubbed
+   return __rtypbasic.__kindInt
+end
+
+function __Chan(elem, capacity, elemReflectType)
+   return {}
+   --[[
+   print("__Chan called")
+   print(debug.traceback())
+   local dir = 1 -- direction: 1=recv, 2=send, 3=both.
+   local elemty = __gijitTypeToGoType(elem)
+   local chtype = reflect.ChanOf(dir, elemty)
+   local ch = reflect.MakeChan(chtype, capacity)
+   
+   local this = {}
+   this.__native = ch
+   
+   if capacity < 0  or  capacity > 2147483647 then
+      __throwRuntimeError("makechan: size out of range");
+   end
+   this.elem = elem;
+   this.__capacity = capacity;
+   this.__buffer = {};
+   this.__sendQueue = {};
+   this.__recvQueue = {};
+   this.__closed = false;
+   this.__val = this
+   return this
+   --]]
+end;
+
+
+function __Chan_GopherJS(elem, capacity)
    local this = {}
    if capacity < 0  or  capacity > 2147483647 then
       __throwRuntimeError("makechan: size out of range");

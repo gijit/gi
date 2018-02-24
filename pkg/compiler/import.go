@@ -8,6 +8,7 @@ import (
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 
 	// shadow_ imports: available inside the REPL
@@ -69,6 +70,24 @@ var _ = optimize.ArmijoConditionMet
 var _ = stat.CDF
 var _ = unit.Atto
 
+func registerLuarReqs(vm *golua.State) {
+	// channel ops need reflect, so import it always.
+
+	luar.Register(vm, "reflect", shadow_reflect.Pkg)
+	luar.Register(vm, "fmt", shadow_fmt.Pkg)
+	fmt.Printf("reflect/fmt registered\n")
+
+	// give goroutines.lua something to clone
+	// to generate select cases.
+	refSelCaseVal := reflect.SelectCase{}
+
+	luar.Register(vm, "", luar.Map{
+		"__refSelCaseVal": refSelCaseVal,
+	})
+
+	registerBasicReflectTypes(vm)
+}
+
 func (ic *IncrState) EnableImportsFromLua() {
 
 	goImportFromLua := func(path string) {
@@ -76,18 +95,6 @@ func (ic *IncrState) EnableImportsFromLua() {
 	}
 	luar.Register(ic.vm, "", luar.Map{
 		"__go_import": goImportFromLua,
-	})
-
-	// channel ops need reflect, so import it always.
-	luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
-	luar.Register(ic.vm, "fmt", shadow_fmt.Pkg)
-
-	// give goroutines.lua something to clone
-	// to generate select cases.
-	refSelCaseVal := reflect.SelectCase{}
-
-	luar.Register(ic.vm, "", luar.Map{
-		"__refSelCaseVal": refSelCaseVal,
 	})
 
 }
