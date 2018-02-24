@@ -364,10 +364,8 @@ func Test606MakeChannel(t *testing.T) {
 		LuaMustInt64(vm, "a", 23)
 
 		// get the 'ch' channel out and use it in Go.
-		iface, err := getChannelFromGlobal(vm, "ch")
+		iface, err := getChannelFromGlobal(vm, "ch", false)
 		panicOn(err)
-		// cleanup
-		vm.Pop(1)
 
 		var ch chan int = iface.(chan int)
 

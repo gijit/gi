@@ -455,10 +455,11 @@ func sumArrayInt64(a [3]int64) (tot int64) {
 
 // Lookup and return a channel (either wrapped in a table or Userdata directly)
 // from _G and return it as an interface{}.
-// If successful, leaves the channel on the top of the stack.
-// Do vm.Pop(1) to clean it up. On failure, leaves the stack clean/as it found it.
+// If successful and leaveOnTop is true, we leave the channel on the top of the stack.
+// Do vm.Pop(1) to clean it up. On failure, or if leaveOnTop is false, we
+// leave the stack clean/as it found it.
 //
-func getChannelFromGlobal(vm *golua.State, varname string) (interface{}, error) {
+func getChannelFromGlobal(vm *golua.State, varname string, leaveOnTop bool) (interface{}, error) {
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	if vm.IsNil(top) {
@@ -491,5 +492,9 @@ func getChannelFromGlobal(vm *golua.State, varname string) (interface{}, error) 
 		return nil, err
 	}
 
+	if !leaveOnTop {
+		// cleanup
+		vm.Pop(1)
+	}
 	return (*i.(*reflect.Value)).Interface(), nil
 }
