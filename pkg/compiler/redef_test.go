@@ -3,6 +3,8 @@ package compiler
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,6 +16,14 @@ var _ = fmt.Printf
 func Test301RedefinitionOfStruct(t *testing.T) {
 
 	cv.Convey(`if we replay struct definition and method call, the method call should succeed the 2nd time (was failing to replay from history, stumbling on the type checker--fix required modifying the type checker to call check.deleteFromObjMapPriorTypeName(oname) in types/check.go)`, t, func() {
+
+		// don't mess up the user's regular ~/.gijit.hist file with our test.
+		origHome := os.Getenv("HOME")
+		tempdir, err := ioutil.TempDir("", "gijit-test")
+		panicOn(err)
+		os.Setenv("HOME", tempdir)
+		defer os.Setenv("HOME", origHome)
+
 		src := `
  type S struct{}
  var s S
@@ -26,7 +36,7 @@ func Test301RedefinitionOfStruct(t *testing.T) {
 		cfg := NewGIConfig()
 		cfg.DefineFlags(myflags)
 
-		err := myflags.Parse([]string{"-q", "-no-liner"}) // , "-vv"})
+		err = myflags.Parse([]string{"-q", "-no-liner"}) // , "-vv"})
 		err = cfg.ValidateConfig()
 		panicOn(err)
 		r := NewRepl(cfg)
