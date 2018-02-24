@@ -227,7 +227,7 @@ __block = function()
    __curGoroutine.asleep = true;
 end;
 
-__send = function(chan, value) 
+__send_GopherJS = function(chan, value) 
    if chan.__closed then
       __throwRuntimeError("send on closed channel");
    end
@@ -268,6 +268,14 @@ __recv = function(chan)
    -- luar can translate that to Lua for us.
    local v = rv.Interface();
    return {v, ok}
+end
+
+__send = function(chan, value)
+   print("__send called! value=", value)
+   local ch = reflect.ValueOf(chan)
+   local v = reflect.ValueOf(value)
+   local cv = v.Convert(reflect.TypeOf(chan).Elem())
+   ch.Send(cv);
 end
 
 -- gopherJs port: __recv
