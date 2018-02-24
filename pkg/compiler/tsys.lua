@@ -2104,8 +2104,11 @@ end;
 -- return the (un-named so as to be interoperable)
 -- reflect Type that corresponds to tsys type 'typ'.
 function __gijitTypeToGoType(typ)
+   --print("__gijitTypeToGoType() called with typ:")
+   --__st(typ)
 
-   local kstring = __kind2str[typ.kind]
+   local kind = typ.kind
+   local kstring = __kind2str[kind]
    local rtyp = __rtyp[kstring]
    if rtyp ~= nil then
       -- basic type, return straight away
