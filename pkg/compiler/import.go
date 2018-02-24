@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/gijit/gi/pkg/importer"
@@ -79,6 +80,34 @@ func (ic *IncrState) EnableImportsFromLua() {
 
 	// channel ops need reflect, so import it always.
 	luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
+
+	// senders
+	refSelCaseSendVal := reflect.SelectCase{
+		Dir: reflect.SelectSend,
+	}
+	luar.Register(ic.vm, "", luar.Map{
+		"__refSelCaseSendVal": refSelCaseSendVal,
+	})
+
+	// receivers
+	refSelCaseRecvVal0 := reflect.SelectCase{
+		Dir: reflect.SelectRecv,
+	}
+	refSelCaseRecvVal1 := reflect.SelectCase{
+		Dir: reflect.SelectRecv,
+	}
+	luar.Register(ic.vm, "", luar.Map{
+		"__refSelCaseRecvVal0": refSelCaseRecvVal0,
+		"__refSelCaseRecvVal1": refSelCaseRecvVal1,
+	})
+
+	// default
+	refSelCaseDefaultVal := reflect.SelectCase{
+		Dir: reflect.SelectDefault,
+	}
+	luar.Register(ic.vm, "", luar.Map{
+		"__refSelCaseDefaultVal": refSelCaseDefaultVal,
+	})
 }
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {

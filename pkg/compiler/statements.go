@@ -550,7 +550,7 @@ __defer_func(%s)
 			clause := cc.(*ast.CommClause)
 			switch comm := clause.Comm.(type) {
 			case nil:
-				channels = append(channels, "[]")
+				channels = append(channels, "{}")
 				hasDefault = true
 			case *ast.ExprStmt:
 				channels = append(channels, c.formatExpr("{%e}", astutil.RemoveParens(comm.X).(*ast.UnaryExpr).X).String())
@@ -570,9 +570,9 @@ __defer_func(%s)
 			if assign, ok := clause.Comm.(*ast.AssignStmt); ok {
 				switch rhsType := c.p.TypeOf(assign.Rhs[0]).(type) {
 				case *types.Tuple:
-					bodyPrefix = []ast.Stmt{&ast.AssignStmt{Lhs: assign.Lhs, Rhs: []ast.Expr{c.newIdent(selectionVar+"[1]", rhsType)}, Tok: assign.Tok}}
+					bodyPrefix = []ast.Stmt{&ast.AssignStmt{Lhs: assign.Lhs, Rhs: []ast.Expr{c.newIdent(selectionVar+"[2]", rhsType)}, Tok: assign.Tok}}
 				default:
-					bodyPrefix = []ast.Stmt{&ast.AssignStmt{Lhs: assign.Lhs, Rhs: []ast.Expr{c.newIdent(selectionVar+"[1][0]", rhsType)}, Tok: assign.Tok}}
+					bodyPrefix = []ast.Stmt{&ast.AssignStmt{Lhs: assign.Lhs, Rhs: []ast.Expr{c.newIdent(selectionVar+"[2][1]", rhsType)}, Tok: assign.Tok}}
 				}
 			}
 
@@ -590,10 +590,10 @@ __defer_func(%s)
 		}, types.Typ[types.Int])
 		c.Blocking[selectCall] = !hasDefault
 		c.Printf("%s = %s;", selectionVar, c.translateExpr(selectCall, nil))
-
+		c.Printf(`__st(_selection,"_selection");`)
 		if len(caseClauses) != 0 {
 			translateCond := func(cond ast.Expr, desiredType types.Type) *expression {
-				return c.formatExpr("%s[0] == %e", selectionVar, cond)
+				return c.formatExpr("%s[1] == %e", selectionVar, cond)
 			}
 			c.translateBranchingStmt(caseClauses, nil, true, translateCond, label, flattened)
 		}

@@ -688,7 +688,15 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 		// yes, is __gi_Slice
 		// leave the props on the top of the stack, we'll use
 		// them immediately.
-		return copyGiTableToSlice(L, adj, v, visited, isSlice)
+		status = copyGiTableToSlice(L, adj, v, visited, isSlice)
+		if status == nil {
+			return status
+		}
+		pp("copyGiTableToSlice saw error, going back to non-gi path. lua stack is now:")
+		if verb.VerboseVerbose {
+			DumpLuaStack(L)
+		}
+		status = nil
 	} else {
 		L.Pop(1)
 	}
@@ -1516,7 +1524,7 @@ func dumpTableString(L *lua.State, index int) (s string) {
 	return
 }
 
-func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (n int, offset int, t reflect.Type) {
+func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (n int, offset int, t reflect.Type, err error) {
 	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
 	pp("stack:\n%s\n", string(debug.Stack()))
 
@@ -1529,8 +1537,9 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	// __length
 	getfield(L, idx, "__length")
 	if L.IsNil(-1) {
-		pp("yikes. __length not found, panicing.")
-		panic("what? should be a `__length` member of a gijit slice")
+		pp("yikes. __length not found, returning an error.")
+		L.Pop(1)
+		return 0, 0, nil, fmt.Errorf("what? should be a `__length` member of a gijit slice")
 	}
 	n = int(L.ToNumber(-1))
 	L.Pop(1)
@@ -1608,7 +1617,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 		DumpLuaStack(L)
 	}
 
-	return n, offset, t
+	return n, offset, t, nil
 }
 
 // props is on top of stack. The actual table at idx, which props describes.
@@ -1619,7 +1628,10 @@ func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uint
 	}
 
 	// extract out the raw underlying table
-	n, offset, t := giSliceGetRawHelper(L, idx, v, visited)
+	n, offset, t, err := giSliceGetRawHelper(L, idx, v, visited)
+	if err != nil {
+		return err
+	}
 
 	pp("in copyGiTableToSlice, n='%v', t='%v', offset='%v'", n, t, offset)
 

@@ -281,9 +281,24 @@ end
 __select = function(comms)
    print("__select called!")
    __st(comms, "comms")
-   local ready = {};
-   local selection = -1;
-   for i, comm in ipairs(comms) do
+   
+   __st(comms[1], "comms[1]")
+   __st(comms[2], "comms[2]")
+   
+   __st(comms[1][1], "comms[1][1]")
+   __st(comms[2][1], "comms[2][1]")
+
+   local c1 = reflect.ValueOf(comms[1][1])
+   local c2 = reflect.ValueOf(comms[2][1])
+
+   print("c1 is "..type(c1))
+   print("c2 is "..type(c2))
+      
+   print("c1 = "..tostring(c1))
+   print("c2 = "..tostring(c2))
+
+ --[[
+    for i, comm in ipairs(comms) do
       local chan = comm[1];
       --switch (comm.length)
       local comm_len = #comm
@@ -299,7 +314,19 @@ __select = function(comms)
 
       end -- end switch
    end
+ --]]
+   
+   __refSelCaseRecvVal0.Chan = c1
+   __refSelCaseRecvVal1.Chan = c2
 
+   local cases = {
+      __refSelCaseRecvVal0,
+      __refSelCaseRecvVal1,
+   }
+   
+   local chosen, recv, recvOk = reflect.Select(cases)
+   
+   return {chosen, {recv, recvOk}};
 end
 
 -- gopherJs port: __recv
