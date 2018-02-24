@@ -42,33 +42,31 @@ func Test001LuaTranslation(t *testing.T) {
 	cv.Convey("assignment", t, func() {
 		by, err := inc.Tr([]byte("a := 10;"))
 		panicOn(err)
-		cv.So(string(by), matchesLuaSrc, "a = 10LL;")
+		LuaRunAndReport(vm, string(by))
+		LuaMustInt64(vm, "a", 10)
+
 		pp("GOOD: past 1st")
 
 		by, err = inc.Tr([]byte("func adder(a, b int) int { return a + b};  sum1 := adder(5,5)"))
 		panicOn(err)
-		cv.So(string(by), matchesLuaSrc,
-			`adder = function(a, b) 
-				         return a + b;
-                     end;
-			         sum1 = adder(5LL,5LL);`)
+		lua := string(by)
+
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "sum1", 10)
 
 		pp("GOOD: past 2nd")
 
 		by, err = inc.Tr([]byte("sum2 := adder(a,a)"))
 		panicOn(err)
-		cv.So(string(by), matchesLuaSrc,
-			`sum2 = adder(a, a);`)
+
+		LuaRunAndReport(vm, string(by))
+		LuaMustInt64(vm, "sum2", 20)
 		pp("GOOD: past 3rd")
 
 		by, err = inc.Tr([]byte("func multiplier(a, b int) int { return a * b};  prod1 := multiplier(5,5)"))
 		panicOn(err)
-
-		cv.So(string(by), matchesLuaSrc,
-			`multiplier = function(a, b) 
-				         return (a * b);
-                     end;
-			         prod1 = multiplier(5LL,5LL);`)
+		LuaRunAndReport(vm, string(by))
+		LuaMustInt64(vm, "prod1", 25)
 
 	})
 }
@@ -167,9 +165,10 @@ func Test008IfThenElseInAFunction(t *testing.T) {
 
 	cv.Convey("if then else within a closure/function should compile into lua", t, func() {
 
-		code := `a:=20; func hmm() { if a > 30 { println("over 30") } else {println("under or at 30")} }`
+		code := `a:=20; over:=0; func hmm() { if a > 30 { println("over 30"); over=1; } else {println("under or at 30"); over=-1; } }; hmm();`
 		// and in separate calls, where the second call sets the earlier variable.
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=20LL; hmm = function() if (a > 30LL) then print("over 30"); else print("under or at 30"); end end;`)
+		LuaRunAndReport(vm, string(inc.trMust([]byte(code))))
+		LuaMustInt64(vm, "over", -1)
 	})
 }
 
@@ -182,29 +181,17 @@ func Test009NumericalForLoop(t *testing.T) {
 	cv.Convey("numerical for loops should compile into lua", t, func() {
 
 		// at top-level
-		code := `for i:=0; i < 10; i++ { i=i+2 }`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
-  		i = 0LL;
-  		while (true) do
-  			if (not (i < 10LL)) then break; end
-            i = i + 2LL;
-  			i = i + (1LL);
-  		 end
-`)
+		code := `a:= 0; for i:=0; i < 4; i++ { a+=i }`
+		lua := string(inc.trMust([]byte(code)))
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "a", 6)
 
 		// inside a func
-		code = `a:=5; func hmm() { for i:=0; i < a; i++ { println(i) } }`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `a=5LL;
-  	hmm = function() 
-  		local i = 0LL;
-  		while (true) do
-  			if (not (i < a)) then break; end
-  			print(i);
-  			i = i + (1LL);
-  		 end
- 	 end;
-`)
-
+		code = `a:=5; b:=0; func hmm() { for i:=0; i < a; i++ { println(i); b-=i } }; hmm();`
+		lua = string(inc.trMust([]byte(code)))
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "b", -10)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 

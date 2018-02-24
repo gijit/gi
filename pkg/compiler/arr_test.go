@@ -87,16 +87,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), matchesLuaSrc,
-			`
-  	__type__.anon_arrayType = __arrayType(__type__.int64, 3); -- 'IMMEDIATE' anon type printing.
-  
-  	a = __type__.anon_arrayType({[0]=1LL, 3LL, 4LL});
-  	__gi_SetRangeCheck(a, 0, (a[0] + (1LL)));
-  	__gi_SetRangeCheck(a, 2, (a[2] - (1LL)));
-  	b = a[0];
-  	c = a[2];
-`)
+		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))

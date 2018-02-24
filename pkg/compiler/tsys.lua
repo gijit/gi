@@ -608,6 +608,8 @@ end;
 
 --
 
+-- low, high are 0-based slice [low,high). max is the
+--  maximum capacity of the slice.
 __subslice = function(slice, low, high, max)
    if high == nil then
       
