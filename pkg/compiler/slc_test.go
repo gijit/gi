@@ -28,21 +28,6 @@ func Test086SlicesPointToArrays(t *testing.T) {
 		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 
-		cv.So(string(translation), matchesLuaSrc, `
-
-  	__type__.anon_arrayType = __arrayType(__type__.int64, 2); 
-  
-  	a = __type__.anon_arrayType({[0]=1LL, 3LL});
-  	
-  	__type__.anon_sliceType = __sliceType(__type__.int64); 
-  
-  	b = __type__.anon_sliceType(a);
-  	c = __subslice(__type__.anon_sliceType(a), 1);
-  	__gi_SetRangeCheck(b, 1, (__gi_GetRangeCheck(b, 1) + (1LL)));
-  	c0 = __gi_GetRangeCheck(c, 0);
-  	a1 = a[1];
-`)
-
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 

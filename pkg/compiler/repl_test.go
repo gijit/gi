@@ -511,15 +511,9 @@ func Test019TopLevelScope(t *testing.T) {
 
 		// at top-level
 		code := `j:=5; for i:=0; i < 3; i++ { j++ }`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `
-        j = 5LL;
-  		i = 0LL;
-  		while (true) do
-  			if (not (i < 3LL)) then break; end
-            j = j + (1LL);
-  			i = i + (1LL);
-  		 end
-`)
+		lua := string(inc.trMust([]byte(code)))
+		LuaRunAndReport(vm, lua)
+		LuaMustInt64(vm, "j", 8)
 
 	})
 }
@@ -893,23 +887,6 @@ default:
 
 		translation := inc.trMust([]byte(code))
 
-		cv.So(string(translation), matchesLuaSrc,
-			`
-	a = 7LL;
-  	b = 2LL;
-  	c = 0LL;
-  	_1 = b;
-  	if (_1 == (1LL)) then 
-  		c = (a * 1LL);
-  	 elseif (_1 == (2LL)) then 
-  		c = (a * 10LL);
-  	 elseif (_1 == (3LL)) then 
-  		c = (a * 100LL);
-  	 else  
-  		c = -1LL;
-  	 end 
-`)
-
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "c", 70)
@@ -979,22 +956,6 @@ default:
 		inc := NewIncrState(vm, nil)
 
 		translation := inc.trMust([]byte(code))
-
-		cv.So(string(translation), matchesLuaSrc,
-			`
-	a = 7LL;
-  	b = 2LL;
-  	c = 0LL;
-  	if ((b == 1LL)) then 
-  		c = (a * 1LL);
-  	 elseif ((b == 2LL)) then 
-  		c = (a * 10LL);
-  	 elseif ((b == 3LL)) then 
-  		c = (a * 100LL);
-  	 else 
-  		c = -1LL;
-  	 end 
-`)
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "c", 70)
