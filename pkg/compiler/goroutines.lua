@@ -1,5 +1,7 @@
 -- goroutines.lua
 
+local ffi = require("ffi")
+
 __stackDepthOffset = 0;
 __getStackDepth = function() 
    -- javascript/mozilla gives a stack trace under .stack,
@@ -255,7 +257,21 @@ __send = function(chan, value)
       end
    };
 end;
-__recv = function(chan) 
+
+__recv = function(chan)
+   --print("__recv called!")
+
+   local ch = reflect.ValueOf(chan)
+   local rv, ok = ch.Recv();
+   -- rv is userdata, a reflect.Value. Convert to
+   -- interface{} for Luar, using Interface(), so
+   -- luar can translate that to Lua for us.
+   local v = rv.Interface();
+   return {v, ok}
+end
+
+-- gopherJs port: __recv
+__recv__GopherJS = function(chan) 
    local queuedSend = chan.__sendQueue.shift();
    if queuedSend ~= nil then
       chan.__buffer.push(queuedSend(false));

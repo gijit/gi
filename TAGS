@@ -76,84 +76,198 @@ local function dofuss(5,77
 local function w_(9,120
 local function w(11,166
 
-pkg/compiler/array.lua,133
-function __gi_NewArray(96,2880
-function __gi_clone2(134,3792
-function _gi_UnpackArrayRaw(183,5292
-function _gi_ArrayRaw(201,5602
+pkg/compiler/allport/fin.lua,453
+function ___ipairsZeroCheck(18,444
+function ___assertIsArray(96,2168
+function ___lenz(108,2387
+function ___st(118,2599
+function ___mapAndJoinStrings(191,4329
+function ___newAnyArrayValue(701,18535
+function ___methodSet(1135,32460
+function ___Chan(1373,40010
+function ___interfaceStrHelper(1415,41557
+function ___basicValue2kind(1469,43229
+function field2strHelper(1546,45325
+function typeKeyHelper(1555,45541
+function ___zipairs(1742,50887
 
-pkg/compiler/defer.lua,18
-function ts(4,75
+pkg/compiler/allport/full.lua,91
+function __assertIsArray(3,59
+function __new(13,230
+function __mapAndJoinStrings(22,486
 
-pkg/compiler/map.lua,30
-function _gi_NewMap(204,6243
+pkg/compiler/allport/half.lua,244
+function __newAnyArrayValue(5,83
+function __assertIsArray(45,1197
+function __new(55,1368
+function __mapAndJoinStrings(64,1624
+function __interfaceStrHelper(1357,37078
+function field2strHelper(1452,39922
+function typeKeyHelper(1463,40274
 
-pkg/compiler/prelude.lua,141
-function _gi_GetRangeCheck(4,84
-function _gi_SetRangeCheck(11,215
-function _gi_NewComplex128(42,965
-function __gijit_printQuoted(46,1010
+pkg/compiler/attic/array.lua,136
+function __gi_NewArray(100,3066
+function __gi_clone2(138,3982
+function __gi_UnpackArrayRaw(187,5488
+function __gi_ArrayRaw(205,5806
+
+pkg/compiler/attic/slice.lua,254
+function __gi_NewSlice(124,4009
+function __gi_UnpackSliceRaw(192,5956
+function __gi_Raw(228,6707
+function append(238,6876
+function appendSlice(297,8401
+function __copySlice(302,8487
+function __subslice(344,9681
+function ___gi_makeSlice(368,10402
+
+pkg/compiler/attic/struct.lua,846
+function __starToAsterisk(50,1168
+function __gi_createNewPointer(93,2353
+function __st(143,3417
+function __show_methods_desc(211,4978
+function __structPrinter(250,6046
+function __ifacePrinter(280,6887
+function __reg:RegisterStruct(318,7921
+function __reg:RegisterInterface(353,9055
+function __reg:IsInterface(381,9823
+function __reg:GetInterfaceMethods(386,9925
+function __reg:GetPointeeMethodset(391,10028
+function __reg:NewInstance(418,10905
+function __reg:RemoveMethod(440,11453
+function __reg:AddMethod(472,12403
+function __gi_methodVal(505,13346
+function __gi_count_methods(532,14131
+function __gi_assertType(571,15272
+function __gi_NewType(942,25680
+function __ptrType(1560,47439
+function __gi_mapArray(1610,48830
+function __mapFuncOverTable(1628,49305
+function __sliceType(1781,54832
+function __arrayType(1864,56609
+
+pkg/compiler/complex.lua,942
+local function __truncateToInt(24,713
+local function complex(33,872
+local function real(44,1184
+local function imag(57,1467
+local function cexp(89,2061
+local function conj(93,2103
+local function cabs(99,2241
+local function phase(118,2720
+local function polar(124,2867
+local function rect(135,3215
+local function clog(146,3567
+local function clogf(153,3797
+local function csqrt(206,5049
+function cmath.Sin(230,5426
+function cmath.Cos(234,5526
+function cmath.Tan(238,5627
+function __reducePi(245,5805
+function __tanSeries(261,6315
+function cmath.Cot(322,7526
+function cmath.Sinh(334,7751
+function cmath.Cosh(338,7852
+function cmath.Tanh(342,7953
+function cmath.Asin(362,8329
+function cmath.Acos(379,8770
+function cmath.Atan(382,8834
+function cmath.Atan2(387,9012
+function cmath.Asinh(396,9324
+function cmath.Acosh(399,9380
+function cmath.Atanh(402,9451
+function cmath.ComplexLog(409,9609
+function check(467,11433
+
+pkg/compiler/defer.lua,20
+function __ts(4,75
+
+pkg/compiler/dfs.lua,392
+function __isBasicTyp(13,246
+local function __makeRequiredTypes(38,927
+function __newDfsNode(53,1283
+function __addChild(96,2419
+function __markGraphUnVisited(162,4156
+function __emptyOutGraph(170,4311
+function __dfsHelper(178,4515
+function __showDFSOrder(196,4928
+function __doDFS(205,5126
+function __hasTypes(213,5277
+function __NewDFSState(218,5339
+function __testDFS(241,5877
+
+pkg/compiler/int64.lua,33
+function __newByteArray(64,1493
+
+pkg/compiler/math.lua,46
+function __max(36,731
+function __min(43,807
+
+pkg/compiler/prelude.lua,70
+function __gi_GetRangeCheck(4,84
+function __gi_SetRangeCheck(21,599
 
 pkg/compiler/rune.lua,27
 function __decodeRune(1,0
 
-pkg/compiler/slice.lua,249
-function _gi_NewSlice(122,3880
-function _gi_UnpackSliceRaw(187,5744
-function _gi_Raw(212,6249
-function append(222,6409
-function appendSlice(281,7921
-function __copySlice(286,8007
-function __subslice(328,9200
-function __gi_makeSlice(352,9916
-
-pkg/compiler/struct.lua,843
-function starToAsterisk(50,1168
-function __gi_createNewPointer(94,2350
-function __st(144,3414
-function __show_methods_desc(206,4816
-function __structPrinter(245,5884
-function __ifacePrinter(275,6719
-function __reg:RegisterStruct(313,7753
-function __reg:RegisterInterface(348,8887
-function __reg:IsInterface(376,9655
-function __reg:GetInterfaceMethods(381,9757
-function __reg:GetPointeeMethodset(386,9860
-function __reg:NewInstance(413,10737
-function __reg:RemoveMethod(435,11285
-function __reg:AddMethod(467,12235
-function __gi_methodVal(500,13178
-function __gi_count_methods(527,13963
-function __gi_assertType(566,15104
-function __gi_NewType(934,25363
-function __ptrType(1552,47116
-function __gi_mapArray(1602,48507
-function __mapFuncOverTable(1620,48982
-function __sliceType(1773,54509
-function __arrayType(1856,56286
-
 pkg/compiler/tmp/hah.lua,33
 function __gi_count_methods(1,0
 
+pkg/compiler/tsys.lua,1010
+function __storeBuiltins(23,556
+function __sorted_keys(32,754
+function __gls(42,912
+function __ls(52,1126
+function __lst(71,1665
+function __glst(84,2005
+function __minifs.renameBasedFileExists(147,3443
+function __minifs.dirExists(158,3674
+function __lenz(242,6172
+function __lenzi(262,6632
+function __ipairsZeroCheck(277,6946
+function __assertIsArray(352,8584
+function __addressof(362,8755
+function __st(372,9003
+function __mapAndJoinStrings(461,11291
+function __starToAsterisk(1116,30884
+function __newAnyArrayValue(1155,32036
+function __methodSet(1864,55980
+function __Chan(2073,62813
+function __addChildTypesHelper(2093,63492
+function __interfaceStrHelper(2148,65881
+function __basicValue2kind(2484,75782
+function __field2strHelper(2574,78293
+function __typeKeyHelper(2583,78518
+function __zipairs(2785,84249
+function __elim0(2808,84795
+function __unpack0(2851,85516
+function __lazy_ellipsis(2867,85754
+function __printHelper(2876,85916
+function __gijit_printQuoted(2893,86281
+
+pkg/compiler/tutil.lua,51
+function __ValEq(5,51
+function __expectEq(43,897
+
 pkg/compiler/utf8.lua,665
-local function utf8charbytes 82,3157
-local function utf8len 179,5239
-local function utf8sub 200,5737
-local function utf8replace 244,6610
-local function utf8upper 272,7270
-local function utf8lower 277,7422
-local function utf8reverse 283,7555
-local function utf8char(313,8160
-local function utf8gensub(389,10141
-local function binsearch(411,10668
-local function classMatchGenerator(432,11164
-local function utf8subWithBytes 564,15097
-local function matcherGenerator(613,16052
-local function utf8find(945,23990
-local function utf8match(951,24159
-local function utf8gmatch(963,24403
-local function replace(978,24783
-local function utf8gsub(1012,25421
+local function utf8charbytes 82,3119
+local function utf8len 179,5201
+local function utf8sub 200,5699
+local function utf8replace 244,6572
+local function utf8upper 272,7232
+local function utf8lower 277,7384
+local function utf8reverse 283,7517
+local function utf8char(313,8122
+local function utf8gensub(389,10103
+local function binsearch(411,10630
+local function classMatchGenerator(432,11126
+local function utf8subWithBytes 564,15059
+local function matcherGenerator(613,16014
+local function utf8find(945,23952
+local function utf8match(951,24121
+local function utf8gmatch(963,24365
+local function replace(978,24745
+local function utf8gsub(1012,25383
 
 pkg/utf8/utf8.lua,665
 local function utf8charbytes 82,3157
@@ -592,9 +706,235 @@ local function dump_trace(99,3709
 local function dumpoff(142,5130
 local function dumpon(152,5361
 
-vendor/github.com/LuaJIT/LuaJIT/src/jit/zone.lua,0
+vendor/github.com/stepelu/lua-sci/alg.lua,1312
+local function array_alloc(48,1867
+local function array_map(55,2104
+local function array_copy_data(62,2339
+local function array_copy_data_offset(67,2496
+local function array_clear(72,2677
+local function mem_stack_data(83,2973
+local function new_mem_stack_ct(88,3074
+local function stack_array(116,3813
+local function stack_clear(122,4057
+local function same_type_check_2(193,6114
+local function same_type_check_3(199,6249
+local function dimensions_mat(206,6426
+local function dimensions_mat_same_check(214,6566
+local function dimensions_mat_square_check(221,6746
+local function dimensions_mul_check_2(227,6863
+local function dimensions_mul_check_3(236,7121
+local function dimensions_pow_check_1(242,7305
+local function dimensions_pow_check_2(248,7448
+local function __mul(254,7610
+local function mul(269,7963
+local function pow_recursive(276,8128
+local function pow_dispatch(296,8696
+local function __pow(310,9022
+local function pow(318,9226
+local function sum(326,9405
+local function prod(332,9495
+local function trace(338,9586
+local function rep(349,9840
+local function join_1(448,12081
+local function join_${N}(456,12243
+local function join_n(474,12729
+local function unsupported_element_ct(513,13676
+local function new_array_ct(517,13806
+local function alg_typeof(709,19499
 
-vendor/github.com/LuaJIT/LuaJIT/src/jit/vmdef.lua,0
+vendor/github.com/stepelu/lua-sci/complex.lua,28
+local function cabs(35,925
+
+vendor/github.com/stepelu/lua-sci/diff.lua,232
+local function dnlogbeta(113,4085
+local function dnbeta(121,4372
+local function dphi(126,4472
+local function dnmax(131,4598
+local function dnmin(141,4949
+local function derivativef(270,9350
+local function gradientf(294,10224
+
+vendor/github.com/stepelu/lua-sci/dist/_gamma.lua,65
+local function marstang(25,987
+local function sampleab(36,1325
+
+vendor/github.com/stepelu/lua-sci/dist/_uniform.lua,31
+local function mvdist(58,1476
+
+vendor/github.com/stepelu/lua-sci/fmax.lua,29
+local function tofmax(7,273
+
+vendor/github.com/stepelu/lua-sci/fmin/_de.lua,762
+local function rand_1_bin(34,1444
+local function rand_2_bin(42,1674
+local function randtobest_2_bin(50,1977
+local function currenttorand_1(59,2335
+local function sample_strategy_indices(75,2790
+local function sample_int(86,3118
+local function sample_distinct_indices(92,3328
+local function sample_F(109,3994
+local function sample_K(115,4084
+local function sample_CR(123,4285
+local function sample_mutations(131,4489
+local function nan_to_inf(148,4873
+local function compare(153,5011
+local function updatemin(164,5399
+local function range(174,5719
+local function stop_x_range_no_violation(186,5970
+local function linear_lt(203,6375
+local function hyper_cube_constrain(207,6438
+local function rows_as_vec(217,6631
+local function optim(228,6818
+
+vendor/github.com/stepelu/lua-sci/fmin/_lbfgs.lua,361
+local function lbfgs_param(24,547
+local function vecadd(132,5736
+local function vecdiff(136,5813
+local function vecmul(140,5889
+local function vecset(145,5999
+local function veccpy(149,6061
+local function vecdot(153,6126
+local function vecscale(159,6222
+local function backtracking(187,7413
+local function stop(253,9156
+local function lbfgs(265,9499
+
+vendor/github.com/stepelu/lua-sci/fmin.lua,29
+local function tofmin(7,273
+
+vendor/github.com/stepelu/lua-sci/math.lua,243
+local function round(27,1001
+local function step(31,1087
+local function sign(35,1186
+local function phi(43,1498
+local function logbeta(199,6352
+local function beta(205,6515
+local function recmax(210,6660
+local function recmin(216,6836
+
+vendor/github.com/stepelu/lua-sci/mcmc/_nuts.lua,400
+local function evalfgrad(33,1319
+local function stop_iter(51,1843
+local function invert(59,1957
+local function factor(69,2131
+local function correlate(77,2303
+local function sigestimate(85,2466
+local function logpdf(93,2625
+local function leapfrog(110,3106
+local function heuristiceps(133,3924
+local function evalsr(148,4476
+local function buildtree(163,5269
+local function nuts(201,6632
+
+vendor/github.com/stepelu/lua-sci/prng/_marsaglia.lua,67
+local function sarg(26,1012
+local function sample_double(31,1138
+
+vendor/github.com/stepelu/lua-sci/prng/_mrg.lua,122
+local function ulmat(27,821
+local function modmul(33,1068
+local function vvmodmul(49,1380
+local function sarg(71,2014
+
+vendor/github.com/stepelu/lua-sci/prng.lua,106
+local function restore_unsafe(18,550
+local function restore(26,798
+local function new_parallel(36,1002
+
+vendor/github.com/stepelu/lua-sci/qrng/_sobol.lua,70
+local function compute_dn(48,1801
+local function fill_state(69,2455
+
+vendor/github.com/stepelu/lua-sci/quad/_dblexp.lua,213
+local function chgedfinite(28,1094
+local function chgedopenpos(37,1391
+local function chgedopenneg(45,1653
+local function chgedopen(56,1984
+local function chgedintegrand(62,2141
+local function normf(78,2810
+
+vendor/github.com/stepelu/lua-sci/root/_newtonm.lua,94
+local function rebracket(10,407
+local function newton(19,585
+local function halley(51,1520
+
+vendor/github.com/stepelu/lua-sci/root/_ridders.lua,28
+local function root(11,380
+
+vendor/github.com/stepelu/lua-sci/stat.lua,532
+local function clear(25,938
+local function mean(31,1008
+local function var(42,1185
+local function cov(55,1433
+local function cor(74,1857
+local function chk_dim(78,1930
+local function chk_eq_square(86,2106
+local function dim(96,2403
+local function len(100,2454
+local function tos_mean(104,2505
+local function tos_var(156,3737
+local function covtocor(225,5481
+local function tos_cor(237,5724
+local function olmean(319,7825
+local function olvar(329,8018
+local function olcov(339,8261
+local function olsamples(345,8449
+
+vendor/github.com/stepelu/lua-xsys/_dep/templet/init.lua,219
+local function parse_expression(14,369
+local function parse_statement(28,766
+local function render_to_string(58,1548
+local function loadtemplate(71,1897
+function _M.loadstring(86,2307
+function _M.loadfile(92,2457
+
+vendor/github.com/stepelu/lua-xsys/init.lua,375
+local function union(29,1234
+local function append(43,1549
+local function getton(67,2154
+local function tonumberx(71,2210
+local function split(83,2600
+local function trim(104,3073
+local function adjustexp(108,3145
+local function width(116,3307
+local function testexec(159,4594
+local function exec(167,4767
+local function from(180,5140
+local function lsb(205,6239
+
+vendor/github.com/stepelu/lua-xsys/__meta.lua,0
+
+vendor/github.com/stepelu/lua-sci/root.lua,0
+
+vendor/github.com/stepelu/lua-sci/quad.lua,0
+
+vendor/github.com/stepelu/lua-sci/quad/_dblexp_precomputed.lua,0
+
+vendor/github.com/stepelu/lua-sci/qrng.lua,0
+
+vendor/github.com/stepelu/lua-sci/qrng/_new-joe-kuo-6-21201.lua,0
+
+vendor/github.com/stepelu/lua-sci/mcmc.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist/_student.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist/_normal.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist/_lognormal.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist/_exponential.lua,0
+
+vendor/github.com/stepelu/lua-sci/dist/_beta.lua,0
+
+vendor/github.com/stepelu/lua-sci/_cblas_h.lua,0
+
+vendor/github.com/stepelu/lua-sci/__meta.lua,0
+
+vendor/github.com/stepelu/lua-sci/__init.lua,0
+
+vendor/github.com/LuaJIT/LuaJIT/src/jit/zone.lua,0
 
 vendor/github.com/LuaJIT/LuaJIT/src/jit/dis_x64.lua,0
 
@@ -610,19 +950,23 @@ vendor/github.com/LuaJIT/LuaJIT/dynasm/dasm_x64.lua,0
 
 vendor/github.com/LuaJIT/LuaJIT/dynasm/dasm_mips64.lua,0
 
+pkg/compiler/tsys_test.lua,0
+
 pkg/compiler/tmp/small.lua,0
 
 pkg/compiler/tmp/s.lua,0
 
 pkg/compiler/tmp/m.lua,0
 
+pkg/compiler/string.lua,0
+
 pkg/compiler/snippet/snoopy.lua,0
 
-pkg/compiler/ptr.lua,0
+pkg/compiler/goroutines.lua,0
 
-pkg/compiler/math.lua,0
+pkg/compiler/attic/native_array.lua,0
 
-pkg/compiler/int64.lua,0
+pkg/compiler/allport/port.lua,0
 
 pkg/compiler/_templates/s.lua,0
 
@@ -631,3 +975,5 @@ pkg/compiler/_templates/rexp.lua,0
 pkg/compiler/_templates/repcall.lua,0
 
 pkg/compiler/_templates/r.lua,0
+
+pkg/compiler/_bench/mul.lua,0

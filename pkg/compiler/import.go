@@ -76,6 +76,9 @@ func (ic *IncrState) EnableImportsFromLua() {
 	luar.Register(ic.vm, "", luar.Map{
 		"__go_import": goImportFromLua,
 	})
+
+	// channel ops need reflect, so import it always.
+	luar.Register(ic.vm, "reflect", shadow_reflect.Pkg)
 }
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {

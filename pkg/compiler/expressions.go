@@ -387,14 +387,14 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 
 		case token.ARROW:
 			call := &ast.CallExpr{
-				Fun:  c.newIdent("_recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
+				Fun:  c.newIdent("__recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
 				Args: []ast.Expr{e.X},
 			}
 			c.Blocking[call] = true
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
 				return c.formatExpr("%e", call)
 			}
-			return c.formatExpr("%e[0]", call)
+			return c.formatExpr("%e[1]", call)
 		}
 
 		basic := t.Underlying().(*types.Basic)
