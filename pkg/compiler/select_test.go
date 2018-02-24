@@ -369,12 +369,25 @@ func Test606MakeChannel(t *testing.T) {
 		// cleanup
 		vm.Pop(1)
 
-		var ci chan int = iface.(chan int)
+		var ch chan int = iface.(chan int)
 
 		// verify as buffered
-		ci <- 12
-		geti := <-ci
+		ch <- 12
+		geti := <-ch
 		pp("geti = '%v'", geti)
 		cv.So(geti, cv.ShouldEqual, 12)
+
+		// from lua do a send, receive in Go.
+
+		code = `ch <- 17;`
+		translation, err = inc.Tr([]byte(code))
+		panicOn(err)
+		//*dbg = true
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+
+		got := <-ch
+		cv.So(got, cv.ShouldEqual, 17)
+
 	})
 }
