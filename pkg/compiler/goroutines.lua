@@ -271,7 +271,7 @@ __recv = function(chan)
 end
 
 __send = function(chan, value)
-   print("__send called! value=", value)
+   --print("__send called! value=", value)
    local ch = reflect.ValueOf(chan)
    local v = reflect.ValueOf(value)
    local cv = v.Convert(reflect.TypeOf(chan).Elem())
