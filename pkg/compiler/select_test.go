@@ -375,7 +375,7 @@ func Test606MakeChannel(t *testing.T) {
 		// is it a table or a cdata. if table, look for t.__native
 		// to get the actual Go channel.
 
-		*dbg = true
+		//*dbg = true
 		pp("before optional unwrappng, stack: '%s'", DumpLuaStackAsString(vm))
 
 		// write method to get the channel out of the vm
