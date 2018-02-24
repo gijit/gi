@@ -278,6 +278,10 @@ __send = function(chan, value)
    ch.Send(cv);
 end
 
+-- TODO: below is hardcoded for select with two receives.
+--       We need to read comms and allocate cases based on
+--       the content of comms.
+--
 __select = function(comms)
    print("__select called!")
    __st(comms, "comms")
