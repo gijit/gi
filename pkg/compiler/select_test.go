@@ -260,8 +260,8 @@ for i := 0; i < 2; i++ {
 		}()
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustInt64(vm, "a", 43)
 		LuaMustString(vm, "b", "hello select")
+		LuaMustInt64(vm, "a", 43)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }

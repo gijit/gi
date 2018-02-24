@@ -325,8 +325,11 @@ __select = function(comms)
    }
    
    local chosen, recv, recvOk = reflect.Select(cases)
+   print("back from reflect.Select, we got: chosen=", chosen)
+   print("back from reflect.Select, we got:   recv=", recv.Interface())
+   print("back from reflect.Select, we got: recvOk=", recvOk)
    
-   return {chosen, {recv, recvOk}};
+   return {chosen, {recv.Interface(), recvOk}};
 end
 
 -- gopherJs port: __recv
