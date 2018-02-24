@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/gijit/gi/pkg/token"
@@ -367,50 +366,15 @@ func Test606MakeChannel(t *testing.T) {
 		// get the 'ch' channel out and use it in Go.
 		iface, err := getChannelFromGlobal(vm, "ch")
 		panicOn(err)
+		// cleanup
+		vm.Pop(1)
 
 		var ci chan int = iface.(chan int)
 
 		// verify as buffered
-		ci <- 1
+		ci <- 12
 		geti := <-ci
 		pp("geti = '%v'", geti)
-
-		// temp:
-		vm.Pop(1)
-		// do a positive control first: push what we know is a channel, and get it back out.
-
-		pp("stack prior to MakeChan: '%s'", DumpLuaStackAsString(vm))
-
-		// MakeChan creates a 'chan interface{}' proxy and pushes it on the stack.
-		// Optional argument: size (number)
-		// Returns: proxy (chan interface{})
-		vm.PushNumber(1)
-
-		pp("stack after PushNumber(1): '%s'", DumpLuaStackAsString(vm))
-
-		luar.MakeChan(vm)
-		vm.SetGlobal("c2")
-		vm.GetGlobal("c2")
-		var ii interface{}
-
-		pp("stack prior to LuaToGo: '%s'", DumpLuaStackAsString(vm))
-
-		vm.Remove(-2)
-		pp("stack after Remove(-2) to get rid of the channel size: '%s'", DumpLuaStackAsString(vm))
-
-		_, err = luar.LuaToGo(vm, -1, &ii)
-		panicOn(err)
-
-		pp("stack after to LuaToGo: '%s'", DumpLuaStackAsString(vm))
-
-		pp("ii = '%#v'", ii) // ii = '(chan interface {})(0xc420066e40)'
-
-		var pci chan interface{} = ii.(chan interface{})
-
-		pp("pci = '%#v'", pci)
-		// verify it is a buffered chan
-		pci <- 1
-		get := <-pci
-		cv.So(get, cv.ShouldEqual, 1)
+		cv.So(geti, cv.ShouldEqual, 12)
 	})
 }
