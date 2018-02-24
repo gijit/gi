@@ -14,11 +14,7 @@ func Test700StartGoroutine(t *testing.T) {
 
 	cv.Convey(`start a new goroutine that gets its own *golua.State`, t, func() {
 
-		vm, err := NewLuaVmWithPrelude(nil)
-		panicOn(err)
-		defer vm.Close()
-
-		r, err := NewGoro(vm, nil)
+		r, err := NewGoro(nil, nil)
 		panicOn(err)
 
 		//r2, err := NewGoro(nil)

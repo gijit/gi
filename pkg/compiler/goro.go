@@ -85,6 +85,15 @@ func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 	if cfg == nil {
 		cfg = &GoroConfig{}
 	}
+
+	var err error
+	if vm == nil {
+		vm, err = NewLuaVmWithPrelude(cfg.GiCfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	r := &Goro{
 		cfg:      cfg,
 		vm:       vm,
@@ -99,6 +108,7 @@ func (r *Goro) Start() {
 	go func() {
 		defer func() {
 			r.halt.MarkDone()
+			r.vm.Close()
 		}()
 		for {
 			select {
