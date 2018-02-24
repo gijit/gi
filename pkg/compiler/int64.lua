@@ -90,5 +90,8 @@ __stringToBytes = function(str)
 end;
 
 __bytesToString = function(ba)
-   return tostring(ba)
+   if ba.__array ~= nil then
+      return string.sub(ffi.string(ba.__array.__bytes), 1, ba.__array.__sz)
+   end
+   error("__bytesToString error: TODO/unknown how to get string out of "..type(ba))
 end;
