@@ -49,14 +49,14 @@
 --
 --  task.Channel:new([buffer size]) - create a new channel with given size
 --
---  task.chanalt(alts, can_block) - run alt / select / multiplex over
+--  task.select(alts, can_block) - run alt / select / multiplex over
 --                                  the alts structure. For example:
 --
--- task.chanalt({{c = channel_1, op = task.RECV},
+-- task.select({{c = channel_1, op = task.RECV},
 --               {c = channel_2, op = task.SEND, p = "hello"}}, true)
 --
 -- This will block current coroutine until it's possible to receive
--- from channel_1 or send to channel_2. chanalt returns a number of
+-- from channel_1 or send to channel_2. select returns a number of
 -- statement from alts that succeeded (1 or 2 here) and a received
 -- value if executed statement was RECV.
 --
@@ -68,7 +68,8 @@
 -- but beware, the results of random() will predictable to a attacker.
 ----------------------------------------------------------------------------
 
-local _M = {}
+
+local __M = {}
 
 -- Constants
 local RECV = 0x1
@@ -170,6 +171,9 @@ local CircularBuffer = {
 -- Tasks ready to be run are placed on a stack and it's possible to
 -- starve a coroutine.
 local function scheduler()
+
+   -- returns nil if running on the main coroutine, otherwise
+   -- returns the running coro.
    local self_coro, is_main = coroutine.running()
 
    -- We actually don't care if scheduler is run from the main
@@ -182,6 +186,7 @@ local function scheduler()
 
    local i = 0
    while #tasks_runnable > 0 do
+      -- table.remove takes the last by default.
       local co = table.remove(tasks_runnable)
       tasks_to[co] = nil
       local okay, emsg = coroutine.resume(co)
@@ -228,7 +233,7 @@ local function spawn(fun, ...)
 end
 
 ----------------------------------------------------------------------------
--- Channels - chanalt and helpers
+-- Channels - select and helpers
 
 -- Given two Alts from a single channel exchange data between
 -- them. It's implied that one is RECV and another is SEND. Channel
@@ -267,7 +272,7 @@ local function altcopy(a, b)
    end
 end
 
--- Given enqueued alt_array from a chanalt statement remove all alts
+-- Given enqueued alt_array from a select statement remove all alts
 -- from the associated channels.
 local function altalldequeue(alt_array)
    for i = 1, #alt_array do
@@ -315,7 +320,7 @@ end
 -- The main entry point. Call it `alt` or `select` or just a
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
-local function chanalt(alt_array, canblock)
+local function select(alt_array, canblock)
    assert(#alt_array)
 
    local list_of_canexec_i = {}
@@ -326,7 +331,7 @@ local function chanalt(alt_array, canblock)
       assert(type(a.op) == "number" and
                 (a.op == RECV or a.op == SEND or a.op == NOP),
              "op field must be RECV, SEND or NOP in alt")
-      assert(type(a.c) == "table" and a.c.__index == _M.Channel,
+      assert(type(a.c) == "table" and a.c.__index == __M.Channel,
              "pass valid channel to a c field of alt")
       if altcanexec(a) == true then
          table.insert(list_of_canexec_i, i)
@@ -383,24 +388,24 @@ local Channel = {
    end,
 
    send = function(self, msg)
-      assert(chanalt({{c = self, op = SEND, p = msg}}, true) == 1)
+      assert(select({{c = self, op = SEND, p = msg}}, true) == 1)
       return true
    end,
 
    recv = function(self, to)
       local alts = {{c = self, op = RECV, to = to and os.time() + to or nil}}
-      local s, msg = chanalt(alts, true)
+      local s, msg = select(alts, true)
       assert(s == 1)
       return msg, alts[1].closed == nil
    end,
 
    nbsend = function(self, msg)
-      local s = chanalt({{c = self, op = SEND, p = msg}}, false)
+      local s = select({{c = self, op = SEND, p = msg}}, false)
       return s == 1
    end,
 
    nbrecv = function(self)
-      local s, msg = chanalt({{c = self, op = RECV}}, false)
+      local s, msg = select({{c = self, op = RECV}}, false)
       return s == 1, msg
    end,
 
@@ -437,361 +442,17 @@ local Channel = {
 ----------------------------------------------------------------------------
 -- Public interface
 
-_M.scheduler = scheduler
-_M.spawn     = spawn
-_M.Channel   = Channel
-_M.chanalt   = chanalt
-_M.RECV      = RECV
-_M.SEND      = SEND
-_M.NOP       = NOP
-_M.Error     = {TIMEOUT = TIMEOUT}
+__task = __M
+
+__task.scheduler = scheduler
+__task.spawn     = spawn
+__task.Channel   = Channel
+__task.select    = select
+__task.RECV      = RECV
+__task.SEND      = SEND
+__task.NOP       = NOP
+__task.Error     = {TIMEOUT = TIMEOUT}
 ----------------------------------------------------------------------------
 ----------------------------------------------------------------------------
--- Tests
---
--- To run:
---    $ lua task.lua
-
-local task = _M
-
-local tests = {
-   counter = function ()
-      local done
-      local function counter(c)
-         local i = 1
-         while true do
-            c:send(i)
-            i = i + 1
-         end
-      end
-      local function main()
-         local c = task.Channel:new()
-         task.spawn(counter, c)
-         assert(c:recv() == 1)
-         assert(c:recv() == 2)
-         assert(c:recv() == 3)
-         assert(c:recv() == 4)
-         assert(c:recv() == 5)
-         done = true
-      end
-      task.spawn(main)
-      task.scheduler()
-      assert(done)
-   end,
-
-   nonblocking_channel = function()
-      local done
-      local function main()
-         local b = task.Channel:new()
-         assert(b:nbsend(1) == false)
-         assert(b:nbrecv() == false)
-
-         local c = task.Channel:new(1)
-         assert(c:nbrecv() == false)
-         assert(c:nbsend(1) == true)
-         assert(c:nbsend(1) == false)
-         local r, v = c:nbrecv()
-         assert(r == true)
-         assert(v == 1)
-         assert(c:nbrecv() == false)
-         done = true
-      end
-      task.spawn(main)
-      task.scheduler()
-      assert(done)
-   end,
-
-   concurrent_send_and_recv = function()
-      local l = {}
-      local function a(c, name)
-         -- Blocking send and recv from the same process
-         local alt = {{c = c, op = task.SEND, p = 1},
-            {c = c, op = task.RECV}}
-         local i, v = task.chanalt(alt, true)
-         local k = string.format('%s %s', name, i == 1 and "send" or "recv")
-         l[k] = (l[k] or 0) + 1
-      end
-
-      for i = 0, 1000 do
-         -- On Mac OS X in lua 5.1 initializing seed with a
-         -- predictable value makes no sense. For all seeds from 1 to
-         -- 1000 the result of math.random(1,3) is _exactly_ the same!
-         -- So beware, when seeding!
-         -- math.randomseed(i)
-         local c = task.Channel:new()
-         task.spawn(a, c, "a")
-         task.spawn(a, c, "b")
-         task.scheduler()
-      end
-
-      -- Make sure we have randomness, that is: events occur in both
-      -- orders in 1000 runs
-      assert(l['a recv'] > 0)
-      assert(l['a send'] > 0)
-      assert(l['b recv'] > 0)
-      assert(l['b send'] > 0)
-   end,
-
-   channels_from_a_coroutine = function()
-      local done
-      local c = task.Channel:new()
-      local function a()
-         for i = 1, 100 do
-            c:send(i)
-         end
-      end
-      local function b()
-         assert(c:recv() == 1)
-         assert(c:recv() == 2)
-         assert(c:recv() == 3)
-         assert(c:recv() == 4)
-         assert(c:recv() == 5)
-         done = true
-      end
-      local a_co = coroutine.create(a)
-      local b_co = coroutine.create(b)
-      coroutine.resume(a_co)
-      coroutine.resume(b_co)
-      task.scheduler()
-      assert(done)
-   end,
-
-   fibonacci = function()
-      local done
-      local function fib(c)
-         local x, y = 0, 1
-         while true do
-            c:send(x)
-            x, y = y, x + y
-         end
-      end
-      local function main(c)
-         assert(c:recv() == 0)
-         assert(c:recv() == 1)
-         assert(c:recv() == 1)
-         assert(c:recv() == 2)
-         assert(c:recv() == 3)
-         assert(c:recv() == 5)
-         assert(c:recv() == 8)
-         assert(c:recv() == 13)
-         assert(c:recv() == 21)
-         assert(c:recv() == 34)
-         done = true
-      end
-
-      local c = task.Channel:new()
-      task.spawn(fib, c)
-      task.spawn(main, c)
-      task.scheduler()
-      assert(done)
-   end,
-
-   non_blocking_chanalt = function()
-      local done
-      local function main()
-         local c = task.Channel:new()
-         local alts = {{c = c, op = task.RECV},
-                       {c = c, op = task.NOP},
-                       {c = c, op = task.SEND, p = 1}}
-         assert(task.chanalt(alts, false) == nil)
-
-         local c = task.Channel:new(1)
-         local alts = {{c = c, op = task.RECV},
-                       {c = c, op = task.NOP},
-                       {c = c, op = task.SEND, p = 1}}
-         assert(task.chanalt(alts, false) == 3)
-         assert(task.chanalt(alts, false) == 1)
-
-         local alts = {{c = c, op = task.NOP}}
-         assert(task.chanalt(alts, false) == nil)
-
-         done = true
-      end
-      task.spawn(main)
-      task.scheduler()
-      assert(done)
-   end,
-
-   -- Apparently it's not really a Sieve of Eratosthenes:
-   --   http://www.cs.hmc.edu/~oneill/papers/Sieve-JFP.pdf
-   eratosthenes_sieve = function()
-      local done
-      local function counter(c)
-         local i = 2
-         while true do
-            c:send(i)
-            i = i + 1
-         end
-      end
-
-      local function filter(p, recv_ch, send_ch)
-         while true do
-            local i = recv_ch:recv()
-            if i % p ~= 0 then
-               send_ch:send(i)
-            end
-         end
-      end
-
-      local function sieve(primes_ch)
-         local c = task.Channel:new()
-         task.spawn(counter, c)
-         while true do
-            local p, newc = c:recv(), task.Channel:new()
-            primes_ch:send(p)
-            task.spawn(filter, p, c, newc)
-            c = newc
-         end
-      end
-
-      local function main()
-         local primes = task.Channel:new()
-         task.spawn(sieve, primes)
-         assert(primes:recv() == 2)
-         assert(primes:recv() == 3)
-         assert(primes:recv() == 5)
-         assert(primes:recv() == 7)
-         assert(primes:recv() == 11)
-         assert(primes:recv() == 13)
-         done = true
-      end
-
-      task.spawn(main)
-      task.scheduler()
-      assert(done)
-   end,
-
-   channel_as_iterator = function()
-      local done
-      local function counter(c)
-         local i = 2
-         while true do
-            c:send(i)
-            i = i + 1
-         end
-      end
-
-      local function main()
-         local numbers = task.Channel:new()
-         task.spawn(counter, numbers)
-         for _, j in numbers() do
-            if j == 100 then
-               break
-            end
-            done = true
-         end
-      end
-      if _VERSION == "Lua 5.1" and not luajit then
-         -- sorry, this doesn't work in 5.1
-         print('skipping... (5.1 unsupported)')
-         done = true
-      else
-         task.spawn(main)
-         task.scheduler()
-      end
-      assert(done)
-   end,
-
-   close_test = function()
-      local values = {}
-      for i = 1, 1000 do table.insert(values, i) end
-      local chan = task.Channel:new()
-      local done = task.Channel:new()
-      task.spawn(function()
-            local i = 0
-            while true do
-               local msg, more = chan:recv()
-               if not more then
-                  break
-               else
-                  i = i + 1
-               end
-            end
-            assert(i == 200)
-            done:send(1)
-      end)
-
-      task.spawn(function()
-            for i =1, 200 do
-               chan:send(i)
-            end
-            chan:close()
-      end)
-
-      task.scheduler()
-   end,
-
-   recv_timeout = function()
-      print("\t testing... (this will block 8 seconds)")
-      -- use copas to sleep
-      local status, copas = pcall(require, "copas")
-      if not status then
-         print("\t no copas install skip testing...")
-         return
-      end
-
-      -- testing data
-      local values = {}
-      for i = 1, 1001 do
-         table.insert(values, i)
-      end
-
-      local exists = function(t, v)
-         for _, val in ipairs(t) do
-            if val == v then return true end
-         end
-         return false
-      end
 
 
-      local chan = task.Channel:new(1000)
-
-      -- we have three reader, only one will timeout
-      local r1 = function()
-         for i = 1, 500 do
-            local v = chan:recv()
-            assert(exists(values, v))
-         end
-      end
-
-      local r2 = function()
-         for i =1, 500 do
-            local v = chan:recv()
-            assert(exists(values, v))
-         end
-      end
-
-      local r3 = function()
-         local v = chan:recv(1)
-         assert(task.Error.TIMEOUT == v)
-      end
-
-      local r4 = function()
-         local v = chan:recv(6)
-         assert(exists(values, v))
-      end
-
-      local sender = function()
-         copas.sleep(5)
-         for _, v in ipairs(values) do
-            chan:send(v)
-         end
-      end
-
-      task.spawn(r1)
-      task.spawn(r2)
-      task.spawn(r3)
-      task.spawn(r4)
-      copas.addthread(sender)
-
-      local done
-      done = true
-
-      for i = 1, 80 do
-         copas.step(0.1)
-         task.scheduler()
-      end
-      assert(done)
-   end
-
-}

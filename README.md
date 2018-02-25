@@ -295,9 +295,9 @@ an embedded scripting language for
 many disparate host languages with
 different inheritance/prototype/overloading
 semantics has sculpted it into
-a power tool that fits the job
-(of language implementation
-in general) like a glove.
+a power tool that fits the job like
+a glove. It is very good at
+language implementation.
 
 
 status update history

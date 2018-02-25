@@ -166,7 +166,7 @@ end
 -- allows standalone development and testing.
 --
 if __preludePath == nil then
-   print("__preludePath is nil...")
+   --print("__preludePath is nil...")
    local origin=""
    local dir = os.getenv("GIJIT_PRELUDE_DIR")
    if dir ~= nil then
@@ -195,7 +195,7 @@ if __preludePath == nil then
    if not __minifs.renameBasedFileExists(__preludePath.."__gijit_prelude") then
       error("error in tsys.lua: could not find my prelude directory. Tried __preludePath='"..__preludePath.."'; "..origin)
    end
-   print("using __preludePath = '"..__preludePath.."'")
+   --print("using __preludePath = '"..__preludePath.."'")
 end
 
 if __min == nil then
@@ -2156,7 +2156,7 @@ end
 __theNilChan={__name="__theNilChan"}
 
 function __Chan(elem, capacity, elemReflectType)
-   print("__Chan called")
+   --print("__Chan called")
    
    if elem == nil then
       return __theNilChan
