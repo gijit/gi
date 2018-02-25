@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	cv "github.com/glycerine/goconvey/convey"
-	"github.com/glycerine/luar"
 )
 
 func Test800LuaOnlyRecvOnChannel(t *testing.T) {
@@ -19,13 +18,6 @@ func Test800LuaOnlyRecvOnChannel(t *testing.T) {
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
-
-		ch := make(chan int, 1)
-		ch <- 57
-
-		luar.Register(vm, "", luar.Map{
-			"ch": ch,
-		})
 
 		code := `ch:=make(chan int, 1); ch <- 57; a:= <- ch`
 		inc := NewIncrState(vm, nil)
