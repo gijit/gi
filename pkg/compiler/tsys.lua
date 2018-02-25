@@ -844,8 +844,8 @@ end;
 
 __sliceToArray = function(slice)
    local cp = {}
+   local k = 0
    if slice.__length > 0 then
-      local k = 0
       for i = slice.__offset, slice.__offset + slice.__length -1 do
          cp[k] = slice.array[i]
          k=k+1
