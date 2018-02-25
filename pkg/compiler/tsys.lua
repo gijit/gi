@@ -278,7 +278,7 @@ function __ipairsZeroCheck(arr)
    if arr[0] ~= nil then error("ipairs will miss the [0] index of this array") end
 end
 
-__mod = function(y) return x % y; end;
+__mod = function(x, y) return x % y; end;
 __parseInt = parseInt;
 __parseFloat = function(f)
    if f ~= nil  and  f ~= nil  and  f.constructor == Number then
@@ -1776,7 +1776,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   if target.prototype[m.__prop] ~= nil then return; end
-                  target.prototype[m.__prop] = function()
+                  target.prototype[m.__prop] = function(this) -- jea todo: is 'this' right?
                      local v = this.__val[f.__prop];
                      if f.__typ == __jsObjectPtr then
                         v = __jsObjectPtr(v);
@@ -2148,7 +2148,7 @@ function __gijitTypeToGoType(typ)
    elseif kind ==  __kindStruct then
       error("TODO: finish struct types")
       for i,fld in ipairs(fields) do
-         this[fld.__prop] = args[i] or fld.__typ.zero();
+         -- this[fld.__prop] = args[i] or fld.__typ.zero();
       end         
    else
       error("invalid kind: " .. tostring(kind));
@@ -2676,7 +2676,7 @@ __makeSlice = function(typ, length, capacity)
       __throwRuntimeError("makeslice: len out of range");
    end
    if capacity < 0  or  capacity < length  or  capacity > 9007199254740992 then
-      __throwRuntimeError("makeslice: cap out of range: "..tostring(capcity));
+      __throwRuntimeError("makeslice: cap out of range: "..tostring(capacity));
    end
    local array = __newAnyArrayValue(typ.elem, capacity)
    local slice = typ(array);
