@@ -227,7 +227,7 @@ __block = function()
    __curGoroutine.asleep = true;
 end;
 
-__send_GopherJS = function(chan, value) 
+__send_purelua_ala_gopherjs = function(chan, value) 
    if chan.__closed then
       __throwRuntimeError("send on closed channel");
    end
@@ -258,8 +258,8 @@ __send_GopherJS = function(chan, value)
    };
 end;
 
-__recv = function(wchan)
-   --print("__recv called! wchan=")
+__recv_via_reflect = function(wchan)
+   --print("__recv_via_reflect called! wchan=")
    --__st(wchan, "wchan")
    if wchan == nil then
       error("cannot read from nil channel")
@@ -282,8 +282,8 @@ __recv = function(wchan)
    return {v, ok}
 end
 
-__send = function(wchan, value)
-   --print("__send called! value=", value)
+__send_via_reflect = function(wchan, value)
+   --print("__send_via_reflect called! value=", value)
    --__st(value, "value")
    --__st(wchan, "wchan")
    if wchan == nil then
@@ -304,8 +304,8 @@ __send = function(wchan, value)
    ch.Send(cv);
 end
 
-__select = function(comms)
-   --print("__select called!")
+__select_via_reflect = function(comms)
+   --print("__select_via_reflect called!")
    --__st(comms, "comms")
    
    --__st(comms[1], "comms[1]")
@@ -386,7 +386,7 @@ __select = function(comms)
 end
 
 -- gopherJs port: __recv
-__recv__GopherJS = function(chan) 
+__recv__purelua_ala_gopherjs = function(chan) 
    local queuedSend = chan.__sendQueue.shift();
    if queuedSend ~= nil then
       chan.__buffer.push(queuedSend(false));
@@ -431,7 +431,7 @@ __close = function(chan)
    end
 end;
 
-__select_GopherJS = function(comms)
+__select_purelua_ala_gopherjs = function(comms)
    local ready = {};
    local selection = -1;
    for i, comm in ipairs(comms) do

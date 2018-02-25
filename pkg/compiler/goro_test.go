@@ -1,5 +1,8 @@
 package compiler
 
+// while we work on lua-only goroutines, comment this out.
+/*
+
 import (
 	//"fmt"
 	"testing"
@@ -66,8 +69,9 @@ func Test700StartGoroutine(t *testing.T) {
 
 	})
 }
+*/
 
-/*
+/* not done:
 func Test701StartTwoGoroutines(t *testing.T) {
 
 	cv.Convey(`start two goroutines that communicate`, t, func() {
