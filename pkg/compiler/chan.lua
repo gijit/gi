@@ -215,17 +215,10 @@ local function spawn(fun, ...)
    local args = {...}
 
    local f = function()
-      -- In luajit we could use pcall() here to produce nicer
-      -- tracebacks on errors, but that won't work on vanilla lua
-      -- (can't yield from within pcall).
-      if not luajit then
-         fun(unpack(args))
-      else
-         local okay, emsg = pcall(fun, unpack(args))
-         if not okay then
-            print(debug.traceback(emsg))
-            error(emsg)
-         end
+      local okay, emsg = pcall(fun, unpack(args))
+      if not okay then
+         print(debug.traceback(emsg))
+         error(emsg)
       end
    end
    local co = coroutine.create(f)
