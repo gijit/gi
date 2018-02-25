@@ -42,7 +42,7 @@ if jit.os == "Windows" then
    __abs_now=function()
       local now = ffi.new("LARGE_INTEGER")
       ffi.C.QueryPerformanceCounter(now)
-      return now.QuadPart * nanoSecPerCount
+      return int64(now.QuadPart * nanoSecPerCount)
    end
    
 elseif jit.os == "OSX" then
@@ -65,7 +65,9 @@ elseif jit.os == "OSX" then
    -- returns a nanosecond time stamp, but not
    -- since epoch of 1970. Maybe since last
    -- reboot? subtract two to get useful nanoseconds.
-   __abs_now=ffi.C.mach_absolute_time
+   __abs_now=function()
+      return int64(ffi.C.mach_absolute_time())
+   end
    
 else
    -- for linux, clock_gettime(CLOCK_MONOTONIC)
@@ -86,7 +88,7 @@ else
 
       -- CLOCK_MONOTONIC = 1
       ffi.C.clock_gettime(1, pnano)
-      return pnano[0].tv_sec * 1000000000 + pnano[0].tv_nsec
+      return int64(pnano[0].tv_sec * 1000000000 + pnano[0].tv_nsec)
    end
 
 end
