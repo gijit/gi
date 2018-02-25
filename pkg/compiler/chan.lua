@@ -199,7 +199,7 @@ local function scheduler()
       i = i + 1
    end
 
-   local now = __abs_time()
+   local now = __abs_now()
    for co, alt in pairs(tasks_to) do
       if alt and now >= alt.to then
          altexec(alt)

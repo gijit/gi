@@ -1,6 +1,6 @@
 package compiler
 
-// zgoro_test: tests of the lua-only channels
+// chan_test.go: tests of the all-lua channels
 
 import (
 	//"fmt"
@@ -25,6 +25,7 @@ func Test900ForeverBlockingSelect(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
+		*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		select {
