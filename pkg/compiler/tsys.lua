@@ -3020,3 +3020,122 @@ end
 __storeBuiltins()
 
 
+__stackDepthOffset = 0;
+__getStackDepth = function() 
+   -- javascript/mozilla gives a stack trace under .stack,
+   -- which GopherJS was using if available.
+   -- Inlining makes debug.traceback() pretty useless under LuaJIT.
+   
+   return __stackDepthOffset
+end;
+
+__panicStackDepth = nil;
+__panicValue = nil;
+
+__callDeferred = function(deferred, jsErr, fromPanic) 
+   if not fromPanic and deferred ~= nil and deferred.index >= #__curGoroutine.deferStack then
+      error( jsErr);
+   end
+   if jsErr ~= nil then
+      local newErr = nil;
+      --try
+      local res = {pcall(function()
+                         __curGoroutine.deferStack.push(deferred);
+                         __panic(__jsErrorPtr(jsErr));
+      end)}
+      local ok, err = unpack(res)
+      --catch (err)
+      if not ok then
+         newErr = err;
+      end
+      __curGoroutine.deferStack.pop();
+      __callDeferred(deferred, newErr);
+      return;
+   end
+   if __curGoroutine.asleep then
+      return;
+   end
+
+   __stackDepthOffset=__stackDepthOffset-1;
+   outerPanicStackDepth = __panicStackDepth;
+   outerPanicValue = __panicValue;
+
+   local localPanicValue = __curGoroutine.panicStack.pop();
+   if localPanicValue ~= nil then
+      __panicStackDepth = __getStackDepth();
+      __panicValue = localPanicValue;
+   end
+
+   --try
+   local res = {pcall(function()
+                      ::top::                 
+                      while true do
+                         if deferred == nil then
+                            deferred = __curGoroutine.deferStack[#__curGoroutine.deferStack - 1];
+                            if deferred == nil then
+                               --
+                               -- The panic reached the top
+                               -- of the stack. Clear it and throw
+                               -- it as a Lua error
+                               --
+                               __panicStackDepth = nil;
+                               error(localPanicValue)
+                            end
+                         end
+                         local call = deferred.pop();
+                         if call == nil then
+                            __curGoroutine.deferStack.pop();
+                            if localPanicValue ~= nil then
+                               deferred = nil;
+                               goto top; -- continue;
+                            end
+                            return;
+                         end
+                         local r = call[0](call[2], call[1]);
+                         if r and r.__blk ~= nil then
+                            deferred.push({r.__blk, {}, r});
+                            if fromPanic then
+                               error( nil);
+                            end
+                            return;
+                         end
+
+                         if localPanicValue ~= nil and __panicStackDepth == nil then
+                            error( nil); -- error was recovered --
+                         end
+                      end
+   end)}
+   --finally, no catch
+   
+   if localPanicValue ~= nil then
+      if __panicStackDepth ~= nil then
+         __curGoroutine.panicStack.push(localPanicValue);
+      end
+      __panicStackDepth = outerPanicStackDepth;
+      __panicValue = outerPanicValue;
+   end
+   __stackDepthOffset=__stackDepthOffset+1;
+
+   -- end finally, no catch
+   -- need to rethrow?
+   local ok, err = unpack(res)
+   if not ok then
+      -- rethrow
+      error(err)
+   end
+end;
+
+__panic = function(value) 
+   __curGoroutine.panicStack.push(value);
+   __callDeferred(nil, nil, true);
+end;
+
+__recover = function() 
+   if __panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2) then
+      return __ifaceNil;
+   end
+   __panicStackDepth = nil;
+   return __panicValue;
+end;
+
+__throw = function(err)  error(err); end;
