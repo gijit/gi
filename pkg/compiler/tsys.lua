@@ -2153,13 +2153,14 @@ function __gijitTypeToGoType(typ)
    end  
 end
 
-__theNilChan={}
+__theNilChan={__name="__theNilChan"}
 
 function __Chan(elem, capacity, elemReflectType)
+   print("__Chan called")
+   
    if elem == nil then
       return __theNilChan
    end
-   --print("__Chan called")
    --print(debug.traceback())
    local dir = 3 -- direction: 1=recv, 2=send, 3=both.
    local elemty = __gijitTypeToGoType(elem)
