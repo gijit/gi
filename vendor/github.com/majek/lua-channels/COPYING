@@ -1,0 +1,5 @@
+Part of the code is derived from libtask library by Russ Cox which is
+distributed under the MIT license.
+
+This code is distributed under the MIT license, see the file
+LICENSE-MIT-lua-channels.

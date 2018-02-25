@@ -1,0 +1,22 @@
+language: c
+
+env:
+  - LUA="lua5.1"
+  - LUA="lua5.2"
+  - LUA="luajit"
+
+branches:
+  only:
+    - master
+
+install:
+  - sudo apt-get -qq -y install luajit lua5.1 lua5.2
+  - sudo ln -s /usr/bin/luajit* /usr/bin/luajit
+  - find /usr/bin -name luajit\*
+
+script: "$LUA lua-channels.lua"
+
+notifications:
+  email:
+    recipients:
+      - travis@popcount.org
