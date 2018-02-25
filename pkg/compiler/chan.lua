@@ -13,7 +13,7 @@
 --
 -- Usage (we're using unbuffered channel here):
 --
--- local task = require('task')
+-- local __task = require('chan')
 --
 -- local function counter(channel)
 --    local i = 1
@@ -24,36 +24,36 @@
 -- end
 --
 -- local function main()
---     local channel = task.Channel:new()
---     task.spawn(counter, channel)
+--     local channel = __task.Channel:new()
+--     __task.spawn(counter, channel)
 --     assert(channel:recv() == 1)
 --     assert(channel:recv() == 2)
 --     assert(channel:recv() == 3)
 -- end
 --
--- task.spawn(main)
--- task.scheduler()
+-- __task.spawn(main)
+-- __task.scheduler()
 --
 --
 -- This module exposes:
 --
---  task.spawn(fun, [...]) - run fun as a coroutine with given
+--  __task.spawn(fun, [...]) - run fun as a coroutine with given
 --                         parameters. You should use this instead of
 --                         coroutine.create()
 --
---  task.scheduler() - can be run only from the main thread, executes
+--  __task.scheduler() - can be run only from the main thread, executes
 --                     all the stuff, resumes the coroutines that are
 --                     blocked on channels that became available. You
 --                     can only do non-blocking sends / receives from
 --                     the main thread.
 --
---  task.Channel:new([buffer size]) - create a new channel with given size
+--  __task.Channel:new([buffer size]) - create a new channel with given size
 --
---  task.select(alts, can_block) - run alt / select / multiplex over
+--  __task.select(alts, can_block) - run alt / select / multiplex over
 --                                  the alts structure. For example:
 --
--- task.select({{c = channel_1, op = task.RECV},
---               {c = channel_2, op = task.SEND, p = "hello"}}, true)
+-- __task.select({{c = channel_1, op = __task.RECV},
+--               {c = channel_2, op = __task.SEND, p = "hello"}}, true)
 --
 -- This will block current coroutine until it's possible to receive
 -- from channel_1 or send to channel_2. select returns a number of
@@ -76,7 +76,6 @@ local RECV = 0x1
 local SEND = 0x2
 local NOP  = 0x3
 local TIMEOUT = {err = "TIMEOUT"}
-local luajit = not not (package.loaded['jit'] and jit.version_num)
 
 -- Global objects for scheduler
 local tasks_runnable = {}       -- list of coroutines ready to be resumed
@@ -139,7 +138,7 @@ local Set = {
 
 
 
--- Circular Buffer data structure
+-- Circular Buffer data structure, used for channels with buffers.
 local CircularBuffer = {
    new = function(self, size)
       local o = {b = {}, slots = size + 1, size = size, l = 0, r = 0}
@@ -180,10 +179,14 @@ local function scheduler()
    -- coroutine. But we do need to make sure that user doesn't do
    -- blocking operation from it, as it can't yield.
 
+   -- jea: I think we want to add a call to scheduler
+   --      from the main coroutine, after each repl command,
+   --      so as to let all background goroutines run.
+   
    -- Be compatible with 5.1 and 5.2
    assert(not(self_coro ~= nil and is_main ~= true),
           "Scheduler must be run from the main coroutine.")
-
+   
    local i = 0
    while #tasks_runnable > 0 do
       -- table.remove takes the last by default.
@@ -196,7 +199,7 @@ local function scheduler()
       i = i + 1
    end
 
-   local now = os.time()
+   local now = __abs_time()
    for co, alt in pairs(tasks_to) do
       if alt and now >= alt.to then
          altexec(alt)
@@ -211,8 +214,8 @@ local function task_ready(co)
    table.insert(tasks_runnable, co)
 end
 
-local function spawn(fun, ...)
-   local args = {...}
+local function spawn(fun, args)
+   --local args = {...}
 
    local f = function()
       local okay, emsg = pcall(fun, unpack(args))
@@ -314,7 +317,13 @@ end
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array, canblock)
-   assert(#alt_array)
+   if #alt_array == 0 and canblock then
+      -- block this goroutine forever
+      local self_coro, is_main = coroutine.running()
+      print("warning: select{} is blocking the goroutine forever... ", self_coro)
+      -- just set ourselves to state normal? call the scheduler?
+      coroutine.resume(scheduler)
+   end
 
    local list_of_canexec_i = {}
    for i = 1, #alt_array do
@@ -386,7 +395,7 @@ local Channel = {
    end,
 
    recv = function(self, to)
-      local alts = {{c = self, op = RECV, to = to and os.time() + to or nil}}
+      local alts = {{c = self, op = RECV, to = to and __abs_now() + to or nil}}
       local s, msg = select(alts, true)
       assert(s == 1)
       return msg, alts[1].closed == nil
@@ -411,11 +420,17 @@ local Channel = {
    end,
 
    _get_alts = function(self, op)
-      return (op == RECV) and self._recv_alts or self._send_alts
+      if op == RECV then
+         return self._recv_alts
+      end
+      return self._send_alts
    end,
 
    _get_other_alts = function(self, op)
-      return (op == SEND) and self._recv_alts or self._send_alts
+      if op == SEND then
+         return self._recv_alts
+      end
+      return self._send_alts
    end,
 
    __tostring = function(self)

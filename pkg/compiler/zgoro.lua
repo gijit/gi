@@ -20,7 +20,8 @@ __mainFinished = false;
 __go = function(fun, args) 
    __totalGoroutines=__totalGoroutines+1;
    __awakeGoroutines=__awakeGoroutines+1;
-   local __goroutine = function() 
+   local __goroutine = {
+      __call = function() 
       --try
       local res = {pcall(function()
                          
@@ -59,7 +60,8 @@ __go = function(fun, args)
          end
       end
       
-   end;
+      end;
+   }
    __goroutine.asleep = false;
    __goroutine.exit = false;
    __goroutine.deferStack = {};

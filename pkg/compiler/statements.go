@@ -529,7 +529,8 @@ __defer_func(%s)
 		c.translateStmt(s.Stmt, label)
 
 	case *ast.GoStmt:
-		c.Printf("__go(%s, [%s]);", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
+		c.Printf("__task.spawn(%s, {%s});", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
+		//c.Printf("__go(%s, {%s});", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
 
 	case *ast.SendStmt:
 		chanType := c.p.TypeOf(s.Chan).Underlying().(*types.Chan)
@@ -591,11 +592,11 @@ __defer_func(%s)
 		c.Blocking[selectCall] = !hasDefault
 		c.Printf("%s = %s;", selectionVar, c.translateExpr(selectCall, nil))
 		c.Printf(`__st(_selection,"_selection");`)
-		c.Printf(`__st(_selection[2],"_selection[2]");`)
+		//c.Printf(`__st(_selection[2],"_selection[2]");`)
 		c.Printf(`print("_selection[1] == 0LL is", _selection[1] == 0LL)`)
 		c.Printf(`print("_selection[1] == 1LL is", _selection[1] == 1LL)`)
-		c.Printf(`print("a is now: '"..tostring(a).."'")`)
-		c.Printf(`print("b is now: '"..tostring(b).."'")`)
+		//c.Printf(`print("a is now: '"..tostring(a).."'")`)
+		//c.Printf(`print("b is now: '"..tostring(b).."'")`)
 		if len(caseClauses) != 0 {
 			translateCond := func(cond ast.Expr, desiredType types.Type) *expression {
 				return c.formatExpr("%s[1] == %e", selectionVar, cond)
