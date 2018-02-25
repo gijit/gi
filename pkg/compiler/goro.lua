@@ -1,4 +1,9 @@
--- goroutines.lua
+-- goro.lua
+
+-- For the hybrid/interacts with
+-- native Go channels via reflect
+-- version of goroutines and
+-- channels: see reflect_goro.lua
 
 local ffi = require("ffi")
 
@@ -402,5 +407,3 @@ __select = function(comms)
 end;
 
 
--- For the hybrid/interacts with native Go channels via reflect
--- version of goroutines and channels: see reflect_goro.lua
