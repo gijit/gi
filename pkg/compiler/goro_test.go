@@ -67,6 +67,7 @@ func Test700StartGoroutine(t *testing.T) {
 	})
 }
 
+/*
 func Test701StartTwoGoroutines(t *testing.T) {
 
 	cv.Convey(`start two goroutines that communicate`, t, func() {
@@ -114,3 +115,4 @@ func Test701StartTwoGoroutines(t *testing.T) {
 
 	})
 }
+*/

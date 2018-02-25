@@ -279,12 +279,9 @@ function __ipairsZeroCheck(arr)
 end
 
 __mod = function(x, y) return x % y; end;
-__parseInt = parseInt;
+__parseInt = function(x) return __truncateToInt(tonumber(x)) end
 __parseFloat = function(f)
-   if f ~= nil  and  f ~= nil  and  f.constructor == Number then
-      return f;
-   end
-   return parseFloat(f);
+   return tonumber(f);
 end;
 
 -- __fround returns nearest float32
@@ -611,15 +608,16 @@ __methodExpr = function(typ, name)
 end;
 
 __ifaceMethodExprs = {};
-__ifaceMethodExpr = function(name) 
+__ifaceMethodExpr = function(name)
    local expr = __ifaceMethodExprs["_"  ..  name];
    if expr == nil then
-      expr = function()
+      expr = function(...)
+         local args = {...}
          __stackDepthOffset = __stackDepthOffset-1;
          -- try
          local res = {pcall(
                          function()
-                            return Function.call.apply(arguments[0][name], arguments);
+                            return args[1][name](unpack(args));
          end)}
          -- finally
          __stackDepthOffset = __stackDepthOffset+1;
@@ -733,7 +731,7 @@ __pointerOfStructConversion = function(obj, typ)
    if proxy == nil then
       local properties = {};
       
-      local helper = function(p)
+      local helper = function(fieldProp)
          properties[fieldProp] = {
             get= function() return obj[fieldProp]; end,
             set= function(value) obj[fieldProp] = value; end
@@ -743,7 +741,7 @@ __pointerOfStructConversion = function(obj, typ)
          helper(f.__prop);
       end
       
-      proxy = Object.create(typ.prototype, properties);
+      proxy = typ.prototype(properties); -- jea maybe? orig: proxy = Object.create(type.prototype, properties);
       proxy.__val = proxy;
       obj.__proxies[typ.__str] = proxy;
       proxy.__proxies = obj.__proxies;
@@ -1100,7 +1098,8 @@ __tfunBasicMT = {
       -- Since we just replace it with newInstance anyway, change that in expressions.go:289 and :349
       -- to just be
       --    s = __type__.S(0LL);
-      
+
+      local newInstance = {}      
       if self ~= nil then
          if self.tfun ~= nil then
             --print("calling tfun! -- let constructors set metatables if they wish to")
@@ -1130,7 +1129,6 @@ __tfunBasicMT = {
             end
          end
       else
-         local newInstance = {}
          --print("in __tfunBasicMT, made newInstance = ")
          --__st(newInstance,"newInstance")
          
@@ -1228,7 +1226,7 @@ __idKey = function(x)
       __idCounter=__idCounter+1;
       x.__id = __idCounter;
    end
-   return String(x.__id);
+   return tostring(x.__id);
 end;
 
 __newType = function(size, kind, str, named, pkg, exported, constructor)
@@ -1776,7 +1774,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          __addMethodSynthesizer(function()
                local synthesizeMethod = function(target, m, f)
                   if target.prototype[m.__prop] ~= nil then return; end
-                  target.prototype[m.__prop] = function(this) -- jea todo: is 'this' right?
+                  target.prototype[m.__prop] = function(this, ...) -- jea todo: is 'this' right?
                      local v = this.__val[f.__prop];
                      if f.__typ == __jsObjectPtr then
                         v = __jsObjectPtr(v);
@@ -1786,7 +1784,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
                         f.__typ(w, v);
                         v = w
                      end
-                     return v[m.__prop](v, arguments);
+                     return v[m.__prop](v, ...);
                   end;
                end;
                for i,f in ipairs(fields) do
@@ -2147,9 +2145,9 @@ function __gijitTypeToGoType(typ)
             
    elseif kind ==  __kindStruct then
       error("TODO: finish struct types")
-      for i,fld in ipairs(fields) do
+      --for i,fld in ipairs(fields) do
          -- this[fld.__prop] = args[i] or fld.__typ.zero();
-      end         
+      --end         
    else
       error("invalid kind: " .. tostring(kind));
    end  
@@ -2889,7 +2887,7 @@ end;
 
 __stackDepthOffset = 0;
 __getStackDepth = function()
-   local err = Error(); -- new
+   local err = __error(); -- new
    if err.stack == nil then
       return nil;
    end
