@@ -65,6 +65,7 @@ func Test901(t *testing.T) {
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "b", 56)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 
@@ -86,5 +87,46 @@ func Test902(t *testing.T) {
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "b", 56)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test903(t *testing.T) {
+
+	cv.Convey("select on multiple channels, in the all-lua system.", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+    a := 0
+    b := ""
+    chInt := make(chan int)
+    chStr := make(chan string)
+    for i := 0; i < 2; i++ {
+      select {
+        case a = <- chInt:
+        case b = <- chStr:
+      }
+    }
+	go func() {
+		chInt <- 43
+	}()
+	go func() {
+		chStr <- "hello select"
+	}()
+`
+
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustString(vm, "b", "hello select")
+		LuaMustInt64(vm, "a", 43)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
