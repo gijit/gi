@@ -177,7 +177,8 @@ local CircularBuffer = {
 -- Tasks ready to be run are placed on a stack and it's possible to
 -- starve a coroutine.
 local function scheduler()
-
+   print("top of scheduler")
+   
    -- returns nil if running on the main coroutine, otherwise
    -- returns the running coro.
    local self_coro, is_main = coroutine.running()
@@ -191,29 +192,52 @@ local function scheduler()
    --      so as to let all background goroutines run.
    
    -- Be compatible with 5.1 and 5.2
-   assert(not(self_coro ~= nil and is_main ~= true),
-          "Scheduler must be run from the main coroutine.")
+   --assert(not(self_coro ~= nil and is_main ~= true),
+   --      "Scheduler must be run from the main coroutine.")
+   
+   print("scheduler: self_coro is ", self_coro)
+   print("scheduler: is_main is ", is_main)
+   
+   print("scheduler: past assert")
    
    local i = 0
-   while #tasks_runnable > 0 do
+   while true do
+      if #tasks_runnable == 0 then
+         print("scheduler: no more runnable tasks")
+         break
+      end
       -- table.remove takes the last by default.
       local co = table.remove(tasks_runnable)
       tasks_to[co] = nil
-      local okay, emsg = coroutine.resume(co)
+
+      -- and resume co
+      print("scheduler: coroutine.resume about to be called on co="..tostring(co))
+      local back = {coroutine.resume(co)}
+      print("scheduler: got back from resume: ", unpack(back))
+      
+      okay, emsg = unpack(back)
       if not okay then
+         print(debug.traceback(emsg))
          error(emsg)
       end
       i = i + 1
+      print("scheduler: resume was okay, i is now = ", i)      
    end
 
+   print("scheduler: checking for timeouts")
+   
    local now = __abs_now()
+   local k = 0
    for co, alt in pairs(tasks_to) do
+      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
          alt.c:_get_alts(RECV):remove(alt)
       end
    end
+
+   print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
 end
 
@@ -233,6 +257,7 @@ local function spawn(fun, args)
    end
    local co = coroutine.create(f)
    task_ready(co)
+   print("spawn added to ready queue: co = ", co)
 end
 
 ----------------------------------------------------------------------------
@@ -335,7 +360,9 @@ local function select(alt_array)
       print("warning: select{} is blocking the goroutine forever... ", self_coro)
       -- just set ourselves to state normal? call the scheduler?
 
-      -- jea: not sure this will work...
+      -- jea: not sure this will work... but resume puts us in normal mode
+      -- where we cannot be scheduled again without yielding. And the
+      -- scheduler should never yield.
       coroutine.resume(scheduler_co)
    end
 
@@ -468,7 +495,19 @@ scheduler_co = coroutine.create(scheduler)
 
 __task = __M
 
-__task.resume_scheduler = function() coroutine.resume(scheduler_co) end
+__task.resume_scheduler = function()
+   print("__task.resume_scheduler called! scheduler_co is:")
+   __st(scheduler_co, "scheduler_co")
+   local ok, err = coroutine.resume(scheduler_co)
+   -- cras before we get to next line.
+   print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
+   if not ok then
+      print("error detected in __task.resume_scheduler!")
+      print(debug.traceback(err))
+      error(err)
+   end
+end
+
 __task.scheduler = scheduler
 __task.spawn     = spawn
 __task.Channel   = Channel
