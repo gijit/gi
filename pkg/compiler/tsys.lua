@@ -3163,7 +3163,7 @@ __throw = function(err)  error(err); end;
 --
 __gijitMainEvalLoop = function(code)
 
-   local chunk, err
+   local chunk, err, ok
    while true do
      -- compile chunk to bytecode
      chunk, err = loadstring(code);
@@ -3174,6 +3174,8 @@ __gijitMainEvalLoop = function(code)
         ok, err = pcall(function() chunk() end)
         if not ok then
            err = "run error: "..tostring(err)
+        else
+           err = nil
         end
      end;
    print("main loop: yielding err="..tostring(err))
@@ -3186,6 +3188,23 @@ end
 __gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
 
 __eval = function(code)
-   ok, err = coroutine.resume(__gijitMainCoro, code)
-   return ok, err
+   print("__eval called with code: '"..code.."'")
+   --ok, err = coroutine.resume(__gijitMainCoro, code)
+
+   local chunk, err, ok
+   chunk, err = loadstring(code);
+   if err ~= nil then
+      err = "load error: "..tostring(err)
+      return false, err
+   else
+      -- run the compiled bytecode
+      ok, err = pcall(function() chunk() end)
+      if not ok then
+         err = "run error: "..tostring(err)
+         return false, err
+      end
+   end;
+   print("\n end of __eval: err is ",err)
+   -- must uniformly return 2 args, since vm.Call(1,2) expects it.
+   return true, "ok"
 end

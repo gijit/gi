@@ -370,17 +370,21 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 	defer vm.SetTop(startTop)
 
 	if useEvalCoroutine {
-		vm.GetGlobal("__gijitMainCoro")
+		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
-			panic("could not locate __gijitMainCoro in _G")
+			panic("could not locate __eval in _G")
 		}
+		fmt.Printf("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
-		vm.Resume(1)
+		vm.Call(1, 2)
 		// if top is true, no error. Otherwise error is at -2
 		ok := vm.ToBoolean(-1)
 		if !ok {
-			return fmt.Errorf("%s", vm.ToString(-2))
+			err := fmt.Errorf("%s", vm.ToString(-2))
+			fmt.Printf("bad, err: '%v'\n", err)
+			return err
 		}
+		fmt.Printf("good: top of stack was true\n")
 		return nil
 	} else {
 
