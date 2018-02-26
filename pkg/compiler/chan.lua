@@ -351,10 +351,21 @@ end
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array)
-   local default = nil
+   print("top of select, alt_array is")
+   __st(alt_array, "alt_array")
+   
+   local defaultPresent = nil
+   local canblock = true
+   
+   -- detect the default only {{}} case.
    if #alt_array==1 and #alt_array[1] == 0 then
+      -- select{ default: }
       -- only the default channel
-      default = 0LL
+      defaultPresent = true
+      defaultNum = 0LL
+      canblock =false
+      print("select: {{}} default only case seen!")
+      
    elseif #alt_array==0 then
       -- no default, no cases: "select{}".
       -- block this goroutine forever
@@ -362,15 +373,32 @@ local function select(alt_array)
       print("warning: select{} is blocking the goroutine forever... ", self_coro)
       -- just set ourselves to state normal? call the scheduler?
 
-      -- jea: not sure this will work... but resume puts us in normal mode
-      -- where we cannot be scheduled again without yielding. And the
-      -- scheduler should never yield.
+      -- jea: resume puts us in "normal" mode
+      -- where we cannot be scheduled again without yielding
+      -- back to us. And the scheduler should never yield.
+      -- So this should effectively park us forever, just
+      -- like select{} does. We pause forever, without
+      -- running any defers, just as select{} would.
       coroutine.resume(scheduler_co)
    end
 
+   print("select: loop through the alt_array...")   
    local list_of_canexec_i = {}
    for i = 1, #alt_array do
+      print("top of alt_array loop, i = ", i)
       local a = alt_array[i]
+
+      local fldcnt = 0
+      for k,v in pairs(a) do fldcnt=fldcnt+1; end
+      if fldcnt == 0 then
+         print("select: default case observed to be present.")
+         --default: option
+         defaultPresent = true
+         canblock = false
+         defaultNum = int(i)-1
+         i=i+1
+         goto zcontinue
+      end
       a.alt_array = alt_array
       a.alt_index = i
       assert(type(a.op) == "number" and
@@ -388,18 +416,24 @@ local function select(alt_array)
             tasks_to[sc] = a
          end
       end
+      ::zcontinue::
    end
 
    if #list_of_canexec_i > 0 then
       local i = random_choice(list_of_canexec_i)
       altexec(alt_array[i])
       return i, alt_array.value, alt_array.closed == nil
+   else
+      print("select: no cases to execute.")
    end
 
-   if default then
-      return default
+   print("select: defaultPresent = ", defaultPresent)   
+   if defaultPresent then
+      print("select choosing our default: ")
+      return {defaultNum}
    end
-
+   print("select: no default present, going on to block...")
+   
    local self_coro, is_main = coroutine.running()
    alt_array.task = self_coro
    assert(self_coro ~= nil and is_main ~= true,

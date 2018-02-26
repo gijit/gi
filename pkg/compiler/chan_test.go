@@ -3,7 +3,7 @@ package compiler
 // chan_test.go: tests of the all-lua channels
 
 import (
-	//"fmt"
+	"fmt"
 	"testing"
 	"time"
 
@@ -24,21 +24,19 @@ func Test900ForeverBlockingSelect(t *testing.T) {
 
 		// with default: present we should not block
 		// _selection = __task.select({{}});
-		code := ` a:= 0; go func() { a = 1; select{ default: }; a= 2; }() // should not block`
+		code := ` a:= 0; go func() { println("top of go-started func"); a = 1; select{ default: }; a= 2; }() // should not block`
 		translation, err := inc.Tr([]byte(code))
 		//*dbg = true
-		pp("translation='%s'", string(translation))
+		fmt.Printf("translation='%s'\n", string(translation))
 
-		/*
-			LuaRunAndReport(vm, string(translation))
-			LuaMustInt64(vm, "a", 2)
-		*/
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "a", 2)
 
 		//  _r = __task.select({});
 		code = ` b:= 0; go func() { b = 1; select{}; b= 2; }() // should block goroutine forever`
 		translation, err = inc.Tr([]byte(code))
 		panicOn(err)
-		pp("translation='%s'", string(translation))
+		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
 		select {
