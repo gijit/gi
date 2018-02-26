@@ -249,6 +249,7 @@ local function scheduler()
 end
 
 local function task_ready(co)
+   print("task_ready making ready co=", co)
    table.insert(tasks_runnable, co)
 end
 
@@ -274,6 +275,7 @@ end
 -- them. It's implied that one is RECV and another is SEND. Channel
 -- may be buffered.
 local function altcopy(a, b)
+   print("top of altcopy")
    local r, s, c = a, b, a.c
    if r.op == SEND then
       r, s = s, r
@@ -282,8 +284,14 @@ local function altcopy(a, b)
    assert(s == nil or s.op == SEND)
    assert(r == nil or r.op == RECV)
 
+   print(" altcopy: s=")
+   __st(s,"s")
+   print(" altcopy: r=")
+   __st(r,"r")
+
    -- Channel is empty or unbuffered, copy directly
    if s ~= nil and r and c._buf:len() == 0 then
+      print("altcopy: copying directly")
       r.alt_array.value = s.p
       return
    end
@@ -336,20 +344,30 @@ end
 
 -- Alt can be execed so find a counterpart Alt and exec it!
 altexec = function (a)
+   local c, op = a.c, a.op
+
    print("top of altexec, a=")
    __st(a,"a")
-   local c, op = a.c, a.op
+   print("top of altexec, op=")
+   __st(op, "op")
+   
    local other_alts = c:_get_other_alts(op)
+   __st(other_alts, "other_alts")
    local other_a = other_alts:random(a.to)
+   __st(other_a, "other_a back from random(a.to)")
    -- other_a may be nil
    local isend = altcopy(a, other_a)
-
+   print("middle of altexec, isend=", isend, "other_a nil?", other_a ~= nil)
+   
    if other_a ~= nil then
+      print("middle of altexec, other_a is not nil.")
       -- Disengage from channels used by the other Alt and make it ready.
       altalldequeue(other_a.alt_array)
       other_a.alt_array.resolved = other_a.alt_index
       task_ready(other_a.alt_array.task)
    elseif isend then
+      print("altexec is making ready: a.alt_array.task=")
+      __st(a.alt_array.task, "a.alt_array.task")
       task_ready(a.alt_array.task)
    end
 end
