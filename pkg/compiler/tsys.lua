@@ -2164,7 +2164,7 @@ end
 __theNilChan={__name="__theNilChan"}
 
 function __Chan(elem, capacity, elemReflectType)
-   print("__Chan called")
+   --print("__Chan called")
 
    if elem == nil then
       return __theNilChan
