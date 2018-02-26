@@ -133,3 +133,52 @@ func Test903(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test904(t *testing.T) {
+
+	cv.Convey("select on with both receive and send, in the all-lua system.", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+    a := 0
+    b := ""
+    sentAndReceived := ""
+    chInt := make(chan int)
+    chStr := make(chan string)
+    chStr2 := make(chan string)
+
+	go func() {
+		chInt <- 43
+	}()
+	go func() {
+		chStr <- "hello select"
+	}()
+	go func() {
+		sentAndReceived = <-chStr2
+	}()
+
+    for i := 0; i < 3; i++ {
+      select {
+        case a = <- chInt:
+        case b = <- chStr:
+        case chStr2 <- "yeehaw":
+      }
+    }
+`
+
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "a", 43)
+		LuaMustString(vm, "b", "hello select")
+		LuaMustString(vm, "sentAndReceived", "yeehaw")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
