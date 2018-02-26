@@ -96,12 +96,19 @@ most recent status
 ------------------
 With release v1.1.0 we focused on establishing
 an all-Lua goroutine functionality. Rather than
-bite off both all-Lua and hybrid Lua/native
+tackle both all-Lua and hybrid Lua/native
 goroutines all at once, we focused on getting
 goroutines working completely in Lua land.
+
 Release v1.1.0 acheives that goal, making
 full `go`, `select`, channel send, and channel
-receive available.
+receive available. v1.1.1 provides a little
+polish.
+
+While fully compiled code seems to work
+(cf. tests 900 - 905 in chan_test.go), the
+interation with goroutines at the REPL
+is still yet a little awkward.
 
 2018 Feb 24 update
 ------------------
