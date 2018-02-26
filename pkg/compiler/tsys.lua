@@ -3153,3 +3153,39 @@ __recover = function()
 end;
 
 __throw = function(err)  error(err); end;
+
+
+-- The main eval loop for the gijit REPL never returns.
+-- It only compiles and runs 'code', then yeilds nil
+-- or an error string.
+--
+-- Resume it with new code to run, ad inifinitum.
+--
+__gijitMainEvalLoop = function(code)
+
+   local chunk, err
+   while true do
+     -- compile chunk to bytecode
+     chunk, err = loadstring(code);
+     if err ~= nil then
+        err = "load error: "..tostring(err)
+     else
+        -- run the compiled bytecode
+        ok, err = pcall(function() chunk() end)
+        if not ok then
+           err = "run error: "..tostring(err)
+        end
+     end;
+   print("main loop: yielding err="..tostring(err))
+   code = coroutine.yield(err)
+   print("main loop: yield returned with new code: "..code)
+   
+   end -- while true
+end
+
+__gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
+
+__eval = function(code)
+   ok, err = coroutine.resume(__gijitMainCoro, code)
+   return ok, err
+end

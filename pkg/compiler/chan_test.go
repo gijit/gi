@@ -211,6 +211,7 @@ func Test905(t *testing.T) {
 	})
 }
 
+/*
 func Test906(t *testing.T) {
 
 	cv.Convey("all-lua system: multiple sends from new goroutine, received on main goroutine", t, func() {
@@ -225,9 +226,9 @@ func Test906(t *testing.T) {
     start := 7
     stop  := 9
 	go func() {
-		for i:=start;i<stop;i++ { 
+		for i:=start;i<stop;i++ {
            println("before sending i=", i);
-           ch <- i; 
+           ch <- i;
            println("after sending i=", i);
         }
     }()
@@ -244,10 +245,10 @@ func Test906(t *testing.T) {
 
 		LuaMustInt64(vm, "a", 7)
 		LuaMustInt64(vm, "b", 8)
-		/*		LuaMustInt64(vm, "c", 9)
-				LuaMustInt64(vm, "d", 10)
-				LuaMustInt64(vm, "e", 11)
-		*/
+		//LuaMustInt64(vm, "c", 9)
+		//LuaMustInt64(vm, "d", 10)
+		//LuaMustInt64(vm, "e", 11)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+*/

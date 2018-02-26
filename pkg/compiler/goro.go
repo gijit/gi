@@ -127,7 +127,6 @@ func (r *Goro) Start() {
 }
 
 func (r *Goro) handleTicket(t *ticket) {
-	startTop := r.vm.GetTop()
 
 	if len(t.regmap) > 0 {
 		luar.Register(r.vm, t.regns, t.regmap)
@@ -136,25 +135,9 @@ func (r *Goro) handleTicket(t *ticket) {
 
 	if len(t.run) > 0 {
 		s := string(t.run)
-
-		interr := r.vm.LoadString(s)
-		if interr != 0 {
-			fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
-			DumpLuaStack(r.vm)
-			t.runErr = fmt.Errorf(r.vm.ToString(-1))
-			r.vm.SetTop(startTop)
-		} else {
-			err := r.vm.Call(0, 0)
-			if err != nil {
-				fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
-				DumpLuaStack(r.vm)
-				r.vm.Pop(1)
-				t.runErr = err
-			}
-		}
-
+		t.runErr = LuaRun(r.vm, s)
 	}
-	if len(t.varname) > 0 {
+	if t.runErr == nil && len(t.varname) > 0 {
 		for key := range t.varname {
 			if key == "" {
 				continue

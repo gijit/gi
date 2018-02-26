@@ -366,21 +366,32 @@ func LuaIsNil(vm *golua.State, varname string) (bool, string) {
 }
 
 func LuaRunAndReport(vm *golua.State, s string) {
+	err := LuaRun(vm, s)
+
+	if err != nil {
+		fmt.Printf("error from LuaRun: '%v'. supplied lua with: '%s'\n",
+			err, s)
+		panic(err)
+	}
+}
+
+func LuaRun(vm *golua.State, s string) error {
+	startTop := vm.GetTop()
 	interr := vm.LoadString(s)
 	if interr != 0 {
-		fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
-		DumpLuaStack(vm)
-		vm.Pop(1)
-		panic("error printed above")
+		loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+		vm.SetTop(startTop)
+		return loadErr
 	} else {
 		err := vm.Call(0, 0)
 		if err != nil {
-			fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
-			DumpLuaStack(vm)
-			vm.Pop(1)
-			panic(err)
+			runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+			vm.SetTop(startTop)
+			return runErr
 		}
 	}
+	vm.SetTop(startTop)
+	return nil
 }
 
 func dumpTableString(L *golua.State, index int) (s string) {
