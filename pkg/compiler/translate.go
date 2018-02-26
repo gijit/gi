@@ -120,6 +120,12 @@ type IncrState struct {
 	PrintAST bool
 }
 
+func (tr *IncrState) Close() {
+	tr.goro.halt.RequestStop()
+	<-tr.goro.halt.Done.Chan
+	tr.goro.vm.Close()
+}
+
 //  panic on errors, a test helper
 func (tr *IncrState) trMust(src []byte) []byte {
 	by, err := tr.Tr(src)
