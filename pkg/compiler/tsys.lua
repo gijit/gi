@@ -212,6 +212,14 @@ if __dfsOrder == nil then
    dofile(__preludePath..'dfs.lua')
 end
 
+if __abs_now == nil then
+   dofile(__preludePath..'absnow.lua')
+end
+
+if __task == nil then
+   dofile(__preludePath..'chan.lua')
+end
+
 -- global for now, later figure out to scope down.
 __dfsGlobal = __NewDFSState()
 

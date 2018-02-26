@@ -190,7 +190,7 @@ local function scheduler()
    -- jea: I think we want to add a call to scheduler
    --      from the main coroutine, after each repl command,
    --      so as to let all background goroutines run.
-   
+
    -- Be compatible with 5.1 and 5.2
    --assert(not(self_coro ~= nil and is_main ~= true),
    --      "Scheduler must be run from the main coroutine.")
@@ -236,12 +236,13 @@ local function scheduler()
    local  newtab = {"wo"}
    __st(newtab)
    print("newtab = ", #newtab)
---   for k, v in pairs({hello="world"}) do
-      --print("key = "..tostring(k))
---   end
+   --for k, v in __pairs_original({hello="world"}) do
+   for k, v in pairs({[1]="world"}) do
+      print("key = "..tostring(k))
+   end
 --[[
    -- something is messed up about tasks_to, just viewing causes a 'resume' and crash:
-   -__st(tasks_to, "tasks_to")
+   __st(tasks_to, "tasks_to")
    
    local k = 0
    print("scheduler: just before pairs(tasks_to)")

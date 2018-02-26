@@ -2,8 +2,6 @@
 
 local ffi = require("ffi")
 
-print("ipairs global is ", ipairs)
-
 -- establish a fine-grained __abs_now()
 -- that can be used for nanosecond timing.
 
