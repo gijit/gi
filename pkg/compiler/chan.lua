@@ -449,7 +449,10 @@ local function select(alt_array)
       end
       local i = random_choice(list_of_canexec_i)
       altexec(alt_array[i])
-      return {int(i-1), {alt_array.value, alt_array.closed == nil}}
+      local res = {int(i-1), {alt_array.value, alt_array.closed == nil}}
+      print("select returning res[2] after choosing i=",i)
+      __st(res[2], "res")
+      return res
    else
       print("select: no cases to execute.")
    end
@@ -483,7 +486,10 @@ local function select(alt_array)
    assert(alt_array.resolved > 0)
 
    local r = alt_array.resolved
-   return {int(r-1), {alt_array.value, alt_array.closed == nil}}
+   local res = {int(r-1), {alt_array.value, alt_array.closed == nil}}
+   print("select at end, returning res:")
+   __st(res, "res")
+   return res
 end
 
 
@@ -501,12 +507,16 @@ local Channel = {
    end,
 
    send = function(self, msg)
-      return select({{c = self, op = SEND, p = msg}}, true)
+      local s= select({{c = self, op = SEND, p = msg}}, true)
+      --__st(s,"s back from select in send")
+      return s
    end,
 
    recv = function(self, to)
       local alts = {{c = self, op = RECV, to = to and __abs_now() + to or nil}}
+      print("recv about to enter select")
       local r = select(alts, true)
+      print("recv returning from select")
       __st(r[2], "r[2] in recv, back from select")
       return unpack(r[2])
    end,
