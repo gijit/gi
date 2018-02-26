@@ -89,6 +89,8 @@ end
 
 local scheduler_co
 
+local parkedForeverPool = coroutine.create(function() end)
+
 ----------------------------------------------------------------------------
 --- Helpers
 

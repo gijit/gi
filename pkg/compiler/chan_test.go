@@ -67,3 +67,24 @@ func Test901(t *testing.T) {
 		LuaMustInt64(vm, "b", 56)
 	})
 }
+
+func Test902(t *testing.T) {
+
+	cv.Convey("spawn goroutine, send and receive on unbuffered channel, in the all-lua system.", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		// with default: present we should not block
+		// _selection = __task.select({{}});
+		code := ` ch := make(chan int); go func() {ch <- 56;}(); b := <-ch; `
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 56)
+	})
+}
