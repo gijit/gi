@@ -3189,8 +3189,13 @@ __gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
 
 __eval = function(code)
    print("__eval called with code: '"..code.."'")
-   --ok, err = coroutine.resume(__gijitMainCoro, code)
-
+   
+   ok, err = coroutine.resume(__gijitMainCoro, code)
+   if not ok then
+      return ok, err
+   end
+   return true, "ok"
+--[[   
    local chunk, err, ok
    chunk, err = loadstring(code);
    if err ~= nil then
@@ -3207,4 +3212,5 @@ __eval = function(code)
    print("\n end of __eval: err is ",err)
    -- must uniformly return 2 args, since vm.Call(1,2) expects it.
    return true, "ok"
+--]]
 end

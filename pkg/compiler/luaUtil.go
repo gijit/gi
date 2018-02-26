@@ -388,7 +388,7 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		return nil
 	} else {
 
-		// not using the main eval loop coroutine.
+		// not using the __eval coroutine.
 
 		interr := vm.LoadString(s)
 		if interr != 0 {
