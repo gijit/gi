@@ -18,7 +18,7 @@ var startsWithLuaSrc = cv.ShouldStartWithModuloWhiteSpaceAndLuaComments
 
 func LoadAndRunTestHelper(t *testing.T, vm *luajit.State, translation []byte) {
 	trans := string(translation)
-	err := LuaRun(vm, trans)
+	err := LuaRun(vm, trans, true)
 	if err != nil {
 		fmt.Printf("error from LuaRun:\n%v\n", err)
 		t.Fatalf(`could not LuaRun("%s")`, trans)

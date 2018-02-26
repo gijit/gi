@@ -135,7 +135,7 @@ func (r *Goro) handleTicket(t *ticket) {
 
 	if len(t.run) > 0 {
 		s := string(t.run)
-		t.runErr = LuaRun(r.vm, s)
+		t.runErr = LuaRun(r.vm, s, true)
 	}
 	if t.runErr == nil && len(t.varname) > 0 {
 		for key := range t.varname {

@@ -43,7 +43,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
-	err := LuaRun(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)))
+	err := LuaRun(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)), false)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = LuaDoFiles(vm, files)
+	err = LuaDoPreludeFiles(vm, files)
 	panicOn(err)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	cwd, err := os.Getwd()
 	panicOn(err)
 	panicOn(os.Chdir(cfg.PreludePath))
-	err = LuaRun(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
+	err = LuaRun(vm, fmt.Sprintf(`__utf8 = require 'utf8'`), false)
 	panicOn(err)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// lastly, after the prelude, reset the DFS graph
 	// so new type dependencies are tracked
-	err = LuaRun(vm, "__dfsGlobal:reset();")
+	err = LuaRun(vm, "__dfsGlobal:reset();", false)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +94,10 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	return vm, err
 }
 
-func LuaDoFiles(vm *golua.State, files []string) error {
+func LuaDoPreludeFiles(vm *golua.State, files []string) error {
 	for _, f := range files {
 		pp("LuaDoFiles, f = '%s'", f)
-		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f))
+		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f), false)
 		if err != nil {
 			return err
 		}
@@ -105,24 +105,19 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 	return nil
 }
 
-/* replace with LuaRun
-func LuaDoString(vm *golua.State, cmd string) error {
-	interr := vm.LoadString(cmd)
-	if interr != 0 {
-		pp("interr %v on vm.LoadString for dofile on '%s'", interr, cmd)
-		msg := DumpLuaStackAsString(vm)
-		vm.Pop(1)
-		return fmt.Errorf("error in LuaDoString('%s') during LoadString. Details: '%s'", cmd, msg)
-	}
-	err := vm.Call(0, 0)
-	if err != nil {
-		msg := DumpLuaStackAsString(vm)
-		vm.Pop(1)
-		return fmt.Errorf("error in LuaDoString('%s') during Call: '%v'. Details: '%s'", cmd, err, msg)
+// user files, those after the prelude load, get run
+// on the main eval coroutine, so they can call goroutines,
+// channels, etc.
+func LuaDoUserFiles(vm *golua.State, files []string) error {
+	for _, f := range files {
+		pp("LuaDoUserFiles, f = '%s'", f)
+		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f), true)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
-*/
 
 func DumpLuaStack(L *golua.State) {
 	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))
@@ -359,7 +354,7 @@ func LuaIsNil(vm *golua.State, varname string) (bool, string) {
 }
 
 func LuaRunAndReport(vm *golua.State, s string) {
-	err := LuaRun(vm, s)
+	err := LuaRun(vm, s, true)
 
 	if err != nil {
 		fmt.Printf("error from LuaRun: '%v'. supplied lua with: '%s'\n",
@@ -368,22 +363,41 @@ func LuaRunAndReport(vm *golua.State, s string) {
 	}
 }
 
-func LuaRun(vm *golua.State, s string) error {
+// useEvalCoroutine may need to be false to bootstrap, but
+// should be typically true once the prelude / __gijitMainCoro is loaded.
+func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 	startTop := vm.GetTop()
-	interr := vm.LoadString(s)
-	if interr != 0 {
-		loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
-		vm.SetTop(startTop)
-		return loadErr
+	defer vm.SetTop(startTop)
+
+	if useEvalCoroutine {
+		vm.GetGlobal("__gijitMainCoro")
+		if vm.IsNil(-1) {
+			panic("could not locate __gijitMainCoro in _G")
+		}
+		vm.PushString(s)
+		vm.Resume(1)
+		// if top is true, no error. Otherwise error is at -2
+		ok := vm.ToBoolean(-1)
+		if !ok {
+			return fmt.Errorf("%s", vm.ToString(-2))
+		}
+		return nil
 	} else {
-		err := vm.Call(0, 0)
-		if err != nil {
-			runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
-			vm.SetTop(startTop)
-			return runErr
+
+		// not using the main eval loop coroutine.
+
+		interr := vm.LoadString(s)
+		if interr != 0 {
+			loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+			return loadErr
+		} else {
+			err := vm.Call(0, 0)
+			if err != nil {
+				runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+				return runErr
+			}
 		}
 	}
-	vm.SetTop(startTop)
 	return nil
 }
 

@@ -298,7 +298,7 @@ readtop:
 			fmt.Printf("error during prelude reload: '%v'", err)
 			return "", err
 		}
-		err = LuaDoFiles(r.vm, files)
+		err = LuaDoPreludeFiles(r.vm, files)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
 		}
@@ -367,7 +367,7 @@ these special commands.
 		if len(final) > 0 {
 			fmt.Printf("%s (%s)\n", nm, strings.Join(show, ","))
 			if r.isDo {
-				err = LuaDoFiles(r.vm, final)
+				err = LuaDoUserFiles(r.vm, final)
 			} else {
 				by, err = sourceGoFiles(final)
 				if err != nil {
@@ -465,7 +465,7 @@ func (r *Repl) Eval(src string) error {
 	}
 	r.t0 = time.Now()
 
-	err := LuaRun(r.vm, use)
+	err := LuaRun(r.vm, use, true)
 	if err != nil {
 		fmt.Printf("error from LuaRun: supplied lua with: '%s'\nlua stack:\n%v\n", use[:len(use)-1], err)
 		return nil
@@ -480,6 +480,6 @@ func (r *Repl) Eval(src string) error {
 
 // :ls, :gls, :lst, :glst implementation
 func (r *Repl) displayCmd(cmd string) {
-	err := LuaRun(r.vm, `__`+cmd+`()`)
+	err := LuaRun(r.vm, `__`+cmd+`()`, true)
 	panicOn(err)
 }
