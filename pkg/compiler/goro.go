@@ -79,11 +79,14 @@ type Goro struct {
 
 type GoroConfig struct {
 	GiCfg *GIConfig
+	off   bool // don't run in separate goroutine.
 }
 
 func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 	if cfg == nil {
-		cfg = &GoroConfig{}
+		cfg = &GoroConfig{
+			off: true, // default to off for now
+		}
 	}
 
 	var err error
@@ -100,7 +103,9 @@ func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 		halt:     idem.NewHalter(),
 		doticket: make(chan *ticket),
 	}
-	r.Start()
+	if !cfg.off {
+		r.Start()
+	}
 	return r, nil
 }
 
@@ -115,68 +120,76 @@ func (r *Goro) Start() {
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:
-				startTop := r.vm.GetTop()
-
-				if len(t.regmap) > 0 {
-					luar.Register(r.vm, t.regns, t.regmap)
-					//fmt.Printf("jea debug, back from luar.Register with regns: '%s', map: '%#v'\n", t.regns, t.regmap)
-				}
-
-				if len(t.run) > 0 {
-					s := string(t.run)
-
-					interr := r.vm.LoadString(s)
-					if interr != 0 {
-						fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
-						DumpLuaStack(r.vm)
-						t.runErr = fmt.Errorf(r.vm.ToString(-1))
-						r.vm.SetTop(startTop)
-					} else {
-						err := r.vm.Call(0, 0)
-						if err != nil {
-							fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
-							DumpLuaStack(r.vm)
-							r.vm.Pop(1)
-							t.runErr = err
-						}
-					}
-
-				}
-				if len(t.varname) > 0 {
-					for key := range t.varname {
-						if key == "" {
-							continue
-						}
-						r.vm.GetGlobal(key)
-						if r.vm.IsNil(-1) {
-							r.vm.Pop(1)
-							t.getErr = fmt.Errorf("not found: '%s'", t.varname)
-							break
-						} else {
-							switch t.gettyp {
-							case GetInt64:
-								t.varname[key] = r.vm.CdataToInt64(-1)
-							case GetString:
-								t.varname[key] = r.vm.ToString(-1)
-							case GetChan:
-								r.vm.Pop(1)
-								t.varname[key], t.getErr = getChannelFromGlobal(r.vm, key, true)
-							}
-							if !t.leaveOnTop {
-								r.vm.Pop(1)
-							}
-						}
-					}
-				}
-				close(t.done)
+				r.handleTicket(t)
 			}
 		}
 	}()
 }
 
+func (r *Goro) handleTicket(t *ticket) {
+	startTop := r.vm.GetTop()
+
+	if len(t.regmap) > 0 {
+		luar.Register(r.vm, t.regns, t.regmap)
+		//fmt.Printf("jea debug, back from luar.Register with regns: '%s', map: '%#v'\n", t.regns, t.regmap)
+	}
+
+	if len(t.run) > 0 {
+		s := string(t.run)
+
+		interr := r.vm.LoadString(s)
+		if interr != 0 {
+			fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", s)
+			DumpLuaStack(r.vm)
+			t.runErr = fmt.Errorf(r.vm.ToString(-1))
+			r.vm.SetTop(startTop)
+		} else {
+			err := r.vm.Call(0, 0)
+			if err != nil {
+				fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, s)
+				DumpLuaStack(r.vm)
+				r.vm.Pop(1)
+				t.runErr = err
+			}
+		}
+
+	}
+	if len(t.varname) > 0 {
+		for key := range t.varname {
+			if key == "" {
+				continue
+			}
+			r.vm.GetGlobal(key)
+			if r.vm.IsNil(-1) {
+				r.vm.Pop(1)
+				t.getErr = fmt.Errorf("not found: '%s'", t.varname)
+				break
+			} else {
+				switch t.gettyp {
+				case GetInt64:
+					t.varname[key] = r.vm.CdataToInt64(-1)
+				case GetString:
+					t.varname[key] = r.vm.ToString(-1)
+				case GetChan:
+					r.vm.Pop(1)
+					t.varname[key], t.getErr = getChannelFromGlobal(r.vm, key, true)
+				}
+				if !t.leaveOnTop {
+					r.vm.Pop(1)
+				}
+			}
+		}
+	}
+	close(t.done)
+}
+
 func (r *Goro) do(t *ticket) {
-	r.doticket <- t
-	<-t.done
+	if r.cfg.off {
+		r.handleTicket(t)
+	} else {
+		r.doticket <- t
+		<-t.done
+	}
 }
 
 func (t *ticket) Do() error {
