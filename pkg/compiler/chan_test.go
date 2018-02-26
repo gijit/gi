@@ -199,7 +199,7 @@ func Test905(t *testing.T) {
 	go func() {
 		sentAndReceived = <-chStr2
 	}()
-    chStr2 <- "yeehaw":
+    chStr2 <- "yeehaw"
 `
 
 		translation, err := inc.Tr([]byte(code))
