@@ -606,6 +606,7 @@ __defer_func(%s)
 			}
 			c.translateBranchingStmt(caseClauses, nil, true, translateCond, label, flattened)
 		}
+		c.Printf("\n__task.scheduler();\n")
 
 	case *ast.EmptyStmt:
 		// skip
