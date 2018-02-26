@@ -96,7 +96,10 @@ local parkedForeverPool = coroutine.create(function() end)
 
 local function random_choice(arr)
    if #arr > 1 then
-      return arr[math.random(#arr)]
+      local rnd = math.random(#arr)
+      print("random_choice is chooding ", rnd)
+      __st(arr, "arr in random_choice(arr)")
+      return arr[rnd]
    else
       return arr[1]
    end
@@ -446,7 +449,7 @@ local function select(alt_array)
       end
       local i = random_choice(list_of_canexec_i)
       altexec(alt_array[i])
-      return i, alt_array.value, alt_array.closed == nil
+      return {int(i-1), {alt_array.value, alt_array.closed == nil}}
    else
       print("select: no cases to execute.")
    end
@@ -454,7 +457,7 @@ local function select(alt_array)
    print("select: defaultPresent = ", defaultPresent)   
    if defaultPresent then
       print("select choosing our default: ")
-      return {defaultNum}
+      return {int(defaultNum), {}}
    end
    print("select: no default present, going on to block...")
    
@@ -480,7 +483,7 @@ local function select(alt_array)
    assert(alt_array.resolved > 0)
 
    local r = alt_array.resolved
-   return r, alt_array.value, alt_array.closed == nil
+   return {int(r-1), {alt_array.value, alt_array.closed == nil}}
 end
 
 
@@ -498,25 +501,22 @@ local Channel = {
    end,
 
    send = function(self, msg)
-      assert(select({{c = self, op = SEND, p = msg}}, true) == 1)
-      return true
+      return select({{c = self, op = SEND, p = msg}}, true)
    end,
 
    recv = function(self, to)
       local alts = {{c = self, op = RECV, to = to and __abs_now() + to or nil}}
-      local s, msg = select(alts, true)
-      assert(s == 1)
-      return msg, alts[1].closed == nil
+      local r = select(alts, true)
+      __st(r[2], "r[2] in recv, back from select")
+      return unpack(r[2])
    end,
 
    nbsend = function(self, msg)
-      local s = select({{c = self, op = SEND, p = msg}}, false)
-      return s == 1
+      return select({{c = self, op = SEND, p = msg}}, false)
    end,
 
    nbrecv = function(self)
-      local s, msg = select({{c = self, op = RECV}}, false)
-      return s == 1, msg
+      return select({{c = self, op = RECV}}, false)
    end,
 
    close = function(self)

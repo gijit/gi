@@ -128,8 +128,8 @@ func Test903(t *testing.T) {
 
 		LuaRunAndReport(vm, string(translation))
 
-		LuaMustString(vm, "b", "hello select")
 		LuaMustInt64(vm, "a", 43)
+		LuaMustString(vm, "b", "hello select")
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
