@@ -43,7 +43,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
-	err := LuaDoString(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)))
+	err := LuaRun(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)))
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	cwd, err := os.Getwd()
 	panicOn(err)
 	panicOn(os.Chdir(cfg.PreludePath))
-	err = LuaDoString(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
+	err = LuaRun(vm, fmt.Sprintf(`__utf8 = require 'utf8'`))
 	panicOn(err)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// lastly, after the prelude, reset the DFS graph
 	// so new type dependencies are tracked
-	err = LuaDoString(vm, "__dfsGlobal:reset();")
+	err = LuaRun(vm, "__dfsGlobal:reset();")
 	if err != nil {
 		return nil, err
 	}
@@ -97,23 +97,15 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 func LuaDoFiles(vm *golua.State, files []string) error {
 	for _, f := range files {
 		pp("LuaDoFiles, f = '%s'", f)
-		interr := vm.LoadString(fmt.Sprintf(`dofile("%s")`, f))
-		if interr != 0 {
-			pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
-			msg := DumpLuaStackAsString(vm)
-			vm.Pop(1)
-			return fmt.Errorf("error during LoadString on file '%s': Details: '%s'", f, msg)
-		}
-		err := vm.Call(0, 0)
+		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f))
 		if err != nil {
-			msg := DumpLuaStackAsString(vm)
-			vm.Pop(1)
-			return fmt.Errorf("load was fine, but we encountered a runtime error during exectution of Call on file '%s': '%v'. Details: '%s'", f, err, msg)
+			return err
 		}
 	}
 	return nil
 }
 
+/* replace with LuaRun
 func LuaDoString(vm *golua.State, cmd string) error {
 	interr := vm.LoadString(cmd)
 	if interr != 0 {
@@ -130,6 +122,7 @@ func LuaDoString(vm *golua.State, cmd string) error {
 	}
 	return nil
 }
+*/
 
 func DumpLuaStack(L *golua.State) {
 	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))

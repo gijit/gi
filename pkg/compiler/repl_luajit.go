@@ -464,24 +464,13 @@ func (r *Repl) Eval(src string) error {
 		r.histFile.Sync()
 	}
 	r.t0 = time.Now()
-	// 	loadstring: returns 0 if there are no errors or 1 in case of errors.
-	interr := r.vm.LoadString(use)
-	if interr != 0 {
-		fmt.Printf("error from Lua vm.LoadString(): supplied lua with: '%s'\nlua stack:\n", use[:len(use)-1])
-		DumpLuaStack(r.vm)
-		r.vm.Pop(1)
-		return nil
-	}
-	err := r.vm.Call(0, 0)
+
+	err := LuaRun(r.vm, use)
 	if err != nil {
-		fmt.Printf("error from Lua vm.Call(0,0): '%v'. supplied lua with: '%s'\nlua stack:\n", err, use[:len(use)-1])
-		DumpLuaStack(r.vm)
-		r.vm.Pop(1)
+		fmt.Printf("error from LuaRun: supplied lua with: '%s'\nlua stack:\n%v\n", use[:len(use)-1], err)
 		return nil
 	}
 	r.t1 = time.Now()
-	// jea debug:
-	//DumpLuaStack(vm)
 	fmt.Printf("\n")
 	r.reader.Reset(os.Stdin)
 	fmt.Printf("elapsed: '%v'\n", r.t1.Sub(r.t0))
@@ -491,6 +480,6 @@ func (r *Repl) Eval(src string) error {
 
 // :ls, :gls, :lst, :glst implementation
 func (r *Repl) displayCmd(cmd string) {
-	err := LuaDoString(r.vm, `__`+cmd+`()`)
+	err := LuaRun(r.vm, `__`+cmd+`()`)
 	panicOn(err)
 }
