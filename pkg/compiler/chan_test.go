@@ -182,3 +182,33 @@ func Test904(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test905(t *testing.T) {
+
+	cv.Convey("simple send, in the all-lua system.", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+    sentAndReceived := ""
+    chStr2 := make(chan string)
+
+	go func() {
+		sentAndReceived = <-chStr2
+	}()
+    chStr2 <- "yeehaw":
+`
+
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustString(vm, "sentAndReceived", "yeehaw")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
