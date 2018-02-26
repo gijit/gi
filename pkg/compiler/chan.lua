@@ -72,9 +72,9 @@
 local __M = {}
 
 -- Constants
-local RECV = 0x1
-local SEND = 0x2
-local NOP  = 0x3
+local RECV = "recv" -- 0x1
+local SEND = "send" -- 0x2
+local NOP  = "nop"  -- 0x3
 local TIMEOUT = {err = "TIMEOUT"}
 
 -- Global objects for scheduler
@@ -349,18 +349,30 @@ altexec = function (a)
    end
 end
 
+local function __fldcnt(t)
+   if type(t) ~= "table" then
+      return 0
+   end
+   local k = 0
+   for _,_ in pairs(t) do k=k+1; end
+   return k
+end
+
 -- The main entry point. Call it `alt` or `select` or just a
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array)
    print("top of select, alt_array is")
    __st(alt_array, "alt_array")
+   for i,_ in ipairs(alt_array) do
+      __st(alt_array[i], "alt_array["..i.."]")
+   end
    
    local defaultPresent = nil
    local canblock = true
    
    -- detect the default only {{}} case.
-   if #alt_array==1 and #alt_array[1] == 0 then
+   if #alt_array==1 and __fldcnt(alt_array[1]) == 0 then
       -- select{ default: }
       -- only the default channel
       defaultPresent = true
@@ -390,9 +402,7 @@ local function select(alt_array)
       print("top of alt_array loop, i = ", i)
       local a = alt_array[i]
 
-      local fldcnt = 0
-      for k,v in pairs(a) do fldcnt=fldcnt+1; end
-      if fldcnt == 0 then
+      if __fldcnt(a) == 0 then
          print("select: default case observed to be present.")
          --default: option
          defaultPresent = true
@@ -401,9 +411,11 @@ local function select(alt_array)
          i=i+1
          goto zcontinue
       end
+      print("select: non default case! i=",i)
+      
       a.alt_array = alt_array
       a.alt_index = i
-      assert(type(a.op) == "number" and
+      assert(type(a.op) == "string" and
                 (a.op == RECV or a.op == SEND or a.op == NOP),
              "op field must be RECV, SEND or NOP in alt")
       assert(type(a.c) == "table" and a.c.__index == __M.Channel,
@@ -420,8 +432,14 @@ local function select(alt_array)
       end
       ::zcontinue::
    end
+   print("select: done with alt_array loop") 
 
    if #list_of_canexec_i > 0 then
+      if #list_of_canexec_i > 1 then
+         print("select: multiple choices from alt_array, can proceed... choosing one at random")
+      else
+         print("select: one choice from alt_array can proceed.")
+      end
       local i = random_choice(list_of_canexec_i)
       altexec(alt_array[i])
       return i, alt_array.value, alt_array.closed == nil
