@@ -78,8 +78,6 @@ func Test902(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		// with default: present we should not block
-		// _selection = __task.select({{}});
 		code := ` ch := make(chan int); go func() {ch <- 56;}(); b := <-ch; `
 		translation, err := inc.Tr([]byte(code))
 		//*dbg = true
@@ -209,6 +207,49 @@ func Test905(t *testing.T) {
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustString(vm, "sentAndReceived", "yeehaw")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test906(t *testing.T) {
+
+	cv.Convey("all-lua system: multiple sends from new goroutine, received on main goroutine", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+    ch := make(chan int)
+    start := 7
+    stop  := 12
+	go func() {
+		for i:=start;i<stop;i++ { 
+           println("before sending i=", i);
+           ch <- i; 
+           println("after sending i=", i);
+        }
+    }()
+
+    a := <- ch
+    b := <- ch
+    c := <- ch
+    d := <- ch
+    e := <- ch
+`
+
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "a", 7)
+		LuaMustInt64(vm, "b", 8)
+		LuaMustInt64(vm, "c", 9)
+		LuaMustInt64(vm, "d", 10)
+		LuaMustInt64(vm, "e", 11)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
