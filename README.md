@@ -92,6 +92,17 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 Feb 26 update
+------------------
+With release v1.1.0 we focused on establishing
+an all-Lua goroutine functionality. Rather than
+bite off both all-Lua and hybrid Lua/native
+goroutines all at once, we focused on getting
+goroutines working completely in Lua land.
+Release v1.1.0 acheives that goal, making
+full `go`, `select`, channel send, and channel
+receive available.
+
 2018 Feb 24 update
 ------------------
 Release v1.0.15 brings the ability to make native
