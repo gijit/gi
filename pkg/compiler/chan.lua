@@ -365,7 +365,10 @@ local function select(alt_array)
    print("top of select, alt_array is")
    __st(alt_array, "alt_array")
    for i,_ in ipairs(alt_array) do
-      __st(alt_array[i], "alt_array["..i.."]")
+      __st(alt_array[i], "alt_array["..i.."]", 6)
+      if type(alt_array[i]) == "table" and type(alt_array[i][1]) == "table" then
+         __st(alt_array[i][1], "alt_array["..i.."][1]", 10)
+      end
    end
    
    local defaultPresent = nil
@@ -415,6 +418,7 @@ local function select(alt_array)
       
       a.alt_array = alt_array
       a.alt_index = i
+      print("a.op is ", a.op, " of type "..type(a.op))
       assert(type(a.op) == "string" and
                 (a.op == RECV or a.op == SEND or a.op == NOP),
              "op field must be RECV, SEND or NOP in alt")
@@ -456,8 +460,11 @@ local function select(alt_array)
    
    local self_coro, is_main = coroutine.running()
    alt_array.task = self_coro
-   assert(self_coro ~= nil and is_main ~= true,
-          "Unable to block from the main thread, run scheduler.")
+   if not (self_coro ~= nil and is_main ~= true) then
+      local err = "Unable to block from the main thread, run scheduler."
+      print(debug.traceback(err))
+      error(err)
+   end
 
    for i = 1, #alt_array do
       local a = alt_array[i]
@@ -480,8 +487,10 @@ end
 -- Channel object
 
 local Channel = {
-   new = function(self, buf_size)
-      local o = {}; setmetatable(o, self); self.__index = self
+   new = function(self, buf_size, elemTyp)
+      local o = {__elemTyp=elemTyp, __name="__valChannel"};
+      setmetatable(o, self);
+      self.__index = self
       o._buf = CircularBuffer:new(buf_size or 0)
       o._recv_alts, o._send_alts = Set:new(), Set:new()
       return o

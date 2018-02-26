@@ -556,7 +556,8 @@ __defer_func(%s)
 			case *ast.ExprStmt:
 				channels = append(channels, c.formatExpr("{%e}", astutil.RemoveParens(comm.X).(*ast.UnaryExpr).X).String())
 			case *ast.AssignStmt:
-				channels = append(channels, c.formatExpr("{%e}", astutil.RemoveParens(comm.Rhs[0]).(*ast.UnaryExpr).X).String())
+				// receive
+				channels = append(channels, c.formatExpr("{c=%e, op=__task.RECV}", astutil.RemoveParens(comm.Rhs[0]).(*ast.UnaryExpr).X).String())
 			case *ast.SendStmt:
 				chanType := c.p.TypeOf(comm.Chan).Underlying().(*types.Chan)
 				channels = append(channels, c.formatExpr("{%e, %s}", comm.Chan, c.translateImplicitConversionWithCloning(comm.Value, chanType.Elem())).String())

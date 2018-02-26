@@ -416,7 +416,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
 
    seen = seen or {}
    if seen[t] ~= nil then
-      return
+      return ""
    end
    seen[t] =true   
    
@@ -2171,7 +2171,7 @@ function __Chan(elem, capacity, elemReflectType)
    end
 
    -- short cut for a moment, just the raw __taskChan
-   return __task.Channel:new(capacity)
+   return __task.Channel:new(capacity, elem)
       
    --[[
    --print(debug.traceback())
