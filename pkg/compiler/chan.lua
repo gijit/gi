@@ -82,6 +82,13 @@ local tasks_runnable = {}       -- list of coroutines ready to be resumed
 local tasks_to = {}             -- all the timeout tasks
 local altexec
 
+local main_coro, is_main = coroutine.running()
+if not is_main then
+   error("must be loaded, for now, by main coroutine")
+end
+
+local scheduler_co
+
 ----------------------------------------------------------------------------
 --- Helpers
 
@@ -316,13 +323,20 @@ end
 -- The main entry point. Call it `alt` or `select` or just a
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
-local function select(alt_array, canblock)
-   if #alt_array == 0 and canblock then
+local function select(alt_array)
+   local default = nil
+   if #alt_array==1 and #alt_array[1] == 0 then
+      -- only the default channel
+      default = 0LL
+   elseif #alt_array==0 then
+      -- no default, no cases: "select{}".
       -- block this goroutine forever
       local self_coro, is_main = coroutine.running()
       print("warning: select{} is blocking the goroutine forever... ", self_coro)
       -- just set ourselves to state normal? call the scheduler?
-      coroutine.resume(scheduler)
+
+      -- jea: not sure this will work...
+      coroutine.resume(scheduler_co)
    end
 
    local list_of_canexec_i = {}
@@ -352,8 +366,8 @@ local function select(alt_array, canblock)
       return i, alt_array.value, alt_array.closed == nil
    end
 
-   if canblock ~= true then
-      return nil
+   if default then
+      return default
    end
 
    local self_coro, is_main = coroutine.running()
@@ -447,11 +461,14 @@ local Channel = {
    end,
 }
 
+scheduler_co = coroutine.create(scheduler)
+
 ----------------------------------------------------------------------------
 -- Public interface
 
 __task = __M
 
+__task.resume_scheduler = function() coroutine.resume(scheduler_co) end
 __task.scheduler = scheduler
 __task.spawn     = spawn
 __task.Channel   = Channel
