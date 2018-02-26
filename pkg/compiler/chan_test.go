@@ -13,9 +13,9 @@ import (
 	//"github.com/glycerine/luar"
 )
 
-func Test900ForeverBlockingSelect(t *testing.T) {
+func Test900SendAndRecvAllLu(t *testing.T) {
 
-	cv.Convey("select{} should block the goroutine forever", t, func() {
+	cv.Convey("select{} should block the goroutine forever, unless also select{default:}", t, func() {
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -44,5 +44,26 @@ func Test900ForeverBlockingSelect(t *testing.T) {
 		}
 		LuaMustInt64(vm, "b", 1)
 		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test901(t *testing.T) {
+
+	cv.Convey("In the all-lua go/coroutine system, ch := make(chan int, 1); ch <- 56;  b := <-ch; write and read back b of 57", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		// with default: present we should not block
+		// _selection = __task.select({{}});
+		code := ` ch := make(chan int, 1); ch <- 56;  b := <-ch; `
+		translation, err := inc.Tr([]byte(code))
+		//*dbg = true
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 56)
 	})
 }
