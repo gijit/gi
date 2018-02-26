@@ -108,7 +108,9 @@ polish.
 While fully compiled code seems to work
 (cf. tests 900 - 905 in chan_test.go), the
 interation with goroutines at the REPL
-is still yet a little awkward.
+is still yet a little awkward, and
+`attempt to yield across C-call boundary`
+a common complaint.
 
 2018 Feb 24 update
 ------------------
