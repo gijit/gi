@@ -102,13 +102,13 @@ func LuaDoFiles(vm *golua.State, files []string) error {
 			pp("interr %v on vm.LoadString for dofile on '%s'", interr, f)
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during LoadString on file '%s': Details: '%s'", f, msg)
+			return fmt.Errorf("error during LoadString on file '%s': Details: '%s'", f, msg)
 		}
 		err := vm.Call(0, 0)
 		if err != nil {
 			msg := DumpLuaStackAsString(vm)
 			vm.Pop(1)
-			return fmt.Errorf("error in setupPrelude during Call on file '%s': '%v'. Details: '%s'", f, err, msg)
+			return fmt.Errorf("load was fine, but we encountered a runtime error during exectution of Call on file '%s': '%v'. Details: '%s'", f, err, msg)
 		}
 	}
 	return nil
