@@ -102,6 +102,12 @@ func (check *Checker) simpleStmt(s ast.Stmt) {
 	}
 }
 
+func (check *Checker) simpleUnary(x *operand, s *ast.UnaryExpr, op token.Token) {
+	if s != nil {
+		check.unary(x, s, op)
+	}
+}
+
 func trimTrailingEmptyStmts(list []ast.Stmt) []ast.Stmt {
 	for i := len(list); i > 0; i-- {
 		if _, ok := list[i-1].(*ast.EmptyStmt); !ok {

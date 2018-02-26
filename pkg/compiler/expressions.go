@@ -997,6 +997,8 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 	}
 	// jea
 	c.Printf(" %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+	// hmm... tests fail with this extra scheduler call:
+	//c.Printf(" %[1]s = %[2]s(%[3]s); __task.scheduler();", returnVar, fun, strings.Join(args, ", "))
 	// jea debug:
 	//c.Printf("/*jea expressions.go:873*/ %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
 

@@ -265,6 +265,9 @@ func (check *Checker) collectObjects() {
 
 		for _, decl := range file.Nodes {
 			switch d := decl.(type) {
+			case *ast.UnaryExpr:
+				fmt.Printf("we see UnaryExpr d = '%#v'\n", d)
+				//jea: allow
 			case *ast.ExprStmt:
 			// jea: check the ExprStmt below, handle other Stmt here.
 			case ast.Stmt:
@@ -498,6 +501,20 @@ func (check *Checker) collectObjects() {
 			case *ast.ForStmt:
 				pp("we see an *ast.ForStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
 				check.simpleStmt(d)
+
+				// jea: allow labels
+			case *ast.LabeledStmt:
+				check.simpleStmt(d)
+
+				// jea: allow channel ops
+			case *ast.SendStmt:
+				pp("we see SendStmt, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
+				check.simpleStmt(d)
+
+				// jea: <-ch is a unary expression, allow it
+			case *ast.UnaryExpr:
+				pp("we see an *ast.UnaryExpr, '%#v'/ pos:end=%v:%v", d, d.Pos(), d.End())
+				//check.simpleUnary(&x, d.X)
 
 				// jea: allow evaluation of expressions at the top level!
 			case *ast.ExprStmt:

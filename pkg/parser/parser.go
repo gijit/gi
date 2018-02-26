@@ -2456,11 +2456,21 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
 	// jea: started to try and allow expressions alone, but still todo...
 	// not sure if this is a good idea or not. B/c would mess up
 	// detection of errors in normal compiled code...? try it and see.
-	//	case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
-	//		x := p.parseExpr(false)
-	//		pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
-	//		return x
 
+	//case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
+	//x := p.parseExpr(false)
+	//pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
+	//return x
+
+	/*
+		case token.ARROW:
+			x := p.parseUnaryExpr(false)
+			pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
+			return x
+
+		case token.SEMICOLON:
+			return nil // hmmm... not sure this is correct. At all.
+	*/
 	case token.IDENT,
 		token.FOR,
 		token.SWITCH,
@@ -2547,7 +2557,10 @@ func (p *parser) parseFile() *ast.File {
 		if p.mode&ImportsOnly == 0 {
 			// rest of package body
 			for p.tok != token.EOF {
-				nodes = append(nodes, p.parseDeclOrNode(syncDecl))
+				y := p.parseDeclOrNode(syncDecl)
+				if y != nil {
+					nodes = append(nodes, y)
+				}
 			}
 		}
 	}
