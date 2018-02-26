@@ -26,7 +26,7 @@ func Test900ForeverBlockingSelect(t *testing.T) {
 		// _selection = __task.select({{}});
 		code := ` a:= 0; go func() { a = 1; select{ default: }; a= 2; }() // should not block`
 		translation, err := inc.Tr([]byte(code))
-		*dbg = true
+		//*dbg = true
 		pp("translation='%s'", string(translation))
 
 		/*

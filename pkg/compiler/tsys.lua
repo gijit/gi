@@ -2164,19 +2164,24 @@ end
 __theNilChan={__name="__theNilChan"}
 
 function __Chan(elem, capacity, elemReflectType)
-   --print("__Chan called")
-   
+   print("__Chan called")
+
    if elem == nil then
       return __theNilChan
    end
+
+   -- short cut for a moment, just the raw __taskChan
+   return __task.Channel:new(capacity)
+      
+   --[[
    --print(debug.traceback())
    local dir = 3 -- direction: 1=recv, 2=send, 3=both.
    local elemty = __gijitTypeToGoType(elem)
    local chtype = reflect.ChanOf(dir, elemty)
-   local ch = reflect.MakeChan(chtype, capacity)
-   
-   local this = {}
-   this.__native = ch
+
+   local this = {}   
+   this.__taskChan = __task.Channel:new(capacity)
+   --this.__native = reflect.MakeChan(chtype, capacity)
 
    -- gopherJS stuff below
    if capacity < 0  or  capacity > 2147483647 then
@@ -2190,6 +2195,7 @@ function __Chan(elem, capacity, elemReflectType)
    this.__closed = false;
    this.__val = this
    return this
+   --]]
 end;
 
 

@@ -1,10 +1,15 @@
--- zgoro.lua, named to load last in prelude,
+-- zgoro.lua, named with a 'z' in order
+-- to load last in prelude,
 -- after tsys.lua, so we have our types.
 
 -- For the hybrid/interacts with
 -- native Go channels via reflect
 -- version of goroutines and
 -- channels: see reflect_goro.lua
+
+-- turn off zgoro for now, using chan.lua presently.
+
+--[==[
 
 local ffi = require("ffi")
 
@@ -294,3 +299,4 @@ __select = function(comms)
    return f;
 end;
 
+--]==]

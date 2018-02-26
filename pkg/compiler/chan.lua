@@ -226,36 +226,18 @@ local function scheduler()
 
    local now = __abs_now()
    print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
-   print("scheduler: checking for timeouts, here is #tasks_to: "..tostring(#tasks_to))
-   --printing the first "key" from pairs is calling resume... lets get rid
-   -- of any metatable first...
-
-   --local ok, err = pcall(__st(tasks_to, "tasks_to"))
-   print("scheduler, ok  from pcall to view tasks_to: ", ok)
-   print("scheduler, err from pcall to view tasks_to: ", err)
-   local  newtab = {"wo"}
-   __st(newtab)
-   print("newtab = ", #newtab)
-   --for k, v in __pairs_original({hello="world"}) do
-   for k, v in pairs({[1]="world"}) do
-      print("key = "..tostring(k))
-   end
---[[
-   -- something is messed up about tasks_to, just viewing causes a 'resume' and crash:
-   __st(tasks_to, "tasks_to")
    
    local k = 0
    print("scheduler: just before pairs(tasks_to)")
    for co, alt in pairs(tasks_to) do
       print("scheduler: top of tasks_to loop")
-      --print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
+      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
          alt.c:_get_alts(RECV):remove(alt)
       end
    end
-   --]]
    
    print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
@@ -540,4 +522,11 @@ __task.Error     = {TIMEOUT = TIMEOUT}
 ----------------------------------------------------------------------------
 ----------------------------------------------------------------------------
 
+__send = function(chan, value)
+   return chan:send(value)
+end
 
+__recv = function(chan)
+   -- return both, wrapped in a tuple for now, since that's what js had to do.
+   return {chan:recv()}
+end
