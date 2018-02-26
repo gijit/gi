@@ -540,7 +540,7 @@ __defer_func(%s)
 		}
 		c.Blocking[call] = true
 		c.translateStmt(&ast.ExprStmt{X: call}, label)
-		c.Printf("\n__task.scheduler();\n")
+		c.Printf("\n\t __task.scheduler();\n")
 
 	case *ast.SelectStmt:
 		selectionVar := c.newVariable("_selection")
@@ -606,7 +606,7 @@ __defer_func(%s)
 			}
 			c.translateBranchingStmt(caseClauses, nil, true, translateCond, label, flattened)
 		}
-		c.Printf("\n__task.scheduler();\n")
+		c.Printf("\n\t __task.scheduler();\n")
 
 	case *ast.EmptyStmt:
 		// skip

@@ -97,8 +97,8 @@ local parkedForeverPool = coroutine.create(function() end)
 local function random_choice(arr)
    if #arr > 1 then
       local rnd = math.random(#arr)
-      print("random_choice is chooding ", rnd)
-      __st(arr, "arr in random_choice(arr)")
+      --print("random_choice is chooding ", rnd)
+      --__st(arr, "arr in random_choice(arr)")
       return arr[rnd]
    else
       return arr[1]
@@ -182,7 +182,7 @@ local CircularBuffer = {
 -- Tasks ready to be run are placed on a stack and it's possible to
 -- starve a coroutine.
 local function scheduler()
-   print("top of scheduler")
+   --print("top of scheduler")
    
    -- returns nil if running on the main coroutine, otherwise
    -- returns the running coro.
@@ -200,15 +200,15 @@ local function scheduler()
    --assert(not(self_coro ~= nil and is_main ~= true),
    --      "Scheduler must be run from the main coroutine.")
    
-   print("scheduler: self_coro is ", self_coro)
-   print("scheduler: is_main is ", is_main)
+   --print("scheduler: self_coro is ", self_coro)
+   --print("scheduler: is_main is ", is_main)
    
-   print("scheduler: past assert")
+   --print("scheduler: past assert")
    
    local i = 0
    while true do
       if #tasks_runnable == 0 then
-         print("scheduler: no more runnable tasks")
+         --print("scheduler: no more runnable tasks")
          break
       end
       -- table.remove takes the last by default.
@@ -216,27 +216,27 @@ local function scheduler()
       tasks_to[co] = nil
 
       -- and resume co
-      print("scheduler: coroutine.resume about to be called on co="..tostring(co))
+      --print("scheduler: coroutine.resume about to be called on co="..tostring(co))
       local back = {coroutine.resume(co)}
-      print("scheduler: got back from resume: ", unpack(back))
+      --print("scheduler: got back from resume: ", unpack(back))
       
       okay, emsg = unpack(back)
       if not okay then
-         print(debug.traceback(emsg))
+         --print(debug.traceback(emsg))
          error(emsg)
       end
       i = i + 1
-      print("scheduler: resume was okay, i is now = ", i)      
+      --print("scheduler: resume was okay, i is now = ", i)      
    end
 
    local now = __abs_now()
-   print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
+   --print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
    
    local k = 0
-   print("scheduler: just before pairs(tasks_to)")
+   --print("scheduler: just before pairs(tasks_to)")
    for co, alt in pairs(tasks_to) do
-      print("scheduler: top of tasks_to loop")
-      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
+      --print("scheduler: top of tasks_to loop")
+      --print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
@@ -244,12 +244,12 @@ local function scheduler()
       end
    end
    
-   print("end of scheduler, we ran i tasks, returning i=", i)   
+   --print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
 end
 
 local function task_ready(co)
-   print("task_ready making ready co=", co)
+   --print("task_ready making ready co=", co)
    table.insert(tasks_runnable, co)
 end
 
@@ -259,13 +259,13 @@ local function spawn(fun, args)
    local f = function()
       local okay, emsg = pcall(fun, unpack(args))
       if not okay then
-         print(debug.traceback(emsg))
+         --print(debug.traceback(emsg))
          error(emsg)
       end
    end
    local co = coroutine.create(f)
    task_ready(co)
-   print("spawn added to ready queue: co = ", co)
+   --print("spawn added to ready queue: co = ", co)
 end
 
 ----------------------------------------------------------------------------
@@ -275,7 +275,7 @@ end
 -- them. It's implied that one is RECV and another is SEND. Channel
 -- may be buffered.
 local function altcopy(a, b)
-   print("top of altcopy")
+   --print("top of altcopy")
    local r, s, c = a, b, a.c
    if r.op == SEND then
       r, s = s, r
@@ -284,14 +284,14 @@ local function altcopy(a, b)
    assert(s == nil or s.op == SEND)
    assert(r == nil or r.op == RECV)
 
-   print(" altcopy: s=")
-   __st(s,"s")
-   print(" altcopy: r=")
-   __st(r,"r")
+   --print(" altcopy: s=")
+   --__st(s,"s")
+   --print(" altcopy: r=")
+   --__st(r,"r")
 
    -- Channel is empty or unbuffered, copy directly
    if s ~= nil and r and c._buf:len() == 0 then
-      print("altcopy: copying directly")
+      --print("altcopy: copying directly")
       r.alt_array.value = s.p
       return
    end
@@ -346,28 +346,28 @@ end
 altexec = function (a)
    local c, op = a.c, a.op
 
-   print("top of altexec, a=")
-   __st(a,"a")
-   print("top of altexec, op=")
-   __st(op, "op")
+   --print("top of altexec, a=")
+   --__st(a,"a")
+   --print("top of altexec, op=")
+   --__st(op, "op")
    
    local other_alts = c:_get_other_alts(op)
-   __st(other_alts, "other_alts")
+   --__st(other_alts, "other_alts")
    local other_a = other_alts:random(a.to)
-   __st(other_a, "other_a back from random(a.to)")
+   --__st(other_a, "other_a back from random(a.to)")
    -- other_a may be nil
    local isend = altcopy(a, other_a)
-   print("middle of altexec, isend=", isend, "other_a nil?", other_a ~= nil)
+   --print("middle of altexec, isend=", isend, "other_a nil?", other_a ~= nil)
    
    if other_a ~= nil then
-      print("middle of altexec, other_a is not nil.")
+      --print("middle of altexec, other_a is not nil.")
       -- Disengage from channels used by the other Alt and make it ready.
       altalldequeue(other_a.alt_array)
       other_a.alt_array.resolved = other_a.alt_index
       task_ready(other_a.alt_array.task)
    elseif isend then
-      print("altexec is making ready: a.alt_array.task=")
-      __st(a.alt_array.task, "a.alt_array.task")
+      --print("altexec is making ready: a.alt_array.task=")
+      --__st(a.alt_array.task, "a.alt_array.task")
       task_ready(a.alt_array.task)
    end
 end
@@ -385,12 +385,12 @@ end
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array)
-   print("top of select, alt_array is")
-   __st(alt_array, "alt_array")
+   --print("top of select, alt_array is")
+   --__st(alt_array, "alt_array")
    for i,_ in ipairs(alt_array) do
-      __st(alt_array[i], "alt_array["..i.."]", 6)
+      --__st(alt_array[i], "alt_array["..i.."]", 6)
       if type(alt_array[i]) == "table" and type(alt_array[i][1]) == "table" then
-         __st(alt_array[i][1], "alt_array["..i.."][1]", 10)
+         --__st(alt_array[i][1], "alt_array["..i.."][1]", 10)
       end
    end
    
@@ -404,13 +404,13 @@ local function select(alt_array)
       defaultPresent = true
       defaultNum = 0LL
       canblock =false
-      print("select: {{}} default only case seen!")
+      --print("select: {{}} default only case seen!")
       
    elseif #alt_array==0 then
       -- no default, no cases: "select{}".
       -- block this goroutine forever
       local self_coro, is_main = coroutine.running()
-      print("warning: select{} is blocking the goroutine forever... ", self_coro)
+      --print("warning: select{} is blocking the goroutine forever... ", self_coro)
       -- just set ourselves to state normal? call the scheduler?
 
       -- jea: resume puts us in "normal" mode
@@ -422,14 +422,14 @@ local function select(alt_array)
       coroutine.resume(scheduler_co)
    end
 
-   print("select: loop through the alt_array...")   
+   --print("select: loop through the alt_array...")   
    local list_of_canexec_i = {}
    for i = 1, #alt_array do
-      print("top of alt_array loop, i = ", i)
+      --print("top of alt_array loop, i = ", i)
       local a = alt_array[i]
 
       if __fldcnt(a) == 0 then
-         print("select: default case observed to be present.")
+         --print("select: default case observed to be present.")
          --default: option
          defaultPresent = true
          canblock = false
@@ -437,11 +437,11 @@ local function select(alt_array)
          i=i+1
          goto zcontinue
       end
-      print("select: non default case! i=",i)
+      --print("select: non default case! i=",i)
       
       a.alt_array = alt_array
       a.alt_index = i
-      print("a.op is ", a.op, " of type "..type(a.op))
+      --print("a.op is ", a.op, " of type "..type(a.op))
       assert(type(a.op) == "string" and
                 (a.op == RECV or a.op == SEND or a.op == NOP),
              "op field must be RECV, SEND or NOP in alt")
@@ -453,36 +453,36 @@ local function select(alt_array)
 
          local sc = coroutine.running()
          if not tasks_to[sc] then
-            print("select is adding sc to the tasks_to table as key. value a")
+            --print("select is adding sc to the tasks_to table as key. value a")
             tasks_to[sc] = a
          end
       end
       ::zcontinue::
    end
-   print("select: done with alt_array loop") 
+   --print("select: done with alt_array loop") 
 
    if #list_of_canexec_i > 0 then
       if #list_of_canexec_i > 1 then
-         print("select: multiple choices from alt_array, can proceed... choosing one at random")
+         --print("select: multiple choices from alt_array, can proceed... choosing one at random")
       else
-         print("select: one choice from alt_array can proceed.")
+         --print("select: one choice from alt_array can proceed.")
       end
       local i = random_choice(list_of_canexec_i)
       altexec(alt_array[i])
       local res = {int(i-1), {alt_array.value, alt_array.closed == nil}}
-      print("select returning res[2] after choosing i=",i)
-      __st(res[2], "res")
+      --print("select returning res[2] after choosing i=",i)
+      --__st(res[2], "res")
       return res
    else
-      print("select: no cases to execute.")
+      --print("select: no cases to execute.")
    end
 
-   print("select: defaultPresent = ", defaultPresent)   
+   --print("select: defaultPresent = ", defaultPresent)   
    if defaultPresent then
-      print("select choosing our default: ")
+      --print("select choosing our default: ")
       return {int(defaultNum), {}}
    end
-   print("select: no default present, going on to block...")
+   --print("select: no default present, going on to block...")
    
    local self_coro, is_main = coroutine.running()
    alt_array.task = self_coro
@@ -507,8 +507,8 @@ local function select(alt_array)
 
    local r = alt_array.resolved
    local res = {int(r-1), {alt_array.value, alt_array.closed == nil}}
-   print("select at end, returning res:")
-   __st(res, "res")
+   --print("select at end, returning res:")
+   --__st(res, "res")
    return res
 end
 
@@ -534,10 +534,10 @@ local Channel = {
 
    recv = function(self, to)
       local alts = {{c = self, op = RECV, to = to and __abs_now() + to or nil}}
-      print("recv about to enter select")
+      --print("recv about to enter select")
       local r = select(alts, true)
-      print("recv returning from select")
-      __st(r[2], "r[2] in recv, back from select")
+      --print("recv returning from select")
+      --__st(r[2], "r[2] in recv, back from select")
       return unpack(r[2])
    end,
 
@@ -593,11 +593,10 @@ scheduler_co = coroutine.create(scheduler)
 __task = __M
 
 __task.resume_scheduler = function()
-   print("__task.resume_scheduler called! scheduler_co is:")
-   __st(scheduler_co, "scheduler_co")
+   --print("__task.resume_scheduler called! scheduler_co is:")
+   --__st(scheduler_co, "scheduler_co")
    local ok, err = coroutine.resume(scheduler_co)
-   -- crashes before we get to next line.
-   print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
+   --print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
    if not ok then
       print("error detected in __task.resume_scheduler!")
       print(debug.traceback(err))
