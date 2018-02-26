@@ -167,6 +167,14 @@ func Init() *lua.State {
 		// Values.
 		"null": Null,
 	})
+
+	// make backups; ipairs in particular seems
+	// messed up under coroutines.
+	L.GetGlobal("pairs")
+	L.SetGlobal("__pairs_original")
+	L.GetGlobal("ipairs")
+	L.SetGlobal("__ipairs_original")
+
 	Register(L, "", Map{
 		"pairs": ProxyPairs,
 		// jea: Using ProxyType is huge 10x performance loss for LuaJIT.

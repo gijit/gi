@@ -224,19 +224,38 @@ local function scheduler()
       print("scheduler: resume was okay, i is now = ", i)      
    end
 
-   print("scheduler: checking for timeouts")
-   
    local now = __abs_now()
+   print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
+   print("scheduler: checking for timeouts, here is #tasks_to: "..tostring(#tasks_to))
+   --printing the first "key" from pairs is calling resume... lets get rid
+   -- of any metatable first...
+
+   --local ok, err = pcall(__st(tasks_to, "tasks_to"))
+   print("scheduler, ok  from pcall to view tasks_to: ", ok)
+   print("scheduler, err from pcall to view tasks_to: ", err)
+   local  newtab = {"wo"}
+   __st(newtab)
+   print("newtab = ", #newtab)
+--   for k, v in pairs({hello="world"}) do
+      --print("key = "..tostring(k))
+--   end
+--[[
+   -- something is messed up about tasks_to, just viewing causes a 'resume' and crash:
+   -__st(tasks_to, "tasks_to")
+   
    local k = 0
+   print("scheduler: just before pairs(tasks_to)")
    for co, alt in pairs(tasks_to) do
-      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
+      print("scheduler: top of tasks_to loop")
+      --print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
          alt.c:_get_alts(RECV):remove(alt)
       end
    end
-
+   --]]
+   
    print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
 end
@@ -382,6 +401,7 @@ local function select(alt_array)
 
          local sc = coroutine.running()
          if not tasks_to[sc] then
+            print("select is adding sc to the tasks_to table as key. value a")
             tasks_to[sc] = a
          end
       end
@@ -499,7 +519,7 @@ __task.resume_scheduler = function()
    print("__task.resume_scheduler called! scheduler_co is:")
    __st(scheduler_co, "scheduler_co")
    local ok, err = coroutine.resume(scheduler_co)
-   -- cras before we get to next line.
+   -- crashes before we get to next line.
    print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
    if not ok then
       print("error detected in __task.resume_scheduler!")
