@@ -75,7 +75,7 @@ func registerLuarReqs(vm *golua.State) {
 
 	luar.Register(vm, "reflect", shadow_reflect.Pkg)
 	luar.Register(vm, "fmt", shadow_fmt.Pkg)
-	fmt.Printf("reflect/fmt registered\n")
+	//fmt.Printf("reflect/fmt registered\n")
 
 	// give goroutines.lua something to clone
 	// to generate select cases.

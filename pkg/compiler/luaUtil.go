@@ -49,7 +49,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	}
 
 	// load prelude
-	fmt.Printf("cfg = '%#v'\n", cfg)
+	//fmt.Printf("cfg = '%#v'\n", cfg)
 	files, err := FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 	panicOn(err)
 	if err != nil {
