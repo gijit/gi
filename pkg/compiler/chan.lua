@@ -88,9 +88,8 @@ if not is_main then
 end
 
 local scheduler_co
-
-local parkedForeverPool = coroutine.create(function() end)
-
+local resume_scheduler
+local task_park
 ----------------------------------------------------------------------------
 --- Helpers
 
@@ -182,7 +181,7 @@ local CircularBuffer = {
 -- Tasks ready to be run are placed on a stack and it's possible to
 -- starve a coroutine.
 local function scheduler()
-   --print("top of scheduler")
+   print("top of scheduler")
    
    -- returns nil if running on the main coroutine, otherwise
    -- returns the running coro.
@@ -192,10 +191,9 @@ local function scheduler()
    -- coroutine. But we do need to make sure that user doesn't do
    -- blocking operation from it, as it can't yield.
 
-   -- jea: I think we want to add a call to scheduler
-   --      from the main coroutine, after each repl command,
-   --      so as to let all background goroutines run.
-
+   -- jea: shouldn't the scheduler just always be running
+   -- in the background?
+   
    -- Be compatible with 5.1 and 5.2
    --assert(not(self_coro ~= nil and is_main ~= true),
    --      "Scheduler must be run from the main coroutine.")
@@ -251,6 +249,15 @@ end
 local function task_ready(co)
    --print("task_ready making ready co=", co)
    table.insert(tasks_runnable, co)
+end
+
+-- make co not be run until further notice
+local function task_park(co)
+   local newrun = {}
+   for _, v in ipairs(tasks_runnable) do
+      if v ~= co then table.insert(newrun, v) end
+   end
+   tasks_runnable = newrun
 end
 
 local function spawn(fun, args)
@@ -385,7 +392,8 @@ end
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array)
-   --print("top of select, alt_array is")
+   ::top::
+   print("top of select, alt_array is size ", #alt_array)
    --__st(alt_array, "alt_array")
    for i,_ in ipairs(alt_array) do
       --__st(alt_array[i], "alt_array["..i.."]", 6)
@@ -413,13 +421,12 @@ local function select(alt_array)
       --print("warning: select{} is blocking the goroutine forever... ", self_coro)
       -- just set ourselves to state normal? call the scheduler?
 
-      -- jea: resume puts us in "normal" mode
-      -- where we cannot be scheduled again without yielding
-      -- back to us. And the scheduler should never yield.
-      -- So this should effectively park us forever, just
-      -- like select{} does. We pause forever, without
-      -- running any defers, just as select{} would.
-      coroutine.resume(scheduler_co)
+      -- select{}: We pause here, forever, without
+      -- running any defers.
+
+      local thisCo = coroutine.running()
+      task_park(thisCo)
+      coroutine.yield(scheduler_co)
    end
 
    --print("select: loop through the alt_array...")   
@@ -489,8 +496,10 @@ local function select(alt_array)
       
    if not (self_coro ~= nil and is_main ~= true) then
       local err = "Unable to block from the main thread, run scheduler."
-      print(debug.traceback(err))
-      error(err)
+      coroutine.yield(scheduler_co)
+      goto top
+      --print(debug.traceback(err))
+      --error(err)
    end
    
    for i = 1, #alt_array do
@@ -585,14 +594,17 @@ local Channel = {
    end,
 }
 
-scheduler_co = coroutine.create(scheduler)
 
-----------------------------------------------------------------------------
--- Public interface
+local background_scheduler = function()
+   while true do
+      scheduler()
+      coroutine.yield()
+   end
+end
 
-__task = __M
+local scheduler_co = coroutine.create(background_scheduler)
 
-__task.resume_scheduler = function()
+local resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
    --__st(scheduler_co, "scheduler_co")
    local ok, err = coroutine.resume(scheduler_co)
@@ -603,6 +615,14 @@ __task.resume_scheduler = function()
       error(err)
    end
 end
+
+
+----------------------------------------------------------------------------
+-- Public interface
+
+__task = __M
+
+__task.resume_scheduler = resume_scheduler
 
 __task.scheduler = scheduler
 __task.spawn     = spawn
