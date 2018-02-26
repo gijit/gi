@@ -336,6 +336,8 @@ end
 
 -- Alt can be execed so find a counterpart Alt and exec it!
 altexec = function (a)
+   print("top of altexec, a=")
+   __st(a,"a")
    local c, op = a.c, a.op
    local other_alts = c:_get_other_alts(op)
    local other_a = other_alts:random(a.to)

@@ -540,6 +540,7 @@ __defer_func(%s)
 		}
 		c.Blocking[call] = true
 		c.translateStmt(&ast.ExprStmt{X: call}, label)
+		c.Printf("\n__task.scheduler();\n")
 
 	case *ast.SelectStmt:
 		selectionVar := c.newVariable("_selection")
