@@ -460,12 +460,13 @@ local function select(alt_array)
    
    local self_coro, is_main = coroutine.running()
    alt_array.task = self_coro
+      
    if not (self_coro ~= nil and is_main ~= true) then
       local err = "Unable to block from the main thread, run scheduler."
       print(debug.traceback(err))
       error(err)
    end
-
+   
    for i = 1, #alt_array do
       local a = alt_array[i]
       if a.op ~= NOP then

@@ -103,20 +103,23 @@ func Test903(t *testing.T) {
 		code := `
     a := 0
     b := ""
+
     chInt := make(chan int)
     chStr := make(chan string)
-    for i := 0; i < 2; i++ {
-      select {
-        case a = <- chInt:
-        case b = <- chStr:
-      }
-    }
+
 	go func() {
 		chInt <- 43
 	}()
 	go func() {
 		chStr <- "hello select"
 	}()
+
+    for i := 0; i < 2; i++ {
+      select {
+        case a = <- chInt:
+        case b = <- chStr:
+      }
+    }
 `
 
 		translation, err := inc.Tr([]byte(code))
