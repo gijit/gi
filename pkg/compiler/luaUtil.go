@@ -381,6 +381,8 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 			panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
 		}
 		evalThread := vm.ToThread(-1)
+		fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
+		vm.Pop(1)
 
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
@@ -393,6 +395,9 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		if vm.Type(-2) != golua.LUA_TBOOLEAN {
 			fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
 			fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
+
+			fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
+
 			panic("why no bool?")
 		}
 		ok := vm.ToBoolean(-2)

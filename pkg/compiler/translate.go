@@ -27,10 +27,22 @@ import (
 // the incremental translation state
 func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
 
+	// get the eval thread and register that
+	// with goro, so it gets the imports
+	vm.GetGlobal("__gijitMainCoro")
+	if vm.IsNil(-1) {
+		panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
+	}
+	evalThread := vm.ToThread(-1)
+	vm.Pop(1)
+	if evalThread == nil {
+		panic("could not get __gijitMainCoro as Lua *State using vm.ToThread")
+	}
+
 	if cfg == nil {
 		cfg = NewGIConfig()
 	}
-	goro, err := NewGoro(vm, &GoroConfig{GiCfg: cfg, off: true})
+	goro, err := NewGoro(evalThread, &GoroConfig{GiCfg: cfg, off: true})
 	panicOn(err)
 	ic := &IncrState{
 		goro:   goro,
