@@ -373,10 +373,6 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 	startTop := vm.GetTop()
 	defer vm.SetTop(startTop)
 
-	if strings.HasPrefix(s, "import") {
-		panic("where?")
-	}
-
 	if useEvalCoroutine {
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {

@@ -176,13 +176,13 @@ func Init() *lua.State {
 
 	// Ugh. the ipairs and pairs proxies
 	// crash under non-main coroutines. Turn them off for now.
-	Register(L, "", Map{
+	//Register(L, "", Map{
 	//"pairs": ProxyPairs,
 	// jea: Using ProxyType is huge 10x performance loss for LuaJIT.
 	// So try not to use it. A developer on the project
 	// reports that it is entirely cosmetic anyhow.
 	//"type": ProxyType,
-	})
+	//})
 	// 'ipairs' needs a special case for performance reasons.
 	//RegProxyIpairs(L, "", "ipairs")
 	return L
