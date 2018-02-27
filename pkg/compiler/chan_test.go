@@ -211,7 +211,6 @@ func Test905(t *testing.T) {
 	})
 }
 
-/*
 func Test906(t *testing.T) {
 
 	cv.Convey("all-lua system: multiple sends from new goroutine, received on main goroutine", t, func() {
@@ -251,4 +250,3 @@ func Test906(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
-*/
