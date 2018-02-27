@@ -113,7 +113,7 @@ func Test058CallFmtIncr(t *testing.T) {
 func Test059CallFmtSummer(t *testing.T) {
 
 	cv.Convey(`Given a pre-compiled Go function gitesting.SummerAny(a ...int), we should be able to call it from gi using gitesting.SummerAny(1, 2, 3);`, t, func() {
-		*dbg = true
+		//*dbg = true
 		cv.So(SummerAny(1, 2, 3), cv.ShouldEqual, 6)
 		pp("good: SummerAny(1,2,3) gave us 6 as expected.")
 
