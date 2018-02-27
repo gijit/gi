@@ -367,6 +367,28 @@ func LuaRunAndReport(vm *golua.State, s string) {
 	}
 }
 
+type LuaRunner struct {
+	vm         *golua.State
+	evalThread *golua.State
+}
+
+func NewLuaRunner(vm *golua.State) *LuaRunner {
+	lr := &LuaRunner{vm: vm}
+
+	vm.GetGlobal("__gijitMainCoro")
+	if vm.IsNil(-1) {
+		panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
+	}
+	lr.evalThread = vm.ToThread(-1)
+	fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
+	vm.Pop(1)
+	return lr
+}
+
+func (lr *LuaRunner) Run(s string, useEvalCoroutine bool) error {
+	return LuaRun(lr.vm, s, useEvalCoroutine)
+}
+
 // useEvalCoroutine may need to be false to bootstrap, but
 // should be typically true once the prelude / __gijitMainCoro is loaded.
 func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
@@ -375,14 +397,6 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 
 	if useEvalCoroutine {
 		// get the eval thread, it will have its own stack
-
-		vm.GetGlobal("__gijitMainCoro")
-		if vm.IsNil(-1) {
-			panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
-		}
-		evalThread := vm.ToThread(-1)
-		fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
-		vm.Pop(1)
 
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
@@ -396,7 +410,7 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 			fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
 			fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
 
-			fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
+			//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
 
 			panic("why no bool?")
 		}

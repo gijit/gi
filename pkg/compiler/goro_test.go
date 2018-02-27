@@ -1,17 +1,51 @@
 package compiler
 
-// while we work on lua-only goroutines, comment this out.
-/*
-
 import (
 	//"fmt"
 	"testing"
 
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	//"github.com/gijit/gi/pkg/token"
+	//"github.com/gijit/gi/pkg/types"
 	cv "github.com/glycerine/goconvey/convey"
 	//"github.com/glycerine/luar"
 )
+
+func Test707ReplGoroVsBackendGoro(t *testing.T) {
+
+	cv.Convey(`In order to allow background goroutines to run, the frontend of the repl runs on its own goroutine, and the backend of runs its own goroutine to keep the scheduler alive and running LuaJIT code. Therefore we should see, even when waiting at the REPL and not typing any input, that background goroutines are running.`, t, func() {
+
+		code := `
+  a := 1
+  ch := make(chan int)
+  go func() {
+      for i :=0; i < 3; i++ {
+         <-ch
+         a++
+         println("a is now, a)
+      }
+  }()
+  for j:=0; j < 3; j++ {
+      ch <- j
+  }
+`
+		// a should be 4
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "a", 4)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+// while we work on lua-only goroutines, comment this out.
+/*
 
 func Test700StartGoroutine(t *testing.T) {
 

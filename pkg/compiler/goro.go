@@ -2,11 +2,27 @@ package compiler
 
 import (
 	"fmt"
+	"time"
 
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/idem"
 	"github.com/glycerine/luar"
 )
+
+// act as a thread-safe proxy to a lua state
+// vm running on its own goroutine.
+type Goro struct {
+	cfg      *GoroConfig
+	lr       *LuaRunner
+	vm       *golua.State
+	halt     *idem.Halter
+	doticket chan *ticket
+}
+
+type GoroConfig struct {
+	GiCfg *GIConfig
+	off   bool // don't run in separate goroutine.
+}
 
 type ticket struct {
 	myGoro *Goro
@@ -68,25 +84,9 @@ const (
 	GetChan
 )
 
-// act as a thread-safe proxy to a lua state
-// vm running on its own goroutine.
-type Goro struct {
-	cfg      *GoroConfig
-	vm       *golua.State
-	halt     *idem.Halter
-	doticket chan *ticket
-}
-
-type GoroConfig struct {
-	GiCfg *GIConfig
-	off   bool // don't run in separate goroutine.
-}
-
 func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 	if cfg == nil {
-		cfg = &GoroConfig{
-			off: true, // default to off for now
-		}
+		cfg = &GoroConfig{}
 	}
 
 	var err error
@@ -102,7 +102,9 @@ func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 		vm:       vm,
 		halt:     idem.NewHalter(),
 		doticket: make(chan *ticket),
+		lr:       NewLuaRunner(vm),
 	}
+
 	if !cfg.off {
 		r.Start()
 	}
@@ -115,8 +117,14 @@ func (r *Goro) Start() {
 			r.halt.MarkDone()
 			r.vm.Close()
 		}()
+
+		beat := 1000 * time.Millisecond
+		heartbeat := time.After(beat)
 		for {
 			select {
+			case <-heartbeat:
+				heartbeat = time.After(beat)
+				r.handleHeartbeat()
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:
@@ -124,6 +132,12 @@ func (r *Goro) Start() {
 			}
 		}
 	}()
+}
+
+func (r *Goro) handleHeartbeat() {
+	fmt.Printf("goro heartbeat!\n")
+	err := LuaRun(r.vm, "__task.resume_scheduler();", false)
+	panicOn(err)
 }
 
 func (r *Goro) handleTicket(t *ticket) {
@@ -135,7 +149,7 @@ func (r *Goro) handleTicket(t *ticket) {
 
 	if len(t.run) > 0 {
 		s := string(t.run)
-		t.runErr = LuaRun(r.vm, s, true)
+		t.runErr = r.lr.Run(s, true)
 	}
 	if t.runErr == nil && len(t.varname) > 0 {
 		for key := range t.varname {
