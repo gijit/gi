@@ -82,6 +82,26 @@ local tasks_runnable = {}       -- list of coroutines ready to be resumed
 local tasks_to = {}             -- all the timeout tasks
 local altexec
 
+__all_coro = {} -- array
+
+-- value.__loc gives location in __all_coro array.
+-- value.__name readable name
+__coro2notes = {} 
+
+-- return coroutine status as a string
+__costring=function(co)
+   local v=__coro2notes[co]
+   return tostring(v.__loc).." "..v.__name .." status:"..coroutine.status(co)
+end
+
+__coshow=function()
+   print("#     name    coroutine status")
+   for k,v in pairs(__coro2notes) do
+      print(__costring(k))
+   end
+end
+
+
 local main_coro, is_main = coroutine.running()
 if not is_main then
    error("must be loaded, for now, by main coroutine")
@@ -192,7 +212,10 @@ local function scheduler()
    -- blocking operation from it, as it can't yield.
 
    -- jea: shouldn't the scheduler just always be running
-   -- in the background?
+   -- in the background? With the lua coroutine system
+   -- there's only one thread. When the
+   -- repl is waiting for input, can or should we be running
+   -- in the background? 
    
    -- Be compatible with 5.1 and 5.2
    --assert(not(self_coro ~= nil and is_main ~= true),
@@ -206,7 +229,7 @@ local function scheduler()
    local i = 0
    while true do
       if #tasks_runnable == 0 then
-         --print("scheduler: no more runnable tasks")
+         print("scheduler: no more runnable tasks")
          break
       end
       -- table.remove takes the last by default.
@@ -214,27 +237,27 @@ local function scheduler()
       tasks_to[co] = nil
 
       -- and resume co
-      --print("scheduler: coroutine.resume about to be called on co="..tostring(co))
+      print("scheduler: coroutine.resume about to be called on co="..__costring(co))
       local back = {coroutine.resume(co)}
-      --print("scheduler: got back from resume: ", unpack(back))
+      print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
       okay, emsg = unpack(back)
       if not okay then
-         --print(debug.traceback(emsg))
+         print(debug.traceback(emsg))
          error(emsg)
       end
       i = i + 1
-      --print("scheduler: resume was okay, i is now = ", i)      
+      print("scheduler: resume was okay, i is now = ", i)      
    end
 
    local now = __abs_now()
-   --print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
+   print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
    
    local k = 0
-   --print("scheduler: just before pairs(tasks_to)")
+   print("scheduler: just before pairs(tasks_to)")
    for co, alt in pairs(tasks_to) do
-      --print("scheduler: top of tasks_to loop")
-      --print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
+      print("scheduler: top of tasks_to loop")
+      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
@@ -242,7 +265,7 @@ local function scheduler()
       end
    end
    
-   --print("end of scheduler, we ran i tasks, returning i=", i)   
+   print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
 end
 
@@ -271,6 +294,10 @@ local function spawn(fun, args)
       end
    end
    local co = coroutine.create(f)
+   table.insert(__all_coro, co)
+   local n=#__all_coro
+   __coro2notes[co]={__loc=n, __name="spawn #"..tostring(n)}
+   
    task_ready(co)
    --print("spawn added to ready queue: co = ", co)
 end
@@ -603,6 +630,8 @@ local background_scheduler = function()
 end
 
 local scheduler_co = coroutine.create(background_scheduler)
+table.insert(__all_coro, scheduler_co)
+__coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 
 local resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
