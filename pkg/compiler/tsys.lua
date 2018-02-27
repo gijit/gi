@@ -3207,8 +3207,15 @@ __gijitMainEvalLoop = function(code)
       else
         
          print("run the compiled bytecode...")
+         print(".........................")
+         print(".........................")
+         print("")
+
          ok, err = xpcall(function() chunk() end, __errHandlerForEval)
 
+         print("")
+         print(".........................")
+         print(".........................")
          print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
          print("ran the compiled bytecode. ok=", ok, "  err=", err)
          if not ok then
@@ -3265,5 +3272,4 @@ __eval = function(code)
 --]]
 end
 
-__tt={"boogie", "woogie"}
 
