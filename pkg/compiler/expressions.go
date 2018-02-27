@@ -394,7 +394,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
 				return c.formatExpr("%e", call)
 			}
-			return c.formatExpr("%e[1]", call)
+			// jea:  what is this doing???
+			// return c.formatExpr("%e[1]", call)
+			return c.formatExpr("")
 		}
 
 		basic := t.Underlying().(*types.Basic)

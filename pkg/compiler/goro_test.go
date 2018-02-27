@@ -21,7 +21,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
       for i :=0; i < 3; i++ {
          <-ch
          a++
-         println("a is now, a)
+         println("a is now ", a)
       }
   }()
   for j:=0; j < 3; j++ {
