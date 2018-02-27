@@ -622,8 +622,9 @@ func (L *State) ToPointer(index int) uintptr {
 
 // lua_tothread
 func (L *State) ToThread(index int) *State {
-	//TODO: find a way to link lua_State* to existing *State, return that
-	return &State{}
+	s := &State{s: (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index))))}
+	registerGoState(s)
+	return s
 }
 
 // lua_touserdata

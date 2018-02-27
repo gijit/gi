@@ -374,6 +374,14 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 	defer vm.SetTop(startTop)
 
 	if useEvalCoroutine {
+		// get the eval thread, it will have its own stack
+
+		vm.GetGlobal("__gijitMainCoro")
+		if vm.IsNil(-1) {
+			panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
+		}
+		evalThread := vm.ToThread(-1)
+
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
 			panic("could not locate __eval in _G")
