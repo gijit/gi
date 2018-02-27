@@ -1,5 +1,6 @@
 package compiler
 
+/* comment out all luar/native go imports for now
 import (
 	"fmt"
 	"math"
@@ -294,8 +295,8 @@ func Test060_LuaToGo_handles_slices(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	__type__.anon_sliceType = __sliceType(__type__.int); 
-  
+  	__type__.anon_sliceType = __sliceType(__type__.int);
+
   	a = __type__.anon_sliceType({[0]=5LL, 6LL, 4LL});
     `)
 
@@ -423,3 +424,5 @@ func testOp(m *myGoTestStruct) string { return "" }
 		LuaMustString(vm, "s", "priv:4, Pub:5")
 	})
 }
+
+*/

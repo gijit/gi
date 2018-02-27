@@ -77,10 +77,10 @@ package main
 
 // matrix multiplication benchmark
 
-import (
-	"fmt"
-	"math/rand"
-)
+//import (
+//	"fmt"
+//	"math/rand"
+//)
 
 type Matrix struct {
 	A    [][]float64
@@ -119,8 +119,9 @@ func NewMatrix(nrow, ncol int, fill bool) *Matrix {
 // m1 x m2 matrix multiplication
 func mult(m1, m2 *Matrix) (r *Matrix) {
 	if m1.Ncol != m2.Nrow {
-		panic(fmt.Sprintf(
-			"incompatible: m1.Ncol=%v, m2.Nrow=%v", m1.Ncol, m2.Nrow))
+        panic("incompatible dimensions")
+		//panic(fmt.Sprintf(
+		//	"incompatible: m1.Ncol=%v, m2.Nrow=%v", m1.Ncol, m2.Nrow))
 	}
 	r = NewMatrix(m1.Nrow, m2.Ncol, false)
 	nr1 := m1.Nrow
