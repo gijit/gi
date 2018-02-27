@@ -3174,7 +3174,10 @@ end;
 
 __throw = function(err)  error(err); end;
 
+__lastEvalErr = ""
+
 __errHandlerForEval = function(err)
+   __lastEvalErr = err
    print("error! __errHandlerForEval sees err =", err)
    print(debug.traceback(coroutine.running(), err))
    return err
@@ -3188,6 +3191,7 @@ end
 --
 __gijitMainEvalLoop = function(code)
    print("top of __gijitMainEvalLoop")
+   __lastEvalErr = ""
    
    local chunk, err, ok
    while true do
@@ -3204,21 +3208,21 @@ __gijitMainEvalLoop = function(code)
         
          print("run the compiled bytecode...")
          ok, err = xpcall(function() chunk() end, __errHandlerForEval)
-         
-         -- not getting here on __st(_G); some kind of error is thrown?
+
+         print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
          print("ran the compiled bytecode. ok=", ok, "  err=", err)
          if not ok then
             err = "run error: "..tostring(err)
-            print("main loop pcall had err= ",err)
+            print("main loop xpcall had err= ",err)
          else
-           print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
-           err = nil
+            print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
+            err = nil
          end
-     end;
-   print("main loop: yielding err="..tostring(err))
-   code = coroutine.yield(ok, err)
-   print("main loop: yield returned with new code: "..code)
-   
+      end;
+      print("main loop: yielding err="..tostring(err))
+      code = coroutine.yield(err)
+      print("main loop: yield returned with new code: "..code)
+      
    end -- while true
 end
 
