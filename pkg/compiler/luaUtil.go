@@ -382,14 +382,14 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		vm.PushString(s)
 		vm.Call(1, 2)
 		// if top is true, no error. Otherwise error is at -2
-		if vm.Type(-1) == golua.LUA_TBOOLEAN {
+		if vm.Type(-2) != golua.LUA_TBOOLEAN {
 			fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
 			fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
 			panic("why no bool?")
 		}
-		ok := vm.ToBoolean(-1)
+		ok := vm.ToBoolean(-2)
 		if !ok {
-			err := fmt.Errorf("%s", vm.ToString(-2))
+			err := fmt.Errorf("%s", vm.ToString(-1))
 			fmt.Printf("bad, err: '%v'\n", err)
 			return err
 		}

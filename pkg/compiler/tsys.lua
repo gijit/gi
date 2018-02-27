@@ -405,7 +405,10 @@ end
 
 -- st or showtable, a debug print helper.
 -- seen avoids infinite looping on self-recursive types.
+-- Trying to print some userdata from Luar
+-- was crashing us, so don't print userdata.
 function __st(t, name, indent, quiet, methods_desc, seen)
+   print("debug: top of __st")
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -413,6 +416,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       end
       return s
    end
+   print("debug: __st, t was not nil")
 
    seen = seen or {}
    if seen[t] ~= nil then
@@ -421,6 +425,10 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    seen[t] =true   
    
    if type(t) ~= "table" then
+      if type(t) == "thread" then
+         print("debug: __st, is a thread")
+         return "thread"
+      end
       local s = tostring(t)
       if not quiet then
          if type(t) == "string" then
@@ -429,9 +437,11 @@ function __st(t, name, indent, quiet, methods_desc, seen)
             print(s)
          end
       end
+      print("debug: __st, was not a table")       
       return s
    end   
 
+   print("debug: __st, is a table... get address")   
    -- get address, avoiding infinite loop of self-calls.
    local mt = getmetatable(t)
    setmetatable(t, nil)
@@ -447,10 +457,20 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    local indent = indent or 0
    local pre = string.rep(" ", 4*indent)..namec
    local s = pre .. "============================ "..addr.."\n"
+
+   print("debug: __st, about to pairs loop")      
    for i,v in pairs(t) do
       k=k+1
       local vals = ""
-      if methods_desc then
+      local tyv = type(v)
+      print("debug: in pairs(t) loop, i is: '"..tostring(i).."'")
+      if tyv == "userdata" then
+         vals = "userdata--do-not-print-may-crash-the-vm"
+         
+      elseif tyv == "thread" then
+         vals = "tread--unprinted"
+         
+      elseif methods_desc then
          --print("methods_desc is true")
          vals = __st(v,"",indent+3,quiet,methods_desc, seen)
       else
@@ -3211,7 +3231,7 @@ __eval = function(code)
    print("status = ", status)
 
    if status ~= "suspended" then
-      error("problem! our __eval is not suspended! instead: "..status)
+      return false, "problem! our __eval is not suspended! instead: "..status
    end
    
    ok, err = coroutine.resume(__gijitMainCoro, code)
@@ -3240,3 +3260,6 @@ __eval = function(code)
    return true, "ok"
 --]]
 end
+
+__tt={"boogie", "woogie"}
+
