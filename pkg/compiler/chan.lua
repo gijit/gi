@@ -195,8 +195,8 @@ local function scheduler()
    -- in the background?
    
    -- Be compatible with 5.1 and 5.2
-   --assert(not(self_coro ~= nil and is_main ~= true),
-   --      "Scheduler must be run from the main coroutine.")
+   assert(not(self_coro ~= nil and is_main ~= true),
+         "Scheduler must be run from the main coroutine.")
    
    --print("scheduler: self_coro is ", self_coro)
    --print("scheduler: is_main is ", is_main)

@@ -289,11 +289,12 @@ func Test033dDefersWorkOnDirectionFunctionCalls(t *testing.T) {
 	cv.Convey(`defer on a repeated direct function call`, t, func() {
 
 		code := `
-import "fmt"
 
-var result string
+var result int
 
-func addDotDotDot(v ...interface{}) { result += fmt.Sprint(v...) }
+var base int = 1
+
+func addDotDotDot(v int) { result += (base * v); base=base*10; }
 
 func test2helper() {
 	for i := 0; i < 10; i++ {
@@ -312,7 +313,7 @@ test2helper()
 
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
-		LuaMustString(vm, "result", "9876543210")
+		LuaMustInt64(vm, "result", 123456789)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
