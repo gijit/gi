@@ -408,7 +408,7 @@ end
 -- Trying to print some userdata from Luar
 -- was crashing us, so don't print userdata.
 function __st(t, name, indent, quiet, methods_desc, seen)
-   print("debug: top of __st")
+   --print("debug: top of __st")
    if t == nil then
       local s = "<nil>"
       if not quiet then
@@ -416,7 +416,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
       end
       return s
    end
-   print("debug: __st, t was not nil")
+   --print("debug: __st, t was not nil")
 
    seen = seen or {}
    if seen[t] ~= nil then
@@ -426,7 +426,7 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    
    if type(t) ~= "table" then
       if type(t) == "thread" then
-         print("debug: __st, is a thread")
+         --print("debug: __st, is a thread")
          return "thread"
       end
       local s = tostring(t)
@@ -437,11 +437,11 @@ function __st(t, name, indent, quiet, methods_desc, seen)
             print(s)
          end
       end
-      print("debug: __st, was not a table")       
+      --print("debug: __st, was not a table")       
       return s
    end   
 
-   print("debug: __st, is a table... get address")   
+   --print("debug: __st, is a table... get address")   
    -- get address, avoiding infinite loop of self-calls.
    local mt = getmetatable(t)
    setmetatable(t, nil)
@@ -458,12 +458,12 @@ function __st(t, name, indent, quiet, methods_desc, seen)
    local pre = string.rep(" ", 4*indent)..namec
    local s = pre .. "============================ "..addr.."\n"
 
-   print("debug: __st, about to pairs loop")      
+   --print("debug: __st, about to pairs loop")      
    for i,v in pairs(t) do
       k=k+1
       local vals = ""
       local tyv = type(v)
-      print("debug: in pairs(t) loop, i is: '"..tostring(i).."'")
+      --print("debug: in pairs(t) loop, i is: '"..tostring(i).."'")
       if tyv == "userdata" then
          vals = "userdata--do-not-print-may-crash-the-vm"
          
@@ -3238,7 +3238,7 @@ __eval = function(code)
       return false, "problem! our __eval is not suspended! instead: "..status
    end
    
-   ok, err = coroutine.resume(__gijitMainCoro, code)
+   local ok, err = coroutine.resume(__gijitMainCoro, code)
    print("back from resume of __gijitMainCoro, ok=", ok, "  err=", err)
    if not ok then
       print("not okay: return ok, err; ok=", ok, "  err=",err)

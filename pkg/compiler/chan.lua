@@ -241,7 +241,7 @@ local function scheduler()
       local back = {coroutine.resume(co)}
       print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
-      okay, emsg = unpack(back)
+      local okay, emsg = unpack(back)
       if not okay then
          print(debug.traceback(emsg))
          error(emsg)
