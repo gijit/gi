@@ -3154,6 +3154,11 @@ end;
 
 __throw = function(err)  error(err); end;
 
+__errHandlerForEval = function(err)
+   print("error! __errHandlerForEval sees err =", err)
+   print(debug.traceback(coroutine.running(), err))
+   return err
+end
 
 -- The main eval loop for the gijit REPL never returns.
 -- It only compiles and runs 'code', then yeilds nil
@@ -3162,24 +3167,36 @@ __throw = function(err)  error(err); end;
 -- Resume it with new code to run, ad inifinitum.
 --
 __gijitMainEvalLoop = function(code)
-
+   print("top of __gijitMainEvalLoop")
+   
    local chunk, err, ok
    while true do
+      print("top of main loop: while true...")
      -- compile chunk to bytecode
-     chunk, err = loadstring(code);
-     if err ~= nil then
-        err = "load error: "..tostring(err)
-     else
-        -- run the compiled bytecode
-        ok, err = pcall(function() chunk() end)
-        if not ok then
-           err = "run error: "..tostring(err)
-        else
+      chunk, err = loadstring(code);
+      print("back from loadstring of code '"..code.."'  we have err=",err," and chunk=", chunk)
+      if err ~= nil then
+         
+         err = "load error: "..tostring(err)
+         print("main loop had err= ",err)
+        
+      else
+        
+         print("run the compiled bytecode...")
+         ok, err = xpcall(function() chunk() end, __errHandlerForEval)
+         
+         -- not getting here on __st(_G); some kind of error is thrown?
+         print("ran the compiled bytecode. ok=", ok, "  err=", err)
+         if not ok then
+            err = "run error: "..tostring(err)
+            print("main loop pcall had err= ",err)
+         else
+           print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
            err = nil
-        end
+         end
      end;
    print("main loop: yielding err="..tostring(err))
-   code = coroutine.yield(err)
+   code = coroutine.yield(ok, err)
    print("main loop: yield returned with new code: "..code)
    
    end -- while true
@@ -3189,9 +3206,18 @@ __gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
 
 __eval = function(code)
    print("__eval called with code: '"..code.."'")
+
+   local status = coroutine.status(__gijitMainCoro)
+   print("status = ", status)
+
+   if status ~= "suspended" then
+      error("problem! our __eval is not suspended! instead: "..status)
+   end
    
    ok, err = coroutine.resume(__gijitMainCoro, code)
+   print("back from resume of __gijitMainCoro, ok=", ok, "  err=", err)
    if not ok then
+      print("not okay: return ok, err; ok=", ok, "  err=",err)
       return ok, err
    end
    return true, "ok"

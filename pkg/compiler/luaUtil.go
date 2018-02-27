@@ -182,6 +182,10 @@ func LuaStackPosToString(L *golua.State, i int) string {
 		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
 	case golua.LUA_TFUNCTION:
 		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
+	case golua.LUA_TTHREAD:
+		return fmt.Sprintf(" Type(code %v/ LUA_TTHREAD) : no auto-print available.\n", t)
+	case golua.LUA_TLIGHTUSERDATA:
+		return fmt.Sprintf(" Type(code %v/ LUA_TLIGHTUSERDATA) : no auto-print available.\n", t)
 	default:
 	}
 	return fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
@@ -378,6 +382,11 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		vm.PushString(s)
 		vm.Call(1, 2)
 		// if top is true, no error. Otherwise error is at -2
+		if vm.Type(-1) == golua.LUA_TBOOLEAN {
+			fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
+			fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
+			panic("why no bool?")
+		}
 		ok := vm.ToBoolean(-1)
 		if !ok {
 			err := fmt.Errorf("%s", vm.ToString(-2))
