@@ -113,10 +113,6 @@ func Test101InterfaceConversion(t *testing.T) {
 		code := `
 		package main
 
-		import (
-			"fmt"
-		)
-
 		type Counter interface {
 			Next() int
 		}
@@ -185,10 +181,6 @@ func Test102InterfaceMethodset(t *testing.T) {
 		code := `
 package main
 
-import (
-	"fmt"
-)
-
 type Bowser interface {
 	Hi()
 }
@@ -207,7 +199,7 @@ type Unsat interface {
 type B struct{}
 
 func (b *B) Hi() {
-	fmt.Printf("B.Hi called\n")
+	println("B.Hi called\n")
 }
 func (b *B) Pebbles() {}
 
@@ -215,13 +207,13 @@ func (b *B) Pebbles() {}
 	var v Bowser = &B{}
 	switch v.(type) {
     case Possum:
-		fmt.Printf("ooh! it types as a Possum!\n")
+		println("ooh! it types as a Possum!\n")
         chk = 2
 	case Bowser:
-		fmt.Printf("yabadadoo! it types as a Bowser!\n")
+		println("yabadadoo! it types as a Bowser!\n")
         chk = 1
 	}
-    fmt.Printf("chk = '%v'\n", chk)
+    println("chk = ", chk)
 
     // and verify that v implements Bowser too:
     asBowser, isBowser := v.(Bowser)
@@ -257,10 +249,6 @@ func Test202InterfaceMethodset(t *testing.T) {
 		code := `
 package main
 
-import (
-	"fmt"
-)
-
 type Bowser interface {
 	Hi() int
 }
@@ -279,7 +267,7 @@ type Unsat interface {
 type B struct{}
 
 func (b *B) Hi() {
-	fmt.Printf("B.Hi called\n")
+	println("B.Hi called\n")
 }
 func (b *B) Pebbles() {}
 
@@ -287,13 +275,13 @@ chk := 0
 var v interface{} = &B{}
 switch v.(type) {
     case Possum:
-		fmt.Printf("ooh! it types as a Possum!\n")
+		println("ooh! it types as a Possum!\n")
         chk = 2
 	case Bowser:
-		fmt.Printf("yabadadoo! it types as a Bowser!\n")
+		println("yabadadoo! it types as a Bowser!\n")
         chk = 1
 	}
-    fmt.Printf("chk = '%v'\n", chk)
+    println("chk = ", chk)
 
     // and verify that v does not implement Bowser too:
     asBowser, isBowser := v.(Bowser)

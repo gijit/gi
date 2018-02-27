@@ -7,6 +7,7 @@ import (
 	cv "github.com/glycerine/goconvey/convey"
 )
 
+/* comment out native/luar use for now
 func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function. A test of Luar functionality.`, t, func() {
@@ -38,34 +39,6 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 	})
 }
 
-func Test081CloneOfInt64Array(t *testing.T) {
-
-	cv.Convey(`__gi_clone([3]int64) should return a clone of the array`, t, func() {
-
-		code := `
-   a := [3]int64{1,3,4}
-   b := a
-   c := b[2]
-`
-
-		vm, err := NewLuaVmWithPrelude(nil)
-		panicOn(err)
-		defer vm.Close()
-		inc := NewIncrState(vm, nil)
-
-		translation, err := inc.Tr([]byte(code))
-		fmt.Printf("\n translation='%s'\n", translation)
-
-		// too fragile.
-		//cv.So(string(translation), matchesLuaSrc,``)
-
-		// and verify that it happens correctly
-		LuaRunAndReport(vm, string(translation))
-
-		LuaMustInt64(vm, "c", 4)
-
-	})
-}
 
 func Test082IncrementOnInt64Arrays(t *testing.T) {
 
@@ -94,6 +67,37 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 		LuaMustInt64(vm, "b", 2)
 		LuaMustInt64(vm, "c", 3)
+
+	})
+}
+
+*/
+
+func Test081CloneOfInt64Array(t *testing.T) {
+
+	cv.Convey(`__gi_clone([3]int64) should return a clone of the array`, t, func() {
+
+		code := `
+   a := [3]int64{1,3,4}
+   b := a
+   c := b[2]
+`
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// too fragile.
+		//cv.So(string(translation), matchesLuaSrc,``)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "c", 4)
 
 	})
 }

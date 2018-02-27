@@ -84,15 +84,6 @@ func Test002LuaEvalIncremental(t *testing.T) {
 	LuaMustInt64(vm, "sum", 20)
 }
 
-// func Test003ImportsAtRepl(t *testing.T) {
-// 	inc := NewIncrState()
-
-// 	cv.Convey("imports", t, func() {
-// 		cv.So(string(inc.Tr([]byte(`import "fmt"; fmt.Printf("hello world!")`))), matchesLuaSrc, "")
-// 		pp("GOOD: past 1st import")
-// 	})
-// }
-
 func Test004ExpressionsAtRepl(t *testing.T) {
 	vm, err := NewLuaVmWithPrelude(nil)
 	panicOn(err)

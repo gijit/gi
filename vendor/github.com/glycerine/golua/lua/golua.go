@@ -13,6 +13,7 @@ package lua
 import "C"
 
 import (
+	//"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -66,9 +67,32 @@ func getGoState(gostateindex uintptr) *State {
 	return goStates[gostateindex]
 }
 
+/* jea added to debug
+func printGoStates() (biggest uintptr) {
+	goStatesMutex.Lock()
+	defer goStatesMutex.Unlock()
+	maxReg := 0
+	for gostateindex, v := range goStates {
+		fmt.Printf("gostateindex=%v, state='%#v'\n", gostateindex, v)
+		cur := len(v.registry)
+		if cur > maxReg {
+			maxReg = cur
+			biggest = gostateindex
+		}
+	}
+	return biggest
+}
+*/
+
 //export golua_callgofunction
 func golua_callgofunction(gostateindex uintptr, fid uint) int {
 	L1 := getGoState(gostateindex)
+	//fmt.Printf("\n jea debug: available states are:")
+	//biggest := printGoStates()
+	// jea: to debug, try substituting the biggest...
+	//if biggest != gostateindex {
+	//	L1 = getGoState(biggest)
+	//}
 	if fid < 0 {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
