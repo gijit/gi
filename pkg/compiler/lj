@@ -1,0 +1,2 @@
+#!/bin/bash
+luajit -i -e 'dofile("tsys.lua")'
