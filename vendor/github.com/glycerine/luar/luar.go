@@ -155,17 +155,17 @@ func Init() *lua.State {
 	L.OpenLibs()
 	Register(L, "luar", Map{
 		// Functions.
-		"unproxify": Unproxify,
+		"__luar_unproxify": Unproxify,
 
-		"method": ProxyMethod,
+		"__luar_method": ProxyMethod,
 
-		"chan":    MakeChan,
-		"complex": Complex,
-		"map":     MakeMap,
-		"slice":   MakeSlice,
+		"__luar_chan":           MakeChan,
+		"__luar_complex_number": Complex,
+		"__luar_map":            MakeMap,
+		"__luar_slice":          MakeSlice,
 
 		// Values.
-		"null": Null,
+		"__luar_null": Null,
 	})
 
 	// make backups;
