@@ -386,6 +386,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 
 		case token.ARROW:
+			fmt.Printf("case token.ARROW:  expr is '%#v'/Type=%T, as string: '%s'. stack:\n'%s'\n", expr, expr, c.exprToString(expr), string(debug.Stack()))
 			call := &ast.CallExpr{
 				Fun:  c.newIdent("__recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
 				Args: []ast.Expr{e.X},
@@ -394,9 +395,19 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if _, isTuple := exprType.(*types.Tuple); isTuple {
 				return c.formatExpr("%e", call)
 			}
-			// jea:  what is this doing???
-			// return c.formatExpr("%e[1]", call)
-			return c.formatExpr("")
+			// jea:  what is this doing? The [1] in
+			// then 2nd line here:
+			//  _r = __recv(ch);
+			//  b = _r[1];
+			// 707 is translating '<-ch' into
+			//    _r = __recv(ch);
+			//    _r[1]; // this is the [1]
+			//
+
+			//panic("where?")
+			fmt.Printf("stack prior to e[1]:\n%s\n", string(debug.Stack()))
+			return c.formatExpr("%e", call)
+			//return c.formatExpr("%e[1]", call)
 		}
 
 		basic := t.Underlying().(*types.Basic)
@@ -978,7 +989,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 }
 
 func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *expression) *expression {
-	pp("top of translateCall, len(e.Args)='%v', e.Args='%#v'", len(e.Args), e.Args)
+	pp("top of translateCall, len(e.Args)='%v', e.Args='%#v'. call='%s'. stack:\n%s\n", len(e.Args), e.Args, c.exprToString(e), string(debug.Stack()))
 	for i := range e.Args {
 		pp("top of translateCall, e.Args[i=%v]='%#v'", i, e.Args[i])
 	}
@@ -993,23 +1004,38 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 	// jea
 	//resumeCase := c.caseCounter
 	c.caseCounter++
-	returnVar := "_r"
-	if sig.Results().Len() != 0 {
-		returnVar = c.newVariable("_r")
-	}
+
+	// jea: we can simplify and
+	// assign directly to our vars, since lua has multiple assignment.
+	/*
+		returnVar := "_r"
+		if sig.Results().Len() != 0 {
+			returnVar = c.newVariable("_r")
+		}
+	*/
 	// jea
-	c.Printf(" %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
+	//c.Printf(" %[1]s(%[2]s); -- expressions.go:1014\n", fun, strings.Join(args, ", "))
+	// this works! to get a direct assignment from the call
+	// b := <-ch;
+	//    translated to
+	// b =  __recv(ch);
+	return c.formatExpr("%s", fmt.Sprintf(" %[1]s(%[2]s); -- expressions.go:1018\n", fun, strings.Join(args, ", ")))
+
+	//c.Printf(" %[1]s = %[2]s(%[3]s); -- expressions.go:1014\n", returnVar, fun, strings.Join(args, ", "))
 	// hmm... tests fail with this extra scheduler call:
 	//c.Printf(" %[1]s = %[2]s(%[3]s); __task.scheduler();", returnVar, fun, strings.Join(args, ", "))
 	// jea debug:
 	//c.Printf("/*jea expressions.go:873*/ %[1]s = %[2]s(%[3]s);", returnVar, fun, strings.Join(args, ", "))
 
 	//c.Printf("%[1]s = %[2]s(%[3]s); /* */ __s = %[4]d; case %[4]d: if(__c) { __c = false; %[1]s = %[1]s.__blk(); } if (%[1]s && %[1]s.__blk !== undefined) { break s; }", returnVar, fun, strings.Join(args, ", "), resumeCase)
-	if sig.Results().Len() != 0 {
-		return c.formatExpr("%s", returnVar)
-	}
-	return c.formatExpr("")
-
+	/*
+		if sig.Results().Len() != 0 {
+			expr := c.formatExpr("%s", returnVar)
+			pp("expr is '%s'", expr.str) // expr is '_r'
+			return expr
+		}
+		return c.formatExpr("")
+	*/
 }
 
 func (c *funcContext) makeReceiver(e *ast.SelectorExpr) *expression {
@@ -1381,7 +1407,7 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 }
 
 func (c *funcContext) translateImplicitConversion(expr ast.Expr, desiredType types.Type) *expression {
-	pp("translateImplicitConversion top: desiredType='%#v', expr='%#v'\n", desiredType, expr)
+	pp("translateImplicitConversion top: desiredType='%#v', expr='%#v'. src='%s'\n", desiredType, expr, c.exprToString(expr))
 
 	if desiredType == nil {
 		pp("YYY 1 translateImplicitConversion exiting early on desiredType == nil")

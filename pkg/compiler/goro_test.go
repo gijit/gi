@@ -33,6 +33,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 
+		//*dbg = true
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)

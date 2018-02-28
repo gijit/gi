@@ -424,7 +424,7 @@ __defer_func(%s)
 				//c.Printf("__unused(%s);", c.translateExpr(s.Rhs[0]))
 				return
 			}
-			//fmt.Printf("about to translate assign...\n")
+			fmt.Printf("about to translate assign...lhs='%v'\n", lhs)
 			c.Printf("%s", c.translateAssign(lhs, s.Rhs[0], s.Tok == token.DEFINE))
 
 		case len(s.Lhs) > 1 && len(s.Rhs) == 1:
@@ -516,6 +516,7 @@ __defer_func(%s)
 
 	case *ast.ExprStmt:
 		pp("calling c.translateExpr with s.X = '%#v'", s.X)
+		// 707here
 		expr := c.translateExpr(s.X, nil)
 		if expr != nil && expr.String() != "" {
 			c.Printf("%s;", expr)
@@ -948,7 +949,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	if isBlank(lhs) {
 		panic("translateAssign with blank lhs")
 	}
-	pp("jea: in translateAssign for lhs='%#v', rhs='%#v', define=%v", lhs, rhs, define)
+	pp("jea: in translateAssign for lhs='%#v', rhs='%#v', define=%v.  Go lhs:'%s', Go rhs:'%s'", lhs, rhs, define, c.exprToString(lhs), c.exprToString(rhs))
 	if l, ok := lhs.(*ast.IndexExpr); ok {
 		if t, ok := c.p.TypeOf(l.X).Underlying().(*types.Map); ok {
 			if typesutil.IsJsObject(c.p.TypeOf(l.Index)) {
@@ -991,7 +992,7 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			return fmt.Sprintf("%s%s = %s; -- statements.go:973", local, tlhs, rhsExpr) // skip __copy
 		}
 	}
-	pp("rhsExpr = '%#v'", rhsExpr)
+	pp("rhsExpr = '%#v'; src='%s'", rhsExpr, rhsExpr.str)
 
 	isReflectValue := false
 	if named, ok := lhsType.(*types.Named); ok && named.Obj().Pkg() != nil && named.Obj().Pkg().Path() == "reflect" && named.Obj().Name() == "Value" {

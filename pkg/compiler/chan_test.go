@@ -24,13 +24,24 @@ func Test900SendAndRecvAllLu(t *testing.T) {
 
 		// with default: present we should not block
 		// _selection = __task.select({{}});
-		code := ` a:= 0; go func() { println("top of go-started func"); a = 1; select{ default: }; a= 2; }() // should not block`
+		code := `
+  a:= 0; 
+  go func() { 
+      println("top of go-started func"); 
+      a = 1; 
+      select{ 
+        default: 
+      }; 
+      a= 2; 
+  }() // should not block`
 		translation, err := inc.Tr([]byte(code))
 		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "a", 2)
+
+		fmt.Printf("\n on to 2nd test in 900\n")
 
 		//  _r = __task.select({});
 		code = ` b:= 0; go func() { b = 1; select{}; b= 2; }() // should block goroutine forever`
@@ -56,12 +67,26 @@ func Test901(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
+		*dbg = true
+
 		// with default: present we should not block
 		// _selection = __task.select({{}});
 		code := ` ch := make(chan int, 1); ch <- 56;  b := <-ch; `
 		translation, err := inc.Tr([]byte(code))
+
+		// 	_r = __recv(ch);
+		//  b = _r[1];
+		//
 		//*dbg = true
-		fmt.Printf("translation='%s'\n", string(translation))
+		strans := string(translation)
+		fmt.Printf("translation='%s'\n", strans)
+
+		cv.So(strans, matchesLuaSrc, `
+	 ch = __Chan(__type__.int, 1);
+	 __send(ch, 56LL);
+	 __task.scheduler();
+	 b = __recv(ch);
+			`)
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "b", 56)
