@@ -65,7 +65,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		} else {
 			exprTypeStr = exprType.String()
 		}
-		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, "") //, string(debug.Stack()))
+		pp("000000 TOP OF gi TRANSLATE EXPR: jea debug, translateExpr(expr='%s', exprType='%v', desiredType='%v'). c.p.Types[expr].Value='%#v', stack=\n%s\n", c.exprToString(expr), exprTypeStr, desiredStr, c.p.Types[expr].Value, "")
 	}
 	defer func() {
 		//pp("returning from translateExpr.\n trace:\n%s\n", string(debug.Stack()))
@@ -386,7 +386,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 
 		case token.ARROW:
-			fmt.Printf("case token.ARROW:  expr is '%#v'/Type=%T, as string: '%s'. stack:\n'%s'\n", expr, expr, c.exprToString(expr), string(debug.Stack()))
+			//fmt.Printf("case token.ARROW:  expr is '%#v'/Type=%T, as string: '%s'. stack:\n", expr, expr, c.exprToString(expr)) //, string(debug.Stack()))
 			call := &ast.CallExpr{
 				Fun:  c.newIdent("__recv", types.NewSignature(nil, types.NewTuple(types.NewVar(0, nil, "", t)), types.NewTuple(types.NewVar(0, nil, "", exprType), types.NewVar(0, nil, "", types.Typ[types.Bool])), false)),
 				Args: []ast.Expr{e.X},
@@ -404,8 +404,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			//    _r[1]; // this is the [1]
 			//
 
-			//panic("where?")
-			fmt.Printf("stack prior to e[1]:\n%s\n", string(debug.Stack()))
+			//fmt.Printf("stack prior to e[1]:\n%s\n", string(debug.Stack()))
 			return c.formatExpr("%e", call)
 			//return c.formatExpr("%e[1]", call)
 		}
@@ -989,7 +988,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 }
 
 func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *expression) *expression {
-	pp("top of translateCall, len(e.Args)='%v', e.Args='%#v'. call='%s'. stack:\n%s\n", len(e.Args), e.Args, c.exprToString(e), string(debug.Stack()))
+	pp("top of translateCall, len(e.Args)='%v', e.Args='%#v'. call='%s'.", len(e.Args), e.Args, c.exprToString(e)) // , string(debug.Stack()))
 	for i := range e.Args {
 		pp("top of translateCall, e.Args[i=%v]='%#v'", i, e.Args[i])
 	}
