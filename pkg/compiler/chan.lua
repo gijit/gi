@@ -669,6 +669,7 @@ __send = function(chan, value)
 end
 
 __recv = function(chan)
-   -- return both, wrapped in a tuple for now, since that's what js had to do.
-   return {chan:recv()}
+   -- no longer wrap in a tuple for now; that's what js did
+   -- only because it lacks multiple assignment.
+   return chan:recv()
 end
