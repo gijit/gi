@@ -23,7 +23,6 @@ func Test800LuaOnlyRecvOnChannel(t *testing.T) {
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
-		//*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "a", 57)

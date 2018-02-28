@@ -35,7 +35,6 @@ func Test900SendAndRecvAllLu(t *testing.T) {
       a= 2; 
   }() // should not block`
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -67,8 +66,6 @@ func Test901(t *testing.T) {
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		*dbg = true
-
 		// with default: present we should not block
 		// _selection = __task.select({{}});
 		code := ` ch := make(chan int, 1); ch <- 56;  b := <-ch; `
@@ -77,7 +74,6 @@ func Test901(t *testing.T) {
 		// 	_r = __recv(ch);
 		//  b = _r[1];
 		//
-		//*dbg = true
 		strans := string(translation)
 		fmt.Printf("translation='%s'\n", strans)
 
@@ -105,7 +101,6 @@ func Test902(t *testing.T) {
 
 		code := ` ch := make(chan int); go func() {ch <- 56;}(); b := <-ch; `
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -146,7 +141,6 @@ func Test903(t *testing.T) {
 `
 
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -194,7 +188,6 @@ func Test904(t *testing.T) {
 `
 
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -226,7 +219,6 @@ func Test905(t *testing.T) {
 `
 
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
@@ -262,7 +254,6 @@ func Test906(t *testing.T) {
 `
 
 		translation, err := inc.Tr([]byte(code))
-		//*dbg = true
 		fmt.Printf("translation='%s'\n", string(translation))
 
 		LuaRunAndReport(vm, string(translation))
