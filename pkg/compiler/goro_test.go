@@ -28,7 +28,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
       ch <- j
   }
 `
-		// a should be 4
+		// 'a' should be 4
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
