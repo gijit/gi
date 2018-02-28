@@ -1015,11 +1015,12 @@ func (c *funcContext) translateCall(e *ast.CallExpr, sig *types.Signature, fun *
 	*/
 	// jea
 	//c.Printf(" %[1]s(%[2]s); -- expressions.go:1014\n", fun, strings.Join(args, ", "))
+
 	// this works! to get a direct assignment from the call
 	// b := <-ch;
 	//    translated to
 	// b =  __recv(ch);
-	return c.formatExpr("%s", fmt.Sprintf(" %[1]s(%[2]s); -- expressions.go:1018\n", fun, strings.Join(args, ", ")))
+	return c.formatExpr("%s", fmt.Sprintf(" %[1]s(%[2]s)", fun, strings.Join(args, ", ")))
 
 	//c.Printf(" %[1]s = %[2]s(%[3]s); -- expressions.go:1014\n", returnVar, fun, strings.Join(args, ", "))
 	// hmm... tests fail with this extra scheduler call:
