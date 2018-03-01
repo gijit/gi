@@ -234,12 +234,14 @@ local function scheduler()
    
    local i = 0
    while true do
-      if #tasks_runnable == 0 then
+      local nr = #tasks_runnable
+      if nr == 0 then
          print("scheduler: no more runnable tasks")
          break
       end
-      -- table.remove takes the last by default.
-      local co = table.remove(tasks_runnable)
+      -- jea: pick one at random
+      local k = math.random(nr)
+      local co = table.remove(tasks_runnable, k)
       tasks_to[co] = nil
 
       -- and resume co
