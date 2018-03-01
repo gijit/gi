@@ -52,6 +52,7 @@ func (c *funcContext) exprToString(expr ast.Expr) string {
 func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn *expression) {
 
 	exprType := c.p.TypeOf(expr)
+	pp("expr in Go is '%s'", c.exprToString(expr)) // __send
 	desiredStr := "<nil>"
 	if desiredType != nil {
 		desiredStr = desiredType.String()
@@ -314,7 +315,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		return c.formatExpr("(%s)", fun)
 
 	case *ast.UnaryExpr:
-		pp("we have UnaryExpr:  *ast.UnaryExpr: '%#v', with typeName='%s'", e, c.typeName(0, c.p.TypeOf(e)))
+		//pp("we have UnaryExpr:  *ast.UnaryExpr: '%#v', with typeName='%s'", e, c.typeName(0, c.p.TypeOf(e)))
 		t := c.p.TypeOf(e.X)
 		switch e.Op {
 		case token.AND:

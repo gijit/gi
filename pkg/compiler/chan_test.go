@@ -266,3 +266,36 @@ func Test906(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test907(t *testing.T) {
+
+	cv.Convey("all-lua system: close of channels", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+ch := make(chan int,3)
+tot := 0
+ch <- 1
+ch <- 2
+ch <- 3
+close(ch)
+for i := range ch {
+   tot += i
+}
+`
+		// tot == 6
+		*dbg = true
+		fmt.Printf("about to translate\n")
+		translation, err := inc.Tr([]byte(code))
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "tot", 6) // 6
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

@@ -640,6 +640,9 @@ func typeKind(ty types.Type) (res string) {
 		return "__kindStruct"
 	case *types.Pointer:
 		return "__kindPtr"
+	case *types.Tuple:
+		panic("don't call for typles")
+		//return "__kindTuple"
 	default:
 		panic(fmt.Sprintf("Unhandled type: %T\n", t))
 	}

@@ -143,6 +143,8 @@ func (c *funcContext) initArgs(ty types.Type) string {
 		c.TypeNameSetting = prev
 	}()
 
+	fmt.Printf("\n initArgs: ty = '%#v'\n", ty)
+	// &types.Tuple{vars:[]*types.Var{(*types.Var)(0xc4201800f0), (*types.Var)(0xc420180140)}}'
 	switch t := ty.(type) {
 	case *types.Array:
 		return fmt.Sprintf("%s, %d", c.typeName(0, t.Elem()), t.Len())
@@ -186,6 +188,20 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(0, field.Type()), encodeString(t.Tag(i)))
 		}
 		return fmt.Sprintf(`"%s", {%s}`, pkgPath, strings.Join(fields, ", "))
+	case *types.Tuple:
+		// A Tuple represents an ordered list of variables;
+		// a nil *Tuple is a valid (empty) tuple.
+		// Tuples are used as components of signatures and to
+		// represent the type of multiple
+		// assignments; they are not first class types of Go.
+		// vars []*Var
+
+		results := make([]string, t.Len())
+		for i := range results {
+			results[i] = c.typeName(0, t.At(i).Type())
+		}
+
+		return fmt.Sprintf("{%s}", strings.Join(results, ", "))
 	default:
 		panic("invalid type")
 	}

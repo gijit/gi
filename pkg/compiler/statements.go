@@ -304,7 +304,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		}
 		switch s.Tok {
 		case token.BREAK:
-			c.PrintCond(data.endCase == 0, fmt.Sprintf("break%s;", normalLabel), fmt.Sprintf("__s = %d; continue%s;", data.endCase, blockingLabel))
+			c.Printf("break%s;", normalLabel)
+			//c.PrintCond(data.endCase == 0, fmt.Sprintf("break%s;", normalLabel), fmt.Sprintf("__s = %d; continue%s;", data.endCase, blockingLabel))
 		case token.CONTINUE:
 			data.postStmt()
 			c.PrintCond(data.beginCase == 0, fmt.Sprintf("continue%s;", normalLabel), fmt.Sprintf("__s = %d; continue%s;", data.beginCase, blockingLabel))
@@ -907,7 +908,8 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 	c.Indent(func() {
 		condStr := cond()
 		if condStr != "true" {
-			c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then __s = %d; continue; end ", condStr, data.endCase))
+			c.Printf("if (not (%s)) then break; end", condStr)
+			//c.PrintCond(!flatten, fmt.Sprintf("if (not (%s)) then break; end", condStr), fmt.Sprintf("if(not (%s)) then __s = %d; continue; end ", condStr, data.endCase))
 		}
 
 		prevEV := c.p.escapingVars
