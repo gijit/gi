@@ -728,3 +728,7 @@ __recv = function(chan)
    -- only because it lacks multiple assignment.
    return chan:recv()
 end
+
+__close = function(chan)
+   return chan:close()
+end

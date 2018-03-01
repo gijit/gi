@@ -288,7 +288,6 @@ for i := range ch {
 }
 `
 		// tot == 6
-		*dbg = true
 		fmt.Printf("about to translate\n")
 		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("translation='%s'\n", string(translation))
