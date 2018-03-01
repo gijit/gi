@@ -814,11 +814,11 @@ __appendSlice = function(slice, toAppend)
 end;
 
 __internalAppend = function(slice, array, offset, length)
-   print("jea debug: __internalAppend: slice is ")
-   __st(slice)
-   print("jea debug: __internalAppend: array is ")
-   __st(array)
-   print("jea debug: __internalAppend: offset is ", offset, " and length=", length)
+   --print("jea debug: __internalAppend: slice is ")
+   --__st(slice)
+   --print("jea debug: __internalAppend: array is ")
+   --__st(array)
+   --print("jea debug: __internalAppend: offset is ", offset, " and length=", length)
    
    if length == 0 then
       return slice;
@@ -828,7 +828,7 @@ __internalAppend = function(slice, array, offset, length)
    local newOffset = slice.__offset;
    local newLength = slice.__length + length;
 
-   print("jea debug: __internalAppend: newLength is "..tostring(newLength))
+   --print("jea debug: __internalAppend: newLength is "..tostring(newLength))
    local newCapacity = slice.__capacity;
    local elem = slice.__constructor.elem;
 
@@ -853,11 +853,11 @@ __internalAppend = function(slice, array, offset, length)
       
    end
 
-   print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
+   --print("jea debug, __internalAppend, newOffset = ", newOffset, " and slice.__length=", slice.__length)
 
    __copyArray(newArray, array, newOffset + slice.__length, offset, length, elem);
-   print("jea debug, __internalAppend, after copying over array:")
-   __st(newArray)
+   --print("jea debug, __internalAppend, after copying over array:")
+   --__st(newArray)
 
    local newSlice = slice.__constructor.tfun(newArray);
    newSlice.__offset = newOffset;
