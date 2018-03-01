@@ -95,7 +95,7 @@ most recent status
 2018 March 1 update
 -------------------
 A major milestone, the v1.2.x series and the
-latest release v1.2.3 bring
+latest release bring
 fully interactive goroutines
 to the REPL. The REPL can perform receives
 on unbuffered channels, and interact with background
@@ -109,6 +109,8 @@ time, is not yet implemented.
 Importantly, native Go imports are turned off while we
 work on polishing the goroutine system.
 Hence `import "fmt"` won't work.
+
+As of v1.2.4, close() on channels is available.
 
 2018 Feb 26 update
 ------------------
