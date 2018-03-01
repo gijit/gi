@@ -281,7 +281,7 @@ local function task_ready(co)
 end
 
 -- make co not be run until further notice
-local function task_park(co)
+task_park = function(co)
    local newrun = {}
    for _, v in ipairs(tasks_runnable) do
       if v ~= co then table.insert(newrun, v) end
@@ -305,7 +305,10 @@ local function spawn(fun, args)
    __coro2notes[co]={__loc=n, __name="spawn #"..tostring(n)}
    
    task_ready(co)
-   --print("spawn added to ready queue: co = ", co)
+   print("spawn added to ready queue: co = ", co)
+   print("about to yield to scheduler, ", scheduler_co ,"; here is showco:")
+   __showco()
+   coroutine.yield(scheduler_co)
 end
 
 ----------------------------------------------------------------------------
@@ -421,10 +424,18 @@ local function __fldcnt(t)
    return k
 end
 
+local select_inner
+   
 -- The main entry point. Call it `alt` or `select` or just a
 -- multiplexing statement. This is user facing function so make sure
 -- the parameters passed are sane.
 local function select(alt_array)
+   local res = {select_inner(alt_array)}
+   coroutine.yield(scheduler_co)
+   return unpack(res)
+end
+
+select_inner = function(alt_array)
    ::top::
    print("top of select, alt_array is size ", #alt_array)
    print(debug.traceback())
@@ -641,11 +652,11 @@ local background_scheduler = function()
    end
 end
 
-local scheduler_co = coroutine.create(background_scheduler)
+scheduler_co = coroutine.create(background_scheduler)
 table.insert(__all_coro, scheduler_co)
 __coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 
-local resume_scheduler = function()
+resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
    --__st(scheduler_co, "scheduler_co")
    local ok, err = coroutine.resume(scheduler_co)
