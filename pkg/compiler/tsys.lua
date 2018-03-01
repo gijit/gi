@@ -3234,6 +3234,9 @@ __gijitMainEvalLoop = function(code)
 end
 
 __gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
+table.insert(__all_coro, __gijitMainCoro)
+__coro2notes[__gijitMainCoro]={__loc=#__all_coro, __name="the-eval-coro"}
+
 
 __eval = function(code)
    print("__eval called with code: '"..code.."'")

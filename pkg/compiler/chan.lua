@@ -91,7 +91,10 @@ __coro2notes = {}
 -- return coroutine status as a string
 __costring=function(co)
    local v=__coro2notes[co]
-   return tostring(v.__loc).." "..v.__name .." status:"..coroutine.status(co)
+   if v == nil then
+      return "<error-in-__costring-co-not-found-in-__coro2notes>"
+   end
+   return "<"..tostring(v.__loc).." "..v.__name .." status:"..coroutine.status(co)..">"
 end
 
 __coshow=function()
@@ -421,7 +424,8 @@ end
 local function select(alt_array)
    ::top::
    print("top of select, alt_array is size ", #alt_array)
-   --__st(alt_array, "alt_array")
+   print(debug.traceback())
+   __st(alt_array, "alt_array")
    for i,_ in ipairs(alt_array) do
       --__st(alt_array[i], "alt_array["..i.."]", 6)
       if type(alt_array[i]) == "table" and type(alt_array[i][1]) == "table" then
@@ -538,6 +542,11 @@ local function select(alt_array)
 
    -- Make sure we're not woken by someone who is not the scheduler.
    alt_array.resolved = nil
+
+   -- why crashing at yield()?
+   local current_co, is_main = coroutine.running()  
+   print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
+   
    coroutine.yield()
    assert(alt_array.resolved > 0)
 

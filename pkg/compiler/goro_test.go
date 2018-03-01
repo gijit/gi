@@ -19,8 +19,8 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
   ch := make(chan int)
   go func() {
       for i :=0; i < 3; i++ {
-         <-ch
-         a++
+         got := <-ch
+         a += 1 + got
          println("a is now ", a)
       }
   }()
@@ -28,7 +28,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
       ch <- j
   }
 `
-		// 'a' should be 4
+		// 'a' should be 7
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -39,7 +39,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt64(vm, "a", 4)
+		LuaMustInt64(vm, "a", 7)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
