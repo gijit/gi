@@ -12,7 +12,7 @@ import (
 
 func Test707ReplGoroVsBackendGoro(t *testing.T) {
 
-	cv.Convey(`In order to allow background goroutines to run, the frontend of the repl runs on its own goroutine, and the backend of runs its own goroutine to keep the scheduler alive and running LuaJIT code. Therefore we should see, even when waiting at the REPL and not typing any input, that background goroutines are running.`, t, func() {
+	cv.Convey(`multiple sends from the background goro to the foreground`, t, func() {
 
 		code := `
   a := 1
@@ -50,7 +50,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 
 func Test708ReplGoroVsBackendGoro(t *testing.T) {
 
-	cv.Convey(`In order to allow background goroutines to run, the frontend of the repl runs on its own goroutine, and the backend of runs its own goroutine to keep the scheduler alive and running LuaJIT code. Therefore we should see, even when waiting at the REPL and not typing any input, that background goroutines are running.  Send and receive should work going from the repl to the background goroutine.`, t, func() {
+	cv.Convey(`Send and receive should work going from the repl to the background goroutine.`, t, func() {
 
 		code := `
   accumRecv := []int{}
