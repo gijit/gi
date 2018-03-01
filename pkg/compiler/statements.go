@@ -609,7 +609,9 @@ __defer_func(%s)
 			}
 			c.translateBranchingStmt(caseClauses, nil, true, translateCond, label, flattened)
 		}
-		c.Printf("\n\t __task.scheduler();\n")
+		// __task.scheduler() after receive
+		c.Printf("")
+		//c.Printf("\n\t __task.scheduler();\n")
 
 	case *ast.EmptyStmt:
 		// skip
