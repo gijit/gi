@@ -402,7 +402,7 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		if vm.IsNil(-1) {
 			panic("could not locate __eval in _G")
 		}
-		fmt.Printf("good: found __eval. running '%s'\n", s)
+		//fmt.Printf("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
 		vm.Call(1, 2)
 		// if top is true, no error. Otherwise error is at -2
@@ -420,7 +420,7 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 			fmt.Printf("bad, err: '%v'\n", err)
 			return err
 		}
-		fmt.Printf("good: top of stack was true\n")
+		//fmt.Printf("good: top of stack was true\n")
 		return nil
 	} else {
 
