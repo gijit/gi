@@ -103,12 +103,15 @@ __coshow=function()
       print(__costring(k))
    end
 end
-
+__showco=__coshow
 
 local main_coro, is_main = coroutine.running()
 if not is_main then
-   error("must be loaded, for now, by main coroutine")
+   error("chan.lua must be loaded, for now, by main coroutine")
 end
+
+table.insert(__all_coro, main_coro)
+__coro2notes[main_coro]={__loc=#__all_coro, __name="main"}
 
 local scheduler_co
 local resume_scheduler
