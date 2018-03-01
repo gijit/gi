@@ -315,7 +315,7 @@ tot := 1
 go func() {
   tot++ // 2
   close(ch2)
- _ = <-ch
+   _ = <-ch
   tot *= 3 // 30
   close(ch3)
 }()
