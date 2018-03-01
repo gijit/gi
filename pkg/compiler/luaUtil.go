@@ -395,13 +395,17 @@ type LuaRunner struct {
 func NewLuaRunner(vm *golua.State) *LuaRunner {
 	lr := &LuaRunner{vm: vm}
 
-	vm.GetGlobal("__gijitMainCoro")
-	if vm.IsNil(-1) {
-		panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
-	}
-	lr.evalThread = vm.ToThread(-1)
-	//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
-	vm.Pop(1)
+	/* now we do a new coroutine per eval, so we can eval blocking actions
+	       like a receive on an unbuffered channel
+
+		vm.GetGlobal("__gijitMainCoro")
+		if vm.IsNil(-1) {
+			panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
+		}
+		lr.evalThread = vm.ToThread(-1)
+		//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
+		vm.Pop(1)
+	*/
 	return lr
 }
 
@@ -416,7 +420,8 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 	defer vm.SetTop(startTop)
 
 	if useEvalCoroutine {
-		// get the eval thread, it will have its own stack
+		// get the eval function. it will spawn us a new coroutine
+		// for each evaluation.
 
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
@@ -424,23 +429,26 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		}
 		//fmt.Printf("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
-		vm.Call(1, 2)
-		// if top is true, no error. Otherwise error is at -2
-		if vm.Type(-2) != golua.LUA_TBOOLEAN {
-			fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
-			fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
+		vm.Call(1, 0)
+		/*
+			vm.Call(1, 2)
+			// if top is true, no error. Otherwise error is at -2
+			if vm.Type(-2) != golua.LUA_TBOOLEAN {
+				fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
+				fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
 
-			//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
+				//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
 
-			panic("why no bool?")
-		}
-		ok := vm.ToBoolean(-2)
-		if !ok {
-			err := fmt.Errorf("%s", vm.ToString(-1))
-			fmt.Printf("bad, err: '%v'\n", err)
-			return err
-		}
-		//fmt.Printf("good: top of stack was true\n")
+				panic("why no bool?")
+			}
+			ok := vm.ToBoolean(-2)
+			if !ok {
+				err := fmt.Errorf("%s", vm.ToString(-1))
+				fmt.Printf("bad, err: '%v'\n", err)
+				return err
+			}
+			//fmt.Printf("good: top of stack was true\n")
+		*/
 		return nil
 	} else {
 

@@ -3240,46 +3240,26 @@ __gijitMainEvalLoop = function(code)
    end -- while true
 end
 
-__gijitMainCoro = coroutine.create(__gijitMainEvalLoop)
-table.insert(__all_coro, __gijitMainCoro)
-__coro2notes[__gijitMainCoro]={__loc=#__all_coro, __name="the-eval-coro"}
-
+__eval_next_count = 1
 
 __eval = function(code)
    --print("__eval called with code: '"..code.."'")
 
-   local status = coroutine.status(__gijitMainCoro)
-   --print("status = ", status)
+   -- since an eval of a receive/select may be blocking, we
+   -- need to start each new bit of code at the repl
+   -- on its own coroutine.
 
-   if status ~= "suspended" then
-      return false, "problem! our __eval is not suspended! instead: "..status
-   end
-   
-   local ok, err = coroutine.resume(__gijitMainCoro, code)
-   --print("back from resume of __gijitMainCoro, ok=", ok, "  err=", err)
-   if not ok then
-      --print("not okay: return ok, err; ok=", ok, "  err=",err)
-      return ok, err
-   end
-   return true, "ok"
---[[   
-   local chunk, err, ok
-   chunk, err = loadstring(code);
-   if err ~= nil then
-      err = "load error: "..tostring(err)
-      return false, err
-   else
-      -- run the compiled bytecode
-      ok, err = pcall(function() chunk() end)
-      if not ok then
-         err = "run error: "..tostring(err)
-         return false, err
-      end
-   end;
-   --print("\n end of __eval: err is ",err)
-   -- must uniformly return 2 args, since vm.Call(1,2) expects it.
-   return true, "ok"
---]]
+   __gijitEvalCoro = coroutine.create(function() __gijitMainEvalLoop(code) end)
+   --__cleanupDeadCoro()
+   table.insert(__all_coro, __gijitEvalCoro)
+   __coro2notes[__gijitEvalCoro]={__loc=#__all_coro, __name="co-eval-"..tostring(__eval_next_count)}
+   __eval_next_count = __eval_next_count+1
+
+   -- we need the scheduler to resume this goroutine,
+   -- so that it gets control back when the
+   -- eval coro yields, so that it can effect
+   -- the actual receive of receives.
+
+   __task_ready(__gijitEvalCoro)
+   __resume_scheduler()
 end
-
-

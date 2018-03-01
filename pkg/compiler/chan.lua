@@ -84,6 +84,22 @@ local altexec
 
 __all_coro = {} -- array
 
+__cleanupDeadCoro = function()
+   local keepers_all = {}
+   local keerers_notes = {}
+   for i,co in ipairs(__all_coro) do
+      if coroutine.status(co) ~= "dead" then
+         table.insert(keepers_all, co)
+         local v = __coro2notes[co]
+         v.__loc = #keepers_all
+         keepers_notes[co] = v
+      end
+   end
+   __all_coro = keepers_all
+   __coro2notes = keepers_notes
+end
+
+
 -- value.__loc gives location in __all_coro array.
 -- value.__name readable name
 __coro2notes = {} 
@@ -114,7 +130,7 @@ table.insert(__all_coro, main_coro)
 __coro2notes[main_coro]={__loc=#__all_coro, __name="main"}
 
 local scheduler_co
-local resume_scheduler
+local __resume_scheduler
 local task_park
 ----------------------------------------------------------------------------
 --- Helpers
@@ -245,9 +261,9 @@ local function scheduler()
       tasks_to[co] = nil
 
       -- and resume co
-      --print("scheduler: coroutine.resume about to be called on co="..__costring(co))
+      print("scheduler: coroutine.resume about to be called on co="..__costring(co))
       local back = {coroutine.resume(co, "scheduler")}
-      --print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
+      print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
       local okay, emsg = unpack(back)
       if not okay then
@@ -277,8 +293,8 @@ local function scheduler()
    return i
 end
 
-local function task_ready(co)
-   --print("task_ready making ready co=", co)
+local function __task_ready(co)
+   --print("__task_ready making ready co=", co)
    table.insert(tasks_runnable, co)
 end
 
@@ -306,7 +322,7 @@ local function spawn(fun, args)
    local n=#__all_coro
    __coro2notes[co]={__loc=n, __name="spawn #"..tostring(n)}
    
-   task_ready(co)
+   __task_ready(co)
    
    --[[
    --print("spawn added to ready queue: co = ", co)
@@ -315,9 +331,9 @@ local function spawn(fun, args)
    local co, is_main = coroutine.running()
    if is_main or __coro2notes[co].__name == "the-eval-coro" then
       -- can't yield, we are already on main or eval
-      resume_scheduler()
+      __resume_scheduler()
    else
-      task_ready(co)
+      __task_ready(co)
       coroutine.yield() -- go back to scheduler
    end
    --]]
@@ -419,11 +435,11 @@ altexec = function (a)
       -- Disengage from channels used by the other Alt and make it ready.
       altalldequeue(other_a.alt_array)
       other_a.alt_array.resolved = other_a.alt_index
-      task_ready(other_a.alt_array.task)
+      __task_ready(other_a.alt_array.task)
    elseif isend then
       --print("altexec is making ready: a.alt_array.task=")
       --__st(a.alt_array.task, "a.alt_array.task")
-      task_ready(a.alt_array.task)
+      __task_ready(a.alt_array.task)
    end
 end
 
@@ -443,7 +459,7 @@ local select_inner
 -- the parameters passed are sane.
 local function select(alt_array)
    local res = {select_inner(alt_array)}
-   --task_ready(coroutine.running())
+   --__task_ready(coroutine.running())
    --coroutine.yield() -- go back to scheduler
    return unpack(res)
 end
@@ -572,7 +588,7 @@ select_inner = function(alt_array)
 
    -- why crashing at yield()?
    local current_co, is_main = coroutine.running()  
-   --print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
+   print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
    
    local who = coroutine.yield()
    print("select: resumed by who='"..who.."'")
@@ -671,7 +687,7 @@ scheduler_co = coroutine.create(background_scheduler)
 table.insert(__all_coro, scheduler_co)
 __coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 
-resume_scheduler = function()
+__resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
    --__st(scheduler_co, "scheduler_co")
    local ok, err = coroutine.resume(scheduler_co, "resume_scheduler")
@@ -681,6 +697,7 @@ resume_scheduler = function()
       print(debug.traceback(err))
       error(err)
    end
+   return ok, err
 end
 
 
@@ -689,7 +706,7 @@ end
 
 __task = __M
 
-__task.resume_scheduler = resume_scheduler
+__task.resume_scheduler = __resume_scheduler
 
 __task.scheduler = scheduler
 __task.spawn     = spawn
