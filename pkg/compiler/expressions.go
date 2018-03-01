@@ -1191,7 +1191,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 	case "recover":
 		return c.formatExpr("recover()")
 	case "close":
-		return c.formatExpr(`__close(%e)`, args[0])
+		return c.formatExpr("__close(%e)", args[0])
 	default:
 		panic(fmt.Sprintf("Unhandled builtin: %s\n", name))
 	}

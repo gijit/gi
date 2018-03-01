@@ -258,7 +258,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		case *types.Chan:
 			c.Printf("%s = %s;", refVar, c.translateExpr(s.X, nil))
 
-			okVar := c.newIdent(c.newVariable("__ok"), types.Typ[types.Bool])
+			okVar := c.newIdent(c.gensym("ok"), types.Typ[types.Bool])
 			key := s.Key
 			tok := s.Tok
 			if key == nil {
