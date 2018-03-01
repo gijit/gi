@@ -272,6 +272,25 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 	vm.Pop(1)
 }
 
+func LuaMustEvalToInt64(vm *golua.State, xpr string, expect int64) {
+
+	evalme := "__tmp = " + xpr
+	LuaRun(vm, evalme, true)
+	vm.GetGlobal("__tmp")
+	top := vm.GetTop()
+	if vm.IsNil(top) {
+		panic(fmt.Sprintf("global variable '__tmp' is nil, after running: '%s'", evalme))
+	}
+	value_int := vm.CdataToInt64(top)
+
+	pp("LuaMustEvalToInt64, expect='%v'; observe value_int='%v'", expect, value_int)
+	if value_int != expect {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected %v, got %v for '%v'", expect, value_int, evalme))
+	}
+	vm.Pop(1)
+}
+
 func LuaInGlobalEnv(vm *golua.State, varname string) bool {
 
 	vm.GetGlobal(varname)

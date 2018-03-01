@@ -44,6 +44,59 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 	})
 }
 
+func Test708ReplGoroVsBackendGoro(t *testing.T) {
+
+	cv.Convey(`In order to allow background goroutines to run, the frontend of the repl runs on its own goroutine, and the backend of runs its own goroutine to keep the scheduler alive and running LuaJIT code. Therefore we should see, even when waiting at the REPL and not typing any input, that background goroutines are running.  Send and receive should work going from the repl to the background goroutine.`, t, func() {
+
+		code := `
+  accumRecv := []int{}
+  a0 := 0
+  c1 := make(chan int)
+  c2 := make(chan int)
+  nextSend := 2
+  go func() {
+      for {
+         select {
+            case c1 <- nextSend:
+               println("background goro sent ", nextSend)
+               nextSend++
+            case r := <- c2:
+               accumRecv = append(accumRecv, r)
+               a0 = accumRecv[0]
+               println("background goro received ", r)
+         }
+      }
+  }()
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		*dbg = true
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+
+		// 2nd interaction at the repl
+		code2 := ` j2 := <-c1; c2 <- 33`
+
+		translation, err = inc.Tr([]byte(code2))
+		panicOn(err)
+
+		pp("2nd translation = '%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "j2", 2)
+		LuaMustInt64(vm, "nextSend", 3)
+		LuaMustInt64(vm, "a0", 33)
+		//LuaMustEvalToInt64(vm, "accumRecv[0]", 33)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
 // while we work on lua-only goroutines, comment this out.
 /*
 
