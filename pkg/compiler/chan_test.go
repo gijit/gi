@@ -297,3 +297,42 @@ for i := range ch {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test908(t *testing.T) {
+
+	cv.Convey("all-lua system: block, waiting for close of channel", t, func() {
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		code := `
+ch := make(chan int)
+ch2 := make(chan int)
+ch3 := make(chan int)
+tot := 1
+go func() {
+  tot++ // 2
+  close(ch2)
+  <-ch
+  tot *= 3 // 30
+  close(ch3)
+}()
+<-ch2
+tot *= 5 // 10
+close(ch)
+<-ch3
+
+`
+		// tot == 30
+		//fmt.Printf("about to translate\n")
+		translation, err := inc.Tr([]byte(code))
+		fmt.Printf("translation='%s'\n", string(translation))
+
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustInt64(vm, "tot", 30)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
