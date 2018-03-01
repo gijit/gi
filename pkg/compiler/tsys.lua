@@ -3201,7 +3201,7 @@ __gijitMainEvalLoop = function(code)
    __lastEvalErr = ""
    
    local chunk, err, ok
-   while true do
+   --while true do
       --print("top of main loop: while true...")
       -- compile chunk to bytecode
       chunk, err = loadstring(code);
@@ -3234,16 +3234,16 @@ __gijitMainEvalLoop = function(code)
          end
       end;
       --print("main loop: yielding err="..tostring(err))
-      code = coroutine.yield(err)
+      --code = coroutine.yield(err)
       --print("main loop: yield returned with new code: "..code)
       
-   end -- while true
+   --end -- while true
 end
 
 __eval_next_count = 1
 
 __eval = function(code)
-   print("__eval called with code: '"..code.."'")
+   --print("__eval called with code: '"..code.."'")
 
    -- since an eval of a receive/select may be blocking, we
    -- need to start each new bit of code at the repl
@@ -3263,5 +3263,5 @@ __eval = function(code)
    __task_ready(__gijitEvalCoro)
    __task.resume_scheduler()
 
-   print("end of __eval, returning")
+   --print("end of __eval, returning")
 end

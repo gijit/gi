@@ -261,9 +261,9 @@ local function scheduler()
       tasks_to[co] = nil
 
       -- and resume co
-      print("scheduler: coroutine.resume about to be called on co="..__costring(co))
+      --print("scheduler: coroutine.resume about to be called on co="..__costring(co))
       local back = {coroutine.resume(co, "scheduler")}
-      print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
+      --print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
       local okay, emsg = unpack(back)
       if not okay then
