@@ -531,7 +531,7 @@ __defer_func(%s)
 		c.translateStmt(s.Stmt, label)
 
 	case *ast.GoStmt:
-		c.Printf("__task.spawn(%s, {%s}); __task.scheduler();", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
+		c.Printf("__task.spawn(%s, {%s});", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
 		//c.Printf("__go(%s, {%s});", c.translateExpr(s.Call.Fun, nil), strings.Join(c.translateArgs(c.p.TypeOf(s.Call.Fun).Underlying().(*types.Signature), s.Call.Args, s.Call.Ellipsis.IsValid()), ", "))
 
 	case *ast.SendStmt:
