@@ -275,6 +275,7 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 func LuaMustEvalToInt64(vm *golua.State, xpr string, expect int64) {
 
 	evalme := "__tmp = " + xpr
+	fmt.Printf("evalme = '%s'\n", evalme)
 	LuaRun(vm, evalme, true)
 	vm.GetGlobal("__tmp")
 	top := vm.GetTop()

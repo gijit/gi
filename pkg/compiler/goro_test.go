@@ -24,6 +24,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
          a += 1 + got
          aa = append(aa, a)
          println("a is now ", a)
+         println("aa is now ", aa)
       }
   }()
   for j:=0; j < 3; j++ {
@@ -39,10 +40,11 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
 
+		*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "a", 7)
-		LuaMustEvalToInt64(vm, "aa[0]", 1)
+		LuaMustEvalToInt64(vm, "aa[0]", 2)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
