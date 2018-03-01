@@ -782,8 +782,9 @@ end;
 
 __append = function(...)
    local args = {...}
-   local slice = table.remove(args,1)
-   return __internalAppend(slice, args, 1, #args);
+   --local slice = table.remove(args,1)
+   local slice = args[1]
+   return __internalAppend(slice, args, 2, #args-1);
 end;
 
 __appendSlice = function(slice, toAppend)
