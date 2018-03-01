@@ -588,10 +588,10 @@ select_inner = function(alt_array)
 
    -- why crashing at yield()?
    local current_co, is_main = coroutine.running()  
-   print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
+   --print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
    
    local who = coroutine.yield()
-   print("select: resumed by who='"..who.."'")
+   --print("select: resumed by who='"..who.."'")
    
    assert(alt_array.resolved > 0)
 
