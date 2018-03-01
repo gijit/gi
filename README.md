@@ -94,12 +94,16 @@ most recent status
 
 2018 March 1 update
 -------------------
-A major milestone, release v1.2.0 brings
+A major milestone, release v1.2.1 brings
 fully interactive goroutines
-to the REPL. The REPL can perform blocking
-operations, and interact with background
+to the REPL. The REPL can perform receives
+on unbuffered channels, and interact with background
 goroutines. A background Lua coroutine
 runs a scheduler that coordinates.
+
+Full blocking at the REPL, on a select or
+receive that cannot be finished at this
+time, is not yet implemented.
 
 2018 Feb 26 update
 ------------------
