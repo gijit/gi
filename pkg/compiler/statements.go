@@ -105,7 +105,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		if s.Init != nil {
 			c.translateStmt(s.Init, nil)
 		}
-		refVar := c.newVariable("_ref")
+		refVar := c.newVariable("__ref")
 		var expr ast.Expr
 		switch a := s.Assign.(type) {
 		case *ast.AssignStmt:
@@ -169,8 +169,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		}, label, c.Flattened[s])
 
 	case *ast.RangeStmt:
-		refVar := c.newVariable("_ref")
-		lenRefVar := c.newVariable("_lenref")
+		refVar := c.newVariable("__ref")
+		lenRefVar := c.newVariable("__lenref")
 
 		switch t := c.p.TypeOf(s.X).Underlying().(type) {
 		case *types.Basic:
@@ -258,7 +258,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		case *types.Chan:
 			c.Printf("%s = %s;", refVar, c.translateExpr(s.X, nil))
 
-			okVar := c.newIdent(c.newVariable("_ok"), types.Typ[types.Bool])
+			okVar := c.newIdent(c.newVariable("__ok"), types.Typ[types.Bool])
 			key := s.Key
 			tok := s.Tok
 			if key == nil {
