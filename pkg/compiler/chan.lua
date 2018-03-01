@@ -293,7 +293,7 @@ local function scheduler()
    return i
 end
 
-local function __task_ready(co)
+function __task_ready(co)
    --print("__task_ready making ready co=", co)
    table.insert(tasks_runnable, co)
 end

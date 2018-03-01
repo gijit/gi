@@ -429,7 +429,11 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		}
 		//fmt.Printf("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
+		fmt.Printf("before vm.Call(1,0), stack is:")
+		DumpLuaStack(vm)
 		vm.Call(1, 0)
+		fmt.Printf("after vm.Call(1,0), stack is:")
+		DumpLuaStack(vm)
 		/*
 			vm.Call(1, 2)
 			// if top is true, no error. Otherwise error is at -2

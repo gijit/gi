@@ -3243,7 +3243,7 @@ end
 __eval_next_count = 1
 
 __eval = function(code)
-   --print("__eval called with code: '"..code.."'")
+   print("__eval called with code: '"..code.."'")
 
    -- since an eval of a receive/select may be blocking, we
    -- need to start each new bit of code at the repl
@@ -3261,5 +3261,7 @@ __eval = function(code)
    -- the actual receive of receives.
 
    __task_ready(__gijitEvalCoro)
-   __resume_scheduler()
+   __task.resume_scheduler()
+
+   print("end of __eval, returning")
 end
