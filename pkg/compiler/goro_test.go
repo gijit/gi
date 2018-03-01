@@ -40,7 +40,6 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
 
-		*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "a", 7)
@@ -77,7 +76,6 @@ func Test708ReplGoroVsBackendGoro(t *testing.T) {
 		panicOn(err)
 		defer vm.Close()
 
-		*dbg = true
 		inc := NewIncrState(vm, nil)
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)

@@ -733,7 +733,6 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		}
 
 	case *ast.CallExpr:
-		fmt.Printf("777777777 have an *ast.CallExpr\n")
 		plainFun := astutil.RemoveParens(e.Fun)
 
 		if astutil.IsTypeExpr(plainFun, c.p.Info.Info) {
