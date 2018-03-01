@@ -80,6 +80,7 @@ func Test708ReplGoroVsBackendGoro(t *testing.T) {
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
 
+		*dbg = true
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 

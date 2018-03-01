@@ -246,7 +246,7 @@ local function scheduler()
 
       -- and resume co
       --print("scheduler: coroutine.resume about to be called on co="..__costring(co))
-      local back = {coroutine.resume(co)}
+      local back = {coroutine.resume(co, "scheduler")}
       --print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
       local okay, emsg = unpack(back)
@@ -574,7 +574,9 @@ select_inner = function(alt_array)
    local current_co, is_main = coroutine.running()  
    --print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
    
-   coroutine.yield()
+   local who = coroutine.yield()
+   print("select: resumed by who='"..who.."'")
+   
    assert(alt_array.resolved > 0)
 
    local r = alt_array.resolved
@@ -672,7 +674,7 @@ __coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
    --__st(scheduler_co, "scheduler_co")
-   local ok, err = coroutine.resume(scheduler_co)
+   local ok, err = coroutine.resume(scheduler_co, "resume_scheduler")
    --print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
    if not ok then
       print("error detected in __task.resume_scheduler!")
