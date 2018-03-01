@@ -432,6 +432,9 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		//fmt.Printf("before vm.Call(1,0), stack is:")
 		//DumpLuaStack(vm)
 		vm.Call(1, 0)
+		// if things crash, this is the first place
+		// to check for an error: dump the Lua stack.
+		// High probability, it will clue you in.
 		//fmt.Printf("after vm.Call(1,0), stack is:")
 		//DumpLuaStack(vm)
 		/*

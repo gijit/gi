@@ -3190,54 +3190,49 @@ __errHandlerForEval = function(err)
    return err
 end
 
--- The main eval loop for the gijit REPL never returns.
--- It only compiles and runs 'code', then yeilds nil
--- or an error string.
+-- The main eval procedure for the gijit REPL
+-- It only compiles and runs 'code', then exits.
 --
--- Resume it with new code to run, ad inifinitum.
---
-__gijitMainEvalLoop = function(code)
-   --print("top of __gijitMainEvalLoop")
+__gijitMainEval = function(code)
+   --print("top of __gijitMainEval")
    __lastEvalErr = ""
    
    local chunk, err, ok
-   --while true do
-      --print("top of main loop: while true...")
-      -- compile chunk to bytecode
-      chunk, err = loadstring(code);
-      --print("back from loadstring of code '"..code.."'  we have err=",err," and chunk=", chunk)
-      if err ~= nil then
-         
-         err = "load error: "..tostring(err)
-         --print("main loop had err= ",err)
-        
-      else
-        
-         --print("run the compiled bytecode...")
-         --print(".........................")
-         --print(".........................")
-         --print("")
-
-         ok, err = xpcall(function() chunk() end, __errHandlerForEval)
-
-         --print("")
-         --print(".........................")
-         --print(".........................")
-         --print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
-         --print("ran the compiled bytecode. ok=", ok, "  err=", err)
-         if not ok then
-            err = "run error: "..tostring(err)
-            --print("main loop xpcall had err= ",err)
-         else
-            --print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
-            err = nil
-         end
-      end;
-      --print("main loop: yielding err="..tostring(err))
-      --code = coroutine.yield(err)
-      --print("main loop: yield returned with new code: "..code)
+   --print("top of main loop: while true...")
+   -- compile chunk to bytecode
+   chunk, err = loadstring(code);
+   --print("back from loadstring of code '"..code.."'  we have err=",err," and chunk=", chunk)
+   if err ~= nil then
       
-   --end -- while true
+      err = "load error: "..tostring(err)
+      --print("main loop had err= ",err)
+      
+   else
+      
+      --print("run the compiled bytecode...")
+      --print(".........................")
+      --print(".........................")
+      --print("")
+
+      ok, err = xpcall(function() chunk() end, __errHandlerForEval)
+
+      --print("")
+      --print(".........................")
+      --print(".........................")
+      --print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
+      --print("ran the compiled bytecode. ok=", ok, "  err=", err)
+      if not ok then
+         err = "run error: "..tostring(err)
+         --print("main loop xpcall had err= ",err)
+      else
+         --print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
+         err = nil
+      end
+   end;
+   --print("main loop: yielding err="..tostring(err))
+   --code = coroutine.yield(err)
+   --print("main loop: yield returned with new code: "..code)
+   
 end
 
 __eval_next_count = 1
@@ -3249,8 +3244,7 @@ __eval = function(code)
    -- need to start each new bit of code at the repl
    -- on its own coroutine.
 
-   __gijitEvalCoro = coroutine.create(function() __gijitMainEvalLoop(code) end)
-   --__cleanupDeadCoro()
+   __gijitEvalCoro = coroutine.create(function() __gijitMainEval(code) end)
    table.insert(__all_coro, __gijitEvalCoro)
    __coro2notes[__gijitEvalCoro]={__loc=#__all_coro, __name="co-eval-"..tostring(__eval_next_count)}
    __eval_next_count = __eval_next_count+1
@@ -3263,5 +3257,6 @@ __eval = function(code)
    __task_ready(__gijitEvalCoro)
    __task.resume_scheduler()
 
+   __cleanupDeadCoro()   
    --print("end of __eval, returning")
 end

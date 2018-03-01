@@ -86,7 +86,7 @@ __all_coro = {} -- array
 
 __cleanupDeadCoro = function()
    local keepers_all = {}
-   local keerers_notes = {}
+   local keepers_notes = {}
    for i,co in ipairs(__all_coro) do
       if coroutine.status(co) ~= "dead" then
          table.insert(keepers_all, co)
