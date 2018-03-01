@@ -305,6 +305,8 @@ local function spawn(fun, args)
    __coro2notes[co]={__loc=n, __name="spawn #"..tostring(n)}
    
    task_ready(co)
+   
+   --[[
    --print("spawn added to ready queue: co = ", co)
    --print("about to yield to scheduler, ", scheduler_co ,"; here is showco:")
    __showco()
@@ -316,6 +318,7 @@ local function spawn(fun, args)
       task_ready(co)
       coroutine.yield() -- go back to scheduler
    end
+   --]]
 end
 
 ----------------------------------------------------------------------------
@@ -438,8 +441,8 @@ local select_inner
 -- the parameters passed are sane.
 local function select(alt_array)
    local res = {select_inner(alt_array)}
-   task_ready(coroutine.running())
-   coroutine.yield() -- go back to scheduler
+   --task_ready(coroutine.running())
+   --coroutine.yield() -- go back to scheduler
    return unpack(res)
 end
 
