@@ -207,7 +207,7 @@ local CircularBuffer = {
 -- Tasks ready to be run are placed on a stack and it's possible to
 -- starve a coroutine.
 local function scheduler()
-   print("top of scheduler")
+   --print("top of scheduler")
    
    -- returns nil if running on the main coroutine, otherwise
    -- returns the running coro.
@@ -236,7 +236,7 @@ local function scheduler()
    while true do
       local nr = #tasks_runnable
       if nr == 0 then
-         print("scheduler: no more runnable tasks")
+         --print("scheduler: no more runnable tasks")
          break
       end
       -- jea: pick one at random
@@ -245,9 +245,9 @@ local function scheduler()
       tasks_to[co] = nil
 
       -- and resume co
-      print("scheduler: coroutine.resume about to be called on co="..__costring(co))
+      --print("scheduler: coroutine.resume about to be called on co="..__costring(co))
       local back = {coroutine.resume(co)}
-      print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
+      --print("scheduler: got back from resume of "..__costring(co)..": ", unpack(back))
       
       local okay, emsg = unpack(back)
       if not okay then
@@ -255,17 +255,17 @@ local function scheduler()
          error(emsg)
       end
       i = i + 1
-      print("scheduler: resume was okay, i is now = ", i)      
+      --print("scheduler: resume was okay, i is now = ", i)      
    end
 
    local now = __abs_now()
-   print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
+   --print("scheduler: checking for timeouts, here is tasks_to: "..type(tasks_to))
    
    local k = 0
-   print("scheduler: just before pairs(tasks_to)")
+   --print("scheduler: just before pairs(tasks_to)")
    for co, alt in pairs(tasks_to) do
-      print("scheduler: top of tasks_to loop")
-      print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
+      --print("scheduler: top of tasks_to loop")
+      --print("scheduler: on tasks_to, on k=",k,"  we have co = ", co, " and alt=", alt)
       if alt and now >= alt.to then
          altexec(alt)
          tasks_to[co] = nil
@@ -273,7 +273,7 @@ local function scheduler()
       end
    end
    
-   print("end of scheduler, we ran i tasks, returning i=", i)   
+   --print("end of scheduler, we ran i tasks, returning i=", i)   
    return i
 end
 
@@ -450,9 +450,9 @@ end
 
 select_inner = function(alt_array)
    ::top::
-   print("top of select, alt_array is size ", #alt_array)
-   print(debug.traceback())
-   __st(alt_array, "alt_array")
+   --print("top of select, alt_array is size ", #alt_array)
+   --print(debug.traceback())
+   --__st(alt_array, "alt_array")
    for i,_ in ipairs(alt_array) do
       --__st(alt_array[i], "alt_array["..i.."]", 6)
       if type(alt_array[i]) == "table" and type(alt_array[i][1]) == "table" then
@@ -572,7 +572,7 @@ select_inner = function(alt_array)
 
    -- why crashing at yield()?
    local current_co, is_main = coroutine.running()  
-   print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
+   --print("about to yield from (is_main? ",is_main," co=", current_co, " / ", __costring(current_co))
    
    coroutine.yield()
    assert(alt_array.resolved > 0)
