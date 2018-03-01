@@ -80,7 +80,6 @@ func Test901(t *testing.T) {
 		cv.So(strans, matchesLuaSrc, `
 	 ch = __Chan(__type__.int, 1);
 	 __send(ch, 56LL);
-	 __task.scheduler();
 	 b = __recv(ch);
 			`)
 
@@ -288,7 +287,7 @@ for i := range ch {
 }
 `
 		// tot == 6
-		fmt.Printf("about to translate\n")
+		//fmt.Printf("about to translate\n")
 		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("translation='%s'\n", string(translation))
 
