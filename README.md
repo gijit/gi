@@ -94,7 +94,8 @@ most recent status
 
 2018 March 1 update
 -------------------
-A major milestone, releases v1.2.0 - v1.2.2 bring
+A major milestone, the v1.2.x series and the
+latest release v1.2.3 bring
 fully interactive goroutines
 to the REPL. The REPL can perform receives
 on unbuffered channels, and interact with background
