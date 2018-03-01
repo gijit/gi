@@ -305,10 +305,17 @@ local function spawn(fun, args)
    __coro2notes[co]={__loc=n, __name="spawn #"..tostring(n)}
    
    task_ready(co)
-   print("spawn added to ready queue: co = ", co)
-   print("about to yield to scheduler, ", scheduler_co ,"; here is showco:")
+   --print("spawn added to ready queue: co = ", co)
+   --print("about to yield to scheduler, ", scheduler_co ,"; here is showco:")
    __showco()
-   coroutine.yield(scheduler_co)
+   local co, is_main = coroutine.running()
+   if is_main or __coro2notes[co].__name == "the-eval-coro" then
+      -- can't yield, we are already on main or eval
+      resume_scheduler()
+   else
+      task_ready(co)
+      coroutine.yield() -- go back to scheduler
+   end
 end
 
 ----------------------------------------------------------------------------
@@ -431,7 +438,8 @@ local select_inner
 -- the parameters passed are sane.
 local function select(alt_array)
    local res = {select_inner(alt_array)}
-   coroutine.yield(scheduler_co)
+   task_ready(coroutine.running())
+   coroutine.yield() -- go back to scheduler
    return unpack(res)
 end
 
@@ -471,7 +479,7 @@ select_inner = function(alt_array)
 
       local thisCo = coroutine.running()
       task_park(thisCo)
-      coroutine.yield(scheduler_co)
+      coroutine.yield() -- go back to scheduler
    end
 
    --print("select: loop through the alt_array...")   
@@ -539,9 +547,9 @@ select_inner = function(alt_array)
    local self_coro, is_main = coroutine.running()
    alt_array.task = self_coro
       
-   if not (self_coro ~= nil and is_main ~= true) then
-      local err = "Unable to block from the main thread, run scheduler."
-      coroutine.yield(scheduler_co)
+   if not (self_coro ~= nil and not is_main) then
+      --local err = "Unable to block from the main thread, run scheduler."
+      coroutine.yield()
       goto top
       --print(debug.traceback(err))
       --error(err)
