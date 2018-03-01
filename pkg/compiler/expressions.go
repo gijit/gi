@@ -733,6 +733,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		}
 
 	case *ast.CallExpr:
+		fmt.Printf("777777777 have an *ast.CallExpr\n")
 		plainFun := astutil.RemoveParens(e.Fun)
 
 		if astutil.IsTypeExpr(plainFun, c.p.Info.Info) {
@@ -1164,7 +1165,7 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 			return c.formatExpr("__appendSlice(%s, %s)", argStr[0], argStr[1])
 		}
 		sliceType := sig.Results().At(0).Type().Underlying().(*types.Slice)
-		return c.formatExpr("append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))
+		return c.formatExpr("__append(%e, %s)", args[0], strings.Join(c.translateExprSlice(args[1:], sliceType.Elem()), ", "))
 	case "delete":
 		keyType := c.p.TypeOf(args[0]).Underlying().(*types.Map).Key()
 		pp("delete, keyType='%v'", keyType)

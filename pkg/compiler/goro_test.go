@@ -16,11 +16,13 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 
 		code := `
   a := 1
+  aa := []int{}
   ch := make(chan int)
   go func() {
       for i :=0; i < 3; i++ {
          got := <-ch
          a += 1 + got
+         aa = append(aa, a)
          println("a is now ", a)
       }
   }()
@@ -40,6 +42,7 @@ func Test707ReplGoroVsBackendGoro(t *testing.T) {
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "a", 7)
+		LuaMustEvalToInt64(vm, "aa[0]", 1)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
@@ -92,7 +95,7 @@ func Test708ReplGoroVsBackendGoro(t *testing.T) {
 		LuaMustInt64(vm, "j2", 2)
 		LuaMustInt64(vm, "nextSend", 3)
 		LuaMustInt64(vm, "a0", 33)
-		//LuaMustEvalToInt64(vm, "accumRecv[0]", 33)
+		LuaMustEvalToInt64(vm, "accumRecv[0]", 33)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
