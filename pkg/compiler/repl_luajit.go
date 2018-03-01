@@ -465,7 +465,8 @@ func (r *Repl) Eval(src string) error {
 	}
 	r.t0 = time.Now()
 
-	err := LuaRun(r.vm, use, true)
+	useEval := !r.cfg.RawLua
+	err := LuaRun(r.vm, use, useEval)
 	if err != nil {
 		fmt.Printf("error from LuaRun: supplied lua with: '%s'\nlua stack:\n%v\n", use[:len(use)-1], err)
 		return nil

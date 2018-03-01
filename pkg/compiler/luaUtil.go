@@ -380,7 +380,7 @@ func NewLuaRunner(vm *golua.State) *LuaRunner {
 		panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
 	}
 	lr.evalThread = vm.ToThread(-1)
-	fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
+	//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
 	vm.Pop(1)
 	return lr
 }

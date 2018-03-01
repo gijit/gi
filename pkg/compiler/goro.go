@@ -9,6 +9,8 @@ import (
 	"github.com/glycerine/luar"
 )
 
+var _ = time.Now
+
 // act as a thread-safe proxy to a lua state
 // vm running on its own goroutine.
 type Goro struct {
@@ -118,13 +120,13 @@ func (r *Goro) Start() {
 			r.vm.Close()
 		}()
 
-		beat := 1000 * time.Millisecond
-		heartbeat := time.After(beat)
+		//beat := 1000 * time.Millisecond
+		//heartbeat := time.After(beat)
 		for {
 			select {
-			case <-heartbeat:
-				heartbeat = time.After(beat)
-				r.handleHeartbeat()
+			//case <-heartbeat:
+			//	heartbeat = time.After(beat)
+			//	r.handleHeartbeat()
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:
