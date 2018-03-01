@@ -94,7 +94,7 @@ most recent status
 
 2018 March 1 update
 -------------------
-A major milestone, release v1.2.1 brings
+A major milestone, releases v1.2.0 - v1.2.2 bring
 fully interactive goroutines
 to the REPL. The REPL can perform receives
 on unbuffered channels, and interact with background
@@ -104,6 +104,10 @@ runs a scheduler that coordinates.
 Full blocking at the REPL, on a select or
 receive that cannot be finished at this
 time, is not yet implemented.
+
+Importantly, native Go imports are turned off while we
+work on polishing the goroutine system.
+Hence `import "fmt"` won't work.
 
 2018 Feb 26 update
 ------------------
