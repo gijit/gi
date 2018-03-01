@@ -2498,7 +2498,7 @@ __valueMapMT = {
    end,
 
    __pairs = function(t)
-      print("map __pairs called!")
+     --print("map __pairs called!")
       -- this makes a map work in a for k,v in pairs() do loop.
 
       -- Iterator function takes the table and an index and returns the next index and associated value
@@ -2506,8 +2506,8 @@ __valueMapMT = {
 
       local function stateless_iter(t, k)
          
-         print("map stateless_iter called, with k ="..tostring(k))
-         __st(k, "k")
+         --print("map stateless_iter called, with k ="..tostring(k))
+         --__st(k, "k")
 
          --if k == __map_iter_with_nil_key then
          --   t.nilKeyStored
@@ -2535,10 +2535,10 @@ __valueMapMT = {
          local nextKey
          local nextVal
          nextKey, nextVal = next(t.__val, k)
-         print("map iter, back from next(t.__val, k), is")
+        --print("map iter, back from next(t.__val, k), is")
 
-         __st(nextKey, "nextKey")
-         __st(nextVal, "nextVal")
+         --__st(nextKey, "nextKey")
+         --__st(nextVal, "nextVal")
          
          return nextKey, nextVal
       end
@@ -3190,7 +3190,7 @@ end
 -- Resume it with new code to run, ad inifinitum.
 --
 __gijitMainEvalLoop = function(code)
-   print("top of __gijitMainEvalLoop")
+   --print("top of __gijitMainEvalLoop")
    __lastEvalErr = ""
    
    local chunk, err, ok
