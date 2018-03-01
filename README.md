@@ -92,6 +92,15 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 March 1 update
+-------------------
+A major milestone, release v1.2.0 brings
+fully interactive goroutines
+to the REPL. The REPL can perform blocking
+operations, and interact with background
+goroutines. A background Lua coroutine
+runs a scheduler that coordinates.
+
 2018 Feb 26 update
 ------------------
 With release v1.1.0 we focused on establishing
