@@ -3195,40 +3195,40 @@ __gijitMainEvalLoop = function(code)
    
    local chunk, err, ok
    while true do
-      print("top of main loop: while true...")
-     -- compile chunk to bytecode
+      --print("top of main loop: while true...")
+      -- compile chunk to bytecode
       chunk, err = loadstring(code);
-      print("back from loadstring of code '"..code.."'  we have err=",err," and chunk=", chunk)
+      --print("back from loadstring of code '"..code.."'  we have err=",err," and chunk=", chunk)
       if err ~= nil then
          
          err = "load error: "..tostring(err)
-         print("main loop had err= ",err)
+         --print("main loop had err= ",err)
         
       else
         
-         print("run the compiled bytecode...")
-         print(".........................")
-         print(".........................")
-         print("")
+         --print("run the compiled bytecode...")
+         --print(".........................")
+         --print(".........................")
+         --print("")
 
          ok, err = xpcall(function() chunk() end, __errHandlerForEval)
 
-         print("")
-         print(".........................")
-         print(".........................")
-         print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
-         print("ran the compiled bytecode. ok=", ok, "  err=", err)
+         --print("")
+         --print(".........................")
+         --print(".........................")
+         --print("main loop xpcall had __lastEvalErr='"..__lastEvalErr.."'")
+         --print("ran the compiled bytecode. ok=", ok, "  err=", err)
          if not ok then
             err = "run error: "..tostring(err)
-            print("main loop xpcall had err= ",err)
+            --print("main loop xpcall had err= ",err)
          else
-            print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
+            --print("main loop pcall no error detected b/c ok was true; err= ",err, " ok=",ok)
             err = nil
          end
       end;
-      print("main loop: yielding err="..tostring(err))
+      --print("main loop: yielding err="..tostring(err))
       code = coroutine.yield(err)
-      print("main loop: yield returned with new code: "..code)
+      --print("main loop: yield returned with new code: "..code)
       
    end -- while true
 end
@@ -3239,19 +3239,19 @@ __coro2notes[__gijitMainCoro]={__loc=#__all_coro, __name="the-eval-coro"}
 
 
 __eval = function(code)
-   print("__eval called with code: '"..code.."'")
+   --print("__eval called with code: '"..code.."'")
 
    local status = coroutine.status(__gijitMainCoro)
-   print("status = ", status)
+   --print("status = ", status)
 
    if status ~= "suspended" then
       return false, "problem! our __eval is not suspended! instead: "..status
    end
    
    local ok, err = coroutine.resume(__gijitMainCoro, code)
-   print("back from resume of __gijitMainCoro, ok=", ok, "  err=", err)
+   --print("back from resume of __gijitMainCoro, ok=", ok, "  err=", err)
    if not ok then
-      print("not okay: return ok, err; ok=", ok, "  err=",err)
+      --print("not okay: return ok, err; ok=", ok, "  err=",err)
       return ok, err
    end
    return true, "ok"
@@ -3269,7 +3269,7 @@ __eval = function(code)
          return false, err
       end
    end;
-   print("\n end of __eval: err is ",err)
+   --print("\n end of __eval: err is ",err)
    -- must uniformly return 2 args, since vm.Call(1,2) expects it.
    return true, "ok"
 --]]
