@@ -492,7 +492,7 @@ select_inner = function(alt_array)
       -- no default, no cases: "select{}".
       -- block this goroutine forever
       local self_coro, is_main = coroutine.running()
-      --print("warning: select{} is blocking the goroutine forever... ", self_coro)
+      print("warning: select{} is blocking the goroutine ("..__costring(self_coro)..") forever... ")
       -- just set ourselves to state normal? call the scheduler?
 
       -- select{}: We pause here, forever, without

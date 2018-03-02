@@ -3252,7 +3252,7 @@ __eval = function(code)
    -- we need the scheduler to resume this goroutine,
    -- so that it gets control back when the
    -- eval coro yields, so that it can effect
-   -- the actual receive of receives.
+   -- the actual receive during chan receive <- ops.
 
    __task_ready(__gijitEvalCoro)
    __task.resume_scheduler()
