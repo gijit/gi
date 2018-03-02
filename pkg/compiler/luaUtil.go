@@ -63,8 +63,9 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	// load prelude
 	var files []string
 	if useStaticPrelude {
-		fmt.Printf("using static prelude.\n")
-
+		if !cfg.Quiet {
+			fmt.Printf("Using static prelude.\n")
+		}
 		// static version, compiled into prelude_static.go
 
 		pre, err := preludeFiles.Open("")
@@ -113,7 +114,9 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		}
 
 	} else {
-		fmt.Printf("dynamic prelude '%s'\n", cfg.PreludePath)
+		if !cfg.Quiet {
+			fmt.Printf("Dynamic prelude '%s'\n", cfg.PreludePath)
+		}
 		//fmt.Printf("cfg = '%#v'\n", cfg)
 		files, err = FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 		panicOn(err)
