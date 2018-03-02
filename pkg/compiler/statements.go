@@ -422,8 +422,8 @@ __defer_func(%s)
 
 			if isBlank(lhs) {
 				// _ <- ch gets here, so we need the rhs
-				c.Printf("%s;", c.translateExpr(s.Rhs[0], nil))
-				//c.Printf("__unused(%s);", c.translateExpr(s.Rhs[0], nil))
+				//c.Printf("%s;", c.translateExpr(s.Rhs[0], nil))
+				c.Printf("__unused(%s);", c.translateExpr(s.Rhs[0], nil))
 				return
 			}
 
