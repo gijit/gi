@@ -39,7 +39,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.IsTestMode, "t", false, "load test mode functions and types")
 	fs.BoolVar(&c.NoLiner, "no-liner", false, "turn off liner, e.g. under emacs")
 	fs.BoolVar(&c.NoPrelude, "np", false, "no prelude; skip loading the prelude .lua files and Luar. implies -r raw mode too.")
-	fs.BoolVar(&c.Dev, "dev", false, "dev mode uses the pkg/compiler/prelude/*.lua files, skipping the statically cached pkg/compiler/prelude_static.go version.")
+	fs.BoolVar(&c.Dev, "d", false, "dev mode uses the pkg/compiler/prelude/*.lua files, skipping the statically cached pkg/compiler/prelude_static.go version.")
 }
 
 // call c.ValidateConfig() after myflags.Parse()

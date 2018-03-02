@@ -113,7 +113,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		}
 
 	} else {
-		fmt.Printf("using dynamic prelude from '%s'\n", cfg.PreludePath)
+		fmt.Printf("dynamic prelude '%s'\n", cfg.PreludePath)
 		//fmt.Printf("cfg = '%#v'\n", cfg)
 		files, err = FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
 		panicOn(err)
@@ -273,7 +273,7 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	// get a consistent application order, by sorting by name.
 	sort.Strings(files)
 	if !quiet {
-		fmt.Printf("\nloading prelude: '%s'\n", preludePath)
+		//fmt.Printf("\nloading prelude: '%s'\n", preludePath)
 		shortFn := make([]string, len(files))
 		for i, fn := range files {
 			shortFn[i] = filepath.Base(fn)
