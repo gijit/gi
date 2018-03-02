@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
@@ -20,6 +21,9 @@ import (
 // *dbg = true
 // to turn on -vv very verbose debug printing.
 var dbg = &verb.VerboseVerbose
+
+var tzdata []byte
+var nyc *time.Location
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	var vm *golua.State
@@ -74,10 +78,22 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		}
 		for _, fi := range slcFileInfo {
 			nm := fi.Name()
-			if !fi.IsDir() && fi.Size() > 0 && strings.HasSuffix(nm, ".lua") {
-				if !strings.HasSuffix(nm, "_test.lua") {
-					//fmt.Printf("file info[%v]: '%#v'\n", i, nm)
-					files = append(files, nm)
+			// also load timezone, for windows
+			if nm == "zoneinfo.zip" {
+				fmt.Printf("loading zoneinfo.zip\n")
+				f, err := preludeFiles.Open("zoneinfo.zip")
+				panicOn(err)
+				tzdata, err = ioutil.ReadAll(f)
+				panicOn(err)
+				nyc, err = time.LoadLocationFromTZData("America/New_York", tzdata)
+				panicOn(err)
+				fmt.Printf("nyc is '%s'\n", nyc)
+			} else {
+				if !fi.IsDir() && fi.Size() > 0 && strings.HasSuffix(nm, ".lua") {
+					if !strings.HasSuffix(nm, "_test.lua") {
+						//fmt.Printf("file info[%v]: '%#v'\n", i, nm)
+						files = append(files, nm)
+					}
 				}
 			}
 		}

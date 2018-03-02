@@ -81,9 +81,9 @@ And, Torch7 has GPU support. [1][2]
 
 Will golang (Go) run on GPUs?  It might be possible!
 
-# installation
+# installation from source
 
-Needs at least go1.9. Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
+Needs go1.10 or later (a critical Windows timezone workaround was provided in go1.10). Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
 
 [Update: I put a v1.0.9 binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; compiled on Windows10. Let me know if it works for you.]
 
