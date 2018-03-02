@@ -42,6 +42,16 @@ by weak type-checking or hard-to-refactor code,
 and performance should not suffer just because
 you require interaction with your data.
 
+# Q: Can I embed `gijit` in my app?
+
+A: Yes! That's how `gijit` is designed. In fact the `gi` command is just
+a very thin wrapper around the `pkg/compiler` library. See
+
+https://github.com/gijit/gi/blob/master/cmd/gi/repl.go#L9
+
+and
+
+https://github.com/gijit/gi/blob/master/pkg/compiler/repl_luajit.go#L57
 
 # of course we need a backend to develop against
 
