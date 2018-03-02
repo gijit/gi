@@ -419,12 +419,14 @@ __defer_func(%s)
 		switch {
 		case len(s.Lhs) == 1 && len(s.Rhs) == 1:
 			lhs := astutil.RemoveParens(s.Lhs[0])
+
 			if isBlank(lhs) {
-				// jea, not sure what this is doing, but don't
-				// think we need it at the repl.
-				//c.Printf("__unused(%s);", c.translateExpr(s.Rhs[0]))
+				// _ <- ch gets here, so we need the rhs
+				c.Printf("%s;", c.translateExpr(s.Rhs[0], nil))
+				//c.Printf("__unused(%s);", c.translateExpr(s.Rhs[0], nil))
 				return
 			}
+
 			//fmt.Printf("about to translate assign...lhs='%v'\n", lhs)
 			c.Printf("%s", c.translateAssign(lhs, s.Rhs[0], s.Tok == token.DEFINE))
 
