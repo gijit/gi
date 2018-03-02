@@ -624,7 +624,12 @@ func (L *State) ToPointer(index int) uintptr {
 
 // lua_tothread
 func (L *State) ToThread(index int) *State {
-	s := &State{s: (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index))))}
+	s := &State{
+		s:           (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index)))),
+		registry:    make([]interface{}, 0, 8),
+		freeIndices: make([]uint, 0, 8),
+	}
+	s.Index = uintptr(unsafe.Pointer(s))
 	registerGoState(s)
 	return s
 }
