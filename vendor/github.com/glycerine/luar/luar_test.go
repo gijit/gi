@@ -1,6 +1,7 @@
 package luar
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"sort"
@@ -900,7 +901,7 @@ func TestLuaObjectIter(t *testing.T) {
 
 	wantValues := map[string]float64{"foo": 10, "bar": 20}
 	if !reflect.DeepEqual(values, wantValues) {
-		t.Errorf("got %q, want %q", keys, wantValues)
+		t.Errorf("got %#v, want %#v", keys, wantValues)
 	}
 
 	checkStack(t, L)
@@ -946,7 +947,7 @@ func TestLuaObjectIterMT(t *testing.T) {
 
 	wantValues := map[string]float64{"foo": 10, "bar": 20}
 	if !reflect.DeepEqual(values, wantValues) {
-		t.Errorf("got %q, want %q", keys, wantValues)
+		t.Errorf("got %#v, want %#v", keys, wantValues)
 	}
 
 	checkStack(t, L)
@@ -1780,4 +1781,29 @@ func TestUnproxify(t *testing.T) {
 
 	mustDoString(t, L, `tm = luar.unproxify(m)`)
 	runLuaTest(t, L, []luaTestData{{`tm`, `{a={1, 2}, b=luar.null, c={10, 20}, d=luar.null}`}})
+}
+
+// on a coroutine, call a Go function registerd with Luar.
+func Test100LuarCoroutinesCallingIntoGo(t *testing.T) {
+	L := Init()
+	defer L.Close()
+
+	sum := func(args []float64) float64 {
+		res := 0.0
+		for _, val := range args {
+			res += val
+		}
+		fmt.Printf("\n sum() computed res = '%v'\n", res)
+		return res
+	}
+
+	Register(L, "", Map{
+		"sum": sum,
+	})
+
+	mustDoString(t, L, `return coroutine.resume(coroutine.create(function() return sum{1, 10, 100} end))`)
+	got := L.ToNumber(-2)
+	if got != 111.0 {
+		panic("expected 111.0")
+	}
 }
