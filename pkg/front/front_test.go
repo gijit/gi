@@ -342,3 +342,17 @@ func Test021AssignmenThoughPointer(t *testing.T) {
 		cv.So(empty, cv.ShouldBeFalse)
 	})
 }
+
+func Test022GoroutineLaunchAnonFunc(t *testing.T) {
+
+	cv.Convey("`go func() {` should return eof and ask for more input", t, func() {
+
+		var eof, syntaxErr, empty bool
+
+		src := `go func() {`
+		eof, syntaxErr, empty, _ = TopLevelParseGoSource([]byte(src))
+		cv.So(syntaxErr, cv.ShouldBeFalse)
+		cv.So(eof, cv.ShouldBeTrue)
+		cv.So(empty, cv.ShouldBeFalse)
+	})
+}
