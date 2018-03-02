@@ -28,7 +28,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		if cfg == nil {
 			cfg = NewGIConfig()
 		}
-		cfg.PreludePath = cwd
+		cfg.PreludePath = cwd + "/prelude"
 	}
 
 	if cfg.NoPrelude || cfg.NoLuar {
@@ -218,12 +218,12 @@ func FetchPreludeFilenames(preludePath string, quiet bool) ([]string, error) {
 	// get a consistent application order, by sorting by name.
 	sort.Strings(files)
 	if !quiet {
-		fmt.Printf("\nusing this prelude directory: '%s'\n", preludePath)
+		fmt.Printf("\nloading prelude: '%s'\n", preludePath)
 		shortFn := make([]string, len(files))
 		for i, fn := range files {
 			shortFn[i] = filepath.Base(fn)
 		}
-		fmt.Printf("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
+		pp("using these files as prelude: %s\n", strings.Join(shortFn, ", "))
 	}
 	// windows needs the \ turned into \\ in order to work
 	if runtime.GOOS == "windows" {

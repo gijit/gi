@@ -43,7 +43,7 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.NoPrelude, "np", false, "no prelude; skip loading the prelude .lua files and Luar. implies -r raw mode too.")
 }
 
-var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler"
+var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler/prelude"
 
 var defaultPreludePathParts []string
 
@@ -64,7 +64,7 @@ func (c *GIConfig) ValidateConfig() error {
 		if dir != "" {
 			c.PreludePath = dir
 		} else {
-			// try hard... try $GOPATH/src/github.com/gijit/gi/pkg/compiler
+			// try hard... try $GOPATH/src/github.com/gijit/gi/pkg/compiler/prelude
 			// by default.
 			gopath := os.Getenv("GOPATH")
 			if gopath == "" {
@@ -87,5 +87,5 @@ func (c *GIConfig) ValidateConfig() error {
 }
 
 func preludeError() error {
-	return fmt.Errorf("setenv GIJIT_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler but GIJIT_PRELUDE_DIR was not set and -prelude was not specified.")
+	return fmt.Errorf("setenv GIJIT_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler/prelude but that could not be found, GIJIT_PRELUDE_DIR was not set, and/or -prelude was not specified correctly.")
 }
