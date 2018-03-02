@@ -22,7 +22,6 @@ import (
 // to turn on -vv very verbose debug printing.
 var dbg = &verb.VerboseVerbose
 
-var tzdata []byte
 var nyc *time.Location
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
@@ -79,15 +78,15 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		for _, fi := range slcFileInfo {
 			nm := fi.Name()
 			// also load timezone, for windows
-			if nm == "zoneinfo.zip" {
-				fmt.Printf("loading zoneinfo.zip\n")
-				f, err := preludeFiles.Open("zoneinfo.zip")
+			if nm == "zoneinfo" {
+				//fmt.Printf("loading zoneinfo/\n")
+				f, err := preludeFiles.Open("zoneinfo/America/New_York")
 				panicOn(err)
-				tzdata, err = ioutil.ReadAll(f)
+				nyctzdata, err := ioutil.ReadAll(f)
 				panicOn(err)
-				nyc, err = time.LoadLocationFromTZData("America/New_York", tzdata)
+				nyc, err = time.LoadLocationFromTZData("America/New_York", nyctzdata)
 				panicOn(err)
-				fmt.Printf("nyc is '%s'\n", nyc)
+				//fmt.Printf("nyc is '%s'\n", nyc)
 			} else {
 				if !fi.IsDir() && fi.Size() > 0 && strings.HasSuffix(nm, ".lua") {
 					if !strings.HasSuffix(nm, "_test.lua") {
