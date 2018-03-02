@@ -51,7 +51,7 @@ func luaToString(L *lua.State, idx int) string {
 	case lua.LUA_TNIL:
 		return "nil"
 	}
-	return fmt.Sprintf("%s: %p", L.LTypename(idx), L.ToPointer(idx))
+	return fmt.Sprintf("%s: %v", L.LTypename(idx), L.ToPointer(idx))
 }
 
 func luaDesc(L *lua.State, idx int) string {

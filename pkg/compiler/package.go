@@ -143,7 +143,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 		c.TypeNameSetting = prev
 	}()
 
-	fmt.Printf("\n initArgs: ty = '%#v'\n", ty)
+	//fmt.Printf("\n initArgs: ty = '%#v'\n", ty)
 	// &types.Tuple{vars:[]*types.Var{(*types.Var)(0xc4201800f0), (*types.Var)(0xc420180140)}}'
 	switch t := ty.(type) {
 	case *types.Array:

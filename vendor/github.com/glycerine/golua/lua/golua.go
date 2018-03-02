@@ -87,7 +87,6 @@ func printGoStates() (biggest uintptr) {
 //export golua_callgofunction
 func golua_callgofunction(gostateindex uintptr, fid uint) int {
 	L1 := getGoState(gostateindex)
-	//fmt.Printf("\n jea debug: available states are:")
 	//biggest := printGoStates()
 	// jea: to debug, try substituting the biggest...
 	//if biggest != gostateindex {
@@ -97,6 +96,8 @@ func golua_callgofunction(gostateindex uintptr, fid uint) int {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
 	f := L1.registry[fid].(LuaGoFunction)
+	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
+
 	return f(L1)
 }
 

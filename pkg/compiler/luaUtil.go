@@ -485,35 +485,20 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		if vm.IsNil(-1) {
 			panic("could not locate __eval in _G")
 		}
-		//fmt.Printf("good: found __eval. running '%s'\n", s)
+		p1("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
-		//fmt.Printf("before vm.Call(1,0), stack is:")
-		//DumpLuaStack(vm)
+		p1("before vm.Call(1,0), stack is:")
+		if verb.Verbose {
+			DumpLuaStack(vm)
+		}
 		vm.Call(1, 0)
 		// if things crash, this is the first place
 		// to check for an error: dump the Lua stack.
-		// High probability, it will clue you in.
-		//fmt.Printf("after vm.Call(1,0), stack is:")
-		//DumpLuaStack(vm)
-		/*
-			vm.Call(1, 2)
-			// if top is true, no error. Otherwise error is at -2
-			if vm.Type(-2) != golua.LUA_TBOOLEAN {
-				fmt.Printf("ugh, expected Bool back on top of stack but didn't get it. Stack:")
-				fmt.Printf("\n ... after Call(1,2), the stack is:\n'%s'\n", DumpLuaStackAsString(vm))
-
-				//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(evalThread))
-
-				panic("why no bool?")
-			}
-			ok := vm.ToBoolean(-2)
-			if !ok {
-				err := fmt.Errorf("%s", vm.ToString(-1))
-				fmt.Printf("bad, err: '%v'\n", err)
-				return err
-			}
-			//fmt.Printf("good: top of stack was true\n")
-		*/
+		// With high probability, it will yield clues to the problem.
+		p1("after vm.Call(1,0), stack is:")
+		if verb.Verbose {
+			DumpLuaStack(vm)
+		}
 		return nil
 	} else {
 

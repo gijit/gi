@@ -75,7 +75,7 @@ func registerLuarReqs(vm *golua.State) {
 
 	luar.Register(vm, "reflect", shadow_reflect.Pkg)
 	luar.Register(vm, "fmt", shadow_fmt.Pkg)
-	//fmt.Printf("reflect/fmt registered\n")
+	fmt.Printf("reflect/fmt registered\n")
 
 	// give goroutines.lua something to clone
 	// to generate select cases.
@@ -90,22 +90,25 @@ func registerLuarReqs(vm *golua.State) {
 
 func (ic *IncrState) EnableImportsFromLua() {
 
-	/* minimize luar stuff for now, focus on pure Lua runtime.
+	// minimize luar stuff for now, focus on pure Lua runtime.
 	goImportFromLua := func(path string) {
 		ic.GiImportFunc(path)
 	}
-	t0 := ic.goro.newTicket()
-	t0.regmap["__go_import"] = goImportFromLua
-	panicOn(t0.Do())
+	luar.Register(ic.goro.vm, "", luar.Map{
+		"__go_import": goImportFromLua,
+	})
+	/*	t0 := ic.goro.newTicket()
+		t0.regmap["__go_import"] = goImportFromLua
+		panicOn(t0.Do())
 	*/
 }
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	fmt.Printf("GiImportFunc called with path = '%s'... TODO: pure Lua packages. No go/binary/luar based stuff for now\n", path)
+	//fmt.Printf("GiImportFunc called with path = '%s'... TODO: pure Lua packages. No go/binary/luar based stuff for now\n", path)
 
-	return nil, nil
+	//return nil, nil
 
 	var pkg *types.Package
 	t0 := ic.goro.newTicket()
