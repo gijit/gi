@@ -2461,15 +2461,7 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
 	//x := p.parseExpr(false)
 	//pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
 	//return x
-	/*
-		case token.ARROW:
-			x := p.parseUnaryExpr(false)
-			pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
-			return x
 
-				case token.SEMICOLON:
-					return nil // hmmm... not sure this is correct. At all.
-	*/
 	case token.ARROW,
 		token.IDENT,
 		token.FOR,
