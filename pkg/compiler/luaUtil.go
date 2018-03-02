@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -22,6 +23,14 @@ var dbg = &verb.VerboseVerbose
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	var vm *golua.State
+	useStaticPrelude := true
+
+	// cfg == nil means under test.
+	// cfg.Dev means `gi -dev` was invoked.
+	if cfg == nil || cfg.Dev {
+		useStaticPrelude = false
+	}
+
 	if cfg == nil || cfg.PreludePath == "" {
 		cwd, err := os.Getwd()
 		panicOn(err)
@@ -49,26 +58,59 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	}
 
 	// load prelude
-	//fmt.Printf("cfg = '%#v'\n", cfg)
-	files, err := FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
-	panicOn(err)
-	if err != nil {
-		return nil, err
-	}
-	err = LuaDoPreludeFiles(vm, files)
-	panicOn(err)
-	if err != nil {
-		return nil, err
-	}
+	var files []string
+	if useStaticPrelude {
+		fmt.Printf("using static prelude.\n")
 
-	// load the utf8 library as __utf8
-	cwd, err := os.Getwd()
-	panicOn(err)
-	panicOn(os.Chdir(cfg.PreludePath))
-	err = LuaRun(vm, fmt.Sprintf(`__utf8 = require 'utf8'`), false)
-	panicOn(err)
-	if err != nil {
-		return nil, err
+		// static version, compiled into prelude_static.go
+
+		pre, err := preludeFiles.Open("")
+		if err != nil {
+			return nil, err
+		}
+		slcFileInfo, err := pre.Readdir(-1)
+		if err != nil {
+			return nil, err
+		}
+		for _, fi := range slcFileInfo {
+			nm := fi.Name()
+			if !fi.IsDir() && fi.Size() > 0 && strings.HasSuffix(nm, ".lua") {
+				if !strings.HasSuffix(nm, "_test.lua") {
+					//fmt.Printf("file info[%v]: '%#v'\n", i, nm)
+					files = append(files, nm)
+				}
+			}
+		}
+
+		for _, fn := range files {
+
+			f, err := preludeFiles.Open(fn)
+			panicOn(err)
+
+			by, err := ioutil.ReadAll(f)
+			panicOn(err)
+
+			//fmt.Printf("\n--88-- ioutil.ReadAll('%s') returned:\n'%s'\n", fn, string(by))
+			err = LuaRun(vm, string(by), false)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	} else {
+		fmt.Printf("using dynamic prelude from '%s'\n", cfg.PreludePath)
+		//fmt.Printf("cfg = '%#v'\n", cfg)
+		files, err = FetchPreludeFilenames(cfg.PreludePath, cfg.Quiet)
+		panicOn(err)
+		if err != nil {
+			return nil, err
+		}
+
+		err = LuaDoPreludeFiles(vm, files)
+		panicOn(err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// lastly, after the prelude, reset the DFS graph
@@ -77,8 +119,6 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	panicOn(os.Chdir(cwd))
 
 	// take a Lua value, turn it into a Go value, wrap
 	// it in a proxy and return it to Lua.

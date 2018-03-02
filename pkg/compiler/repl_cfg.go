@@ -2,10 +2,6 @@ package compiler
 
 import (
 	"flag"
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/gijit/gi/pkg/verb"
 )
@@ -21,6 +17,8 @@ type GIConfig struct {
 	NoLiner        bool // for under test/emacs
 	NoPrelude      bool
 	NoLuar         bool
+
+	Dev bool // dev mode, don't use statically cached prelude
 }
 
 var defaultTestMode bool // set to true by init() for tests, in repl_test.go.
@@ -37,18 +35,11 @@ func (c *GIConfig) DefineFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&c.Verbose, "v", false, "show debug prints")
 	fs.BoolVar(&c.VerboseVerbose, "vv", false, "show even more verbose debug prints")
 	fs.BoolVar(&c.RawLua, "r", false, "raw mode: skip all translation, type raw Lua to LuaJIT with our prelude installed")
-	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All .lua files are sourced before startup from this directory. Default is to to read from 'GIJIT_PRELUDE_DIR' env var. -prelude overrides this.")
+	fs.StringVar(&c.PreludePath, "prelude", "", "path to the prelude directory. All *.lua files are sourced before startup from this directory. Default is to use the statically embedded version.")
 	fs.BoolVar(&c.IsTestMode, "t", false, "load test mode functions and types")
 	fs.BoolVar(&c.NoLiner, "no-liner", false, "turn off liner, e.g. under emacs")
 	fs.BoolVar(&c.NoPrelude, "np", false, "no prelude; skip loading the prelude .lua files and Luar. implies -r raw mode too.")
-}
-
-var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler/prelude"
-
-var defaultPreludePathParts []string
-
-func init() {
-	defaultPreludePathParts = strings.Split(defaultPreludePath, "/")
+	fs.BoolVar(&c.Dev, "dev", false, "dev mode uses the pkg/compiler/prelude/*.lua files, skipping the statically cached pkg/compiler/prelude_static.go version.")
 }
 
 // call c.ValidateConfig() after myflags.Parse()
@@ -60,32 +51,10 @@ func (c *GIConfig) ValidateConfig() error {
 	}
 
 	if c.PreludePath == "" {
-		dir := os.Getenv("GIJIT_PRELUDE_DIR")
-		if dir != "" {
-			c.PreludePath = dir
-		} else {
-			// try hard... try $GOPATH/src/github.com/gijit/gi/pkg/compiler/prelude
-			// by default.
-			gopath := os.Getenv("GOPATH")
-			if gopath == "" {
-				// try $HOME/go
-				home := os.Getenv("HOME")
-				proposed := filepath.Join(home, "go")
-				if !DirExists(home) || !DirExists(proposed) {
-					return preludeError()
-				}
-				gopath = proposed
-			}
-
-			c.PreludePath = filepath.Join(append([]string{gopath}, defaultPreludePathParts...)...)
-		}
+		// just use the statically embedded prelude from build time.
 	}
 	verb.Verbose = c.Verbose || c.VerboseVerbose
 	verb.VerboseVerbose = c.VerboseVerbose
 
 	return nil
-}
-
-func preludeError() error {
-	return fmt.Errorf("setenv GIJIT_PRELUDE_DIR to point to your prelude dir. This is typically $GOPATH/src/github.com/gijit/gi/pkg/compiler/prelude but that could not be found, GIJIT_PRELUDE_DIR was not set, and/or -prelude was not specified correctly.")
 }
