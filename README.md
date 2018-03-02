@@ -10,6 +10,7 @@ quick install
 -------------
 
 ~~~
+# use go1.10 or later.
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi
 $ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
@@ -83,7 +84,7 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 # installation from source
 
-Needs go1.10 or later (a critical Windows timezone workaround was provided in go1.10). Works on Mac OSX and Linux and Windows. On windows you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
+Release v1.3.0 and later needs go1.10 or later (a critical Windows timezone workaround was provided in go1.10). Works on Mac OSX and Linux and Windows. To build on Windows, you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
 
 [Update: I put a v1.0.9 binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; compiled on Windows10. Let me know if it works for you.]
 
