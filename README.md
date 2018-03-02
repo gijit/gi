@@ -111,6 +111,8 @@ work on polishing the goroutine system.
 Hence `import "fmt"` won't work.
 
 As of v1.2.4, close() on channels is available.
+As of v1.2.5, <-ch, for a channel ch, works
+by itself at the repl and in functions.
 
 2018 Feb 26 update
 ------------------
