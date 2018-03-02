@@ -1,2 +1,2 @@
 #!/bin/bash
-luajit -i -e 'dofile("tsys.lua")'
+luajit -i -e 'dofile("prelude/tsys.lua")'
