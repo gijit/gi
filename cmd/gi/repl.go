@@ -33,7 +33,7 @@ Copyright (c) 2018, Jason E. Aten. All rights reserved.
 License: 3-clause BSD. See the LICENSE file at
 https://github.com/gijit/gi/blob/master/LICENSE
 ====================
-  [ gigit/gi is an interactive Golang environment,
+  [ gijit/gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop.]
   [ at the gi> prompt, type ctrl-d to exit.]
   [ at the gi> :?   or :help for help.]
