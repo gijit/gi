@@ -21,7 +21,7 @@ $ gi
 ~~~
 See https://github.com/gijit/gi/issues/18 for windows install help.
 
-For v1.3.2, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 They have the prelude compiled in now, so should be standalone. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
+For v1.3.2, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 They have the prelude compiled in now. They should run standalone, without needing to install the source. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
 
 # the dream
 
@@ -86,7 +86,7 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 Release v1.3.0 and later needs go1.10 or later (a critical Windows timezone workaround was provided in go1.10). Works on Mac OSX and Linux and Windows. To build on Windows, you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
 
-[Update: I put a v1.0.9 binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; compiled on Windows10. Let me know if it works for you.]
+[Update: I put a v1.3.2 binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 ; compiled on Windows10.]
 
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
