@@ -30,8 +30,9 @@ type LuaStackEntry struct {
 
 func newState(L *C.lua_State) *State {
 	newstate := &State{
-		s:      L,
-		Shared: newSharedByAllCoroutines(),
+		s:          L,
+		Shared:     newSharedByAllCoroutines(),
+		IsMainCoro: true,
 	}
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
 	registerGoState(newstate)
@@ -372,7 +373,7 @@ func (L *State) NewThread() *State {
 	}
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
 
-	registerGoState(newstate)
+	//registerGoState(newstate)
 	// don't replace the main lua state as 'k' in the Lua registry,
 	// let the main coroutine keep that. i.e. keep this commented out.
 	//C.clua_setgostate(s, C.size_t(newstate.Index))
@@ -625,7 +626,7 @@ func (L *State) ToThread(index int) *State {
 		Shared: L.Shared,
 	}
 	s.Index = uintptr(unsafe.Pointer(s))
-	registerGoState(s)
+	//registerGoState(s)
 	return s
 }
 
@@ -852,15 +853,28 @@ func (L *State) CoroutineRunning() (running *State, isMain bool) {
 	//fmt.Printf("start of CoroutineRunning, stack is:")
 	//DumpLuaStack(L)
 
-	L.GetGlobal("coroutine")
-	L.PushString("running")
-	L.GetTable(-2)
-	L.Call(0, 2)
-	running = L.ToThread(-2)
-	isMain = L.ToBoolean(-1)
-	L.Pop(3)
+	var isM C.int
+	curThread := (*C.lua_State)(unsafe.Pointer(C.clua_coroutine_running(L.s, &isM)))
 
-	//fmt.Printf("end of CoroutineRunning, stack is:")
-	//DumpLuaStack(L)
-	return
+	s := &State{
+		s:      curThread,
+		Shared: L.Shared,
+	}
+	s.Index = uintptr(unsafe.Pointer(s))
+	//registerGoState(s)
+	return s, isM == 1
+
+	/*
+		L.GetGlobal("coroutine")
+		L.PushString("running")
+		L.GetTable(-2)
+		L.Call(0, 2)
+		running = L.ToThread(-2)
+		isMain = L.ToBoolean(-1)
+		L.Pop(3)
+
+		//fmt.Printf("end of CoroutineRunning, stack is:")
+		//DumpLuaStack(L)
+		return
+	*/
 }

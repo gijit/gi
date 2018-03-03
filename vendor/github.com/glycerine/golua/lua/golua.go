@@ -35,6 +35,8 @@ type State struct {
 	Index uintptr
 
 	Shared *SharedByAllCoroutines
+
+	IsMainCoro bool // if true, then will be registered
 }
 
 type SharedByAllCoroutines struct {
