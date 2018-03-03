@@ -26,20 +26,25 @@ var nyc *time.Location
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	var vm *golua.State
-	useStaticPrelude := true
+	var useStaticPrelude bool
 
 	// cfg == nil means under test.
 	// cfg.Dev means `gi -dev` was invoked.
 	if cfg == nil || cfg.Dev {
 		useStaticPrelude = false
+	} else {
+		useStaticPrelude = true
 	}
 
-	if cfg == nil || cfg.PreludePath == "" {
+	if cfg == nil {
+		cfg = NewGIConfig()
+	}
+
+	if useStaticPrelude {
+		cfg.PreludePath = ""
+	} else {
 		cwd, err := os.Getwd()
 		panicOn(err)
-		if cfg == nil {
-			cfg = NewGIConfig()
-		}
 		cfg.PreludePath = cwd + "/prelude"
 	}
 
@@ -48,14 +53,14 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		vm = golua.NewState()
 		vm.OpenLibs()
 		return vm, nil
-	} else {
-		vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
-		registerLuarReqs(vm)
 	}
+
+	vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
+	registerLuarReqs(vm)
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
-	err := LuaRun(vm, fmt.Sprintf(`__preludePath="%s/";`, makePathWindowsSafe(cfg.PreludePath)), false)
+	err := LuaRun(vm, fmt.Sprintf(`__preludePath="/";`), false) //, makePathWindowsSafe(cfg.PreludePath)), false)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +81,8 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		if err != nil {
 			return nil, err
 		}
-		for _, fi := range slcFileInfo {
+		for i, fi := range slcFileInfo {
+			_ = i
 			nm := fi.Name()
 			// also load timezone, for windows
 			if nm == "zoneinfo" {
@@ -98,6 +104,8 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 			}
 		}
 
+		// get a consistent application order, by sorting by name.
+		sort.Strings(files)
 		for _, fn := range files {
 
 			f, err := preludeFiles.Open(fn)
@@ -109,8 +117,10 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 			//fmt.Printf("\n--88-- ioutil.ReadAll('%s') returned:\n'%s'\n", fn, string(by))
 			err = LuaRun(vm, string(by), false)
 			if err != nil {
+				//fmt.Printf("problem loading prelude file '%s': '%v'\n", fn, err)
 				return nil, err
 			}
+			//fmt.Printf("ok load of prelude file '%s'.\n", fn)
 		}
 
 	} else {

@@ -208,7 +208,8 @@ if complex == nil then
    dofile(__preludePath..'complex.lua')
 end
 
-if __dfsOrder == nil then
+if __showDFSOrder == nil then
+   print("__showDFSOrder is nil, so loading dfs.lua")
    dofile(__preludePath..'dfs.lua')
 end
 
