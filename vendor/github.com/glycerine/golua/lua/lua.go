@@ -176,6 +176,14 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 		}()
 	}
 
+	// switch to current coro here?
+	running, isMain := L.CoroutineRunning()
+	fmt.Printf("\n in callEx(): isMain: %v, running = '%p'; running: '%#v'\n", isMain, running, running)
+	if !isMain {
+		fmt.Printf("callEx(): not on main, replacing L with running.\n")
+		L = running
+	}
+
 	L.GetGlobal(C.GOLUA_DEFAULT_MSGHANDLER)
 	// We must record where we put the error handler in the stack otherwise it will be impossible to remove after the pcall when nresults == LUA_MULTRET
 	erridx := L.GetTop() - nargs - 1
