@@ -21,7 +21,7 @@ $ gi
 ~~~
 See https://github.com/gijit/gi/issues/18 for windows install help.
 
-For v1.0.9, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.0.9 ; however you'll still need to set your `GOPATH` and ` go get -d github.com/gijit/gi/cmd/gi` the source code using the command above in order to make the prelude .lua files avaialable.
+For v1.3.2, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 They have the prelude compiled in now, so should be standalone. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
 
 # the dream
 
@@ -107,6 +107,8 @@ most recent status
 -------------------
 Release v1.3.2 vendors the gonum libraries
 used, as users were seeing some version skew.
+
+There are binaries available. See https://github.com/gijit/gi/releases/tag/v1.3.2
 
 2018 March 1 update
 -------------------
