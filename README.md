@@ -145,20 +145,13 @@ full `go`, `select`, channel send, and channel
 receive available. v1.1.1 provides a little
 polish.
 
-While fully compiled code seems to work
-(cf. tests 900 - 905 in chan_test.go), the
-interation with goroutines at the REPL
-is still yet a little awkward, and
-`attempt to yield across C-call boundary`
-a common complaint.
-
 2018 Feb 24 update
 ------------------
 Release v1.0.15 brings the ability to make native
 Go channels via reflection for basic types, and then
 use those channels in send, receive, and `select`
 operations to communicate between interpreted and
-pre-compiled Go code.  Goroutines are still TODO.
+pre-compiled Go code.
 
 2018 Feb 23 update
 ------------------
@@ -182,9 +175,8 @@ Release v1.0.0 marks these milestones:
 
 Limitations not yet addressed:
 
-* import of packages (e.g. import "fmt") on linux
-  doesn't appear to be working.
-* imports of binary Go packages in general need some help.
+* import of source packages isn't working yet.
+* imports of binary Go packages don't work, and in general need some help.
 * chan/select/goroutines are not implemented; init()
   functions and full ahead-of-time compile of packages
   are not done.
@@ -385,7 +377,7 @@ the matrix 501 example.
 ------------------
 As of `gigit` v0.9.15, Complex numbers
 fully supported, with all of the `cmplx` library
-funtions available. The underlying complex.lua
+functions available. The underlying complex.lua
 library works at LuaJIT natively.
 
 There's still some cruft to clear out
