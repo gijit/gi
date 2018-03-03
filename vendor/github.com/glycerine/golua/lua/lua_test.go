@@ -384,3 +384,22 @@ func TestConv(t *testing.T) {
 		t.Fatalf("Wrong conversion (str -> str): <%s>", s)
 	}
 }
+
+func TestCoroutineRunning(t *testing.T) {
+	L := NewState()
+	L.OpenLibs()
+	defer L.Close()
+
+	mainCoro, isMain := L.CoroutineRunning()
+	_ = mainCoro
+	if !isMain {
+		t.Fatal("should have gotten isMain true")
+	}
+	/*
+		code := `return`
+		err := L.DoString(code)
+		if err != nil {
+			t.Fatal(err)
+		}
+	*/
+}

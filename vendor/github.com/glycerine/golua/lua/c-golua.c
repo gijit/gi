@@ -420,3 +420,24 @@ void clua_luajit_push_cdata_uint64(lua_State *L, uint64_t u)
 {
   return luajit_push_cdata_uint64(L, u);
 }
+
+/* Like coroutine.running(), in Lua 5.2/LuaJIT.
+   Returns with *isMain == 1 if the main coroutine is 
+   running, 0 if other coroutine running.
+   In either case, the return value is the running
+   coroutine.
+*/
+lua_State* clua_coroutine_running(lua_State* L, int* isMain /*out*/)
+{
+  lua_State* res;
+  lua_getglobal(L, "coroutine");
+  lua_pushstring(L, "running");
+  lua_gettable(L, -2);
+  lua_call(L, 0, 2);
+  res = lua_tothread(L, -2);
+  if (isMain != NULL) {
+    *isMain = lua_toboolean(L, -1);
+  }
+  lua_pop(L, 3);
+  return res;
+}

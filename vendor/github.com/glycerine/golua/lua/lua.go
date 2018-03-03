@@ -374,7 +374,7 @@ func (L *State) NewThread() *State {
 
 	registerGoState(newstate)
 	// don't replace the main lua state as 'k' in the Lua registry,
-	// let the main coroutine keep that.
+	// let the main coroutine keep that. i.e. keep this commented out.
 	//C.clua_setgostate(s, C.size_t(newstate.Index))
 	return newstate
 }
@@ -844,5 +844,23 @@ func dumpTableString(L *State, index int) (s string) {
 	// Pop table
 	L.Pop(1)
 	// Stack is now the same as it was on entry to this function
+	return
+}
+
+// same as coroutine.running() in Lua 5.2/LuaJIT.
+func (L *State) CoroutineRunning() (running *State, isMain bool) {
+	//fmt.Printf("start of CoroutineRunning, stack is:")
+	//DumpLuaStack(L)
+
+	L.GetGlobal("coroutine")
+	L.PushString("running")
+	L.GetTable(-2)
+	L.Call(0, 2)
+	running = L.ToThread(-2)
+	isMain = L.ToBoolean(-1)
+	L.Pop(3)
+
+	//fmt.Printf("end of CoroutineRunning, stack is:")
+	//DumpLuaStack(L)
 	return
 }
