@@ -38,7 +38,8 @@ type State struct {
 
 	IsMainCoro bool // if true, then will be registered
 
-	MainCo *State // always points to the main coro
+	MainCo  *State       // always points to the main coro
+	CmainCo *C.lua_State // ditto
 }
 
 type SharedByAllCoroutines struct {
@@ -115,7 +116,7 @@ func golua_callgofunction(gostateindex uintptr, fid uint) int {
 
 	running, isMain := L1.CoroutineRunning()
 	_ = isMain
-	fmt.Printf("\n isMain: %v, running: '%#v'\n", isMain, running)
+	fmt.Printf("\n isMain: %v, running = '%p'; running: '%#v'\n", isMain, running, running)
 
 	return f(running)
 	//return f(L1)

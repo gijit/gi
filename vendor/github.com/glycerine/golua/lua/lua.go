@@ -33,6 +33,7 @@ func newState(L *C.lua_State) *State {
 		s:          L,
 		Shared:     newSharedByAllCoroutines(),
 		IsMainCoro: true,
+		CmainCo:    L,
 	}
 	newstate.MainCo = newstate
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
@@ -369,9 +370,10 @@ func (L *State) NewThread() *State {
 
 	s := C.lua_newthread(L.s)
 	newstate := &State{
-		s:      s,
-		Shared: L.Shared,
-		MainCo: L.MainCo,
+		s:       s,
+		Shared:  L.Shared,
+		MainCo:  L.MainCo,
+		CmainCo: L.MainCo.s,
 	}
 	//newstate.Index = uintptr(unsafe.Pointer(newstate))
 	//registerGoState(newstate)
@@ -623,9 +625,10 @@ func (L *State) ToPointer(index int) uintptr {
 // lua_tothread
 func (L *State) ToThread(index int) *State {
 	s := &State{
-		s:      (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index)))),
-		Shared: L.Shared,
-		MainCo: L.MainCo,
+		s:       (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index)))),
+		Shared:  L.Shared,
+		MainCo:  L.MainCo,
+		CmainCo: L.MainCo.s,
 	}
 	//s.Index = uintptr(unsafe.Pointer(s))
 	//registerGoState(s)
@@ -859,9 +862,10 @@ func (L *State) CoroutineRunning() (running *State, isMain bool) {
 	curThread := (*C.lua_State)(unsafe.Pointer(C.clua_coroutine_running(L.s, &isM)))
 
 	s := &State{
-		s:      curThread,
-		Shared: L.Shared,
-		MainCo: L.MainCo,
+		s:       curThread,
+		Shared:  L.Shared,
+		MainCo:  L.MainCo,
+		CmainCo: L.MainCo.s,
 	}
 	//s.Index = uintptr(unsafe.Pointer(s))
 	//registerGoState(s)
