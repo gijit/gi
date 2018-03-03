@@ -103,6 +103,11 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 March 2 update
+-------------------
+Release v1.3.2 vendors the gonum libraries
+used, as users were seeing some version skew.
+
 2018 March 1 update
 -------------------
 A major milestone, the v1.2.x series and the
