@@ -109,6 +109,7 @@ end
 `
 
 func mustDoString(t *testing.T, L *lua.State, code string) {
+	fmt.Printf("mustDoString() top. code='%s'. L=%p\n", code, L)
 	err := L.DoString(code)
 	if err != nil {
 		t.Fatal(err)
@@ -1789,6 +1790,7 @@ func Test100LuarCoroutinesCallingIntoGo(t *testing.T) {
 	defer L.Close()
 
 	sum := func(args []float64) float64 {
+		fmt.Printf("top of sum(). called with args='%#v'\n", args)
 		res := 0.0
 		for _, val := range args {
 			res += val
@@ -1802,6 +1804,11 @@ func Test100LuarCoroutinesCallingIntoGo(t *testing.T) {
 	})
 
 	mustDoString(t, L, `return coroutine.resume(coroutine.create(function() return sum{1, 10, 100} end))`)
+	top := L.GetTop()
+	if top != 2 {
+		fmt.Printf("top was %v\n", top)
+		panic("resume should have returned two values: true and 111.0")
+	}
 	got := L.ToNumber(-2)
 	if got != 111.0 {
 		panic("expected 111.0")
