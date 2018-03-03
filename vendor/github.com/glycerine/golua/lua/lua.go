@@ -373,7 +373,9 @@ func (L *State) NewThread() *State {
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
 
 	registerGoState(newstate)
-	C.clua_setgostate(L.s, C.size_t(newstate.Index))
+	// don't replace the main lua state as 'k' in the Lua registry,
+	// let the main coroutine keep that.
+	//C.clua_setgostate(s, C.size_t(newstate.Index))
 	return newstate
 }
 

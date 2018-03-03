@@ -73,7 +73,7 @@ size_t clua_getgostate(lua_State* L)
 	size_t gostateindex;
 	//get gostate from registry entry
 	lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
-	lua_gettable(L, LUA_REGISTRYINDEX);
+	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
 	gostateindex = (size_t)lua_touserdata(L,-1);
 	lua_pop(L,1);
 	return gostateindex;
