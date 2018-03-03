@@ -34,11 +34,22 @@ type State struct {
 	// index of this object inside the goStates array
 	Index uintptr
 
+	Shared *SharedByAllCoroutines
+}
+
+type SharedByAllCoroutines struct {
 	// Registry of go object that have been pushed to Lua VM
 	registry []interface{}
 
 	// Freelist for funcs indices, to allow for freeing
 	freeIndices []uint
+}
+
+func newSharedByAllCoroutines() *SharedByAllCoroutines {
+	return &SharedByAllCoroutines{
+		registry:    make([]interface{}, 0, 8),
+		freeIndices: make([]uint, 0, 8),
+	}
 }
 
 var goStates map[uintptr]*State
@@ -95,7 +106,7 @@ func golua_callgofunction(gostateindex uintptr, fid uint) int {
 	if fid < 0 {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
-	f := L1.registry[fid].(LuaGoFunction)
+	f := L1.Shared.registry[fid].(LuaGoFunction)
 	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
 
 	return f(L1)
@@ -106,7 +117,7 @@ var typeOfBytes = reflect.TypeOf([]byte(nil))
 //export golua_interface_newindex_callback
 func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_name_cstr *C.char) int {
 	L := getGoState(gostateindex)
-	iface := L.registry[iid]
+	iface := L.Shared.registry[iid]
 	ifacevalue := reflect.ValueOf(iface).Elem()
 
 	field_name := C.GoString(field_name_cstr)
@@ -201,7 +212,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 //export golua_interface_index_callback
 func golua_interface_index_callback(gostateindex uintptr, iid uint, field_name *C.char) int {
 	L := getGoState(gostateindex)
-	iface := L.registry[iid]
+	iface := L.Shared.registry[iid]
 	ifacevalue := reflect.ValueOf(iface).Elem()
 
 	fval := ifacevalue.FieldByName(C.GoString(field_name))
@@ -269,7 +280,7 @@ func golua_gchook(gostateindex uintptr, id uint) int {
 //export golua_callpanicfunction
 func golua_callpanicfunction(gostateindex uintptr, id uint) int {
 	L1 := getGoState(gostateindex)
-	f := L1.registry[id].(LuaGoFunction)
+	f := L1.Shared.registry[id].(LuaGoFunction)
 	return f(L1)
 }
 

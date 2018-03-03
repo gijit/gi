@@ -13,7 +13,10 @@ package lua
 #include "golua.h"
 */
 import "C"
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 type LuaError struct {
 	code       int
@@ -111,7 +114,10 @@ func (L *State) DoString(str string) error {
 	if r := L.LoadString(str); r != 0 {
 		return &LuaError{r, L.ToString(-1), L.StackTrace()}
 	}
-	return L.Call(0, LUA_MULTRET)
+	fmt.Printf("load okay, about to Call()\n")
+	err := L.Call(0, LUA_MULTRET)
+	fmt.Printf("L.Call() back, err = '%v'\n", err) // runtime error: index out of range
+	return err
 }
 
 // Like DoString but panics on error
