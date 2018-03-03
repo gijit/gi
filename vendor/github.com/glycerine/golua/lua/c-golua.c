@@ -425,7 +425,7 @@ void clua_luajit_push_cdata_uint64(lua_State *L, uint64_t u)
    Returns with *isMain == 1 if the main coroutine is 
    running, 0 if other coroutine running.
    In either case, the return value is the running
-   coroutine.
+   coroutine, which Lua represents as a pointer to lua_State.
 */
 lua_State* clua_coroutine_running(lua_State* L, int* isMain /*out*/)
 {

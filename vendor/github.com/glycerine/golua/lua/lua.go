@@ -34,6 +34,7 @@ func newState(L *C.lua_State) *State {
 		Shared:     newSharedByAllCoroutines(),
 		IsMainCoro: true,
 	}
+	newstate.MainCo = newstate
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
 	registerGoState(newstate)
 	C.clua_setgostate(L, C.size_t(newstate.Index))
@@ -370,9 +371,9 @@ func (L *State) NewThread() *State {
 	newstate := &State{
 		s:      s,
 		Shared: L.Shared,
+		MainCo: L.MainCo,
 	}
-	newstate.Index = uintptr(unsafe.Pointer(newstate))
-
+	//newstate.Index = uintptr(unsafe.Pointer(newstate))
 	//registerGoState(newstate)
 	// don't replace the main lua state as 'k' in the Lua registry,
 	// let the main coroutine keep that. i.e. keep this commented out.
@@ -624,8 +625,9 @@ func (L *State) ToThread(index int) *State {
 	s := &State{
 		s:      (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index)))),
 		Shared: L.Shared,
+		MainCo: L.MainCo,
 	}
-	s.Index = uintptr(unsafe.Pointer(s))
+	//s.Index = uintptr(unsafe.Pointer(s))
 	//registerGoState(s)
 	return s
 }
@@ -859,8 +861,9 @@ func (L *State) CoroutineRunning() (running *State, isMain bool) {
 	s := &State{
 		s:      curThread,
 		Shared: L.Shared,
+		MainCo: L.MainCo,
 	}
-	s.Index = uintptr(unsafe.Pointer(s))
+	//s.Index = uintptr(unsafe.Pointer(s))
 	//registerGoState(s)
 	return s, isM == 1
 

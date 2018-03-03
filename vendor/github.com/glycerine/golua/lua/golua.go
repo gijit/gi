@@ -13,7 +13,7 @@ package lua
 import "C"
 
 import (
-	//"fmt"
+	"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -37,6 +37,8 @@ type State struct {
 	Shared *SharedByAllCoroutines
 
 	IsMainCoro bool // if true, then will be registered
+
+	MainCo *State // always points to the main coro
 }
 
 type SharedByAllCoroutines struct {
@@ -111,7 +113,12 @@ func golua_callgofunction(gostateindex uintptr, fid uint) int {
 	f := L1.Shared.registry[fid].(LuaGoFunction)
 	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
 
-	return f(L1)
+	running, isMain := L1.CoroutineRunning()
+	_ = isMain
+	fmt.Printf("\n isMain: %v, running: '%#v'\n", isMain, running)
+
+	return f(running)
+	//return f(L1)
 }
 
 var typeOfBytes = reflect.TypeOf([]byte(nil))
