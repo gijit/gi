@@ -394,10 +394,9 @@ func TestCoroutineRunning(t *testing.T) {
 	butterCalled := 0
 	butter := func(butterVm *State) int {
 		butterCalled++
-		actualCo := butterVm.ToThread(-1)
-		fmt.Printf("in butter() callback! here is actualCo's stack:\n")
-		DumpLuaStack(actualCo)
-		fmt.Printf("above is actualCo's stack\n")
+		fmt.Printf("in butter() callback! here is butterVm's stack:\n")
+		DumpLuaStack(butterVm)
+		fmt.Printf("above is butterVm's stack\n")
 
 		return 0
 	}
