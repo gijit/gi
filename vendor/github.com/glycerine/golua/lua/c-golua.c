@@ -132,9 +132,8 @@ int callback_function(lua_State* L)
 	int r;
 	unsigned int *fid = clua_checkgosomething(L, 1, MT_GOFUNCTION);
 	size_t gostateindex = clua_getgostate(L);
-	size_t mainIndex = clua_getgostate(lua_mainthread(L));
-    
     lua_State* mainThread = getMainThread(L);
+	size_t mainIndex = clua_getgostate(mainThread);
     
     // jea: the metatable is on the stack.
     
