@@ -105,6 +105,10 @@ most recent status
 
 2018 March 3 update
 -------------------
+Release v1.3.4 builds LuaJIT with
+`XCFLAGS+= -DLUAJIT_ENABLE_GC64` in order
+to allow more than 4GB of memory use.
+
 Release v1.3.3 has internal updates that make
 progress towards calling native Go functions
 from coroutines. This is needed to restore
