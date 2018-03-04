@@ -74,8 +74,20 @@ size_t clua_getgostate(lua_State* L)
 	//get gostate from registry entry
 	lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
 	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
+
+    // 'k' is now a map from lua_State* to index
+    // push key
+    lua_pushthread(L);
+    // stack is now:
+    //  key
+    //  map
+    lua_gettable(L, -2);
+    // stack is now
+    //  value
+    //  map
+    
 	gostateindex = (size_t)lua_touserdata(L,-1);
-	lua_pop(L,1);
+	lua_pop(L,2);
 	return gostateindex;
 }
 
@@ -88,7 +100,7 @@ int callback_function(lua_State* L)
 	size_t gostateindex = clua_getgostate(L);
 	//remove the go function from the stack (to present same behavior as lua_CFunctions)
 	lua_remove(L,1);
-	return golua_callgofunction(gostateindex, fid!=NULL ? *fid : -1);
+	return golua_callgofunction(L, gostateindex, fid!=NULL ? *fid : -1);
 }
 
 //wrapper for gchook
@@ -126,7 +138,7 @@ static int callback_c (lua_State* L)
 {
 	int fid = clua_togofunction(L,lua_upvalueindex(1));
 	size_t gostateindex = clua_getgostate(L);
-	return golua_callgofunction(gostateindex,fid);
+	return golua_callgofunction(L, gostateindex,fid);
 }
 
 void clua_pushcallback(lua_State* L)
@@ -151,11 +163,65 @@ int default_panicf(lua_State *L)
 
 void clua_setgostate(lua_State* L, size_t gostateindex)
 {
-	lua_atpanic(L, default_panicf);
-	lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
-	lua_pushlightuserdata(L, (void*)gostateindex);
-	//set into registry table
-	lua_settable(L, LUA_REGISTRYINDEX);
+  int top;
+  top = lua_gettop(L);
+      
+  lua_atpanic(L, default_panicf);
+  lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
+
+  //
+  // store L into a table that maps lua_State* -> gostateindex
+  //
+  lua_gettable(L, LUA_REGISTRYINDEX); // pops the key
+  // does it already exist, or did we get nil back?
+  if (lua_isnil(L, -1)) {
+    // doesn't exist yet, need to create it the first time.
+    lua_pop(L, 1); // get rid of the nil
+    lua_newtable(L);
+
+    // save map into lua registry under GoStateRegistryKey.
+
+    // stack:
+    //   map
+    lua_pushvalue(L, -1);
+    // stack:
+    //   map
+    //   map
+    
+    // get the key
+    lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
+    // stack is now:
+    //  key
+    //  map
+    //  map
+    //
+    // and we need
+    //  map
+    //  key
+    //  map
+
+    lua_insert(L, -2);
+    // stack should now be ready for lua_settable:
+    //  map
+    //  key
+    //  map
+
+    //set into registry table
+    lua_settable(L, LUA_REGISTRYINDEX);    
+    // stack:
+    //   map
+  }   
+  // INVAR: our map is at top of stack, -1 position.
+  
+  // populate the map
+  // key
+  lua_pushlightuserdata(L, (void*)gostateindex);
+  // value
+  lua_pushthread(L);
+  // store key:value in map
+  lua_settable(L, -3);
+  // cleanup stack, remove map
+  lua_settop(L, top);
 }
 
 /* called when lua code attempts to access a field of a published go object */
@@ -419,25 +485,4 @@ void clua_luajit_push_cdata_int64(lua_State *L, int64_t n)
 void clua_luajit_push_cdata_uint64(lua_State *L, uint64_t u)
 {
   return luajit_push_cdata_uint64(L, u);
-}
-
-/* Like coroutine.running(), in Lua 5.2/LuaJIT.
-   Returns with *isMain == 1 if the main coroutine is 
-   running, 0 if other coroutine running.
-   In either case, the return value is the running
-   coroutine, which Lua represents as a pointer to lua_State.
-*/
-lua_State* clua_coroutine_running(lua_State* L, int* isMain /*out*/)
-{
-  lua_State* res;
-  lua_getglobal(L, "coroutine");
-  lua_pushstring(L, "running");
-  lua_gettable(L, -2);
-  lua_call(L, 0, 2);
-  res = lua_tothread(L, -2);
-  if (isMain != NULL) {
-    *isMain = lua_toboolean(L, -1);
-  }
-  lua_pop(L, 3);
-  return res;
 }

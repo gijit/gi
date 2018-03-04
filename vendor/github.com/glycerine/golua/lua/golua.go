@@ -101,7 +101,8 @@ func printGoStates() (biggest uintptr) {
 */
 
 //export golua_callgofunction
-func golua_callgofunction(gostateindex uintptr, fid uint) int {
+func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, fid uint) int {
+	// this is the __call() for the MT_GOFUNCTION
 	L1 := getGoState(gostateindex)
 	//biggest := printGoStates()
 	// jea: to debug, try substituting the biggest...
@@ -114,12 +115,23 @@ func golua_callgofunction(gostateindex uintptr, fid uint) int {
 	f := L1.Shared.registry[fid].(LuaGoFunction)
 	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
 
-	running, isMain := L1.CoroutineRunning()
-	_ = isMain
-	fmt.Printf("\n isMain: %v, running = '%p'; running: '%#v'\n", isMain, running, running)
+	fmt.Printf("\n jea debug: in golua_callgofunction(): L1 stack is:\n")
+	DumpLuaStack(L1)
 
-	return f(running)
-	//return f(L1)
+	/*
+		// hack for viability testing: TODO: allow functions
+		//  to actually take coroutines as their first args but
+		//  NOT call that coroutines stack!!!
+		// the hack specifically: if we have a thread first thing, call on that.
+		thread := L1.ToThread(1)
+		if thread != nil {
+			narg := L1.GetTop()
+			XMove(L1, thread, narg-1)
+			return f(thread)
+		}
+	*/
+	fmt.Printf("\n jea debug, in golua_callgofunction(): right before final f(L1) call.\n")
+	return f(L1)
 }
 
 var typeOfBytes = reflect.TypeOf([]byte(nil))

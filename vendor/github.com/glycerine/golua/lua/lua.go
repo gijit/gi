@@ -176,13 +176,28 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 		}()
 	}
 
-	// switch to current coro here?
-	running, isMain := L.CoroutineRunning()
-	fmt.Printf("\n in callEx(): isMain: %v, running = '%p'; running: '%#v'\n", isMain, running, running)
-	if !isMain {
-		fmt.Printf("callEx(): not on main, replacing L with running.\n")
-		L = running
-	}
+	// switch to coro here?
+	/*
+		thread := L.ToThread(1)
+		if thread != nil {
+			narg := L.GetTop()
+
+			fmt.Printf("callEx: L stack just before XMove:")
+			DumpLuaStack(L)
+			fmt.Printf("callEx: thread stack just before XMove:")
+			DumpLuaStack(thread)
+
+			XMove(L, thread, narg-1)
+
+			fmt.Printf("callEx: L stack just after XMove:")
+			DumpLuaStack(L)
+			fmt.Printf("callEx: thread stack just after XMove:")
+			DumpLuaStack(thread)
+
+			fmt.Printf("callEx(): thread was first arg, replacing L with running coro.\n")
+			L = thread
+		}
+	*/
 
 	L.GetGlobal(C.GOLUA_DEFAULT_MSGHANDLER)
 	// We must record where we put the error handler in the stack otherwise it will be impossible to remove after the pcall when nresults == LUA_MULTRET
@@ -632,8 +647,12 @@ func (L *State) ToPointer(index int) uintptr {
 
 // lua_tothread
 func (L *State) ToThread(index int) *State {
+	ptr := (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index))))
+	if ptr == nil {
+		return nil
+	}
 	s := &State{
-		s:       (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index)))),
+		s:       ptr,
 		Shared:  L.Shared,
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
@@ -824,6 +843,9 @@ func LuaStackPosToString(L *State, i int) string {
 
 	case LUA_TUSERDATA:
 		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
+	case LUA_TTHREAD:
+		return fmt.Sprintf(" Type(code %v/ LUA_TTHREAD) : no auto-print available.\n", t)
+
 	case LUA_TFUNCTION:
 		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
 	default:
@@ -859,37 +881,4 @@ func dumpTableString(L *State, index int) (s string) {
 	L.Pop(1)
 	// Stack is now the same as it was on entry to this function
 	return
-}
-
-// same as coroutine.running() in Lua 5.2/LuaJIT.
-func (L *State) CoroutineRunning() (running *State, isMain bool) {
-	//fmt.Printf("start of CoroutineRunning, stack is:")
-	//DumpLuaStack(L)
-
-	var isM C.int
-	curThread := (*C.lua_State)(unsafe.Pointer(C.clua_coroutine_running(L.s, &isM)))
-
-	s := &State{
-		s:       curThread,
-		Shared:  L.Shared,
-		MainCo:  L.MainCo,
-		CmainCo: L.MainCo.s,
-	}
-	//s.Index = uintptr(unsafe.Pointer(s))
-	//registerGoState(s)
-	return s, isM == 1
-
-	/*
-		L.GetGlobal("coroutine")
-		L.PushString("running")
-		L.GetTable(-2)
-		L.Call(0, 2)
-		running = L.ToThread(-2)
-		isMain = L.ToBoolean(-1)
-		L.Pop(3)
-
-		//fmt.Printf("end of CoroutineRunning, stack is:")
-		//DumpLuaStack(L)
-		return
-	*/
 }

@@ -1,6 +1,7 @@
 package lua
 
 import (
+	"fmt"
 	"testing"
 	"unsafe"
 )
@@ -390,16 +391,34 @@ func TestCoroutineRunning(t *testing.T) {
 	L.OpenLibs()
 	defer L.Close()
 
-	mainCoro, isMain := L.CoroutineRunning()
-	_ = mainCoro
-	if !isMain {
-		t.Fatal("should have gotten isMain true")
+	butterCalled := 0
+	butter := func(butterVm *State) int {
+		butterCalled++
+		actualCo := butterVm.ToThread(-1)
+		fmt.Printf("in butter() callback! here is actualCo's stack:\n")
+		DumpLuaStack(actualCo)
+		fmt.Printf("above is actualCo's stack\n")
+
+		return 0
 	}
-	/*
-		code := `return`
-		err := L.DoString(code)
-		if err != nil {
-			t.Fatal(err)
-		}
-	*/
+
+	L.Register("butter", butter)
+
+	// This code demonstrates checking that a value on the stack is a go function
+	L.CheckStack(1)
+	L.GetGlobal("butter")
+	if !L.IsGoFunction(-1) {
+		t.Fatalf("IsGoFunction failed to recognize a Go function object")
+	}
+	L.Pop(1)
+
+	// We call example_function from inside Lua VM
+	butterCalled = 0
+	if err := L.DoString("coroutine.resume(coroutine.create(function() butter(coroutine.running()); end))"); err != nil {
+		t.Fatalf("Error executing butter function: %v\n", err)
+	}
+	if butterCalled != 1 {
+		t.Fatalf("It appears the butter function wasn't actually called\n")
+	}
+	fmt.Printf("butterCalled = %v\n", butterCalled)
 }
