@@ -103,6 +103,13 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 March 3 update
+-------------------
+Release v1.3.3 has internal updates that make
+progress towards calling native Go functions
+from coroutines. This is needed to restore
+binary imports of native Go packages.
+
 2018 March 2 update
 -------------------
 Release v1.3.2 vendors the gonum libraries
