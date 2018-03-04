@@ -114,8 +114,11 @@ XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
 #XCFLAGS+= -DLUAJIT_NUMMODE=2
 #
 # jea enable this
-# Enable GC64 mode for x64.
-XCFLAGS+= -DLUAJIT_ENABLE_GC64
+# Enable GC64 mode for x64, OSX/Linux.
+ifeq (Windows,$(findstring Windows,$(OS))$(MSYSTEM)$(TERM))
+else
+  XCFLAGS+= -DLUAJIT_ENABLE_GC64
+endif
 #
 ##############################################################################
 
