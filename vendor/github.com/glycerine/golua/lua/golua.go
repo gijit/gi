@@ -113,24 +113,12 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 
 	var L1 *State
 	if gostateindex == 0 {
-		/* haven't figure out how to get the main coro yet...
-
 		// lua side created goroutine, first time seen;
 		// and not yet registered on the go-side.
 		fmt.Printf("debug: first time this coroutine has been seen on the Go side\n")
 
-		ptr := curThread
-		newstate := &State{
-			s:       ptr,
-			Shared:  L.Shared,
-			MainCo:  L.MainCo,
-			CmainCo: L.MainCo.s,
-		}
-		newstate.Index = uintptr(unsafe.Pointer(newstate))
-		registerGoState(newstate)
-		newstate.uPos = int(C.clua_setgostate(ptr, C.size_t(newstate.Index)))
-		L1 = newstate
-		*/
+		L := getGoState(mainIndex)
+		L1 = L.ToThreadHelper(curThread)
 	} else {
 
 		// this is the __call() for the MT_GOFUNCTION

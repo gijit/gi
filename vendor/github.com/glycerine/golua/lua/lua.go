@@ -649,6 +649,12 @@ func (L *State) ToThread(index int) *State {
 	if ptr == nil {
 		return nil
 	}
+	return L.ToThreadHelper(ptr)
+}
+func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
+	if ptr == nil {
+		return nil
+	}
 	newstate := &State{
 		s:       ptr,
 		Shared:  L.Shared,
