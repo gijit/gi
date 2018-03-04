@@ -113,8 +113,9 @@ XCFLAGS+= -DLUAJIT_ENABLE_LUA52COMPAT
 #XCFLAGS+= -DLUAJIT_NUMMODE=1
 #XCFLAGS+= -DLUAJIT_NUMMODE=2
 #
+# jea enable this
 # Enable GC64 mode for x64.
-#XCFLAGS+= -DLUAJIT_ENABLE_GC64
+XCFLAGS+= -DLUAJIT_ENABLE_GC64
 #
 ##############################################################################
 
