@@ -38,7 +38,7 @@ func newState(L *C.lua_State) *State {
 	newstate.MainCo = newstate
 	newstate.Index = uintptr(unsafe.Pointer(newstate))
 	registerGoState(newstate)
-	C.clua_setgostate(L, C.size_t(newstate.Index))
+	newstate.uPos = int(C.clua_setgostate(L, C.size_t(newstate.Index)))
 	C.clua_initstate(L)
 	return newstate
 }
@@ -398,11 +398,9 @@ func (L *State) NewThread() *State {
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
 	}
-	//newstate.Index = uintptr(unsafe.Pointer(newstate))
-	//registerGoState(newstate)
-	// don't replace the main lua state as 'k' in the Lua registry,
-	// let the main coroutine keep that. i.e. keep this commented out.
-	//C.clua_setgostate(s, C.size_t(newstate.Index))
+	newstate.Index = uintptr(unsafe.Pointer(newstate))
+	registerGoState(newstate)
+	newstate.uPos = int(C.clua_setgostate(s, C.size_t(newstate.Index)))
 	return newstate
 }
 
@@ -651,15 +649,16 @@ func (L *State) ToThread(index int) *State {
 	if ptr == nil {
 		return nil
 	}
-	s := &State{
+	newstate := &State{
 		s:       ptr,
 		Shared:  L.Shared,
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
 	}
-	//s.Index = uintptr(unsafe.Pointer(s))
-	//registerGoState(s)
-	return s
+	newstate.Index = uintptr(unsafe.Pointer(newstate))
+	registerGoState(newstate)
+	newstate.uPos = int(C.clua_setgostate(ptr, C.size_t(newstate.Index)))
+	return newstate
 }
 
 // lua_touserdata

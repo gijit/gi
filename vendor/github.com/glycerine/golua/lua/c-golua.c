@@ -15,6 +15,7 @@
 
 static const char GoStateRegistryKey = 'k'; //golua registry key
 static const char GoStateRegistryUniqKey = 'u'; //golua registry key, uniq array.
+static const char GoStateRegistryUniqPos = 'z'; //golua registry key, uniq pos.
 static const char PanicFIDRegistryKey = 'k';
 
 /* makes sure we compile in atoll/_atoi64 if available.*/
@@ -84,11 +85,11 @@ size_t clua_getgostate(lua_State* L)
     //  map
     lua_gettable(L, -2);
     // stack is now
-    //  value
+    //  index value
     //  map
-    
-	gostateindex = (size_t)lua_touserdata(L,-1);
-	lua_pop(L,2);
+
+	gostateindex = (size_t)lua_touserdata(L, -1);
+	lua_pop(L, 2);
 	return gostateindex;
 }
 
