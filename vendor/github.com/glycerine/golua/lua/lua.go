@@ -855,13 +855,13 @@ func LuaStackPosToString(L *State, i int) string {
 		}
 
 	case LUA_TUSERDATA:
-		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : 0x%x\n", t, L.ToPointer(i))
+		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : 0x%x with pointer %p\n", t, L.ToPointer(i), L.ToUserdata(i))
 	case LUA_TFUNCTION:
 		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : 0x%x\n", t, L.ToPointer(i))
 	case LUA_TTHREAD:
 		return fmt.Sprintf(" Type(code %v/ LUA_TTHREAD) : 0x%x\n", t, L.ToPointer(i))
 	case LUA_TLIGHTUSERDATA:
-		return fmt.Sprintf(" Type(code %v/ LUA_TLIGHTUSERDATA) : 0x%x\n", t, L.ToPointer(i))
+		return fmt.Sprintf(" Type(code %v/ LUA_TLIGHTUSERDATA) : 0x%x with pointer %p\n", t, L.ToPointer(i), L.ToUserdata(i))
 	default:
 	}
 	return fmt.Sprintf(" Type(code %v) : 0x%x, no auto-print available.\n", t, L.ToPointer(i))

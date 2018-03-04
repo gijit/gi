@@ -430,6 +430,18 @@ function __st(t, name, indent, quiet, methods_desc, seen)
          --print("debug: __st, is a thread")
          return "thread"
       end
+      --
+      -- Both lightuserdata and userdata have type() "userdata".
+      -- userdata is like a malloced []byte, and can have metatables.
+      -- The heavy userdata is GC-ed by Lua.
+      -- 
+      -- The lightuserdata stores a C pointer, cannot have metatables,
+      -- is compared for equality by the pointer stored,
+      -- and is not GC-ed.
+      --
+      if type(t) == "userdata" then
+         --print("yep, userdata")
+      end
       local s = tostring(t)
       if not quiet then
          if type(t) == "string" then
