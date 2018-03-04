@@ -13,7 +13,7 @@ package lua
 import "C"
 
 import (
-	"fmt"
+	//"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -105,24 +105,24 @@ func printGoStates() (biggest uintptr) {
 //export golua_callgofunction
 func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
 
-	fmt.Printf("jea debug: golua_callgofunction, fid=%v, here is stack of curThread at top:\n", fid)
-	DumpLuaStack(&State{s: curThread})
+	//fmt.Printf("jea debug: golua_callgofunction, fid=%v, here is stack of curThread at top:\n", fid)
+	//DumpLuaStack(&State{s: curThread})
 
-	fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
+	//fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
 
 	var L1 *State
 	if gostateindex == 0 {
 		// lua side created goroutine, first time seen;
 		// and not yet registered on the go-side.
-		fmt.Printf("debug: first time this coroutine has been seen on the Go side\n")
+		//fmt.Printf("debug: first time this coroutine has been seen on the Go side\n")
 
 		L := getGoState(mainIndex)
 
 		if mainThread != nil && L.s != mainThread {
-			fmt.Printf("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.s, mainThread)
+			//fmt.Printf("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.s, mainThread)
 			panic("mainThread pointers disaggree")
 		}
-		fmt.Printf("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.s, mainThread)
+		//fmt.Printf("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.s, mainThread)
 		L1 = L.ToThreadHelper(curThread)
 	} else {
 
@@ -130,7 +130,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		L1 = getGoState(gostateindex)
 	}
 
-	fmt.Printf("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
+	//fmt.Printf("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
 	//biggest := printGoStates()
 	// jea: to debug, try substituting the biggest...
 	//if biggest != gostateindex {
@@ -140,12 +140,12 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
 	f := L1.Shared.registry[fid].(LuaGoFunction)
-	fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
+	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
 
-	fmt.Printf("\n jea debug: in golua_callgofunction(): L1 stack is:\n")
-	DumpLuaStack(L1)
+	//fmt.Printf("\n jea debug: in golua_callgofunction(): L1 stack is:\n")
+	//DumpLuaStack(L1)
 
-	fmt.Printf("\n jea debug, in golua_callgofunction(): right before final f(L1) call.\n")
+	//fmt.Printf("\n jea debug, in golua_callgofunction(): right before final f(L1) call.\n")
 	return f(L1)
 }
 

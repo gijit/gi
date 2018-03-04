@@ -36,7 +36,7 @@ static lua_State* getMainThread(lua_State* L) {
     // stack: uniqArray
 
     if (lua_isnil(L,-1)) {
-      printf("\n debug: arg. nil back for UniqKey lookup.\n");
+      //printf("\n debug: arg. nil back for UniqKey lookup.\n");
     }
     
     lua_pushnumber(L, 1);
@@ -45,10 +45,10 @@ static lua_State* getMainThread(lua_State* L) {
     // stack: main *lua_State, uniqArray
 
     int ty = lua_type(L, -1);
-    printf("\ndebug: top on top : %d.\n", ty);    
+    //printf("\ndebug: top on top : %d.\n", ty);    
     
     lua_State* mainThread = lua_tothread(L, -1);
-    printf("\ndebug: UniqKey -> mainThread : %p.\n", mainThread);
+    //printf("\ndebug: UniqKey -> mainThread : %p.\n", mainThread);
     
     lua_settop(L, top);
 
@@ -261,7 +261,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     lua_settable(L, LUA_REGISTRYINDEX);
     // stack: Lmap
 
-    printf("\ndebug: UniqKey setup in lua registry.\n");
+    //printf("\ndebug: UniqKey setup in lua registry.\n");
   }
   // INVAR: our Lmap is at top of stack, -1 position.
 
