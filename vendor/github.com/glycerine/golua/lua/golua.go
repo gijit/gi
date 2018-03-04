@@ -15,7 +15,6 @@ import "C"
 import (
 	"fmt"
 	"reflect"
-	"runtime/debug"
 	"sync"
 	"unsafe"
 )
@@ -109,7 +108,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 	fmt.Printf("jea debug: golua_callgofunction, here is stack of curThread at top:\n")
 	DumpLuaStack(&State{s: curThread})
 
-	fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\nstack:\n%s\n", gostateindex, curThread, curThread, string(debug.Stack()))
+	fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
 
 	var L1 *State
 	if gostateindex == 0 {

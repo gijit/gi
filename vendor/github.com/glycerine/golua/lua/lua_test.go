@@ -392,13 +392,19 @@ func TestCoroutineRunning(t *testing.T) {
 	defer L.Close()
 
 	butterCalled := 0
-	butter := func(butterVm *State) int {
+	butter := func(L *State) int {
 		butterCalled++
 		fmt.Printf("in butter() callback! here is butterVm's stack:\n")
-		DumpLuaStack(butterVm)
+		DumpLuaStack(L)
 		fmt.Printf("above is butterVm's stack\n")
-
-		return 0
+		tot := 0.0
+		tot += L.ToNumber(-1)
+		tot += L.ToNumber(-2)
+		tot += L.ToNumber(-3)
+		L.Pop(3)
+		L.PushNumber(tot)
+		fmt.Printf("tot was %v\n", tot)
+		return 1
 	}
 
 	L.Register("butter", butter)
@@ -413,11 +419,18 @@ func TestCoroutineRunning(t *testing.T) {
 
 	// We call example_function from inside Lua VM
 	butterCalled = 0
-	if err := L.DoString("coroutine.resume(coroutine.create(function() butter(4,5,6); end))"); err != nil {
+	if err := L.DoString("a = {coroutine.resume(coroutine.create(function() return butter(4,5,6); end))}; for k,v in pairs(a) do print('a.key= ',k, '  value:', v); end; b = a[2]"); err != nil {
 		t.Fatalf("Error executing butter function: %v\n", err)
 	}
 	if butterCalled != 1 {
 		t.Fatalf("It appears the butter function wasn't actually called\n")
 	}
 	fmt.Printf("butterCalled = %v\n", butterCalled)
+
+	L.GetGlobal("b")
+	top := L.GetTop()
+	obsB := L.ToNumber(top)
+	if obsB != 15.0 {
+		t.Fatalf("butter() summing 4+5+6 should have given 15, but instead got %v\n", obsB)
+	}
 }
