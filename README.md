@@ -19,9 +19,9 @@ $ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gi
 $ make install
 $ gi
 ~~~
-See https://github.com/gijit/gi/issues/18 for windows install help.
+See https://github.com/gijit/gi/issues/18 for windows install-from-source help.
 
-For v1.3.2, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 They have the prelude compiled in now. They should run standalone, without needing to install the source. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
+For v1.3.5, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.5 They have the prelude compiled in now. They run standalone, without needing to install the source. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
 
 # the dream
 
