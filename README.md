@@ -109,7 +109,10 @@ Release v1.3.5 fixes an issue with the build on Windows.
 
 Release v1.3.4 builds LuaJIT with
 `XCFLAGS+= -DLUAJIT_ENABLE_GC64` in order
-to allow more than 4GB of memory use.
+to allow more than 4GB of memory use on
+OSX and Linux. Windows 10 hates that setting,
+and `luajit.exe` itself crashes with that flag enabled.
+So it is not enabled on Windows.
 
 Release v1.3.3 has internal updates that make
 progress towards calling native Go functions
