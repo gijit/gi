@@ -1799,39 +1799,12 @@ func Test100LuarCoroutinesCallingIntoGo(t *testing.T) {
 		return res
 	}
 
-	_, isM0 := L.CoroutineRunning()
-	if !isM0 {
-		t.Fatal("no coroutine started, should have returned true on L.")
-	}
-
-	isMain := func() bool {
-		//_, ism := L.CoroutineRunning()
-		//return ism
-		return false
-	}
-
 	Register(L, "", Map{
-		"sum":    sum,
-		"isMain": isMain,
+		"sum": sum,
 	})
 
-	mustDoString(t, L, `return coroutine.resume(coroutine.create(function() return isMain(); end))`)
-	top := L.GetTop()
-	if top != 2 {
-		fmt.Printf("top was %v\n", top)
-		panic("resume should have returned two values: true and false")
-	}
-	got1 := L.ToBoolean(-1) // false
-	got2 := L.ToBoolean(-2) // true
-	if got1 != false {
-		t.Fatal("isMain should have returned false!")
-	}
-	if got2 != true {
-		t.Fatal("resume should have returned true as 1st value!")
-	}
-
 	mustDoString(t, L, `return coroutine.resume(coroutine.create(function() return sum{1, 10, 100} end))`)
-	top = L.GetTop()
+	top := L.GetTop()
 	if top != 2 {
 		fmt.Printf("top was %v\n", top)
 		panic("resume should have returned two values: true and 111.0")

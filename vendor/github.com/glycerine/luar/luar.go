@@ -476,7 +476,7 @@ func goToLua(L *lua.State, a interface{}, proxify bool, visited visitor) {
 			L.PushInt64(v.Int())
 			pp("in goToLua at switch v.Kind(), Int types, *after* PushInt64")
 			if verb.VerboseVerbose {
-				DumpLuaStack(L)
+				lua.DumpLuaStack(L)
 			}
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -666,7 +666,7 @@ func copyTableToMap(L *lua.State, idx int, v reflect.Value, visited map[uintptr]
 func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value, isSlice bool) (status error) {
 	pp("top of copyTableToSlice. here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	t := v.Type()
@@ -703,7 +703,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 		}
 		pp("copyGiTableToSlice saw error, going back to non-gi path. lua stack is now:")
 		if verb.VerboseVerbose {
-			DumpLuaStack(L)
+			lua.DumpLuaStack(L)
 		}
 		status = nil
 	} else {
@@ -759,7 +759,7 @@ func copyTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintpt
 func copyTableToStruct(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (status error) {
 	pp("top of copyTableToStruct, here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	/*
@@ -958,7 +958,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 		L.Remove(idx)
 		pp("non-table type inside lazy ellipses, returning early with it on top of stack:")
 		if verb.VerboseVerbose {
-			DumpLuaStack(L)
+			lua.DumpLuaStack(L)
 		}
 		return 0, nil
 	}
@@ -968,7 +968,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 		L.Remove(idx)
 		pp("non-slice inside lazy ellipses, returning early with it on top of stack:")
 		if verb.VerboseVerbose {
-			DumpLuaStack(L)
+			lua.DumpLuaStack(L)
 		}
 		return 0, nil
 	}
@@ -1014,7 +1014,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 
 	pp("-- just before expanding the lazy ellip, here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	for i := 0; i < n; i++ {
@@ -1023,7 +1023,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 
 	pp("-- after expanding the lazy ellip, but before removing container, here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// now expanded, remove the array value and lazy ellipsis container
@@ -1033,7 +1033,7 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 
 	pp("-- after expanding lazy ellip, and removing container, returng this stack::")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	return n, nil
@@ -1071,13 +1071,13 @@ func dereferenceGijitStructPointerToStruct(L *lua.State, idx int) {
 
 	pp("-- dereferenceGijitStructPointerToStruct, after getting __val to top, here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 	L.Replace(idx)
 
 	pp("-- dereferenceGijitStructPointerToStruct, after Replace(idx), here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 }
 
@@ -1085,7 +1085,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 
 	pp("-- top of luaToGo, here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	expandCount, err := expandLazyEllipsis(L, idx)
@@ -1095,7 +1095,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 
 	pp("-- in luaToGo, after expandLazyEllipsis(), here is stack:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	if expandCount > 0 {
@@ -1116,7 +1116,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		dereferenceGijitStructPointerToStruct(L, top-i)
 		pp("-- in luaToGo, after dereferenceGijitStructPointerToStruct(L, %v), here is stack:", top-i)
 		if verb.VerboseVerbose {
-			DumpLuaStack(L)
+			lua.DumpLuaStack(L)
 		}
 	}
 
@@ -1434,111 +1434,12 @@ func typeof(a interface{}) reflect.Type {
 	return reflect.TypeOf(a).Elem()
 }
 
-// jea
-func DumpLuaStack(L *lua.State) {
-	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))
-}
-
-func DumpLuaStackAsString(L *lua.State) (s string) {
-	var top int
-
-	top = L.GetTop()
-	s += fmt.Sprintf("========== begin DumpLuaStack: top = %v\n", top)
-	for i := top; i >= 1; i-- {
-
-		t := L.Type(i)
-		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
-		s += LuaStackPosToString(L, i)
-	}
-	s += fmt.Sprintf("========= end of DumpLuaStack\n")
-	return
-}
-
-func LuaStackPosToString(L *lua.State, i int) string {
-	t := L.Type(i)
-
-	switch t {
-	case lua.LUA_TNONE: // -1
-		return fmt.Sprintf("LUA_TNONE; i=%v was invalid index\n", i)
-	case lua.LUA_TNIL:
-		return fmt.Sprintf("LUA_TNIL: nil\n")
-	case lua.LUA_TSTRING:
-		return fmt.Sprintf(" String : \t%v\n", L.ToString(i))
-	case lua.LUA_TBOOLEAN:
-		return fmt.Sprintf(" Bool : \t\t%v\n", L.ToBoolean(i))
-	case lua.LUA_TNUMBER:
-		return fmt.Sprintf(" Number : \t%v\n", L.ToNumber(i))
-	case lua.LUA_TTABLE:
-		return fmt.Sprintf(" Table : \n%s\n", dumpTableString(L, i))
-
-	case 10: // LUA_TCDATA aka cdata
-		//pp("Dump cdata case, L.Type(idx) = '%v'", L.Type(i))
-		ctype := L.LuaJITctypeID(i)
-		//pp("luar.go Dump sees ctype = %v", ctype)
-		switch ctype {
-		case 5: //  int8
-		case 6: //  uint8
-		case 7: //  int16
-		case 8: //  uint16
-		case 9: //  int32
-		case 10: //  uint32
-		case 11: //  int64
-			val := L.CdataToInt64(i)
-			return fmt.Sprintf(" int64: '%v'\n", val)
-		case 12: //  uint64
-			val := L.CdataToUint64(i)
-			return fmt.Sprintf(" uint64: '%v'\n", val)
-		case 13: //  float32
-		case 14: //  float64
-
-		case 0: // means it wasn't a ctype
-		}
-
-	case lua.LUA_TUSERDATA:
-		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
-	case lua.LUA_TFUNCTION:
-		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
-	default:
-	}
-	return fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
-}
-
-func dumpTableString(L *lua.State, index int) (s string) {
-
-	// Push another reference to the table on top of the stack (so we know
-	// where it is, and this function can work for negative, positive and
-	// pseudo indices
-	L.PushValue(index)
-	// stack now contains: -1 => table
-	L.PushNil()
-	// stack now contains: -1 => nil; -2 => table
-	for L.Next(-2) != 0 {
-
-		// stack now contains: -1 => value; -2 => key; -3 => table
-		// copy the key so that lua_tostring does not modify the original
-		L.PushValue(-2)
-		// stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
-		key := L.ToString(-1)
-		value := L.ToString(-2)
-		s += fmt.Sprintf("'%s' => '%s'\n", key, value)
-		// pop value + copy of key, leaving original key
-		L.Pop(2)
-		// stack now contains: -1 => key; -2 => table
-	}
-	// stack now contains: -1 => table (when lua_next returns 0 it pops the key
-	// but does not push anything.)
-	// Pop table
-	L.Pop(1)
-	// Stack is now the same as it was on entry to this function
-	return
-}
-
 func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value) (n int, offset int, t reflect.Type, err error) {
 	pp("top of giSliceGetRawHelper. idx=%v, here is stack:", idx)
 	pp("stack:\n%s\n", string(debug.Stack()))
 
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	t = v.Type()
@@ -1554,7 +1455,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	L.Pop(1)
 	pp("giSliceGetRawHelper after getting __length=%v, stack is:", n)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// __offset
@@ -1566,7 +1467,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	L.Pop(1)
 	pp("giSliceGetRawHelper after getting __offset=%v, stack is:", offset)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// __array
@@ -1576,7 +1477,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	}
 	pp("copyGiTableToSlice after fetching __array, stack is:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	/* sample
@@ -1611,7 +1512,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 
 	pp("after adjusting to having __array on stack, here is stack, with adjusted idx=%v:", idx)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// just leave the raw, remove the outer table.
@@ -1623,7 +1524,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 	L.Replace(idx)
 	pp("after popping the props and outer and leaving just the raw:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	return n, offset, t, nil
@@ -1633,7 +1534,7 @@ func giSliceGetRawHelper(L *lua.State, idx int, v reflect.Value, visited map[uin
 func copyGiTableToSlice(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect.Value, isSlice bool) (status error) {
 	pp("top of copyGiTableToSlice. idx=%v, here is stack:", idx)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// extract out the raw underlying table
@@ -1730,7 +1631,7 @@ func getfield(L *lua.State, tableIdx int, key string) {
 func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 	pp("top of getLenByCallingMetamethod for idx=%v, here is stack:", idx)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 	pp("trace:\n%s\n", string(debug.Stack()))
 
@@ -1764,7 +1665,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 	}
 	pp("after RawGet was not nil, top =%v, stack is", top)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// INVAR: __len method is on top of stack.
@@ -1773,7 +1674,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 
 	//	pp("we think __len method is top of stack, followed by metable.")
 	//	if verb.VerboseVerbose {
-	//		DumpLuaStack(L)
+	//		lua.DumpLuaStack(L)
 	//	}
 
 	// gotta get rid of the metable first, prior to the call, since
@@ -1786,7 +1687,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 
 	pp("after Remove(-2), top =%v, stack is", top)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// Setup the call with the table as the argument
@@ -1794,7 +1695,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 
 	pp("about to call __len, stack is:")
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	err := L.Call(1, 1)
@@ -1806,7 +1707,7 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 
 	pp("after __len call, flen is %v; with stack:", fLen)
 	if verb.VerboseVerbose {
-		DumpLuaStack(L)
+		lua.DumpLuaStack(L)
 	}
 
 	// NOTE: won't work for tables of len > 2^52 or 4 peta items.

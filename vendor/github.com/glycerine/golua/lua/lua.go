@@ -855,15 +855,16 @@ func LuaStackPosToString(L *State, i int) string {
 		}
 
 	case LUA_TUSERDATA:
-		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : no auto-print available.\n", t)
-	case LUA_TTHREAD:
-		return fmt.Sprintf(" Type(code %v/ LUA_TTHREAD) : no auto-print available.\n", t)
-
+		return fmt.Sprintf(" Type(code %v/ LUA_TUSERDATA) : 0x%x\n", t, L.ToPointer(i))
 	case LUA_TFUNCTION:
-		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : no auto-print available.\n", t)
+		return fmt.Sprintf(" Type(code %v/ LUA_TFUNCTION) : 0x%x\n", t, L.ToPointer(i))
+	case LUA_TTHREAD:
+		return fmt.Sprintf(" Type(code %v/ LUA_TTHREAD) : 0x%x\n", t, L.ToPointer(i))
+	case LUA_TLIGHTUSERDATA:
+		return fmt.Sprintf(" Type(code %v/ LUA_TLIGHTUSERDATA) : 0x%x\n", t, L.ToPointer(i))
 	default:
 	}
-	return fmt.Sprintf(" Type(code %v) : no auto-print available.\n", t)
+	return fmt.Sprintf(" Type(code %v) : 0x%x, no auto-print available.\n", t, L.ToPointer(i))
 }
 
 func dumpTableString(L *State, index int) (s string) {
