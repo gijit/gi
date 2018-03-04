@@ -14,6 +14,7 @@
 #define GOLUA_DEFAULT_MSGHANDLER "golua_default_msghandler"
 
 static const char GoStateRegistryKey = 'k'; //golua registry key
+static const char GoStateRegistryUniqKey = 'u'; //golua registry key, uniq array.
 static const char PanicFIDRegistryKey = 'k';
 
 /* makes sure we compile in atoll/_atoi64 if available.*/
@@ -161,16 +162,17 @@ int default_panicf(lua_State *L)
 	abort();
 }
 
-void clua_setgostate(lua_State* L, size_t gostateindex)
+int clua_setgostate(lua_State* L, size_t gostateindex)
 {
-  int top;
-  top = lua_gettop(L);
+  int ret = 0;
+  int top = lua_gettop(L);
       
   lua_atpanic(L, default_panicf);
   lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
 
   //
-  // store L into a table that maps lua_State* -> gostateindex
+  // store L into a table that maps lua_State* -> gostateindex.
+  // call the table the Lmap. It maps L to an index.
   //
   lua_gettable(L, LUA_REGISTRYINDEX); // pops the key
   // does it already exist, or did we get nil back?
@@ -179,49 +181,106 @@ void clua_setgostate(lua_State* L, size_t gostateindex)
     lua_pop(L, 1); // get rid of the nil
     lua_newtable(L);
 
-    // save map into lua registry under GoStateRegistryKey.
+    // save Lmap into lua registry under GoStateRegistryKey.
 
     // stack:
-    //   map
+    //   Lmap
     lua_pushvalue(L, -1);
     // stack:
-    //   map
-    //   map
+    //   Lmap
+    //   Lmap
     
     // get the key
     lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
     // stack is now:
     //  key
-    //  map
-    //  map
-    //
-    // and we need
-    //  map
-    //  key
-    //  map
+    //  Lmap
+    //  Lmap
 
     lua_insert(L, -2);
     // stack should now be ready for lua_settable:
-    //  map
+    //  Lmap
     //  key
-    //  map
+    //  Lmap
 
     //set into registry table
     lua_settable(L, LUA_REGISTRYINDEX);    
     // stack:
-    //   map
-  }   
-  // INVAR: our map is at top of stack, -1 position.
-  
-  // populate the map
+    //   Lmap
+
+    // and create the uniq array too, at the same time.
+    lua_newtable(L);
+    // stack: newtable, Lmap
+
+    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+    // stack: ukey, newtable, Lmap
+
+    lua_insert(L, -2);    
+    // stack: newtable, ukey, Lmap
+    
+    lua_settable(L, LUA_REGISTRYINDEX);
+    // stack: Lmap
+  }
+  // INVAR: our Lmap is at top of stack, -1 position.
+
+  // does our key already exist in the Lmap?
+  // If not, then append to the uniqArray.
   // key
-  lua_pushlightuserdata(L, (void*)gostateindex);
-  // value
   lua_pushthread(L);
+  // stack: key, Lmap
+
+  lua_gettable(L, -2);
+  // stack: nil, Lmap  OR  priorValue, Lmap
+
+  if (lua_isnil(L, -1)) {
+    // table.insert(uniqueArray, L)
+    // stack: nil, Lmap
+    lua_pop(L, 1);
+    // stack: Lmap
+    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+    // stack: ukey, Lmap
+
+    lua_gettable(L, LUA_REGISTRYINDEX);    
+    // stack: uniqArray, Lmap
+
+    lua_pushlightuserdata(L, (void*)gostateindex);
+    // stack: index, uniqArray, Lmap
+
+    // append to array at -2
+    int pos = lua_objlen(L, -2) + 1; /* first empty element */
+
+    lua_rawseti(L, -2, pos);  /* t[pos] = v; and pops v from the top of the stack*/
+    // stack: uniqArray, Lmap
+
+    ret = lua_objlen(L, -1);
+    lua_pop(L, 1);
+    // stack: Lmap
+    
+  } else {
+    // stack: priorValue, Lmap
+    // no duplicate insert needed
+    return -1;
+  }
+  
+  // stack: Lmap
+  
+  // populate the Lmap
+  // key
+  lua_pushthread(L);
+  // stack: key, Lmap
+  
+  // value
+  lua_pushlightuserdata(L, (void*)gostateindex);
+  // stack: value, key, Lmap
+  
   // store key:value in map
   lua_settable(L, -3);
-  // cleanup stack, remove map
+  // stack: Lmap
+  
+  // cleanup stack, remove Lmap
   lua_settop(L, top);
+
+  return ret;
 }
 
 /* called when lua code attempts to access a field of a published go object */
@@ -486,3 +545,4 @@ void clua_luajit_push_cdata_uint64(lua_State *L, uint64_t u)
 {
   return luajit_push_cdata_uint64(L, u);
 }
+

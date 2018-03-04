@@ -13,7 +13,7 @@ unsigned int clua_togostruct(lua_State *L, int index);
 void clua_pushcallback(lua_State* L);
 void clua_pushgofunction(lua_State* L, unsigned int fid);
 void clua_pushgostruct(lua_State *L, unsigned int fid);
-void clua_setgostate(lua_State* L, size_t gostateindex);
+int clua_setgostate(lua_State* L, size_t gostateindex);
 size_t clua_getgostate(lua_State* L);
 GoInterface clua_atpanic(lua_State* L, unsigned int panicf_id);
 int clua_callluacfunc(lua_State* L, lua_CFunction f);
@@ -38,3 +38,4 @@ int clua_isgofunction(lua_State *L, int n);
 int clua_isgostruct(lua_State *L, int n);
 
 lua_State* clua_coroutine_running(lua_State* L, int* isMain /*out*/);
+
