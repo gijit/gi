@@ -103,9 +103,9 @@ func printGoStates() (biggest uintptr) {
 */
 
 //export golua_callgofunction
-func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, fid uint) int {
+func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
 
-	fmt.Printf("jea debug: golua_callgofunction, here is stack of curThread at top:\n")
+	fmt.Printf("jea debug: golua_callgofunction, fid=%v, here is stack of curThread at top:\n", fid)
 	DumpLuaStack(&State{s: curThread})
 
 	fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
@@ -117,6 +117,12 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		fmt.Printf("debug: first time this coroutine has been seen on the Go side\n")
 
 		L := getGoState(mainIndex)
+
+		if mainThread != nil && L.s != mainThread {
+			fmt.Printf("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.s, mainThread)
+			panic("mainThread pointers disaggree")
+		}
+		fmt.Printf("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.s, mainThread)
 		L1 = L.ToThreadHelper(curThread)
 	} else {
 

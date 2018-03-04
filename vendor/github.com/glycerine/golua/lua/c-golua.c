@@ -28,6 +28,33 @@ long long int wrapAtoll(const char *nptr)
 #endif
 }
 
+static lua_State* getMainThread(lua_State* L) {
+    // experiment: can we get main from uniqArray[1]; it should be there.
+    int top = lua_gettop(L);
+    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
+    // stack: uniqArray
+
+    if (lua_isnil(L,-1)) {
+      printf("\n debug: arg. nil back for UniqKey lookup.\n");
+    }
+    
+    lua_pushnumber(L, 1);
+    // stack: 1, uniqArray
+    lua_gettable(L, -2);
+    // stack: main *lua_State, uniqArray
+
+    int ty = lua_type(L, -1);
+    printf("\ndebug: top on top : %d.\n", ty);    
+    
+    lua_State* mainThread = lua_tothread(L, -1);
+    printf("\ndebug: UniqKey -> mainThread : %p.\n", mainThread);
+    
+    lua_settop(L, top);
+
+    return mainThread;
+}
+
 /* taken from lua5.2 source */
 void *testudata(lua_State *L, int ud, const char *tname)
 {
@@ -106,13 +133,15 @@ int callback_function(lua_State* L)
 	unsigned int *fid = clua_checkgosomething(L, 1, MT_GOFUNCTION);
 	size_t gostateindex = clua_getgostate(L);
 	size_t mainIndex = clua_getgostate(lua_mainthread(L));
-
+    
+    lua_State* mainThread = getMainThread(L);
+    
     // jea: the metatable is on the stack.
     
 	//remove the userdata metatable (go function??) from the stack (to present same behavior as lua_CFunctions)
 	lua_remove(L, 1);
     
-	return golua_callgofunction(L, gostateindex, mainIndex, fid!=NULL ? *fid : -1);
+	return golua_callgofunction(L, gostateindex, mainIndex, mainThread, fid!=NULL ? *fid : -1);
 }
 
 //wrapper for gchook
@@ -150,7 +179,7 @@ static int callback_c (lua_State* L)
 {
 	int fid = clua_togofunction(L,lua_upvalueindex(1));
 	size_t gostateindex = clua_getgostate(L);
-	return golua_callgofunction(L, gostateindex, 0, fid);
+	return golua_callgofunction(L, gostateindex, 0, getMainThread(L), fid);
 }
 
 void clua_pushcallback(lua_State* L)
@@ -231,6 +260,8 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     
     lua_settable(L, LUA_REGISTRYINDEX);
     // stack: Lmap
+
+    printf("\ndebug: UniqKey setup in lua registry.\n");
   }
   // INVAR: our Lmap is at top of stack, -1 position.
 
@@ -254,8 +285,10 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     lua_gettable(L, LUA_REGISTRYINDEX);    
     // stack: uniqArray, Lmap
 
-    lua_pushlightuserdata(L, (void*)gostateindex);
-    // stack: index, uniqArray, Lmap
+    // jea: now store the actual thread in uniqArray
+    //
+    lua_pushthread(L);
+    // stack: thread, uniqArray, Lmap
 
     // append to array at -2
     int pos = lua_objlen(L, -2) + 1; /* first empty element */
