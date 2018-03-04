@@ -787,12 +787,6 @@ LUA_API int lua_pushthread(lua_State *L)
   return (mainthread(G(L)) == L);
 }
 
-// jea add
-LUA_API lua_State* lua_mainthread(lua_State *L)
-{
-  return mainthread(G(L));
-}
-
 LUA_API lua_State *lua_newthread(lua_State *L)
 {
   lua_State *L1;
