@@ -17,9 +17,15 @@ package lua
 
 */
 import "C"
-import "unsafe"
 
-import "fmt"
+import (
+	"unsafe"
+
+	"fmt"
+	"github.com/gijit/gi/pkg/verb"
+)
+
+var pp = verb.PP
 
 type LuaStackEntry struct {
 	Name        string
@@ -203,11 +209,13 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 	// We must record where we put the error handler in the stack otherwise it will be impossible to remove after the pcall when nresults == LUA_MULTRET
 	erridx := L.GetTop() - nargs - 1
 	L.Insert(erridx)
-	//fmt.Printf("callEx: golua lua.go, stack just before pcall, L = '%p'/'%#v'\n", L, L)
+	pp("callEx: golua lua.go, stack just before pcall, L = '%p'/'%#v'\n", L, L)
 	//DumpLuaStack(L)
 	r := L.pcall(nargs, nresults, erridx)
-	//fmt.Printf("callEx: golua lua.go, stack just after pcall:")
-	//DumpLuaStack(L)
+	pp("callEx: golua lua.go, stack just after pcall:")
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 	L.Remove(erridx)
 	if r != 0 {
 		err = &LuaError{r, L.ToString(-1), L.StackTrace()}
@@ -599,7 +607,7 @@ func (L *State) ToGoStruct(index int) (f interface{}) {
 	if fid < 0 {
 		return nil
 	}
-	fmt.Printf("querying fid = '%v'\n", fid)
+	pp("querying fid = '%v'\n", fid)
 	return L.Shared.registry[fid]
 }
 
