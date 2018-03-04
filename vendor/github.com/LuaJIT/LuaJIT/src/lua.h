@@ -113,6 +113,11 @@ LUA_API lua_State *(lua_newstate) (lua_Alloc f, void *ud);
 LUA_API void       (lua_close) (lua_State *L);
 LUA_API lua_State *(lua_newthread) (lua_State *L);
 
+/*
+** jea add: retreive the main thread, given an coroutine.
+*/
+LUA_API lua_State *(lua_mainthread) (lua_State *L);
+  
 LUA_API lua_CFunction (lua_atpanic) (lua_State *L, lua_CFunction panicf);
 
 
