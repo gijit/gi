@@ -203,7 +203,7 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 	// We must record where we put the error handler in the stack otherwise it will be impossible to remove after the pcall when nresults == LUA_MULTRET
 	erridx := L.GetTop() - nargs - 1
 	L.Insert(erridx)
-	fmt.Printf("callEx: golua lua.go, stack just before pcall:")
+	fmt.Printf("callEx: golua lua.go, stack just before pcall, L = '%p'/'%#v'\n", L, L)
 	DumpLuaStack(L)
 	r := L.pcall(nargs, nresults, erridx)
 	fmt.Printf("callEx: golua lua.go, stack just after pcall:")

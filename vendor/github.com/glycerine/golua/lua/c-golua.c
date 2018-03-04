@@ -88,7 +88,12 @@ size_t clua_getgostate(lua_State* L)
     //  index value
     //  map
 
-	gostateindex = (size_t)lua_touserdata(L, -1);
+    // if nil, return 0
+    if (lua_isnil(L, -1)) {
+      gostateindex = (size_t)(0);
+    } else {
+      gostateindex = (size_t)lua_touserdata(L, -1);
+    }
 	lua_pop(L, 2);
 	return gostateindex;
 }
@@ -100,9 +105,14 @@ int callback_function(lua_State* L)
 	int r;
 	unsigned int *fid = clua_checkgosomething(L, 1, MT_GOFUNCTION);
 	size_t gostateindex = clua_getgostate(L);
-	//remove the go function from the stack (to present same behavior as lua_CFunctions)
-	lua_remove(L,1);
-	return golua_callgofunction(L, gostateindex, fid!=NULL ? *fid : -1);
+	size_t mainIndex = clua_getgostate(lua_mainthread(L));
+
+    // jea: the metatable is on the stack.
+    
+	//remove the userdata metatable (go function??) from the stack (to present same behavior as lua_CFunctions)
+	lua_remove(L, 1);
+    
+	return golua_callgofunction(L, gostateindex, mainIndex, fid!=NULL ? *fid : -1);
 }
 
 //wrapper for gchook
@@ -140,7 +150,7 @@ static int callback_c (lua_State* L)
 {
 	int fid = clua_togofunction(L,lua_upvalueindex(1));
 	size_t gostateindex = clua_getgostate(L);
-	return golua_callgofunction(L, gostateindex,fid);
+	return golua_callgofunction(L, gostateindex, 0, fid);
 }
 
 void clua_pushcallback(lua_State* L)

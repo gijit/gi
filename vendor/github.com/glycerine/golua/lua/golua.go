@@ -15,6 +15,7 @@ import "C"
 import (
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"sync"
 	"unsafe"
 )
@@ -103,9 +104,40 @@ func printGoStates() (biggest uintptr) {
 */
 
 //export golua_callgofunction
-func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, fid uint) int {
-	// this is the __call() for the MT_GOFUNCTION
-	L1 := getGoState(gostateindex)
+func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, fid uint) int {
+
+	fmt.Printf("jea debug: golua_callgofunction, here is stack of curThread at top:\n")
+	DumpLuaStack(&State{s: curThread})
+
+	fmt.Printf("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\nstack:\n%s\n", gostateindex, curThread, curThread, string(debug.Stack()))
+
+	var L1 *State
+	if gostateindex == 0 {
+		/* haven't figure out how to get the main coro yet...
+
+		// lua side created goroutine, first time seen;
+		// and not yet registered on the go-side.
+		fmt.Printf("debug: first time this coroutine has been seen on the Go side\n")
+
+		ptr := curThread
+		newstate := &State{
+			s:       ptr,
+			Shared:  L.Shared,
+			MainCo:  L.MainCo,
+			CmainCo: L.MainCo.s,
+		}
+		newstate.Index = uintptr(unsafe.Pointer(newstate))
+		registerGoState(newstate)
+		newstate.uPos = int(C.clua_setgostate(ptr, C.size_t(newstate.Index)))
+		L1 = newstate
+		*/
+	} else {
+
+		// this is the __call() for the MT_GOFUNCTION
+		L1 = getGoState(gostateindex)
+	}
+
+	fmt.Printf("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
 	//biggest := printGoStates()
 	// jea: to debug, try substituting the biggest...
 	//if biggest != gostateindex {
@@ -115,23 +147,11 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, fid uint
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}
 	f := L1.Shared.registry[fid].(LuaGoFunction)
-	//fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
+	fmt.Printf("\n jea debug golua_callgofunction: f back from registry for fid=%#v, is f=%#v\n", fid, f)
 
 	fmt.Printf("\n jea debug: in golua_callgofunction(): L1 stack is:\n")
 	DumpLuaStack(L1)
 
-	/*
-		// hack for viability testing: TODO: allow functions
-		//  to actually take coroutines as their first args but
-		//  NOT call that coroutines stack!!!
-		// the hack specifically: if we have a thread first thing, call on that.
-		thread := L1.ToThread(1)
-		if thread != nil {
-			narg := L1.GetTop()
-			XMove(L1, thread, narg-1)
-			return f(thread)
-		}
-	*/
 	fmt.Printf("\n jea debug, in golua_callgofunction(): right before final f(L1) call.\n")
 	return f(L1)
 }

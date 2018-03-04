@@ -414,7 +414,7 @@ func TestCoroutineRunning(t *testing.T) {
 
 	// We call example_function from inside Lua VM
 	butterCalled = 0
-	if err := L.DoString("coroutine.resume(coroutine.create(function() butter(coroutine.running()); end))"); err != nil {
+	if err := L.DoString("coroutine.resume(coroutine.create(function() butter(4,5,6); end))"); err != nil {
 		t.Fatalf("Error executing butter function: %v\n", err)
 	}
 	if butterCalled != 1 {
