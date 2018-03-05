@@ -37,5 +37,5 @@ void clua_luajit_push_cdata_uint64(lua_State *L, uint64_t u);
 int clua_isgofunction(lua_State *L, int n);
 int clua_isgostruct(lua_State *L, int n);
 
-lua_State* clua_coroutine_running(lua_State* L, int* isMain /*out*/);
-
+int clua_create_uniqArrayIfNotExists(lua_State* L);
+int clua_known_coro(lua_State* coro);

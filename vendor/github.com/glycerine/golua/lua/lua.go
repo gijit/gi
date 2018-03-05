@@ -49,6 +49,7 @@ func newState(L *C.lua_State) *State {
 	if newstate.uPos != 1 {
 		panic(fmt.Sprintf("assert violated: we expected newstate.uPos for the main coro to always be at index 1: our code depends on that!"))
 	}
+	newstate.MainCo.AllCoro[newstate.uPos] = newstate
 	C.clua_initstate(L)
 	return newstate
 }
@@ -625,6 +626,13 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	if ptr == nil {
 		return nil
 	}
+	known := int(C.clua_known_coro(ptr))
+	fmt.Printf("ToThreadHelper(): known = %v\n", known)
+	if known != 0 {
+		return L.MainCo.AllCoro[known]
+	}
+
+	// not already known
 	newstate := &State{
 		s:       ptr,
 		Shared:  L.Shared,

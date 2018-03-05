@@ -201,6 +201,90 @@ int default_panicf(lua_State *L)
 	abort();
 }
 
+
+void create_uniqArray(lua_State* L) {
+  // stack: ...
+  
+  lua_newtable(L);
+  // stack: newtable, ...
+  
+  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  // stack: ukey, newtable, ...
+  
+  lua_insert(L, -2);    
+  // stack: newtable, ukey, ...
+  
+  lua_settable(L, LUA_REGISTRYINDEX);
+  // stack: ...
+}
+
+// return 1 if created, 0 if already existed.
+int clua_create_uniqArrayIfNotExists(lua_State* L) {
+  // stack: ...
+  
+  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  // stack: ukey, ...
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  // stack: (uniqArray or nil), ...
+
+  if (lua_isnil(L, -1)) {
+      lua_pop(L, 1);
+      // stack: ...
+      create_uniqArray(L);
+      // stack: ...
+      return 1;
+  }
+  lua_pop(L, 1);
+  // stack: ...
+  return 0;
+}
+
+// clua_known_coro returns 0 if L is
+// not already known, otherwise it
+// returns the uPos index into uniqArray
+// that holds coro. i.e. uniqArray[uPos] == L
+// when return value != 0.
+//
+// Must be kept in sync with clua_setgostate().
+// 
+int clua_known_coro(lua_State* L)
+{
+  int res = 0;
+  // for now, linear search through uniqArray
+  if (1 == clua_create_uniqArrayIfNotExists(L)) {
+    return 0;
+  }
+  // stack: ...
+  int isMain = lua_pushthread(L);
+  // stack: coro, ...
+  
+  lua_pushlightuserdata(L, (void*)&GoStateRegistryUniqKey);
+  // stack: ukey, coro, ...
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  // stack: uniqArray, coro, ...
+
+  lua_pushnil(L); // put a nil key on stack, to start iteration via lua_next.
+  // stack: nil, uniqArray, coro, ...
+
+  while (lua_next(L,-2) != 0) { // key(-1) is replaced by the next key(-1) in table(-2)
+    // stack: value, key, uniqArray, coro, ...
+    // if value == coro then return the index/key (uPos) into uniqArray.
+    if (lua_equal (L, -1, -4)) {
+      res = (int)(lua_tonumber(L,-2));
+      lua_pop(L, 4);
+      // stack: ...
+      return res;
+    }
+    lua_pop(L, 1); // remove value(-1), now key on top at(-1)
+    // stack: key, uniqArray, coro, ...
+  }
+  // Key popped and nothing pushed when lua_next returns 0 at end of iteration.
+  // stack: uniqArray, coro, ...
+  lua_pop(L, 2);
+  // stack: ...
+  return 0; // unknown coroutine.
+}
+
 int clua_setgostate(lua_State* L, size_t gostateindex)
 {
   int ret = 0;
@@ -248,16 +332,8 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     //   Lmap
 
     // and create the uniq array too, at the same time.
-    lua_newtable(L);
-    // stack: newtable, Lmap
-
-    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
-    // stack: ukey, newtable, Lmap
-
-    lua_insert(L, -2);    
-    // stack: newtable, ukey, Lmap
+    clua_create_uniqArrayIfNotExists(L);
     
-    lua_settable(L, LUA_REGISTRYINDEX);
     // stack: Lmap
 
     //printf("\ndebug: UniqKey setup in lua registry.\n");
@@ -295,7 +371,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     lua_rawseti(L, -2, pos);  /* t[pos] = v; and pops v from the top of the stack*/
     // stack: uniqArray, Lmap
 
-    ret = lua_objlen(L, -1);
+    ret = pos; // lua_objlen(L, -1);
     lua_pop(L, 1);
     // stack: Lmap
     
