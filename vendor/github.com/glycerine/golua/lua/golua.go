@@ -42,7 +42,10 @@ type State struct {
 	MainCo  *State       // always points to the main coro
 	CmainCo *C.lua_State // ditto
 
-	uPos int // position in uniqArray
+	uPos int // position in uniqArray; must be 1 for a main state.
+
+	// uPos -> all coroutines within a main state
+	AllCoro map[int]*State
 }
 
 type SharedByAllCoroutines struct {

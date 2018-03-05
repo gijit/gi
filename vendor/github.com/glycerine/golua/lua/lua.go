@@ -40,6 +40,7 @@ func newState(L *C.lua_State) *State {
 		Shared:     newSharedByAllCoroutines(),
 		IsMainCoro: true,
 		CmainCo:    L,
+		AllCoro:    make(map[int]*State),
 	}
 	newstate.MainCo = newstate
 	registerGoState(newstate) // sets Index
@@ -369,20 +370,7 @@ func (L *State) NewTable() {
 func (L *State) NewThread() *State {
 
 	s := C.lua_newthread(L.s)
-	newstate := &State{
-		s:       s,
-		Shared:  L.Shared,
-		MainCo:  L.MainCo,
-		CmainCo: L.MainCo.s,
-	}
-	registerGoState(newstate) // sets Index
-	newstate.uPos = int(C.clua_setgostate(s, C.size_t(newstate.Index)))
-	// assert(uPos != 1)
-	if newstate.uPos == 1 {
-		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
-
-	}
-	return newstate
+	return L.ToThreadHelper(s)
 }
 
 // lua_next
@@ -632,6 +620,7 @@ func (L *State) ToThread(index int) *State {
 	}
 	return L.ToThreadHelper(ptr)
 }
+
 func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	if ptr == nil {
 		return nil
@@ -649,6 +638,7 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
 
 	}
+	newstate.MainCo.AllCoro[newstate.uPos] = newstate
 	return newstate
 }
 
