@@ -14,7 +14,7 @@ package lua
 */
 import "C"
 import (
-	"fmt"
+	//"fmt"
 	"unsafe"
 )
 
@@ -114,9 +114,9 @@ func (L *State) DoString(str string) error {
 	if r := L.LoadString(str); r != 0 {
 		return &LuaError{r, L.ToString(-1), L.StackTrace()}
 	}
-	fmt.Printf("debug: DoString(), golua/lua/lauxlib.go, load okay, about to Call()\n")
+	//fmt.Printf("debug: DoString(), golua/lua/lauxlib.go, load okay, about to Call()\n")
 	err := L.Call(0, LUA_MULTRET)
-	fmt.Printf("debug: DoString(), golua/lua/lauxlib.go, L.Call() back, err = '%v'\n", err) // runtime error: index out of range
+	//fmt.Printf("debug: DoString(), golua/lua/lauxlib.go, L.Call() back, err = '%v'\n", err) // runtime error: index out of range
 	return err
 }
 

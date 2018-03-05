@@ -270,7 +270,9 @@ int clua_known_coro(lua_State* L)
     return 0;
   }
 
-  // new: use revUniqMap, for O(1) lookup.
+  // use revUniqMap, for O(1) lookup. The old
+  // scan through uniqArray is O(n) for n coroutines in
+  // a main state.
 
   // store pos into revUniqMap too, for O(1) coroutine lookup.
   lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
@@ -299,40 +301,6 @@ int clua_known_coro(lua_State* L)
   lua_pop(L, 2);
   // stack clean
   return res;
-
-  /*
-  // old: linear search through uniqArray
-  
-  // stack: ...
-  int isMain = lua_pushthread(L);
-  // stack: coro, ...
-  
-  lua_pushlightuserdata(L, (void*)&GoStateRegistryUniqKey);
-  // stack: ukey, coro, ...
-  lua_gettable(L, LUA_REGISTRYINDEX);
-  // stack: uniqArray, coro, ...
-
-  lua_pushnil(L); // put a nil key on stack, to start iteration via lua_next.
-  // stack: nil, uniqArray, coro, ...
-
-  while (lua_next(L,-2) != 0) { // key(-1) is replaced by the next key(-1) in table(-2)
-    // stack: value, key, uniqArray, coro, ...
-    // if value == coro then return the index/key (uPos) into uniqArray.
-    if (lua_equal (L, -1, -4)) {
-      res = (int)(lua_tonumber(L,-2));
-      lua_pop(L, 4);
-      // stack: ...
-      return res;
-    }
-    lua_pop(L, 1); // remove value(-1), now key on top at(-1)
-    // stack: key, uniqArray, coro, ...
-  }
-  // Key popped and nothing pushed when lua_next returns 0 at end of iteration.
-  // stack: uniqArray, coro, ...
-  lua_pop(L, 2);
-  // stack: ...
-  return 0; // unknown coroutine.
-  */
 }
 
 int clua_setgostate(lua_State* L, size_t gostateindex)

@@ -627,7 +627,7 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		return nil
 	}
 	known := int(C.clua_known_coro(ptr))
-	fmt.Printf("ToThreadHelper(): known = %v\n", known)
+	//fmt.Printf("ToThreadHelper(): known = %v\n", known)
 	if known != 0 {
 		return L.MainCo.AllCoro[known]
 	}

@@ -13,7 +13,7 @@ package lua
 import "C"
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/gijit/gi/pkg/verb"
 	"reflect"
 	"sync"
@@ -92,7 +92,7 @@ func registerGoState(L *State) {
 	// a counter that is incremented under the
 	// lock we now hold. Thus:
 
-	fmt.Printf("using Index %v\n", nextGoStateIndex)
+	//fmt.Printf("using Index %v\n", nextGoStateIndex)
 	L.Index = nextGoStateIndex
 	nextGoStateIndex++
 	goStates[L.Index] = L
