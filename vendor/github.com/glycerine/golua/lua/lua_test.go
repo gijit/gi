@@ -386,7 +386,7 @@ func TestConv(t *testing.T) {
 	}
 }
 
-func TestCoroutineRunning(t *testing.T) {
+func Test101CoroutineRunning(t *testing.T) {
 	L := NewState()
 	L.OpenLibs()
 	defer L.Close()
@@ -433,4 +433,73 @@ func TestCoroutineRunning(t *testing.T) {
 	if obsB != 15.0 {
 		t.Fatalf("butter() summing 4+5+6 should have given 15, but instead got %v\n", obsB)
 	}
+}
+
+func Test102LuaRegsitryIsPerState(t *testing.T) {
+	// We test the  assumption
+	// that the Lua Registry is shared by all
+	// coroutines within a main C.lua State.
+	// However two different C.lua_States
+	// are expected to have distinct registries.
+	//
+	// If validated, we'll use this fact to
+	// store a pointer to the main C.lua_State
+	// in the registry, and have all
+	// coroutines use the key to find their
+	// main state.
+	//
+	// Result: the assumption was confirmed.
+	// The registry is distinct per main State,
+	// and shared by coroutines within one state.
+
+	L := NewState()
+	L.OpenLibs()
+	defer L.Close()
+
+	L2 := NewState()
+	L2.OpenLibs()
+	defer L2.Close()
+
+	key := "lua_test.my_registry_key"
+	val := "lua_test.my_value_for_testing"
+	L.PushString(key)
+	L.PushString(val)
+	L.SetTable(LUA_REGISTRYINDEX)
+	top := L.GetTop()
+	if top != 0 {
+		panic("expected empty stack")
+	}
+	L.PushString(key)
+	L.GetTable(LUA_REGISTRYINDEX)
+	if L.IsNil(-1) {
+		panic("expected value back")
+	}
+	obsVal := L.ToString(-1)
+	if obsVal != val {
+		panic("expected obsVal to match val")
+	}
+	//fmt.Printf("good: retreived val from L registry\n")
+	L.Pop(1)
+
+	// now query the L2 registry
+	L2.PushString(key)
+	L2.GetTable(LUA_REGISTRYINDEX)
+	if !L2.IsNil(-1) {
+		fmt.Printf("bad, expected nil, got: '%s'\n", LuaStackPosToString(L2, -1))
+		panic("expected nil back when querying L2 registry for key")
+	}
+	//fmt.Printf("good: did not retreived val from L2 registry under key\n")
+
+	// now check that a new coroutine in L sees the same registry.
+	L3 := L.NewThread()
+	L3.PushString(key)
+	L3.GetTable(LUA_REGISTRYINDEX)
+	if L3.IsNil(-1) {
+		panic("expected value back")
+	}
+	obsVal3 := L3.ToString(-1)
+	if obsVal3 != val {
+		panic("expected obsVal3 to match val")
+	}
+	//fmt.Printf("good: retreived val from L3 registry\n")
 }

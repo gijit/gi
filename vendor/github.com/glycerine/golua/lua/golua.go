@@ -13,7 +13,7 @@ package lua
 import "C"
 
 import (
-	//"fmt"
+	"fmt"
 	"github.com/gijit/gi/pkg/verb"
 	"reflect"
 	"sync"
@@ -67,10 +67,31 @@ func init() {
 	goStates = make(map[uintptr]*State, 16)
 }
 
+var nextGoStateIndex uintptr = 1
+
 func registerGoState(L *State) {
 	goStatesMutex.Lock()
 	defer goStatesMutex.Unlock()
-	L.Index = uintptr(unsafe.Pointer(L))
+
+	// This is dangerous:
+	//   L.Index = uintptr(unsafe.Pointer(L))
+	// Why?
+	// If the Go garbage
+	// collector ever does become a moving
+	// collector (and the Go team has reserved
+	// the right to make that happen), and
+	// it just happens to swap
+	// addresses of two distinct L, then we
+	// could get address reuse and this would
+	// over-write a previous pointer, unexpectedly deleting it.
+	//
+	// It is much simpler and safer just to use
+	// a counter that is incremented under the
+	// lock we now hold. Thus:
+
+	fmt.Printf("using Index %v\n", nextGoStateIndex)
+	L.Index = nextGoStateIndex
+	nextGoStateIndex++
 	goStates[L.Index] = L
 }
 
@@ -134,11 +155,6 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 	}
 
 	pp("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
-	//biggest := printGoStates()
-	// jea: to debug, try substituting the biggest...
-	//if biggest != gostateindex {
-	//	L1 = getGoState(biggest)
-	//}
 	if fid < 0 {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}

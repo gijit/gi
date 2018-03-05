@@ -42,9 +42,12 @@ func newState(L *C.lua_State) *State {
 		CmainCo:    L,
 	}
 	newstate.MainCo = newstate
-	newstate.Index = uintptr(unsafe.Pointer(newstate))
-	registerGoState(newstate)
+	registerGoState(newstate) // sets Index
 	newstate.uPos = int(C.clua_setgostate(L, C.size_t(newstate.Index)))
+	// assert(uPos == 1)
+	if newstate.uPos != 1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.uPos for the main coro to always be at index 1: our code depends on that!"))
+	}
 	C.clua_initstate(L)
 	return newstate
 }
@@ -352,42 +355,8 @@ func (L *State) LessThan(index1, index2 int) bool {
 
 // Creates a new lua interpreter state with the given allocation function
 func NewStateAlloc(f Alloc) *State {
-	// ../example/alloc.go panics:
-	/*
-		jaten@Jasons-MacBook-Pro ~/go/src/github.com/glycerine/golua/example (master) $ go run alloc.go
-		go run alloc.go
-		Must use luaL_newstate() for 64 bit target
-		fatal error: unexpected signal during runtime execution
-		[signal SIGSEGV: segmentation violation code=0x1 addr=0x8 pc=0x40a5a30]
-
-		runtime stack:
-		runtime.throw(0x414538e, 0x2a)
-			/usr/local/go/src/runtime/panic.go:605 +0x95
-		runtime.sigpanic()
-			/usr/local/go/src/runtime/signal_unix.go:351 +0x2b8
-
-		goroutine 1 [syscall, locked to thread]:
-		runtime.cgocall(0x409e100, 0xc42005be40, 0x41450a4)
-			/usr/local/go/src/runtime/cgocall.go:132 +0xe4 fp=0xc42005be00 sp=0xc42005bdc0 pc=0x4004494
-		github.com/glycerine/golua/lua._Cfunc_clua_setgostate(0x0, 0xc42009a0c0)
-			github.com/glycerine/golua/lua/_obj/_cgo_gotypes.go:432 +0x45 fp=0xc42005be40 sp=0xc42005be00 pc=0x40975c5
-		github.com/glycerine/golua/lua.newState.func1(0x0, 0xc42009a0c0)
-			/Users/jaten/go/src/github.com/glycerine/golua/lua/lua.go:33 +0x6a fp=0xc42005be78 sp=0xc42005be40 pc=0x409bb2a
-		github.com/glycerine/golua/lua.newState(0x0, 0x0)
-			/Users/jaten/go/src/github.com/glycerine/golua/lua/lua.go:33 +0x154 fp=0xc42005bef0 sp=0xc42005be78 pc=0x409a5e4
-		github.com/glycerine/golua/lua.NewStateAlloc(0x4146538, 0xc420082058)
-			/Users/jaten/go/src/github.com/glycerine/golua/lua/lua.go:332 +0x5b fp=0xc42005bf18 sp=0xc42005bef0 pc=0x409ac7b
-		main.main()
-			/Users/jaten/go/src/github.com/glycerine/golua/example/alloc.go:42 +0x31 fp=0xc42005bf80 sp=0xc42005bf18 pc=0x409d221
-		runtime.main()
-			/usr/local/go/src/runtime/proc.go:185 +0x20d fp=0xc42005bfe0 sp=0xc42005bf80 pc=0x402bb7d
-		runtime.goexit()
-			/usr/local/go/src/runtime/asm_amd64.s:2337 +0x1 fp=0xc42005bfe8 sp=0xc42005bfe0 pc=0x4053b51
-		exit status 2
-		jaten@Jasons-MacBook-Pro ~/go/src/github.com/glycerine/golua/example (master) $
-	*/
+	// jea: ../example/alloc.go panics... hmm.
 	ls := C.clua_newstate(unsafe.Pointer(&f))
-
 	return newState(ls)
 }
 
@@ -406,9 +375,13 @@ func (L *State) NewThread() *State {
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
 	}
-	newstate.Index = uintptr(unsafe.Pointer(newstate))
-	registerGoState(newstate)
+	registerGoState(newstate) // sets Index
 	newstate.uPos = int(C.clua_setgostate(s, C.size_t(newstate.Index)))
+	// assert(uPos != 1)
+	if newstate.uPos == 1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
+
+	}
 	return newstate
 }
 
@@ -669,9 +642,13 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
 	}
-	newstate.Index = uintptr(unsafe.Pointer(newstate))
-	registerGoState(newstate)
+	registerGoState(newstate) // sets Index
 	newstate.uPos = int(C.clua_setgostate(ptr, C.size_t(newstate.Index)))
+	// assert(uPos != 1)
+	if newstate.uPos == 1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
+
+	}
 	return newstate
 }
 

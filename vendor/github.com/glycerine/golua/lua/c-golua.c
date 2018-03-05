@@ -211,7 +211,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
 
   //
   // store L into a table that maps lua_State* -> gostateindex.
-  // call the table the Lmap. It maps L to an index.
+  // Call the table the Lmap. It maps L to an index.
   //
   lua_gettable(L, LUA_REGISTRYINDEX); // pops the key
   // does it already exist, or did we get nil back?
@@ -274,7 +274,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
   // stack: nil, Lmap  OR  priorValue, Lmap
 
   if (lua_isnil(L, -1)) {
-    // table.insert(uniqueArray, L)
+    // do the equivalent of: table.insert(uniqueArray, L)
     // stack: nil, Lmap
     lua_pop(L, 1);
     // stack: Lmap
