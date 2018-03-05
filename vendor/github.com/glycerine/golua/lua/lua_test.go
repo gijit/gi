@@ -517,11 +517,11 @@ func Test103ToThreadDeduplicatesCoroutines(t *testing.T) {
 
 	isMain := L.PushThread()
 	if !isMain {
-		panic("should have gotten isMain true!")
+		t.Fatal("should have gotten isMain true!")
 	}
 	thr := L.ToThread(-1)
 	if thr != L {
-		panic("ToThread should dedup")
+		t.Fatal("ToThread should dedup")
 	}
 
 	L2 := NewState()
@@ -531,6 +531,21 @@ func Test103ToThreadDeduplicatesCoroutines(t *testing.T) {
 	L2.PushThread()
 	thr2 := L2.ToThread(-1)
 	if thr2 != L2 {
-		panic("ToThread should dedup L2")
+		t.Fatal("ToThread should dedup L2")
+	}
+
+	if thr == thr2 {
+		t.Fatal("thr should not equal thr2")
+	}
+
+	// make some new coroutines, make sure they are deduped.
+	co2b := L2.NewThread()
+	if co2b == thr2 || co2b == thr {
+		t.Fatal("co2b should not equal thr2 or thr")
+	}
+
+	co2b.PushThread()
+	if co2b.ToThread(-1) != co2b {
+		t.Fatal("co2b was not deduped!")
 	}
 }

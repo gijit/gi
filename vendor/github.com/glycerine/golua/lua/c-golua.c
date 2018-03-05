@@ -15,6 +15,9 @@
 
 static const char GoStateRegistryKey = 'k'; //golua registry key
 static const char GoStateRegistryUniqKey = 'u'; //golua registry key, uniq array.
+
+// the reverseUniqMap maps *lua_State -> uPos
+static const char GoStateRegistryRevUniqMap = 'r'; //in golua registry, reverse uniq map
 static const char GoStateRegistryUniqPos = 'z'; //golua registry key, uniq pos.
 static const char PanicFIDRegistryKey = 'k';
 
@@ -31,7 +34,7 @@ long long int wrapAtoll(const char *nptr)
 static lua_State* getMainThread(lua_State* L) {
     // experiment: can we get main from uniqArray[1]; it should be there.
     int top = lua_gettop(L);
-    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+    lua_pushlightuserdata(L, (void*)&GoStateRegistryUniqKey);
 	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
     // stack: uniqArray
 
@@ -216,6 +219,19 @@ void create_uniqArray(lua_State* L) {
   
   lua_settable(L, LUA_REGISTRYINDEX);
   // stack: ...
+
+  // and create the reverse uniq map: *lua_State -> uPos
+  lua_newtable(L);
+  // stack: newtable, ...
+  
+  lua_pushlightuserdata(L,(void*)&GoStateRegistryRevUniqMap);
+  // stack: urevkey, newtable, ...
+  
+  lua_insert(L, -2);    
+  // stack: newtable, urevkey, ...
+  
+  lua_settable(L, LUA_REGISTRYINDEX);
+  // stack: ...
 }
 
 // return 1 if created, 0 if already existed.
@@ -349,41 +365,64 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
   lua_gettable(L, -2);
   // stack: nil, Lmap  OR  priorValue, Lmap
 
-  if (lua_isnil(L, -1)) {
-    // do the equivalent of: table.insert(uniqueArray, L)
-    // stack: nil, Lmap
-    lua_pop(L, 1);
-    // stack: Lmap
-    lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
-    // stack: ukey, Lmap
-
-    lua_gettable(L, LUA_REGISTRYINDEX);    
-    // stack: uniqArray, Lmap
-
-    // jea: now store the actual thread in uniqArray
-    //
-    lua_pushthread(L);
-    // stack: thread, uniqArray, Lmap
-
-    // append to array at -2
-    int pos = lua_objlen(L, -2) + 1; /* first empty element */
-
-    lua_rawseti(L, -2, pos);  /* t[pos] = v; and pops v from the top of the stack*/
-    // stack: uniqArray, Lmap
-
-    ret = pos; // lua_objlen(L, -1);
-    lua_pop(L, 1);
-    // stack: Lmap
-    
-  } else {
+  if (!lua_isnil(L, -1)) {
     // stack: priorValue, Lmap
     // no duplicate insert needed
     return -1;
   }
   
+  // This thread, L, is not known to Lmap.
+  // 
+  // Do the equivalent of: table.insert(uniqueArray, L)
+  //                   and then revUniq[L] = #uniqArray (==uPos)
+    
+  // stack: nil, Lmap
+  lua_pop(L, 1);
   // stack: Lmap
+  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  // stack: ukey, Lmap
+
+  lua_gettable(L, LUA_REGISTRYINDEX);    
+  // stack: uniqArray, Lmap
+
+  // jea: now store the actual thread in uniqArray
+  //
+  lua_pushthread(L);
+  // stack: thread, uniqArray, Lmap
+
+  // append to array at -2
+  int pos = lua_objlen(L, -2) + 1; /* first empty element */
+
+  lua_rawseti(L, -2, pos);  /* t[pos] = v; and pops v from the top of the stack*/
+  // stack: uniqArray, Lmap
+
+  ret = pos; // lua_objlen(L, -1);
+  lua_pop(L, 1);
+  // stack: Lmap
+
+  // Phase 2:
+  // 
+  // store pos into revUniqMap too, for O(1) coroutine lookup.
+  lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
+  // stack: revkey, Lmap
+
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  // stack: revUniqMap, Lmap
+
+  lua_pushthread(L);
+  // stack: thread, revUniqMap, Lmap
+    
+  lua_pushnumber(L, (double)pos);
+  // stack: pos, thread, revUniqMap, Lmap
+
+  lua_settable(L, -3);
+  // stack: revUniqMap, Lmap
+
+  lua_pop(L, 1);
+  // stack: Lmap
+    
+  // Finally, populate the Lmap
   
-  // populate the Lmap
   // key
   lua_pushthread(L);
   // stack: key, Lmap
