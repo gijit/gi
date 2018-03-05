@@ -43,8 +43,11 @@ func newState(L *C.lua_State) *State {
 		AllCoro:    make(map[int]*State),
 	}
 	newstate.MainCo = newstate
+
+	// only for main states, not additional coroutines:
 	registerGoState(newstate) // sets Index
 	newstate.Upos = int(C.clua_setgostate(L, C.size_t(newstate.Index)))
+
 	// assert(Upos == 1)
 	if newstate.Upos != 1 {
 		panic(fmt.Sprintf("assert violated: we expected newstate.Upos for the main coro to always be at index 1: our code depends on that!"))
@@ -632,7 +635,6 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		return already
 	}
 
-	// known == 0 means: not already known
 	newstate := &State{
 		s:       ptr,
 		Shared:  L.Shared,

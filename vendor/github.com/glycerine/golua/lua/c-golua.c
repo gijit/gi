@@ -13,12 +13,25 @@
 
 #define GOLUA_DEFAULT_MSGHANDLER "golua_default_msghandler"
 
-static const char GoStateRegistryKey = 'k'; //golua registry key
-static const char GoStateRegistryUniqKey = 'u'; //golua registry key, uniq array.
+// golua registry key, main states only, non non-main coroutines.
+// The address of this constant is used as a unique
+// lightuserdata key.
+static const char GoMainStatesKey = 'k';
 
+// Within one main state, store the main state (at 1),
+// plus all other coroutines at uniqArray[pos > 1].
+// Stored in the per state Lua registry.
+// The address of this constant is used as a unique
+// lightuserdata key.
+static const char GoWithinStateUniqArrayKey = 'u'; //golua registry key, uniq array.
+
+// Within one main state's 
 // the reverseUniqMap maps *lua_State -> uPos
-static const char GoStateRegistryRevUniqMap = 'r'; //in golua registry, reverse uniq map
-static const char GoStateRegistryUniqPos = 'z'; //golua registry key, uniq pos.
+// Stored in the per state Lua registry.
+// The address of this constant is used as a unique
+// lightuserdata key.
+static const char GoWithinStateRevUniqMap = 'r'; //in golua registry, reverse uniq map
+
 static const char PanicFIDRegistryKey = 'k';
 
 /* makes sure we compile in atoll/_atoi64 if available.*/
@@ -34,7 +47,7 @@ long long int wrapAtoll(const char *nptr)
 static lua_State* getMainThread(lua_State* L) {
     // experiment: can we get main from uniqArray[1]; it should be there.
     int top = lua_gettop(L);
-    lua_pushlightuserdata(L, (void*)&GoStateRegistryUniqKey);
+    lua_pushlightuserdata(L, (void*)&GoWithinStateUniqArrayKey);
 	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
     // stack: uniqArray
 
@@ -104,7 +117,7 @@ size_t clua_getgostate(lua_State* L)
 {
 	size_t gostateindex;
 	//get gostate from registry entry
-	lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
+	lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
 	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
 
     // 'k' is now a map from lua_State* to index
@@ -211,7 +224,7 @@ void create_uniqArray(lua_State* L) {
   lua_newtable(L);
   // stack: newtable, ...
   
-  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  lua_pushlightuserdata(L,(void*)&GoWithinStateUniqArrayKey);
   // stack: ukey, newtable, ...
   
   lua_insert(L, -2);    
@@ -224,7 +237,7 @@ void create_uniqArray(lua_State* L) {
   lua_newtable(L);
   // stack: newtable, ...
   
-  lua_pushlightuserdata(L,(void*)&GoStateRegistryRevUniqMap);
+  lua_pushlightuserdata(L,(void*)&GoWithinStateRevUniqMap);
   // stack: urevkey, newtable, ...
   
   lua_insert(L, -2);    
@@ -238,7 +251,7 @@ void create_uniqArray(lua_State* L) {
 int clua_create_uniqArrayIfNotExists(lua_State* L) {
   // stack: ...
   
-  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  lua_pushlightuserdata(L,(void*)&GoWithinStateUniqArrayKey);
   // stack: ukey, ...
   lua_gettable(L, LUA_REGISTRYINDEX);
   // stack: (uniqArray or nil), ...
@@ -279,7 +292,7 @@ int clua_dedup_coro(lua_State* L)
   // use revUniqMap, for O(1) lookup.
 
   // store pos into revUniqMap too, for O(1) coroutine lookup.
-  lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
+  lua_pushlightuserdata(L, (void*)&GoWithinStateRevUniqMap);
   // stack: revkey
 
   lua_gettable(L, LUA_REGISTRYINDEX);
@@ -318,7 +331,7 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L) {
   // stack: ...
   int top = lua_gettop(L);
   
-  lua_pushlightuserdata(L,(void*)&GoStateRegistryUniqKey);
+  lua_pushlightuserdata(L,(void*)&GoWithinStateUniqArrayKey);
   // stack: ukey, ...
 
   lua_gettable(L, LUA_REGISTRYINDEX);    
@@ -341,7 +354,7 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L) {
   // Phase 2:
   // 
   // store pos into revUniqMap too, for O(1) coroutine lookup.
-  lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
+  lua_pushlightuserdata(L, (void*)&GoWithinStateRevUniqMap);
   // stack: revkey, ...
 
   lua_gettable(L, LUA_REGISTRYINDEX);
@@ -368,7 +381,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
   int top = lua_gettop(L);
       
   lua_atpanic(L, default_panicf);
-  lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
+  lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
 
   //
   // store L into a table that maps lua_State* -> gostateindex.
@@ -381,7 +394,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     lua_pop(L, 1); // get rid of the nil
     lua_newtable(L);
 
-    // save Lmap into lua registry under GoStateRegistryKey.
+    // save Lmap into lua registry under GoMainStatesKey.
 
     // stack:
     //   Lmap
@@ -391,7 +404,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     //   Lmap
     
     // get the key
-    lua_pushlightuserdata(L,(void*)&GoStateRegistryKey);
+    lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
     // stack is now:
     //  key
     //  Lmap
@@ -433,7 +446,8 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     lua_settop(L, top);
     // stack clean.
 
-    // should be returning 1 always
+    // should be returning 1 always, indicating
+    // a main coroutine.
     return clua_dedup_coro(L);
   }
   
