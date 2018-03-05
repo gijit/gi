@@ -416,7 +416,8 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
     //printf("\ndebug: UniqKey setup in lua registry.\n");
   }
   // INVAR: our Lmap is at top of stack, -1 position.
-
+  // stack: Lmap
+  
   // does our key already exist in the Lmap?
   // If not, then append to the uniqArray.
   // key
@@ -428,10 +429,12 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
 
   if (!lua_isnil(L, -1)) {
     // stack: priorValue, Lmap
-    // no duplicate insert needed
+    // no duplicate insert into Lmap needed
     lua_settop(L, top);
     // stack clean.
-    return -1;
+
+    // should be returning 1 always
+    return clua_dedup_coro(L);
   }
   
   // stack: thread, Lmap
