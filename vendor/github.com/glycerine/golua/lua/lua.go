@@ -646,6 +646,10 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
 
 	}
+	if newstate.uPos == -1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be -1 for any not known coroutine!"))
+
+	}
 	newstate.MainCo.AllCoro[newstate.uPos] = newstate
 	return newstate
 }
