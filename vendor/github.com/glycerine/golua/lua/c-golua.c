@@ -261,16 +261,21 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L);
 // of L in uniqArray, adding L to
 // uniqArray and revUniqMap if it
 // is not already present in revUniqMap.
-// On return of uPos, uniqArray[uPos] == L
 //
-// Must be kept in sync with clua_setgostate().
+// POST INVAR:
+// On return of value uPos, uniqArray[uPos] == L
+// and revUniqMap[L] == uPos.
+// 
+// The returned value will be >= 1.
 // 
 int clua_known_coro(lua_State* L)
 {
-  int res = 0;
   if (1 == clua_create_uniqArrayIfNotExists(L)) {
-    return clua_addThreadToUniqArrayAndRevUniq(L);    
+    return clua_addThreadToUniqArrayAndRevUniq(L);
   }
+  
+  int top = lua_gettop(L);
+  int res = 0;
 
   // use revUniqMap, for O(1) lookup. The old
   // scan through uniqArray is O(n) for n coroutines in
@@ -291,16 +296,19 @@ int clua_known_coro(lua_State* L)
 
   if (lua_isnil(L, -1)) {
     // stack: nil, revUniqMap
-    // not available
-    lua_pop(L, 2);
+    
+    // not previously known
+    lua_settop(L, top);
     // stack clean
-    return 0; // unknown coroutine
+
+    // add it
+    return clua_addThreadToUniqArrayAndRevUniq(L);    
   }
   
   // stack: pos, revUniqMap
   res = (int)lua_tonumber(L, -1);
   
-  lua_pop(L, 2);
+  lua_settop(L, top);
   // stack clean
   return res;
 }
