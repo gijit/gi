@@ -33,18 +33,31 @@ type State struct {
 	s *C.lua_State
 
 	// index of this object inside the goStates array
-	Index uintptr
+	Index int
 
 	Shared *SharedByAllCoroutines
 
 	IsMainCoro bool // if true, then will be registered
 
-	MainCo  *State       // always points to the main coro
-	CmainCo *C.lua_State // ditto
+	MainCo  *State       // always points to the main coroutine.
+	CmainCo *C.lua_State // always points to the main coroutine's C state.
 
-	uPos int // position in uniqArray; must be 1 for a main state.
+	// Upos is position in uniqArray. Upos must be 1 for
+	// a main state because code in c-golua.c counts on this
+	// to lookup the main coroutine from a non-main
+	// coroutine. As happens naturally, that means the main
+	// coroutine must be registered first, before any
+	// other coroutines in that main state are
+	// generated/registered.
+	//
+	Upos int
 
-	// uPos -> all coroutines within a main state
+	// Upos -> all coroutines within a main state
+	// TODO: currently no hooks for garbage collection
+	//  from the Lua side back to Go. So when Lua
+	//  deletes a coroutine, we don't notice, and
+	// it stays in our maps (uniqArray, revUniq, Lmap)
+	// and on the Go side (AllCoro) forever, at the moment.
 	AllCoro map[int]*State
 }
 
@@ -63,14 +76,14 @@ func newSharedByAllCoroutines() *SharedByAllCoroutines {
 	}
 }
 
-var goStates map[uintptr]*State
+var goStates map[int]*State
 var goStatesMutex sync.Mutex
 
 func init() {
-	goStates = make(map[uintptr]*State, 16)
+	goStates = make(map[int]*State, 16)
 }
 
-var nextGoStateIndex uintptr = 1
+var nextGoStateIndex int = 1
 
 func registerGoState(L *State) {
 	goStatesMutex.Lock()
@@ -104,7 +117,7 @@ func unregisterGoState(L *State) {
 	delete(goStates, L.Index)
 }
 
-func getGoState(gostateindex uintptr) *State {
+func getGoState(gostateindex int) *State {
 	goStatesMutex.Lock()
 	defer goStatesMutex.Unlock()
 	return goStates[gostateindex]
@@ -143,7 +156,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		// and not yet registered on the go-side.
 		pp("debug: first time this coroutine has been seen on the Go side\n")
 
-		L := getGoState(mainIndex)
+		L := getGoState(int(mainIndex))
 
 		if mainThread != nil && L.s != mainThread {
 			pp("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.s, mainThread)
@@ -154,7 +167,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 	} else {
 
 		// this is the __call() for the MT_GOFUNCTION
-		L1 = getGoState(gostateindex)
+		L1 = getGoState(int(gostateindex))
 	}
 
 	pp("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
@@ -177,7 +190,7 @@ var typeOfBytes = reflect.TypeOf([]byte(nil))
 
 //export golua_interface_newindex_callback
 func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_name_cstr *C.char) int {
-	L := getGoState(gostateindex)
+	L := getGoState(int(gostateindex))
 	iface := L.Shared.registry[iid]
 	ifacevalue := reflect.ValueOf(iface).Elem()
 
@@ -272,7 +285,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 
 //export golua_interface_index_callback
 func golua_interface_index_callback(gostateindex uintptr, iid uint, field_name *C.char) int {
-	L := getGoState(gostateindex)
+	L := getGoState(int(gostateindex))
 	iface := L.Shared.registry[iid]
 	ifacevalue := reflect.ValueOf(iface).Elem()
 
@@ -333,14 +346,14 @@ func golua_interface_index_callback(gostateindex uintptr, iid uint, field_name *
 
 //export golua_gchook
 func golua_gchook(gostateindex uintptr, id uint) int {
-	L1 := getGoState(gostateindex)
+	L1 := getGoState(int(gostateindex))
 	L1.unregister(id)
 	return 0
 }
 
 //export golua_callpanicfunction
 func golua_callpanicfunction(gostateindex uintptr, id uint) int {
-	L1 := getGoState(gostateindex)
+	L1 := getGoState(int(gostateindex))
 	f := L1.Shared.registry[id].(LuaGoFunction)
 	return f(L1)
 }
@@ -362,7 +375,7 @@ func golua_callallocf(fp uintptr, ptr uintptr, osize uint, nsize uint) uintptr {
 
 //export go_panic_msghandler
 func go_panic_msghandler(gostateindex uintptr, z *C.char) {
-	L := getGoState(gostateindex)
+	L := getGoState(int(gostateindex))
 	s := C.GoString(z)
 
 	panic(&LuaError{LUA_ERRERR, s, L.StackTrace()})

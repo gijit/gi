@@ -44,12 +44,12 @@ func newState(L *C.lua_State) *State {
 	}
 	newstate.MainCo = newstate
 	registerGoState(newstate) // sets Index
-	newstate.uPos = int(C.clua_setgostate(L, C.size_t(newstate.Index)))
-	// assert(uPos == 1)
-	if newstate.uPos != 1 {
-		panic(fmt.Sprintf("assert violated: we expected newstate.uPos for the main coro to always be at index 1: our code depends on that!"))
+	newstate.Upos = int(C.clua_setgostate(L, C.size_t(newstate.Index)))
+	// assert(Upos == 1)
+	if newstate.Upos != 1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.Upos for the main coro to always be at index 1: our code depends on that!"))
 	}
-	newstate.MainCo.AllCoro[newstate.uPos] = newstate
+	newstate.MainCo.AllCoro[newstate.Upos] = newstate
 	C.clua_initstate(L)
 	return newstate
 }
@@ -626,31 +626,33 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	if ptr == nil {
 		return nil
 	}
-	known := int(C.clua_known_coro(ptr))
-	//fmt.Printf("ToThreadHelper(): known = %v\n", known)
-	if known != 0 {
-		return L.MainCo.AllCoro[known]
+	upos := int(C.clua_known_coro(ptr))
+	already := L.MainCo.AllCoro[upos]
+	if already != nil {
+		return already
 	}
 
-	// not already known
+	// known == 0 means: not already known
 	newstate := &State{
 		s:       ptr,
 		Shared:  L.Shared,
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
+		Index:   -1, // not the main state/main thread.
 	}
-	registerGoState(newstate) // sets Index
-	newstate.uPos = int(C.clua_setgostate(ptr, C.size_t(newstate.Index)))
-	// assert(uPos != 1)
-	if newstate.uPos == 1 {
-		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
+	// don't register non-main threads in gostates[].
+	newstate.Upos = upos
+
+	// asserts that (Upos != 1)
+	if newstate.Upos == 1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.Upos to not be 1 for any non-main thread/coroutine stated! our code in c-golua.c depends on that"))
 
 	}
-	if newstate.uPos == -1 {
-		panic(fmt.Sprintf("assert violated: we expected newstate.uPos to not be -1 for any not known coroutine!"))
+	if newstate.Upos == -1 {
+		panic(fmt.Sprintf("assert violated: we expected newstate.Upos to not be -1 for any not known coroutine!"))
 
 	}
-	newstate.MainCo.AllCoro[newstate.uPos] = newstate
+	newstate.MainCo.AllCoro[newstate.Upos] = newstate
 	return newstate
 }
 

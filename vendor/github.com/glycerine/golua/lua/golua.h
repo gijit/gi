@@ -39,3 +39,6 @@ int clua_isgostruct(lua_State *L, int n);
 
 int clua_create_uniqArrayIfNotExists(lua_State* L);
 int clua_known_coro(lua_State* coro);
+
+// return upos, the array index into uniqArray for coro.
+int clua_addThreadToUniqArrayAndRevUniq(lua_State* L);
