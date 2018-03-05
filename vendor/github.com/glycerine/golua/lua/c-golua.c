@@ -266,10 +266,43 @@ int clua_create_uniqArrayIfNotExists(lua_State* L) {
 int clua_known_coro(lua_State* L)
 {
   int res = 0;
-  // for now, linear search through uniqArray
   if (1 == clua_create_uniqArrayIfNotExists(L)) {
     return 0;
   }
+
+  // new: use revUniqMap, for O(1) lookup.
+
+  // store pos into revUniqMap too, for O(1) coroutine lookup.
+  lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
+  // stack: revkey
+
+  lua_gettable(L, LUA_REGISTRYINDEX);
+  // stack: revUniqMap
+
+  int isMain = lua_pushthread(L);
+  // stack: thread, revUniqMap
+    
+  lua_gettable(L, -2);
+  // stack: (pos or nil), revUniqMap
+
+  if (lua_isnil(L, -1)) {
+    // stack: nil, revUniqMap
+    // not available
+    lua_pop(L, 2);
+    // stack clean
+    return 0; // unknown coroutine
+  }
+  
+  // stack: pos, revUniqMap
+  res = (int)lua_tonumber(L, -1);
+  
+  lua_pop(L, 2);
+  // stack clean
+  return res;
+
+  /*
+  // old: linear search through uniqArray
+  
   // stack: ...
   int isMain = lua_pushthread(L);
   // stack: coro, ...
@@ -299,6 +332,7 @@ int clua_known_coro(lua_State* L)
   lua_pop(L, 2);
   // stack: ...
   return 0; // unknown coroutine.
+  */
 }
 
 int clua_setgostate(lua_State* L, size_t gostateindex)
