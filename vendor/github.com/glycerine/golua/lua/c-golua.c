@@ -255,6 +255,8 @@ int clua_create_uniqArrayIfNotExists(lua_State* L) {
   return 0;
 }
 
+int clua_addThreadToUniqArrayAndRevUniq(lua_State* L);
+
 // clua_known_coro returns the index
 // of L in uniqArray, adding L to
 // uniqArray and revUniqMap if it
@@ -267,7 +269,7 @@ int clua_known_coro(lua_State* L)
 {
   int res = 0;
   if (1 == clua_create_uniqArrayIfNotExists(L)) {
-    return 0;
+    return clua_addThreadToUniqArrayAndRevUniq(L);    
   }
 
   // use revUniqMap, for O(1) lookup. The old
