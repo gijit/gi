@@ -626,7 +626,7 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	if ptr == nil {
 		return nil
 	}
-	upos := int(C.clua_known_coro(ptr))
+	upos := int(C.clua_dedup_coro(ptr))
 	already := L.MainCo.AllCoro[upos]
 	if already != nil {
 		return already
@@ -639,9 +639,9 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		MainCo:  L.MainCo,
 		CmainCo: L.MainCo.s,
 		Index:   -1, // not the main state/main thread.
+		Upos:    upos,
 	}
 	// don't register non-main threads in gostates[].
-	newstate.Upos = upos
 
 	// asserts that (Upos != 1)
 	if newstate.Upos == 1 {

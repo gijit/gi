@@ -268,18 +268,15 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L);
 // 
 // The returned value will be >= 1.
 // 
-int clua_known_coro(lua_State* L)
+int clua_dedup_coro(lua_State* L)
 {
   if (1 == clua_create_uniqArrayIfNotExists(L)) {
     return clua_addThreadToUniqArrayAndRevUniq(L);
   }
   
   int top = lua_gettop(L);
-  int res = 0;
 
-  // use revUniqMap, for O(1) lookup. The old
-  // scan through uniqArray is O(n) for n coroutines in
-  // a main state.
+  // use revUniqMap, for O(1) lookup.
 
   // store pos into revUniqMap too, for O(1) coroutine lookup.
   lua_pushlightuserdata(L, (void*)&GoStateRegistryRevUniqMap);
@@ -306,7 +303,7 @@ int clua_known_coro(lua_State* L)
   }
   
   // stack: pos, revUniqMap
-  res = (int)lua_tonumber(L, -1);
+  int res = (int)lua_tonumber(L, -1);
   
   lua_settop(L, top);
   // stack clean
