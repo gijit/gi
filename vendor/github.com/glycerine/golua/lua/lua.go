@@ -777,6 +777,7 @@ func (L *State) NewError(msg string) *LuaError {
 
 // LuaJIT only: return ctype of the cdata at the top of the stack.
 func (L *State) LuaJITctypeID(idx int) uint32 {
+	fmt.Printf("top of LuaJITctypeID, idx=%v, L is '%#v', top=%v\n", idx, L, L.GetTop())
 	res := C.clua_luajit_ctypeid(L.S, C.int(idx))
 	return uint32(res)
 }
