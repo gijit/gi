@@ -7,7 +7,6 @@ import (
 	cv "github.com/glycerine/goconvey/convey"
 )
 
-/* comment out native/luar use for now
 func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 	cv.Convey(`[3]int64 should be allocated from Lua and passable to a Go native function. A test of Luar functionality.`, t, func() {
@@ -39,7 +38,6 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 	})
 }
 
-
 func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 	cv.Convey(`a := [3]int64{1,3,4}; a[0]++ should leave a[0] at 2.`, t, func() {
@@ -70,8 +68,6 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 	})
 }
-
-*/
 
 func Test081CloneOfInt64Array(t *testing.T) {
 
