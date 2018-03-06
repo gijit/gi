@@ -34,8 +34,6 @@ func Test050CallFmtSprintf(t *testing.T) {
 	})
 }
 
-/* comment out native imports for now
-
 func Test051CallFmtSprintf(t *testing.T) {
 
 	// big Q here: in what format does Luar expect varargs to Sprintf?
@@ -313,5 +311,3 @@ func Test087ShadowRegexp(t *testing.T) {
 		LuaMustInt64(vm, "a1", 5)
 	})
 }
-
-*/
