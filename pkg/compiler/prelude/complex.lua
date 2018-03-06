@@ -70,21 +70,25 @@ local select=select
 local tonumber=tonumber
 local tostring=tostring
 
-local e=math.exp(1)
-local pi=math.pi
-local abs=math.abs
-local exp=math.exp
-local log=math.log
-local cos=math.cos
-local sin=math.sin
-local asin=math.asin
-local acos=math.acos
-local cosh=math.cosh
-local sinh=math.sinh
-local sqrt=math.sqrt
-local atan2=math.atan2
+if __builtin_math == nil then
+   __builtin_math = math
+end
+
+local e=__builtin_math.exp(1)
+local pi=__builtin_math.pi
+local abs=__builtin_math.abs
+local exp=__builtin_math.exp
+local log=__builtin_math.log
+local cos=__builtin_math.cos
+local sin=__builtin_math.sin
+local asin=__builtin_math.asin
+local acos=__builtin_math.acos
+local cosh=__builtin_math.cosh
+local sinh=__builtin_math.sinh
+local sqrt=__builtin_math.sqrt
+local atan2=__builtin_math.atan2
 local i=complex(0,1)
-local Inf=math.huge
+local Inf=__builtin_math.huge
 
 local function cexp(a)
    return e^a

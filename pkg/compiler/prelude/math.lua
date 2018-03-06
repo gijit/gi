@@ -15,6 +15,10 @@ math.finite = function(x) return x > -math.huge and x < math.huge; end
 
 math.nan = math.huge * 0
 
+if __builtin_math == nil then
+   __builtin_math = math
+end
+
 __truncateToInt = function(x)
    if x >= 0 then
        return x - (x % 1)
@@ -23,7 +27,7 @@ __truncateToInt = function(x)
 end
 
 __integerByZeroCheck = function(x)
-   if not math.finite(x) then
+   if not __builtin_math.finite(x) then
       error("integer divide by zero")
    end
    -- eliminate any fractional part

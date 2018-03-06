@@ -61,10 +61,10 @@
 -- value if executed statement was RECV.
 --
 -- Finally, if two alt statements can be fulfilled at the same time,
--- we use math.random() to decide which one should go first. So it
+-- we use __builtin_math.random() to decide which one should go first. So it
 -- makes sense to initialize seed with something random. If you don't
 -- have access to an entropy source you can do:
---   math.randomseed(os.time())
+--   __builtin_math.randomseed(os.time())
 -- but beware, the results of random() will predictable to a attacker.
 ----------------------------------------------------------------------------
 
@@ -137,7 +137,7 @@ local task_park
 
 local function random_choice(arr)
    if #arr > 1 then
-      local rnd = math.random(#arr)
+      local rnd = __builtin_math.random(#arr)
       --print("random_choice is chooding ", rnd)
       --__st(arr, "arr in random_choice(arr)")
       return arr[rnd]
@@ -256,7 +256,7 @@ local function scheduler()
          break
       end
       -- jea: pick one at random
-      local k = math.random(nr)
+      local k = __builtin_math.random(nr)
       local co = table.remove(tasks_runnable, k)
       tasks_to[co] = nil
 

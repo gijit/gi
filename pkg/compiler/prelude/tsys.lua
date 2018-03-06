@@ -321,7 +321,7 @@ __flatten64 = function(x)
 end;
 
 
-__Infinity = math.huge
+__Infinity = __builtin_math.huge
 
 -- the __kind numbers must be kept in sync with rtyp.go.
 -- returned by __basicValue2kind(v) on unrecognized kind.

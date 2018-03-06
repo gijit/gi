@@ -62,9 +62,9 @@ local __chan_tests = {
       for i = 0, 1000 do
          -- On Mac OS X in lua 5.1 initializing seed with a
          -- predictable value makes no sense. For all seeds from 1 to
-         -- 1000 the result of math.random(1,3) is _exactly_ the same!
+         -- 1000 the result of __builtin_math.random(1,3) is _exactly_ the same!
          -- So beware, when seeding!
-         -- math.randomseed(i)
+         -- __builtin_math.randomseed(i)
          local c = task.Channel:new()
          task.spawn(a, c, "a")
          task.spawn(a, c, "b")

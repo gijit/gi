@@ -232,8 +232,8 @@ __select = function(comms)
    end
 
    if #ready  ~= 0 then
-      -- jea NB lua's math.random(n) returns in [1,n] to match its arrays.
-      selection = ready[math.random(#ready)]; 
+      -- jea NB lua's __builtin_math.random(n) returns in [1,n] to match its arrays.
+      selection = ready[__builtin_math.random(#ready)]; 
    end
    if selection ~= -1 then
       local comm = comms[selection];
