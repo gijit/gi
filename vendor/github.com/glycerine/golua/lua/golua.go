@@ -147,7 +147,7 @@ func printGoStates() (biggest uintptr) {
 */
 
 //export golua_callgofunction
-func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
+func golua_callgofunction(coro *C.lua_State, coro_index uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
 
 	defer func() {
 		r := recover()
@@ -157,12 +157,10 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		}
 	}()
 
-	pp("jea debug: golua_callgofunction, fid=%v. mainIndex='%v'\n", fid, mainIndex)
-
-	pp("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
+	pp("jea debug: golua_callgofunction or __call, fid=%v. mainIndex='%v'. mainThread='%#v', coro_index='%#v', coro is '%p'/'%#v'\n", fid, mainIndex, mainThread, coro_index, coro, coro) // , string(debug.Stack()))
 
 	var L1 *State
-	if gostateindex == 0 {
+	if coro_index == 0 {
 		// lua side created goroutine, first time seen;
 		// and not yet registered on the go-side.
 		pp("debug: first time this coroutine has been seen on the Go side\n")
@@ -175,14 +173,14 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 			panic("mainThread pointers disaggree")
 		}
 		pp("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.S, mainThread)
-		L1 = L.ToThreadHelper(curThread)
+		L1 = L.ToThreadHelper(coro)
 	} else {
 
 		// this is the __call() for the MT_GOFUNCTION
-		L1 = getGoState(int(gostateindex))
+		L1 = getGoState(int(coro_index))
 	}
 
-	pp("L1 corresponding to gostateindex '%v' -> '%#v'\n", gostateindex, L1)
+	pp("L1 corresponding to coro_index '%v' -> '%#v'\n", coro_index, L1)
 	if fid < 0 {
 		panic(&LuaError{0, "Requested execution of an unknown function", L1.StackTrace()})
 	}

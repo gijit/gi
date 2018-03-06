@@ -148,6 +148,7 @@ size_t clua_getgostate(lua_State* L)
 //wrapper for callgofunction
 int callback_function(lua_State* coro)
 {
+  printf("callback_function top, c-golua.c:151\n");
 	int r;
 	unsigned int *fid = clua_checkgosomething(coro, 1, MT_GOFUNCTION);
 	size_t coro_index = clua_getgostate(coro);
@@ -197,6 +198,8 @@ void clua_pushgofunction(lua_State* L, unsigned int fid)
 
 static int callback_c (lua_State* coro)
 {
+  printf("callback_c top, c-golua.c:201\n");
+  
 	int fid = clua_togofunction(coro, lua_upvalueindex(1));
 	size_t coro_index = clua_getgostate(coro);
     lua_State*  mainThread = getMainThread(coro);
