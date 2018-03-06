@@ -52,7 +52,9 @@ type State struct {
 	//
 	Upos int
 
-	// Upos -> all coroutines within a main state
+	// Upos -> all coroutines within a main state.
+	// For non-main coroutines, AllCoro is a nil map.
+	//
 	// TODO: currently no hooks for garbage collection
 	//  from the Lua side back to Go. So when Lua
 	//  deletes a coroutine, we don't notice, and

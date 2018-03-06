@@ -632,8 +632,10 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	upos := int(C.clua_dedup_coro(ptr))
 	already := L.MainCo.AllCoro[upos]
 	if already != nil {
+		fmt.Printf("ToThreadHelper, already known at upos=%v\n", upos)
 		return already
 	}
+	fmt.Printf("ToThreadHelper, new at upos=%v\n", upos)
 
 	newstate := &State{
 		s:       ptr,

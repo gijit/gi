@@ -506,6 +506,12 @@ func Test102LuaRegsitryIsPerState(t *testing.T) {
 	//fmt.Printf("good: retreived val from L3 registry\n")
 }
 
+func assert(t *testing.T, b bool, msg string) {
+	if !b {
+		t.Fatal(msg)
+	}
+}
+
 func Test103ToThreadDeduplicatesCoroutines(t *testing.T) {
 	// when ToThread encounters the same coroutine
 	// again, it should return the prior *State, and
@@ -544,8 +550,25 @@ func Test103ToThreadDeduplicatesCoroutines(t *testing.T) {
 		t.Fatal("co2b should not equal thr2 or thr")
 	}
 
-	co2b.PushThread()
+	co2b_isMain := co2b.PushThread()
 	if co2b.ToThread(-1) != co2b {
 		t.Fatal("co2b was not deduped!")
 	}
+	assert(t, !co2b_isMain, "co2b_isMain should not have been a main thread!")
+
+	// coroutines from Lua first
+	err := co2b.DoString("a = 1; return coroutine.create(function() return a; end)")
+	if err != nil {
+		t.Fatalf("DoString returned an error: %v\n", err)
+	}
+
+	fmt.Printf("calling ")
+	thr4 := co2b.ToThread(-1)
+	fmt.Printf("thr4 = '%p'/'%#v'\n", thr4, thr4)
+	assert(t, thr4.AllCoro == nil, "non-main coroutines should have nil AllCoro maps")
+
+	for k, v := range L2.AllCoro {
+		fmt.Printf("\n L2.AllCoro k = '%#v', v='%p'/'%#v'\n", k, v, v)
+	}
+	assert(t, L2.AllCoro[thr4.Upos] == thr4, "thr4 should be found in L2's AllCoro")
 }
