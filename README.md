@@ -105,11 +105,11 @@ most recent status
 
 2018 March 6 update
 -------------------
-In major progress, internal release v1.3.7 enables calls into
-`fmt` (a native package) from any goroutine.
-The threading is still messed up after
-such calls, so this will be an internal
-only release.
+Release v1.3.8 re-enables calls into
+`fmt` and the other builtin native
+Go shadowed packages. They now
+work when called from goroutines.
+
 
 2018 March 3 update
 -------------------
