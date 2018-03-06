@@ -81,10 +81,36 @@ func TestCheckStringFail(t *testing.T) {
 }
 */
 
-/* jea: failing, disable for now
+// jea: works under OpenLibs, because generally
+//      we will need pcall/xpcall.
+//
+// See https://github.com/aarzilli/golua#on-error-handling
+//   for why they are hidden. We should probably
+//   be hiding these then using unsafe_pcall, and
+//   verify that Lua code using them doesn't call
+//   back into Go code that panics.
+/*
+Shortened version of the on-error-handling link:
+
+Lua's exceptions are incompatible with Go.
+golua works around this incompatibility by
+setting up protected execution environments
+in lua.State.DoString, lua.State.DoFile, and
+lua.State.Call and turning every exception
+into a Go panic.
+
+This means that:
+
+In general you can't do any exception handling
+from Lua, pcall and xpcall are renamed to
+unsafe_pcall and unsafe_xpcall. They are only
+safe to be called from Lua code that never
+calls back to Go. Use at your own risk.
+*/
 func TestPCallHidden(t *testing.T) {
 	L := NewState()
-	L.OpenLibs()
+	//L.OpenLibs()
+	L.OpenBase()
 	defer L.Close()
 
 	err := L.DoString("pcall(print, \"ciao\")")
@@ -97,7 +123,6 @@ func TestPCallHidden(t *testing.T) {
 		t.Fatal("Can not use unsafe_pcall\n")
 	}
 }
-*/
 
 func TestCall(t *testing.T) {
 	L := NewState()
