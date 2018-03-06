@@ -496,9 +496,16 @@ func (r *Repl) showLuaStacks() {
 		panic("could not locate __all_coro in _G")
 	}
 	forEachArrayValue(r.vm, -1, func(i int) {
+		ignore := 1
+		if i == 1 {
+			// main thread is where we are iterating from,
+			// so it has value, key, __all_coro, __all_coro.
+			// Ignore that administrivia, its not interesting.
+			ignore = 4
+		}
 		thr := r.vm.ToThread(-1)
 		fmt.Printf("\n ======== __all_coro %v ======\n", i)
-		DumpLuaStack(thr)
+		fmt.Printf("\n%s\n", DumpLuaStackAsString(thr, ignore))
 	})
 	r.vm.SetTop(top)
 }

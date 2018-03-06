@@ -65,6 +65,8 @@ func NewLuaObjectFromValue(L *lua.State, val interface{}) *LuaObject {
 //
 // If 'results' is nil, results will be discarded.
 func (lo *LuaObject) Call(results interface{}, args ...interface{}) error {
+	pp("top of LuaObject.Call() ...")
+
 	L := lo.l
 	// Push the callable value.
 	lo.Push()

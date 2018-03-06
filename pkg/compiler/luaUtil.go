@@ -189,10 +189,10 @@ func LuaDoUserFiles(vm *golua.State, files []string) error {
 }
 
 func DumpLuaStack(L *golua.State) {
-	fmt.Printf("\n%s\n", DumpLuaStackAsString(L))
+	fmt.Printf("\n%s\n", DumpLuaStackAsString(L, 0))
 }
 
-func DumpLuaStackAsString(L *golua.State) (s string) {
+func DumpLuaStackAsString(L *golua.State, ignoreTop int) (s string) {
 	var top int
 
 	top = L.GetTop()
@@ -203,7 +203,7 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 	L.SetTop(top)
 
 	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top)
-	for i := top; i >= 1; i-- {
+	for i := top - ignoreTop; i >= 1; i-- {
 
 		t := L.Type(i)
 		s += fmt.Sprintf("DumpLuaStack: i=%v, t= %v\n", i, t)
@@ -471,12 +471,12 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 
 		interr := vm.LoadString(s)
 		if interr != 0 {
-			loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+			loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
 			return loadErr
 		} else {
 			err := vm.Call(0, 0)
 			if err != nil {
-				runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm))
+				runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
 				return runErr
 			}
 		}
