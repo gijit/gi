@@ -562,13 +562,14 @@ func Test103ToThreadDeduplicatesCoroutines(t *testing.T) {
 		t.Fatalf("DoString returned an error: %v\n", err)
 	}
 
-	fmt.Printf("calling ")
+	fmt.Printf("calling ToThread()")
 	thr4 := co2b.ToThread(-1)
 	fmt.Printf("thr4 = '%p'/'%#v'\n", thr4, thr4)
 	assert(t, thr4.AllCoro == nil, "non-main coroutines should have nil AllCoro maps")
-
-	for k, v := range L2.AllCoro {
-		fmt.Printf("\n L2.AllCoro k = '%#v', v='%p'/'%#v'\n", k, v, v)
-	}
-	assert(t, L2.AllCoro[thr4.Upos] == thr4, "thr4 should be found in L2's AllCoro")
+	/*
+		for k, v := range L2.AllCoro {
+			fmt.Printf("\n L2.AllCoro k = '%#v', v='%p'/'%#v'\n", k, v, v)
+		}
+	*/
+	assert(t, L2.AllCoro[thr4.Upos] == thr4, "thr4 should be found in L2's AllCoro, at Upos")
 }
