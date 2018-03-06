@@ -13,9 +13,10 @@ package lua
 import "C"
 
 import (
-	//"fmt"
+	"fmt"
 	"github.com/gijit/gi/pkg/verb"
 	"reflect"
+	"runtime/debug"
 	"sync"
 	"unsafe"
 )
@@ -145,10 +146,15 @@ func printGoStates() (biggest uintptr) {
 //export golua_callgofunction
 func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
 
-	pp("jea debug: golua_callgofunction, fid=%v, here is stack of curThread at top:\n", fid)
-	if verb.VerboseVerbose {
-		DumpLuaStack(&State{S: curThread})
-	}
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Printf("problem in golua_callgofunction, panic happened: '%v' at\n%s\n", r, string(debug.Stack()))
+			panic(r) // resume panic
+		}
+	}()
+
+	pp("jea debug: golua_callgofunction, fid=%v.\n", fid)
 
 	pp("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
 
