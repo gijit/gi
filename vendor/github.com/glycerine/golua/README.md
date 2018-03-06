@@ -1,21 +1,19 @@
 Go Bindings for the lua C API
 =========================
 
-[![Build Status](https://travis-ci.org/aarzilli/golua.svg?branch=master)](https://travis-ci.org/aarzilli/golua)
-
 Simplest way to install:
 
-	# go get -u github.com/aarzilli/golua/lua
+	# go get -u github.com/glycerine/golua/lua
 
 Will work as long as your compiler can find a shared object called lua5.1 on linux, or lua anywhere else.
 If your linux system uses "lua" as the shared object name for lua (for example, Fedora Core does this) you can install using:
 
-	# go get -u -tags llua github.com/aarzilli/golua/lua
+	# go get -u -tags llua github.com/glycerine/golua/lua
 
 
 You can then try to run the examples:
 
-	$ cd /usr/local/go/src/pkg/github.com/aarzilli/golua/example/
+	$ cd /usr/local/go/src/pkg/github.com/glycerine/golua/example/
 	$ go run basic.go
 	$ go run alloc.go
 	$ go run panic.go
@@ -97,10 +95,25 @@ err := L.Call(0, 0)
 …
 ```
 
-ON THREADS AND COROUTINES
+ON COROUTINES
 ---------------------
 
-'lua.State' is not thread safe, but the library itself is. Lua's coroutines exist but (to my knowledge) have never been tested and are likely to encounter the same problems that errors have, use at your own peril.
+Lua's coroutines exist and have been tested. ToThread()
+and NewThread() work, and calls to registered Go functions can
+be made from any Lua coroutine.
+
+Registrations made on any coroutine are
+shared among all coroutines within
+that state. Registrations are per-`lua.State`, and
+are not globally shared between `lua.State`s.
+
+ON GOROUTINE SAFETY
+---------------------
+
+From the Go perspective of actual
+multithreading, the basic 'lua.State' is not thread safe.
+For safety, access a lua.State from a single goroutine
+or add locks around the lua.State to synchronize access.
 
 ODDS AND ENDS
 ---------------------
@@ -117,7 +130,7 @@ To link with [luajit-2.0.x](http://luajit.org/luajit.html), you can use CGO_CFLA
 ```
 $ CGO_CFLAGS=`pkg-config luajit --cflags`
 $ CGO_LDFLAGS=`pkg-config luajit --libs-only-L`
-$ go get -f -u -tags luajit github.com/aarzilli/golua/lua
+$ go get -f -u -tags luajit github.com/glycerine/golua/lua
 ```
 
 CONTRIBUTORS
@@ -137,6 +150,7 @@ CONTRIBUTORS
 * Admin36
 * Pierre Neidhardt (@Ambrevar)
 * HuangWei (@huangwei1024)
+* Jason E. Aten
 
 SEE ALSO
 ---------------------
