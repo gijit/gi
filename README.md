@@ -86,7 +86,7 @@ Will golang (Go) run on GPUs?  It might be possible!
 
 Release v1.3.0 and later needs go1.10 or later (a critical Windows timezone workaround was provided in go1.10). Works on Mac OSX and Linux and Windows. To build on Windows, you'll need to install mingw64 port of gcc first, if its not already installed, since that is what CGO on windows requires. See the notes in https://github.com/gijit/gi/issues/18
 
-[Update: I put a v1.3.2 binaries here https://github.com/gijit/gi/releases/tag/v1.3.2 ; compiled on Windows10.]
+[Update: I put a v1.3.5 binaries here https://github.com/gijit/gi/releases/tag/v1.3.5 ; compiled on Windows10.]
 
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
@@ -102,6 +102,14 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 
 most recent status
 ------------------
+
+2018 March 6 update
+-------------------
+In major progress, internal release v1.3.7 enables calls into
+`fmt` (a native package) from any goroutine.
+The threading is still messed up after
+such calls, so this will be an internal
+only release.
 
 2018 March 3 update
 -------------------
