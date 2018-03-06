@@ -33,7 +33,7 @@ func addPreludeToNewPkg(pkg *types.Package) {
 	// allow tostring from Go, to call the Lua builtin.
 	scope.Insert(getFunFor__tostring(pkg))
 	scope.Insert(getFunFor__st(pkg))
-	for _, cmd := range []string{"__ls", "__gls", "__lst", "__glst"} {
+	for _, cmd := range []string{"__ls", "__gls", "__lst", "__glst", "__stacks"} {
 		scope.Insert(getFunFor__replUtil(cmd, pkg))
 	}
 }
