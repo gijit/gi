@@ -202,7 +202,7 @@ func DumpLuaStackAsString(L *golua.State, ignoreTop int) (s string) {
 	// cleanup stack
 	L.SetTop(top)
 
-	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top)
+	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top-ignoreTop)
 	for i := top - ignoreTop; i >= 1; i-- {
 
 		t := L.Type(i)
