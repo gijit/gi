@@ -450,19 +450,20 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		if vm.IsNil(-1) {
 			panic("could not locate __eval in _G")
 		}
-		p1("good: found __eval. running '%s'\n", s)
 		vm.PushString(s)
-		p1("before vm.Call(1,0), stack is:")
+
+		p1("good: found __eval. it is on top of the stack, followed by out running code. running '%s'\n", s)
+		p1("before vm.Call(1,0), stacks are:")
 		if verb.Verbose {
-			DumpLuaStack(vm)
+			showLuaStacks(vm)
 		}
 		vm.Call(1, 0)
 		// if things crash, this is the first place
 		// to check for an error: dump the Lua stack.
 		// With high probability, it will yield clues to the problem.
-		p1("after vm.Call(1,0), stack is:")
+		p1("after vm.Call(1,0), stacks are:")
 		if verb.Verbose {
-			DumpLuaStack(vm)
+			showLuaStacks(vm)
 		}
 		return nil
 	} else {
