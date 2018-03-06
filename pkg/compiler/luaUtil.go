@@ -450,9 +450,10 @@ func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
 		if vm.IsNil(-1) {
 			panic("could not locate __eval in _G")
 		}
+		eval := vm.ToPointer(-1)
 		vm.PushString(s)
 
-		p1("good: found __eval. it is on top of the stack, followed by out running code. running '%s'\n", s)
+		p1("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
 		p1("before vm.Call(1,0), stacks are:")
 		if verb.Verbose {
 			showLuaStacks(vm)

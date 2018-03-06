@@ -496,7 +496,7 @@ func showLuaStacks(vm *golua.State) {
 		panic("could not locate __all_coro in _G")
 	}
 	fmt.Printf("\n")
-	forEachAllCoroArrayValue(vm, -1, func(i int, name string) {
+	forEachAllCoroArrayValue(vm, -1, func(i int, name, status string) {
 		ignoreTopmost := 1
 		if i == 1 {
 			// main thread is where we are iterating from,
@@ -506,7 +506,7 @@ func showLuaStacks(vm *golua.State) {
 		}
 		thr := vm.ToThread(-1)
 		fmt.Printf("===================================\n")
-		fmt.Printf("        __all_coro %v: '%s'\n", i, name)
+		fmt.Printf("        __all_coro %v: '%s' (%s)\n", i, name, status)
 		fmt.Printf("===================================\n"+
 			"%s\n", DumpLuaStackAsString(thr, ignoreTopmost))
 	})
@@ -516,7 +516,7 @@ func showLuaStacks(vm *golua.State) {
 // Call f with each __all_coro array value in term on the top of
 // the stack, the f(i, name) call will have i set to 1, 2, 3, ...
 // in turn.
-func forEachAllCoroArrayValue(L *golua.State, index int, f func(int, string)) {
+func forEachAllCoroArrayValue(L *golua.State, index int, f func(i int, name, status string)) {
 
 	i := 1
 	// Push another reference to the table on top of the stack (so we know
@@ -550,7 +550,10 @@ func forEachAllCoroArrayValue(L *golua.State, index int, f func(int, string)) {
 		name := L.ToString(-1)
 		L.Pop(3)
 		// stack: value, key, table
-		f(i, name)
+		status := getCoroutineStatus(L, -1)
+
+		// stack: value, key, table
+		f(i, name, status)
 
 		// pop value, leaving original key
 		L.Pop(1)
@@ -564,4 +567,25 @@ func forEachAllCoroArrayValue(L *golua.State, index int, f func(int, string)) {
 	// Stack is now the same as it was on entry to this function
 	return
 
+}
+
+func getCoroutineStatus(L *golua.State, index int) (status string) {
+	top := L.GetTop()
+	L.PushValue(index)
+	// stack: thread
+	L.GetGlobal("coroutine")
+	// stack: coroutine table, thread
+	L.PushString("status")
+	// stack: "status", coroutine table, thread
+	L.GetTable(-2)
+	// stack: status function, coroutine table, thread
+	L.Remove(-2)
+	// stack: status function, thread
+	L.Insert(-2)
+	// stack: thread, status function
+	L.Call(1, 1)
+	// stack: status string
+	status = L.ToString(-1)
+	L.SetTop(top)
+	return
 }
