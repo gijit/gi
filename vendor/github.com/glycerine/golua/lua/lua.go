@@ -754,23 +754,9 @@ func (L *State) NewError(msg string) *LuaError {
 
 // LuaJIT only: return ctype of the cdata at the top of the stack.
 func (L *State) LuaJITctypeID(idx int) uint32 {
-	//fmt.Printf("top of LuaJITctypeID, idx=%v, L is '%#v', top=%v\n", idx, L, L.GetTop())
-
-	// jea: seems to have trouble on non-main coroutine.
-	// but doesn't crash when running  it on main coroutine,
-	// so just do that, instead of:
+	//fmt.Printf("top of LuaJITctypeID, idx=%v,
+	// L is '%#v', top=%v\n", idx, L, L.GetTop())
 	res := C.clua_luajit_ctypeid(L.S, C.int(idx))
-	/*
-		ltop := L.GetTop()
-		L.PushValue(idx) // copy idx
-		main := L.MainCo
-		mainTop := main.GetTop()
-		XMove(L, main, 1)
-		res := C.clua_luajit_ctypeid(L.CmainCo, C.int(-1))
-		//fmt.Printf("LuaJITctypeID: back from C.luajit_ctypeid\n")
-		main.SetTop(mainTop)
-		L.SetTop(ltop)
-	*/
 	return uint32(res)
 }
 

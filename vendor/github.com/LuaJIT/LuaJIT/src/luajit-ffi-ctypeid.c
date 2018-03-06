@@ -76,7 +76,6 @@ luajit_push_cdata_uint64(struct lua_State *L, uint64_t u)
 LUA_API uint32_t
 luajit_ctypeid(struct lua_State *L, int idxNew)
 {
-  printf("top of luajit_ctypeid, L=%p, idxNew=%d, top=%d\n", L, idxNew, lua_gettop(L));
   int restoreAtEndIdx = lua_gettop(L);
   if (restoreAtEndIdx == 0) {
       return luaL_error(L, "luajit-ffi-ctypeid: empty stack.");
@@ -87,14 +86,9 @@ luajit_ctypeid(struct lua_State *L, int idxNew)
      which are large negative ints.
   */
   if (idxNew < 0 && (-idxNew) <= restoreAtEndIdx) {
-    printf("luajit_ctypeid debug, top=%d, converted rel %d -> abs %d\n", lua_gettop(L), idxNew,  (restoreAtEndIdx + 1) + idxNew);
+    //printf("luajit_ctypeid debug, top=%d, converted rel %d -> abs %d\n", lua_gettop(L), idxNew,  (restoreAtEndIdx + 1) + idxNew);
     idxNew = (restoreAtEndIdx + 1) + idxNew;
   }
-  /*
-jea, might want:
-TValue *o = L->base + idxNew-1;
-  */
-
   
   CTypeID ctypeid;
   GCcdata *cd;
@@ -106,9 +100,7 @@ TValue *o = L->base + idxNew-1;
     return luaL_error(L, "luajit-ffi-ctypeid error: could not loadstring");
   }
 
-  printf("debug luajit_ctypeid, just before lua_pcall to ffi.typeof\n");  
   err = lua_pcall(L, 0, 1, 0);
-  printf("debug luajit_ctypeid, just after lua_pcall to ffi.typeof\n");    
   if (err != 0) {
     lua_settop(L, restoreAtEndIdx);
     return luaL_error(L, "luajit-ffi-ctypeid pcall to require ffi.typeof failed.");
@@ -123,9 +115,7 @@ TValue *o = L->base + idxNew-1;
   lua_pushvalue(L, idxNew);
   /* Call ffi.typeof() */
 
-  printf("debug luajit_ctypeid, just before 2nd pcall\n");      
   err = lua_pcall(L, 1, 1, 0);
-  printf("debug luajit_ctypeid, just after 2nd pcall\n"); // fine to here, crash after
   if (err != 0) {
     lua_settop(L, restoreAtEndIdx);
     /*e.g. bad argument #1 to 'typeof' (C type expected, got number)*/
@@ -137,29 +127,16 @@ TValue *o = L->base + idxNew-1;
     lua_settop(L, restoreAtEndIdx);
     return luaL_error(L, "luajit-ffi-ctypeid call to ffi.typeof failed at lua_type(L,1) != LUA_TCDATA");
   }
-  /*cd = cdataV(L->base);*/
-  printf("debug luajit_ctypeid, before cdataV(L->top)\n");
-  printf("debug (L->top) is \n");
   int newTop = lua_gettop(L);
   TValue *o = L->base + newTop-1;
   cd = cdataV(o);
-  //  cd = cdataV(L->top);
   
-  printf("debug luajit_ctypeid, after cdataV(L->top)\n");
-  printf("debug luajit_ctypeid, cd = %p\n", cd); // cd = 0x2d
-  // this next ->ctypeid is crashing b/c cd is not really
-  // a pointer.
   if (cd->ctypeid != CTID_CTYPEID) {
-    printf("in err, CTID_CTYPEID=%d, but cd->typeid=%d, about to restoreAtEndIdx=%d\n",    CTID_CTYPEID, cd->ctypeid, restoreAtEndIdx);
     lua_settop(L, restoreAtEndIdx);
-    printf("done with restoreAtEndIdx\n");  
     return luaL_error(L, "luajit-ffi-ctypeid call to ffi.typeof failed at ctypeid != CTID_CTYPEID");
   }
-  printf("debug luajit_ctypeid, before cdataptr(cd) call\n");  
   ctypeid = *(CTypeID *)cdataptr(cd);
-  printf("debug luajit_ctypeid, before settop\n");    
   lua_settop(L, restoreAtEndIdx);
-  printf("debug luajit_ctypeid, after settop\n");  
   return ctypeid;
 }
 
