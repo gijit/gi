@@ -154,7 +154,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		}
 	}()
 
-	pp("jea debug: golua_callgofunction, fid=%v.\n", fid)
+	pp("jea debug: golua_callgofunction, fid=%v. mainIndex='%v'\n", fid, mainIndex)
 
 	pp("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
 
@@ -165,6 +165,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 		pp("debug: first time this coroutine has been seen on the Go side\n")
 
 		L := getGoState(int(mainIndex))
+		fmt.Printf("L back from mainIndex=%v, getGoState is: '%#v'\n", mainIndex, L)
 
 		if mainThread != nil && L.S != mainThread {
 			pp("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.S, mainThread)

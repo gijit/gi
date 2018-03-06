@@ -115,48 +115,51 @@ unsigned int* clua_checkgosomething(lua_State* L, int index, const char *desired
 
 size_t clua_getgostate(lua_State* L)
 {
-	size_t gostateindex;
-	//get gostate from registry entry
-	lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
-	lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
+  //printf("debug: clua_getgostate() top, L=%p\n", L);
+  size_t gostateindex;
+  lua_State*  main = getMainThread(L);
 
-    // 'k' is now a map from lua_State* to index
-    // push key
-    lua_pushthread(L);
-    // stack is now:
-    //  key
-    //  map
-    lua_gettable(L, -2);
-    // stack is now
-    //  index value
-    //  map
+  //get gostate from registry entry
+  lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
+  lua_gettable(L, LUA_REGISTRYINDEX); // pushes value onto top of stack
 
-    // if nil, return 0
-    if (lua_isnil(L, -1)) {
-      gostateindex = (size_t)(0);
-    } else {
-      gostateindex = (size_t)lua_touserdata(L, -1);
-    }
-	lua_pop(L, 2);
-	return gostateindex;
+  // 'k' is now a map from lua_State* to index
+  // push key
+  lua_pushthread(main);
+  // stack is now:
+  //  key
+  //  map
+  lua_gettable(L, -2);
+  // stack is now
+  //  index value
+  //  map
+
+  // if nil, return 0
+  if (lua_isnil(L, -1)) {
+    gostateindex = (size_t)(0);
+  } else {
+    gostateindex = (size_t)lua_touserdata(L, -1);
+  }
+  lua_pop(L, 2);
+  return gostateindex;
 }
 
 
 //wrapper for callgofunction
-int callback_function(lua_State* L)
+int callback_function(lua_State* coro)
 {
 	int r;
-	unsigned int *fid = clua_checkgosomething(L, 1, MT_GOFUNCTION);
-	size_t gostateindex = clua_getgostate(L);
-    lua_State* mainThread = getMainThread(L);
+	unsigned int *fid = clua_checkgosomething(coro, 1, MT_GOFUNCTION);
+	size_t coro_index = clua_getgostate(coro);
+    lua_State* mainThread = getMainThread(coro);
 	size_t mainIndex = clua_getgostate(mainThread);
     
     // jea: the metatable is on the stack.
     
 	//remove the userdata metatable (go function??) from the stack (to present same behavior as lua_CFunctions)
-	lua_remove(L, 1);
+	lua_remove(coro, 1);
     
-	return golua_callgofunction(L, gostateindex, mainIndex, mainThread, fid!=NULL ? *fid : -1);
+	return golua_callgofunction(coro, coro_index, mainIndex, mainThread, fid!=NULL ? *fid : -1);
 }
 
 //wrapper for gchook
@@ -190,11 +193,14 @@ void clua_pushgofunction(lua_State* L, unsigned int fid)
 	lua_setmetatable(L, -2);
 }
 
-static int callback_c (lua_State* L)
+static int callback_c (lua_State* coro)
 {
-	int fid = clua_togofunction(L,lua_upvalueindex(1));
-	size_t gostateindex = clua_getgostate(L);
-	return golua_callgofunction(L, gostateindex, 0, getMainThread(L), fid);
+	int fid = clua_togofunction(coro, lua_upvalueindex(1));
+	size_t coro_index = clua_getgostate(coro);
+    lua_State*  mainThread = getMainThread(coro);
+    size_t main_index = clua_getgostate(mainThread);
+    
+	return golua_callgofunction(coro, coro_index, main_index, mainThread, fid);
 }
 
 void clua_pushcallback(lua_State* L)
