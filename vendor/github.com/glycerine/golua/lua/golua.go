@@ -129,23 +129,6 @@ func getGoState(gostateindex int) *State {
 	return goStates[gostateindex]
 }
 
-/* jea added to debug
-func printGoStates() (biggest uintptr) {
-	goStatesMutex.Lock()
-	defer goStatesMutex.Unlock()
-	maxReg := 0
-	for gostateindex, v := range goStates {
-		fmt.Printf("gostateindex=%v, state='%#v'\n", gostateindex, v)
-		cur := len(v.registry)
-		if cur > maxReg {
-			maxReg = cur
-			biggest = gostateindex
-		}
-	}
-	return biggest
-}
-*/
-
 //export golua_printstack
 func golua_printstack(coro *C.lua_State, mainIndex uintptr) {
 	fmt.Printf("golua_printstack() top, called with coro='%p', mainIndex=%v\n", coro, mainIndex) // coro = ; mainIndex =1
@@ -177,7 +160,7 @@ func golua_callgofunction(coro *C.lua_State, coro_index uintptr, mainIndex uintp
 		pp("debug: first time this coroutine has been seen on the Go side\n")
 
 		L := getGoState(int(mainIndex))
-		fmt.Printf("L back from mainIndex=%v, getGoState is: '%#v'\n", mainIndex, L)
+		//fmt.Printf("L back from mainIndex=%v, getGoState is: '%#v'\n", mainIndex, L)
 
 		if mainThread != nil && L.S != mainThread {
 			pp("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.S, mainThread)
@@ -189,7 +172,7 @@ func golua_callgofunction(coro *C.lua_State, coro_index uintptr, mainIndex uintp
 
 		// this is the __call() for the MT_GOFUNCTION
 		L1 = getGoState(int(coro_index))
-		fmt.Printf("golua.go:192 debug: after getGoState on coro_index=%v, L1='%#v'\n", coro_index, L1)
+		//fmt.Printf("golua.go:192 debug: after getGoState on coro_index=%v, L1='%#v'\n", coro_index, L1)
 	}
 
 	pp("L1 corresponding to coro_index '%v' -> '%#v'\n", coro_index, L1)
