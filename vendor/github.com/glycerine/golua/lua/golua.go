@@ -118,7 +118,7 @@ func unregisterGoState(L *State) {
 	goStatesMutex.Lock()
 	defer goStatesMutex.Unlock()
 	if L.Index > 0 {
-		fmt.Printf("deleting L.Index=%v\n from map '%#v'\n", L.Index, goStates)
+		//fmt.Printf("deleting L.Index=%v\n from map '%#v'\n", L.Index, goStates)
 		delete(goStates, L.Index)
 	}
 }
@@ -358,9 +358,9 @@ func golua_interface_index_callback(gostateindex uintptr, iid uint, field_name *
 
 //export golua_gchook
 func golua_gchook(main_index uintptr, id uint) int {
-	fmt.Printf("main_index is '%#v'\n", main_index)
+	//fmt.Printf("main_index is '%#v'\n", main_index)
 	L := getGoState(int(main_index))
-	fmt.Printf("L is '%#v'\n", L)
+	//fmt.Printf("L is '%#v'\n", L)
 	L.unregister(id)
 	return 0
 }

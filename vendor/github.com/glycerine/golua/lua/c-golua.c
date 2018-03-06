@@ -385,7 +385,7 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L) {
 
 int clua_setgostate(lua_State* L, size_t gostateindex)
 {
-  printf("\n debug: top of clua_setgostate(gostateindex=%lu)\n", gostateindex);
+  //printf("\n debug: top of clua_setgostate(gostateindex=%lu)\n", gostateindex);
   int ret = 0;
   int top = lua_gettop(L);
       
