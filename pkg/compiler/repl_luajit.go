@@ -495,31 +495,32 @@ func (r *Repl) showLuaStacks() {
 	if r.vm.IsNil(-1) {
 		panic("could not locate __all_coro in _G")
 	}
-	forEachArrayValue(r.vm, -1, func(i int) {
-		ignore := 1
+	forEachAllCoroArrayValue(r.vm, -1, func(i int, name string) {
+		ignoreTopmost := 1
 		if i == 1 {
 			// main thread is where we are iterating from,
 			// so it has value, key, __all_coro, __all_coro.
 			// Ignore that administrivia, its not interesting.
-			ignore = 4
+			ignoreTopmost = 4
 		}
 		thr := r.vm.ToThread(-1)
-		fmt.Printf("\n======== __all_coro %v ======\n", i)
-		fmt.Printf("\n=============================\n"+
-			"%s\n", DumpLuaStackAsString(thr, ignore))
+		fmt.Printf("===================================\n")
+		fmt.Printf("======== __all_coro %v: '%s'\n", i, name)
+		fmt.Printf("===================================\n"+
+			"%s\n", DumpLuaStackAsString(thr, ignoreTopmost))
 	})
 	r.vm.SetTop(top)
 }
 
-// Call f with each array value in term on the top of
-// the stack, the f(i) call will have i set to 1, 2, 3, ...
+// Call f with each __all_coro array value in term on the top of
+// the stack, the f(i, name) call will have i set to 1, 2, 3, ...
 // in turn.
-func forEachArrayValue(L *golua.State, index int, f func(int)) {
+func forEachAllCoroArrayValue(L *golua.State, index int, f func(int, string)) {
 
 	i := 1
 	// Push another reference to the table on top of the stack (so we know
 	// where it is, and this function can work for negative, positive and
-	// pseudo indices
+	// pseudo indices.
 	L.PushValue(index)
 	// stack now contains: -1 => table
 	L.PushNil()
@@ -527,11 +528,32 @@ func forEachArrayValue(L *golua.State, index int, f func(int)) {
 	for L.Next(-2) != 0 {
 
 		// stack now contains: -1 => value; -2 => key; -3 => table
-		f(i)
+
+		L.PushValue(-1)
+		// stack: value, value, key, table
+
+		// get name from __coro2notes
+		L.GetGlobal("__coro2notes")
+		// stack: __coro2notes, value, value, key, table
+		L.Insert(-2)
+		// stack: value, __coro2notes, value, key, table
+		L.GetTable(-2)
+		// stack: details, __coro2notes, value, key, table
+		L.PushString("__name")
+		// stack: "__name", details, __coro2notes, value, key, table
+		L.GetTable(-2)
+		// stack: threadName, details, __coro2notes, value, key, table
+		if L.IsNil(-1) {
+			panic("thread did not have a name?!?")
+		}
+		name := L.ToString(-1)
+		L.Pop(3)
+		// stack: value, key, table
+		f(i, name)
 
 		// pop value, leaving original key
 		L.Pop(1)
-		// stack now contains: -1 => key; -2 => table
+		// stack: key, table
 		i++
 	}
 	// stack now contains: -1 => table (when lua_next returns 0 it pops the key
