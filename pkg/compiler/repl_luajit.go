@@ -505,7 +505,7 @@ func (r *Repl) showLuaStacks() {
 		}
 		thr := r.vm.ToThread(-1)
 		fmt.Printf("===================================\n")
-		fmt.Printf("======== __all_coro %v: '%s'\n", i, name)
+		fmt.Printf("        __all_coro %v: '%s'\n", i, name)
 		fmt.Printf("===================================\n"+
 			"%s\n", DumpLuaStackAsString(thr, ignoreTopmost))
 	})
