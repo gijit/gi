@@ -117,7 +117,7 @@ size_t clua_getgostate(lua_State* L)
 {
   //printf("debug: clua_getgostate() top, L=%p\n", L);
   size_t gostateindex;
-  lua_State*  main = getMainThread(L);
+  //lua_State*  main = getMainThread(L);
 
   //get gostate from registry entry
   lua_pushlightuserdata(L,(void*)&GoMainStatesKey);
@@ -125,7 +125,7 @@ size_t clua_getgostate(lua_State* L)
 
   // 'k' is now a map from lua_State* to index
   // push key
-  lua_pushthread(main);
+  lua_pushthread(L);
   // stack is now:
   //  key
   //  map
@@ -134,11 +134,11 @@ size_t clua_getgostate(lua_State* L)
   //  index value
   //  map
 
-  // if nil, return 0
+  // if nil, enter it, so it is recorded.
   if (lua_isnil(L, -1)) {
     gostateindex = (size_t)(0);
   } else {
-    gostateindex = (size_t)lua_touserdata(L, -1);
+    gostateindex = (size_t)lua_tonumber(L, -1);
   }
   lua_pop(L, 2);
   return gostateindex;
@@ -165,12 +165,14 @@ int callback_function(lua_State* coro)
 //wrapper for gchook
 int gchook_wrapper(lua_State* L)
 {
-	//printf("Garbage collection wrapper\n");
-	unsigned int* fid = clua_checkgosomething(L, -1, NULL);
-	size_t gostateindex = clua_getgostate(L);
-	if (fid != NULL)
-		return golua_gchook(gostateindex,*fid);
-	return 0;
+  //printf("Garbage collection wrapper\n");
+  unsigned int* fid = clua_checkgosomething(L, -1, NULL);
+  if (fid != NULL) {
+    lua_State*  mainThread = getMainThread(L);
+    size_t main_index = clua_getgostate(mainThread);
+    return golua_gchook(main_index, *fid);
+  }
+  return 0;
 }
 
 unsigned int clua_togofunction(lua_State* L, int index)
@@ -383,6 +385,7 @@ int clua_addThreadToUniqArrayAndRevUniq(lua_State* L) {
 
 int clua_setgostate(lua_State* L, size_t gostateindex)
 {
+  printf("\n debug: top of clua_setgostate(gostateindex=%lu)\n", gostateindex);
   int ret = 0;
   int top = lua_gettop(L);
       
@@ -473,7 +476,7 @@ int clua_setgostate(lua_State* L, size_t gostateindex)
   // stack: key, Lmap
   
   // value
-  lua_pushlightuserdata(L, (void*)gostateindex);
+  lua_pushnumber(L, gostateindex);
   // stack: value, key, Lmap
   
   // store key:value in map
