@@ -1106,3 +1106,28 @@ w := denver.word
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test199CalculatorExpression(t *testing.T) {
+
+	cv.Convey(`a math expression "= math.Exp(2);" ending in a semicolon should still be computed, after removing the semicolon`, t, func() {
+
+		code := `import "math"`
+		code2 := `= math.Exp(2);`
+
+		// expect 7.3890560989307
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		LuaRunAndReport(vm, string(translation))
+
+		translation2 := inc.trMust([]byte(code2))
+		LuaRunAndReport(vm, string(translation2))
+		LuaRunAndReport(vm, "chk = tonumber(__gijit_ans[0])")
+		LuaMustFloat64(vm, "chk", 7.3890560989307)
+
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

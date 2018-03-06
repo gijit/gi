@@ -451,10 +451,12 @@ func (tr *IncrState) prependAns(src []byte) []byte {
 	n := len(leftTrimmed)
 	leftdiff := nsrc - n
 	if tr.cfg.CalculatorMode {
-		return append(gijitAnsPrefix, append(trimmed[leftdiff:], gijitAnsSuffix...)...)
+		middle := removeTrailingSemicolon(trimmed[leftdiff:])
+		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...)
 	}
 	if n > 1 && leftTrimmed[0] == '=' && leftTrimmed[1] != '=' {
-		return append(gijitAnsPrefix, append(trimmed[leftdiff+1:], gijitAnsSuffix...)...)
+		middle := removeTrailingSemicolon(trimmed[leftdiff+1:])
+		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...)
 	}
 	return src
 }
@@ -494,4 +496,14 @@ func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) 
 	err = WriteProgramCode([]*Archive{arch}, w)
 
 	return res.Bytes(), err
+}
+
+var semi = []byte{';'}
+
+func removeTrailingSemicolon(src []byte) []byte {
+	tr := bytes.TrimSpace(src)
+	for bytes.HasSuffix(tr, semi) {
+		tr = tr[:len(tr)-1]
+	}
+	return tr
 }
