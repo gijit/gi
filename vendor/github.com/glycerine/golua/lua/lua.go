@@ -759,17 +759,18 @@ func (L *State) LuaJITctypeID(idx int) uint32 {
 	// jea: seems to have trouble on non-main coroutine.
 	// but doesn't crash when running  it on main coroutine,
 	// so just do that, instead of:
-	// res := C.clua_luajit_ctypeid(L.S, C.int(idx))
-
-	ltop := L.GetTop()
-	L.PushValue(idx) // copy idx
-	main := L.MainCo
-	mainTop := main.GetTop()
-	XMove(L, main, 1)
-	res := C.clua_luajit_ctypeid(L.CmainCo, C.int(-1))
-	//fmt.Printf("LuaJITctypeID: back from C.luajit_ctypeid\n")
-	main.SetTop(mainTop)
-	L.SetTop(ltop)
+	res := C.clua_luajit_ctypeid(L.S, C.int(idx))
+	/*
+		ltop := L.GetTop()
+		L.PushValue(idx) // copy idx
+		main := L.MainCo
+		mainTop := main.GetTop()
+		XMove(L, main, 1)
+		res := C.clua_luajit_ctypeid(L.CmainCo, C.int(-1))
+		//fmt.Printf("LuaJITctypeID: back from C.luajit_ctypeid\n")
+		main.SetTop(mainTop)
+		L.SetTop(ltop)
+	*/
 	return uint32(res)
 }
 
