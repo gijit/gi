@@ -270,7 +270,7 @@ readtop:
 		r.displayCmd(`lst`)
 		goto readtop
 	case ":stacks":
-		r.showLuaStacks()
+		showLuaStacks(r.vm)
 		goto readtop
 	case ":r":
 		r.cfg.RawLua = true
@@ -489,13 +489,14 @@ func (r *Repl) displayCmd(cmd string) {
 	panicOn(err)
 }
 
-func (r *Repl) showLuaStacks() {
-	top := r.vm.GetTop()
-	r.vm.GetGlobal("__all_coro")
-	if r.vm.IsNil(-1) {
+func showLuaStacks(vm *golua.State) {
+	top := vm.GetTop()
+	vm.GetGlobal("__all_coro")
+	if vm.IsNil(-1) {
 		panic("could not locate __all_coro in _G")
 	}
-	forEachAllCoroArrayValue(r.vm, -1, func(i int, name string) {
+	fmt.Printf("\n")
+	forEachAllCoroArrayValue(vm, -1, func(i int, name string) {
 		ignoreTopmost := 1
 		if i == 1 {
 			// main thread is where we are iterating from,
@@ -503,13 +504,13 @@ func (r *Repl) showLuaStacks() {
 			// Ignore that administrivia, its not interesting.
 			ignoreTopmost = 4
 		}
-		thr := r.vm.ToThread(-1)
+		thr := vm.ToThread(-1)
 		fmt.Printf("===================================\n")
 		fmt.Printf("        __all_coro %v: '%s'\n", i, name)
 		fmt.Printf("===================================\n"+
 			"%s\n", DumpLuaStackAsString(thr, ignoreTopmost))
 	})
-	r.vm.SetTop(top)
+	vm.SetTop(top)
 }
 
 // Call f with each __all_coro array value in term on the top of

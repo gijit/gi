@@ -94,8 +94,12 @@ func (ic *IncrState) EnableImportsFromLua() {
 	goImportFromLua := func(path string) {
 		ic.GiImportFunc(path)
 	}
+	stacksClosure := func() {
+		showLuaStacks(ic.goro.vm)
+	}
 	luar.Register(ic.goro.vm, "", luar.Map{
 		"__go_import": goImportFromLua,
+		"__stacks":    stacksClosure,
 	})
 	/*	t0 := ic.goro.newTicket()
 		t0.regmap["__go_import"] = goImportFromLua
