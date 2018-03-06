@@ -192,29 +192,6 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 		}()
 	}
 
-	// switch to coro here?
-	/*
-		thread := L.ToThread(1)
-		if thread != nil {
-			narg := L.GetTop()
-
-			fmt.Printf("callEx: L stack just before XMove:")
-			DumpLuaStack(L)
-			fmt.Printf("callEx: thread stack just before XMove:")
-			DumpLuaStack(thread)
-
-			XMove(L, thread, narg-1)
-
-			fmt.Printf("callEx: L stack just after XMove:")
-			DumpLuaStack(L)
-			fmt.Printf("callEx: thread stack just after XMove:")
-			DumpLuaStack(thread)
-
-			fmt.Printf("callEx(): thread was first arg, replacing L with running coro.\n")
-			L = thread
-		}
-	*/
-
 	L.GetGlobal(C.GOLUA_DEFAULT_MSGHANDLER)
 	// We must record where we put the error handler in the stack otherwise it will be impossible to remove after the pcall when nresults == LUA_MULTRET
 	erridx := L.GetTop() - nargs - 1
@@ -779,6 +756,7 @@ func (L *State) NewError(msg string) *LuaError {
 func (L *State) LuaJITctypeID(idx int) uint32 {
 	fmt.Printf("top of LuaJITctypeID, idx=%v, L is '%#v', top=%v\n", idx, L, L.GetTop())
 	res := C.clua_luajit_ctypeid(L.S, C.int(idx))
+	fmt.Printf("LuaJITctypeID: back from C.luajit_ctypeid\n")
 	return uint32(res)
 }
 

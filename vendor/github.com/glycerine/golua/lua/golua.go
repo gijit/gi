@@ -189,6 +189,7 @@ func golua_callgofunction(coro *C.lua_State, coro_index uintptr, mainIndex uintp
 
 		// this is the __call() for the MT_GOFUNCTION
 		L1 = getGoState(int(coro_index))
+		fmt.Printf("golua.go:192 debug: after getGoState on coro_index=%v, L1='%#v'\n", coro_index, L1)
 	}
 
 	pp("L1 corresponding to coro_index '%v' -> '%#v'\n", coro_index, L1)
