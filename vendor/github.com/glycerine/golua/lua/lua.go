@@ -19,7 +19,7 @@ package lua
 import "C"
 
 import (
-	"runtime/debug"
+	//"runtime/debug"
 	"unsafe"
 
 	"fmt"
@@ -634,10 +634,12 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 		return nil
 	}
 	upos := int(C.clua_dedup_coro(ptr))
-	fmt.Printf("\n jea debug: Top of ToThreadHelper(), stack = '%v'\n", string(debug.Stack()))
-	fmt.Printf("\n jea debug: L = '%#v'\n", L)
-	fmt.Printf("\n jea debug: L.MainCo = '%#v'\n", L.MainCo) // is nil
-	fmt.Printf("\n jea debug: L.MainCo.AllCoro = '%#v'\n", L.MainCo.AllCoro)
+	/*
+		fmt.Printf("\n jea debug: Top of ToThreadHelper(), stack = '%v'\n", string(debug.Stack()))
+		fmt.Printf("\n jea debug: L = '%#v'\n", L)
+		fmt.Printf("\n jea debug: L.MainCo = '%#v'\n", L.MainCo) // is nil
+		fmt.Printf("\n jea debug: L.MainCo.AllCoro = '%#v'\n", L.MainCo.AllCoro)
+	*/
 	already := L.MainCo.AllCoro[upos]
 	if already != nil {
 		//fmt.Printf("ToThreadHelper, already known at upos=%v\n", upos)
