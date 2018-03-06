@@ -146,6 +146,13 @@ func printGoStates() (biggest uintptr) {
 }
 */
 
+//export golua_printstack
+func golua_printstack(coro *C.lua_State, mainIndex uintptr) {
+	L := getGoState(int(mainIndex))
+	L1 := L.ToThreadHelper(coro)
+	DumpLuaStack(L1)
+}
+
 //export golua_callgofunction
 func golua_callgofunction(coro *C.lua_State, coro_index uintptr, mainIndex uintptr, mainThread *C.lua_State, fid uint) int {
 

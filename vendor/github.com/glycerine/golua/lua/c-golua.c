@@ -148,19 +148,24 @@ size_t clua_getgostate(lua_State* L)
 //wrapper for callgofunction
 int callback_function(lua_State* coro)
 {
-  printf("callback_function top, c-golua.c:151\n");
-	int r;
-	unsigned int *fid = clua_checkgosomething(coro, 1, MT_GOFUNCTION);
-	size_t coro_index = clua_getgostate(coro);
-    lua_State* mainThread = getMainThread(coro);
-	size_t mainIndex = clua_getgostate(mainThread);
-    
-    // jea: the metatable is on the stack.
-    
-	//remove the userdata metatable (go function??) from the stack (to present same behavior as lua_CFunctions)
-	lua_remove(coro, 1);
-    
-	return golua_callgofunction(coro, coro_index, mainIndex, mainThread, fid!=NULL ? *fid : -1);
+  int r;
+  printf("callback_function top, c-golua.c:151, coro=%p\n", coro);
+  unsigned int *fid = clua_checkgosomething(coro, 1, MT_GOFUNCTION);
+  size_t coro_index = clua_getgostate(coro);
+  lua_State* mainThread = getMainThread(coro);
+  size_t mainIndex = clua_getgostate(mainThread);
+  
+  // jea: the metatable is on the stack.
+  printf("callback_function: before lua_remove(coro, 1);\n");
+  golua_printstack(coro, mainIndex);
+  
+  //remove the userdata metatable (go function??) from the stack (to present same behavior as lua_CFunctions)
+  lua_remove(coro, 1);
+
+  printf("callback_function: stack after lua_remove(coro, 1);\n");
+  golua_printstack(coro, mainIndex);
+  
+  return golua_callgofunction(coro, coro_index, mainIndex, mainThread, fid!=NULL ? *fid : -1);
 }
 
 //wrapper for gchook
