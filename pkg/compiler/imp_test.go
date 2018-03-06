@@ -1,14 +1,11 @@
 package compiler
 
-/* comment out native imports for now
-
 import (
 	"testing"
 
 	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
-
 
 func Test050CallFmtSprintf(t *testing.T) {
 
@@ -34,6 +31,8 @@ func Test050CallFmtSprintf(t *testing.T) {
 		LuaMustString(vm, "a", "hello no-args")
 	})
 }
+
+/* comment out native imports for now
 
 func Test051CallFmtSprintf(t *testing.T) {
 
