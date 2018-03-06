@@ -1813,4 +1813,18 @@ func Test100LuarCoroutinesCallingIntoGo(t *testing.T) {
 	if got != 111.0 {
 		panic("expected 111.0")
 	}
+
+	// coroutines nested deeper, then call
+
+	L.SetTop(0)
+	mustDoString(t, L, `return coroutine.resume(coroutine.create(function() local a={coroutine.resume(coroutine.create(function() return 2 * sum{1, 10, 100} end))}; return a[2]; end))`)
+	top = L.GetTop()
+	if top != 2 {
+		fmt.Printf("top was %v\n", top)
+		panic("resume should have returned two values: true and 222.0")
+	}
+	got = L.ToNumber(-1)
+	if got != 222.0 {
+		panic(fmt.Sprintf("expected 222.0, got: %v", got))
+	}
 }
