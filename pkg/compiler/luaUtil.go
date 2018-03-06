@@ -198,7 +198,10 @@ func DumpLuaStackAsString(L *golua.State) (s string) {
 	top = L.GetTop()
 	isMain := L.PushThread()
 	thr := L.ToThread(-1)
+
+	// cleanup stack
 	L.SetTop(top)
+
 	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top)
 	for i := top; i >= 1; i-- {
 
