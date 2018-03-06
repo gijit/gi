@@ -36,7 +36,7 @@ type LuaStackEntry struct {
 
 func newState(L *C.lua_State) *State {
 	newstate := &State{
-		s:          L,
+		S:          L,
 		Shared:     newSharedByAllCoroutines(),
 		IsMainCoro: true,
 		CmainCo:    L,
@@ -97,7 +97,7 @@ func (L *State) unregister(fid uint) {
 // Like lua_pushcfunction pushes onto the stack a go function as user data
 func (L *State) PushGoFunction(f LuaGoFunction) {
 	fid := L.register(f)
-	C.clua_pushgofunction(L.s, C.uint(fid))
+	C.clua_pushgofunction(L.S, C.uint(fid))
 }
 
 // PushGoClosure pushes a lua.LuaGoFunction to the stack wrapped in a Closure.
@@ -105,7 +105,7 @@ func (L *State) PushGoFunction(f LuaGoFunction) {
 // this implements behaviour akin to lua_pushcfunction() in lua C API.
 func (L *State) PushGoClosure(f LuaGoFunction) {
 	L.PushGoFunction(f)      // leaves Go function userdata on stack
-	C.clua_pushcallback(L.s) // wraps the userdata object with a closure making it into a function
+	C.clua_pushcallback(L.S) // wraps the userdata object with a closure making it into a function
 }
 
 // Sets a metamethod to execute a go function
@@ -124,7 +124,7 @@ func (L *State) PushGoClosure(f LuaGoFunction) {
 // except this wouldn't work because pushing a go function results in user data not a cfunction
 func (L *State) SetMetaMethod(methodName string, f LuaGoFunction) {
 	L.PushGoFunction(f)      // leaves Go function userdata on stack
-	C.clua_pushcallback(L.s) // wraps the userdata object with a closure making it into a function
+	C.clua_pushcallback(L.S) // wraps the userdata object with a closure making it into a function
 	L.SetField(-2, methodName)
 }
 
@@ -133,7 +133,7 @@ func (L *State) SetMetaMethod(methodName string, f LuaGoFunction) {
 // The user data will be rigged so that lua code can access and change the public members of simple types directly
 func (L *State) PushGoStruct(iface interface{}) {
 	iid := L.register(iface)
-	C.clua_pushgostruct(L.s, C.uint(iid))
+	C.clua_pushgostruct(L.S, C.uint(iid))
 }
 
 // Push a pointer onto the stack as user data.
@@ -141,12 +141,12 @@ func (L *State) PushGoStruct(iface interface{}) {
 // This function doesn't save a reference to the interface, it is the responsibility of the caller of this function to insure that the interface outlasts the lifetime of the lua object that this function creates.
 func (L *State) PushLightUserdata(ud *interface{}) {
 	//push
-	C.lua_pushlightuserdata(L.s, unsafe.Pointer(ud))
+	C.lua_pushlightuserdata(L.S, unsafe.Pointer(ud))
 }
 
 // Creates a new user data object of specified size and returns it
 func (L *State) NewUserdata(size uintptr) unsafe.Pointer {
-	return unsafe.Pointer(C.lua_newuserdata(L.s, C.size_t(size)))
+	return unsafe.Pointer(C.lua_newuserdata(L.S, C.size_t(size)))
 }
 
 // Sets the AtPanic function, returns the old one
@@ -157,7 +157,7 @@ func (L *State) AtPanic(panicf LuaGoFunction) (oldpanicf LuaGoFunction) {
 	if panicf != nil {
 		fid = L.register(panicf)
 	}
-	oldres := interface{}(C.clua_atpanic(L.s, C.uint(fid)))
+	oldres := interface{}(C.clua_atpanic(L.S, C.uint(fid)))
 	switch i := oldres.(type) {
 	case C.uint:
 		f := L.Shared.registry[uint(i)].(LuaGoFunction)
@@ -166,7 +166,7 @@ func (L *State) AtPanic(panicf LuaGoFunction) (oldpanicf LuaGoFunction) {
 		return f
 	case C.lua_CFunction:
 		return func(L1 *State) int {
-			return int(C.clua_callluacfunc(L1.s, i))
+			return int(C.clua_callluacfunc(L1.S, i))
 		}
 	}
 	//generally we only get here if the panicf got set to something like nil
@@ -175,7 +175,7 @@ func (L *State) AtPanic(panicf LuaGoFunction) (oldpanicf LuaGoFunction) {
 }
 
 func (L *State) pcall(nargs, nresults, errfunc int) int {
-	return int(C.lua_pcall(L.s, C.int(nargs), C.int(nresults), C.int(errfunc)))
+	return int(C.lua_pcall(L.S, C.int(nargs), C.int(nresults), C.int(errfunc)))
 }
 
 func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
@@ -246,41 +246,41 @@ func (L *State) MustCall(nargs, nresults int) {
 
 // lua_checkstack
 func (L *State) CheckStack(extra int) bool {
-	return C.lua_checkstack(L.s, C.int(extra)) != 0
+	return C.lua_checkstack(L.S, C.int(extra)) != 0
 }
 
 // lua_close
 func (L *State) Close() {
-	C.lua_close(L.s)
+	C.lua_close(L.S)
 	unregisterGoState(L)
 }
 
 // lua_concat
 func (L *State) Concat(n int) {
-	C.lua_concat(L.s, C.int(n))
+	C.lua_concat(L.S, C.int(n))
 }
 
 // lua_createtable
 func (L *State) CreateTable(narr int, nrec int) {
-	C.lua_createtable(L.s, C.int(narr), C.int(nrec))
+	C.lua_createtable(L.S, C.int(narr), C.int(nrec))
 }
 
 // lua_equal
 func (L *State) Equal(index1, index2 int) bool {
-	return C.lua_equal(L.s, C.int(index1), C.int(index2)) == 1
+	return C.lua_equal(L.S, C.int(index1), C.int(index2)) == 1
 }
 
 // lua_gc
-func (L *State) GC(what, data int) int { return int(C.lua_gc(L.s, C.int(what), C.int(data))) }
+func (L *State) GC(what, data int) int { return int(C.lua_gc(L.S, C.int(what), C.int(data))) }
 
 // lua_getfenv
-func (L *State) GetfEnv(index int) { C.lua_getfenv(L.s, C.int(index)) }
+func (L *State) GetfEnv(index int) { C.lua_getfenv(L.S, C.int(index)) }
 
 // lua_getfield
 func (L *State) GetField(index int, k string) {
 	Ck := C.CString(k)
 	defer C.free(unsafe.Pointer(Ck))
-	C.lua_getfield(L.s, C.int(index), Ck)
+	C.lua_getfield(L.S, C.int(index), Ck)
 }
 
 // Pushes on the stack the value of a global variable (lua_getglobal)
@@ -288,74 +288,74 @@ func (L *State) GetGlobal(name string) { L.GetField(LUA_GLOBALSINDEX, name) }
 
 // lua_getmetatable
 func (L *State) GetMetaTable(index int) bool {
-	return C.lua_getmetatable(L.s, C.int(index)) != 0
+	return C.lua_getmetatable(L.S, C.int(index)) != 0
 }
 
 // lua_gettable
-func (L *State) GetTable(index int) { C.lua_gettable(L.s, C.int(index)) }
+func (L *State) GetTable(index int) { C.lua_gettable(L.S, C.int(index)) }
 
 // lua_gettop
-func (L *State) GetTop() int { return int(C.lua_gettop(L.s)) }
+func (L *State) GetTop() int { return int(C.lua_gettop(L.S)) }
 
 // lua_insert
-func (L *State) Insert(index int) { C.lua_insert(L.s, C.int(index)) }
+func (L *State) Insert(index int) { C.lua_insert(L.S, C.int(index)) }
 
 // Returns true if lua_type == LUA_TBOOLEAN
 func (L *State) IsBoolean(index int) bool {
-	return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TBOOLEAN
+	return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TBOOLEAN
 }
 
 // Returns true if the value at index is a LuaGoFunction
 func (L *State) IsGoFunction(index int) bool {
-	return C.clua_isgofunction(L.s, C.int(index)) != 0
+	return C.clua_isgofunction(L.S, C.int(index)) != 0
 }
 
 // Returns true if the value at index is user data pushed with PushGoStruct
 func (L *State) IsGoStruct(index int) bool {
-	return C.clua_isgostruct(L.s, C.int(index)) != 0
+	return C.clua_isgostruct(L.S, C.int(index)) != 0
 }
 
 // Returns true if the value at index is user data pushed with PushGoFunction
 func (L *State) IsFunction(index int) bool {
-	return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TFUNCTION
+	return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TFUNCTION
 }
 
 // Returns true if the value at index is light user data
 func (L *State) IsLightUserdata(index int) bool {
-	return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TLIGHTUSERDATA
+	return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TLIGHTUSERDATA
 }
 
 // lua_isnil
-func (L *State) IsNil(index int) bool { return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TNIL }
+func (L *State) IsNil(index int) bool { return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TNIL }
 
 // lua_isnone
-func (L *State) IsNone(index int) bool { return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TNONE }
+func (L *State) IsNone(index int) bool { return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TNONE }
 
 // lua_isnoneornil
-func (L *State) IsNoneOrNil(index int) bool { return int(C.lua_type(L.s, C.int(index))) <= 0 }
+func (L *State) IsNoneOrNil(index int) bool { return int(C.lua_type(L.S, C.int(index))) <= 0 }
 
 // lua_isnumber
-func (L *State) IsNumber(index int) bool { return C.lua_isnumber(L.s, C.int(index)) == 1 }
+func (L *State) IsNumber(index int) bool { return C.lua_isnumber(L.S, C.int(index)) == 1 }
 
 // lua_isstring
-func (L *State) IsString(index int) bool { return C.lua_isstring(L.s, C.int(index)) == 1 }
+func (L *State) IsString(index int) bool { return C.lua_isstring(L.S, C.int(index)) == 1 }
 
 // lua_istable
 func (L *State) IsTable(index int) bool {
-	return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TTABLE
+	return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TTABLE
 }
 
 // lua_isthread
 func (L *State) IsThread(index int) bool {
-	return LuaValType(C.lua_type(L.s, C.int(index))) == LUA_TTHREAD
+	return LuaValType(C.lua_type(L.S, C.int(index))) == LUA_TTHREAD
 }
 
 // lua_isuserdata
-func (L *State) IsUserdata(index int) bool { return C.lua_isuserdata(L.s, C.int(index)) == 1 }
+func (L *State) IsUserdata(index int) bool { return C.lua_isuserdata(L.S, C.int(index)) == 1 }
 
 // lua_lessthan
 func (L *State) LessThan(index1, index2 int) bool {
-	return C.lua_lessthan(L.s, C.int(index1), C.int(index2)) == 1
+	return C.lua_lessthan(L.S, C.int(index1), C.int(index2)) == 1
 }
 
 // Creates a new lua interpreter state with the given allocation function
@@ -367,19 +367,19 @@ func NewStateAlloc(f Alloc) *State {
 
 // lua_newtable
 func (L *State) NewTable() {
-	C.lua_createtable(L.s, 0, 0)
+	C.lua_createtable(L.S, 0, 0)
 }
 
 // lua_newthread
 func (L *State) NewThread() *State {
 
-	s := C.lua_newthread(L.s)
+	s := C.lua_newthread(L.S)
 	return L.ToThreadHelper(s)
 }
 
 // lua_next
 func (L *State) Next(index int) int {
-	return int(C.lua_next(L.s, C.int(index)))
+	return int(C.lua_next(L.S, C.int(index)))
 }
 
 // lua_objlen
@@ -398,15 +398,15 @@ func (L *State) Next(index int) int {
 // metamethod.
 //
 func (L *State) ObjLen(index int) uint {
-	return uint(C.lua_objlen(L.s, C.int(index)))
+	return uint(C.lua_objlen(L.S, C.int(index)))
 }
 
 // lua_pop
 func (L *State) Pop(n int) {
 	//Why is this implemented this way? I don't get it... maybe it
 	// is just inlining manually the actual implementation.
-	//C.lua_pop(L.s, C.int(n));
-	C.lua_settop(L.s, C.int(-n-1))
+	//C.lua_pop(L.S, C.int(n));
+	C.lua_settop(L.S, C.int(-n-1))
 }
 
 // lua_pushboolean
@@ -417,68 +417,68 @@ func (L *State) PushBoolean(b bool) {
 	} else {
 		bint = 0
 	}
-	C.lua_pushboolean(L.s, C.int(bint))
+	C.lua_pushboolean(L.S, C.int(bint))
 }
 
 // lua_pushstring
 func (L *State) PushString(str string) {
 	Cstr := C.CString(str)
 	defer C.free(unsafe.Pointer(Cstr))
-	C.lua_pushlstring(L.s, Cstr, C.size_t(len(str)))
+	C.lua_pushlstring(L.S, Cstr, C.size_t(len(str)))
 }
 
 func (L *State) PushBytes(b []byte) {
-	C.lua_pushlstring(L.s, (*C.char)(unsafe.Pointer(&b[0])), C.size_t(len(b)))
+	C.lua_pushlstring(L.S, (*C.char)(unsafe.Pointer(&b[0])), C.size_t(len(b)))
 }
 
 // lua_pushinteger
 func (L *State) PushInteger(n int64) {
-	C.lua_pushinteger(L.s, C.lua_Integer(n))
+	C.lua_pushinteger(L.S, C.lua_Integer(n))
 }
 
 // lua_pushnil
 func (L *State) PushNil() {
-	C.lua_pushnil(L.s)
+	C.lua_pushnil(L.S)
 }
 
 // lua_pushnumber
 func (L *State) PushNumber(n float64) {
-	C.lua_pushnumber(L.s, C.lua_Number(n)) // lua_Number is a cast
+	C.lua_pushnumber(L.S, C.lua_Number(n)) // lua_Number is a cast
 }
 
 // lua_pushthread
 func (L *State) PushThread() (isMain bool) {
-	return C.lua_pushthread(L.s) != 0
+	return C.lua_pushthread(L.S) != 0
 }
 
 // lua_pushvalue
 func (L *State) PushValue(index int) {
-	C.lua_pushvalue(L.s, C.int(index))
+	C.lua_pushvalue(L.S, C.int(index))
 }
 
 // lua_rawequal
 func (L *State) RawEqual(index1 int, index2 int) bool {
-	return C.lua_rawequal(L.s, C.int(index1), C.int(index2)) != 0
+	return C.lua_rawequal(L.S, C.int(index1), C.int(index2)) != 0
 }
 
 // lua_rawget
 func (L *State) RawGet(index int) {
-	C.lua_rawget(L.s, C.int(index))
+	C.lua_rawget(L.S, C.int(index))
 }
 
 // lua_rawgeti
 func (L *State) RawGeti(index int, n int) {
-	C.lua_rawgeti(L.s, C.int(index), C.int(n))
+	C.lua_rawgeti(L.S, C.int(index), C.int(n))
 }
 
 // lua_rawset
 func (L *State) RawSet(index int) {
-	C.lua_rawset(L.s, C.int(index))
+	C.lua_rawset(L.S, C.int(index))
 }
 
 // lua_rawseti
 func (L *State) RawSeti(index int, n int) {
-	C.lua_rawseti(L.s, C.int(index), C.int(n))
+	C.lua_rawseti(L.S, C.int(index), C.int(n))
 }
 
 // Registers a Go function as a global variable
@@ -489,66 +489,66 @@ func (L *State) Register(name string, f LuaGoFunction) {
 
 // lua_remove
 func (L *State) Remove(index int) {
-	C.lua_remove(L.s, C.int(index))
+	C.lua_remove(L.S, C.int(index))
 }
 
 // lua_replace
 func (L *State) Replace(index int) {
-	C.lua_replace(L.s, C.int(index))
+	C.lua_replace(L.S, C.int(index))
 }
 
 // lua_resume
 func (L *State) Resume(narg int) int {
-	return int(C.lua_resume(L.s, C.int(narg)))
+	return int(C.lua_resume(L.S, C.int(narg)))
 }
 
 // lua_setallocf
 func (L *State) SetAllocf(f Alloc) {
-	C.clua_setallocf(L.s, unsafe.Pointer(&f))
+	C.clua_setallocf(L.S, unsafe.Pointer(&f))
 }
 
 // lua_setfenv
 func (L *State) SetfEnv(index int) {
-	C.lua_setfenv(L.s, C.int(index))
+	C.lua_setfenv(L.S, C.int(index))
 }
 
 // lua_setfield
 func (L *State) SetField(index int, k string) {
 	Ck := C.CString(k)
 	defer C.free(unsafe.Pointer(Ck))
-	C.lua_setfield(L.s, C.int(index), Ck)
+	C.lua_setfield(L.S, C.int(index), Ck)
 }
 
 // lua_setglobal
 func (L *State) SetGlobal(name string) {
 	Cname := C.CString(name)
 	defer C.free(unsafe.Pointer(Cname))
-	C.lua_setfield(L.s, C.int(LUA_GLOBALSINDEX), Cname)
+	C.lua_setfield(L.S, C.int(LUA_GLOBALSINDEX), Cname)
 }
 
 // lua_setmetatable
 func (L *State) SetMetaTable(index int) {
-	C.lua_setmetatable(L.s, C.int(index))
+	C.lua_setmetatable(L.S, C.int(index))
 }
 
 // lua_settable
 func (L *State) SetTable(index int) {
-	C.lua_settable(L.s, C.int(index))
+	C.lua_settable(L.S, C.int(index))
 }
 
 // lua_settop
 func (L *State) SetTop(index int) {
-	C.lua_settop(L.s, C.int(index))
+	C.lua_settop(L.S, C.int(index))
 }
 
 // lua_status
 func (L *State) Status() int {
-	return int(C.lua_status(L.s))
+	return int(C.lua_status(L.S))
 }
 
 // lua_toboolean
 func (L *State) ToBoolean(index int) bool {
-	return C.lua_toboolean(L.s, C.int(index)) != 0
+	return C.lua_toboolean(L.S, C.int(index)) != 0
 }
 
 // Returns the value at index as a Go function (it must be something pushed with PushGoFunction)
@@ -556,7 +556,7 @@ func (L *State) ToGoFunction(index int) (f LuaGoFunction) {
 	if !L.IsGoFunction(index) {
 		return nil
 	}
-	fid := C.clua_togofunction(L.s, C.int(index))
+	fid := C.clua_togofunction(L.S, C.int(index))
 	if fid < 0 {
 		return nil
 	}
@@ -568,7 +568,7 @@ func (L *State) ToGoStruct(index int) (f interface{}) {
 	if !L.IsGoStruct(index) {
 		return nil
 	}
-	fid := C.clua_togostruct(L.s, C.int(index))
+	fid := C.clua_togostruct(L.S, C.int(index))
 	if fid < 0 {
 		return nil
 	}
@@ -579,46 +579,46 @@ func (L *State) ToGoStruct(index int) (f interface{}) {
 // lua_tostring
 func (L *State) ToString(index int) string {
 	var size C.size_t
-	r := C.lua_tolstring(L.s, C.int(index), &size)
+	r := C.lua_tolstring(L.S, C.int(index), &size)
 	return C.GoStringN(r, C.int(size))
 }
 
 func (L *State) ToBytes(index int) []byte {
 	var size C.size_t
-	b := C.lua_tolstring(L.s, C.int(index), &size)
+	b := C.lua_tolstring(L.S, C.int(index), &size)
 	return C.GoBytes(unsafe.Pointer(b), C.int(size))
 }
 
 // lua_tointeger
 func (L *State) ToInteger(index int) int {
-	return int(C.lua_tointeger(L.s, C.int(index)))
+	return int(C.lua_tointeger(L.S, C.int(index)))
 }
 
 // lua_tonumber
 func (L *State) ToNumber(index int) float64 {
-	return float64(C.lua_tonumber(L.s, C.int(index)))
+	return float64(C.lua_tonumber(L.S, C.int(index)))
 }
 
 func (L *State) CdataToInt64(index int) int64 {
-	return int64(C.lua_cdata_to_int64(L.s, C.int(index)))
+	return int64(C.lua_cdata_to_int64(L.S, C.int(index)))
 }
 
 func (L *State) CdataToInt32(index int) int32 {
-	return int32(C.lua_cdata_to_int32(L.s, C.int(index)))
+	return int32(C.lua_cdata_to_int32(L.S, C.int(index)))
 }
 
 func (L *State) CdataToUint64(index int) uint64 {
-	return uint64(C.lua_cdata_to_uint64(L.s, C.int(index)))
+	return uint64(C.lua_cdata_to_uint64(L.S, C.int(index)))
 }
 
 // lua_topointer
 func (L *State) ToPointer(index int) uintptr {
-	return uintptr(C.lua_topointer(L.s, C.int(index)))
+	return uintptr(C.lua_topointer(L.S, C.int(index)))
 }
 
 // lua_tothread
 func (L *State) ToThread(index int) *State {
-	ptr := (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.s, C.int(index))))
+	ptr := (*C.lua_State)(unsafe.Pointer(C.lua_tothread(L.S, C.int(index))))
 	if ptr == nil {
 		return nil
 	}
@@ -638,10 +638,10 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	fmt.Printf("ToThreadHelper, new at upos=%v\n", upos)
 
 	newstate := &State{
-		s:       ptr,
+		S:       ptr,
 		Shared:  L.Shared,
 		MainCo:  L.MainCo,
-		CmainCo: L.MainCo.s,
+		CmainCo: L.MainCo.S,
 		Index:   -1, // not the main state/main thread.
 		Upos:    upos,
 	}
@@ -662,69 +662,69 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 
 // lua_touserdata
 func (L *State) ToUserdata(index int) unsafe.Pointer {
-	return unsafe.Pointer(C.lua_touserdata(L.s, C.int(index)))
+	return unsafe.Pointer(C.lua_touserdata(L.S, C.int(index)))
 }
 
 // lua_type
 func (L *State) Type(index int) LuaValType {
-	return LuaValType(C.lua_type(L.s, C.int(index)))
+	return LuaValType(C.lua_type(L.S, C.int(index)))
 }
 
 // lua_typename
 func (L *State) Typename(tp int) string {
-	return C.GoString(C.lua_typename(L.s, C.int(tp)))
+	return C.GoString(C.lua_typename(L.S, C.int(tp)))
 }
 
 // lua_xmove
 func XMove(from *State, to *State, n int) {
-	C.lua_xmove(from.s, to.s, C.int(n))
+	C.lua_xmove(from.S, to.S, C.int(n))
 }
 
 // lua_yield
 func (L *State) Yield(nresults int) int {
-	return int(C.lua_yield(L.s, C.int(nresults)))
+	return int(C.lua_yield(L.S, C.int(nresults)))
 }
 
 // Restricted library opens
 
 // Calls luaopen_base
 func (L *State) OpenBase() {
-	C.clua_openbase(L.s)
+	C.clua_openbase(L.S)
 }
 
 // Calls luaopen_io
 func (L *State) OpenIO() {
-	C.clua_openio(L.s)
+	C.clua_openio(L.S)
 }
 
 // Calls luaopen_math
 func (L *State) OpenMath() {
-	C.clua_openmath(L.s)
+	C.clua_openmath(L.S)
 }
 
 // Calls luaopen_package
 func (L *State) OpenPackage() {
-	C.clua_openpackage(L.s)
+	C.clua_openpackage(L.S)
 }
 
 // Calls luaopen_string
 func (L *State) OpenString() {
-	C.clua_openstring(L.s)
+	C.clua_openstring(L.S)
 }
 
 // Calls luaopen_table
 func (L *State) OpenTable() {
-	C.clua_opentable(L.s)
+	C.clua_opentable(L.S)
 }
 
 // Calls luaopen_os
 func (L *State) OpenOS() {
-	C.clua_openos(L.s)
+	C.clua_openos(L.S)
 }
 
 // Sets the maximum number of operations to execute at instrNumber, after this the execution ends
 func (L *State) SetExecutionLimit(instrNumber int) {
-	C.clua_setexecutionlimit(L.s, C.int(instrNumber))
+	C.clua_setexecutionlimit(L.S, C.int(instrNumber))
 }
 
 // Returns the current stack trace
@@ -734,8 +734,8 @@ func (L *State) StackTrace() []LuaStackEntry {
 	Sln := C.CString("Sln")
 	defer C.free(unsafe.Pointer(Sln))
 
-	for depth := 0; C.lua_getstack(L.s, C.int(depth), &d) > 0; depth++ {
-		C.lua_getinfo(L.s, Sln, &d)
+	for depth := 0; C.lua_getstack(L.S, C.int(depth), &d) > 0; depth++ {
+		C.lua_getinfo(L.S, Sln, &d)
 		ssb := make([]byte, C.LUA_IDSIZE)
 		for i := 0; i < C.LUA_IDSIZE; i++ {
 			ssb[i] = byte(d.short_src[i])
@@ -767,16 +767,16 @@ func (L *State) NewError(msg string) *LuaError {
 
 // LuaJIT only: return ctype of the cdata at the top of the stack.
 func (L *State) LuaJITctypeID(idx int) uint32 {
-	res := C.clua_luajit_ctypeid(L.s, C.int(idx))
+	res := C.clua_luajit_ctypeid(L.S, C.int(idx))
 	return uint32(res)
 }
 
 func (L *State) PushInt64(n int64) {
-	C.clua_luajit_push_cdata_int64(L.s, C.int64_t(n))
+	C.clua_luajit_push_cdata_int64(L.S, C.int64_t(n))
 }
 
 func (L *State) PushUint64(u uint64) {
-	C.clua_luajit_push_cdata_uint64(L.s, C.uint64_t(u))
+	C.clua_luajit_push_cdata_uint64(L.S, C.uint64_t(u))
 }
 
 // jea
@@ -791,7 +791,7 @@ func DumpLuaStackAsString(L *State) (s string) {
 	isMain := L.PushThread()
 	thr := L.ToThread(-1)
 	L.SetTop(top)
-	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.s, isMain, top)
+	s += fmt.Sprintf("========== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top)
 	for i := top; i >= 1; i-- {
 
 		t := L.Type(i)

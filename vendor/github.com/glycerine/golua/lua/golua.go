@@ -30,7 +30,7 @@ type LuaGoFunction func(L *State) int
 //export State
 type State struct {
 	// Wrapped lua_State object
-	s *C.lua_State
+	S *C.lua_State
 
 	// index of this object inside the goStates array
 	Index int
@@ -147,7 +147,7 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 
 	pp("jea debug: golua_callgofunction, fid=%v, here is stack of curThread at top:\n", fid)
 	if verb.VerboseVerbose {
-		DumpLuaStack(&State{s: curThread})
+		DumpLuaStack(&State{S: curThread})
 	}
 
 	pp("jea debug: golua_callgofunction or __call on userdata top: gostateindex='%#v', curThread is '%p'/'%#v'\n", gostateindex, curThread, curThread) // , string(debug.Stack()))
@@ -160,11 +160,11 @@ func golua_callgofunction(curThread *C.lua_State, gostateindex uintptr, mainInde
 
 		L := getGoState(int(mainIndex))
 
-		if mainThread != nil && L.s != mainThread {
-			pp("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.s, mainThread)
+		if mainThread != nil && L.S != mainThread {
+			pp("\n debug: bad: mainThread pointers disagree. %p vs %p\n", L.S, mainThread)
 			panic("mainThread pointers disaggree")
 		}
-		pp("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.s, mainThread)
+		pp("\n debug: good: mainThread pointers agree: %p and mainThread:%p\n", L.S, mainThread)
 		L1 = L.ToThreadHelper(curThread)
 	} else {
 
@@ -204,12 +204,12 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 		fval = fval.Elem()
 	}
 
-	luatype := LuaValType(C.lua_type(L.s, 3))
+	luatype := LuaValType(C.lua_type(L.S, 3))
 
 	switch fval.Kind() {
 	case reflect.Bool:
 		if luatype == LUA_TBOOLEAN {
-			fval.SetBool(int(C.lua_toboolean(L.s, 3)) != 0)
+			fval.SetBool(int(C.lua_toboolean(L.S, 3)) != 0)
 			return 1
 		} else {
 			L.PushString("Wrong assignment to field " + field_name)
@@ -226,7 +226,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 		fallthrough
 	case reflect.Int64:
 		if luatype == LUA_TNUMBER {
-			fval.SetInt(int64(C.lua_tointeger(L.s, 3)))
+			fval.SetInt(int64(C.lua_tointeger(L.S, 3)))
 			return 1
 		} else {
 			L.PushString("Wrong assignment to field " + field_name)
@@ -243,7 +243,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 		fallthrough
 	case reflect.Uint64:
 		if luatype == LUA_TNUMBER {
-			fval.SetUint(uint64(C.lua_tointeger(L.s, 3)))
+			fval.SetUint(uint64(C.lua_tointeger(L.S, 3)))
 			return 1
 		} else {
 			L.PushString("Wrong assignment to field " + field_name)
@@ -252,7 +252,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 
 	case reflect.String:
 		if luatype == LUA_TSTRING {
-			fval.SetString(C.GoString(C.lua_tolstring(L.s, 3, nil)))
+			fval.SetString(C.GoString(C.lua_tolstring(L.S, 3, nil)))
 			return 1
 		} else {
 			L.PushString("Wrong assignment to field " + field_name)
@@ -263,7 +263,7 @@ func golua_interface_newindex_callback(gostateindex uintptr, iid uint, field_nam
 		fallthrough
 	case reflect.Float64:
 		if luatype == LUA_TNUMBER {
-			fval.SetFloat(float64(C.lua_tonumber(L.s, 3)))
+			fval.SetFloat(float64(C.lua_tonumber(L.S, 3)))
 			return 1
 		} else {
 			L.PushString("Wrong assignment to field " + field_name)
