@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"time"
@@ -434,6 +435,7 @@ func (lr *LuaRunner) Run(s string, useEvalCoroutine bool) error {
 // useEvalCoroutine may need to be false to bootstrap, but
 // should be typically true once the prelude / __gijitMainCoro is loaded.
 func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
+	pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
 	startTop := vm.GetTop()
 	defer vm.SetTop(startTop)
 

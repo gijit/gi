@@ -269,6 +269,9 @@ readtop:
 	case ":lst":
 		r.displayCmd(`lst`)
 		goto readtop
+	case ":stacks":
+		r.showLuaStacks()
+		goto readtop
 	case ":r":
 		r.cfg.RawLua = true
 		r.cfg.CalculatorMode = false
@@ -329,6 +332,7 @@ these special commands.
  :source <path>  Re-play Go code from a file.
  :ls             List all global user variables.
  :gls            List all global variables (include __ prefixed).
+ :stacks         Show lua stacks for each coroutine.
  = 3 + 4         Calculate the expression after the '=' (one line).
  ==              Multiple entry calculator mode. ':' to exit.
  import "fmt"    Import the binary, pre-compiled package.
@@ -483,4 +487,50 @@ func (r *Repl) Eval(src string) error {
 func (r *Repl) displayCmd(cmd string) {
 	err := LuaRun(r.vm, `__`+cmd+`()`, true)
 	panicOn(err)
+}
+
+func (r *Repl) showLuaStacks() {
+	top := r.vm.GetTop()
+	r.vm.GetGlobal("__all_coro")
+	if r.vm.IsNil(-1) {
+		panic("could not locate __all_coro in _G")
+	}
+	forEachArrayValue(r.vm, -1, func(i int) {
+		thr := r.vm.ToThread(-1)
+		fmt.Printf("\n ======== __all_coro %v ======\n", i)
+		DumpLuaStack(thr)
+	})
+	r.vm.SetTop(top)
+}
+
+// Call f with each array value in term on the top of
+// the stack, the f(i) call will have i set to 1, 2, 3, ...
+// in turn.
+func forEachArrayValue(L *golua.State, index int, f func(int)) {
+
+	i := 1
+	// Push another reference to the table on top of the stack (so we know
+	// where it is, and this function can work for negative, positive and
+	// pseudo indices
+	L.PushValue(index)
+	// stack now contains: -1 => table
+	L.PushNil()
+	// stack now contains: -1 => nil; -2 => table
+	for L.Next(-2) != 0 {
+
+		// stack now contains: -1 => value; -2 => key; -3 => table
+		f(i)
+
+		// pop value, leaving original key
+		L.Pop(1)
+		// stack now contains: -1 => key; -2 => table
+		i++
+	}
+	// stack now contains: -1 => table (when lua_next returns 0 it pops the key
+	// but does not push anything.)
+	// Pop table
+	L.Pop(1)
+	// Stack is now the same as it was on entry to this function
+	return
+
 }

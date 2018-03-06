@@ -179,6 +179,7 @@ func (L *State) pcall(nargs, nresults, errfunc int) int {
 }
 
 func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
+	pp("top of callEx")
 	if catch {
 		defer func() {
 			if err2 := recover(); err2 != nil {
@@ -218,7 +219,9 @@ func (L *State) callEx(nargs, nresults int, catch bool) (err error) {
 	erridx := L.GetTop() - nargs - 1
 	L.Insert(erridx)
 	pp("callEx: golua lua.go, stack just before pcall, L = '%p'/'%#v'\n", L, L)
-	//DumpLuaStack(L)
+	if verb.VerboseVerbose {
+		DumpLuaStack(L)
+	}
 	r := L.pcall(nargs, nresults, erridx)
 	pp("callEx: golua lua.go, stack just after pcall:")
 	if verb.VerboseVerbose {
@@ -632,10 +635,10 @@ func (L *State) ToThreadHelper(ptr *C.lua_State) *State {
 	upos := int(C.clua_dedup_coro(ptr))
 	already := L.MainCo.AllCoro[upos]
 	if already != nil {
-		fmt.Printf("ToThreadHelper, already known at upos=%v\n", upos)
+		//fmt.Printf("ToThreadHelper, already known at upos=%v\n", upos)
 		return already
 	}
-	fmt.Printf("ToThreadHelper, new at upos=%v\n", upos)
+	//fmt.Printf("ToThreadHelper, new at upos=%v\n", upos)
 
 	newstate := &State{
 		S:       ptr,
