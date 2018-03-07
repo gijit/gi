@@ -3,6 +3,7 @@ package shadow_math
 import "math"
 
 var Pkg = make(map[string]interface{})
+var Ctor = make(map[string]interface{})
 
 func init() {
 	Pkg["Abs"] = math.Abs
@@ -22,6 +23,8 @@ func init() {
 	Pkg["E"] = math.E
 	Pkg["Erf"] = math.Erf
 	Pkg["Erfc"] = math.Erfc
+	Pkg["Erfcinv"] = math.Erfcinv
+	Pkg["Erfinv"] = math.Erfinv
 	Pkg["Exp"] = math.Exp
 	Pkg["Exp2"] = math.Exp2
 	Pkg["Expm1"] = math.Expm1
@@ -77,6 +80,8 @@ func init() {
 	Pkg["Pow"] = math.Pow
 	Pkg["Pow10"] = math.Pow10
 	Pkg["Remainder"] = math.Remainder
+	Pkg["Round"] = math.Round
+	Pkg["RoundToEven"] = math.RoundToEven
 	Pkg["Signbit"] = math.Signbit
 	Pkg["Sin"] = math.Sin
 	Pkg["Sincos"] = math.Sincos
@@ -95,4 +100,11 @@ func init() {
 	Pkg["Y1"] = math.Y1
 	Pkg["Yn"] = math.Yn
 
+}
+
+func InitLua() string {
+	return `
+__type__.math ={};
+
+`
 }

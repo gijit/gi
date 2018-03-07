@@ -3,6 +3,8 @@ package shadow_io
 import "io"
 
 var Pkg = make(map[string]interface{})
+var Ctor = make(map[string]interface{})
+
 func init() {
     Pkg["ByteReader"] = GijitShadow_InterfaceConvertTo2_ByteReader
     Pkg["ByteScanner"] = GijitShadow_InterfaceConvertTo2_ByteScanner
@@ -18,10 +20,13 @@ func init() {
     Pkg["ErrShortWrite"] = io.ErrShortWrite
     Pkg["ErrUnexpectedEOF"] = io.ErrUnexpectedEOF
     Pkg["LimitReader"] = io.LimitReader
+    Ctor["LimitedReader"] = GijitShadow_NewStruct_LimitedReader
     Pkg["MultiReader"] = io.MultiReader
     Pkg["MultiWriter"] = io.MultiWriter
     Pkg["NewSectionReader"] = io.NewSectionReader
     Pkg["Pipe"] = io.Pipe
+    Ctor["PipeReader"] = GijitShadow_NewStruct_PipeReader
+    Ctor["PipeWriter"] = GijitShadow_NewStruct_PipeWriter
     Pkg["ReadAtLeast"] = io.ReadAtLeast
     Pkg["ReadCloser"] = GijitShadow_InterfaceConvertTo2_ReadCloser
     Pkg["ReadFull"] = io.ReadFull
@@ -34,6 +39,7 @@ func init() {
     Pkg["ReaderFrom"] = GijitShadow_InterfaceConvertTo2_ReaderFrom
     Pkg["RuneReader"] = GijitShadow_InterfaceConvertTo2_RuneReader
     Pkg["RuneScanner"] = GijitShadow_InterfaceConvertTo2_RuneScanner
+    Ctor["SectionReader"] = GijitShadow_NewStruct_SectionReader
     Pkg["SeekCurrent"] = io.SeekCurrent
     Pkg["SeekEnd"] = io.SeekEnd
     Pkg["SeekStart"] = io.SeekStart
@@ -87,18 +93,30 @@ func GijitShadow_InterfaceConvertTo1_Closer(x interface{}) io.Closer {
 }
 
 
-func GijitShadow_NewStruct_LimitedReader() *io.LimitedReader {
-	return &io.LimitedReader{}
+func GijitShadow_NewStruct_LimitedReader(src *io.LimitedReader) *io.LimitedReader {
+    if src == nil {
+	   return &io.LimitedReader{}
+    }
+    a := *src
+    return &a
 }
 
 
-func GijitShadow_NewStruct_PipeReader() *io.PipeReader {
-	return &io.PipeReader{}
+func GijitShadow_NewStruct_PipeReader(src *io.PipeReader) *io.PipeReader {
+    if src == nil {
+	   return &io.PipeReader{}
+    }
+    a := *src
+    return &a
 }
 
 
-func GijitShadow_NewStruct_PipeWriter() *io.PipeWriter {
-	return &io.PipeWriter{}
+func GijitShadow_NewStruct_PipeWriter(src *io.PipeWriter) *io.PipeWriter {
+    if src == nil {
+	   return &io.PipeWriter{}
+    }
+    a := *src
+    return &a
 }
 
 
@@ -202,8 +220,12 @@ func GijitShadow_InterfaceConvertTo1_RuneScanner(x interface{}) io.RuneScanner {
 }
 
 
-func GijitShadow_NewStruct_SectionReader() *io.SectionReader {
-	return &io.SectionReader{}
+func GijitShadow_NewStruct_SectionReader(src *io.SectionReader) *io.SectionReader {
+    if src == nil {
+	   return &io.SectionReader{}
+    }
+    a := *src
+    return &a
 }
 
 
@@ -266,3 +288,66 @@ func GijitShadow_InterfaceConvertTo1_WriterTo(x interface{}) io.WriterTo {
 	return x.(io.WriterTo)
 }
 
+
+
+ func InitLua() string {
+  return `
+__type__.io ={};
+
+-----------------
+-- struct LimitedReader
+-----------------
+
+__type__.io.LimitedReader = {
+ __name = "native_Go_struct_type_wrapper",
+ __native_type = "LimitedReader",
+ __call = function(t, src)
+   return __ctor__io.LimitedReader(src)
+ end,
+};
+setmetatable(__type__.io.LimitedReader, __type__.io.LimitedReader);
+
+
+-----------------
+-- struct PipeReader
+-----------------
+
+__type__.io.PipeReader = {
+ __name = "native_Go_struct_type_wrapper",
+ __native_type = "PipeReader",
+ __call = function(t, src)
+   return __ctor__io.PipeReader(src)
+ end,
+};
+setmetatable(__type__.io.PipeReader, __type__.io.PipeReader);
+
+
+-----------------
+-- struct PipeWriter
+-----------------
+
+__type__.io.PipeWriter = {
+ __name = "native_Go_struct_type_wrapper",
+ __native_type = "PipeWriter",
+ __call = function(t, src)
+   return __ctor__io.PipeWriter(src)
+ end,
+};
+setmetatable(__type__.io.PipeWriter, __type__.io.PipeWriter);
+
+
+-----------------
+-- struct SectionReader
+-----------------
+
+__type__.io.SectionReader = {
+ __name = "native_Go_struct_type_wrapper",
+ __native_type = "SectionReader",
+ __call = function(t, src)
+   return __ctor__io.SectionReader(src)
+ end,
+};
+setmetatable(__type__.io.SectionReader, __type__.io.SectionReader);
+
+
+`}

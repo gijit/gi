@@ -91,7 +91,9 @@ func GijitShadow_NewStruct_Timer(src *time.Timer) *time.Timer {
     return &a
 }
 
-func InitLua() string {
+
+
+ func InitLua() string {
   return `
 __type__.time ={};
 

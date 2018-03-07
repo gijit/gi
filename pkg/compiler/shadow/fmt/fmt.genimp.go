@@ -3,6 +3,8 @@ package shadow_fmt
 import "fmt"
 
 var Pkg = make(map[string]interface{})
+var Ctor = make(map[string]interface{})
+
 func init() {
     Pkg["Errorf"] = fmt.Errorf
     Pkg["Formatter"] = GijitShadow_InterfaceConvertTo2_Formatter
@@ -90,3 +92,10 @@ func GijitShadow_InterfaceConvertTo1_Stringer(x interface{}) fmt.Stringer {
 	return x.(fmt.Stringer)
 }
 
+
+
+ func InitLua() string {
+  return `
+__type__.fmt ={};
+
+`}

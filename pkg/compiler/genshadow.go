@@ -224,7 +224,7 @@ func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under 
 
 func genInitLuaStart(shortPkg string) string {
 
-	return fmt.Sprintf("func InitLua() string {\n  "+
+	return fmt.Sprintf("\n\n func InitLua() string {\n  "+
 		"return `\n__type__.%s ={};\n", shortPkg)
 }
 
