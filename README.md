@@ -105,7 +105,7 @@ most recent status
 
 2018 March 6 update
 -------------------
-Release v1.4.0 improves the shadow
+Releases v1.4.0 and following improve the shadow
 import system to provide by zero-value
 native Go struct constructors and
 copy constructors for native Go structs.
