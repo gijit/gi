@@ -244,3 +244,160 @@ test2helper()
 
 // should print:
 // go func() { defer fmt.Printf("hi there %#v\n", time.Now()) }()
+
+func Test033mTest2FromRecoverStressTest(t *testing.T) {
+	// taken from recover.go in the golang test suite
+
+	cv.Convey(`test2 from the recover.go test in the golang test suite`, t, func() {
+
+		code := `
+import "runtime"
+
+func mustRecover(x interface{}) {
+	mustRecoverBody(doubleRecover(), recover(), recover(), x)
+    println("done with mustRecover()")
+}
+
+func die() {
+    println("die() invoked, calling runtime.Breakpoint()")
+	runtime.Breakpoint() // can't depend on panic
+}
+
+func mustRecoverBody(v1, v2, v3, x interface{}) {
+	v := v1
+	if v != nil {
+		println("spurious recover", v)
+		die()
+	}
+	v = v2
+	if v == nil {
+		println("missing recover", x.(int))
+		die() // panic is useless here
+	}
+	if v != x {
+		println("wrong value", v, x)
+		die()
+	}
+
+	// the value should be gone now regardless
+	v = v3
+	if v != nil {
+		println("recover didn't recover")
+		die()
+	}
+    println("mustRecoverBody reached end without die.")
+}
+
+
+func doubleRecover() interface{} {
+	return recover()
+}
+
+func test2() {
+	// Recover only sees the panic argument
+	// if it is called from a deferred call.
+	// It does not see the panic when called from a call within 
+    // a deferred call (too late)
+	// nor does it see the panic when it *is* the deferred call (too early).
+	defer mustRecover(2)
+	defer recover() // should be no-op
+    println("about to panic(2)")
+	panic(2)
+}
+test2()
+println("test2() ran")
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+
+		inc := NewIncrState(vm, nil)
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+
+		pp("translation='%s'", string(translation))
+		LuaRunAndReport(vm, string(translation))
+		//LuaMustInt64(vm, "result", 123456789)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+
+	/* current translation looks okay, but is crashing
+	       the scheduler. r2:
+
+		__go_import("runtime")
+
+		mustRecover = function(x)
+		   mustRecoverBody(doubleRecover(), recover(), recover(), x);
+		   print("done with mustRecover()");
+		end;
+
+		die = function()
+		   print("die() invoked, calling runtime.Breakpoint()");
+		   runtime.Breakpoint();
+		end;
+
+		mustRecoverBody = function(v1, v2, v3, x)
+		   local v = v1;
+		   if ( not (__interfaceIsEqual(v, nil))) then
+		      print("spurious recover", v);
+					die();
+		   end
+		   v = v2;
+		   if (__interfaceIsEqual(v, nil)) then
+		      print("missing recover", __assertType(x, __type__.int, 0));
+		      die();
+		   end
+		   if ( not (__interfaceIsEqual(v, x))) then
+		      print("wrong value", v, x);
+		      die();
+		   end
+		   v = v3;
+		   if ( not (__interfaceIsEqual(v, nil))) then
+		      print("recover didn't recover");
+		      die();
+		   end
+		   print("mustRecoverBody reached end without die.");
+		end;
+
+		doubleRecover = function()
+		   return  recover() ;
+		end;
+
+		test2 =
+		   function(...)
+		   local __orig = {...}
+		   local __defers={}
+		   local __zeroret = {}
+		   local __namedNames = {}
+		   local __actual=function()
+
+		      local __defer_func = function(__gensym_1__arg)
+		         local __gensym_1__arg = __gensym_1__arg;
+
+		         __defers[1+#__defers] = function()
+		            mustRecover(__gensym_1__arg);
+		         end
+		      end
+		      __defer_func(2LL);
+
+
+		      local __defer_func = function()
+
+		         __defers[1+#__defers] = function()
+		            recover();
+		         end
+		      end
+		      __defer_func();
+
+		      print("about to panic(2)");
+		      panic(2LL);
+
+		   end
+		   return __actuallyCall("", __actual, __namedNames, __zeroret, __defers, __orig)
+		   end
+		;
+		test2();
+
+		print("test2() ran");
+	*/
+}

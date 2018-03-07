@@ -690,11 +690,20 @@ __coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 __resume_scheduler = function()
    --print("__task.resume_scheduler called! scheduler_co is:")
    --__st(scheduler_co, "scheduler_co")
+
+   --local co, isMain = coroutine.running()
+   --print("__task.resume_scheduler called! current coro is: ", __costring(co), " isMain:"..tostring(isMain))
+   --__showco()
+   --__stacks()
+   --print("about to attempt resume_scheduler...")
+   
    local ok, err = coroutine.resume(scheduler_co, "resume_scheduler")
    --print("__task.resume_scheduler back from coroutine.resume(scheduler_co)")
    if not ok then
       print("error detected in __task.resume_scheduler!")
       print(debug.traceback(err))
+      __showco()
+      __stacks()
       error(err)
    end
    return ok, err

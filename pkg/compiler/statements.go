@@ -346,8 +346,13 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			var builtin *types.Builtin
 			builtin, isBuiltin = c.p.Uses[fun].(*types.Builtin)
 			if isBuiltin && builtin.Name() == "recover" {
-				c.Printf("__deferred.push([__recover, []]);")
-				return
+				// jea: `defer recover()` reaches here.
+				// jea: not sure we need to special case this...
+				//      try just commenting this out.
+				/*
+					c.Printf("__deferred.push([__recover, []]);")
+					return
+				*/
 			}
 		case *ast.SelectorExpr:
 			isJs = typesutil.IsJsPackage(c.p.Uses[fun.Sel].Pkg())
