@@ -362,7 +362,8 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			narg := len(s.Call.Args)
 			callArgs := make([]ast.Expr, narg)
 			for i, arg := range s.Call.Args {
-				v := c.newVariable("_arg")
+				//v := c.newVariable("_arg")
+				v := c.gensym("_arg")
 				vars[i] = v
 				callArgs[i] = c.newIdent(v, c.p.TypeOf(arg))
 			}
@@ -374,7 +375,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 
 			localArgStash := ""
 			for i := range vars {
-				localArgStash += fmt.Sprintf("local %v = %v", vars[i], vars[i])
+				localArgStash += fmt.Sprintf("local %v = %v;\n", vars[i], vars[i])
 			}
 
 			c.Printf(`

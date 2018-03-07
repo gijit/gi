@@ -241,3 +241,6 @@ test2helper()
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+// should print:
+// go func() { defer fmt.Printf("hi there %#v\n", time.Now()) }()
