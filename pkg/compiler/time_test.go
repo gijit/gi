@@ -33,3 +33,8 @@ func Test921TimeImports(t *testing.T) {
 
 	})
 }
+
+/*
+time.Sleep(10 * time.Second)
+problem in golua_callgofunction, panic happened: '[string "time.Sleep(10000000000LL);"]:1: cannot convert Go function argument #0: cannot convert Lua value 'cdata: 82734008' (cdata) to time.Duration' at
+*/
