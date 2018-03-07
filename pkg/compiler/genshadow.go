@@ -44,6 +44,8 @@ func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error
 import "%s"
 
 var Pkg = make(map[string]interface{})
+var Ctor = make(map[string]interface{})
+
 func init() {
 `, base, importPath)
 
@@ -61,6 +63,8 @@ func init() {
 
 		oty := obj.Type()
 		under := oty.Underlying()
+
+		pp("oty = '%#v', under='%#v'", oty, under)
 
 		switch oty.(type) {
 		default:
@@ -95,7 +99,7 @@ func init() {
 			direct(o, nm, pkgName)
 
 		case *types.Named:
-
+			pp("oty is types.Named...")
 			switch under.(type) {
 			case *types.Interface:
 				switch obj.(type) {
@@ -120,11 +124,13 @@ func init() {
 		fmt.Fprintf(o, "%s\n", s)
 	}
 
+	pp("structs = '%#v'", structs)
+
 	// write the InitLua() function that
 	// sets up the native struct (copy) constructors.
 	fmt.Fprintf(o, "%s", genInitLuaStart(pkgName))
 	for _, r := range structs {
-		perStructInitLua(pkgName, r)
+		fmt.Fprintf(o, "%s", perStructInitLua(pkgName, r))
 	}
 	fmt.Fprintf(o, "%s", genInitLuaFinish(pkgName))
 
@@ -168,6 +174,10 @@ func direct(o *os.File, nm, pkgName string) {
 	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s.%s\n", nm, pkgName, nm)
 }
 
+func ctor(o *os.File, nm, pkgName string) {
+	fmt.Fprintf(o, "    Ctor[\"%[1]s\"] = GijitShadow_NewStruct_%[1]s\n", nm)
+}
+
 /* make a function like:
 func GijitShadow_CtorStruct_Time(src *time.Time) *time.Time {
 	if src == nil {
@@ -195,6 +205,7 @@ func GijitShadow_NewStruct_%[2]s(src *%[1]s.%[2]s) *%[1]s.%[2]s {
     return &a
 }
 `, pkgName, nm))
+		ctor(o, nm, pkgName)
 	default:
 		direct(o, nm, pkgName)
 	}
@@ -214,11 +225,11 @@ func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under 
 func genInitLuaStart(shortPkg string) string {
 
 	return fmt.Sprintf("func InitLua() string {\n  "+
-		"return []byte(`\n__type__.%s ={};\n", shortPkg)
+		"return `\n__type__.%s ={};\n", shortPkg)
 }
 
 func genInitLuaFinish(shortPkg string) string {
-	return "\n`)}"
+	return "\n`}"
 }
 
 func perStructInitLua(shortPkg, structName string) string {
