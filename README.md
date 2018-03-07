@@ -1296,6 +1296,19 @@ oops: 'problem detected during Go static type checking: 'where error? err = '1:1
 gi>
 ~~~
 
+# Q: can I target non-JIT environments?
+
+Yes, LuaJIT can be compiled to run without codegen, using
+only its interpreter. This can be done at
+compile time by adjusting the LuaJIT Makefile, or at
+runtime (http://luajit.org/ext_jit.html).
+
+# Q: Can I use PUC Lua instead of LuaJIT?
+
+No. We target at 64-bit environment and heavily
+use the 64-bit integer support and `ffi`
+functionality of LuaJIT.
+
 # editor support
 
 An emacs mode `gigo.el` can be found in the `emacs/` subdirectory
@@ -1306,56 +1319,7 @@ step through any file that is in `gijit` mode.
 
 Other editors: please contribute!
 
-# how to contribute: getting started
-
-a) Pick an issue from here, https://github.com/gijit/gi/issues, and add a comment that
-you are starting work on that feature. Make a branch for your feature, using `git checkout -b yourFeatureName`.
-
-b) Write a test for your feature. Make sure it fails (the test is red), before
-moving on to implementation. Tests are quite short. There are many examples here
-in the pkg/compiler/*_test.go files. These show the currently implemented
-features. Add your test to a new _test.go file.
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/repl_test.go
-
-Then simply implement your feature. (So simple! Yeah right!)
-
-So this is fun part. It's too situational to give general advice, but do see the hints
-https://github.com/gijit/gi#translation-hints below for some
-specific Lua tricks for translating javascript idioms.
-
-These are the main files you'll be adding to/updating:
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/incr.go
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/package.go
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/translate.go
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/statements.go
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/expressions.go
-
-https://github.com/gijit/gi/blob/master/pkg/compiler/luaUtil.go
-
-You wil find it necessary and useful to add print statements to the code. Do this using the `pp()` function, and feel free to leave those prints in during commit. It's a small matter later to take them out, and while you are adding functionality, the debug prints help immensely. You will see them scattered through the code as I've worked. Just leave them there; the verb.Verbose flag and VerboseVerbose can be used to mute them.
-
-The files above derive from GopherJS which compiles Go into Javascript; whereas `gi` translates Go into
-Lua. This makes implementation usually very fast, since mostly it is just
-above figuring out how to re-write javascript into Lua. You are typically just
-checking the syntax of the source-to-source translation. Sometimes some
-Lua support functions will be needed. Add them to a new .lua file in `compile/`
-directory.
-
-By default, `gi` looks in `./prelude/` relative to its current directory, and this is symlinked to `pkg/compile/` if you are running in `cmd/gi`. Otherwise use the `-prelude` flag to `gi` to tell it where to find its prelude files. All
-.lua files found the prelude directory will be sourced during `gi` startup. The default prelude is the `pkg/compile` directory. These files are required for `gi` to work.
-
-c) When you are done, make sure all the tests are green `go test -v` in the compile/ directory.
-Run `go fmt` on your code.
-
-d) submit your pull request! (Rebase against master first, please).
-
-# Lua resources
+# Lua resources - development reference
 
 LuaJIT targets Lua 5.1 with some 5.2 extensions.
 
@@ -1374,7 +1338,7 @@ Lua.org, August 2006
 
 Lua 5.1 https://www.lua.org/manual/5.1/ 
 
-# translation hints
+# translation hints - developer reference
 
 Specific javascript to Lua translation hints are below. Note
 that `gijit` doesn't generate javascript. However, the
