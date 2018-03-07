@@ -499,6 +499,9 @@ func showLuaStacks(vm *golua.State) {
 	forEachAllCoroArrayValue(vm, -1, func(i int, name, status string) {
 		ignoreTopmost := 1
 		if i == 1 {
+			if name != "main" {
+				panic("name should have been main for i == 1 thread!")
+			}
 			// main thread is where we are iterating from,
 			// so it has value, key, __all_coro, __all_coro.
 			// Ignore that administrivia, its not interesting.

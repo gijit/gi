@@ -202,7 +202,7 @@ func DumpLuaStackAsString(L *golua.State, ignoreTop int) (s string) {
 	// cleanup stack
 	L.SetTop(top)
 
-	s += fmt.Sprintf("== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, top-ignoreTop)
+	s += fmt.Sprintf("== begin DumpLuaStack (of coro %p/lua.State=%p; isMain=%v): top = %v\n", thr, thr.S, isMain, intMax(0, top-ignoreTop))
 	for i := top - ignoreTop; i >= 1; i-- {
 
 		t := L.Type(i)
@@ -603,4 +603,18 @@ func getChannelFromGlobal(vm *golua.State, varname string, leaveOnTop bool) (int
 		vm.Pop(1)
 	}
 	return (*i.(*reflect.Value)).Interface(), nil
+}
+
+func intMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func intMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
