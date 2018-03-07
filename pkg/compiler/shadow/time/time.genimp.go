@@ -63,8 +63,6 @@ func GijitShadow_NewStruct_Timer() *time.Timer {
 	return &time.Timer{}
 }
 
-var Types = map[string]interface{}{"Time": GijitShadow_NewStruct_Time}
-
 func GijitShadow_CtorStruct_Time(src *time.Time) *time.Time {
 	if src == nil {
 		return &time.Time{}
@@ -85,8 +83,6 @@ __type__.time.Time = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Time",
  __call = function(t, src)
-   -- With nil src, return zero value for type.
-   -- Else act as copy constructor, copying from src.
    return __ctor__time.Time(src)
  end,
 };

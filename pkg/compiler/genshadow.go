@@ -17,6 +17,7 @@ import (
 func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error {
 	var pkg *types.Package
 
+	structs := []string{}
 	base := filepath.Base(residentPkg)
 	imp := importer.Default()
 	imp2, ok := imp.(types.ImporterFrom)
@@ -109,6 +110,7 @@ func init() {
 			case *types.Struct:
 				// none of these in "io"
 				structTemplate(o, obj, nm, pkgName, oty, under, &atEnd)
+				structs = append(structs, nm)
 			}
 		}
 	}
@@ -117,6 +119,15 @@ func init() {
 	for _, s := range atEnd {
 		fmt.Fprintf(o, "%s\n", s)
 	}
+
+	// write the InitLua() function that
+	// sets up the native struct (copy) constructors.
+	fmt.Fprintf(o, "%s", genInitLuaStart(pkgName))
+	for _, r := range structs {
+		perStructInitLua(pkgName, r)
+	}
+	fmt.Fprintf(o, "%s", genInitLuaFinish(pkgName))
+
 	return nil
 }
 
@@ -158,8 +169,12 @@ func direct(o *os.File, nm, pkgName string) {
 }
 
 /* make a function like:
-func GijitShadow_NewStruct_PipeReader() *io.PipeReader {
-	return &io.PipeReader{}
+func GijitShadow_CtorStruct_Time(src *time.Time) *time.Time {
+	if src == nil {
+		return &time.Time{}
+	}
+	a := *src
+	return &a
 }
 */
 func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under types.Type, atEnd *[]string) {
@@ -172,10 +187,14 @@ func structTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under
 	switch obj.(type) {
 	case *types.TypeName:
 		*atEnd = append(*atEnd, fmt.Sprintf(`
-func GijitShadow_NewStruct_%s() *%s.%s {
-	return &%s.%s{}
+func GijitShadow_NewStruct_%[2]s(src *%[1]s.%[2]s) *%[1]s.%[2]s {
+    if src == nil {
+	   return &%[1]s.%[2]s{}
+    }
+    a := *src
+    return &a
 }
-`, nm, pkgName, nm, pkgName, nm))
+`, pkgName, nm))
 	default:
 		direct(o, nm, pkgName)
 	}
@@ -190,4 +209,33 @@ func ifaceTemplate(o *os.File, obj types.Object, nm, pkgName string, oty, under 
 	*atEnd = append((*atEnd), decl)
 	fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName2)
 	//fmt.Fprintf(o, "    Pkg[\"%s\"] = %s\n", nm, funcName1)
+}
+
+func genInitLuaStart(shortPkg string) string {
+
+	return fmt.Sprintf("func InitLua() string {\n  "+
+		"return []byte(`\n__type__.%s ={};\n", shortPkg)
+}
+
+func genInitLuaFinish(shortPkg string) string {
+	return "\n`)}"
+}
+
+func perStructInitLua(shortPkg, structName string) string {
+
+	return fmt.Sprintf(`
+-----------------
+-- struct %[2]s
+-----------------
+
+__type__.%[1]s.%[2]s = {
+ __name = "native_Go_struct_type_wrapper",
+ __native_type = "%[2]s",
+ __call = function(t, src)
+   return __ctor__%[1]s.%[2]s(src)
+ end,
+};
+setmetatable(__type__.%[1]s.%[2]s, __type__.%[1]s.%[2]s);
+
+`, shortPkg, structName)
 }
