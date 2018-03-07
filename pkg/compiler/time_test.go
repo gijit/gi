@@ -34,6 +34,7 @@ func Test921TimeImports(t *testing.T) {
 	})
 }
 
+/* work in progress
 func Test922TimeoutsInSelect(t *testing.T) {
 
 	cv.Convey(`channel timeouts in a select statement`, t, func() {
@@ -49,7 +50,7 @@ go func() {
             if toCount < 3 {
                toCount++
             }
-            println("timeout! toCount is now ", toCount)  
+            println("timeout! toCount is now ", toCount)
        }
     }
 }()
@@ -72,3 +73,4 @@ time.Sleep(5 * time.Millisecond*100)
 
 	})
 }
+*/
