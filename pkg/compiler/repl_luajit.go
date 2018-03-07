@@ -505,7 +505,7 @@ func showLuaStacks(vm *golua.State) {
 			// main thread is where we are iterating from,
 			// so it has value, key, __all_coro, __all_coro.
 			// Ignore that administrivia, its not interesting.
-			ignoreTopmost = 4
+			ignoreTopmost = 5
 		}
 		thr := vm.ToThread(-1)
 		fmt.Printf("===================================\n")
