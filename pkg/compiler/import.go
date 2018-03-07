@@ -172,6 +172,8 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		t0.regmap["regexp"] = shadow_regexp.Pkg
 	case "time":
 		t0.regmap["time"] = shadow_time.Pkg
+		t0.regmap["__ctor__time"] = shadow_time.Ctor
+		t0.run = append(t0.run, shadow_time.InitLua()...)
 	case "io/ioutil":
 		t0.regmap["ioutil"] = shadow_ioutil.Pkg
 
