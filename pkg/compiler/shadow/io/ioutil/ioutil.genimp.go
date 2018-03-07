@@ -3,6 +3,8 @@ package shadow_ioutil
 import "io/ioutil"
 
 var Pkg = make(map[string]interface{})
+var Ctor = make(map[string]interface{})
+
 func init() {
     Pkg["Discard"] = ioutil.Discard
     Pkg["NopCloser"] = ioutil.NopCloser
@@ -14,3 +16,9 @@ func init() {
     Pkg["WriteFile"] = ioutil.WriteFile
 
 }
+
+ func InitLua() string {
+  return `
+__type__.ioutil ={};
+
+`}

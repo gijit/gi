@@ -16,7 +16,7 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
 	"github.com/gijit/gi/pkg/compiler/shadow/io"
 
-	shadow_ioutil "github.com/gijit/gi/pkg/compiler/shadow/io/ioutil"
+	shadow_io_ioutil "github.com/gijit/gi/pkg/compiler/shadow/io/ioutil"
 	"io/ioutil"
 
 	"github.com/gijit/gi/pkg/compiler/shadow/math"
@@ -24,6 +24,7 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/os"
 	shadow_reflect "github.com/gijit/gi/pkg/compiler/shadow/reflect"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
+	shadow_runtime "github.com/gijit/gi/pkg/compiler/shadow/runtime"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
 
 	// gonum
@@ -156,26 +157,53 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
 	case "bytes":
 		t0.regmap["bytes"] = shadow_bytes.Pkg
+		t0.regmap["__ctor__bytes"] = shadow_bytes.Ctor
+		t0.run = append(t0.run, shadow_bytes.InitLua()...)
 	case "fmt":
 		t0.regmap["fmt"] = shadow_fmt.Pkg
+		t0.regmap["__ctor__fmt"] = shadow_fmt.Ctor
+		t0.run = append(t0.run, shadow_fmt.InitLua()...)
 	case "io":
 		t0.regmap["io"] = shadow_io.Pkg
+		t0.regmap["__ctor__io"] = shadow_io.Ctor
+		t0.run = append(t0.run, shadow_io.InitLua()...)
 	case "math":
 		t0.regmap["math"] = shadow_math.Pkg
+		t0.regmap["__ctor__math"] = shadow_math.Ctor
+		t0.run = append(t0.run, shadow_math.InitLua()...)
 	case "math/rand":
 		t0.regmap["rand"] = shadow_math_rand.Pkg
+		t0.regmap["__ctor__math_rand"] = shadow_math_rand.Ctor
+		t0.run = append(t0.run, shadow_math_rand.InitLua()...)
 	case "os":
 		t0.regmap["os"] = shadow_os.Pkg
+		t0.regmap["__ctor__os"] = shadow_os.Ctor
+		t0.run = append(t0.run, shadow_os.InitLua()...)
+
 	case "reflect":
 		t0.regmap["reflect"] = shadow_reflect.Pkg
+		t0.regmap["__ctor__reflect"] = shadow_reflect.Ctor
+		t0.run = append(t0.run, shadow_reflect.InitLua()...)
+
 	case "regexp":
 		t0.regmap["regexp"] = shadow_regexp.Pkg
+		t0.regmap["__ctor__regexp"] = shadow_regexp.Ctor
+		t0.run = append(t0.run, shadow_regexp.InitLua()...)
+
 	case "time":
 		t0.regmap["time"] = shadow_time.Pkg
 		t0.regmap["__ctor__time"] = shadow_time.Ctor
 		t0.run = append(t0.run, shadow_time.InitLua()...)
+
+	case "runtime":
+		t0.regmap["runtime"] = shadow_runtime.Pkg
+		t0.regmap["__ctor__runtime"] = shadow_runtime.Ctor
+		t0.run = append(t0.run, shadow_runtime.InitLua()...)
+
 	case "io/ioutil":
-		t0.regmap["ioutil"] = shadow_ioutil.Pkg
+		t0.regmap["ioutil"] = shadow_io_ioutil.Pkg
+		t0.regmap["__ctor__ioutil"] = shadow_io_ioutil.Ctor
+		t0.run = append(t0.run, shadow_io_ioutil.InitLua()...)
 
 		// gonum:
 	case "gonum.org/v1/gonum/blas":
