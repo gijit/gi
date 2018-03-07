@@ -680,7 +680,7 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 		for j, cond := range clause.List {
 			conds[j] = translateCond(cond, nil).String()
 		}
-		condStrs[i] = strings.Join(conds, " || ")
+		condStrs[i] = strings.Join(conds, " or ")
 		if flatten {
 			//c.Printf("/*jea statements.go:652 */ if (%s) then __s = %d; continue; end", condStrs[i], caseOffset+i)
 		}
