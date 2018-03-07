@@ -29,6 +29,7 @@ type ConvError struct {
 var ErrTableConv = errors.New("some table elements could not be converted")
 
 func (l ConvError) Error() string {
+	//fmt.Printf("cannot convert stacktrace: '%s'\n", string(debug.Stack()))
 	return fmt.Sprintf("cannot convert %v to %v", l.From, l.To)
 }
 
@@ -974,18 +975,18 @@ func expandLazyEllipsis(L *lua.State, idx int) (expandCount int, err error) {
 	}
 	L.Pop(1)
 
-	fmt.Printf("okay! we have a lazy ellipsis!\n")
+	//fmt.Printf("okay! we have a lazy ellipsis!\n")
 	// unpack the top
 
 	// get the length to unpack from the array
 	n, err := getLenByCallingMetamethod(L, sliceValueToExpand)
 	if err != nil {
 		L.Pop(2)
-		fmt.Printf("lazy ellipsis: early exit, could not get length of object on top of stack\n")
+		//fmt.Printf("lazy ellipsis: early exit, could not get length of object on top of stack\n")
 		return -1, err
 	}
 
-	fmt.Printf("lazy elip: back safe from getting n=%v\n", n)
+	//fmt.Printf("lazy elip: back safe from getting n=%v\n", n)
 	if n <= 0 {
 		// empty? just clear ourselves off the stack
 		L.SetTop(top)
@@ -1309,7 +1310,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 			val := L.CdataToInt64(idx)
 			f := reflect.ValueOf(val)
 			//vi := v.Interface()
-			//pp("luar.go calling L.CdataToInt64, got val=%v/'%T', v=%v/'%T'", val, val, vi, vi)
+			//fmt.Printf("luar.go called L.CdataToInt64, got val=%v/'%T', f=%v/'%T'", val, val, f, f)
 			//v.Set(f.Convert(v.Type())) // don't do this universally,
 			// since it will coerce uints
 			// and then we won't get the type mistmatch error that is important.
@@ -1717,16 +1718,28 @@ func getLenByCallingMetamethod(L *lua.State, idx int) (int, error) {
 }
 
 func canAndDidAssign(f, v *reflect.Value) (res bool) {
-	pp("top of canAndDidAssign, f.Type='%v', v.Type='%T'", f.Interface(), v.Interface()) // 'string'
+	//fmt.Printf("top of canAndDidAssign, f.Type='%v', v.Type='%T'\n", f.Interface(), v.Interface()) // 'string'
 
 	res = true
 	defer func() {
 		if r := recover(); r != nil {
 			pp("canAndDidAssign recover caught: '%v'", r)
 			res = false
+
+			tryAgain := func() {
+				res = true
+				defer func() {
+					if r2 := recover(); r2 != nil {
+						pp("tryAgain recover caught: '%v'", r2)
+						res = false
+					}
+				}()
+				v.Set(f.Convert(v.Type()))
+			}
+			tryAgain()
 		}
 	}()
-	v.Set(*f)
+	v.Set(*f) // *f's value must be assignable to v's type.
 	//f.Convert(v.Type())
 	return
 }

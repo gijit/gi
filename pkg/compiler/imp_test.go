@@ -26,9 +26,7 @@ func Test050CallFmtSprintf(t *testing.T) {
 		cv.So(string(translation), matchesLuaSrc,
 			`a = fmt.Sprintf("hello no-args");`)
 
-		*dbg = true
 		LoadAndRunTestHelper(t, vm, translation)
-		*dbg = false
 
 		LuaMustString(vm, "a", "hello no-args")
 	})
