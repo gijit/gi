@@ -626,6 +626,13 @@ __defer_func(%s)
 }
 
 func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defaultClause *ast.CaseClause, canBreak bool, translateCond func(ast.Expr, types.Type) *expression, label *types.Label, flatten bool) {
+
+	// jea: for now:
+	// flatten seems to be set true when blocking or goto
+	// are involved. But we haven't ported the switch/case
+	// to Lua, so none of that will work at the moment.
+	flatten = false
+
 	var caseOffset, defaultCase, endCase int
 	if flatten {
 		caseOffset = c.caseCounter
