@@ -758,6 +758,9 @@ end;
 
 --
 __clone = function(src, typ)
+   if typ.__name == "native_Go_struct_type_wrapper" then
+      return typ(src) -- if src is nil, return zero value, else copy of src.
+   end
    local clone = typ()
    typ.copy(clone, src);
    return clone;
