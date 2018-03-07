@@ -34,7 +34,41 @@ func Test921TimeImports(t *testing.T) {
 	})
 }
 
-/*
-time.Sleep(10 * time.Second)
-problem in golua_callgofunction, panic happened: '[string "time.Sleep(10000000000LL);"]:1: cannot convert Go function argument #0: cannot convert Lua value 'cdata: 82734008' (cdata) to time.Duration' at
-*/
+func Test922TimeoutsInSelect(t *testing.T) {
+
+	cv.Convey(`channel timeouts in a select statement`, t, func() {
+
+		code := `import "time"`
+		code2 := `
+ch := make(chan int)
+toCount:= 0
+go func() {
+    for {
+       select {
+          case <-time.After(time.Millisecond*100):
+            if toCount < 3 {
+               toCount++
+            }
+            println("timeout! toCount is now ", toCount)  
+       }
+    }
+}()
+time.Sleep(5 * time.Millisecond*100)
+`
+		// toCount should be 3
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		LuaRunAndReport(vm, string(translation))
+
+		translation2 := inc.trMust([]byte(code2))
+		LuaRunAndReport(vm, string(translation2))
+		LuaMustInt(vm, "toCount", 3)
+
+		cv.So(true, cv.ShouldBeTrue)
+
+	})
+}
