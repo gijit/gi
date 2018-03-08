@@ -30,7 +30,7 @@ type LuaVm struct {
 	cfg *GIConfig
 	vm  *golua.State
 
-	mut *sync.Mutex
+	mut sync.Mutex
 }
 
 func (lvm *LuaVm) Close() {
@@ -40,6 +40,7 @@ func (lvm *LuaVm) Close() {
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	var vm *golua.State
 	var useStaticPrelude bool
+	lvm = &LuaVm{}
 
 	// cfg == nil means under test.
 	// cfg.Dev means `gi -d` was invoked.
@@ -52,9 +53,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	if cfg == nil {
 		cfg = NewGIConfig()
 	}
-	lvm = &LuaVm{
-		cfg: cfg,
-	}
+	lvm.cfg = cfg
 
 	if useStaticPrelude {
 		cfg.PreludePath = ""
@@ -455,6 +454,9 @@ func (lr *LuaRunner) Run(s string, useEvalCoroutine bool) error {
 // useEvalCoroutine may need to be false to bootstrap, but
 // should be typically true once the prelude / __gijitMainCoro is loaded.
 func LuaRun(lvm *LuaVm, s string, useEvalCoroutine bool) error {
+
+	lvm.mut.Lock()
+	defer lvm.mut.Unlock()
 
 	pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
 	vm := lvm.vm
