@@ -2801,20 +2801,17 @@ end;
 
 
 __equal = function(a, b, typ)
+   if typ == nil then
+      return a == b
+   end
+   
    if typ == __jsObjectPtr then
       return a == b;
    end
 
    local sw = typ.kind
-   if sw == __kindComplex64 or
-   sw == __kindComplex128 then
-      return a.__real == b.__real  and  a.__imag == b.__imag;
       
-   elseif sw == __kindInt64 or
-   sw == __kindUint64 then 
-      return a.__high == b.__high  and  a.__low == b.__low;
-      
-   elseif sw == __kindArray then 
+   if sw == __kindArray then 
       if #a ~= #b then
          return false;
       end
@@ -2841,25 +2838,42 @@ __equal = function(a, b, typ)
 end;
 
 __interfaceIsEqual = function(a, b)
-   --print("top of __interfaceIsEqual! a is:")
-   --__st(a,"a")
-   --print("top of __interfaceIsEqual! b is:")   
-   --__st(b,"b")
+   print("top of __interfaceIsEqual! a is:")
+   __st(a,"a")
+   print("top of __interfaceIsEqual! b is:")   
+   __st(b,"b")
    if a == nil or b == nil then
-      --print("one or both is nil")
+      print("one or both is nil")
       if a == nil and b == nil then
-         --print("both are nil")
+         print("both are nil")
          return true
       else
-         --print("one is nil, one is not")
+         print("one is nil, one is not")
          return false
       end
    end
+   print("neither is raw nil. comparing to __ifaceNil")
+   __st(__ifaceNil, "__ifaceNil")
+   
    if a == __ifaceNil  or  b == __ifaceNil then
-      --print("one or both is __ifaceNil")
+      print("one or both is __ifaceNil")
       return a == b;
    end
+   print("neither is nil")
+   
+   local tya = type(a)
+   local tyb = type(b)
+   
+   if tya == "table" and tyb ~= "table" then
+      return false
+   elseif tya ~= "table" and tyb == "table" then
+      return false
+   elseif tya ~= "table" and tyb ~= "table" then
+      return a == b
+   end
+   
    if a.constructor ~= b.constructor then
+      print("constructors not equal.")
       return false;
    end
    if a.constructor == __jsObjectPtr then
@@ -2868,6 +2882,8 @@ __interfaceIsEqual = function(a, b)
    if  not a.constructor.comparable then
       __throwRuntimeError("comparing uncomparable type "  ..  a.constructor.__str);
    end
+
+   --print("calling __equal on a.__val and b.__val with a.constructor = ")
    return __equal(a.__val, b.__val, a.constructor);
 end;
 
