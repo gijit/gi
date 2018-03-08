@@ -105,10 +105,11 @@ most recent status
 
 2018 March 6 update
 -------------------
-Releases v1.4.0 and following improve the shadow
-import system to provide by zero-value
-native Go struct constructors and
+The release v1.4.x series improves the shadow
+import system to provide  constructors and
 copy constructors for native Go structs.
+We pass additional `recover` tests from the Golang
+compiler test suite.
 
 Release v1.3.8 re-enables calls into
 `fmt` and the other builtin native
