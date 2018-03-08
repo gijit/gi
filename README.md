@@ -1312,8 +1312,8 @@ functionality of LuaJIT.
 
 # editor support
 
-An emacs mode `gigo.el` can be found in the `emacs/` subdirectory
-here https://github.com/gijit/gi/tree/master/emacs/gijit.el
+An emacs mode `gijit.el` can be found in the `emacs/` subdirectory
+here https://github.com/gijit/gi/blob/master/emacs/gijit.el
 
 M-x `run-gijit` to start the interpreter. Pressing ctrl-n will
 step through any file that is in `gijit` mode. 
