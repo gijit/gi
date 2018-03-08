@@ -143,5 +143,20 @@ __expectEq(ap[3], 103LL)
 __expectEq(#ap, 4)
 
 
-print("done with fin_test.lua")
 
+local indirectCallExampleStack = [=[
+	r2:47: in function 'doubleRecover'
+	r2:7: in function 'mustRecover'
+	r2:64: in function 'f'
+	[string "--..."]:23: in function '__top_of_defer'
+]=]
+
+local directCallExampleStack = [=[
+	r2:63: in function 'f'
+	[string "--..."]:23: in function '__top_of_defer'
+]=]
+
+__expectEq(__isDirectDefer(directCallExampleStack), true)
+__expectEq(__isDirectDefer(indirectCallExampleStack), false)
+
+print("done with fin_test.lua")

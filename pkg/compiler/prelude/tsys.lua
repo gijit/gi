@@ -17,6 +17,14 @@ __minifs = {}
 __ffi = require "ffi"
 local __osname = __ffi.os == "Windows" and "windows" or "unix"
 
+-- __top_of_defer just marks our position on
+-- the call stack, so we can tell if a 'recover'
+-- was direct or not. It returns a function
+-- that when invoked, calls f().
+__top_of_defer = function(f)
+   return function() f() end
+end
+
 __built_in_starting_symbol_list={};
 __built_in_starting_type_list={};
 
@@ -3188,10 +3196,11 @@ __panic = function(value)
 end;
 
 __recover = function() 
-   if __panicStackDepth == nil or (__panicStackDepth ~= nil and __panicStackDepth ~= __getStackDepth() - 2) then
+   if __panicStackDepth == nil or (__panicStackDepth ~= __getStackDepth() - 2) then
       return __ifaceNil;
    end
    __panicStackDepth = nil;
+   
    return __panicValue;
 end;
 
@@ -3254,7 +3263,7 @@ end
 __eval_next_count = 1
 
 __eval = function(code)
-   --print("__eval called with code: '"..code.."'")
+   print("__eval called with code: '"..code.."'")
 
    -- since an eval of a receive/select may be blocking, we
    -- need to start each new bit of code at the repl
@@ -3276,3 +3285,60 @@ __eval = function(code)
    __cleanupDeadCoro()   
    --print("end of __eval, returning")
 end
+
+-- scan only variables local to
+-- in the current function's scope.
+-- return the value if found, else nil.
+function __get_local_value(name, depth)
+   local i = 1
+   while true do
+      local n, v = debug.getlocal(depth, i)
+      if not n then return nil; end
+      if n == name then
+         return v
+      end
+      i = i + 1
+   end
+   return nil;
+end
+
+__get_value_depth = function(name)
+   __get_local_value(name, depth)
+end
+
+-- golang's defer/recover semantics depend
+-- upon whether the recover() call is *directly*
+-- inside the defered function or not. So
+-- we must know how deep on the callstack we
+-- are when the recover() is called.
+--
+__isDirectDefer = function(stack)
+   local origStack = stack
+   
+   -- beginAfter may or may not appear.
+   local beginAfter = "in function 'recover'"
+   local beg, e = string.find(stack, beginAfter)
+   print("beg = ", beg, " and e=", e)
+   if beg ~= nil then
+      -- trim off, so we can count the calls between even
+      -- an inlined call to recover.
+      stack = string.sub(stack, e)
+   end
+   
+   local marker = string.find(stack, "__top_of_defer")
+   if marker == nil then
+      print("__isDirectDefer did not find marker, returning false.")
+      return false -- was immediate `defer recover()`, too early.
+      --error("__isDirectDefer could not find __top_of_defer in stack: '"..stack.."'")
+   end
+   -- count number of "in function" between beginning and marker
+   local target = string.sub(stack, 1, marker)
+   print("debug, __isDirectDefer: target is '"..target.."'<<end of target.\n\n")
+   local _, nsub = string.gsub(target, "in function", "")
+   print("debug, __isDirectDefer: nsub = "..tostring(nsub))
+   if nsub < 4 then
+      return true
+   end
+   return false
+end
+

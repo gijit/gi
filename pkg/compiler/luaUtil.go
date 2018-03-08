@@ -31,7 +31,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// cfg == nil means under test.
 	// cfg.Dev means `gi -d` was invoked.
-	if cfg == nil || cfg.Dev {
+	if cfg == nil || cfg.Dev || cfg.IsTestMode {
 		useStaticPrelude = false
 	} else {
 		useStaticPrelude = true

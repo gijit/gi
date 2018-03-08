@@ -347,12 +347,17 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			builtin, isBuiltin = c.p.Uses[fun].(*types.Builtin)
 			if isBuiltin && builtin.Name() == "recover" {
 				// jea: `defer recover()` reaches here.
-				// jea: not sure we need to special case this...
-				//      try just commenting this out.
+				// see defer_test.go 033m : `defer recover()` is
+				// a no-op.
 				/*
-					c.Printf("__deferred.push([__recover, []]);")
-					return
+					fmt.Printf("immediate `defer recover()` special case detected!\n")
+					c.Printf(`
+					__defers[1+#__defers] = __immediate_recover
+					`)
 				*/
+				c.Printf("\n -- defer recover() is a no-op\n")
+				//c.Printf("__deferred.push([__recover, []]);")
+				return
 			}
 		case *ast.SelectorExpr:
 			isJs = typesutil.IsJsPackage(c.p.Uses[fun.Sel].Pkg())
@@ -386,9 +391,9 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Printf(`
 local __defer_func = function(%s)
    %s
-    __defers[1+#__defers] = function()
+    __defers[1+#__defers] = __top_of_defer(function()
         %s;
-    end
+    end)
 end
 __defer_func(%s);
 `,
@@ -409,8 +414,8 @@ __defer_func(%s);
 		c.Printf(`
 local __defer_func = %s
     %s
-    __defers[1+#__defers] = function()
-    %s
+    __defers[1+#__defers] = __top_of_defer(function()
+      %s)
 end
 __defer_func(%s)
 `, head, localArgStash,

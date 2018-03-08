@@ -253,8 +253,21 @@ func Test033mTest2FromRecoverStressTest(t *testing.T) {
 		code := `
 import "runtime"
 
+got_correct_value := false
+
 func mustRecover(x interface{}) {
-	mustRecoverBody(doubleRecover(), recover(), recover(), x)
+    println("top of mustRecover")
+
+    a := doubleRecover()
+    println("a is ", a)
+
+    b := recover()
+    println("b is ", b)
+
+    c := recover()
+    println("c is ", c)
+
+	mustRecoverBody(a, b, c, x)
     println("done with mustRecover()")
 }
 
@@ -271,13 +284,15 @@ func mustRecoverBody(v1, v2, v3, x interface{}) {
 	}
 	v = v2
 	if v == nil {
-		println("missing recover", x.(int))
+		println("missing recover ")
+		//println("assert x is int: ", x.(int)) // crashing by itself.
 		die() // panic is useless here
 	}
 	if v != x {
 		println("wrong value", v, x)
 		die()
 	}
+    got_correct_value = true
 
 	// the value should be gone now regardless
 	v = v3
@@ -317,87 +332,89 @@ println("test2() ran")
 
 		pp("translation='%s'", string(translation))
 		LuaRunAndReport(vm, string(translation))
-		//LuaMustInt64(vm, "result", 123456789)
+		LuaMustBool(vm, "got_correct_value", true)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 
 	/* current translation looks okay, but is crashing
-	       the scheduler. r2:
+			       the scheduler. r2:
 
-		__go_import("runtime")
+				__go_import("runtime")
 
-		mustRecover = function(x)
-		   mustRecoverBody(doubleRecover(), recover(), recover(), x);
-		   print("done with mustRecover()");
-		end;
+		        got_correct_value = false;
+				mustRecover = function(x)
+				   mustRecoverBody(doubleRecover(), recover(), recover(), x);
+				   print("done with mustRecover()");
+				end;
 
-		die = function()
-		   print("die() invoked, calling runtime.Breakpoint()");
-		   runtime.Breakpoint();
-		end;
+				die = function()
+				   print("die() invoked, calling runtime.Breakpoint()");
+				   runtime.Breakpoint();
+				end;
 
-		mustRecoverBody = function(v1, v2, v3, x)
-		   local v = v1;
-		   if ( not (__interfaceIsEqual(v, nil))) then
-		      print("spurious recover", v);
-					die();
-		   end
-		   v = v2;
-		   if (__interfaceIsEqual(v, nil)) then
-		      print("missing recover", __assertType(x, __type__.int, 0));
-		      die();
-		   end
-		   if ( not (__interfaceIsEqual(v, x))) then
-		      print("wrong value", v, x);
-		      die();
-		   end
-		   v = v3;
-		   if ( not (__interfaceIsEqual(v, nil))) then
-		      print("recover didn't recover");
-		      die();
-		   end
-		   print("mustRecoverBody reached end without die.");
-		end;
+				mustRecoverBody = function(v1, v2, v3, x)
+				   local v = v1;
+				   if ( not (__interfaceIsEqual(v, nil))) then
+				      print("spurious recover", v);
+							die();
+				   end
+				   v = v2;
+				   if (__interfaceIsEqual(v, nil)) then
+				      print("missing recover", __assertType(x, __type__.int, 0));
+				      die();
+				   end
+				   if ( not (__interfaceIsEqual(v, x))) then
+				      print("wrong value", v, x);
+				      die();
+				   end
+	               got_correct_value = true
+				   v = v3;
+				   if ( not (__interfaceIsEqual(v, nil))) then
+				      print("recover didn't recover");
+				      die();
+				   end
+				   print("mustRecoverBody reached end without die.");
+				end;
 
-		doubleRecover = function()
-		   return  recover() ;
-		end;
+				doubleRecover = function()
+				   return  recover() ;
+				end;
 
-		test2 =
-		   function(...)
-		   local __orig = {...}
-		   local __defers={}
-		   local __zeroret = {}
-		   local __namedNames = {}
-		   local __actual=function()
+				test2 =
+				   function(...)
+				   local __orig = {...}
+				   local __defers={}
+				   local __zeroret = {}
+				   local __namedNames = {}
+				   local __actual=function()
 
-		      local __defer_func = function(__gensym_1__arg)
-		         local __gensym_1__arg = __gensym_1__arg;
+				      local __defer_func = function(__gensym_1__arg)
+				         local __gensym_1__arg = __gensym_1__arg;
 
-		         __defers[1+#__defers] = function()
-		            mustRecover(__gensym_1__arg);
-		         end
-		      end
-		      __defer_func(2LL);
+				         __defers[1+#__defers] = function()
+				            mustRecover(__gensym_1__arg);
+				         end
+				      end
+				      __defer_func(2LL);
 
 
-		      local __defer_func = function()
+				      local __defer_func = function()
 
-		         __defers[1+#__defers] = function()
-		            recover();
-		         end
-		      end
-		      __defer_func();
+				         __defers[1+#__defers] = function()
+				            recover();
+				         end
+				      end
+				      __defer_func();
 
-		      print("about to panic(2)");
-		      panic(2LL);
+				      print("about to panic(2)");
+				      panic(2LL);
 
-		   end
-		   return __actuallyCall("", __actual, __namedNames, __zeroret, __defers, __orig)
-		   end
-		;
-		test2();
+				   end
+				   return __actuallyCall("", __actual, __namedNames, __zeroret, __defers, __orig)
+				   end
+				;
+				test2();
 
-		print("test2() ran");
+				print("test2() ran");
 	*/
 }

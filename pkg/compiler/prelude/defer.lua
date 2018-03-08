@@ -36,13 +36,22 @@ __recovMT = {__tostring = function(v) return 'a-panic-value:' .. tostring(v[1]) 
 
 __recoverVal = nil
 
-recover = function() 
-    local cp = __recoverVal
-    __recoverVal = nil
-    return cp;
+recover = function()
+   print("debug: top of recover()")
+   local stack = debug.traceback()
+   if not __isDirectDefer(stack) then
+      print("debug `recover()`: was not direct defer, leaving __recoverVal=", __recoverVal)
+      return nil
+   end
+   print("debug `recover()`: was *direct* defer, returning __recoverVal=", __recoverVal)
+   
+   local cp = __recoverVal
+   __recoverVal = nil
+   return cp;
 end
 
 panic = function(err)
+   print("panic() called with err = ", err)
   -- wrap err in table to prevent conversion to string by error()
   __recoverVal = {err}
   -- but still allow it to be viewable in a stack trace:
@@ -53,35 +62,37 @@ end
 
   -- begin boilerplate part 2:
   
-  -- prepare to handle panic/defer/recover
+-- prepare to handle panic/defer/recover
 __handler2 = function(err)
-     --print(" __handler2 running with err =", err)
-     __recoverVal = err
-     return err
+   print(" __handler2 running with err =", err)
+   __recoverVal = err
+   return err
 end
   
 __panicHandler = function(err, defers)
-       --print("__panicHandler running with err =", err)
-       -- print(debug.traceback())
-       --print("__panicHandler running with defers:", tostring(defers))
-
+   print("__panicHandler running with err =", err)
+   print(debug.traceback())
+   print("__panicHandler running with defers:", tostring(defers))
+   
      __recoverVal = err
      if defers ~= nil then
 
-         --print(debug.traceback(), " __panicHandler running with err =", err, " and #defer = ", #defers)      
-         --print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
+        print(debug.traceback(), " __panicHandler running with err =", err, " and #defer = ", #defers)      
+        print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
          for __i = #defers, 1, -1 do
              local dcall = {xpcall(defers[__i], __handler2)}
-             --for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
+             for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
          end
      else
-         --print("debug: found no defers in __panicHandler")
+        print("debug: found no defers in __panicHandler")
      end
-     --print("__panicHandler: done with defer processing")
+     print("__panicHandler: done with defer processing")
      if __recoverVal ~= nil then
+        print("debug: end of __panicHandler, returning __recoverVal: ", __recoverVal)
         return __recoverVal
      end
-  end
+     print("debug: end of __panicHandler, nil __recoverVal.")
+end
 
   -- __processDefers represents the normal
   --    return path, without a panic.
@@ -94,8 +105,8 @@ __panicHandler = function(err, defers)
   --                 so we know how to update actEnv.
   --
 __processDefers = function(who, defers, __res, __namedNames, actEnv)
-   --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
-   --print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
+   print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
+   print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
 
   if __res[1] then
       --print(who,": __processDefers: call had no panic")
@@ -153,6 +164,8 @@ end
 
 __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __orig)
 
+   print("debug: top of __actuallyCall.")
+   
    --local actEnv = getfenv(__actual)
    -- So getfenv(__actual) showed that actEnv
    -- was the _G global env, not good.
@@ -174,5 +187,9 @@ __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __or
   end  
   local myPanic = function(err) __panicHandler(err, __defers) end
   local __res = {xpcall(__actual, myPanic, unpack(__orig))}
+
+  print("debug: back from xpcall in __actuallyCall. __res = ")
+  __st(__res)
+     
   return __processDefers(who, __defers, __res,  __namedNames, actEnv)  
 end
