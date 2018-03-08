@@ -16,6 +16,9 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/fmt"
 	"github.com/gijit/gi/pkg/compiler/shadow/io"
 
+	shadow_sync "github.com/gijit/gi/pkg/compiler/shadow/sync"
+	shadow_sync_atomic "github.com/gijit/gi/pkg/compiler/shadow/sync/atomic"
+
 	shadow_io_ioutil "github.com/gijit/gi/pkg/compiler/shadow/io/ioutil"
 	"io/ioutil"
 
@@ -189,6 +192,16 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		t0.regmap["regexp"] = shadow_regexp.Pkg
 		t0.regmap["__ctor__regexp"] = shadow_regexp.Ctor
 		t0.run = append(t0.run, shadow_regexp.InitLua()...)
+
+	case "sync":
+		t0.regmap["sync"] = shadow_sync.Pkg
+		t0.regmap["__ctor__sync"] = shadow_sync.Ctor
+		t0.run = append(t0.run, shadow_sync.InitLua()...)
+
+	case "sync/atomic":
+		t0.regmap["atomic"] = shadow_sync_atomic.Pkg
+		t0.regmap["__ctor__atomic"] = shadow_sync_atomic.Ctor
+		t0.run = append(t0.run, shadow_sync_atomic.InitLua()...)
 
 	case "time":
 		t0.regmap["time"] = shadow_time.Pkg

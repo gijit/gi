@@ -11,6 +11,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gijit/gi/pkg/verb"
@@ -28,6 +29,8 @@ var nyc *time.Location
 type LuaVm struct {
 	cfg *GIConfig
 	vm  *golua.State
+
+	mut *sync.Mutex
 }
 
 func (lvm *LuaVm) Close() {
@@ -441,20 +444,7 @@ type LuaRunner struct {
 }
 
 func NewLuaRunner(lvm *LuaVm) *LuaRunner {
-
 	lr := &LuaRunner{lvm: lvm}
-
-	/* now we do a new coroutine per eval, so we can eval blocking actions
-	       like a receive on an unbuffered channel
-
-		vm.GetGlobal("__gijitMainCoro")
-		if vm.IsNil(-1) {
-			panic("could not locate __gijitMainCoro in _G: tsys.lua must have been sourced.")
-		}
-		lr.evalThread = vm.ToThread(-1)
-		//fmt.Printf("\n ... evalThread stack is:\n'%s'\n", DumpLuaStackAsString(lr.evalThread))
-		vm.Pop(1)
-	*/
 	return lr
 }
 
