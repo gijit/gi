@@ -30,7 +30,7 @@ language for exploratory data analysis.
 
 # the rationale
 
-Go has big advantages over python, R, and Matlab.
+Go has big advantages over Python, R, and Matlab.
 It has good type checking, reasonable compiled performance,
 and excellent multicore support.
 
