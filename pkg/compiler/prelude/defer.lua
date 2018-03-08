@@ -47,7 +47,14 @@ recover = function()
    
    local cp = __recoverVal
    __recoverVal = nil
-   return cp;
+   if cp ~= nil and type(cp) == "table" then
+      print("cp is ", cp)
+      __st(cp)
+      local unwrap = cp[1]; -- unwrap from array, so raw value is returned
+      __st(unwrap, "unwrap")
+      return unwrap
+   end
+   return cp
 end
 
 panic = function(err)

@@ -282,16 +282,20 @@ func mustRecoverBody(v1, v2, v3, x interface{}) {
 		println("spurious recover", v)
 		die()
 	}
+    println("mustRecoverBody: past v1 check, v2=", v2)
 	v = v2
 	if v == nil {
 		println("missing recover ")
 		//println("assert x is int: ", x.(int)) // crashing by itself.
 		die() // panic is useless here
 	}
+    println("mustRecoverBody: past v2 check. x = ", x, " and v=", v)
+
 	if v != x {
-		println("wrong value", v, x)
+		println("wrong value. v = ", v, " and x=", x)
 		die()
 	}
+    println("mustRecoverBody: past x check")
     got_correct_value = true
 
 	// the value should be gone now regardless
