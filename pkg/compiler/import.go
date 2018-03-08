@@ -440,3 +440,48 @@ func getFunForGijitPrintQuoted(pkg *types.Package) *types.Func {
 	fun := types.NewFunc(token.NoPos, pkg, "__gijit_printQuoted", sig)
 	return fun
 }
+
+/* time stuff
+
+var $setTimeout = function(f, t) {
+  $awakeGoroutines++;
+  return setTimeout(function() {
+    $awakeGoroutines--;
+    f();
+  }, t);
+};
+
+func Sleep(d Duration) {
+	c := make(chan struct{})
+	js.Global.Call("$setTimeout", js.InternalObject(func() { close(c) }), int(d/Millisecond))
+	<-c
+}
+
+
+func startTimer(t *runtimeTimer) {
+	t.active = true
+	diff := (t.when - runtimeNano()) / int64(Millisecond)
+	if diff > 1<<31-1 { // math.MaxInt32
+		return
+	}
+	if diff < 0 {
+		diff = 0
+	}
+	t.timeout = js.Global.Call("$setTimeout", js.InternalObject(func() {
+		t.active = false
+		if t.period != 0 {
+			t.when += t.period
+			startTimer(t)
+		}
+		go t.f(t.arg, 0)
+	}), diff+1)
+}
+
+func stopTimer(t *runtimeTimer) bool {
+	js.Global.Call("clearTimeout", t.timeout)
+	wasActive := t.active
+	t.active = false
+	return wasActive
+}
+
+*/
