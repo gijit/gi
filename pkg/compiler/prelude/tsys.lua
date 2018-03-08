@@ -3333,31 +3333,32 @@ end
 -- are when the recover() is called.
 --
 __isDirectDefer = function(stack)
-   print("top of __isDirectDefer, stack = "..stack)
+   --print("top of __isDirectDefer, stack = "..stack)
    local origStack = stack
    
    -- beginAfter may or may not appear.
    local beginAfter = "in function 'recover'"
    local beg, e = string.find(stack, beginAfter)
-   print("beg = ", beg, " and e=", e)
+   --print("beg = ", beg, " and e=", e)
    if beg ~= nil then
       -- trim off, so we can count the calls between even
       -- an inlined call to recover.
       stack = string.sub(stack, e)
    end
 
+   -- ugh. this is so fragile. TODO: better way?
    local marker = string.find(stack, "in function 'f'")
-   --local marker = string.find(stack, "gijit/gi/pkg/compiler/prelude/tsys.lua:")
+
    if marker == nil then
-      print("__isDirectDefer did not find marker, returning false.")
+      --print("__isDirectDefer did not find marker, returning false.")
       return false -- was immediate `defer recover()`, too early.
       --error("__isDirectDefer could not find __top_of_defer in stack: '"..stack.."'")
    end
    -- count number of "in function" between beginning and marker
    local target = string.sub(stack, 1, marker)
-   print("debug, __isDirectDefer: target is '"..target.."'<<end of target.\n\n")
+   --print("debug, __isDirectDefer: target is '"..target.."'<<end of target.\n\n")
    local _, nsub = string.gsub(target, "in function", "")
-   print("debug, __isDirectDefer: nsub = "..tostring(nsub))
+   --print("debug, __isDirectDefer: nsub = "..tostring(nsub))
    if nsub < 2 then
       return true
    end

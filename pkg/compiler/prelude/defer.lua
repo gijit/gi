@@ -37,33 +37,30 @@ __recovMT = {__tostring = function(v) return 'a-panic-value:' .. tostring(v[1]) 
 __recoverVal = nil
 
 recover = function()
-   print("debug: top of recover()")
+   --print("debug: top of recover()")
    local stack = debug.traceback()
    if not __isDirectDefer(stack) then
-      print("debug `recover()`: was not direct defer, leaving __recoverVal=", __recoverVal)
+      --print("debug `recover()`: was not direct defer, leaving __recoverVal=", __recoverVal)
       return nil
    end
-   print("debug `recover()`: was *direct* defer, returning __recoverVal=", __recoverVal)
+   --print("debug `recover()`: was *direct* defer, returning __recoverVal=", __recoverVal)
    
    local cp = __recoverVal
    __recoverVal = nil
    if cp ~= nil and type(cp) == "table" then
-      print("cp is ", cp)
-      __st(cp)
       local unwrap = cp[1]; -- unwrap from array, so raw value is returned
-      __st(unwrap, "unwrap")
       return unwrap
    end
    return cp
 end
 
 panic = function(err)
-   print("panic() called with err = ", err)
-  -- wrap err in table to prevent conversion to string by error()
-  __recoverVal = {err}
-  -- but still allow it to be viewable in a stack trace:
-  setmetatable(__recoverVal, __recovMT)
-  error(__recoverVal)
+   --print("panic() called with err = ", err)
+   -- wrap err in table to prevent conversion to string by error()
+   __recoverVal = {err}
+   -- but still allow it to be viewable in a stack trace:
+   setmetatable(__recoverVal, __recovMT)
+   error(__recoverVal)
 end
 
 
@@ -71,49 +68,49 @@ end
   
 -- prepare to handle panic/defer/recover
 __handler2 = function(err)
-   print(" __handler2 running with err =", err)
+   --print(" __handler2 running with err =", err)
    __recoverVal = err
    return err
 end
   
 __panicHandler = function(err, defers)
-   print("__panicHandler running with err =", err)
-   print(debug.traceback())
-   print("__panicHandler running with defers:", tostring(defers))
+   --print("__panicHandler running with err =", err)
+   --print(debug.traceback())
+   --print("__panicHandler running with defers:", tostring(defers))
    
-     __recoverVal = err
-     if defers ~= nil then
-
-        print(debug.traceback(), " __panicHandler running with err =", err, " and #defer = ", #defers)      
-        print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
-         for __i = #defers, 1, -1 do
-             local dcall = {xpcall(defers[__i], __handler2)}
-             for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
-         end
-     else
-        print("debug: found no defers in __panicHandler")
-     end
-     print("__panicHandler: done with defer processing")
-     if __recoverVal ~= nil then
-        print("debug: end of __panicHandler, returning __recoverVal: ", __recoverVal)
-        return __recoverVal
-     end
-     print("debug: end of __panicHandler, nil __recoverVal.")
+   __recoverVal = err
+   if defers ~= nil then
+      
+      --print(debug.traceback(), " __panicHandler running with err =", err, " and #defer = ", #defers)      
+      --print(" __panicHandler running with err =", err, " and #defer = ", #defers)  
+      for __i = #defers, 1, -1 do
+         local dcall = {xpcall(defers[__i], __handler2)}
+         for i,v in pairs(dcall) do print("__panicHandler: panic path defer call result: i=",i, "  v=",v) end
+      end
+   else
+      --print("debug: found no defers in __panicHandler")
+   end
+   print("__panicHandler: done with defer processing")
+   if __recoverVal ~= nil then
+      --print("debug: end of __panicHandler, returning __recoverVal: ", __recoverVal)
+      return __recoverVal
+   end
+   --print("debug: end of __panicHandler, nil __recoverVal.")
 end
 
-  -- __processDefers represents the normal
-  --    return path, without a panic.
-  --
-  --    We need to update the named return values if
-  --    there were explicit return values from __actual,
-  --    and then we need to call the defers.
-  --
-  --    __namedNames is an array of the variable names of the return values,
-  --                 so we know how to update actEnv.
-  --
+-- __processDefers represents the normal
+--    return path, without a panic.
+--
+--    We need to update the named return values if
+--    there were explicit return values from __actual,
+--    and then we need to call the defers.
+--
+--    __namedNames is an array of the variable names of the return values,
+--                 so we know how to update actEnv.
+--
 __processDefers = function(who, defers, __res, __namedNames, actEnv)
-   print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
-   print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
+   --print(who,": __processDefers top: __res[1] is: ", tostring(__res[1]))
+   --print(who,": __processDefers top: __namedNames is: ", __ts(__namedNames))
 
   if __res[1] then
       --print(who,": __processDefers: call had no panic")
@@ -171,7 +168,7 @@ end
 
 __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __orig)
 
-   print("debug: top of __actuallyCall.")
+   --print("debug: top of __actuallyCall.")
    
    --local actEnv = getfenv(__actual)
    -- So getfenv(__actual) showed that actEnv
@@ -195,8 +192,8 @@ __actuallyCall = function(who, __actual, __namedNames, __zeroret, __defers, __or
   local myPanic = function(err) __panicHandler(err, __defers) end
   local __res = {xpcall(__actual, myPanic, unpack(__orig))}
 
-  print("debug: back from xpcall in __actuallyCall. __res = ")
-  __st(__res)
+  --print("debug: back from xpcall in __actuallyCall. __res = ")
+  --__st(__res)
      
   return __processDefers(who, __defers, __res,  __namedNames, actEnv)  
 end
