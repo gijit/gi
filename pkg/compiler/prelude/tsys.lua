@@ -3283,7 +3283,7 @@ end
 __eval_next_count = 1
 
 __eval = function(code)
-   print("__eval called with code: '"..code.."'")
+   --print("__eval called with code: '"..code.."'")
 
    -- since an eval of a receive/select may be blocking, we
    -- need to start each new bit of code at the repl

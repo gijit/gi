@@ -688,19 +688,19 @@ table.insert(__all_coro, scheduler_co)
 __coro2notes[scheduler_co]={__loc=#__all_coro, __name="scheduler"}
 
 __resume_scheduler = function()
-   print("__task.resume_scheduler called! scheduler_co is: "..__costring(scheduler_co))
-   __st(scheduler_co, "scheduler_co")
+   --print("__task.resume_scheduler called! scheduler_co is: "..__costring(scheduler_co))
+   --__st(scheduler_co, "scheduler_co")
 
    -- if scheduler is already running, this should be a no-op;
    -- Lua won't let us resume a 'normal' state coroutine anyway.
    if coroutine.status(scheduler_co) == "normal" then
 
       local co, isMain = coroutine.running()
-      print("__task.resume_scheduler called! current coro is: ", __costring(co), " isMain:"..tostring(isMain))
-      __showco()
-      __stacks()
+      --print("__task.resume_scheduler called! current coro is: ", __costring(co), " isMain:"..tostring(isMain))
+      --__showco()
+      --__stacks()
       
-      print("warning: __resume_scheduler() no-op: scheduler is in normal, returning early instead")
+      --print("warning: __resume_scheduler() no-op: scheduler is in normal, returning early instead")
       --print(debug.traceback("__resume_scheduler: scheduler is in normal"))
       --return true, coroutine.yield()
       return false
