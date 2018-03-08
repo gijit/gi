@@ -8,7 +8,7 @@ simply `gi`, as it is a "go interpreter".
 
 quick install
 -------------
-
+See https://github.com/gijit/gi/releases for binary releases that can be run directly without building from source. For source builds:
 ~~~
 # use go1.10 or later.
 $ go get -d github.com/gijit/gi/cmd/gi
@@ -19,9 +19,9 @@ $ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gi
 $ make install
 $ gi
 ~~~
-See https://github.com/gijit/gi/issues/18 for windows install-from-source help.
+See also https://github.com/gijit/gi/issues/18 for windows install-from-source help.
 
-For v1.3.5, there are pre-compiled binaries here https://github.com/gijit/gi/releases/tag/v1.3.5 They have the prelude compiled in now. They run standalone, without needing to install the source. Note that the importing of other packages (e.g. `fmt`; use `println` instead) is not yet functional.
+For various releases there are pre-compiled binaries (https://github.com/gijit/gi/releases). They have the prelude compiled in now. They run standalone, without needing to install the source. Note that the importing of source packages (e.g. custom ones) is not yet functional. Importing shadowed (binary Go) packages works. These include the commonly used `fmt`, `os`, `math/rand`, and others listed here https://github.com/gijit/gi/tree/master/pkg/compiler/shadow
 
 # the dream
 
