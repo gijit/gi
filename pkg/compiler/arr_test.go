@@ -18,10 +18,10 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
    sum := gitesting.SumArrayInt64(a)
 `
 
-		vm, err := NewLuaVmWithPrelude(nil)
+		lvm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
-		defer vm.Close()
-		inc := NewIncrState(vm, nil)
+		defer lvm.vm.Close()
+		inc := NewIncrState(lvm, nil)
 
 		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
@@ -30,10 +30,10 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
-		LuaRunAndReport(vm, string(translation))
+		LuaRunAndReport(lvm, string(translation))
 
 		// check for exception
-		LuaMustInt64(vm, "sum", 8)
+		LuaMustInt64(lvm, "sum", 8)
 
 	})
 }
@@ -50,10 +50,10 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
    c := a[2]
 `
 
-		vm, err := NewLuaVmWithPrelude(nil)
+		lvm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
-		defer vm.Close()
-		inc := NewIncrState(vm, nil)
+		defer lvm.vm.Close()
+		inc := NewIncrState(lvm, nil)
 
 		translation, err := inc.Tr([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
@@ -61,10 +61,10 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
-		LuaRunAndReport(vm, string(translation))
+		LuaRunAndReport(lvm, string(translation))
 
-		LuaMustInt64(vm, "b", 2)
-		LuaMustInt64(vm, "c", 3)
+		LuaMustInt64(lvm, "b", 2)
+		LuaMustInt64(lvm, "c", 3)
 
 	})
 }

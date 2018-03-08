@@ -25,7 +25,16 @@ var dbg = &verb.VerboseVerbose
 
 var nyc *time.Location
 
-func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
+type LuaVm struct {
+	cfg *GIConfig
+	vm  *golua.State
+}
+
+func (lvm *LuaVm) Close() {
+	lvm.vm.Close()
+}
+
+func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	var vm *golua.State
 	var useStaticPrelude bool
 
@@ -40,6 +49,9 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	if cfg == nil {
 		cfg = NewGIConfig()
 	}
+	lvm = &LuaVm{
+		cfg: cfg,
+	}
 
 	if useStaticPrelude {
 		cfg.PreludePath = ""
@@ -53,15 +65,17 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 		fmt.Printf("loading LuaJIT vm without Luar.\n")
 		vm = golua.NewState()
 		vm.OpenLibs()
-		return vm, nil
+		lvm.vm = vm
+		return lvm, nil
 	}
 
 	vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
 	registerLuarReqs(vm)
+	lvm.vm = vm
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
-	err := LuaRun(vm, fmt.Sprintf(`__preludePath="/";`), false) //, makePathWindowsSafe(cfg.PreludePath)), false)
+	err = LuaRun(lvm, fmt.Sprintf(`__preludePath="/";`), false) //, makePathWindowsSafe(cfg.PreludePath)), false)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +130,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 			panicOn(err)
 
 			//fmt.Printf("\n--88-- ioutil.ReadAll('%s') returned:\n'%s'\n", fn, string(by))
-			err = LuaRun(vm, string(by), false)
+			err = LuaRun(lvm, string(by), false)
 			if err != nil {
 				//fmt.Printf("problem loading prelude file '%s': '%v'\n", fn, err)
 				return nil, err
@@ -135,7 +149,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 			return nil, err
 		}
 
-		err = LuaDoPreludeFiles(vm, files)
+		err = LuaDoPreludeFiles(lvm, files)
 		panicOn(err)
 		if err != nil {
 			return nil, err
@@ -144,7 +158,7 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 
 	// lastly, after the prelude, reset the DFS graph
 	// so new type dependencies are tracked
-	err = LuaRun(vm, "__dfsGlobal:reset();", false)
+	err = LuaRun(lvm, "__dfsGlobal:reset();", false)
 	if err != nil {
 		return nil, err
 	}
@@ -160,13 +174,13 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (*golua.State, error) {
 	})
 	//fmt.Printf("registered __lua2go with luar.\n")
 
-	return vm, err
+	return lvm, err
 }
 
-func LuaDoPreludeFiles(vm *golua.State, files []string) error {
+func LuaDoPreludeFiles(lvm *LuaVm, files []string) error {
 	for _, f := range files {
 		pp("LuaDoFiles, f = '%s'", f)
-		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f), false)
+		err := LuaRun(lvm, fmt.Sprintf(`dofile("%s")`, f), false)
 		if err != nil {
 			return err
 		}
@@ -177,10 +191,10 @@ func LuaDoPreludeFiles(vm *golua.State, files []string) error {
 // user files, those after the prelude load, get run
 // on the main eval coroutine, so they can call goroutines,
 // channels, etc.
-func LuaDoUserFiles(vm *golua.State, files []string) error {
+func LuaDoUserFiles(lvm *LuaVm, files []string) error {
 	for _, f := range files {
 		pp("LuaDoUserFiles, f = '%s'", f)
-		err := LuaRun(vm, fmt.Sprintf(`dofile("%s")`, f), true)
+		err := LuaRun(lvm, fmt.Sprintf(`dofile("%s")`, f), true)
 		if err != nil {
 			return err
 		}
@@ -264,8 +278,9 @@ func makePathWindowsSafe(path string) string {
 }
 
 // prefer below LuaMustInt64
-func LuaMustInt(vm *golua.State, varname string, expect int) {
+func LuaMustInt(lvm *LuaVm, varname string, expect int) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	value_int := vm.ToInteger(top) // lossy for 64-bit int64, use vm.CdataToInt64() instead.
@@ -277,8 +292,9 @@ func LuaMustInt(vm *golua.State, varname string, expect int) {
 	}
 }
 
-func LuaMustInt64(vm *golua.State, varname string, expect int64) {
+func LuaMustInt64(lvm *LuaVm, varname string, expect int64) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	if vm.IsNil(top) {
@@ -294,11 +310,12 @@ func LuaMustInt64(vm *golua.State, varname string, expect int64) {
 	vm.Pop(1)
 }
 
-func LuaMustEvalToInt64(vm *golua.State, xpr string, expect int64) {
+func LuaMustEvalToInt64(lvm *LuaVm, xpr string, expect int64) {
 
+	vm := lvm.vm
 	evalme := "__tmp = " + xpr
 	fmt.Printf("evalme = '%s'\n", evalme)
-	LuaRun(vm, evalme, true)
+	LuaRun(lvm, evalme, true)
 	vm.GetGlobal("__tmp")
 	top := vm.GetTop()
 	if vm.IsNil(top) {
@@ -314,32 +331,36 @@ func LuaMustEvalToInt64(vm *golua.State, xpr string, expect int64) {
 	vm.Pop(1)
 }
 
-func LuaInGlobalEnv(vm *golua.State, varname string) bool {
+func LuaInGlobalEnv(lvm *LuaVm, varname string) bool {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	ret := !vm.IsNil(-1)
 	vm.Pop(1)
 	return ret
 }
 
-func LuaMustNotBeInGlobalEnv(vm *golua.State, varname string) {
+func LuaMustNotBeInGlobalEnv(lvm *LuaVm, varname string) {
 
-	if LuaInGlobalEnv(vm, varname) {
+	vm := lvm.vm
+	if LuaInGlobalEnv(lvm, varname) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v to not be in global env, but it was.", varname))
 	}
 }
 
-func LuaMustBeInGlobalEnv(vm *golua.State, varname string) {
+func LuaMustBeInGlobalEnv(lvm *LuaVm, varname string) {
 
-	if !LuaInGlobalEnv(vm, varname) {
+	vm := lvm.vm
+	if !LuaInGlobalEnv(lvm, varname) {
 		DumpLuaStack(vm)
 		panic(fmt.Sprintf("expected %v to be in global env, but it was not.", varname))
 	}
 }
 
-func LuaMustFloat64(vm *golua.State, varname string, expect float64) {
+func LuaMustFloat64(lvm *LuaVm, varname string, expect float64) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	value := vm.ToNumber(top)
@@ -352,8 +373,9 @@ func LuaMustFloat64(vm *golua.State, varname string, expect float64) {
 	vm.Pop(1)
 }
 
-func LuaMustString(vm *golua.State, varname string, expect string) {
+func LuaMustString(lvm *LuaVm, varname string, expect string) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	value_string := vm.ToString(top)
@@ -366,8 +388,9 @@ func LuaMustString(vm *golua.State, varname string, expect string) {
 	vm.Pop(1)
 }
 
-func LuaMustBool(vm *golua.State, varname string, expect bool) {
+func LuaMustBool(lvm *LuaVm, varname string, expect bool) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	value_bool := vm.ToBoolean(top)
@@ -380,8 +403,10 @@ func LuaMustBool(vm *golua.State, varname string, expect bool) {
 	vm.Pop(1)
 }
 
-func LuaMustBeNil(vm *golua.State, varname string) {
-	isNil, alt := LuaIsNil(vm, varname)
+func LuaMustBeNil(lvm *LuaVm, varname string) {
+
+	vm := lvm.vm
+	isNil, alt := LuaIsNil(lvm, varname)
 
 	if !isNil {
 		DumpLuaStack(vm)
@@ -390,8 +415,9 @@ func LuaMustBeNil(vm *golua.State, varname string) {
 	}
 	vm.Pop(1)
 }
-func LuaIsNil(vm *golua.State, varname string) (bool, string) {
+func LuaIsNil(lvm *LuaVm, varname string) (bool, string) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	isNil := vm.IsNil(-1)
 	top := vm.GetTop()
@@ -399,8 +425,8 @@ func LuaIsNil(vm *golua.State, varname string) (bool, string) {
 	return isNil, golua.LuaStackPosToString(vm, top)
 }
 
-func LuaRunAndReport(vm *golua.State, s string) {
-	err := LuaRun(vm, s, true)
+func LuaRunAndReport(lvm *LuaVm, s string) {
+	err := LuaRun(lvm, s, true)
 
 	if err != nil {
 		fmt.Printf("error from LuaRun: '%v'. supplied lua with: '%s'\n",
@@ -410,12 +436,13 @@ func LuaRunAndReport(vm *golua.State, s string) {
 }
 
 type LuaRunner struct {
-	vm         *golua.State
+	lvm        *LuaVm
 	evalThread *golua.State
 }
 
-func NewLuaRunner(vm *golua.State) *LuaRunner {
-	lr := &LuaRunner{vm: vm}
+func NewLuaRunner(lvm *LuaVm) *LuaRunner {
+
+	lr := &LuaRunner{lvm: lvm}
 
 	/* now we do a new coroutine per eval, so we can eval blocking actions
 	       like a receive on an unbuffered channel
@@ -432,13 +459,15 @@ func NewLuaRunner(vm *golua.State) *LuaRunner {
 }
 
 func (lr *LuaRunner) Run(s string, useEvalCoroutine bool) error {
-	return LuaRun(lr.vm, s, useEvalCoroutine)
+	return LuaRun(lr.lvm, s, useEvalCoroutine)
 }
 
 // useEvalCoroutine may need to be false to bootstrap, but
 // should be typically true once the prelude / __gijitMainCoro is loaded.
-func LuaRun(vm *golua.State, s string, useEvalCoroutine bool) error {
+func LuaRun(lvm *LuaVm, s string, useEvalCoroutine bool) error {
+
 	pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
+	vm := lvm.vm
 	startTop := vm.GetTop()
 	defer vm.SetTop(startTop)
 
@@ -520,8 +549,9 @@ func dumpTableString(L *golua.State, index int) (s string) {
 	return
 }
 
-func LuaMustRune(vm *golua.State, varname string, expect rune) {
+func LuaMustRune(lvm *LuaVm, varname string, expect rune) {
 
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	value_int := rune(vm.CdataToInt64(top))
@@ -569,7 +599,8 @@ func sumArrayInt64(a [3]int64) (tot int64) {
 // Do vm.Pop(1) to clean it up. On failure, or if leaveOnTop is false, we
 // leave the stack clean/as it found it.
 //
-func getChannelFromGlobal(vm *golua.State, varname string, leaveOnTop bool) (interface{}, error) {
+func getChannelFromGlobal(lvm *LuaVm, varname string, leaveOnTop bool) (interface{}, error) {
+	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
 	if vm.IsNil(top) {

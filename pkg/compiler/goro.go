@@ -16,6 +16,7 @@ var _ = time.Now
 type Goro struct {
 	cfg      *GoroConfig
 	lr       *LuaRunner
+	lvm      *LuaVm
 	vm       *golua.State
 	halt     *idem.Halter
 	doticket chan *ticket
@@ -86,14 +87,14 @@ const (
 	GetChan
 )
 
-func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
+func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 	if cfg == nil {
 		cfg = &GoroConfig{}
 	}
 
 	var err error
-	if vm == nil {
-		vm, err = NewLuaVmWithPrelude(cfg.GiCfg)
+	if lvm == nil {
+		lvm, err = NewLuaVmWithPrelude(cfg.GiCfg)
 		if err != nil {
 			return nil, err
 		}
@@ -101,10 +102,11 @@ func NewGoro(vm *golua.State, cfg *GoroConfig) (*Goro, error) {
 
 	r := &Goro{
 		cfg:      cfg,
-		vm:       vm,
+		lvm:      lvm,
+		vm:       lvm.vm,
 		halt:     idem.NewHalter(),
 		doticket: make(chan *ticket),
-		lr:       NewLuaRunner(vm),
+		lr:       NewLuaRunner(lvm),
 	}
 
 	if !cfg.off {
@@ -138,7 +140,7 @@ func (r *Goro) Start() {
 
 func (r *Goro) handleHeartbeat() {
 	fmt.Printf("goro heartbeat!\n")
-	err := LuaRun(r.vm, "__task.resume_scheduler();", false)
+	err := LuaRun(r.lvm, "__task.resume_scheduler();", false)
 	panicOn(err)
 }
 
@@ -171,7 +173,7 @@ func (r *Goro) handleTicket(t *ticket) {
 					t.varname[key] = r.vm.ToString(-1)
 				case GetChan:
 					r.vm.Pop(1)
-					t.varname[key], t.getErr = getChannelFromGlobal(r.vm, key, true)
+					t.varname[key], t.getErr = getChannelFromGlobal(r.lvm, key, true)
 				}
 				if !t.leaveOnTop {
 					r.vm.Pop(1)

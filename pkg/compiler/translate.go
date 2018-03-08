@@ -16,8 +16,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	luajit "github.com/glycerine/golua/lua"
+	//luajit "github.com/glycerine/golua/lua"
 	//"github.com/kisielk/gotool"
 	//"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
@@ -25,12 +24,13 @@ import (
 )
 
 // the incremental translation state
-func NewIncrState(vm *luajit.State, cfg *GIConfig) *IncrState {
+func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 
 	if cfg == nil {
 		cfg = NewGIConfig()
+		lvm.cfg = cfg
 	}
-	goro, err := NewGoro(vm, &GoroConfig{GiCfg: cfg, off: false})
+	goro, err := NewGoro(lvm, &GoroConfig{GiCfg: cfg, off: false})
 	panicOn(err)
 	ic := &IncrState{
 		goro:   goro,

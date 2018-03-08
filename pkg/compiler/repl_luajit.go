@@ -19,14 +19,14 @@ var p = verb.P
 
 func (cfg *GIConfig) LuajitMain() {
 	r := NewRepl(cfg)
-	defer r.vm.Close()
+	defer r.lvm.vm.Close()
 	r.Loop()
 }
 
 type Repl struct {
 	inc   *IncrState
 	vmCfg *GIConfig
-	vm    *golua.State
+	lvm   *LuaVm
 
 	t0 time.Time
 	t1 time.Time
@@ -56,12 +56,12 @@ type Repl struct {
 
 func NewRepl(cfg *GIConfig) *Repl {
 
-	vm, err := NewLuaVmWithPrelude(cfg)
+	lvm, err := NewLuaVmWithPrelude(cfg)
 
 	panicOn(err)
-	inc := NewIncrState(vm, cfg)
+	inc := NewIncrState(lvm, cfg)
 
-	r := &Repl{cfg: cfg, vm: vm, inc: inc}
+	r := &Repl{cfg: cfg, lvm: lvm, inc: inc}
 	r.home = os.Getenv("HOME")
 	if r.home != "" {
 		r.histFn = r.home + string(os.PathSeparator) + ".gijit.hist"
@@ -270,7 +270,7 @@ readtop:
 		r.displayCmd(`lst`)
 		goto readtop
 	case ":stacks":
-		showLuaStacks(r.vm)
+		showLuaStacks(r.lvm.vm)
 		goto readtop
 	case ":r":
 		r.cfg.RawLua = true
@@ -301,7 +301,7 @@ readtop:
 			fmt.Printf("error during prelude reload: '%v'", err)
 			return "", err
 		}
-		err = LuaDoPreludeFiles(r.vm, files)
+		err = LuaDoPreludeFiles(r.lvm, files)
 		if err != nil {
 			fmt.Printf("error during prelude reload: '%v'", err)
 		}
@@ -371,7 +371,7 @@ these special commands.
 		if len(final) > 0 {
 			fmt.Printf("%s (%s)\n", nm, strings.Join(show, ","))
 			if r.isDo {
-				err = LuaDoUserFiles(r.vm, final)
+				err = LuaDoUserFiles(r.lvm, final)
 			} else {
 				by, err = sourceGoFiles(final)
 				if err != nil {
@@ -470,7 +470,7 @@ func (r *Repl) Eval(src string) error {
 	r.t0 = time.Now()
 
 	useEval := !r.cfg.RawLua
-	err := LuaRun(r.vm, use, useEval)
+	err := LuaRun(r.lvm, use, useEval)
 	if err != nil {
 		fmt.Printf("error from LuaRun: supplied lua with: '%s'\nlua stack:\n%v\n", use[:len(use)-1], err)
 		return nil
@@ -485,7 +485,7 @@ func (r *Repl) Eval(src string) error {
 
 // :ls, :gls, :lst, :glst implementation
 func (r *Repl) displayCmd(cmd string) {
-	err := LuaRun(r.vm, `__`+cmd+`()`, true)
+	err := LuaRun(r.lvm, `__`+cmd+`()`, true)
 	panicOn(err)
 }
 

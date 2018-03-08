@@ -6,7 +6,7 @@ import (
 
 	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
-	luajit "github.com/glycerine/golua/lua"
+	//luajit "github.com/glycerine/golua/lua"
 )
 
 func init() {
@@ -16,9 +16,9 @@ func init() {
 var matchesLuaSrc = cv.ShouldMatchModuloWhiteSpaceAndLuaComments
 var startsWithLuaSrc = cv.ShouldStartWithModuloWhiteSpaceAndLuaComments
 
-func LoadAndRunTestHelper(t *testing.T, vm *luajit.State, translation []byte) {
+func LoadAndRunTestHelper(t *testing.T, lvm *LuaVm, translation []byte) {
 	trans := string(translation)
-	err := LuaRun(vm, trans, true)
+	err := LuaRun(lvm, trans, true)
 	if err != nil {
 		fmt.Printf("error from LuaRun:\n%v\n", err)
 		t.Fatalf(`could not LuaRun("%s")`, trans)
