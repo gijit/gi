@@ -22,7 +22,11 @@ local __osname = __ffi.os == "Windows" and "windows" or "unix"
 -- was direct or not. It returns a function
 -- that when invoked, calls f().
 __top_of_defer = function(f)
-   return function() f() end
+   local __dear_luajit_do_not_inline = 2
+   return function()
+      f();
+      __dear_luajit_do_not_inline = __dear_luajit_do_not_inline+1;
+   end
 end
 
 __built_in_starting_symbol_list={};
@@ -3313,6 +3317,7 @@ end
 -- are when the recover() is called.
 --
 __isDirectDefer = function(stack)
+   print("top of __isDirectDefer, stack = "..stack)
    local origStack = stack
    
    -- beginAfter may or may not appear.
@@ -3324,8 +3329,9 @@ __isDirectDefer = function(stack)
       -- an inlined call to recover.
       stack = string.sub(stack, e)
    end
-   
-   local marker = string.find(stack, "__top_of_defer")
+
+   local marker = string.find(stack, "in function 'f'")
+   --local marker = string.find(stack, "gijit/gi/pkg/compiler/prelude/tsys.lua:")
    if marker == nil then
       print("__isDirectDefer did not find marker, returning false.")
       return false -- was immediate `defer recover()`, too early.
@@ -3336,7 +3342,7 @@ __isDirectDefer = function(stack)
    print("debug, __isDirectDefer: target is '"..target.."'<<end of target.\n\n")
    local _, nsub = string.gsub(target, "in function", "")
    print("debug, __isDirectDefer: nsub = "..tostring(nsub))
-   if nsub < 4 then
+   if nsub < 2 then
       return true
    end
    return false
