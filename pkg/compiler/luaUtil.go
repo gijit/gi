@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
@@ -37,6 +36,7 @@ type LuaVm struct {
 func (lvm *LuaVm) Close() {
 	lvm.goro.halt.RequestStop()
 	<-lvm.goro.halt.Done.Chan
+	fmt.Printf("\n\n LuaVm Close() done.\n\n")
 }
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
@@ -451,65 +451,6 @@ func LuaRunAndReport(lvm *LuaVm, s string) {
 func LuaRun(lvm *LuaVm, s string, useEvalCoroutine bool) error {
 	tk := lvm.goro.newTicket(s, useEvalCoroutine)
 	return tk.Do()
-}
-
-// should only be called by Goro
-func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
-
-	lvm := goro.lvm
-
-	s := string(run)
-	pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
-	vm := lvm.vm
-	startTop := vm.GetTop()
-	defer vm.SetTop(startTop)
-
-	if useEvalCoroutine {
-		// get the eval function. it will spawn us a new coroutine
-		// for each evaluation.
-
-		vm.GetGlobal("__eval")
-		if vm.IsNil(-1) {
-			panic("could not locate __eval in _G")
-		}
-		eval := vm.ToPointer(-1)
-		_ = eval
-		vm.PushString(s)
-
-		/*p1("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
-		p1("before vm.Call(1,0), stacks are:")
-		if verb.Verbose {
-			showLuaStacks(vm)
-		}
-		*/
-		vm.Call(1, 0)
-		// if things crash, this is the first place
-		// to check for an error: dump the Lua stack.
-		// With high probability, it will yield clues to the problem.
-		/*
-			p1("after vm.Call(1,0), stacks are:")
-			if verb.Verbose {
-				showLuaStacks(vm)
-			}
-		*/
-		return nil
-	} else {
-
-		// not using the __eval coroutine.
-
-		interr := vm.LoadString(s)
-		if interr != 0 {
-			loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
-			return loadErr
-		} else {
-			err := vm.Call(0, 0)
-			if err != nil {
-				runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
-				return runErr
-			}
-		}
-	}
-	return nil
 }
 
 func dumpTableString(L *golua.State, index int) (s string) {

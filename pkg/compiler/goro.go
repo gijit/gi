@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	golua "github.com/glycerine/golua/lua"
@@ -20,6 +21,9 @@ type Goro struct {
 	halt     *idem.Halter
 	beat     time.Duration
 	doticket chan *ticket
+
+	mut     sync.Mutex
+	started bool
 }
 
 type GoroConfig struct {
@@ -112,6 +116,7 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		vm:       lvm.vm,
 		halt:     idem.NewHalter(),
 		doticket: make(chan *ticket),
+		beat:     2000 * time.Millisecond,
 	}
 
 	if !cfg.off {
@@ -121,6 +126,12 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 }
 
 func (r *Goro) Start() {
+	r.mut.Lock()
+	if r.started {
+		panic("cannot start goro more than once!")
+	}
+	r.started = true
+	r.mut.Unlock()
 	go func() {
 		defer func() {
 			r.halt.MarkDone()
@@ -128,13 +139,13 @@ func (r *Goro) Start() {
 			r.lvm.vm.Close()
 		}()
 
-		//beat := 1000 * time.Millisecond
-		//heartbeat := time.After(beat)
+		fmt.Printf("r.beat is %v\n", r.beat)
+		heartbeat := time.After(r.beat)
 		for {
 			select {
-			//case <-heartbeat:
-			//	heartbeat = time.After(beat)
-			//	r.handleHeartbeat()
+			case <-heartbeat:
+				r.handleHeartbeat()
+				heartbeat = time.After(r.beat)
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:
@@ -147,9 +158,9 @@ func (r *Goro) Start() {
 var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
-	//fmt.Printf("goro heartbeat!\n")
-	err := r.privateRun(resumeSchedBytes, false)
-	panicOn(err)
+	fmt.Printf("goro heartbeat! at %v\n", time.Now())
+	//err := r.privateRun(resumeSchedBytes, true)
+	//panicOn(err)
 }
 
 func (r *Goro) handleTicket(t *ticket) {
@@ -208,6 +219,68 @@ func (t *ticket) Do() error {
 	}
 	if t.getErr != nil {
 		return t.getErr
+	}
+	return nil
+}
+
+// privateRun should only be called by Goro, to provide
+// appropriate synchronization (we must only have one thread at a time
+// should be calling the LuaJIT vm). This is
+// where code actually gets run on the vm.
+func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
+
+	lvm := goro.lvm
+
+	s := string(run)
+	//pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
+	vm := lvm.vm
+	startTop := vm.GetTop()
+	defer vm.SetTop(startTop)
+
+	if useEvalCoroutine {
+		// get the eval function. it will spawn us a new coroutine
+		// for each evaluation.
+
+		vm.GetGlobal("__eval")
+		if vm.IsNil(-1) {
+			panic("could not locate __eval in _G")
+		}
+		eval := vm.ToPointer(-1)
+		_ = eval
+		vm.PushString(s)
+
+		/*p1("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
+		p1("before vm.Call(1,0), stacks are:")
+		if verb.Verbose {
+			showLuaStacks(vm)
+		}
+		*/
+		vm.Call(1, 0)
+		// if things crash, this is the first place
+		// to check for an error: dump the Lua stack.
+		// With high probability, it will yield clues to the problem.
+		/*
+			p1("after vm.Call(1,0), stacks are:")
+			if verb.Verbose {
+				showLuaStacks(vm)
+			}
+		*/
+		return nil
+	} else {
+
+		// not using the __eval coroutine.
+
+		interr := vm.LoadString(s)
+		if interr != 0 {
+			loadErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
+			return loadErr
+		} else {
+			err := vm.Call(0, 0)
+			if err != nil {
+				runErr := fmt.Errorf("%s", DumpLuaStackAsString(vm, 0))
+				return runErr
+			}
+		}
 	}
 	return nil
 }
