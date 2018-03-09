@@ -34,7 +34,7 @@ type LuaVm struct {
 }
 
 func (lvm *LuaVm) Close() {
-	if !lvm.goro.cfg.off {
+	if !lvm.goro.cfg.off2 {
 		lvm.goro.halt.RequestStop()
 		<-lvm.goro.halt.Done.Chan
 	}

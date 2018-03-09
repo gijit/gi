@@ -28,7 +28,7 @@ type Goro struct {
 
 type GoroConfig struct {
 	GiCfg *GIConfig
-	off   bool // don't run in separate goroutine.
+	off2  bool // don't run in separate goroutine.
 }
 
 type ticket struct {
@@ -119,7 +119,7 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		beat:     2000 * time.Millisecond,
 	}
 
-	if !cfg.off {
+	if !cfg.off2 {
 		r.Start()
 	}
 	return r, nil
@@ -205,7 +205,7 @@ func (r *Goro) handleTicket(t *ticket) {
 }
 
 func (r *Goro) do(t *ticket) {
-	if r.cfg.off {
+	if r.cfg.off2 {
 		r.handleTicket(t)
 	} else {
 		r.doticket <- t

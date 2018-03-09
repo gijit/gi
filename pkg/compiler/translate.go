@@ -26,14 +26,16 @@ import (
 // the incremental translation state
 func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 
+	if lvm == nil {
+		panic("NewIncrState(): lvm cannot be nil")
+	}
+
 	if cfg == nil {
 		cfg = NewGIConfig()
 		lvm.cfg = cfg
 	}
-	goro, err := NewGoro(lvm, &GoroConfig{GiCfg: cfg, off: true})
-	panicOn(err)
 	ic := &IncrState{
-		goro:   goro,
+		goro:   lvm.goro,
 		pkgMap: make(map[string]*IncrPkg),
 		cfg:    cfg,
 	}
