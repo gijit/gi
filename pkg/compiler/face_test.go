@@ -92,6 +92,10 @@ e := c.Next()
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
+		// manually insert heartbeat, seems to be
+		// messing up our vm..?
+		// vm.goro.manualHeartbeat <- true
+
 		LuaMustInt64(vm, "a", 1)
 		LuaMustInt64(vm, "b", 2)
 

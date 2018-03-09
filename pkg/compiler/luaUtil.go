@@ -193,7 +193,11 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	//fmt.Printf("registered __lua2go with luar.\n")
 	// only now that __eval is available can we start heartbeat.
 	// But, heartbeat causes crashes, lets not.
-	// lvm.goro.StartBeat()
+	// Even when LuaJIT is locked to main thread, still
+	// seems to mix up the stacks to have a new coroutine come in
+	// run in between our previous code and our querying the
+	// state of the VM.
+	//lvm.goro.StartBeat()
 	return lvm, err
 }
 
@@ -319,6 +323,9 @@ func LuaMustInt64(lvm *LuaVm, varname string, expect int64) {
 	top := vm.GetTop()
 	if vm.IsNil(top) {
 		panic(fmt.Sprintf("global variable '%s' is nil", varname))
+	}
+	if top < 1 {
+		panic(fmt.Sprintf("top was less than 1: top=%v", top))
 	}
 	value_int := vm.CdataToInt64(top)
 

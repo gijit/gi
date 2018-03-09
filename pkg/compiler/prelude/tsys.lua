@@ -3283,8 +3283,10 @@ end
 __eval_next_count = 1
 
 __eval = function(code)
-   --print("__eval called with code: '"..code.."'")
-
+   local res = {pcall(function() 
+                      print("__eval called with code: '"..tostring(code).."'")
+                      __stacks()
+   
    -- since an eval of a receive/select may be blocking, we
    -- need to start each new bit of code at the repl
    -- on its own coroutine.
@@ -3303,7 +3305,9 @@ __eval = function(code)
    __task.resume_scheduler()
 
    __cleanupDeadCoro()   
-   --print("end of __eval, returning")
+   print("end of __eval, returning")
+   end)}
+   print("back from __eval pcall: res= ", unpack(res))
 end
 
 -- scan only variables local to

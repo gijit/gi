@@ -27,6 +27,8 @@ type Goro struct {
 	mut       sync.Mutex
 	started   bool
 
+	manualHeartbeat chan bool
+
 	beatCount int64
 
 	Ready chan struct{}
@@ -121,14 +123,15 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 	}
 
 	r := &Goro{
-		cfg:       cfg,
-		lvm:       lvm,
-		vm:        lvm.vm,
-		halt:      idem.NewHalter(),
-		doticket:  make(chan *ticket),
-		beat:      100 * time.Millisecond,
-		startBeat: make(chan struct{}),
-		Ready:     make(chan struct{}),
+		cfg:             cfg,
+		lvm:             lvm,
+		vm:              lvm.vm,
+		halt:            idem.NewHalter(),
+		doticket:        make(chan *ticket),
+		beat:            50 * time.Millisecond,
+		startBeat:       make(chan struct{}),
+		Ready:           make(chan struct{}),
+		manualHeartbeat: make(chan bool),
 	}
 	// run r.Start() on the main thread
 	//r.Start()
@@ -168,6 +171,9 @@ func (r *Goro) Start() {
 			case <-heartbeat:
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
+			case <-r.manualHeartbeat:
+				fmt.Printf("manualHeartbeat arrived.\n")
+				r.handleHeartbeat()
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:
@@ -180,7 +186,7 @@ func (r *Goro) Start() {
 var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
-	//fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
+	fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
 
 	cur := atomic.AddInt64(&r.beatCount, 1)
 	if cur%30 == 0 {
@@ -272,20 +278,20 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 		_ = eval
 		vm.PushString(s)
 
-		/*p1("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
-		p1("before vm.Call(1,0), stacks are:")
-		if verb.Verbose {
-			showLuaStacks(vm)
-		}
-		*/
+		fmt.Printf("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
+		//fmt.Printf("before vm.Call(1,0), stacks are:")
+		//if verb.Verbose {
+		//showLuaStacks(vm)
+		//}
+
 		vm.Call(1, 0)
 		// if things crash, this is the first place
 		// to check for an error: dump the Lua stack.
 		// With high probability, it will yield clues to the problem.
 
-		//fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
+		fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
 		//if verb.Verbose {
-		//showLuaStacks(vm)
+		showLuaStacks(vm)
 		//}
 
 		return nil

@@ -27,6 +27,7 @@ func init() {
 
 // the single queue of work to run in main thread.
 var mainQ = make(chan func())
+var mainShutdown = make(chan bool)
 
 // doMain runs f on the main thread.
 func doMainWait(f func()) {
@@ -51,6 +52,8 @@ func doMainAsync(f func()) {
 func MainCThread() {
 	for {
 		select {
+		case <-mainShutdown:
+			return
 		case f := <-mainQ:
 			f()
 		}
@@ -59,10 +62,19 @@ func MainCThread() {
 
 func (cfg *GIConfig) LuajitMain() {
 
+	done := make(chan bool)
+	var r *Repl
 	go func() {
-		r := NewRepl(cfg)
-		defer r.lvm.Close()
+		r = NewRepl(cfg)
+
+		// in place of defer to cleanup:
+		go func() {
+			<-done
+			r.lvm.Close()
+			close(mainShutdown)
+		}()
 		r.Loop()
+		done <- true
 	}()
 
 	// this is the C main thread, for LuaJIT
@@ -554,7 +566,7 @@ func showLuaStacks(vm *golua.State) {
 		ignoreTopmost := 1
 		if i == 1 {
 			if name != "main" {
-				panic("name should have been main for i == 1 thread!")
+				panic(fmt.Sprintf("name should have been main for i == 1 thread! not '%s'", name))
 			}
 			// main thread is where we are iterating from,
 			// so it has value, key, __all_coro, __all_coro.
