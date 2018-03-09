@@ -119,7 +119,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	//return nil, nil
 
 	var pkg *types.Package
-	t0 := ic.goro.newTicket()
+	t0 := ic.goro.newTicket("", true)
 
 	switch path {
 	case "gitesting":

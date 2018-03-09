@@ -1187,23 +1187,7 @@ backend provided by (LuaJIT)[http://luajit.org/], progress has been
 quite rapid.
 
 
-# special note on installing under the borked go1.9.4:
-
-Very important: if you want to build with go1.9.4, well, just don't. go1.9.4 is a very borked release with respect to CGO projects; we recommend you avoid it. go1.9.5 will fix the most glaring problems; see https://github.com/golang/go/issues/23749 and just use go1.9.3, it works fine. Should you masochistically attempt to use go1.9.4, poor soul, then prior to building, you must add
-~~~
-export CGO_LDFLAGS_ALLOW='.*\.a$'
-~~~
-to your ~/.bashrc or equivalent, and restart your shell before building, so that `CGO_LDFLAGS_ALLOW` is defined in your environment prior to building.
-
-Verify that `CGO_LDFLAGS_ALLOW` has been set before proceeding (only under the not-recommended go1.9.4):
-~~~
-$ env | grep CGO_LDFLAGS_ALLOW
-CGO_LDFLAGS_ALLOW=.*\.a$
-$
-~~~
-If you don't see `CGO_LDFLAGS_ALLOW` defined as the above, then fix your environment first.
-
-Then, (or just start here for go1.9.3) to install:
+#quick demo session
 ~~~
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi && make install

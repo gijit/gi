@@ -30,7 +30,7 @@ func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 		cfg = NewGIConfig()
 		lvm.cfg = cfg
 	}
-	goro, err := NewGoro(lvm, &GoroConfig{GiCfg: cfg, off: false})
+	goro, err := NewGoro(lvm, &GoroConfig{GiCfg: cfg, off: true})
 	panicOn(err)
 	ic := &IncrState{
 		goro:   goro,

@@ -30,17 +30,28 @@ type LuaVm struct {
 	cfg *GIConfig
 	vm  *golua.State
 
-	mut sync.Mutex
+	goro *Goro
+	mut  sync.Mutex
+}
+
+func NewLuaVm() *LuaVm {
+	lvm := &LuaVm{}
+	var err error
+	gcfg := &GoroConfig{}
+	lvm.goro, err = NewGoro(lvm, gcfg)
+	panicOn(err)
+	return lvm
 }
 
 func (lvm *LuaVm) Close() {
-	lvm.vm.Close()
+	lvm.goro.halt.RequestStop()
+	<-lvm.goro.halt.Done.Chan
 }
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	var vm *golua.State
 	var useStaticPrelude bool
-	lvm = &LuaVm{}
+	lvm = NewLuaVm()
 
 	// cfg == nil means under test.
 	// cfg.Dev means `gi -d` was invoked.
@@ -437,27 +448,19 @@ func LuaRunAndReport(lvm *LuaVm, s string) {
 	}
 }
 
-type LuaRunner struct {
-	lvm        *LuaVm
-	evalThread *golua.State
-}
-
-func NewLuaRunner(lvm *LuaVm) *LuaRunner {
-	lr := &LuaRunner{lvm: lvm}
-	return lr
-}
-
-func (lr *LuaRunner) Run(s string, useEvalCoroutine bool) error {
-	return LuaRun(lr.lvm, s, useEvalCoroutine)
-}
-
 // useEvalCoroutine may need to be false to bootstrap, but
 // should be typically true once the prelude / __gijitMainCoro is loaded.
 func LuaRun(lvm *LuaVm, s string, useEvalCoroutine bool) error {
+	tk := lvm.goro.newTicket(s, useEvalCoroutine)
+	return tk.Do()
+}
 
-	lvm.mut.Lock()
-	defer lvm.mut.Unlock()
+// should only be called by Goro
+func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 
+	lvm := goro.lvm
+
+	s := string(run)
 	pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
 	vm := lvm.vm
 	startTop := vm.GetTop()

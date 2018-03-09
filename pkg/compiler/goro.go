@@ -15,10 +15,10 @@ var _ = time.Now
 // vm running on its own goroutine.
 type Goro struct {
 	cfg      *GoroConfig
-	lr       *LuaRunner
 	lvm      *LuaVm
 	vm       *golua.State
 	halt     *idem.Halter
+	beat     time.Duration
 	doticket chan *ticket
 }
 
@@ -43,9 +43,10 @@ type ticket struct {
 	// what to fetch for return, optional;
 	// one of register, run, or varname should be
 	// set. Else no point in making the Do ticket call.
-	varname    map[string]interface{}
-	gettyp     GetType
-	leaveOnTop bool
+	varname          map[string]interface{}
+	gettyp           GetType
+	leaveOnTop       bool
+	useEvalCoroutine bool
 
 	//output
 	runErr error
@@ -56,15 +57,17 @@ type ticket struct {
 	done chan struct{}
 }
 
-func (r *Goro) newTicket() *ticket {
+func (r *Goro) newTicket(run string, useEvalCoroutine bool) *ticket {
 	if r == nil {
 		panic("newTicket cannot be called on nil Goro r")
 	}
 	t := &ticket{
-		myGoro:  r,
-		regmap:  make(luar.Map),
-		varname: make(map[string]interface{}),
-		done:    make(chan struct{}),
+		myGoro:           r,
+		regmap:           make(luar.Map),
+		varname:          make(map[string]interface{}),
+		done:             make(chan struct{}),
+		run:              []byte(run),
+		useEvalCoroutine: useEvalCoroutine,
 	}
 	return t
 }
@@ -106,7 +109,6 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		vm:       lvm.vm,
 		halt:     idem.NewHalter(),
 		doticket: make(chan *ticket),
-		lr:       NewLuaRunner(lvm),
 	}
 
 	if !cfg.off {
@@ -138,9 +140,11 @@ func (r *Goro) Start() {
 	}()
 }
 
+var resumeSchedBytes = []byte("__task.resume_scheduler();")
+
 func (r *Goro) handleHeartbeat() {
 	fmt.Printf("goro heartbeat!\n")
-	err := LuaRun(r.lvm, "__task.resume_scheduler();", false)
+	err := r.privateRun(resumeSchedBytes, false)
 	panicOn(err)
 }
 
@@ -152,8 +156,7 @@ func (r *Goro) handleTicket(t *ticket) {
 	}
 
 	if len(t.run) > 0 {
-		s := string(t.run)
-		t.runErr = r.lr.Run(s, true)
+		t.runErr = r.privateRun(t.run, t.useEvalCoroutine)
 	}
 	if t.runErr == nil && len(t.varname) > 0 {
 		for key := range t.varname {
