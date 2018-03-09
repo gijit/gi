@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -17,10 +18,58 @@ import (
 
 var p = verb.P
 
+// Arrange that main.main runs on main thread.
+// We want LuaJIT to always be on the one
+// main C thread.
+func init() {
+	runtime.LockOSThread()
+}
+
+// the single queue of work to run in main thread.
+var mainQ = make(chan func())
+
+// doMain runs f on the main thread.
+func doMainWait(f func()) {
+	done := make(chan bool, 1)
+	mainQ <- func() {
+		f()
+		done <- true
+	}
+	<-done
+}
+
+func doMainAsync(f func()) {
+	mainQ <- func() {
+		f()
+	}
+}
+
+// Main runs the main LuaJIT service loop.
+// The binary's main.main must call LuajitMain() to run this loop.
+// Main does not return. If the binary needs to do other work, it
+// must do it in separate goroutines.
+func MainCThread() {
+	for {
+		select {
+		case f := <-mainQ:
+			f()
+		}
+	}
+}
+
 func (cfg *GIConfig) LuajitMain() {
-	r := NewRepl(cfg)
-	defer r.lvm.Close()
-	r.Loop()
+
+	go func() {
+		r := NewRepl(cfg)
+		defer r.lvm.Close()
+		r.Loop()
+	}()
+
+	// this is the C main thread, for LuaJIT
+	// to always and only be on... it never
+	// returns. Use doMain() to communicate
+	// with it via mainQ.
+	MainCThread()
 }
 
 type Repl struct {
@@ -56,6 +105,11 @@ type Repl struct {
 
 func NewRepl(cfg *GIConfig) *Repl {
 
+	// give a config so it knows we are
+	// running under `gi` cmd. Otherwise
+	// tests will assume nil means they
+	// need to start a new goroutine for
+	// non main work.
 	lvm, err := NewLuaVmWithPrelude(cfg)
 
 	panicOn(err)

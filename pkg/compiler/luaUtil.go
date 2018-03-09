@@ -38,7 +38,12 @@ func (lvm *LuaVm) Close() {
 	<-lvm.goro.halt.Done.Chan
 }
 
+// can't be called on main thread
+// and MainCThread() must have already
+// been started.
+//
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
+
 	var vm *golua.State
 	var useStaticPrelude bool
 	lvm = &LuaVm{}
@@ -82,6 +87,9 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	if err != nil {
 		return nil, err
 	}
+	doMainAsync(func() {
+		lvm.goro.Start()
+	})
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.

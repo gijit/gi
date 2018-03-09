@@ -40,6 +40,7 @@ func Test301RedefinitionOfStruct(t *testing.T) {
 		err = cfg.ValidateConfig()
 		panicOn(err)
 		r := NewRepl(cfg)
+		defer r.lvm.Close()
 
 		//verb.VerboseVerbose = true
 		//verb.Verbose = true
@@ -56,13 +57,14 @@ func Test301RedefinitionOfStruct(t *testing.T) {
 
 		// now split into lines: then we get the oops.
 		lines := strings.Split(src, "\n")
+
 		// and do the lines set 2x
 		for j := 0; j < 2; j++ {
 			for i := range lines {
 				err = r.Eval(lines[i])
 				panicOn(err)
 			}
-			//fmt.Printf("\n pass j=%v complete.\n", j)
 		}
+		//fmt.Printf("\n pass j=%v complete.\n", j)
 	})
 }

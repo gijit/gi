@@ -2,6 +2,8 @@ package compiler
 
 import (
 	"fmt"
+	"os"
+	"runtime"
 	"testing"
 
 	//"github.com/gijit/gi/pkg/verb"
@@ -11,6 +13,17 @@ import (
 
 func init() {
 	defaultTestMode = true
+}
+
+func init() {
+	runtime.LockOSThread()
+}
+
+func TestMain(m *testing.M) {
+	go func() {
+		os.Exit(m.Run())
+	}()
+	MainCThread()
 }
 
 var matchesLuaSrc = cv.ShouldMatchModuloWhiteSpaceAndLuaComments

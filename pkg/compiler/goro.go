@@ -28,6 +28,8 @@ type Goro struct {
 	started   bool
 
 	beatCount int64
+
+	Ready chan struct{}
 }
 
 type GoroConfig struct {
@@ -126,13 +128,21 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		doticket:  make(chan *ticket),
 		beat:      100 * time.Millisecond,
 		startBeat: make(chan struct{}),
+		Ready:     make(chan struct{}),
 	}
-	//fmt.Printf("\n 000000000 NewGoro returning r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
-
-	r.Start()
+	// run r.Start() on the main thread
+	//r.Start()
 	return r, nil
 }
 
+// Start must run on the main thread
+// for LuaJIT, it only returns when
+// halted. Use this:
+/*
+    doMainAsync(func() {
+		lvm.goro.Start()
+	})
+*/
 func (r *Goro) Start() {
 	r.mut.Lock()
 	if r.started {
@@ -141,7 +151,7 @@ func (r *Goro) Start() {
 	r.started = true
 	r.mut.Unlock()
 
-	go func() {
+	func() {
 		defer func() {
 			r.lvm.vm.Close()
 			r.halt.MarkDone()
@@ -149,6 +159,7 @@ func (r *Goro) Start() {
 
 		//fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
 		var heartbeat <-chan time.Time
+		close(r.Ready)
 		for {
 			select {
 			case <-r.startBeat:
