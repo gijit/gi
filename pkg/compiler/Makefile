@@ -9,4 +9,4 @@ test:
 	@:
 
 testbuild:
-	go test -c -gcflags "-N -l" -v
+	go test -c -gcflags "-N -l" -v -race

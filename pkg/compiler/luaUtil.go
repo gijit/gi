@@ -36,7 +36,6 @@ type LuaVm struct {
 func (lvm *LuaVm) Close() {
 	lvm.goro.halt.RequestStop()
 	<-lvm.goro.halt.Done.Chan
-	fmt.Printf("\n\n 0000033333 LuaVm Close() done. goro= %p\n\n", lvm.goro)
 }
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
@@ -184,10 +183,9 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 		"__lua2go": lua2GoProxy,
 	})
 	//fmt.Printf("registered __lua2go with luar.\n")
-
 	// only now that __eval is available can we start heartbeat.
-	// Causes crashes, lets not.
-	//lvm.goro.StartBeat()
+	// But, heartbeat causes crashes, lets not.
+	// lvm.goro.StartBeat()
 	return lvm, err
 }
 

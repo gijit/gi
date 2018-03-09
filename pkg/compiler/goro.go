@@ -27,7 +27,7 @@ type Goro struct {
 	mut       sync.Mutex
 	started   bool
 
-	k int64
+	beatCount int64
 }
 
 type GoroConfig struct {
@@ -124,7 +124,7 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		vm:        lvm.vm,
 		halt:      idem.NewHalter(),
 		doticket:  make(chan *ticket),
-		beat:      20 * time.Millisecond,
+		beat:      100 * time.Millisecond,
 		startBeat: make(chan struct{}),
 	}
 	//fmt.Printf("\n 000000000 NewGoro returning r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
@@ -139,15 +139,12 @@ func (r *Goro) Start() {
 		panic("cannot start goro more than once!")
 	}
 	r.started = true
-	//fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p, k=%v\n\n", r, atomic.AddInt64(&r.k, 1))
 	r.mut.Unlock()
 
 	go func() {
 		defer func() {
-			//fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 			r.lvm.vm.Close()
 			r.halt.MarkDone()
-			//fmt.Printf("\n 0000044444 goro Start() finished. closed r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 		}()
 
 		//fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
@@ -155,13 +152,12 @@ func (r *Goro) Start() {
 		for {
 			select {
 			case <-r.startBeat:
+				r.startBeat = nil
 				heartbeat = time.After(r.beat)
 			case <-heartbeat:
-				//fmt.Printf("\n case heartbeat received. r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
 			case <-r.halt.ReqStop.Chan:
-				//fmt.Printf("\n returning on ReqStop received, r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				return
 			case t := <-r.doticket:
 				r.handleTicket(t)
@@ -174,6 +170,11 @@ var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
 	//fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
+
+	cur := atomic.AddInt64(&r.beatCount, 1)
+	if cur%30 == 0 {
+		fmt.Printf("goro heartbeat cur = %v. on r=%p, at %v\n", cur, r, time.Now())
+	}
 	err := r.privateRun(resumeSchedBytes, true)
 	panicOn(err)
 }
@@ -254,7 +255,7 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
-			panic(fmt.Sprintf("could not locate __eval in _G. for r=%p, k=%v", goro, atomic.AddInt64(&goro.k, 1)))
+			panic(fmt.Sprintf("could not locate __eval in _G. for r=%p", goro))
 		}
 		eval := vm.ToPointer(-1)
 		_ = eval
@@ -270,12 +271,12 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 		// if things crash, this is the first place
 		// to check for an error: dump the Lua stack.
 		// With high probability, it will yield clues to the problem.
-		/*
-			p1("after vm.Call(1,0), stacks are:")
-			if verb.Verbose {
-				showLuaStacks(vm)
-			}
-		*/
+
+		//fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
+		//if verb.Verbose {
+		//showLuaStacks(vm)
+		//}
+
 		return nil
 	} else {
 
