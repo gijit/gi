@@ -3,6 +3,8 @@ package compiler
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
+
 	"time"
 
 	golua "github.com/glycerine/golua/lua"
@@ -15,20 +17,21 @@ var _ = time.Now
 // act as a thread-safe proxy to a lua state
 // vm running on its own goroutine.
 type Goro struct {
-	cfg      *GoroConfig
-	lvm      *LuaVm
-	vm       *golua.State
-	halt     *idem.Halter
-	beat     time.Duration
-	doticket chan *ticket
+	cfg       *GoroConfig
+	lvm       *LuaVm
+	vm        *golua.State
+	halt      *idem.Halter
+	beat      time.Duration
+	doticket  chan *ticket
+	startBeat chan struct{}
+	mut       sync.Mutex
+	started   bool
 
-	mut     sync.Mutex
-	started bool
+	k int64
 }
 
 type GoroConfig struct {
 	GiCfg *GIConfig
-	off2  bool // don't run in separate goroutine.
 }
 
 type ticket struct {
@@ -61,6 +64,9 @@ type ticket struct {
 	done chan struct{}
 }
 
+func (r *Goro) StartBeat() {
+	close(r.startBeat)
+}
 func (r *Goro) newTicket(run string, useEvalCoroutine bool) *ticket {
 	//fmt.Printf("goro.newTicket: top \n")
 
@@ -113,17 +119,17 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 	}
 
 	r := &Goro{
-		cfg:      cfg,
-		lvm:      lvm,
-		vm:       lvm.vm,
-		halt:     idem.NewHalter(),
-		doticket: make(chan *ticket),
-		beat:     2000 * time.Millisecond,
+		cfg:       cfg,
+		lvm:       lvm,
+		vm:        lvm.vm,
+		halt:      idem.NewHalter(),
+		doticket:  make(chan *ticket),
+		beat:      20 * time.Millisecond,
+		startBeat: make(chan struct{}),
 	}
+	fmt.Printf("\n 000000000 NewGoro returning r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 
-	if !cfg.off2 {
-		r.Start()
-	}
+	r.Start()
 	return r, nil
 }
 
@@ -133,24 +139,29 @@ func (r *Goro) Start() {
 		panic("cannot start goro more than once!")
 	}
 	r.started = true
-	fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p\n\n", r)
+	fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p, k=%v\n\n", r, atomic.AddInt64(&r.k, 1))
 	r.mut.Unlock()
 
 	go func() {
 		defer func() {
-			fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p \n", r)
+			fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 			r.lvm.vm.Close()
 			r.halt.MarkDone()
+			fmt.Printf("\n 0000044444 goro Start() finished. closed r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 		}()
 
-		fmt.Printf("r.beat is %v\n", r.beat)
-		heartbeat := time.After(r.beat)
+		fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
+		var heartbeat <-chan time.Time
 		for {
 			select {
+			case <-r.startBeat:
+				heartbeat = time.After(r.beat)
 			case <-heartbeat:
+				fmt.Printf("\n case heartbeat received. r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
 			case <-r.halt.ReqStop.Chan:
+				fmt.Printf("\n returning on ReqStop received, r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				return
 			case t := <-r.doticket:
 				r.handleTicket(t)
@@ -168,7 +179,7 @@ func (r *Goro) handleHeartbeat() {
 }
 
 func (r *Goro) handleTicket(t *ticket) {
-	//fmt.Printf("goro.handleTicket: top \n")
+	fmt.Printf("goro.handleTicket: top \n")
 
 	if len(t.regmap) > 0 {
 		luar.Register(r.vm, t.regns, t.regmap)
@@ -208,12 +219,8 @@ func (r *Goro) handleTicket(t *ticket) {
 }
 
 func (r *Goro) do(t *ticket) {
-	if r.cfg.off2 {
-		r.handleTicket(t)
-	} else {
-		r.doticket <- t
-		<-t.done
-	}
+	r.doticket <- t
+	<-t.done
 }
 
 func (t *ticket) Do() error {
@@ -247,7 +254,7 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 
 		vm.GetGlobal("__eval")
 		if vm.IsNil(-1) {
-			panic("could not locate __eval in _G")
+			panic(fmt.Sprintf("could not locate __eval in _G. for r=%p, k=%v", goro, atomic.AddInt64(&goro.k, 1)))
 		}
 		eval := vm.ToPointer(-1)
 		_ = eval

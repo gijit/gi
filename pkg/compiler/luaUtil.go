@@ -34,10 +34,8 @@ type LuaVm struct {
 }
 
 func (lvm *LuaVm) Close() {
-	if !lvm.goro.cfg.off2 {
-		lvm.goro.halt.RequestStop()
-		<-lvm.goro.halt.Done.Chan
-	}
+	lvm.goro.halt.RequestStop()
+	<-lvm.goro.halt.Done.Chan
 	fmt.Printf("\n\n 0000033333 LuaVm Close() done. goro= %p\n\n", lvm.goro)
 }
 
@@ -187,6 +185,8 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	})
 	//fmt.Printf("registered __lua2go with luar.\n")
 
+	// only now that __eval is available can we start heartbeat.
+	lvm.goro.StartBeat()
 	return lvm, err
 }
 
