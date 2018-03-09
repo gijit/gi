@@ -278,7 +278,7 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 		_ = eval
 		vm.PushString(s)
 
-		fmt.Printf("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
+		//fmt.Printf("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
 		//fmt.Printf("before vm.Call(1,0), stacks are:")
 		//if verb.Verbose {
 		//showLuaStacks(vm)
@@ -289,9 +289,9 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 		// to check for an error: dump the Lua stack.
 		// With high probability, it will yield clues to the problem.
 
-		fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
+		//fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
 		//if verb.Verbose {
-		showLuaStacks(vm)
+		//showLuaStacks(vm)
 		//}
 
 		return nil
