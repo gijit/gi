@@ -20,7 +20,7 @@ func Test080Int64ArraysByGoProxyCopyAppend(t *testing.T) {
 
 		lvm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
-		defer lvm.vm.Close()
+		defer lvm.Close()
 		inc := NewIncrState(lvm, nil)
 
 		translation, err := inc.Tr([]byte(code))
@@ -52,7 +52,7 @@ func Test082IncrementOnInt64Arrays(t *testing.T) {
 
 		lvm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
-		defer lvm.vm.Close()
+		defer lvm.Close()
 		inc := NewIncrState(lvm, nil)
 
 		translation, err := inc.Tr([]byte(code))

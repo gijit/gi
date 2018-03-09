@@ -38,7 +38,7 @@ func (lvm *LuaVm) Close() {
 		lvm.goro.halt.RequestStop()
 		<-lvm.goro.halt.Done.Chan
 	}
-	fmt.Printf("\n\n LuaVm Close() done.\n\n")
+	fmt.Printf("\n\n 0000033333 LuaVm Close() done. goro= %p\n\n", lvm.goro)
 }
 
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {

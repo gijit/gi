@@ -102,12 +102,14 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		cfg = &GoroConfig{}
 	}
 
-	var err error
+	//var err error
 	if lvm == nil {
-		lvm, err = NewLuaVmWithPrelude(cfg.GiCfg)
+		panic("lvm cannot be nil") // try to root out duplicate starts.
+		/*lvm, err = NewLuaVmWithPrelude(cfg.GiCfg)
 		if err != nil {
 			return nil, err
 		}
+		*/
 	}
 
 	r := &Goro{
@@ -131,11 +133,12 @@ func (r *Goro) Start() {
 		panic("cannot start goro more than once!")
 	}
 	r.started = true
+	fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p\n\n", r)
 	r.mut.Unlock()
 
 	go func() {
 		defer func() {
-			fmt.Printf("Gogo.Start() finished. closing r.vm='%#v'", r.vm)
+			fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p \n", r)
 			r.lvm.vm.Close()
 			r.halt.MarkDone()
 		}()
@@ -160,8 +163,8 @@ var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
 	fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
-	//err := r.privateRun(resumeSchedBytes, true)
-	//panicOn(err)
+	err := r.privateRun(resumeSchedBytes, true)
+	panicOn(err)
 }
 
 func (r *Goro) handleTicket(t *ticket) {

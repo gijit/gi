@@ -19,7 +19,7 @@ var p = verb.P
 
 func (cfg *GIConfig) LuajitMain() {
 	r := NewRepl(cfg)
-	defer r.lvm.vm.Close()
+	defer r.lvm.Close()
 	r.Loop()
 }
 
