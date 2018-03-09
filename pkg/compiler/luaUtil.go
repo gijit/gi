@@ -192,12 +192,18 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	})
 	//fmt.Printf("registered __lua2go with luar.\n")
 	// only now that __eval is available can we start heartbeat.
-	// But, heartbeat causes crashes, lets not.
+
 	// Even when LuaJIT is locked to main thread, still
-	// seems to mix up the stacks to have a new coroutine come in
+	// heartbeats seem to to mix up the stack that we
+	// query during inspection of the vm... e.g. when
+	// we find we have a new coroutine come in
 	// run in between our previous code and our querying the
 	// state of the VM.
-	//lvm.goro.StartBeat()
+	// Leaving heartbeats off after running our test code
+	// appears, at least for now, to resolve the issue.
+	//
+	// But no application currently, so leave them off.
+	// lvm.goro.StartBeat()
 	return lvm, err
 }
 
@@ -452,7 +458,11 @@ func LuaIsNil(lvm *LuaVm, varname string) (bool, string) {
 	return isNil, golua.LuaStackPosToString(vm, top)
 }
 
+// turns heartbeats on only during the run,
+// then turns them off so they don't mess
+// up our vm inspection.
 func LuaRunAndReport(lvm *LuaVm, s string) {
+	lvm.goro.heartbeatsOn <- true
 	err := LuaRun(lvm, s, true)
 
 	if err != nil {
@@ -460,6 +470,7 @@ func LuaRunAndReport(lvm *LuaVm, s string) {
 			err, s)
 		panic(err)
 	}
+	lvm.goro.heartbeatsOff <- true
 }
 
 // useEvalCoroutine may need to be false to bootstrap, but

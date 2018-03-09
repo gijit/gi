@@ -17,17 +17,18 @@ var _ = time.Now
 // act as a thread-safe proxy to a lua state
 // vm running on its own goroutine.
 type Goro struct {
-	cfg       *GoroConfig
-	lvm       *LuaVm
-	vm        *golua.State
-	halt      *idem.Halter
-	beat      time.Duration
-	doticket  chan *ticket
-	startBeat chan struct{}
-	mut       sync.Mutex
-	started   bool
+	cfg      *GoroConfig
+	lvm      *LuaVm
+	vm       *golua.State
+	halt     *idem.Halter
+	beat     time.Duration
+	doticket chan *ticket
+	mut      sync.Mutex
+	started  bool
 
 	manualHeartbeat chan bool
+	heartbeatsOff   chan bool
+	heartbeatsOn    chan bool
 
 	beatCount int64
 
@@ -69,7 +70,7 @@ type ticket struct {
 }
 
 func (r *Goro) StartBeat() {
-	close(r.startBeat)
+	r.heartbeatsOn <- true
 }
 func (r *Goro) newTicket(run string, useEvalCoroutine bool) *ticket {
 	//fmt.Printf("goro.newTicket: top \n")
@@ -128,10 +129,11 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		vm:              lvm.vm,
 		halt:            idem.NewHalter(),
 		doticket:        make(chan *ticket),
-		beat:            50 * time.Millisecond,
-		startBeat:       make(chan struct{}),
+		beat:            10 * time.Millisecond,
 		Ready:           make(chan struct{}),
 		manualHeartbeat: make(chan bool),
+		heartbeatsOff:   make(chan bool),
+		heartbeatsOn:    make(chan bool),
 	}
 	// run r.Start() on the main thread
 	//r.Start()
@@ -165,12 +167,16 @@ func (r *Goro) Start() {
 		close(r.Ready)
 		for {
 			select {
-			case <-r.startBeat:
-				r.startBeat = nil
-				heartbeat = time.After(r.beat)
 			case <-heartbeat:
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
+
+			case <-r.heartbeatsOn:
+				heartbeat = time.After(r.beat)
+
+			case <-r.heartbeatsOff:
+				heartbeat = nil
+
 			case <-r.manualHeartbeat:
 				fmt.Printf("manualHeartbeat arrived.\n")
 				r.handleHeartbeat()
