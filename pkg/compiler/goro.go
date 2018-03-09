@@ -172,6 +172,7 @@ func (r *Goro) Start() {
 				heartbeat = time.After(r.beat)
 
 			case <-r.heartbeatsOn:
+				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
 
 			case <-r.heartbeatsOff:
