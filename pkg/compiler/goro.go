@@ -127,7 +127,7 @@ func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
 		beat:      20 * time.Millisecond,
 		startBeat: make(chan struct{}),
 	}
-	fmt.Printf("\n 000000000 NewGoro returning r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
+	//fmt.Printf("\n 000000000 NewGoro returning r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 
 	r.Start()
 	return r, nil
@@ -139,29 +139,29 @@ func (r *Goro) Start() {
 		panic("cannot start goro more than once!")
 	}
 	r.started = true
-	fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p, k=%v\n\n", r, atomic.AddInt64(&r.k, 1))
+	//fmt.Printf("\n 0000011111 Goro.Start() succeeded on %p, k=%v\n\n", r, atomic.AddInt64(&r.k, 1))
 	r.mut.Unlock()
 
 	go func() {
 		defer func() {
-			fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
+			//fmt.Printf("\n 0000022222 goro Start() finished. closing r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 			r.lvm.vm.Close()
 			r.halt.MarkDone()
-			fmt.Printf("\n 0000044444 goro Start() finished. closed r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
+			//fmt.Printf("\n 0000044444 goro Start() finished. closed r= %p, k=%v \n", r, atomic.AddInt64(&r.k, 1))
 		}()
 
-		fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
+		//fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
 		var heartbeat <-chan time.Time
 		for {
 			select {
 			case <-r.startBeat:
 				heartbeat = time.After(r.beat)
 			case <-heartbeat:
-				fmt.Printf("\n case heartbeat received. r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
+				//fmt.Printf("\n case heartbeat received. r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
 			case <-r.halt.ReqStop.Chan:
-				fmt.Printf("\n returning on ReqStop received, r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
+				//fmt.Printf("\n returning on ReqStop received, r = %p, k=%v\n", r, atomic.AddInt64(&r.k, 1))
 				return
 			case t := <-r.doticket:
 				r.handleTicket(t)
@@ -173,13 +173,13 @@ func (r *Goro) Start() {
 var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
-	fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
+	//fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
 	err := r.privateRun(resumeSchedBytes, true)
 	panicOn(err)
 }
 
 func (r *Goro) handleTicket(t *ticket) {
-	fmt.Printf("goro.handleTicket: top \n")
+	//fmt.Printf("goro.handleTicket: top \n")
 
 	if len(t.regmap) > 0 {
 		luar.Register(r.vm, t.regns, t.regmap)

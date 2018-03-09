@@ -7,3 +7,6 @@ test:
 	export CGO_LDFLAGS_ALLOW='.*\.a$$'; go test -v $(filter-out $@,$(MAKECMDGOALS))
 %:
 	@:
+
+testbuild:
+	go test -c -gcflags "-N -l" -v

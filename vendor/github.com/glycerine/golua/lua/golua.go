@@ -383,7 +383,10 @@ func golua_callallocf(fp uintptr, ptr uintptr, osize uint, nsize uint) uintptr {
 //export go_panic_msghandler
 func go_panic_msghandler(gostateindex uintptr, z *C.char) {
 	L := getGoState(int(gostateindex))
+	_ = L
 	s := C.GoString(z)
 
-	panic(&LuaError{LUA_ERRERR, s, L.StackTrace()})
+	// jea: L.StackTrace was itself crashing?
+	//panic(&LuaError{LUA_ERRERR, s, L.StackTrace()})
+	panic(&LuaError{LUA_ERRERR, s, nil})
 }

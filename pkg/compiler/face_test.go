@@ -301,12 +301,19 @@ switch v.(type) {
 		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
+		fmt.Printf("pre run and report\n")
 		LuaRunAndReport(vm, string(translation))
+		fmt.Printf("past 0\n")
 		LuaMustInt64(vm, "chk", 0)
+		fmt.Printf("past 1 chk\n")
 		LuaMustBool(vm, "isBowser", false)
+		fmt.Printf("past 2\n")
 		LuaMustBool(vm, "asIsNil", true)
+		fmt.Printf("past 3\n")
 
 		LuaMustBool(vm, "isUn", false)
+		fmt.Printf("past 4\n")
 		LuaMustBool(vm, "asUnNil", true)
+		fmt.Printf("past 5\n")
 	})
 }

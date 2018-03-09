@@ -186,7 +186,8 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	//fmt.Printf("registered __lua2go with luar.\n")
 
 	// only now that __eval is available can we start heartbeat.
-	lvm.goro.StartBeat()
+	// Causes crashes, lets not.
+	//lvm.goro.StartBeat()
 	return lvm, err
 }
 
