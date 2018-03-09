@@ -34,8 +34,10 @@ type LuaVm struct {
 }
 
 func (lvm *LuaVm) Close() {
-	lvm.goro.halt.RequestStop()
-	<-lvm.goro.halt.Done.Chan
+	if !lvm.goro.cfg.off {
+		lvm.goro.halt.RequestStop()
+		<-lvm.goro.halt.Done.Chan
+	}
 	fmt.Printf("\n\n LuaVm Close() done.\n\n")
 }
 

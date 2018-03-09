@@ -132,11 +132,12 @@ func (r *Goro) Start() {
 	}
 	r.started = true
 	r.mut.Unlock()
+
 	go func() {
 		defer func() {
-			r.halt.MarkDone()
-			//fmt.Printf("Gogo.Start() finished. closing r.vm='%#v'", r.vm)
+			fmt.Printf("Gogo.Start() finished. closing r.vm='%#v'", r.vm)
 			r.lvm.vm.Close()
+			r.halt.MarkDone()
 		}()
 
 		fmt.Printf("r.beat is %v\n", r.beat)
@@ -158,7 +159,7 @@ func (r *Goro) Start() {
 var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
-	fmt.Printf("goro heartbeat! at %v\n", time.Now())
+	fmt.Printf("goro heartbeat! on r=%p, at %v\n", r, time.Now())
 	//err := r.privateRun(resumeSchedBytes, true)
 	//panicOn(err)
 }

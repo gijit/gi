@@ -39,6 +39,7 @@ func Test053GoToLuarThenLuarToGo(t *testing.T) {
 
 		//vm, err := NewLuaVmWithPrelude(nil)
 		//panicOn(err)
+        defer vm.Close()
 
 		vm := luar.Init()
 		a := []int{6, 7, 8}
