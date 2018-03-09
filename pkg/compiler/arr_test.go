@@ -88,13 +88,12 @@ func Test081CloneOfInt64Array(t *testing.T) {
 		fmt.Printf("\n translation='%s'\n", translation)
 
 		// too fragile.
-		//cv.So(string(translation), matchesLuaSrc,``)
 
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustInt64(vm, "c", 4)
-
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
 

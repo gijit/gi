@@ -34,15 +34,6 @@ type LuaVm struct {
 	mut  sync.Mutex
 }
 
-func NewLuaVm() *LuaVm {
-	lvm := &LuaVm{}
-	var err error
-	gcfg := &GoroConfig{}
-	lvm.goro, err = NewGoro(lvm, gcfg)
-	panicOn(err)
-	return lvm
-}
-
 func (lvm *LuaVm) Close() {
 	lvm.goro.halt.RequestStop()
 	<-lvm.goro.halt.Done.Chan
@@ -51,7 +42,7 @@ func (lvm *LuaVm) Close() {
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	var vm *golua.State
 	var useStaticPrelude bool
-	lvm = NewLuaVm()
+	lvm = &LuaVm{}
 
 	// cfg == nil means under test.
 	// cfg.Dev means `gi -d` was invoked.
@@ -85,6 +76,13 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	vm = luar.Init() // does vm.OpenLibs() for us, adds luar. functions.
 	registerLuarReqs(vm)
 	lvm.vm = vm
+
+	// before any LuaRun, must setup the lvm.goro
+	gcfg := &GoroConfig{}
+	lvm.goro, err = NewGoro(lvm, gcfg)
+	if err != nil {
+		return nil, err
+	}
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.

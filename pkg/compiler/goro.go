@@ -58,6 +58,8 @@ type ticket struct {
 }
 
 func (r *Goro) newTicket(run string, useEvalCoroutine bool) *ticket {
+	//fmt.Printf("goro.newTicket: top \n")
+
 	if r == nil {
 		panic("newTicket cannot be called on nil Goro r")
 	}
@@ -91,6 +93,7 @@ const (
 )
 
 func NewGoro(lvm *LuaVm, cfg *GoroConfig) (*Goro, error) {
+	//fmt.Printf("\n\n NewGoro: top lvm='%#v'; lvm.vm='%#v'\n", lvm, lvm.vm)
 	if cfg == nil {
 		cfg = &GoroConfig{}
 	}
@@ -121,7 +124,8 @@ func (r *Goro) Start() {
 	go func() {
 		defer func() {
 			r.halt.MarkDone()
-			r.vm.Close()
+			//fmt.Printf("Gogo.Start() finished. closing r.vm='%#v'", r.vm)
+			r.lvm.vm.Close()
 		}()
 
 		//beat := 1000 * time.Millisecond
@@ -143,12 +147,13 @@ func (r *Goro) Start() {
 var resumeSchedBytes = []byte("__task.resume_scheduler();")
 
 func (r *Goro) handleHeartbeat() {
-	fmt.Printf("goro heartbeat!\n")
+	//fmt.Printf("goro heartbeat!\n")
 	err := r.privateRun(resumeSchedBytes, false)
 	panicOn(err)
 }
 
 func (r *Goro) handleTicket(t *ticket) {
+	//fmt.Printf("goro.handleTicket: top \n")
 
 	if len(t.regmap) > 0 {
 		luar.Register(r.vm, t.regns, t.regmap)
