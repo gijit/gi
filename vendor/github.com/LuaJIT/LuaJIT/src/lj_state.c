@@ -12,7 +12,6 @@
 #include "lj_obj.h"
 #include "lj_gc.h"
 #include "lj_err.h"
-#include "lj_buf.h"
 #include "lj_str.h"
 #include "lj_tab.h"
 #include "lj_func.h"
@@ -27,7 +26,6 @@
 #include "lj_vm.h"
 #include "lj_lex.h"
 #include "lj_alloc.h"
-#include "luajit.h"
 
 /* -- Stack handling ------------------------------------------------------ */
 
@@ -49,7 +47,6 @@
 ** one extra slot if mobj is not a function. Only lj_meta_tset needs 5
 ** slots above top, but then mobj is always a function. So we can get by
 ** with 5 extra slots.
-** LJ_FR2: We need 2 more slots for the frame PC and the continuation PC.
 */
 
 /* Resize stack slots and adjust pointers in state. */
@@ -62,7 +59,7 @@ static void resizestack(lua_State *L, MSize n)
   GCobj *up;
   lua_assert((MSize)(tvref(L->maxstack)-oldst)==L->stacksize-LJ_STACK_EXTRA-1);
   st = (TValue *)lj_mem_realloc(L, tvref(L->stack),
-				(MSize)(oldsize*sizeof(TValue)),
+				(MSize)(L->stacksize*sizeof(TValue)),
 				(MSize)(realsize*sizeof(TValue)));
   setmref(L->stack, st);
   delta = (char *)st - (char *)oldst;
@@ -70,12 +67,12 @@ static void resizestack(lua_State *L, MSize n)
   while (oldsize < realsize)  /* Clear new slots. */
     setnilV(st + oldsize++);
   L->stacksize = realsize;
-  if ((size_t)(mref(G(L)->jit_base, char) - (char *)oldst) < oldsize)
-    setmref(G(L)->jit_base, mref(G(L)->jit_base, char) + delta);
   L->base = (TValue *)((char *)L->base + delta);
   L->top = (TValue *)((char *)L->top + delta);
   for (up = gcref(L->openupval); up != NULL; up = gcnext(up))
     setmref(gco2uv(up)->v, (TValue *)((char *)uvval(gco2uv(up)) + delta));
+  if (obj2gco(L) == gcref(G(L)->jit_L))
+    setmref(G(L)->jit_base, mref(G(L)->jit_base, char) + delta);
 }
 
 /* Relimit stack after error, in case the limit was overdrawn. */
@@ -92,8 +89,7 @@ void lj_state_shrinkstack(lua_State *L, MSize used)
     return;  /* Avoid stack shrinking while handling stack overflow. */
   if (4*used < L->stacksize &&
       2*(LJ_STACK_START+LJ_STACK_EXTRA) < L->stacksize &&
-      /* Don't shrink stack of live trace. */
-      (tvref(G(L)->jit_base) == NULL || obj2gco(L) != gcref(G(L)->cur_L)))
+      obj2gco(L) != gcref(G(L)->jit_L))  /* Don't shrink stack of live trace. */
     resizestack(L, L->stacksize >> 1);
 }
 
@@ -129,9 +125,8 @@ static void stack_init(lua_State *L1, lua_State *L)
   L1->stacksize = LJ_STACK_START + LJ_STACK_EXTRA;
   stend = st + L1->stacksize;
   setmref(L1->maxstack, stend - LJ_STACK_EXTRA - 1);
-  setthreadV(L1, st++, L1);  /* Needed for curr_funcisL() on empty stack. */
-  if (LJ_FR2) setnilV(st++);
-  L1->base = L1->top = st;
+  L1->base = L1->top = st+1;
+  setthreadV(L1, st, L1);  /* Needed for curr_funcisL() on empty stack. */
   while (st < stend)  /* Clear new slots. */
     setnilV(st++);
 }
@@ -169,7 +164,7 @@ static void close_state(lua_State *L)
   lj_ctype_freestate(g);
 #endif
   lj_mem_freevec(g, g->strhash, g->strmask+1, GCRef);
-  lj_buf_free(g, &g->tmpbuf);
+  lj_str_freebuf(g, &g->tmpbuf);
   lj_mem_freevec(g, tvref(L->stack), L->stacksize, TValue);
   lua_assert(g->gc.total == sizeof(GG_State));
 #ifndef LUAJIT_USE_SYSMALLOC
@@ -180,7 +175,7 @@ static void close_state(lua_State *L)
     g->allocf(g->allocd, G2GG(g), sizeof(GG_State), 0);
 }
 
-#if LJ_64 && !LJ_GC64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
+#if LJ_64 && !(defined(LUAJIT_USE_VALGRIND) && defined(LUAJIT_USE_SYSMALLOC))
 lua_State *lj_state_newstate(lua_Alloc f, void *ud)
 #else
 LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
@@ -189,7 +184,7 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   GG_State *GG = (GG_State *)f(ud, NULL, 0, sizeof(GG_State));
   lua_State *L = &GG->L;
   global_State *g = &GG->g;
-  if (GG == NULL || !checkptrGC(GG)) return NULL;
+  if (GG == NULL || !checkptr32(GG)) return NULL;
   memset(GG, 0, sizeof(GG_State));
   L->gct = ~LJ_TTHREAD;
   L->marked = LJ_GC_WHITE0 | LJ_GC_FIXED | LJ_GC_SFIXED;  /* Prevent free. */
@@ -207,10 +202,8 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
   setnilV(registry(L));
   setnilV(&g->nilnode.val);
   setnilV(&g->nilnode.key);
-#if !LJ_GC64
   setmref(g->nilnode.freetop, &g->nilnode);
-#endif
-  lj_buf_init(NULL, &g->tmpbuf);
+  lj_str_initbuf(&g->tmpbuf);
   g->gc.state = GCSpause;
   setgcref(g->gc.root, obj2gco(L));
   setmref(g->gc.sweep, &g->gc.root);
@@ -224,7 +217,7 @@ LUA_API lua_State *lua_newstate(lua_Alloc f, void *ud)
     close_state(L);
     return NULL;
   }
-  L->status = LUA_OK;
+  L->status = 0;
   return L;
 }
 
@@ -243,10 +236,6 @@ LUA_API void lua_close(lua_State *L)
   global_State *g = G(L);
   int i;
   L = mainthread(g);  /* Only the main thread can be closed. */
-#if LJ_HASPROFILE
-  luaJIT_profile_stop(L);
-#endif
-  setgcrefnull(g->cur_L);
   lj_func_closeuv(L, tvref(L->stack));
   lj_gc_separateudata(g, 1);  /* Separate udata which have GC metamethods. */
 #if LJ_HASJIT
@@ -256,10 +245,10 @@ LUA_API void lua_close(lua_State *L)
 #endif
   for (i = 0;;) {
     hook_enter(g);
-    L->status = LUA_OK;
-    L->base = L->top = tvref(L->stack) + 1 + LJ_FR2;
+    L->status = 0;
     L->cframe = NULL;
-    if (lj_vm_cpcall(L, NULL, NULL, cpfinalize) == LUA_OK) {
+    L->base = L->top = tvref(L->stack) + 1;
+    if (lj_vm_cpcall(L, NULL, NULL, cpfinalize) == 0) {
       if (++i >= 10) break;
       lj_gc_separateudata(g, 1);  /* Separate udata again. */
       if (gcref(g->gc.mmudata) == NULL)  /* Until nothing is left to do. */
@@ -274,7 +263,7 @@ lua_State *lj_state_new(lua_State *L)
   lua_State *L1 = lj_mem_newobj(L, lua_State);
   L1->gct = ~LJ_TTHREAD;
   L1->dummy_ffid = FF_C;
-  L1->status = LUA_OK;
+  L1->status = 0;
   L1->stacksize = 0;
   setmref(L1->stack, NULL);
   L1->cframe = NULL;
@@ -290,8 +279,6 @@ lua_State *lj_state_new(lua_State *L)
 void LJ_FASTCALL lj_state_free(global_State *g, lua_State *L)
 {
   lua_assert(L != mainthread(g));
-  if (obj2gco(L) == gcref(g->cur_L))
-    setgcrefnull(g->cur_L);
   lj_func_closeuv(L, tvref(L->stack));
   lua_assert(gcref(L->openupval) == NULL);
   lj_mem_freevec(g, tvref(L->stack), L->stacksize, TValue);

@@ -29,7 +29,6 @@
 #include "lj_ccall.h"
 #include "lj_ccallback.h"
 #include "lj_clib.h"
-#include "lj_strfmt.h"
 #include "lj_ff.h"
 #include "lj_lib.h"
 
@@ -138,7 +137,7 @@ static int ffi_index_meta(lua_State *L, CTState *cts, CType *ct, MMS mm)
       }
     }
     copyTV(L, base, L->top);
-    tv = L->top-1-LJ_FR2;
+    tv = L->top-1;
   }
   return lj_meta_tailcall(L, tv);
 }
@@ -194,7 +193,7 @@ LJLIB_CF(ffi_meta___eq)		LJLIB_REC(cdata_arith MM_eq)
 
 LJLIB_CF(ffi_meta___len)	LJLIB_REC(cdata_arith MM_len)
 {
-  return ffi_arith(L);
+  return lj_carith_len(L);
 }
 
 LJLIB_CF(ffi_meta___lt)		LJLIB_REC(cdata_arith MM_lt)
@@ -319,7 +318,7 @@ LJLIB_CF(ffi_meta___tostring)
       }
     }
   }
-  lj_strfmt_pushf(L, msg, strdata(lj_ctype_repr(L, id, NULL)), p);
+  lj_str_pushf(L, msg, strdata(lj_ctype_repr(L, id, NULL)), p);
 checkgc:
   lj_gc_check(L);
   return 1;
@@ -505,7 +504,10 @@ LJLIB_CF(ffi_new)	LJLIB_REC(.)
   }
   if (sz == CTSIZE_INVALID)
     lj_err_arg(L, 1, LJ_ERR_FFI_INVSIZE);
-  cd = lj_cdata_newx(cts, id, sz, info);
+  if (!(info & CTF_VLA) && ctype_align(info) <= CT_MEMALIGN)
+    cd = lj_cdata_new(cts, id, sz);
+  else
+    cd = lj_cdata_newv(cts, id, sz, ctype_align(info));
   setcdataV(L, o-1, cd);  /* Anchor the uninitialized cdata. */
   lj_cconv_ct_init(cts, ct, sz, cdataptr(cd),
 		   o, (MSize)(L->top - o));  /* Initialize cdata. */
@@ -554,31 +556,6 @@ LJLIB_CF(ffi_typeof)	LJLIB_REC(.)
   setcdataV(L, L->top-1, cd);
   lj_gc_check(L);
   return 1;
-}
-
-/* Internal and unsupported API. */
-LJLIB_CF(ffi_typeinfo)
-{
-  CTState *cts = ctype_cts(L);
-  CTypeID id = (CTypeID)ffi_checkint(L, 1);
-  if (id > 0 && id < cts->top) {
-    CType *ct = ctype_get(cts, id);
-    GCtab *t;
-    lua_createtable(L, 0, 4);  /* Increment hash size if fields are added. */
-    t = tabV(L->top-1);
-    setintV(lj_tab_setstr(L, t, lj_str_newlit(L, "info")), (int32_t)ct->info);
-    if (ct->size != CTSIZE_INVALID)
-      setintV(lj_tab_setstr(L, t, lj_str_newlit(L, "size")), (int32_t)ct->size);
-    if (ct->sib)
-      setintV(lj_tab_setstr(L, t, lj_str_newlit(L, "sib")), (int32_t)ct->sib);
-    if (gcref(ct->name)) {
-      GCstr *s = gco2str(gcref(ct->name));
-      setstrV(L, lj_tab_setstr(L, t, lj_str_newlit(L, "name")), s);
-    }
-    lj_gc_check(L);
-    return 1;
-  }
-  return 0;
 }
 
 LJLIB_CF(ffi_istype)	LJLIB_REC(.)
@@ -748,9 +725,6 @@ LJLIB_CF(ffi_abi)	LJLIB_REC(.)
   case H_(4ab624a8,4ab624a8): b = 1; break;  /* win */
 #endif
   case H_(3af93066,1f001464): b = 1; break;  /* le/be */
-#if LJ_GC64
-  case H_(9e89d2c9,13c83c92): b = 1; break;  /* gc64 */
-#endif
   default:
     break;
   }
@@ -794,11 +768,19 @@ LJLIB_CF(ffi_gc)	LJLIB_REC(.)
   GCcdata *cd = ffi_checkcdata(L, 1);
   TValue *fin = lj_lib_checkany(L, 2);
   CTState *cts = ctype_cts(L);
+  GCtab *t = cts->finalizer;
   CType *ct = ctype_raw(cts, cd->ctypeid);
   if (!(ctype_isptr(ct->info) || ctype_isstruct(ct->info) ||
 	ctype_isrefarray(ct->info)))
     lj_err_arg(L, 1, LJ_ERR_FFI_INVTYPE);
-  lj_cdata_setfin(L, cd, gcval(fin), itype(fin));
+  if (gcref(t->metatable)) {  /* Update finalizer table, if still enabled. */
+    copyTV(L, lj_tab_set(L, t, L->base), fin);
+    lj_gc_anybarriert(L, t);
+    if (!tvisnil(fin))
+      cd->marked |= LJ_GC_CDATA_FIN;
+    else
+      cd->marked &= ~LJ_GC_CDATA_FIN;
+  }
   L->top = L->base+1;  /* Pass through the cdata object. */
   return 1;
 }

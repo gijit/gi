@@ -14,10 +14,9 @@
 ##############################################################################
 
 MAJVER=  2
-MINVER=  1
-RELVER=  0
-PREREL=  -beta3
-VERSION= $(MAJVER).$(MINVER).$(RELVER)$(PREREL)
+MINVER=  0
+RELVER=  5
+VERSION= $(MAJVER).$(MINVER).$(RELVER)
 ABIVER=  5.1
 
 ##############################################################################
@@ -85,10 +84,8 @@ FILE_SO= libluajit.so
 FILE_MAN= luajit.1
 FILE_PC= luajit.pc
 FILES_INC= lua.h lualib.h lauxlib.h luaconf.h lua.hpp luajit.h
-FILES_JITLIB= bc.lua bcsave.lua dump.lua p.lua v.lua zone.lua \
-	      dis_x86.lua dis_x64.lua dis_arm.lua dis_arm64.lua \
-	      dis_arm64be.lua dis_ppc.lua dis_mips.lua dis_mipsel.lua \
-	      dis_mips64.lua dis_mips64el.lua vmdef.lua
+FILES_JITLIB= bc.lua v.lua dump.lua dis_x86.lua dis_x64.lua dis_arm.lua \
+	      dis_ppc.lua dis_mips.lua dis_mipsel.lua bcsave.lua vmdef.lua
 
 ifeq (,$(findstring Windows,$(OS)))
   HOST_SYS:= $(shell uname -s)
@@ -118,7 +115,7 @@ install: $(INSTALL_DEP)
 	$(MKDIR) $(INSTALL_DIRS)
 	cd src && $(INSTALL_X) $(FILE_T) $(INSTALL_T)
 	cd src && test -f $(FILE_A) && $(INSTALL_F) $(FILE_A) $(INSTALL_STATIC) || :
-	$(RM) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2)
+	$(RM) $(INSTALL_TSYM) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2)
 	cd src && test -f $(FILE_SO) && \
 	  $(INSTALL_X) $(FILE_SO) $(INSTALL_DYN) && \
 	  $(LDCONFIG) $(INSTALL_LIB) && \
@@ -130,18 +127,12 @@ install: $(INSTALL_DEP)
 	  $(RM) $(FILE_PC).tmp
 	cd src && $(INSTALL_F) $(FILES_INC) $(INSTALL_INC)
 	cd src/jit && $(INSTALL_F) $(FILES_JITLIB) $(INSTALL_JITLIB)
+	$(SYMLINK) $(INSTALL_TNAME) $(INSTALL_TSYM)
 	@echo "==== Successfully installed LuaJIT $(VERSION) to $(PREFIX) ===="
-	@echo ""
-	@echo "Note: the development releases deliberately do NOT install a symlink for luajit"
-	@echo "You can do this now by running this command (with sudo):"
-	@echo ""
-	@echo "  $(SYMLINK) $(INSTALL_TNAME) $(INSTALL_TSYM)"
-	@echo ""
-
 
 uninstall:
 	@echo "==== Uninstalling LuaJIT $(VERSION) from $(PREFIX) ===="
-	$(UNINSTALL) $(INSTALL_T) $(INSTALL_STATIC) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2) $(INSTALL_MAN)/$(FILE_MAN) $(INSTALL_PC)
+	$(UNINSTALL) $(INSTALL_TSYM) $(INSTALL_T) $(INSTALL_STATIC) $(INSTALL_DYN) $(INSTALL_SHORT1) $(INSTALL_SHORT2) $(INSTALL_MAN)/$(FILE_MAN) $(INSTALL_PC)
 	for file in $(FILES_JITLIB); do \
 	  $(UNINSTALL) $(INSTALL_JITLIB)/$$file; \
 	  done

@@ -448,10 +448,8 @@ int lj_cconv_tv_bf(CTState *cts, CType *s, TValue *o, uint8_t *sp)
 	setintV(o, (int32_t)val);
     }
   } else {
-    uint32_t b = (val >> pos) & 1;
     lua_assert(bsz == 1);
-    setboolV(o, b);
-    setboolV(&cts->g->tmptv2, b);  /* Remember for trace recorder. */
+    setboolV(o, (val >> pos) & 1);
   }
   return 0;  /* No GC step needed. */
 }

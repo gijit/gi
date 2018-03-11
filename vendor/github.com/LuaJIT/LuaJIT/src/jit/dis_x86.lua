@@ -15,20 +15,19 @@
 -- Intel and AMD manuals. The supported instruction set is quite extensive
 -- and reflects what a current generation Intel or AMD CPU implements in
 -- 32 bit and 64 bit mode. Yes, this includes MMX, SSE, SSE2, SSE3, SSSE3,
--- SSE4.1, SSE4.2, SSE4a, AVX, AVX2 and even privileged and hypervisor
--- (VMX/SVM) instructions.
+-- SSE4.1, SSE4.2, SSE4a and even privileged and hypervisor (VMX/SVM)
+-- instructions.
 --
 -- Notes:
 -- * The (useless) a16 prefix, 3DNow and pre-586 opcodes are unsupported.
 -- * No attempt at optimization has been made -- it's fast enough for my needs.
+-- * The public API may change when more architectures are added.
 ------------------------------------------------------------------------------
 
 local type = type
 local sub, byte, format = string.sub, string.byte, string.format
 local match, gmatch, gsub = string.match, string.gmatch, string.gsub
 local lower, rep = string.lower, string.rep
-local bit = require("bit")
-local tohex = bit.tohex
 
 -- Map for 1st opcode byte in 32 bit mode. Ugly? Well ... read on.
 local map_opc1_32 = {
@@ -77,7 +76,7 @@ local map_opc1_32 = {
 "movBRi","movBRi","movBRi","movBRi","movBRi","movBRi","movBRi","movBRi",
 "movVRI","movVRI","movVRI","movVRI","movVRI","movVRI","movVRI","movVRI",
 --Cx
-"shift!Bmu","shift!Vmu","retBw","ret","vex*3$lesVrm","vex*2$ldsVrm","movBmi","movVmi",
+"shift!Bmu","shift!Vmu","retBw","ret","$lesVrm","$ldsVrm","movBmi","movVmi",
 "enterBwu","leave","retfBw","retf","int3","intBu","into","iretVS",
 --Dx
 "shift!Bm1","shift!Vm1","shift!Bmc","shift!Vmc","aamBu","aadBu","salc","xlatb",
@@ -102,7 +101,7 @@ local map_opc1_64 = setmetatable({
   [0x44]="rex*r",  [0x45]="rex*rb",  [0x46]="rex*rx",  [0x47]="rex*rxb",
   [0x48]="rex*w",  [0x49]="rex*wb",  [0x4a]="rex*wx",  [0x4b]="rex*wxb",
   [0x4c]="rex*wr", [0x4d]="rex*wrb", [0x4e]="rex*wrx", [0x4f]="rex*wrxb",
-  [0x82]=false, [0x9a]=false, [0xc4]="vex*3", [0xc5]="vex*2", [0xce]=false,
+  [0x82]=false, [0x9a]=false, [0xc4]=false, [0xc5]=false, [0xce]=false,
   [0xd4]=false, [0xd5]=false, [0xd6]=false, [0xea]=false,
 }, { __index = map_opc1_32 })
 
@@ -113,12 +112,12 @@ local map_opc2 = {
 [0]="sldt!Dmp","sgdt!Ump","larVrm","lslVrm",nil,"syscall","clts","sysret",
 "invd","wbinvd",nil,"ud1",nil,"$prefetch!Bm","femms","3dnowMrmu",
 --1x
-"movupsXrm|movssXrvm|movupdXrm|movsdXrvm",
-"movupsXmr|movssXmvr|movupdXmr|movsdXmvr",
+"movupsXrm|movssXrm|movupdXrm|movsdXrm",
+"movupsXmr|movssXmr|movupdXmr|movsdXmr",
 "movhlpsXrm$movlpsXrm|movsldupXrm|movlpdXrm|movddupXrm",
 "movlpsXmr||movlpdXmr",
-"unpcklpsXrvm||unpcklpdXrvm",
-"unpckhpsXrvm||unpckhpdXrvm",
+"unpcklpsXrm||unpcklpdXrm",
+"unpckhpsXrm||unpckhpdXrm",
 "movlhpsXrm$movhpsXrm|movshdupXrm|movhpdXrm",
 "movhpsXmr||movhpdXmr",
 "$prefetcht!Bm","hintnopVm","hintnopVm","hintnopVm",
@@ -127,7 +126,7 @@ local map_opc2 = {
 "movUmx$","movUmy$","movUxm$","movUym$","movUmz$",nil,"movUzm$",nil,
 "movapsXrm||movapdXrm",
 "movapsXmr||movapdXmr",
-"cvtpi2psXrMm|cvtsi2ssXrvVmt|cvtpi2pdXrMm|cvtsi2sdXrvVmt",
+"cvtpi2psXrMm|cvtsi2ssXrVmt|cvtpi2pdXrMm|cvtsi2sdXrVmt",
 "movntpsXmr|movntssXmr|movntpdXmr|movntsdXmr",
 "cvttps2piMrXm|cvttss2siVrXm|cvttpd2piMrXm|cvttsd2siVrXm",
 "cvtps2piMrXm|cvtss2siVrXm|cvtpd2piMrXm|cvtsd2siVrXm",
@@ -143,27 +142,27 @@ local map_opc2 = {
 "cmovlVrm","cmovgeVrm","cmovleVrm","cmovgVrm",
 --5x
 "movmskpsVrXm$||movmskpdVrXm$","sqrtpsXrm|sqrtssXrm|sqrtpdXrm|sqrtsdXrm",
-"rsqrtpsXrm|rsqrtssXrvm","rcppsXrm|rcpssXrvm",
-"andpsXrvm||andpdXrvm","andnpsXrvm||andnpdXrvm",
-"orpsXrvm||orpdXrvm","xorpsXrvm||xorpdXrvm",
-"addpsXrvm|addssXrvm|addpdXrvm|addsdXrvm","mulpsXrvm|mulssXrvm|mulpdXrvm|mulsdXrvm",
-"cvtps2pdXrm|cvtss2sdXrvm|cvtpd2psXrm|cvtsd2ssXrvm",
+"rsqrtpsXrm|rsqrtssXrm","rcppsXrm|rcpssXrm",
+"andpsXrm||andpdXrm","andnpsXrm||andnpdXrm",
+"orpsXrm||orpdXrm","xorpsXrm||xorpdXrm",
+"addpsXrm|addssXrm|addpdXrm|addsdXrm","mulpsXrm|mulssXrm|mulpdXrm|mulsdXrm",
+"cvtps2pdXrm|cvtss2sdXrm|cvtpd2psXrm|cvtsd2ssXrm",
 "cvtdq2psXrm|cvttps2dqXrm|cvtps2dqXrm",
-"subpsXrvm|subssXrvm|subpdXrvm|subsdXrvm","minpsXrvm|minssXrvm|minpdXrvm|minsdXrvm",
-"divpsXrvm|divssXrvm|divpdXrvm|divsdXrvm","maxpsXrvm|maxssXrvm|maxpdXrvm|maxsdXrvm",
+"subpsXrm|subssXrm|subpdXrm|subsdXrm","minpsXrm|minssXrm|minpdXrm|minsdXrm",
+"divpsXrm|divssXrm|divpdXrm|divsdXrm","maxpsXrm|maxssXrm|maxpdXrm|maxsdXrm",
 --6x
-"punpcklbwPrvm","punpcklwdPrvm","punpckldqPrvm","packsswbPrvm",
-"pcmpgtbPrvm","pcmpgtwPrvm","pcmpgtdPrvm","packuswbPrvm",
-"punpckhbwPrvm","punpckhwdPrvm","punpckhdqPrvm","packssdwPrvm",
-"||punpcklqdqXrvm","||punpckhqdqXrvm",
+"punpcklbwPrm","punpcklwdPrm","punpckldqPrm","packsswbPrm",
+"pcmpgtbPrm","pcmpgtwPrm","pcmpgtdPrm","packuswbPrm",
+"punpckhbwPrm","punpckhwdPrm","punpckhdqPrm","packssdwPrm",
+"||punpcklqdqXrm","||punpckhqdqXrm",
 "movPrVSm","movqMrm|movdquXrm|movdqaXrm",
 --7x
-"pshufwMrmu|pshufhwXrmu|pshufdXrmu|pshuflwXrmu","pshiftw!Pvmu",
-"pshiftd!Pvmu","pshiftq!Mvmu||pshiftdq!Xvmu",
-"pcmpeqbPrvm","pcmpeqwPrvm","pcmpeqdPrvm","emms*|",
+"pshufwMrmu|pshufhwXrmu|pshufdXrmu|pshuflwXrmu","pshiftw!Pmu",
+"pshiftd!Pmu","pshiftq!Mmu||pshiftdq!Xmu",
+"pcmpeqbPrm","pcmpeqwPrm","pcmpeqdPrm","emms|",
 "vmreadUmr||extrqXmuu$|insertqXrmuu$","vmwriteUrm||extrqXrm$|insertqXrm$",
 nil,nil,
-"||haddpdXrvm|haddpsXrvm","||hsubpdXrvm|hsubpsXrvm",
+"||haddpdXrm|haddpsXrm","||hsubpdXrm|hsubpsXrm",
 "movVSmMr|movqXrm|movVSmXr","movqMmr|movdquXmr|movdqaXmr",
 --8x
 "joVj","jnoVj","jbVj","jnbVj","jzVj","jnzVj","jbeVj","jaVj",
@@ -181,27 +180,27 @@ nil,nil,
 "bsfVrm","bsrVrm|lzcntVrm|bsrWrm","movsxVrBmt","movsxVrWmt",
 --Cx
 "xaddBmr","xaddVmr",
-"cmppsXrvmu|cmpssXrvmu|cmppdXrvmu|cmpsdXrvmu","$movntiVmr|",
-"pinsrwPrvWmu","pextrwDrPmu",
-"shufpsXrvmu||shufpdXrvmu","$cmpxchg!Qmp",
+"cmppsXrmu|cmpssXrmu|cmppdXrmu|cmpsdXrmu","$movntiVmr|",
+"pinsrwPrWmu","pextrwDrPmu",
+"shufpsXrmu||shufpdXrmu","$cmpxchg!Qmp",
 "bswapVR","bswapVR","bswapVR","bswapVR","bswapVR","bswapVR","bswapVR","bswapVR",
 --Dx
-"||addsubpdXrvm|addsubpsXrvm","psrlwPrvm","psrldPrvm","psrlqPrvm",
-"paddqPrvm","pmullwPrvm",
+"||addsubpdXrm|addsubpsXrm","psrlwPrm","psrldPrm","psrlqPrm",
+"paddqPrm","pmullwPrm",
 "|movq2dqXrMm|movqXmr|movdq2qMrXm$","pmovmskbVrMm||pmovmskbVrXm",
-"psubusbPrvm","psubuswPrvm","pminubPrvm","pandPrvm",
-"paddusbPrvm","padduswPrvm","pmaxubPrvm","pandnPrvm",
+"psubusbPrm","psubuswPrm","pminubPrm","pandPrm",
+"paddusbPrm","padduswPrm","pmaxubPrm","pandnPrm",
 --Ex
-"pavgbPrvm","psrawPrvm","psradPrvm","pavgwPrvm",
-"pmulhuwPrvm","pmulhwPrvm",
+"pavgbPrm","psrawPrm","psradPrm","pavgwPrm",
+"pmulhuwPrm","pmulhwPrm",
 "|cvtdq2pdXrm|cvttpd2dqXrm|cvtpd2dqXrm","$movntqMmr||$movntdqXmr",
-"psubsbPrvm","psubswPrvm","pminswPrvm","porPrvm",
-"paddsbPrvm","paddswPrvm","pmaxswPrvm","pxorPrvm",
+"psubsbPrm","psubswPrm","pminswPrm","porPrm",
+"paddsbPrm","paddswPrm","pmaxswPrm","pxorPrm",
 --Fx
-"|||lddquXrm","psllwPrvm","pslldPrvm","psllqPrvm",
-"pmuludqPrvm","pmaddwdPrvm","psadbwPrvm","maskmovqMrm||maskmovdquXrm$",
-"psubbPrvm","psubwPrvm","psubdPrvm","psubqPrvm",
-"paddbPrvm","paddwPrvm","padddPrvm","ud",
+"|||lddquXrm","psllwPrm","pslldPrm","psllqPrm",
+"pmuludqPrm","pmaddwdPrm","psadbwPrm","maskmovqMrm||maskmovdquXrm$",
+"psubbPrm","psubwPrm","psubdPrm","psubqPrm",
+"paddbPrm","paddwPrm","padddPrm","ud",
 }
 assert(map_opc2[255] == "ud")
 
@@ -209,73 +208,49 @@ assert(map_opc2[255] == "ud")
 local map_opc3 = {
 ["38"] = { -- [66] 0f 38 xx
 --0x
-[0]="pshufbPrvm","phaddwPrvm","phadddPrvm","phaddswPrvm",
-"pmaddubswPrvm","phsubwPrvm","phsubdPrvm","phsubswPrvm",
-"psignbPrvm","psignwPrvm","psigndPrvm","pmulhrswPrvm",
-"||permilpsXrvm","||permilpdXrvm",nil,nil,
+[0]="pshufbPrm","phaddwPrm","phadddPrm","phaddswPrm",
+"pmaddubswPrm","phsubwPrm","phsubdPrm","phsubswPrm",
+"psignbPrm","psignwPrm","psigndPrm","pmulhrswPrm",
+nil,nil,nil,nil,
 --1x
 "||pblendvbXrma",nil,nil,nil,
-"||blendvpsXrma","||blendvpdXrma","||permpsXrvm","||ptestXrm",
-"||broadcastssXrm","||broadcastsdXrm","||broadcastf128XrlXm",nil,
+"||blendvpsXrma","||blendvpdXrma",nil,"||ptestXrm",
+nil,nil,nil,nil,
 "pabsbPrm","pabswPrm","pabsdPrm",nil,
 --2x
 "||pmovsxbwXrm","||pmovsxbdXrm","||pmovsxbqXrm","||pmovsxwdXrm",
 "||pmovsxwqXrm","||pmovsxdqXrm",nil,nil,
-"||pmuldqXrvm","||pcmpeqqXrvm","||$movntdqaXrm","||packusdwXrvm",
-"||maskmovpsXrvm","||maskmovpdXrvm","||maskmovpsXmvr","||maskmovpdXmvr",
+"||pmuldqXrm","||pcmpeqqXrm","||$movntdqaXrm","||packusdwXrm",
+nil,nil,nil,nil,
 --3x
 "||pmovzxbwXrm","||pmovzxbdXrm","||pmovzxbqXrm","||pmovzxwdXrm",
-"||pmovzxwqXrm","||pmovzxdqXrm","||permdXrvm","||pcmpgtqXrvm",
-"||pminsbXrvm","||pminsdXrvm","||pminuwXrvm","||pminudXrvm",
-"||pmaxsbXrvm","||pmaxsdXrvm","||pmaxuwXrvm","||pmaxudXrvm",
+"||pmovzxwqXrm","||pmovzxdqXrm",nil,"||pcmpgtqXrm",
+"||pminsbXrm","||pminsdXrm","||pminuwXrm","||pminudXrm",
+"||pmaxsbXrm","||pmaxsdXrm","||pmaxuwXrm","||pmaxudXrm",
 --4x
-"||pmulddXrvm","||phminposuwXrm",nil,nil,
-nil,"||psrlvVSXrvm","||psravdXrvm","||psllvVSXrvm",
---5x
-[0x58] = "||pbroadcastdXrlXm",[0x59] = "||pbroadcastqXrlXm",
-[0x5a] = "||broadcasti128XrlXm",
---7x
-[0x78] = "||pbroadcastbXrlXm",[0x79] = "||pbroadcastwXrlXm",
---8x
-[0x8c] = "||pmaskmovXrvVSm",
-[0x8e] = "||pmaskmovVSmXvr",
---Dx
-[0xdc] = "||aesencXrvm", [0xdd] = "||aesenclastXrvm",
-[0xde] = "||aesdecXrvm", [0xdf] = "||aesdeclastXrvm",
+"||pmulddXrm","||phminposuwXrm",
 --Fx
 [0xf0] = "|||crc32TrBmt",[0xf1] = "|||crc32TrVmt",
-[0xf7] = "| sarxVrmv| shlxVrmv| shrxVrmv",
 },
 
 ["3a"] = { -- [66] 0f 3a xx
 --0x
-[0x00]="||permqXrmu","||permpdXrmu","||pblenddXrvmu",nil,
-"||permilpsXrmu","||permilpdXrmu","||perm2f128Xrvmu",nil,
-"||roundpsXrmu","||roundpdXrmu","||roundssXrvmu","||roundsdXrvmu",
-"||blendpsXrvmu","||blendpdXrvmu","||pblendwXrvmu","palignrPrvmu",
+[0x00]=nil,nil,nil,nil,nil,nil,nil,nil,
+"||roundpsXrmu","||roundpdXrmu","||roundssXrmu","||roundsdXrmu",
+"||blendpsXrmu","||blendpdXrmu","||pblendwXrmu","palignrPrmu",
 --1x
 nil,nil,nil,nil,
 "||pextrbVmXru","||pextrwVmXru","||pextrVmSXru","||extractpsVmXru",
-"||insertf128XrvlXmu","||extractf128XlXmYru",nil,nil,
-nil,nil,nil,nil,
+nil,nil,nil,nil,nil,nil,nil,nil,
 --2x
-"||pinsrbXrvVmu","||insertpsXrvmu","||pinsrXrvVmuS",nil,
---3x
-[0x38] = "||inserti128Xrvmu",[0x39] = "||extracti128XlXmYru",
+"||pinsrbXrVmu","||insertpsXrmu","||pinsrXrVmuS",nil,
 --4x
-[0x40] = "||dppsXrvmu",
-[0x41] = "||dppdXrvmu",
-[0x42] = "||mpsadbwXrvmu",
-[0x44] = "||pclmulqdqXrvmu",
-[0x46] = "||perm2i128Xrvmu",
-[0x4a] = "||blendvpsXrvmb",[0x4b] = "||blendvpdXrvmb",
-[0x4c] = "||pblendvbXrvmb",
+[0x40] = "||dppsXrmu",
+[0x41] = "||dppdXrmu",
+[0x42] = "||mpsadbwXrmu",
 --6x
 [0x60] = "||pcmpestrmXrmu",[0x61] = "||pcmpestriXrmu",
 [0x62] = "||pcmpistrmXrmu",[0x63] = "||pcmpistriXrmu",
-[0xdf] = "||aeskeygenassistXrmu",
---Fx
-[0xf0] = "||| rorxVrmu",
 },
 }
 
@@ -379,19 +354,17 @@ local map_regs = {
 	"mm0", "mm1", "mm2", "mm3", "mm4", "mm5", "mm6", "mm7" }, -- No x64 ext!
   X = { "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
 	"xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15" },
-  Y = { "ymm0", "ymm1", "ymm2", "ymm3", "ymm4", "ymm5", "ymm6", "ymm7",
-	"ymm8", "ymm9", "ymm10", "ymm11", "ymm12", "ymm13", "ymm14", "ymm15" },
 }
 local map_segregs = { "es", "cs", "ss", "ds", "fs", "gs", "segr6", "segr7" }
 
 -- Maps for size names.
 local map_sz2n = {
-  B = 1, W = 2, D = 4, Q = 8, M = 8, X = 16, Y = 32,
+  B = 1, W = 2, D = 4, Q = 8, M = 8, X = 16,
 }
 local map_sz2prefix = {
   B = "byte", W = "word", D = "dword",
   Q = "qword",
-  M = "qword", X = "xword", Y = "yword",
+  M = "qword", X = "xword",
   F = "dword", G = "qword", -- No need for sizes/register names for these two.
 }
 
@@ -414,13 +387,10 @@ local function putop(ctx, text, operands)
   if ctx.rep then text = ctx.rep.." "..text; ctx.rep = false end
   if ctx.rex then
     local t = (ctx.rexw and "w" or "")..(ctx.rexr and "r" or "")..
-	      (ctx.rexx and "x" or "")..(ctx.rexb and "b" or "")..
-	      (ctx.vexl and "l" or "")
-    if ctx.vexv and ctx.vexv ~= 0 then t = t.."v"..ctx.vexv end
-    if t ~= "" then text = ctx.rex.."."..t.." "..gsub(text, "^ ", "")
-    elseif ctx.rex == "vex" then text = gsub("v"..text, "^v ", "") end
+	      (ctx.rexx and "x" or "")..(ctx.rexb and "b" or "")
+    if t ~= "" then text = "rex."..t.." "..text end
     ctx.rexw = false; ctx.rexr = false; ctx.rexx = false; ctx.rexb = false
-    ctx.rex = false; ctx.vexl = false; ctx.vexv = false
+    ctx.rex = false
   end
   if ctx.seg then
     local text2, n = gsub(text, "%[", "["..ctx.seg..":")
@@ -435,7 +405,6 @@ local function putop(ctx, text, operands)
   end
   ctx.out(format("%08x  %s%s\n", ctx.addr+ctx.start, hex, text))
   ctx.mrm = false
-  ctx.vexv = false
   ctx.start = pos
   ctx.imm = nil
 end
@@ -444,7 +413,7 @@ end
 local function clearprefixes(ctx)
   ctx.o16 = false; ctx.seg = false; ctx.lock = false; ctx.rep = false
   ctx.rexw = false; ctx.rexr = false; ctx.rexx = false; ctx.rexb = false
-  ctx.rex = false; ctx.a32 = false; ctx.vexl = false
+  ctx.rex = false; ctx.a32 = false
 end
 
 -- Fallback for incomplete opcodes at the end.
@@ -481,9 +450,9 @@ end
 -- Process pattern string and generate the operands.
 local function putpat(ctx, name, pat)
   local operands, regs, sz, mode, sp, rm, sc, rx, sdisp
-  local code, pos, stop, vexl = ctx.code, ctx.pos, ctx.stop, ctx.vexl
+  local code, pos, stop = ctx.code, ctx.pos, ctx.stop
 
-  -- Chars used: 1DFGIMPQRSTUVWXYabcdfgijlmoprstuvwxyz
+  -- Chars used: 1DFGIMPQRSTUVWXacdfgijmoprstuwxyz
   for p in gmatch(pat, ".") do
     local x = nil
     if p == "V" or p == "U" then
@@ -498,13 +467,11 @@ local function putpat(ctx, name, pat)
     elseif p == "B" then
       sz = "B"
       regs = ctx.rex and map_regs.B64 or map_regs.B
-    elseif match(p, "[WDQMXYFG]") then
+    elseif match(p, "[WDQMXFG]") then
       sz = p
-      if sz == "X" and vexl then sz = "Y"; ctx.vexl = false end
       regs = map_regs[sz]
     elseif p == "P" then
       sz = ctx.o16 and "X" or "M"; ctx.o16 = false
-      if sz == "X" and vexl then sz = "Y"; ctx.vexl = false end
       regs = map_regs[sz]
     elseif p == "S" then
       name = name..lower(sz)
@@ -516,10 +483,6 @@ local function putpat(ctx, name, pat)
     elseif p == "u" then
       local imm = getimm(ctx, pos, 1); if not imm then return end
       x = format("0x%02x", imm)
-      pos = pos+1
-    elseif p == "b" then
-      local imm = getimm(ctx, pos, 1); if not imm then return end
-      x = regs[imm/16+1]
       pos = pos+1
     elseif p == "w" then
       local imm = getimm(ctx, pos, 2); if not imm then return end
@@ -569,7 +532,7 @@ local function putpat(ctx, name, pat)
 	local lo = imm % 0x1000000
 	x = format("0x%02x%06x", (imm-lo) / 0x1000000, lo)
       else
-	x = "0x"..tohex(imm)
+	x = format("0x%08x", imm)
       end
     elseif p == "R" then
       local r = byte(code, pos-1, pos-1)%8
@@ -653,13 +616,8 @@ local function putpat(ctx, name, pat)
 	else
 	  x = "CR"..sp
 	end
-      elseif p == "v" then
-	if ctx.vexv then
-	  x = regs[ctx.vexv+1]; ctx.vexv = false
-	end
       elseif p == "y" then x = "DR"..sp
       elseif p == "z" then x = "TR"..sp
-      elseif p == "l" then vexl = false
       elseif p == "t" then
       else
 	error("bad pattern `"..pat.."'")
@@ -734,7 +692,7 @@ map_act = {
   B = putpat, W = putpat, D = putpat, Q = putpat,
   V = putpat, U = putpat, T = putpat,
   M = putpat, X = putpat, P = putpat,
-  F = putpat, G = putpat, Y = putpat,
+  F = putpat, G = putpat,
 
   -- Collect prefixes.
   [":"] = function(ctx, name, pat)
@@ -795,67 +753,14 @@ map_act = {
 
   -- REX prefix.
   rex = function(ctx, name, pat)
-    if ctx.rex then return unknown(ctx) end -- Only 1 REX or VEX prefix allowed.
+    if ctx.rex then return unknown(ctx) end -- Only 1 REX prefix allowed.
     for p in gmatch(pat, ".") do ctx["rex"..p] = true end
-    ctx.rex = "rex"
-  end,
-
-  -- VEX prefix.
-  vex = function(ctx, name, pat)
-    if ctx.rex then return unknown(ctx) end -- Only 1 REX or VEX prefix allowed.
-    ctx.rex = "vex"
-    local pos = ctx.pos
-    if ctx.mrm then
-      ctx.mrm = nil
-      pos = pos-1
-    end
-    local b = byte(ctx.code, pos, pos)
-    if not b then return incomplete(ctx) end
-    pos = pos+1
-    if b < 128 then ctx.rexr = true end
-    local m = 1
-    if pat == "3" then
-      m = b%32; b = (b-m)/32
-      local nb = b%2; b = (b-nb)/2
-      if nb == 0 then ctx.rexb = true end
-      local nx = b%2
-      if nx == 0 then ctx.rexx = true end
-      b = byte(ctx.code, pos, pos)
-      if not b then return incomplete(ctx) end
-      pos = pos+1
-      if b >= 128 then ctx.rexw = true end
-    end
-    ctx.pos = pos
-    local map
-    if m == 1 then map = map_opc2
-    elseif m == 2 then map = map_opc3["38"]
-    elseif m == 3 then map = map_opc3["3a"]
-    else return unknown(ctx) end
-    local p = b%4; b = (b-p)/4
-    if p == 1 then ctx.o16 = "o16"
-    elseif p == 2 then ctx.rep = "rep"
-    elseif p == 3 then ctx.rep = "repne" end
-    local l = b%2; b = (b-l)/2
-    if l ~= 0 then ctx.vexl = true end
-    ctx.vexv = (-1-b)%16
-    return dispatchmap(ctx, map)
+    ctx.rex = true
   end,
 
   -- Special case for nop with REX prefix.
   nop = function(ctx, name, pat)
     return dispatch(ctx, ctx.rex and pat or "nop")
-  end,
-
-  -- Special case for 0F 77.
-  emms = function(ctx, name, pat)
-    if ctx.rex ~= "vex" then
-      return putop(ctx, "emms")
-    elseif ctx.vexl then
-      ctx.vexl = false
-      return putop(ctx, "zeroall")
-    else
-      return putop(ctx, "zeroupper")
-    end
   end,
 }
 
@@ -877,7 +782,7 @@ local function disass_block(ctx, ofs, len)
 end
 
 -- Extended API: create a disassembler context. Then call ctx:disass(ofs, len).
-local function create(code, addr, out)
+local function create_(code, addr, out)
   local ctx = {}
   ctx.code = code
   ctx.addr = (addr or 0) - 1
@@ -891,8 +796,8 @@ local function create(code, addr, out)
   return ctx
 end
 
-local function create64(code, addr, out)
-  local ctx = create(code, addr, out)
+local function create64_(code, addr, out)
+  local ctx = create_(code, addr, out)
   ctx.x64 = true
   ctx.map1 = map_opc1_64
   ctx.aregs = map_regs.Q
@@ -900,32 +805,32 @@ local function create64(code, addr, out)
 end
 
 -- Simple API: disassemble code (a string) at address and output via out.
-local function disass(code, addr, out)
-  create(code, addr, out):disass()
+local function disass_(code, addr, out)
+  create_(code, addr, out):disass()
 end
 
-local function disass64(code, addr, out)
-  create64(code, addr, out):disass()
+local function disass64_(code, addr, out)
+  create64_(code, addr, out):disass()
 end
 
 -- Return register name for RID.
-local function regname(r)
+local function regname_(r)
   if r < 8 then return map_regs.D[r+1] end
   return map_regs.X[r-7]
 end
 
-local function regname64(r)
+local function regname64_(r)
   if r < 16 then return map_regs.Q[r+1] end
   return map_regs.X[r-15]
 end
 
 -- Public module functions.
-return {
-  create = create,
-  create64 = create64,
-  disass = disass,
-  disass64 = disass64,
-  regname = regname,
-  regname64 = regname64
-}
+module(...)
+
+create = create_
+create64 = create64_
+disass = disass_
+disass64 = disass64_
+regname = regname_
+regname64 = regname64_
 
