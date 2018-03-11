@@ -1,28 +1,47 @@
-luajit 2.1 as of 2018 January 3, the v2.1 branch
+luajit 2.1 as of 2018 Feb 28, the v2.1 branch
 of https://github.com/LuaJIT/LuaJIT
-ea7071d3c30b6432bfe6f8a9d263e0285cec25e3
 
-commit ea7071d3c30b6432bfe6f8a9d263e0285cec25e3
+commit fe651bf6e2b4d02b624be3c289378c08bab2fa9b
 Author: Mike Pall <mike>
-Date:   Sat Nov 18 12:25:35 2017 +0100
+Date:   Tue Feb 27 23:22:40 2018 +0100
 
-    MIPS64: Fix xpcall() error case.
+    DynASM/x86: Add BMI1 and BMI2 instructions.
     
-    Thanks to François Perrad and Stefan Pejic.
+    Thanks to Peter Cawley.
 
-commit d417ded17945b4211608d497d50b509e0274f5e0
+commit 66c1614828d0041baece3ab2002763f2a2fd83b3
+Merge: fddef92 046129d
 Author: Mike Pall <mike>
-Date:   Sat Nov 18 12:23:57 2017 +0100
-
-    ARM64: Fix xpcall() error case (really).
-    
-    Thanks to François Perrad and Stefan Pejic.
-
-commit 734a3fa32c12c031d501df055c88601810f6c666
-Merge: 33082a6 7dbf0b0
-Author: Mike Pall <mike>
-Date:   Thu Nov 16 13:00:09 2017 +0100
+Date:   Tue Feb 27 23:18:32 2018 +0100
 
     Merge branch 'master' into v2.1
 
-commit 7dbf0b05f1228c1c719866db5e5f3d58f87f74c8
+commit 046129dbdda5261c1b17469a2895a113d14c070a
+Author: Mike Pall <mike>
+Date:   Tue Feb 27 23:02:23 2018 +0100
+
+    Fix rechaining of pseudo-resurrected string keys.
+    
+    This is a serious bug. But extremely hard to reproduce, so it went
+    undetected for 8 years. One needs two resurrections with different
+    main nodes, which are both in a hash chain which gets relinked on
+: 
+    key insertion where the colliding node is in a non-main position. Phew.
+    
+    Thanks to lbeiming.
+
+commit fddef924097f28c46a0a5b45483a6086b33cab81
+Merge: 0bf46e1 03cd5aa
+Author: Mike Pall <mike>
+Date:   Mon Jan 29 13:28:53 2018 +0100
+
+    Merge branch 'master' into v2.1
+
+commit 03cd5aa749c1bc3bb4b7d4289236b6096cb3dc85
+Author: Mike Pall <mike>
+Date:   Mon Jan 29 13:25:51 2018 +0100
+
+    Clear stack after print_jit_status() in CLI.
+    
+    Suggested by Hydroque.
+

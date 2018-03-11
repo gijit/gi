@@ -2,3 +2,7 @@
 7dbf0b05f1228c1c719866db5e5f3d58f87f74c8 ea7071d3c30b6432bfe6f8a9d263e0285cec25e3 Jason E. Aten <j.e.aten@gmail.com> 1514964824 -0600	checkout: moving from master to v2.1
 ea7071d3c30b6432bfe6f8a9d263e0285cec25e3 7dbf0b05f1228c1c719866db5e5f3d58f87f74c8 Jason E. Aten <j.e.aten@gmail.com> 1520750731 -0600	checkout: moving from v2.1 to master
 7dbf0b05f1228c1c719866db5e5f3d58f87f74c8 046129dbdda5261c1b17469a2895a113d14c070a Jason E. Aten <j.e.aten@gmail.com> 1520750926 -0600	pull origin master: Fast-forward
+046129dbdda5261c1b17469a2895a113d14c070a ea7071d3c30b6432bfe6f8a9d263e0285cec25e3 Jason E. Aten <j.e.aten@gmail.com> 1520751137 -0600	checkout: moving from master to v2.1
+ea7071d3c30b6432bfe6f8a9d263e0285cec25e3 fe651bf6e2b4d02b624be3c289378c08bab2fa9b Jason E. Aten <j.e.aten@gmail.com> 1520751160 -0600	pull origin v2.1: Fast-forward
+fe651bf6e2b4d02b624be3c289378c08bab2fa9b fe651bf6e2b4d02b624be3c289378c08bab2fa9b Jason E. Aten <j.e.aten@gmail.com> 1520751283 -0600	checkout: moving from v2.1 to gijit-on-v21
+fe651bf6e2b4d02b624be3c289378c08bab2fa9b 89c679d1f7b02bb2b7e0a3a7aa459516dac4e0d5 Jason E. Aten <j.e.aten@gmail.com> 1520751369 -0600	commit: gijit int64 additions
