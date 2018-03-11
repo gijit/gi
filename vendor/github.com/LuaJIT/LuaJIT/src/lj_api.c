@@ -25,6 +25,9 @@
 #include "lj_vm.h"
 #include "lj_strscan.h"
 #include "lj_strfmt.h"
+#include "lj_ctype.h"
+#include "lj_cdata.h"
+#include <stdint.h>
 
 /* -- Common helper functions --------------------------------------------- */
 
@@ -341,6 +344,72 @@ LUA_API lua_Number lua_tonumber(lua_State *L, int idx)
   else
     return 0;
 }
+
+LUA_API int64_t lua_cdata_to_int64(lua_State *L, int idx)
+{
+  TValue *o = index2adr(L, idx);
+  //printf("lua_cdata_to_int64: ok after index2adr\n");
+  
+  if (!tviscdata(o)) {
+    //printf("lua_cdata_to_int64: error bad arg not TCDATA\n");
+    return 0;
+    lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  //printf("lua_cdata_to_int64: got past tviscdata(o) check\n");  
+  GCcdata *cd = cdataV(o);
+  //printf("lua_cdata_to_int64: ok after cdataV\n");
+
+  CTypeID ctypeid = cd->ctypeid;
+  if (ctypeid != 11) {
+      //printf("lua_cdata_to_int64: error, not expected int64\n");
+
+    lj_err_argtype(L, 1, "int64");
+    //lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  //printf("lua_cdata_to_int64: ok after ctypeid\n");
+
+  int64_t ret = *(int64_t*)(cdataptr(cd));
+
+  //printf("lua_cdata_to_int64: ok after last thing, ret= %lld\n", ret);    
+  return ret;
+}
+
+LUA_API int32_t lua_cdata_to_int32(lua_State *L, int idx)
+{
+  TValue *o = index2adr(L, idx);
+  
+  if (!tviscdata(o)) {
+    lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  GCcdata *cd = cdataV(o);
+
+  CTypeID ctypeid = cd->ctypeid;
+    if (ctypeid != 9) {
+      lj_err_argtype(L, 1, "int32");
+      //lj_err_argt(L, 1, LUA_TCDATA);
+    }
+  return *(int32_t*)(cdataptr(cd));
+}
+
+
+LUA_API uint64_t lua_cdata_to_uint64(lua_State *L, int idx)
+{
+  TValue *o = index2adr(L, idx);
+  
+  if (!tviscdata(o)) {
+    lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  
+  GCcdata *cd = cdataV(o);
+
+  CTypeID ctypeid = cd->ctypeid;
+  if (ctypeid != 12) {
+    lj_err_argtype(L, 1, "uint64");
+    //lj_err_argt(L, 1, LUA_TCDATA);
+  }
+  return *(uint64_t*)(cdataptr(cd));
+}
+
 
 LUA_API lua_Number lua_tonumberx(lua_State *L, int idx, int *ok)
 {
