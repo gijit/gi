@@ -163,11 +163,11 @@ func (r *Goro) Start() {
 		}()
 
 		//fmt.Printf("\n r.beat is %v on r = %p\n", r.beat, r)
-		var heartbeat <-chan time.Time
+		//var heartbeat <-chan time.Time
 		close(r.Ready)
 		for {
 			select {
-			case <-heartbeat:
+			/*case <-heartbeat:
 				r.handleHeartbeat()
 				heartbeat = time.After(r.beat)
 
@@ -181,6 +181,7 @@ func (r *Goro) Start() {
 			case <-r.manualHeartbeat:
 				fmt.Printf("manualHeartbeat arrived.\n")
 				r.handleHeartbeat()
+			*/
 			case <-r.halt.ReqStop.Chan:
 				return
 			case t := <-r.doticket:

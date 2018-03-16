@@ -1144,3 +1144,29 @@ func Test199CalculatorExpression(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1990simpleTwoFunc(t *testing.T) {
+
+	cv.Convey(`a second func calling the first should work`, t, func() {
+
+		code := `A0 := func() float64 { return 3 }`
+		code2 := `A1 := func() float64 { return 1 + A0() }; a1 := A1()`
+
+		// expect A1() to give 4.0
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+		LuaRunAndReport(vm, string(translation))
+
+		translation2 := inc.trMust([]byte(code2))
+		fmt.Printf("\n translation2='%s'\n", translation2)
+		LuaRunAndReport(vm, string(translation2))
+		LuaMustFloat64(vm, "a1", 4.0)
+
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

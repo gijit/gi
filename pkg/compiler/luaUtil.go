@@ -462,7 +462,7 @@ func LuaIsNil(lvm *LuaVm, varname string) (bool, string) {
 // then turns them off so they don't mess
 // up our vm inspection.
 func LuaRunAndReport(lvm *LuaVm, s string) {
-	lvm.goro.heartbeatsOn <- true
+	//lvm.goro.heartbeatsOn <- true
 	err := LuaRun(lvm, s, true)
 
 	if err != nil {
@@ -470,7 +470,7 @@ func LuaRunAndReport(lvm *LuaVm, s string) {
 			err, s)
 		panic(err)
 	}
-	lvm.goro.heartbeatsOff <- true
+	//lvm.goro.heartbeatsOff <- true
 }
 
 // useEvalCoroutine may need to be false to bootstrap, but
