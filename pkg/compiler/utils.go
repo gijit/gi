@@ -354,7 +354,7 @@ func (c *funcContext) setType(e ast.Expr, t types.Type) ast.Expr {
 func (c *funcContext) pkgVar(pkg *types.Package) string {
 	if pkg == c.p.Pkg {
 		if !c.topLevelRepl {
-			//return "__pkg"
+			//return "__pkg" // breaks 1990 repl_test calling exported func
 			return ""
 		}
 		return ""

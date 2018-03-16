@@ -743,7 +743,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			if isPkgLevel(o) {
 				// jea: might need to attend to package names
 				//  eventually, or not.
-				//lhs += " = __pkg." + encodeIdent(o.Name())
+				//lhs += " = __pkg." + encodeIdent(o.Name()) + " -- incr.go:746\n"
 			}
 			size := int64(0)
 
