@@ -1145,9 +1145,9 @@ func Test199CalculatorExpression(t *testing.T) {
 	})
 }
 
-func Test1990simpleTwoFunc(t *testing.T) {
+func Test1990complexReturnValue(t *testing.T) {
 
-	cv.Convey(`a second func calling the first should work`, t, func() {
+	cv.Convey(`a complex return value should work, exercising statements.go:337`, t, func() {
 
 		code := `A0 := func() float64 { return 3 }`
 		code2 := `A1 := func() float64 { return 1 + A0() }; a1 := A1()`

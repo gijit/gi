@@ -234,7 +234,8 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 		funcRef := c.objectName(o)
 		code.Write(primaryFunction(false, funcRef))
 		if fun.Name.IsExported() {
-			fmt.Fprintf(code, "\t__pkg.%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
+			//fmt.Fprintf(code, "\t__pkg.%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
+			fmt.Fprintf(code, "\t%s = %s;\n", encodeIdent(fun.Name.Name), funcRef)
 		}
 		return code.Bytes()
 	}
@@ -380,9 +381,12 @@ func translateFunction(typ *ast.FuncType, recv *ast.Ident, body *ast.BlockStmt, 
 
 		c.translateStmtList(body.List)
 		if len(c.Flattened) != 0 && !endsWithReturn(body.List) {
+			pp("jea debug: returning traslation of empty return...")
 			c.translateStmt(&ast.ReturnStmt{}, nil)
 		}
 	}))
+
+	pp("bodyOutput = '%s'", bodyOutput)
 
 	sort.Strings(c.localVars)
 

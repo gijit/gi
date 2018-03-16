@@ -467,6 +467,7 @@ func (tr *IncrState) prependAns(src []byte) []byte {
 
 // FullPackage: translate a full package from go to Lua.
 func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) {
+	pp("FullPackage top.")
 
 	fileSet := token.NewFileSet()
 	file, err := parser.ParseFile(fileSet, "", src, 0)

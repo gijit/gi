@@ -24,7 +24,6 @@ func (c *funcContext) Write(b []byte) (int, error) {
 	pp("func.ContextWrite, c.output is now '%v'", string(c.output))
 	// DEBUG:
 	if strings.HasPrefix(string(c.output), "	sum1 = adder(5, 5)") {
-		//panic("where")
 	}
 	return len(b), nil
 }
@@ -355,7 +354,8 @@ func (c *funcContext) setType(e ast.Expr, t types.Type) ast.Expr {
 func (c *funcContext) pkgVar(pkg *types.Package) string {
 	if pkg == c.p.Pkg {
 		if !c.topLevelRepl {
-			return "__pkg"
+			//return "__pkg"
+			return ""
 		}
 		return ""
 	}
@@ -392,13 +392,13 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 			// jea, foregoing pkg vars with the __Pkg. prefix, for now.
 			// return o.Name() // jea was this, until we needed fmt.Sprintf
 			// jea debug here for fmt.Sprintf
-			pp("o.Pkg() = '%#v', o.Name()='%#v'", o.Pkg(), o.Name())
 			pkgPrefix := c.pkgVar(o.Pkg())
+			pp("o.Pkg() = '%#v', o.Name()='%#v'; pkgPrefix='%s'. c.p.Pkg='%s'",
+				o.Pkg(), o.Name(), pkgPrefix, c.p.Pkg)
 			if pkgPrefix == "" {
 				return o.Name()
 			}
 			return pkgPrefix + "." + o.Name()
-
 		}
 	}
 

@@ -22,6 +22,8 @@ func (c *funcContext) translateStmtList(stmts []ast.Stmt) {
 }
 
 func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
+	pp("translateStmt top stmt='%#v'", stmt)
+
 	c.SetPos(stmt.Pos())
 
 	stmt = filter.IncDecStmt(stmt, c.p.Info.Info)
@@ -332,6 +334,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 		rVal := c.translateResults(results)
 		if len(c.Flattened) != 0 {
 			//c.Printf("__s = -1; return%s;", rVal)
+			c.Printf("return%s;", rVal) // see repl_test.go:1150 Test1990.
 			return
 		}
 		pp("DEBUG rVal='%s'", rVal)
