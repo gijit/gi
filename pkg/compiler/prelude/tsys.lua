@@ -2170,7 +2170,7 @@ function __gijitTypeToGoType(typ)
 
    local kind = typ.kind
    local kstring = __kind2str[kind]
-   local rtyp = __rtyp[kstring]
+   local rtyp = __rtyp[kstring] -- __rtyp is Luar injected by compiler/rtyp.go:70
    if rtyp ~= nil then
       -- basic type, return straight away
       return rtyp
@@ -2896,27 +2896,11 @@ __assertType = function(value, typ, returnTuple)
    if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      -- int64_t ctype gets here, and doesn't have a .__typ member!
-      -- so...
-      if type(value) == "cdata" then
-         --print("type of value is cdata")
-         local sty = tostring(__ffi.typeof(value))
-         --print("TODO (tsys.lua:2902) try to match cdata type "..sty.." with typ: ")
-         --__st(typ)
-         if sty == "ctype<int64_t>" then
-            if typ.__str == "int" then
-               return value, true
-            elseif typ.__str == "int64" then
-               return value, true
-            end
-         elseif sty == "ctype<uint64_t>" then
-            if typ.__str == "uint" then
-               return value, true
-            elseif typ.__str == "uint64" then
-               return value, true
-            end
-         else
-            print("TODO: handle other basic primitive types. tsys.lua:2919. sty='"..sty.."' and typ="..__st(typ))
+      local knd = __basicValue2kind(value)
+      if knd ~= __kindUnknown then
+         -- known basic type
+         if typ.kind == knd then
+            return value, true
          end
       else
          ok = value.__typ == typ;
