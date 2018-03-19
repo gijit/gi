@@ -2891,12 +2891,36 @@ end;
 __assertType = function(value, typ, returnTuple)
 
    local isInterface = (typ.kind == __kindInterface)
-   local ok
+   local ok = false
    local missingMethod = "";
    if value == __ifaceNil then
       ok = false;
    elseif  not isInterface then
-      ok = value.__typ == typ;
+      -- int64_t ctype gets here, and doesn't have a .__typ member!
+      -- so...
+      if type(value) == "cdata" then
+         --print("type of value is cdata")
+         local sty = tostring(__ffi.typeof(value))
+         --print("TODO (tsys.lua:2902) try to match cdata type "..sty.." with typ: ")
+         --__st(typ)
+         if sty == "ctype<int64_t>" then
+            if typ.__str == "int" then
+               return value, true
+            elseif typ.__str == "int64" then
+               return value, true
+            end
+         elseif sty == "ctype<uint64_t>" then
+            if typ.__str == "uint" then
+               return value, true
+            elseif typ.__str == "uint64" then
+               return value, true
+            end
+         else
+            print("TODO: handle other basic primitive types. tsys.lua:2919. sty='"..sty.."' and typ="..__st(typ))
+         end
+      else
+         ok = value.__typ == typ;
+      end
    else
       local valueTypeString = value.__typ.__str;
 
