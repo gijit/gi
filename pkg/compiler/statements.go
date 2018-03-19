@@ -312,7 +312,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			data.postStmt()
 			c.PrintCond(data.beginCase == 0, fmt.Sprintf("continue%s;", normalLabel), fmt.Sprintf("__s = %d; continue%s;", data.beginCase, blockingLabel))
 		case token.GOTO:
-			c.PrintCond(false, "goto "+s.Label.Name, fmt.Sprintf("__s = %d; continue;", c.labelCase(c.p.Uses[s.Label].(*types.Label))))
+			c.PrintCond(true, "goto "+s.Label.Name, fmt.Sprintf("__s = %d; continue;", c.labelCase(c.p.Uses[s.Label].(*types.Label))))
 		case token.FALLTHROUGH:
 			// handled in CaseClause
 		default:
@@ -542,7 +542,7 @@ __defer_func(%s)
 	case *ast.LabeledStmt:
 		label := c.p.Defs[s.Label].(*types.Label)
 		if c.GotoLabel[label] {
-			c.PrintCond(false, s.Label.Name+":", fmt.Sprintf("case %d:", c.labelCase(label)))
+			c.PrintCond(true, "::"+s.Label.Name+"::", fmt.Sprintf("case %d:", c.labelCase(label)))
 		}
 		c.translateStmt(s.Stmt, label)
 

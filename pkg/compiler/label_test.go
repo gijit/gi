@@ -31,12 +31,13 @@ lab:
 		goto lab
 	}
 }
+main()
 `
 
 		translation := inc.trMust([]byte(code))
 		fmt.Printf("\n translation='%s'\n", translation)
 		LuaRunAndReport(vm, string(translation))
-		LuaMustInt64(vm, "i", 2)
+		LuaMustInt64(vm, "i", 3)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
