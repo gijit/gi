@@ -56,7 +56,7 @@ func NewScope(parent *Scope, pos, end token.Pos, comment, methodName string) (sc
 	pp("NewScope() is returning %p with parent %p. comment '%s'", s, parent, comment)
 	if Universe != nil {
 		if parent == nil {
-			panic("where is nil scope parent coming from???? bad!")
+			//panic("where is nil scope parent coming from???? bad!") // from labels.go:15
 		}
 	}
 	return s
