@@ -245,8 +245,12 @@ func (r *Goro) handleTicket(t *ticket) {
 }
 
 func (r *Goro) do(t *ticket) {
-	r.doticket <- t
-	<-t.done
+	if reserveMainThread {
+		r.doticket <- t
+		<-t.done
+	} else {
+		r.handleTicket(t)
+	}
 }
 
 func (t *ticket) Do() error {
