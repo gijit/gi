@@ -61,27 +61,37 @@ func MainCThread() {
 }
 
 func (cfg *GIConfig) LuajitMain() {
-
-	done := make(chan bool)
-	var r *Repl
-	go func() {
-		r = NewRepl(cfg)
-
-		// in place of defer to cleanup:
+	if reserveMainThread {
+		done := make(chan bool)
+		var r *Repl
 		go func() {
-			<-done
+			r = NewRepl(cfg)
+
+			// in place of defer to cleanup:
+			go func() {
+				<-done
+				r.lvm.Close()
+				close(mainShutdown)
+			}()
+			r.Loop()
+			done <- true
+		}()
+
+		// this is the C main thread, for LuaJIT
+		// to always and only be on... it never
+		// returns. Use doMain() to communicate
+		// with it via mainQ.
+		MainCThread()
+
+	} else {
+
+		r := NewRepl(cfg)
+		defer func() {
 			r.lvm.Close()
 			close(mainShutdown)
 		}()
 		r.Loop()
-		done <- true
-	}()
-
-	// this is the C main thread, for LuaJIT
-	// to always and only be on... it never
-	// returns. Use doMain() to communicate
-	// with it via mainQ.
-	MainCThread()
+	}
 }
 
 type Repl struct {

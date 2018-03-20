@@ -20,10 +20,14 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	go func() {
+	if reserveMainThread {
+		go func() {
+			os.Exit(m.Run())
+		}()
+		MainCThread()
+	} else {
 		os.Exit(m.Run())
-	}()
-	MainCThread()
+	}
 }
 
 var matchesLuaSrc = cv.ShouldMatchModuloWhiteSpaceAndLuaComments

@@ -18,6 +18,15 @@ import (
 	"github.com/glycerine/luar"
 )
 
+// If reserveMainThread is true, we will
+// attempt to reserve the main starting
+// C thread for the LuaVM. This makes
+// things much more complicated, because
+// we run everything else on other
+// goroutines. For simplicity, we leave
+// it false at the moment.
+const reserveMainThread = false
+
 // shortcut; do
 // *dbg = true
 // to turn on -vv very verbose debug printing.
@@ -87,9 +96,14 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 	if err != nil {
 		return nil, err
 	}
-	doMainAsync(func() {
-		lvm.goro.Start()
-	})
+	if reserveMainThread {
+		doMainAsync(func() {
+			lvm.goro.Start()
+		})
+
+	} else {
+		go lvm.goro.Start()
+	}
 
 	// establish prelude location so prelude can know itself.
 	// __preludePath must be terminated with a '/' character.
