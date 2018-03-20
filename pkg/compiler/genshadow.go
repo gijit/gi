@@ -70,6 +70,15 @@ func init() {
 		default:
 			panic(fmt.Sprintf("genshadow: "+
 				"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
+		case *types.Map:
+			switch obj.(type) {
+			case *types.Var:
+				direct(o, nm, pkgName)
+			default:
+				panic(fmt.Sprintf("genshadow: "+
+					"unhandled type! what oty type? '%T' for nm='%v'", oty, nm))
+			}
+
 		case *types.Slice:
 			//fmt.Printf("Slice: nm = '%s', obj='%#v', oty='%#v', under='%#v'\n", nm, obj, oty, under)
 			// ex: os.Args
