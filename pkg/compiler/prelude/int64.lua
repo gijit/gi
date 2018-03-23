@@ -93,5 +93,9 @@ __bytesToString = function(ba)
    if ba.__array ~= nil then
       return string.sub(ffi.string(ba.__array.__bytes), 1, ba.__array.__sz)
    end
+   if type(ba) == "userdata" then
+      -- most likely a proxy
+      return getmetatable(ba).__proxy_byteslice_tostring(ba)
+   end
    error("__bytesToString error: TODO/unknown how to get string out of "..type(ba))
 end;

@@ -79,7 +79,7 @@ func luaToGoValue(L *lua.State, idx int) (reflect.Value, reflect.Type) {
 }
 
 func makeValueProxy(L *lua.State, v reflect.Value, proxyMT string) {
-	fmt.Printf("\n makeValueProxy() top. v.Type()='%#v'\n", v.Type())
+	//fmt.Printf("\n makeValueProxy() top. v.Type()='%#v'\n", v.Type())
 	// The metatable needs be set up in the Lua state before the proxy is created,
 	// otherwise closing the state will fail on calling the garbage collector.
 	// Not really sure why this happens though...
@@ -133,7 +133,7 @@ func makeValueProxy(L *lua.State, v reflect.Value, proxyMT string) {
 			L.SetMetaMethod("__ipairs", slice__ipairs)
 			L.SetMetaMethod("__pairs", slice__ipairs)
 			L.SetMetaMethod("__proxy_byteslice_tostring", slice__proxy_byteslice_tostring) // jea
-			L.SetMetaMethod("__proxy_byteslice_tostring", slice__proxy_byteslice_tobytes)  // jea
+			L.SetMetaMethod("__proxy_byteslice_tosbytes", slice__proxy_byteslice_tobytes)  // jea
 			flagValue()
 		case cMapMeta:
 			L.NewMetaTable(proxyMT)
