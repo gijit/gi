@@ -91,6 +91,14 @@ func registerLuarReqs(vm *golua.State) {
 	})
 
 	registerBasicReflectTypes(vm)
+
+	/*
+		luar.Register(vm, "", luar.Map{
+			"__tobytes": func(a interface{}) []byte {
+				return vm.ToBytes(0)
+			},
+		})
+	*/
 }
 
 func (ic *IncrState) EnableImportsFromLua() {

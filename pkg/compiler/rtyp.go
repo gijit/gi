@@ -68,4 +68,5 @@ func registerBasicReflectTypes(vm *golua.State) {
 	m["__kindComplex128"] = reflect.TypeOf(complex128(0))
 
 	luar.Register(vm, "__rtyp", m)
+
 }

@@ -562,3 +562,23 @@ func struct__newindex(L *lua.State) int {
 	field.Set(val.Elem())
 	return 0
 }
+
+func slice__proxy_byteslice_tostring(L *lua.State) int {
+	rval, _ := valueOfProxy(L, 1)
+	switch x := rval.Interface().(type) {
+	case []byte:
+		L.PushString(string(x))
+		return 1
+	}
+	return 0
+}
+
+func slice__proxy_byteslice_tobytes(L *lua.State) int {
+	rval, _ := valueOfProxy(L, 1)
+	switch x := rval.Interface().(type) {
+	case []byte:
+		L.PushBytes(x)
+		return 1
+	}
+	return 0
+}

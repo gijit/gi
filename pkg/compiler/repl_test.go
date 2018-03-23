@@ -1201,7 +1201,7 @@ func Test1991bytesReturnValue(t *testing.T) {
 		// native:
 
 		code3 := `import "runtime/debug"`
-		code4 := `d := string(debug.Stack()); e := d[:15]`
+		code4 := `d := string(debug.Stack()); e := d[:9]`
 
 		translation3 := inc.trMust([]byte(code3))
 		fmt.Printf("\n translation3='%s'\n", translation3)
@@ -1210,7 +1210,7 @@ func Test1991bytesReturnValue(t *testing.T) {
 		translation4 := inc.trMust([]byte(code4))
 		fmt.Printf("\n translation4='%s'\n", translation4)
 		LuaRunAndReport(vm, string(translation4))
-		LuaMustString(vm, "e", "runtime stack:")
+		LuaMustString(vm, "e", "goroutine")
 
 		cv.So(true, cv.ShouldBeTrue)
 	})
