@@ -1174,3 +1174,44 @@ func Test1990complexReturnValue(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1991bytesReturnValue(t *testing.T) {
+
+	cv.Convey(`a []byte return value from a native Go function should work, as should string conversion from []byte to string applied to that native return`, t, func() {
+
+		// non-native
+		code := `f := func() []byte { return []byte("hello") }; a := f()`
+		code2 := `b := string(a)`
+
+		// expect b to give "hello"
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+		LuaRunAndReport(vm, string(translation))
+
+		translation2 := inc.trMust([]byte(code2))
+		fmt.Printf("\n translation2='%s'\n", translation2)
+		LuaRunAndReport(vm, string(translation2))
+		LuaMustString(vm, "b", "hello")
+
+		// native:
+
+		code3 := `import "runtime/debug"`
+		code4 := `d := string(debug.Stack()); e := d[:15]`
+
+		translation3 := inc.trMust([]byte(code3))
+		fmt.Printf("\n translation3='%s'\n", translation3)
+		LuaRunAndReport(vm, string(translation))
+
+		translation4 := inc.trMust([]byte(code4))
+		fmt.Printf("\n translation4='%s'\n", translation4)
+		LuaRunAndReport(vm, string(translation4))
+		LuaMustString(vm, "e", "runtime stack:")
+
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

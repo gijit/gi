@@ -28,6 +28,7 @@ import (
 	shadow_reflect "github.com/gijit/gi/pkg/compiler/shadow/reflect"
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	shadow_runtime "github.com/gijit/gi/pkg/compiler/shadow/runtime"
+	shadow_runtime_debug "github.com/gijit/gi/pkg/compiler/shadow/runtime/debug"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
 
 	// gonum
@@ -212,6 +213,11 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		t0.regmap["runtime"] = shadow_runtime.Pkg
 		t0.regmap["__ctor__runtime"] = shadow_runtime.Ctor
 		t0.run = append(t0.run, shadow_runtime.InitLua()...)
+
+	case "runtime/debug":
+		t0.regmap["debug"] = shadow_runtime_debug.Pkg
+		t0.regmap["__ctor__debug"] = shadow_runtime_debug.Ctor
+		t0.run = append(t0.run, shadow_runtime_debug.InitLua()...)
 
 	case "io/ioutil":
 		t0.regmap["ioutil"] = shadow_io_ioutil.Pkg
