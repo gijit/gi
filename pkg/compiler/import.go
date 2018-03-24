@@ -244,8 +244,16 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		t0.regmap["unit"] = shadow_unit.Pkg
 
 	default:
+		// try a source import.
+		archive, err := ic.ImportSourcePackage(path)
+		if err == nil {
+			return archive, err
+		}
+		// source import failed.
+
 		// need to run gen-gijit-shadow-import
-		return nil, fmt.Errorf("erro: package '%s' unknown, or not shadowed. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path)
+		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed?): '%v'. To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
+
 	}
 	panicOn(t0.Do())
 
