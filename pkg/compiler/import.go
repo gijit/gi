@@ -92,13 +92,6 @@ func registerLuarReqs(vm *golua.State) {
 
 	registerBasicReflectTypes(vm)
 
-	/*
-		luar.Register(vm, "", luar.Map{
-			"__tobytes": func(a interface{}) []byte {
-				return vm.ToBytes(0)
-			},
-		})
-	*/
 }
 
 func (ic *IncrState) EnableImportsFromLua() {
@@ -114,10 +107,6 @@ func (ic *IncrState) EnableImportsFromLua() {
 		"__go_import": goImportFromLua,
 		"__stacks":    stacksClosure,
 	})
-	/*	t0 := ic.goro.newTicket()
-		t0.regmap["__go_import"] = goImportFromLua
-		panicOn(t0.Do())
-	*/
 }
 
 func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
