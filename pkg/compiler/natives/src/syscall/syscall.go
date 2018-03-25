@@ -12,7 +12,7 @@ var warningPrinted = false
 var lineBuffer []byte
 
 func init() {
-	js.Global.Set("$flushConsole", js.InternalObject(func() {
+	js.Global.Set("__flushConsole", js.InternalObject(func() {
 		if len(lineBuffer) != 0 {
 			js.Global.Get("console").Call("log", string(lineBuffer))
 			lineBuffer = nil

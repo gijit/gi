@@ -163,7 +163,7 @@ func Min(x, y float64) float64 {
 }
 
 func Mod(x, y float64) float64 {
-	return js.Global.Call("$mod", x, y).Float()
+	return js.Global.Call("__mod", x, y).Float()
 }
 
 func Modf(f float64) (float64, float64) {

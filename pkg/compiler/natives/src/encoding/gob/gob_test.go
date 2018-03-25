@@ -65,7 +65,7 @@ func TestEndToEnd(t *testing.T) {
 		Mintptr: map[int]*int{meaning: &fingers, fingers: &meaning},
 		Mcomp:   map[complex128]complex128{comp1: comp2, comp2: comp1},
 		// TODO: Fix this problem:
-		// 	TypeError: dst.$set is not a function
+		// 	TypeError: dst.__set is not a function
 		// 	    at typedmemmove (/github.com/gopherjs/gopherjs/reflect.go:487:3)
 		//Marr:     map[[2]string][2]*float64{arr1: floatArr1, arr2: floatArr2},
 		EmptyMap: make(map[string]int),

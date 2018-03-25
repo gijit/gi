@@ -62,7 +62,7 @@ func Syscall(trap, a1, a2, a3 uintptr) (r1, r2 uintptr, err Errno) {
 	if trap == SYS_WRITE && (a1 == 1 || a1 == 2) {
 		array := js.InternalObject(a2)
 		slice := make([]byte, array.Length())
-		js.InternalObject(slice).Set("$array", array)
+		js.InternalObject(slice).Set("__array", array)
 		printToConsole(slice)
 		return uintptr(array.Length()), 0, 0
 	}

@@ -121,7 +121,7 @@ func InternalObject(i interface{}) *Object {
 
 // MakeFunc wraps a function and gives access to the values of JavaScript's "this" and "arguments" keywords.
 func MakeFunc(fn func(this *Object, arguments []*Object) interface{}) *Object {
-	return Global.Call("$makeFunc", InternalObject(fn))
+	return Global.Call("__makeFunc", InternalObject(fn))
 }
 
 // Keys returns the keys of the given JavaScript object.
@@ -149,7 +149,7 @@ func MakeWrapper(i interface{}) *Object {
 			continue
 		}
 		o.Set(m.Get("name").String(), func(args ...*Object) *Object {
-			return Global.Call("$externalizeFunction", v.Get(m.Get("prop").String()), m.Get("typ"), true).Call("apply", v, args)
+			return Global.Call("__externalizeFunction", v.Get(m.Get("prop").String()), m.Get("typ"), true).Call("apply", v, args)
 		})
 	}
 	return o
@@ -158,9 +158,9 @@ func MakeWrapper(i interface{}) *Object {
 // NewArrayBuffer creates a JavaScript ArrayBuffer from a byte slice.
 func NewArrayBuffer(b []byte) *Object {
 	slice := InternalObject(b)
-	offset := slice.Get("$offset").Int()
-	length := slice.Get("$length").Int()
-	return slice.Get("$array").Get("buffer").Call("slice", offset, offset+length)
+	offset := slice.Get("__offset").Int()
+	length := slice.Get("__length").Int()
+	return slice.Get("__array").Get("buffer").Call("slice", offset, offset+length)
 }
 
 // M is a simple map type. It is intended as a shorthand for JavaScript objects (before conversion).
