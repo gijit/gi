@@ -50,6 +50,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		},
 	}
 
+	pp("config.Check on importPath='%s'", importPath)
 	typesPkg, _, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
 	if importError != nil {
 		return nil, importError
