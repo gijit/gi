@@ -2,6 +2,7 @@
 
 package runtime
 
+/*
 import (
 	"runtime/internal/sys"
 
@@ -228,3 +229,4 @@ func findfunc(pc uintptr) funcInfo { return funcInfo{} }
 func funcname(f funcInfo) string   { return "" }
 
 type funcInfo struct{}
+*/
