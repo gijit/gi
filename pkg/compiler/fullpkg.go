@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/printer"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"runtime/debug"
@@ -29,6 +30,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		pp("end of FullPackageCompile, returning arch='%#v', err='%v'", arch, err)
 		pp("and stack is '%s'", string(debug.Stack()))
 	}()
+	var funcSrcCache map[string]string
 	typesInfo := &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
 		Defs:       make(map[*ast.Ident]types.Object),
@@ -57,7 +59,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 
 	pp("config.Check on importPath='%s'", importPath)
-	typesPkg, _, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
+	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
 	if importError != nil {
 		return nil, importError
 	}
@@ -163,6 +165,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		for _, decl := range file.Nodes {
 			switch d := decl.(type) {
 			case *ast.FuncDecl:
+
+				// cache the source for checking at the repl
+				var by bytes.Buffer
+				err = printer.Fprint(&by, fileSet, d)
+				panicOn(err)
+				funcSrcCache[d.Name.Name] = by.String()
+				pp("stored in funcSrcCache['%s'] the value '%s'", d.Name.Name, funcSrcCache[d.Name.Name])
+
 				sig := c.p.Defs[d.Name].(*types.Func).Type().(*types.Signature)
 				var recvType types.Type
 				if sig.Recv() != nil {
@@ -471,6 +481,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			FileSet:      encodedFileSet.Bytes(),
 			Minified:     minify,
 		},
-		Pkg: typesPkg,
+		TypesInfo:    typesInfo,
+		Config:       config,
+		Check:        chk,
+		Pkg:          typesPkg,
+		FuncSrcCache: funcSrcCache,
 	}, nil
 }
