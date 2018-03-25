@@ -60,7 +60,10 @@ type Archive struct {
 	IncJSCode    []byte
 	FileSet      []byte
 	Minified     bool
-	NewCodeText  [][]byte
+
+	// above from GopherJS, below added for gijit.
+
+	NewCodeText [][]byte
 
 	// save state so we can type incrementally
 	TypesInfo *types.Info
