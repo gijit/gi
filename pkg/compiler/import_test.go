@@ -85,3 +85,26 @@ func Fish(numPole int) (fishCaught int) {
 `, i)
 	f.Close()
 }
+
+func Test1002ImportSourcePackageThatLoadsRuntime(t *testing.T) {
+
+	cv.Convey(`import a Go source package that imports 'io', and so loads 'runtime' indirectly.`, t, func() {
+
+		code := `
+import "github.com/gijit/gi/pkg/verb"
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustInt64(vm, "caught", 4)
+	})
+}
