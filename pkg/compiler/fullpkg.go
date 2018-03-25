@@ -30,6 +30,13 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		pp("end of FullPackageCompile, returning arch='%#v', err='%v'", arch, err)
 		pp("and stack is '%s'", string(debug.Stack()))
 	}()
+
+	// In incr.go, newCodeText collects Lua source from de.DeclCode for FuncDecl,
+	// type definitions, variables de.InitCode, etc.
+	// It is probably redundant with Archive.Declarations now.
+	//
+	var newCodeText [][]byte
+
 	funcSrcCache := make(map[string]string)
 	typesInfo := &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
@@ -481,6 +488,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			FileSet:      encodedFileSet.Bytes(),
 			Minified:     minify,
 		},
+		NewCodeText:  newCodeText,
 		TypesInfo:    typesInfo,
 		Config:       config,
 		Check:        chk,

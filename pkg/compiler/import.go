@@ -249,6 +249,17 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		// try a source import.
 		archive, err := ic.ImportSourcePackage(path, "")
 		if err == nil {
+
+			// success. execute the code to define
+			// functions in the lua namespace.
+			t0.regns = archive.Pkg.Name()
+			code, err := ic.CurPkg.Session.WriteCommandPackage(archive, "")
+			if err != nil {
+				return nil, err
+			}
+			t0.run = code
+			panicOn(t0.Do())
+
 			return archive, err
 		}
 		// source import failed.
