@@ -7,7 +7,7 @@
 package importgraph // import "golang.org/x/tools/refactor/importgraph"
 
 import (
-	"go/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"sync"
 
 	"golang.org/x/tools/go/buildutil"
