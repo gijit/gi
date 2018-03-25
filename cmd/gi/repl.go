@@ -12,8 +12,19 @@ import (
 
 var ProgramName string = path.Base(os.Args[0])
 
-func main() {
+// Makefile tells the linker for main to set these,
+// propagate to compiler package here.
+func setCompilerVersion() {
+	compiler.LastGitCommitHash = LastGitCommitHash
+	compiler.BuildTimeStamp = BuildTimeStamp
+	compiler.NearestGitTag = NearestGitTag
+	compiler.GitBranch = GitBranch
+	compiler.GoVersion = GoVersion
+	compiler.LuajitVersion = LuajitVersion
+}
 
+func main() {
+	setCompilerVersion()
 	myflags := flag.NewFlagSet("gi", flag.ExitOnError)
 	cfg := compiler.NewGIConfig()
 	cfg.DefineFlags(myflags)
@@ -42,7 +53,7 @@ https://github.com/gijit/gi/blob/master/LICENSE
 ====================
 %s
 ==================
-`, Version())
+`, compiler.Version())
 	}
 
 	cfg.LuajitMain()
