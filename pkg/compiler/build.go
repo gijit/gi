@@ -225,24 +225,26 @@ func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTag
 // in the original AND the overrides, the original identifier in the AST gets
 // replaced by `_`. New identifiers that don't exist in original package get added.
 func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (files []*ast.File, err error) {
-	vv("parseAndAugment called! pkg.Name='%s'", pkg.Name)
-	//debug
-	defer func() {
-		r := recover()
-		vv("done with parseAndAugment of pkg.Name='%s', in panic unwind = %v", pkg.Name, r != nil)
-		if r != nil {
-			panic(r)
-		}
-	}()
+	/*
+		vv("parseAndAugment called! pkg.Name='%s'", pkg.Name)
+		//debug
+		defer func() {
+			r := recover()
+			vv("done with parseAndAugment of pkg.Name='%s', in panic unwind = %v", pkg.Name, r != nil)
+			if r != nil {
+				panic(r)
+			}
+		}()
 
-	// debug
-	defer func() {
+		// debug
 
-		by := dumpFileAst(files, fileSet)
-		vv("jea debug, at end of parseAndAugment, files = '\n%s\n'", string(by))
+			defer func() {
 
-	}()
+				by := dumpFileAst(files, fileSet)
+				vv("jea debug, at end of parseAndAugment, files = '\n%s\n'", string(by))
 
+			}()
+	*/
 	replacedDeclNames := make(map[string]bool)
 	funcName := func(d *ast.FuncDecl) string {
 		if d.Recv == nil || len(d.Recv.List) == 0 {
