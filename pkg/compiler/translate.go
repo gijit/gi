@@ -20,7 +20,7 @@ import (
 	//"github.com/kisielk/gotool"
 	//"github.com/shurcooL/go-goon"
 	//gbuild "github.com/gijit/gi/pkg/gostd/build"
-	//gbuild "github.com/gijit/gi/pkg/gibuild"
+	//gibuild "github.com/gijit/gi/pkg/gibuild"
 )
 
 // the incremental translation state
@@ -80,6 +80,9 @@ type IncrPkg struct {
 	fileSet       *token.FileSet
 	importContext *ImportContext
 	Arch          *Archive
+
+	localImportPathCache map[string]*Archive
+	Session              *Session
 }
 
 func newIncrPkg(key string,
@@ -90,12 +93,17 @@ func newIncrPkg(key string,
 
 ) *IncrPkg {
 
+	opt := &Options{}
+
 	return &IncrPkg{
 		key:           key,
 		pack:          pack,
 		fileSet:       fileSet,
 		importContext: importContext,
 		Arch:          archive,
+
+		localImportPathCache: make(map[string]*Archive),
+		Session:              NewSession(opt),
 	}
 }
 
@@ -191,20 +199,12 @@ func (tr *IncrState) Tr(src []byte) ([]byte, error) {
 	return res.Bytes(), nil
 }
 
-type ImportCError struct {
-	pkgPath string
-}
-
-func (e *ImportCError) Error() string {
-	return e.pkgPath + `: importing "C" is not supported by GopherJS`
-}
-
 func NewReplContext(installSuffix string, buildTags []string) *build.Context {
 	return &build.Context{
 		GOROOT:        build.Default.GOROOT,
 		GOPATH:        build.Default.GOPATH,
 		GOOS:          build.Default.GOOS,
-		GOARCH:        "js",
+		GOARCH:        "gijit",
 		InstallSuffix: installSuffix,
 		Compiler:      "gc",
 		BuildTags:     append(buildTags, "netgo"),
@@ -244,7 +244,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	case "syscall":
 		// syscall needs to use a typical GOARCH like amd64 to pick up definitions for _Socklen, BpfInsn, IFNAMSIZ, Timeval, BpfStat, SYS_FCNTL, Flock_t, etc.
 		bctx.GOARCH = runtime.GOARCH
-		bctx.InstallSuffix = "js"
+		bctx.InstallSuffix = "gijit"
 		if installSuffix != "" {
 			bctx.InstallSuffix += "_" + installSuffix
 		}
@@ -285,7 +285,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	}
 
 	if pkg.IsCommand() {
-		pkg.PkgObj = filepath.Join(pkg.BinDir, filepath.Base(pkg.ImportPath)+".js")
+		pkg.PkgObj = filepath.Join(pkg.BinDir, filepath.Base(pkg.ImportPath)+".gijit")
 	}
 
 	if _, err := os.Stat(pkg.PkgObj); os.IsNotExist(err) && strings.HasPrefix(pkg.PkgObj, build.Default.GOROOT) {
@@ -421,7 +421,7 @@ func jsFilesFromDir(dir string) ([]string, error) {
 	}
 	var jsFiles []string
 	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".inc.js") && file.Name()[0] != '_' && file.Name()[0] != '.' {
+		if strings.HasSuffix(file.Name(), ".inc.gijit") && file.Name()[0] != '_' && file.Name()[0] != '.' {
 			jsFiles = append(jsFiles, file.Name())
 		}
 	}

@@ -8,7 +8,19 @@ import (
 	//"github.com/glycerine/luar"
 )
 
-func (ic *IncrState) ImportSourcePackage(path string) (res *Archive, err error) {
+func (ic *IncrState) ImportSourcePackage(path, pkgDir string) (res *Archive, err error) {
+
+	// from ~/go/src/github.com/gopherjs/gopherjs/build/build.go
+	if archive, ok := ic.CurPkg.localImportPathCache[path]; ok {
+		return archive, nil
+	}
+	_, archive, err := ic.CurPkg.Session.BuildImportPathWithSrcDir(path, pkgDir)
+	if err != nil {
+		return nil, err
+	}
+	ic.CurPkg.localImportPathCache[path] = archive
+	return archive, nil
+
 	/*
 		var pkg *types.Package
 
