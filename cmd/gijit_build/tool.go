@@ -30,7 +30,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/gijit/gi/pkg/compiler"
-	gbuild "github.com/gijit/gi/pkg/gibuild"
 	"github.com/kisielk/gotool"
 	"github.com/neelance/sourcemap"
 	"github.com/spf13/cobra"
@@ -61,7 +60,7 @@ func init() {
 
 func main() {
 	var (
-		options = &gbuild.Options{CreateMapFile: true}
+		options = &compiler.Options{CreateMapFile: true}
 		pkgObj  string
 		tags    string
 	)
@@ -89,10 +88,13 @@ func main() {
 	cmdBuild.Flags().AddFlagSet(flagQuiet)
 	cmdBuild.Flags().AddFlagSet(compilerFlags)
 	cmdBuild.Flags().AddFlagSet(flagWatch)
+
+	isMain := true
+
 	cmdBuild.Run = func(cmd *cobra.Command, args []string) {
 		options.BuildTags = strings.Fields(tags)
 		for {
-			s := gbuild.NewSession(options)
+			s := compiler.NewSession(options)
 
 			err := func() error {
 				// Handle "gijit_build build [files]" ad-hoc package mode.
@@ -114,23 +116,23 @@ func main() {
 							s.Watcher.Add(name)
 						}
 					}
-					err := s.BuildFiles(args, pkgObj, currentDirectory)
+					_, err := s.BuildFiles(args, pkgObj, currentDirectory)
 					return err
 				}
 
 				// Expand import path patterns.
-				patternContext := gbuild.NewBuildContext("", options.BuildTags)
+				patternContext := compiler.NewBuildContext("", options.BuildTags)
 				pkgs := (&gotool.Context{BuildContext: *patternContext}).ImportPaths(args)
 
 				for _, pkgPath := range pkgs {
 					if s.Watcher != nil {
-						pkg, err := gbuild.NewBuildContext(s.InstallSuffix(), options.BuildTags).Import(pkgPath, "", build.FindOnly)
+						pkg, err := compiler.NewBuildContext(s.InstallSuffix(), options.BuildTags).Import(pkgPath, "", build.FindOnly)
 						if err != nil {
 							return err
 						}
 						s.Watcher.Add(pkg.Dir)
 					}
-					pkg, err := gbuild.Import(pkgPath, 0, s.InstallSuffix(), options.BuildTags)
+					pkg, err := compiler.Import(pkgPath, 0, s.InstallSuffix(), options.BuildTags)
 					if err != nil {
 						return err
 					}
@@ -143,7 +145,7 @@ func main() {
 							pkgObj = filepath.Base(pkg.Dir) + ".gijit"
 						}
 						if pkg.IsCommand() && !pkg.UpToDate {
-							if err := s.WriteCommandPackage(archive, pkgObj); err != nil {
+							if _, err := s.WriteCommandPackage(archive, pkgObj, isMain); err != nil {
 								return err
 							}
 						}
@@ -171,11 +173,11 @@ func main() {
 	cmdInstall.Run = func(cmd *cobra.Command, args []string) {
 		options.BuildTags = strings.Fields(tags)
 		for {
-			s := gbuild.NewSession(options)
+			s := compiler.NewSession(options)
 
 			err := func() error {
 				// Expand import path patterns.
-				patternContext := gbuild.NewBuildContext("", options.BuildTags)
+				patternContext := compiler.NewBuildContext("", options.BuildTags)
 				pkgs := (&gotool.Context{BuildContext: *patternContext}).ImportPaths(args)
 
 				if cmd.Name() == "get" {
@@ -187,7 +189,7 @@ func main() {
 					}
 				}
 				for _, pkgPath := range pkgs {
-					pkg, err := gbuild.Import(pkgPath, 0, s.InstallSuffix(), options.BuildTags)
+					pkg, err := compiler.Import(pkgPath, 0, s.InstallSuffix(), options.BuildTags)
 					if s.Watcher != nil && pkg != nil { // add watch even on error
 						s.Watcher.Add(pkg.Dir)
 					}
@@ -201,7 +203,7 @@ func main() {
 					}
 
 					if pkg.IsCommand() && !pkg.UpToDate {
-						if err := s.WriteCommandPackage(archive, pkg.PkgObj); err != nil {
+						if _, err := s.WriteCommandPackage(archive, pkg.PkgObj, isMain); err != nil {
 							return err
 						}
 					}
@@ -272,8 +274,8 @@ func main() {
 				os.Remove(tempfile.Name())
 				os.Remove(tempfile.Name() + ".map")
 			}()
-			s := gbuild.NewSession(options)
-			if err := s.BuildFiles(args[:lastSourceArg], tempfile.Name(), currentDirectory); err != nil {
+			s := compiler.NewSession(options)
+			if _, err := s.BuildFiles(args[:lastSourceArg], tempfile.Name(), currentDirectory); err != nil {
 				return err
 			}
 			if err := runNode(tempfile.Name(), args[lastSourceArg:], "", options.Quiet); err != nil {
@@ -303,13 +305,13 @@ func main() {
 		options.BuildTags = strings.Fields(tags)
 		err := func() error {
 			// Expand import path patterns.
-			patternContext := gbuild.NewBuildContext("", options.BuildTags)
+			patternContext := compiler.NewBuildContext("", options.BuildTags)
 			args = (&gotool.Context{BuildContext: *patternContext}).ImportPaths(args)
 
-			pkgs := make([]*gbuild.PackageData, len(args))
+			pkgs := make([]*compiler.PackageData, len(args))
 			for i, pkgPath := range args {
 				var err error
-				pkgs[i], err = gbuild.Import(pkgPath, 0, "", options.BuildTags)
+				pkgs[i], err = compiler.Import(pkgPath, 0, "", options.BuildTags)
 				if err != nil {
 					return err
 				}
@@ -321,10 +323,10 @@ func main() {
 					fmt.Printf("?   \t%s\t[no test files]\n", pkg.ImportPath)
 					continue
 				}
-				s := gbuild.NewSession(options)
+				s := compiler.NewSession(options)
 
 				tests := &testFuncs{Package: pkg.Package}
-				collectTests := func(testPkg *gbuild.PackageData, testPkgName string, needVar *bool) error {
+				collectTests := func(testPkg *compiler.PackageData, testPkgName string, needVar *bool) error {
 					if testPkgName == "_test" {
 						for _, file := range pkg.TestGoFiles {
 							if err := tests.load(filepath.Join(pkg.Package.Dir, file), testPkgName, &tests.ImportTest, &tests.NeedTest); err != nil {
@@ -342,7 +344,7 @@ func main() {
 					return err
 				}
 
-				if err := collectTests(&gbuild.PackageData{
+				if err := collectTests(&compiler.PackageData{
 					Package: &build.Package{
 						ImportPath: pkg.ImportPath,
 						Dir:        pkg.Dir,
@@ -355,7 +357,7 @@ func main() {
 					return err
 				}
 
-				if err := collectTests(&gbuild.PackageData{
+				if err := collectTests(&compiler.PackageData{
 					Package: &build.Package{
 						ImportPath: pkg.ImportPath + "_test",
 						Dir:        pkg.Dir,
@@ -416,7 +418,7 @@ func main() {
 					}
 				}()
 
-				if err := s.WriteCommandPackage(mainPkgArchive, outfile.Name()); err != nil {
+				if _, err := s.WriteCommandPackage(mainPkgArchive, outfile.Name(), isMain); err != nil {
 					return err
 				}
 
@@ -489,6 +491,7 @@ func main() {
 			options:    options,
 			dirs:       dirs,
 			sourceMaps: make(map[string][]byte),
+			isMain:     isMain,
 		})
 
 		ln, err := net.Listen("tcp", addr)
@@ -548,9 +551,10 @@ func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
 
 type serveCommandFileSystem struct {
 	serveRoot  string
-	options    *gbuild.Options
+	options    *compiler.Options
 	dirs       []string
 	sourceMaps map[string][]byte
+	isMain     bool
 }
 
 func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
@@ -565,8 +569,8 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 
 	if isPkg || isMap || isIndex {
 		// If we're going to be serving our special files, make sure there's a Go command in this folder.
-		s := gbuild.NewSession(fs.options)
-		pkg, err := gbuild.Import(path.Dir(name), 0, s.InstallSuffix(), fs.options.BuildTags)
+		s := compiler.NewSession(fs.options)
+		pkg, err := compiler.Import(path.Dir(name), 0, s.InstallSuffix(), fs.options.BuildTags)
 		if err != nil || pkg.Name != "main" {
 			isPkg = false
 			isMap = false
@@ -585,13 +589,13 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 
 				sourceMapFilter := &compiler.SourceMapFilter{Writer: buf}
 				m := &sourcemap.Map{File: base + ".gijit"}
-				sourceMapFilter.MappingCallback = gbuild.NewMappingCallback(m, fs.options.GOROOT, fs.options.GOPATH, fs.options.MapToLocalDisk)
+				sourceMapFilter.MappingCallback = compiler.NewMappingCallback(m, fs.options.GOROOT, fs.options.GOPATH, fs.options.MapToLocalDisk)
 
 				deps, err := compiler.ImportDependencies(archive, s.BuildImportPath)
 				if err != nil {
 					return err
 				}
-				if err := compiler.WriteProgramCode(deps, sourceMapFilter); err != nil {
+				if err := compiler.WriteProgramCode(deps, sourceMapFilter, fs.isMain); err != nil {
 					return err
 				}
 
@@ -686,7 +690,7 @@ func (f *fakeFile) Sys() interface{} {
 
 // handleError handles err and returns an appropriate exit code.
 // If browserErrors is non-nil, errors are written for presentation in browser.
-func handleError(err error, options *gbuild.Options, browserErrors *bytes.Buffer) int {
+func handleError(err error, options *compiler.Options, browserErrors *bytes.Buffer) int {
 	switch err := err.(type) {
 	case nil:
 		return 0
@@ -704,7 +708,7 @@ func handleError(err error, options *gbuild.Options, browserErrors *bytes.Buffer
 }
 
 // printError prints err to Stderr with options. If browserErrors is non-nil, errors are also written for presentation in browser.
-func printError(err error, options *gbuild.Options, browserErrors *bytes.Buffer) {
+func printError(err error, options *compiler.Options, browserErrors *bytes.Buffer) {
 	e := sprintError(err)
 	options.PrintError("%s\n", e)
 	if browserErrors != nil {
