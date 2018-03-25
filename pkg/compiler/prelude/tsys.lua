@@ -2093,7 +2093,7 @@ __type__.string  = __newType(16, __kindString,  "string",   true, "", false, nil
 
 __ptrType = function(elem)
    if elem == nil then
-      error("internal error: cannot call __ptrType() will nil elem")
+      error("internal error: cannot call __ptrType() with nil elem")
    end
    local typ = elem.ptr;
    if typ == nil then
