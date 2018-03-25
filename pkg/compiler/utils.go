@@ -484,6 +484,17 @@ func (c *funcContext) typeName(level int, ty types.Type) (res string) {
 	return
 }
 
+func (c *funcContext) getPkgName() string {
+	pkgName := c.p.Pkg.Name()
+	vv("pkgName='%s'", pkgName)
+	if pkgName == "main" {
+		pkgName = ""
+	} else {
+		pkgName += "."
+	}
+	return pkgName
+}
+
 func (c *funcContext) typeNameWithAnonInfo(
 	ty types.Type,
 ) (
@@ -493,32 +504,27 @@ func (c *funcContext) typeNameWithAnonInfo(
 	createdVarName string,
 ) {
 
+	pkgName := c.getPkgName()
+
 	whenAnonPrint := c.TypeNameSetting
 
 	pp("in typeNameWithAnonInfo, ty='%v'; whenAnonPrint=%v\n", ty.String(), whenAnonPrint)
-	defer func() {
-		// funcContext.typeName returning with res = 'sliceType'
-		//fmt.Printf("funcContext.typeName returning with res = '%s'\n", res)
-		if res == "__type__.anon_sliceType" {
-			//panic("where?")
-		}
-	}()
 	switch t := ty.(type) {
 	case *types.Basic:
 		jst := toJavaScriptType(t)
 		pp("in typeName, basic, calling toJavaScriptType t='%#v', got jst='%s'", t, jst)
-		res = "__type__." + jst
+		res = "__type__." + pkgName + jst
 		return
 	case *types.Named:
 		if t.Obj().Name() == "error" {
-			res = "__type__.error"
+			res = "__type__." + pkgName + "error"
 			return
 		}
-		res = "__type__." + c.objectName(t.Obj())
+		res = "__type__." + pkgName + c.objectName(t.Obj())
 		return
 	case *types.Interface:
 		if t.Empty() {
-			res = "__type__.emptyInterface"
+			res = "__type__." + pkgName + "emptyInterface"
 			return
 		}
 	}
@@ -533,7 +539,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		pp("----- back from c.initArgs(ty)\n")
 
 		// [6:] takes prefix "__kind" off.
-		low := "__type__.anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
+		low := "__type__." + pkgName + "anon_" + strings.ToLower(typeKind(ty)[6:]) + "Type"
 
 		// typeKind(ty)='_kindSlice', low='sliceType'
 		pp("typeKind(ty)='%s', low='%s'\n", typeKind(ty), low)
@@ -546,7 +552,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- '%s' anon type printing. utils.go:506\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- '%s' anon type printing. utils.go:550\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 

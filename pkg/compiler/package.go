@@ -139,6 +139,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 }
 
 func (c *funcContext) initArgs(ty types.Type) string {
+
 	prev := c.TypeNameSetting
 	c.TypeNameSetting = IMMEDIATE
 	defer func() {
@@ -211,6 +212,9 @@ func (c *funcContext) initArgs(ty types.Type) string {
 
 func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysis.FuncInfo) []byte {
 	pp("translateToplevelFunction called! fun.Name.Name='%s'", fun.Name.Name)
+
+	pkgName := c.getPkgName()
+
 	o := c.p.Defs[fun.Name].(*types.Func)
 	sig := o.Type().(*types.Signature)
 	var recv *ast.Ident
@@ -249,7 +253,7 @@ func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysi
 	if isPointer {
 		namedRecvType = ptr.Elem().(*types.Named)
 	}
-	typeName := "__type__." + c.objectName(namedRecvType.Obj())
+	typeName := "__type__." + pkgName + c.objectName(namedRecvType.Obj())
 	funName := fun.Name.Name
 	if reservedKeywords[funName] {
 		funName += "_"
