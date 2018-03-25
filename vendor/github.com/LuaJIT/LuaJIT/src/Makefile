@@ -511,7 +511,7 @@ LIB_VMDEFP= $(LIB_VMDEF)
 LUAJIT_O= luajit.o
 LUAJIT_A= libluajit.a
 LUAJIT_SO= libluajit.so
-LUAJIT_T= luajit
+LUAJIT_T= gijit_luajit
 
 ALL_T= $(LUAJIT_T) $(LUAJIT_A) $(LUAJIT_SO) $(HOST_T)
 ALL_HDRGEN= lj_bcdef.h lj_ffdef.h lj_libdef.h lj_recdef.h lj_folddef.h \

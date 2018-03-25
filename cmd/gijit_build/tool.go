@@ -96,15 +96,15 @@ func main() {
 
 			err := func() error {
 				// Handle "gijit_build build [files]" ad-hoc package mode.
-				if len(args) > 0 && (strings.HasSuffix(args[0], ".go") || strings.HasSuffix(args[0], ".inc.js")) {
+				if len(args) > 0 && (strings.HasSuffix(args[0], ".go") || strings.HasSuffix(args[0], ".inc.gijit")) {
 					for _, arg := range args {
-						if !strings.HasSuffix(arg, ".go") && !strings.HasSuffix(arg, ".inc.js") {
-							return fmt.Errorf("named files must be .go or .inc.js files")
+						if !strings.HasSuffix(arg, ".go") && !strings.HasSuffix(arg, ".inc.gijit") {
+							return fmt.Errorf("named files must be .go or .inc.gijit files")
 						}
 					}
 					if pkgObj == "" {
 						basename := filepath.Base(args[0])
-						pkgObj = basename[:len(basename)-3] + ".js"
+						pkgObj = basename[:len(basename)-3] + ".gijit"
 					}
 					names := make([]string, len(args))
 					for i, name := range args {
@@ -140,7 +140,7 @@ func main() {
 					}
 					if len(pkgs) == 1 { // Only consider writing output if single package specified.
 						if pkgObj == "" {
-							pkgObj = filepath.Base(pkg.Dir) + ".js"
+							pkgObj = filepath.Base(pkg.Dir) + ".gijit"
 						}
 						if pkg.IsCommand() && !pkg.UpToDate {
 							if err := s.WriteCommandPackage(archive, pkgObj); err != nil {
@@ -179,7 +179,7 @@ func main() {
 				pkgs := (&gotool.Context{BuildContext: *patternContext}).ImportPaths(args)
 
 				if cmd.Name() == "get" {
-					goGet := exec.Command("go", append([]string{"get", "-d", "-tags=js"}, pkgs...)...)
+					goGet := exec.Command("go", append([]string{"get", "-d", "-tags=gijit"}, pkgs...)...)
 					goGet.Stdout = os.Stdout
 					goGet.Stderr = os.Stderr
 					if err := goGet.Run(); err != nil {
@@ -251,7 +251,7 @@ func main() {
 		err := func() error {
 			lastSourceArg := 0
 			for {
-				if lastSourceArg == len(args) || !(strings.HasSuffix(args[lastSourceArg], ".go") || strings.HasSuffix(args[lastSourceArg], ".inc.js")) {
+				if lastSourceArg == len(args) || !(strings.HasSuffix(args[lastSourceArg], ".go") || strings.HasSuffix(args[lastSourceArg], ".inc.gijit")) {
 					break
 				}
 				lastSourceArg++
@@ -296,7 +296,7 @@ func main() {
 	run := cmdTest.Flags().String("run", "", "Run only those tests and examples matching the regular expression.")
 	short := cmdTest.Flags().Bool("short", false, "Tell long-running tests to shorten their run time.")
 	verbose := cmdTest.Flags().BoolP("verbose", "v", false, "Log all tests as they are run. Also print all text from Log and Logf calls even if the test succeeds.")
-	compileOnly := cmdTest.Flags().BoolP("compileonly", "c", false, "Compile the test binary to pkg.test.js but do not run it (where pkg is the last element of the package's import path). The file name can be changed with the -o flag.")
+	compileOnly := cmdTest.Flags().BoolP("compileonly", "c", false, "Compile the test binary to pkg.test.gijit but do not run it (where pkg is the last element of the package's import path). The file name can be changed with the -o flag.")
 	outputFilename := cmdTest.Flags().StringP("output", "o", "", "Compile the test binary to the named file. The test still runs (unless -c is specified).")
 	cmdTest.Flags().AddFlagSet(compilerFlags)
 	cmdTest.Run = func(cmd *cobra.Command, args []string) {
@@ -393,7 +393,7 @@ func main() {
 				}
 
 				if *compileOnly && *outputFilename == "" {
-					*outputFilename = pkg.Package.Name + "_test.js"
+					*outputFilename = pkg.Package.Name + "_test.gijit"
 				}
 
 				var outfile *os.File
@@ -559,8 +559,8 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 	dir, file := path.Split(name)
 	base := path.Base(dir) // base is parent folder name, which becomes the output file name.
 
-	isPkg := file == base+".js"
-	isMap := file == base+".js.map"
+	isPkg := file == base+".gijit"
+	isMap := file == base+".gijit.map"
 	isIndex := file == "index.html"
 
 	if isPkg || isMap || isIndex {
@@ -584,7 +584,7 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 				}
 
 				sourceMapFilter := &compiler.SourceMapFilter{Writer: buf}
-				m := &sourcemap.Map{File: base + ".js"}
+				m := &sourcemap.Map{File: base + ".gijit"}
 				sourceMapFilter.MappingCallback = gbuild.NewMappingCallback(m, fs.options.GOROOT, fs.options.GOPATH, fs.options.MapToLocalDisk)
 
 				deps, err := compiler.ImportDependencies(archive, s.BuildImportPath)
@@ -597,7 +597,7 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 
 				mapBuf := new(bytes.Buffer)
 				m.WriteTo(mapBuf)
-				buf.WriteString("//# sourceMappingURL=" + base + ".js.map\n")
+				buf.WriteString("//# sourceMappingURL=" + base + ".gijit.map\n")
 				fs.sourceMaps[name+".map"] = mapBuf.Bytes()
 
 				return nil
@@ -606,11 +606,11 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 			if err != nil {
 				buf = browserErrors
 			}
-			return newFakeFile(base+".js", buf.Bytes()), nil
+			return newFakeFile(base+".gijit", buf.Bytes()), nil
 
 		case isMap:
 			if content, ok := fs.sourceMaps[name]; ok {
-				return newFakeFile(base+".js.map", content), nil
+				return newFakeFile(base+".gijit.map", content), nil
 			}
 		}
 	}
@@ -632,7 +632,7 @@ func (fs serveCommandFileSystem) Open(requestName string) (http.File, error) {
 
 	if isIndex {
 		// If there was no index.html file in any dirs, supply our own.
-		return newFakeFile("index.html", []byte(`<html><head><meta charset="utf-8"><script src="`+base+`.js"></script></head><body></body></html>`)), nil
+		return newFakeFile("index.html", []byte(`<html><head><meta charset="utf-8"><script src="`+base+`.gijit"></script></head><body></body></html>`)), nil
 	}
 
 	return nil, os.ErrNotExist
@@ -734,15 +734,17 @@ func sprintError(err error) string {
 
 func runNode(script string, args []string, dir string, quiet bool) error {
 	var allArgs []string
-	if b, _ := strconv.ParseBool(os.Getenv("SOURCE_MAP_SUPPORT")); os.Getenv("SOURCE_MAP_SUPPORT") == "" || b {
-		allArgs = []string{"--require", "source-map-support/register"}
-		if err := exec.Command("node", "--require", "source-map-support/register", "--eval", "").Run(); err != nil {
-			if !quiet {
-				fmt.Fprintln(os.Stderr, "gijit_build: Source maps disabled. Install source-map-support module for nice stack traces. See https://github.com/gopherjs/gopherjs#gopherjs-run-gopherjs-test.")
+	/*
+		if b, _ := strconv.ParseBool(os.Getenv("SOURCE_MAP_SUPPORT")); os.Getenv("SOURCE_MAP_SUPPORT") == "" || b {
+			allArgs = []string{"--require", "source-map-support/register"}
+			if err := exec.Command("gi", "--require", "source-map-support/register", "--eval", "").Run(); err != nil {
+				if !quiet {
+					fmt.Fprintln(os.Stderr, "gijit_build: Source maps disabled. Install source-map-support module for nice stack traces. See https://github.com/gopherjs/gopherjs#gopherjs-run-gopherjs-test.")
+				}
+				allArgs = []string{}
 			}
-			allArgs = []string{}
 		}
-	}
+	*/
 
 	// jea: this is a node.js issue.
 	/*
@@ -773,14 +775,14 @@ func runNode(script string, args []string, dir string, quiet bool) error {
 	allArgs = append(allArgs, script)
 	allArgs = append(allArgs, args...)
 
-	node := exec.Command("node", allArgs...)
+	node := exec.Command("gi", allArgs...)
 	node.Dir = dir
 	node.Stdin = os.Stdin
 	node.Stdout = os.Stdout
 	node.Stderr = os.Stderr
 	err := node.Run()
 	if _, ok := err.(*exec.ExitError); err != nil && !ok {
-		err = fmt.Errorf("could not run Node.js: %s", err.Error())
+		err = fmt.Errorf("could not run gi: %s", err.Error())
 	}
 	return err
 }
