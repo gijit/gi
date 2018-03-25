@@ -106,5 +106,6 @@ import "github.com/gijit/gi/pkg/verb"
 		LuaRunAndReport(vm, string(translation))
 
 		//LuaMustInt64(vm, "caught", 4)
+		cv.So(true, cv.ShouldBeTrue)
 	})
 }
