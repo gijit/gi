@@ -96,7 +96,7 @@ func Test1010NativesDontImportExtraPackages(t *testing.T) {
 					if err != nil {
 						t.Fatalf("strconv.Unquote(%v): %v", imp.Path.Value, err)
 					}
-					if importPath == "github.com/gopherjs/gopherjs/js" {
+					if importPath == "github.com/gijit/gi/pkg/luaapi" {
 						continue
 					}
 					if _, ok := realImports[importPath]; !ok {
