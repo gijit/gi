@@ -106,6 +106,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	case "os":
 		pkg.GoFiles = excludeExecutable(pkg.GoFiles) // Need to exclude executable implementation files, because some of them contain package scope variables that perform (indirectly) syscalls on init.
 	case "runtime":
+		fmt.Printf("\n\n package 'runtime' detected.\n")
 		pkg.GoFiles = []string{"error.go"}
 	case "runtime/internal/sys":
 		pkg.GoFiles = []string{fmt.Sprintf("zgoos_%s.go", bctx.GOOS), "zversion.go"}
