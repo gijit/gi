@@ -9,7 +9,7 @@ import (
 )
 
 const GOOS = sys.GOOS
-const GOARCH = "js"
+const GOARCH = "gijit"
 const Compiler = "gopherjs"
 
 // fake for error.go
@@ -64,7 +64,7 @@ func Callers(skip int, pc []uintptr) int {
 	return 0
 }
 
-// CallersFrames is not implemented for GOARCH=js.
+// CallersFrames is not implemented for GOARCH=gijit.
 // TODO: Implement if possible.
 func CallersFrames(callers []uintptr) *Frames { return &Frames{} }
 

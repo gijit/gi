@@ -19,7 +19,7 @@ func HasExec() bool {
 		}
 	}
 	switch runtime.GOARCH {
-	case "js":
+	case "js", "gijit":
 		return false
 	}
 	return true
