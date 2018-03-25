@@ -5,7 +5,7 @@ package syscall
 import (
 	"unsafe"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 var warningPrinted = false

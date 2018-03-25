@@ -5,7 +5,7 @@ package runtime
 import (
 	"runtime/internal/sys"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 const GOOS = sys.GOOS
@@ -24,10 +24,10 @@ func (t *_type) string() string {
 }
 
 func init() {
-	jsPkg := js.Global.Get("$packages").Get("github.com/gijit/gi/pkg/gopherjs/js")
-	js.Global.Set("$jsObjectPtr", jsPkg.Get("Object").Get("ptr"))
-	js.Global.Set("$jsErrorPtr", jsPkg.Get("Error").Get("ptr"))
-	js.Global.Set("$throwRuntimeError", js.InternalObject(throw))
+	jsPkg := js.Global.Get("__packages").Get("github.com/gijit/gi/pkg/luaapi")
+	js.Global.Set("__jsObjectPtr", jsPkg.Get("Object").Get("ptr"))
+	js.Global.Set("__jsErrorPtr", jsPkg.Get("Error").Get("ptr"))
+	js.Global.Set("__throwRuntimeError", js.InternalObject(throw))
 
 	// avoid dead code elimination
 	var e error
@@ -85,8 +85,8 @@ func GC() {
 }
 
 func Goexit() {
-	js.Global.Get("$curGoroutine").Set("exit", true)
-	js.Global.Call("$throw", nil)
+	js.Global.Get("__curGoroutine").Set("exit", true)
+	js.Global.Call("__throw", nil)
 }
 
 func GOMAXPROCS(n int) int {
@@ -95,7 +95,7 @@ func GOMAXPROCS(n int) int {
 
 func Gosched() {
 	c := make(chan struct{})
-	js.Global.Call("$setTimeout", js.InternalObject(func() { close(c) }), 0)
+	js.Global.Call("__setTimeout", js.InternalObject(func() { close(c) }), 0)
 	<-c
 }
 
@@ -104,7 +104,7 @@ func NumCPU() int {
 }
 
 func NumGoroutine() int {
-	return js.Global.Get("$totalGoroutines").Int()
+	return js.Global.Get("__totalGoroutines").Int()
 }
 
 type MemStats struct {

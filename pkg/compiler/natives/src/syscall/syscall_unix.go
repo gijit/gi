@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"unsafe"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func runtime_envs() []string {

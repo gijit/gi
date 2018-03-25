@@ -10,7 +10,7 @@ import (
 	"net/textproto"
 	"strconv"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 var DefaultTransport = func() RoundTripper {
