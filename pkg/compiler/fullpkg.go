@@ -390,7 +390,8 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		d.DceDeps = collectDependencies(func() {
 			d.DeclCode = c.CatchOutput(0, func() {
 				typeName := c.objectName(o)
-				lhs := "__type__." + typeName
+				lhsPre := fmt.Sprintf("__type__.%s", typesPkg.Name())
+				lhs := fmt.Sprintf("%s.%s", lhsPre, typeName)
 				// jea comment out for now... b/c getting stuff like:
 				//
 				// __type__.GONZAGA = _pkg.GONZAGA --[[ fullpkg.go:395 --]]  = __newType(16, __kindInterface, "spkg_tst.GONZAGA", true, "github.com/gijit/gi/pkg/compiler/spkg_tst", true, nil);
@@ -422,6 +423,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 				case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
 					size = sizes64.Sizeof(t)
 				}
+				c.Printf("%[1]s = %[1]s or {};\n", lhsPre)
 				c.Printf(`%s = __newType(%d, %s, "%s.%s", %t, "%s", %t, %s);`, lhs, size, typeKind(o.Type()), o.Pkg().Name(), o.Name(), o.Name() != "", o.Pkg().Path(), o.Exported(), constructor)
 			})
 			d.MethodListCode = c.CatchOutput(0, func() {
@@ -460,7 +462,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			switch t := o.Type().Underlying().(type) {
 			case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 				d.TypeInitCode = c.CatchOutput(0, func() {
-					c.Printf("%s.init(%s); -- fullpkg.go:418", "__type__."+c.objectName(o), c.initArgs(t))
+					c.Printf("%s.%s.%s.init(%s); -- fullpkg.go:463", "__type__", typesPkg.Name(), c.objectName(o), c.initArgs(t))
 				})
 			}
 		})
