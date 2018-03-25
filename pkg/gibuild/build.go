@@ -52,7 +52,7 @@ func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
 // a standard import path, the returned package will set p.ImportPath to
 // that path.
 //
-// In the directory containing the package, .go and .inc.js files are
+// In the directory containing the package, .go and .inc.gijit files are
 // considered part of the package except for:
 //
 //    - .go files in package documentation
@@ -64,7 +64,7 @@ func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
 func Import(path string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		// Getwd may fail if we're in GOARCH=js mode. That's okay, handle
+		// Getwd may fail if we're in GOARCH=gijit mode. That's okay, handle
 		// it by falling back to empty working directory. It just means
 		// Import will not be able to resolve relative import paths.
 		wd = ""
@@ -78,7 +78,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	case "syscall":
 		// syscall needs to use a typical GOARCH like amd64 to pick up definitions for _Socklen, BpfInsn, IFNAMSIZ, Timeval, BpfStat, SYS_FCNTL, Flock_t, etc.
 		bctx.GOARCH = runtime.GOARCH
-		bctx.InstallSuffix = "js"
+		bctx.InstallSuffix = "gijit"
 		if installSuffix != "" {
 			bctx.InstallSuffix += "_" + installSuffix
 		}
@@ -119,7 +119,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	}
 
 	if pkg.IsCommand() {
-		pkg.PkgObj = filepath.Join(pkg.BinDir, filepath.Base(pkg.ImportPath)+".js")
+		pkg.PkgObj = filepath.Join(pkg.BinDir, filepath.Base(pkg.ImportPath)+".gijit")
 	}
 
 	if _, err := os.Stat(pkg.PkgObj); os.IsNotExist(err) && strings.HasPrefix(pkg.PkgObj, build.Default.GOROOT) {
@@ -216,7 +216,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 	nativesContext := &build.Context{
 		GOROOT:   "/",
 		GOOS:     build.Default.GOOS,
-		GOARCH:   "js",
+		GOARCH:   "gijit",
 		Compiler: "gc",
 		JoinPath: path.Join,
 		SplitPathList: func(list string) []string {
@@ -467,7 +467,7 @@ func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string)
 		return err
 	}
 	if pkgObj == "" {
-		pkgObj = filepath.Base(packagePath) + ".js"
+		pkgObj = filepath.Base(packagePath) + ".gijit"
 	}
 	if pkg.IsCommand() && !pkg.UpToDate {
 		if err := s.WriteCommandPackage(archive, pkgObj); err != nil {
@@ -487,7 +487,7 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 	}
 
 	for _, file := range filenames {
-		if strings.HasSuffix(file, ".inc.js") {
+		if strings.HasSuffix(file, ".inc.gijit") {
 			pkg.JSFiles = append(pkg.JSFiles, file)
 			continue
 		}
@@ -640,9 +640,9 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 		if err != nil {
 			return nil, err
 		}
-		archive.IncJSCode = append(archive.IncJSCode, []byte("\t(function() {\n")...)
+		archive.IncJSCode = append(archive.IncJSCode, []byte("\t(function() \n")...)
 		archive.IncJSCode = append(archive.IncJSCode, code...)
-		archive.IncJSCode = append(archive.IncJSCode, []byte("\n\t}).call($global);\n")...)
+		archive.IncJSCode = append(archive.IncJSCode, []byte("\n\t end)(_global);\n")...)
 	}
 
 	if s.options.Verbose {
@@ -705,7 +705,7 @@ func (s *Session) WriteCommandPackage(archive *compiler.Archive, pkgObj string) 
 		defer func() {
 			m.WriteTo(mapFile)
 			mapFile.Close()
-			fmt.Fprintf(codeFile, "//# sourceMappingURL=%s.map\n", filepath.Base(pkgObj))
+			fmt.Fprintf(codeFile, "--# sourceMappingURL=%s.map\n", filepath.Base(pkgObj))
 		}()
 
 		sourceMapFilter.MappingCallback = NewMappingCallback(m, s.options.GOROOT, s.options.GOPATH, s.options.MapToLocalDisk)
@@ -755,7 +755,7 @@ func jsFilesFromDir(dir string) ([]string, error) {
 	}
 	var jsFiles []string
 	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".inc.js") && file.Name()[0] != '_' && file.Name()[0] != '.' {
+		if strings.HasSuffix(file.Name(), ".inc.gijit") && file.Name()[0] != '_' && file.Name()[0] != '.' {
 			jsFiles = append(jsFiles, file.Name())
 		}
 	}
@@ -783,7 +783,7 @@ func (s *Session) WaitForChange() {
 			if ev.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) == 0 || filepath.Base(ev.Name)[0] == '.' {
 				continue
 			}
-			if !strings.HasSuffix(ev.Name, ".go") && !strings.HasSuffix(ev.Name, ".inc.js") {
+			if !strings.HasSuffix(ev.Name, ".go") && !strings.HasSuffix(ev.Name, ".inc.gijit") {
 				continue
 			}
 			s.options.PrintSuccess("change detected: %s\n", ev.Name)
