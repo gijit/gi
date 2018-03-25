@@ -247,7 +247,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	default:
 		// try a source import.
-		archive, err := ic.ImportSourcePackage(path)
+		archive, err := ic.ImportSourcePackage(path, "")
 		if err == nil {
 			return archive, err
 		}

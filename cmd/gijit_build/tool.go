@@ -387,7 +387,7 @@ func main() {
 						return s.BuildImportPath(path)
 					},
 				}
-				mainPkgArchive, err := compiler.IncrementallyCompile(nil, "main", []*ast.File{mainFile}, fset, importContext, options.Minify)
+				mainPkgArchive, err := compiler.FullPackageCompile("main", []*ast.File{mainFile}, fset, importContext, options.Minify)
 				if err != nil {
 					return err
 				}

@@ -1,4 +1,4 @@
-package build
+package compiler
 
 import (
 	"fmt"
@@ -7,23 +7,26 @@ import (
 	"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/scanner"
 	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	//"github.com/gijit/gi/pkg/types"
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
+	//"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
+	//"runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/gijit/gi/pkg/compiler"
 	"github.com/gijit/gi/pkg/compiler/natives"
 	"github.com/neelance/sourcemap"
 )
+
+// original location of this file was
+// ~/go/src/github.com/gopherjs/gopherjs/build/build.go
+//
+// jea: now it is half in translate.go, half here.
 
 type ImportCError struct {
 	pkgPath string
@@ -31,159 +34,6 @@ type ImportCError struct {
 
 func (e *ImportCError) Error() string {
 	return e.pkgPath + `: importing "C" is not supported by gijit`
-}
-
-func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
-	return &build.Context{
-		GOROOT:        build.Default.GOROOT,
-		GOPATH:        build.Default.GOPATH,
-		GOOS:          build.Default.GOOS,
-		GOARCH:        "gijit",
-		InstallSuffix: installSuffix,
-		Compiler:      "gc",
-		BuildTags:     append(buildTags, "netgo"),
-		ReleaseTags:   build.Default.ReleaseTags,
-		CgoEnabled:    true, // detect `import "C"` to throw proper error
-	}
-}
-
-// Import returns details about the Go package named by the import path. If the
-// path is a local import path naming a package that can be imported using
-// a standard import path, the returned package will set p.ImportPath to
-// that path.
-//
-// In the directory containing the package, .go and .inc.gijit files are
-// considered part of the package except for:
-//
-//    - .go files in package documentation
-//    - files starting with _ or . (likely editor temporary files)
-//    - files with build constraints not satisfied by the context
-//
-// If an error occurs, Import returns a non-nil error and a nil
-// *PackageData.
-func Import(path string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		// Getwd may fail if we're in GOARCH=gijit mode. That's okay, handle
-		// it by falling back to empty working directory. It just means
-		// Import will not be able to resolve relative import paths.
-		wd = ""
-	}
-	return importWithSrcDir(path, wd, mode, installSuffix, buildTags)
-}
-
-func importWithSrcDir(path string, srcDir string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
-	bctx := NewBuildContext(installSuffix, buildTags)
-	switch path {
-	case "syscall":
-		// syscall needs to use a typical GOARCH like amd64 to pick up definitions for _Socklen, BpfInsn, IFNAMSIZ, Timeval, BpfStat, SYS_FCNTL, Flock_t, etc.
-		bctx.GOARCH = runtime.GOARCH
-		bctx.InstallSuffix = "gijit"
-		if installSuffix != "" {
-			bctx.InstallSuffix += "_" + installSuffix
-		}
-	case "math/big":
-		// Use pure Go version of math/big; we don't want non-Go assembly versions.
-		bctx.BuildTags = append(bctx.BuildTags, "math_big_pure_go")
-	case "crypto/x509", "os/user":
-		// These stdlib packages have cgo and non-cgo versions (via build tags); we want the latter.
-		bctx.CgoEnabled = false
-	}
-	pkg, err := bctx.Import(path, srcDir, mode)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Resolve issue #415 and remove this temporary workaround.
-	if strings.HasSuffix(pkg.ImportPath, "/vendor/github.com/gopherjs/gopherjs/js") {
-		return nil, fmt.Errorf("vendoring github.com/gopherjs/gopherjs/js package is not supported, see https://github.com/gopherjs/gopherjs/issues/415")
-	}
-	if strings.HasSuffix(pkg.ImportPath, "/vendor/github.com/gijit/gi/pkg/luaapi") {
-		return nil, fmt.Errorf("vendoring github.com/gijit/gi/pkg/luaapi package is not supported, see https://github.com/gopherjs/gopherjs/issues/415; gijit/gi/pkg/gibuild/build.go:102")
-	}
-
-	switch path {
-	case "os":
-		pkg.GoFiles = excludeExecutable(pkg.GoFiles) // Need to exclude executable implementation files, because some of them contain package scope variables that perform (indirectly) syscalls on init.
-	case "runtime":
-		pkg.GoFiles = []string{"error.go"}
-	case "runtime/internal/sys":
-		pkg.GoFiles = []string{fmt.Sprintf("zgoos_%s.go", bctx.GOOS), "zversion.go"}
-	case "runtime/pprof":
-		pkg.GoFiles = nil
-	case "internal/poll":
-		pkg.GoFiles = exclude(pkg.GoFiles, "fd_poll_runtime.go")
-	case "crypto/rand":
-		pkg.GoFiles = []string{"rand.go", "util.go"}
-	}
-
-	if len(pkg.CgoFiles) > 0 {
-		return nil, &ImportCError{path}
-	}
-
-	if pkg.IsCommand() {
-		pkg.PkgObj = filepath.Join(pkg.BinDir, filepath.Base(pkg.ImportPath)+".gijit")
-	}
-
-	if _, err := os.Stat(pkg.PkgObj); os.IsNotExist(err) && strings.HasPrefix(pkg.PkgObj, build.Default.GOROOT) {
-		// fall back to GOPATH
-		firstGopathWorkspace := filepath.SplitList(build.Default.GOPATH)[0] // TODO: Need to check inside all GOPATH workspaces.
-		gopathPkgObj := filepath.Join(firstGopathWorkspace, pkg.PkgObj[len(build.Default.GOROOT):])
-		if _, err := os.Stat(gopathPkgObj); err == nil {
-			pkg.PkgObj = gopathPkgObj
-		}
-	}
-
-	jsFiles, err := jsFilesFromDir(pkg.Dir)
-	if err != nil {
-		return nil, err
-	}
-
-	return &PackageData{Package: pkg, JSFiles: jsFiles}, nil
-}
-
-// excludeExecutable excludes all executable implementation .go files.
-// They have "executable_" prefix.
-func excludeExecutable(goFiles []string) []string {
-	var s []string
-	for _, f := range goFiles {
-		if strings.HasPrefix(f, "executable_") {
-			continue
-		}
-		s = append(s, f)
-	}
-	return s
-}
-
-// exclude returns files, excluding specified files.
-func exclude(files []string, exclude ...string) []string {
-	var s []string
-Outer:
-	for _, f := range files {
-		for _, e := range exclude {
-			if f == e {
-				continue Outer
-			}
-		}
-		s = append(s, f)
-	}
-	return s
-}
-
-// ImportDir is like Import but processes the Go package found in the named
-// directory.
-func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
-	pkg, err := NewBuildContext(installSuffix, buildTags).ImportDir(dir, mode)
-	if err != nil {
-		return nil, err
-	}
-
-	jsFiles, err := jsFilesFromDir(pkg.Dir)
-	if err != nil {
-		return nil, err
-	}
-
-	return &PackageData{Package: pkg, JSFiles: jsFiles}, nil
 }
 
 // parseAndAugment parses and returns all .go files of given pkg.
@@ -299,7 +149,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 	}
 	delete(replacedDeclNames, "init")
 
-	var errList compiler.ErrorList
+	var errList ErrorList
 	for _, name := range pkg.GoFiles {
 		if !filepath.IsAbs(name) {
 			name = filepath.Join(pkg.Dir, name)
@@ -372,90 +222,9 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 	return files, nil
 }
 
-type Options struct {
-	GOROOT         string
-	GOPATH         string
-	Verbose        bool
-	Quiet          bool
-	Watch          bool
-	CreateMapFile  bool
-	MapToLocalDisk bool
-	Minify         bool
-	Color          bool
-	BuildTags      []string
-}
-
-func (o *Options) PrintError(format string, a ...interface{}) {
-	if o.Color {
-		format = "\x1B[31m" + format + "\x1B[39m"
-	}
-	fmt.Fprintf(os.Stderr, format, a...)
-}
-
-func (o *Options) PrintSuccess(format string, a ...interface{}) {
-	if o.Color {
-		format = "\x1B[32m" + format + "\x1B[39m"
-	}
-	fmt.Fprintf(os.Stderr, format, a...)
-}
-
-type PackageData struct {
-	*build.Package
-	JSFiles    []string
-	IsTest     bool // IsTest is true if the package is being built for running tests.
-	SrcModTime time.Time
-	UpToDate   bool
-}
-
-type Session struct {
-	options  *Options
-	Archives map[string]*compiler.Archive
-	Types    map[string]*types.Package
-	Watcher  *fsnotify.Watcher
-}
-
-func NewSession(options *Options) *Session {
-	if options.GOROOT == "" {
-		options.GOROOT = build.Default.GOROOT
-	}
-	if options.GOPATH == "" {
-		options.GOPATH = build.Default.GOPATH
-	}
-	options.Verbose = options.Verbose || options.Watch
-
-	s := &Session{
-		options:  options,
-		Archives: make(map[string]*compiler.Archive),
-	}
-	s.Types = make(map[string]*types.Package)
-	if options.Watch {
-		if out, err := exec.Command("ulimit", "-n").Output(); err == nil {
-			if n, err := strconv.Atoi(strings.TrimSpace(string(out))); err == nil && n < 1024 {
-				fmt.Printf("Warning: The maximum number of open file descriptors is very low (%d). Change it with 'ulimit -n 8192'.\n", n)
-			}
-		}
-
-		var err error
-		s.Watcher, err = fsnotify.NewWatcher()
-		if err != nil {
-			panic(err)
-		}
-	}
-	return s
-}
-
-func (s *Session) InstallSuffix() string {
-	if s.options.Minify {
-		return "min"
-	}
-	return ""
-}
-
 func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string) error {
-	if s.Watcher != nil {
-		s.Watcher.Add(packagePath)
-	}
-	buildPkg, err := NewBuildContext(s.InstallSuffix(), s.options.BuildTags).ImportDir(packagePath, 0)
+
+	buildPkg, err := NewReplContext(s.InstallSuffix(), s.options.BuildTags).ImportDir(packagePath, 0)
 	if err != nil {
 		return err
 	}
@@ -507,16 +276,14 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 	return s.WriteCommandPackage(archive, pkgObj)
 }
 
-func (s *Session) BuildImportPath(path string) (*compiler.Archive, error) {
+func (s *Session) BuildImportPath(path string) (*Archive, error) {
 	_, archive, err := s.BuildImportPathWithSrcDir(path, "")
 	return archive, err
 }
 
-func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*PackageData, *compiler.Archive, error) {
+func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*PackageData, *Archive, error) {
 	pkg, err := importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags)
-	if s.Watcher != nil && pkg != nil { // add watch even on error
-		s.Watcher.Add(pkg.Dir)
-	}
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -529,7 +296,7 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*Packag
 	return pkg, archive, nil
 }
 
-func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
+func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	if archive, ok := s.Archives[pkg.ImportPath]; ok {
 		return archive, nil
 	}
@@ -568,7 +335,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 			if importedPkgPath == "unsafe" || ignored {
 				continue
 			}
-			importedPkg, _, err := s.buildImportPathWithSrcDir(importedPkgPath, pkg.Dir)
+			importedPkg, _, err := s.BuildImportPathWithSrcDir(importedPkgPath, pkg.Dir)
 			if err != nil {
 				return nil, err
 			}
@@ -602,7 +369,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 			}
 			defer objFile.Close()
 
-			archive, err := compiler.ReadArchive(pkg.PkgObj, pkg.ImportPath, objFile, s.Types)
+			archive, err := ReadArchive(pkg.PkgObj, pkg.ImportPath, objFile, s.Types)
 			if err != nil {
 				return nil, err
 			}
@@ -618,14 +385,14 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 		return nil, err
 	}
 
-	localImportPathCache := make(map[string]*compiler.Archive)
-	importContext := &compiler.ImportContext{
+	localImportPathCache := make(map[string]*Archive)
+	importContext := &ImportContext{
 		Packages: s.Types,
-		Import: func(path string) (*compiler.Archive, error) {
+		Import: func(path string) (*Archive, error) {
 			if archive, ok := localImportPathCache[path]; ok {
 				return archive, nil
 			}
-			_, archive, err := s.buildImportPathWithSrcDir(path, pkg.Dir)
+			_, archive, err := s.BuildImportPathWithSrcDir(path, pkg.Dir)
 			if err != nil {
 				return nil, err
 			}
@@ -633,7 +400,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 			return archive, nil
 		},
 	}
-	archive, err := compiler.FullPackageCompile(pkg.ImportPath, files, fileSet, importContext, s.options.Minify)
+	archive, err := FullPackageCompile(pkg.ImportPath, files, fileSet, importContext, s.options.Minify)
 	if err != nil {
 		return nil, err
 	}
@@ -673,7 +440,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 	return archive, nil
 }
 
-func (s *Session) writeLibraryPackage(archive *compiler.Archive, pkgObj string) error {
+func (s *Session) writeLibraryPackage(archive *Archive, pkgObj string) error {
 	if err := os.MkdirAll(filepath.Dir(pkgObj), 0777); err != nil {
 		return err
 	}
@@ -684,10 +451,10 @@ func (s *Session) writeLibraryPackage(archive *compiler.Archive, pkgObj string) 
 	}
 	defer objFile.Close()
 
-	return compiler.WriteArchive(archive, objFile)
+	return WriteArchive(archive, objFile)
 }
 
-func (s *Session) WriteCommandPackage(archive *compiler.Archive, pkgObj string) error {
+func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) error {
 	if err := os.MkdirAll(filepath.Dir(pkgObj), 0777); err != nil {
 		return err
 	}
@@ -697,7 +464,7 @@ func (s *Session) WriteCommandPackage(archive *compiler.Archive, pkgObj string) 
 	}
 	defer codeFile.Close()
 
-	sourceMapFilter := &compiler.SourceMapFilter{Writer: codeFile}
+	sourceMapFilter := &SourceMapFilter{Writer: codeFile}
 	if s.options.CreateMapFile {
 		m := &sourcemap.Map{File: filepath.Base(pkgObj)}
 		mapFile, err := os.Create(pkgObj + ".map")
@@ -714,17 +481,17 @@ func (s *Session) WriteCommandPackage(archive *compiler.Archive, pkgObj string) 
 		sourceMapFilter.MappingCallback = NewMappingCallback(m, s.options.GOROOT, s.options.GOPATH, s.options.MapToLocalDisk)
 	}
 
-	deps, err := compiler.ImportDependencies(archive, func(path string) (*compiler.Archive, error) {
+	deps, err := ImportDependencies(archive, func(path string) (*Archive, error) {
 		if archive, ok := s.Archives[path]; ok {
 			return archive, nil
 		}
-		_, archive, err := s.buildImportPathWithSrcDir(path, "")
+		_, archive, err := s.BuildImportPathWithSrcDir(path, "")
 		return archive, err
 	})
 	if err != nil {
 		return err
 	}
-	return compiler.WriteProgramCode(deps, sourceMapFilter)
+	return WriteProgramCode(deps, sourceMapFilter)
 }
 
 func NewMappingCallback(m *sourcemap.Map, goroot, gopath string, localMap bool) func(generatedLine, generatedColumn int, originalPos token.Position) {
@@ -749,57 +516,4 @@ func NewMappingCallback(m *sourcemap.Map, goroot, gopath string, localMap bool) 
 
 		m.AddMapping(&sourcemap.Mapping{GeneratedLine: generatedLine, GeneratedColumn: generatedColumn, OriginalFile: file, OriginalLine: originalPos.Line, OriginalColumn: originalPos.Column})
 	}
-}
-
-func jsFilesFromDir(dir string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	var jsFiles []string
-	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".inc.gijit") && file.Name()[0] != '_' && file.Name()[0] != '.' {
-			jsFiles = append(jsFiles, file.Name())
-		}
-	}
-	return jsFiles, nil
-}
-
-// hasGopathPrefix returns true and the length of the matched GOPATH workspace,
-// iff file has a prefix that matches one of the GOPATH workspaces.
-func hasGopathPrefix(file, gopath string) (hasGopathPrefix bool, prefixLen int) {
-	gopathWorkspaces := filepath.SplitList(gopath)
-	for _, gopathWorkspace := range gopathWorkspaces {
-		gopathWorkspace = filepath.Clean(gopathWorkspace)
-		if strings.HasPrefix(file, gopathWorkspace) {
-			return true, len(gopathWorkspace)
-		}
-	}
-	return false, 0
-}
-
-func (s *Session) WaitForChange() {
-	s.options.PrintSuccess("watching for changes...\n")
-	for {
-		select {
-		case ev := <-s.Watcher.Events:
-			if ev.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) == 0 || filepath.Base(ev.Name)[0] == '.' {
-				continue
-			}
-			if !strings.HasSuffix(ev.Name, ".go") && !strings.HasSuffix(ev.Name, ".inc.gijit") {
-				continue
-			}
-			s.options.PrintSuccess("change detected: %s\n", ev.Name)
-		case err := <-s.Watcher.Errors:
-			s.options.PrintError("watcher error: %s\n", err.Error())
-		}
-		break
-	}
-
-	go func() {
-		for range s.Watcher.Events {
-			// consume, else Close() may deadlock
-		}
-	}()
-	s.Watcher.Close()
 }

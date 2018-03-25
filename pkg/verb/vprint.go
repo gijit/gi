@@ -11,7 +11,7 @@ import (
 
 // for tons of debug output
 var Verbose bool = false
-var VerboseVerbose bool = true
+var VerboseVerbose bool = false
 
 func P(format string, a ...interface{}) {
 	if Verbose {
