@@ -140,10 +140,10 @@ func ImportDependencies(archive *Archive, importPkg func(string) (*Archive, erro
 	//
 	// with it commented out, tests 1000 and 1001 go green, but 1002 stays red.
 	//
-	/*	if err := collectDependencies("runtime"); err != nil {
-			return nil, err
-		}
-	*/
+	if err := collectDependencies("runtime"); err != nil {
+		return nil, err
+	}
+
 	for _, imp := range archive.Imports {
 		if err := collectDependencies(imp); err != nil {
 			return nil, err
