@@ -331,6 +331,7 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*Packag
 func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
 	if archive, ok := s.Archives[pkg.ImportPath]; ok {
+		fmt.Printf("build.go:234 using cached version of archive for path '%s'\n", pkg.ImportPath)
 		return archive, nil
 	}
 

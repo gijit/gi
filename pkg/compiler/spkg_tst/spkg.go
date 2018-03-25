@@ -1,3 +1,4 @@
+
 package spkg_tst
 
 func Fish(numPole int) (fishCaught int) {
