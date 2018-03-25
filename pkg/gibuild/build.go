@@ -30,7 +30,7 @@ type ImportCError struct {
 }
 
 func (e *ImportCError) Error() string {
-	return e.pkgPath + `: importing "C" is not supported by GopherJS`
+	return e.pkgPath + `: importing "C" is not supported by gijit`
 }
 
 func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
@@ -533,15 +533,15 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 
 	if pkg.PkgObj != "" {
 		var fileInfo os.FileInfo
-		gopherjsBinary, err := os.Executable()
+		gijitBinary, err := os.Executable()
 		if err == nil {
-			fileInfo, err = os.Stat(gopherjsBinary)
+			fileInfo, err = os.Stat(gijitBinary)
 			if err == nil {
 				pkg.SrcModTime = fileInfo.ModTime()
 			}
 		}
 		if err != nil {
-			os.Stderr.WriteString("Could not get GopherJS binary's modification timestamp. Please report issue.\n")
+			os.Stderr.WriteString("Could not get gijit_build binary's modification timestamp. Please report issue.\n")
 			pkg.SrcModTime = time.Now()
 		}
 

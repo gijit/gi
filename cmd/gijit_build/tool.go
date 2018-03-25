@@ -95,7 +95,7 @@ func main() {
 			s := gbuild.NewSession(options)
 
 			err := func() error {
-				// Handle "gopherjs build [files]" ad-hoc package mode.
+				// Handle "gijit_build build [files]" ad-hoc package mode.
 				if len(args) > 0 && (strings.HasSuffix(args[0], ".go") || strings.HasSuffix(args[0], ".inc.js")) {
 					for _, arg := range args {
 						if !strings.HasSuffix(arg, ".go") && !strings.HasSuffix(arg, ".inc.js") {
@@ -257,7 +257,7 @@ func main() {
 				lastSourceArg++
 			}
 			if lastSourceArg == 0 {
-				return fmt.Errorf("gopherjs run: no go files listed")
+				return fmt.Errorf("gijit_build run: no go files listed")
 			}
 
 			tempfile, err := ioutil.TempFile(currentDirectory, filepath.Base(args[0])+".")
@@ -506,7 +506,7 @@ func main() {
 
 	cmdVersion := &cobra.Command{
 		Use:   "version",
-		Short: "print GopherJS compiler version",
+		Short: "print Gijit compiler version",
 	}
 	cmdVersion.Run = func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
@@ -514,12 +514,12 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("GopherJS %s\n", compiler.Version)
+		fmt.Printf("Gijit %s\n", compiler.Version)
 	}
 
 	rootCmd := &cobra.Command{
-		Use:  "gopherjs",
-		Long: "GopherJS is a tool for compiling Go source code to JavaScript.",
+		Use:  "gijit_build",
+		Long: "Gijit_build is a tool for compiling Go source code to JavaScript.",
 	}
 	rootCmd.AddCommand(cmdBuild, cmdGet, cmdInstall, cmdRun, cmdTest, cmdServe, cmdVersion, cmdDoc)
 	err := rootCmd.Execute()
@@ -738,7 +738,7 @@ func runNode(script string, args []string, dir string, quiet bool) error {
 		allArgs = []string{"--require", "source-map-support/register"}
 		if err := exec.Command("node", "--require", "source-map-support/register", "--eval", "").Run(); err != nil {
 			if !quiet {
-				fmt.Fprintln(os.Stderr, "gopherjs: Source maps disabled. Install source-map-support module for nice stack traces. See https://github.com/gopherjs/gopherjs#gopherjs-run-gopherjs-test.")
+				fmt.Fprintln(os.Stderr, "gijit_build: Source maps disabled. Install source-map-support module for nice stack traces. See https://github.com/gopherjs/gopherjs#gopherjs-run-gopherjs-test.")
 			}
 			allArgs = []string{}
 		}
