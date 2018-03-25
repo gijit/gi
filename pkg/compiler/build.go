@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/gostd/build"
@@ -22,6 +23,29 @@ import (
 	"github.com/gijit/gi/pkg/compiler/natives"
 	"github.com/neelance/sourcemap"
 )
+
+// from ~/go/src/github.com/gopherjs/gopherjs/tool.go:
+// currentDirectory and the init() that follows.
+var currentDirectory string
+
+func init() {
+	var err error
+	currentDirectory, err = os.Getwd()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	currentDirectory, err = filepath.EvalSymlinks(currentDirectory)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	gopaths := filepath.SplitList(build.Default.GOPATH)
+	if len(gopaths) == 0 {
+		fmt.Fprintf(os.Stderr, "$GOPATH not set. For more details see: go help gopath\n")
+		os.Exit(1)
+	}
+}
 
 // original location of this file was
 // ~/go/src/github.com/gopherjs/gopherjs/build/build.go
@@ -222,34 +246,38 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 	return files, nil
 }
 
-func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string) error {
+func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string) (out []byte, err error) {
 
 	buildPkg, err := NewReplContext(s.InstallSuffix(), s.options.BuildTags).ImportDir(packagePath, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pkg := &PackageData{Package: buildPkg}
 	jsFiles, err := jsFilesFromDir(pkg.Dir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pkg.JSFiles = jsFiles
 	archive, err := s.BuildPackage(pkg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if pkgObj == "" {
 		pkgObj = filepath.Base(packagePath) + ".gijit"
 	}
 	if pkg.IsCommand() && !pkg.UpToDate {
-		if err := s.WriteCommandPackage(archive, pkgObj); err != nil {
-			return err
+		out, err = s.WriteCommandPackage(archive, pkgObj)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return
 }
 
-func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath string) error {
+// filenames is the set of .go source files to compile,
+// pkgObj is the output file path,
+// packagePath is the current directory.
+func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath string) (out []byte, err error) {
 	pkg := &PackageData{
 		Package: &build.Package{
 			Name:       "main",
@@ -268,12 +296,13 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 
 	archive, err := s.BuildPackage(pkg)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if s.Types["main"].Name() != "main" {
-		return fmt.Errorf("cannot build/run non-main package")
+		return nil, fmt.Errorf("cannot build/run non-main package")
 	}
-	return s.WriteCommandPackage(archive, pkgObj)
+	out, err = s.WriteCommandPackage(archive, pkgObj)
+	return
 }
 
 func (s *Session) BuildImportPath(path string) (*Archive, error) {
@@ -457,22 +486,34 @@ func (s *Session) writeLibraryPackage(archive *Archive, pkgObj string) error {
 	return WriteArchive(archive, objFile)
 }
 
-func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) error {
-	if err := os.MkdirAll(filepath.Dir(pkgObj), 0777); err != nil {
-		return err
+func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) (out []byte, err error) {
+	var codeFile io.Writer
+	if s.options.WriteToFile {
+		if err := os.MkdirAll(filepath.Dir(pkgObj), 0777); err != nil {
+			return nil, err
+		}
+
+		fd, err := os.Create(pkgObj)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+		codeFile = fd
+	} else {
+		by := bytes.NewBuffer(nil)
+		codeFile = by
+		defer func() {
+			out = by.Bytes()
+		}()
 	}
-	codeFile, err := os.Create(pkgObj)
-	if err != nil {
-		return err
-	}
-	defer codeFile.Close()
 
 	sourceMapFilter := &SourceMapFilter{Writer: codeFile}
-	if s.options.CreateMapFile {
+	if s.options.WriteToFile && s.options.CreateMapFile {
+
 		m := &sourcemap.Map{File: filepath.Base(pkgObj)}
 		mapFile, err := os.Create(pkgObj + ".map")
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		defer func() {
@@ -492,9 +533,10 @@ func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) error {
 		return archive, err
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return WriteProgramCode(deps, sourceMapFilter)
+	err = WriteProgramCode(deps, sourceMapFilter)
+	return
 }
 
 func NewMappingCallback(m *sourcemap.Map, goroot, gopath string, localMap bool) func(generatedLine, generatedColumn int, originalPos token.Position) {

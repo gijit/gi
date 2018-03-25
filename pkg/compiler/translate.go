@@ -360,6 +360,7 @@ type Options struct {
 	Minify         bool
 	Color          bool
 	BuildTags      []string
+	WriteToFile    bool
 }
 
 func (o *Options) PrintError(format string, a ...interface{}) {
