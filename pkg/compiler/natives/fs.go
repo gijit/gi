@@ -1,4 +1,4 @@
-// +build gopherjsdev
+// plus build gopherjsdev
 
 package natives
 
@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gijit/gi/pkg/verb"
 	"github.com/shurcooL/httpfs/filter"
 )
 
@@ -24,6 +25,12 @@ func importPathToDir(importPath string) string {
 var FS = filter.Keep(
 	http.Dir(importPathToDir("github.com/gijit/gi/pkg/compiler/natives")),
 	func(path string, fi os.FileInfo) bool {
-		return path == "/" || path == "/src" || strings.HasPrefix(path, "/src/")
+		res := path == "/" || path == "/src" || strings.HasPrefix(path, "/src/")
+		if res {
+			verb.VV("jea debug: native.FS is keeping path: '%s' -> %v", path, res)
+		} else {
+			verb.VV("jea debug: native.FS is rejecting path: '%s' because res was %v", path, res)
+		}
+		return res
 	},
 )
