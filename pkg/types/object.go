@@ -201,6 +201,14 @@ type Var struct {
 	used      bool // set if the variable was used
 }
 
+// jea: avoid gob: type types.Var has no exported fields
+func (v *Var) GobEncode() ([]byte, error) {
+	return nil, nil
+}
+func (v *Var) GobDecode([]byte) error {
+	return nil
+}
+
 // NewVar returns a new variable.
 // The arguments set the attributes found with all Objects.
 func NewVar(pos token.Pos, pkg *Package, name string, typ Type) *Var {
@@ -232,6 +240,14 @@ func (*Var) isDependency() {} // a variable may be a dependency of an initializa
 // An abstract method may belong to many interfaces due to embedding.
 type Func struct {
 	object
+}
+
+func (v *Func) GobEncode() ([]byte, error) {
+	return nil, nil
+}
+
+func (v *Func) GobDecode([]byte) error {
+	return nil
 }
 
 // NewFunc returns a new function with the given signature, representing

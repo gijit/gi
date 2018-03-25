@@ -31,6 +31,17 @@ type Scope struct {
 	comment    string            // for debugging only
 	isFunc     bool              // set if this is a function scope (internal use only)
 	methodName string            // function name; or method name with struct type-name prefix
+
+}
+
+// jea: avoid the error:
+// gob: type types.Scope has no exported fields
+func (v *Scope) GobEncode() ([]byte, error) {
+	return nil, nil
+}
+
+func (v *Scope) GobDecode([]byte) error {
+	return nil
 }
 
 // jea debug

@@ -630,7 +630,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*compiler.Archive, error) {
 			return archive, nil
 		},
 	}
-	archive, err := compiler.IncrementallyCompile(nil, pkg.ImportPath, files, fileSet, importContext, s.options.Minify)
+	archive, err := compiler.FullPackageCompile(pkg.ImportPath, files, fileSet, importContext, s.options.Minify)
 	if err != nil {
 		return nil, err
 	}

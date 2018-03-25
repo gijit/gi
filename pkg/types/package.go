@@ -19,6 +19,15 @@ type Package struct {
 	fake     bool // scope lookup errors are silently dropped if package is fake (internal use only)
 }
 
+// jea: avoid gob encoding errors
+func (v *Package) GobEncode() ([]byte, error) {
+	return nil, nil
+}
+
+func (v *Package) GobDecode([]byte) error {
+	return nil
+}
+
 // NewPackage returns a new Package for the given package path and name.
 // The package is not complete and contains no explicit imports.
 func NewPackage(path, name string) *Package {
