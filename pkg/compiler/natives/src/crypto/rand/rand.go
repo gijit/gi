@@ -15,8 +15,8 @@ func init() {
 type rngReader struct{}
 
 func (r *rngReader) Read(b []byte) (n int, err error) {
-	array := js.InternalObject(b).Get("$array")
-	offset := js.InternalObject(b).Get("$offset").Int()
+	array := js.InternalObject(b).Get("__array")
+	offset := js.InternalObject(b).Get("__offset").Int()
 
 	// browser
 	crypto := js.Global.Get("crypto")
