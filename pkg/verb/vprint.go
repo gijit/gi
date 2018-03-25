@@ -45,7 +45,10 @@ func TSPrintf(format string, a ...interface{}) {
 	Printf(format+"\n", a...)
 }
 
-var VV = TSPrintf
+func VV(format string, a ...interface{}) {
+	Printf("\n%s %s ", FileLine(2), ts())
+	Printf(format+"\n", a...)
+}
 
 // get timestamp for logging purposes
 func ts() string {

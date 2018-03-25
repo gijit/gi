@@ -390,12 +390,17 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		d.DceDeps = collectDependencies(func() {
 			d.DeclCode = c.CatchOutput(0, func() {
 				typeName := c.objectName(o)
-				lhs := typeName
-				if isPkgLevel(o) {
-					lhs += " = _pkg." + encodeIdent(o.Name())
+				lhs := "__type__." + typeName
+				// jea comment out for now... b/c getting stuff like:
+				//
+				// __type__.GONZAGA = _pkg.GONZAGA --[[ fullpkg.go:395 --]]  = __newType(16, __kindInterface, "spkg_tst.GONZAGA", true, "github.com/gijit/gi/pkg/compiler/spkg_tst", true, nil);
+				//
+				/*if isPkgLevel(o) {
+					lhs += " = _pkg." + encodeIdent(o.Name()) + " --[[ fullpkg.go:395 --]] "
 				}
+				*/
 				size := int64(0)
-				constructor := "null"
+				constructor := "nil"
 				switch t := o.Type().Underlying().(type) {
 				case *types.Struct:
 					params := make([]string, t.NumFields())

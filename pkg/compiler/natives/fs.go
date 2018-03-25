@@ -25,6 +25,10 @@ func importPathToDir(importPath string) string {
 var FS = filter.Keep(
 	http.Dir(importPathToDir("github.com/gijit/gi/pkg/compiler/natives")),
 	func(path string, fi os.FileInfo) bool {
+		if strings.HasSuffix(path, "~") {
+			verb.VV("jea debug: native.FS rejecting path ending in ~tilde~: '%s'", path)
+			return false
+		}
 		res := path == "/" || path == "/src" || strings.HasPrefix(path, "/src/")
 		if res {
 			verb.VV("jea debug: native.FS is keeping path: '%s' -> %v", path, res)

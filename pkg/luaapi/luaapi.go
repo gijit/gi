@@ -33,7 +33,6 @@
 // Additionally, for a struct containing a *js.Object field, only the content of the field will be passed to JavaScript and vice versa.
 package js
 
-/*
 // Object is a container for a native JavaScript object. Calls to its methods are treated specially by GopherJS and translated directly to their JavaScript syntax. A nil pointer to Object is equal to JavaScript's "null". Object can not be used as a map key.
 type Object struct{ object *Object }
 
@@ -175,4 +174,3 @@ func init() {
 	e := Error{}
 	_ = e
 }
-*/
