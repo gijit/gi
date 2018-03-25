@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gijit/gi/pkg/compiler"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -23,13 +24,13 @@ func Test301ReplayOfStructdDef(t *testing.T) {
 		fmt.Printf("replay 2x, src='%s'\n", src)
 
 		myflags := flag.NewFlagSet("gi", flag.ExitOnError)
-		cfg := &GIConfig{}
+		cfg := &compiler.GIConfig{}
 		cfg.DefineFlags(myflags)
 
 		err := myflags.Parse([]string{"-q", "-no-liner"}) // , "-vv"})
 		err = cfg.ValidateConfig()
 		panicOn(err)
-		r := NewRepl(cfg)
+		r := compiler.NewRepl(cfg)
 
 		//verb.VerboseVerbose = true
 		//verb.Verbose = true
