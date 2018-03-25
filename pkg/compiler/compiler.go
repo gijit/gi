@@ -227,7 +227,9 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 
   local __mainPkg = __packages["` + string(mainPkg.ImportPath) + `"];
   local __rtTemp = __packages["runtime"]; 
-  if __rtTemp ~= nil then _init(); end;
+  if __rtTemp ~= nil and __rtTemp._init ~= nil then 
+     __rtTemp._init(); 
+  end;
 
   __go(__mainPkg._init, {});
 end)();
@@ -306,7 +308,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= _init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t__pkg._init = _init;\n\t return __pkg;\n end)();\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= _init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t_pkg._init = _init;\n\t return _pkg;\n end)();\n"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified
