@@ -79,9 +79,9 @@ type Archive struct {
 	NewCodeText [][]byte
 
 	// save state so we can type incrementally
+	Pkg       *types.Package
 	TypesInfo *types.Info
 	Config    *types.Config
-	Pkg       *types.Package
 	Check     *types.Checker
 
 	FuncSrcCache map[string]string
