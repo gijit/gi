@@ -30,7 +30,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		pp("end of FullPackageCompile, returning arch='%#v', err='%v'", arch, err)
 		pp("and stack is '%s'", string(debug.Stack()))
 	}()
-	var funcSrcCache map[string]string
+	funcSrcCache := make(map[string]string)
 	typesInfo := &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
 		Defs:       make(map[*ast.Ident]types.Object),
