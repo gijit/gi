@@ -103,7 +103,11 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		check = a.Check
 	}
 	var err error
-	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
+	prelude := addPreludeToNewPkg
+	if importPath != "main" {
+		prelude = nil
+	}
+	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, prelude)
 	if importError != nil {
 		//pp("config.Check: importError")
 		return nil, importError
