@@ -91,7 +91,7 @@ func Test1002ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 	cv.Convey(`import a Go source package that imports 'io', and so loads 'runtime' indirectly.`, t, func() {
 
 		code := `
-import "github.com/gijit/gi/pkg/verb"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst2"
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)

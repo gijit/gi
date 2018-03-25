@@ -169,6 +169,11 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		}
 	}
 
+	// jea important location! here is
+	// where the magic happens that
+	// converts certain Go source identifiers
+	// into their native Lua (was javascript) equivalents.
+	//
 	if obj != nil && typesutil.IsJsPackage(obj.Pkg()) {
 		switch obj.Name() {
 		case "Global":
@@ -176,7 +181,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case "Module":
 			return c.formatExpr("__module")
 		case "Undefined":
-			return c.formatExpr("undefined")
+			return c.formatExpr("nil")
 		}
 	}
 
@@ -750,6 +755,10 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if o, ok := obj.(*types.Builtin); ok {
 				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid(), exprType)
 			}
+			// jea magic here!
+			// gopherjs doc said: InternalObject returns the internal JavaScript object
+			// that represents i. Not intended for public use.
+			//
 			if typesutil.IsJsPackage(obj.Pkg()) && obj.Name() == "InternalObject" {
 				return c.translateExpr(e.Args[0], nil)
 			}
@@ -760,6 +769,9 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if !ok {
 				// qualified identifier
 				obj := c.p.Uses[f.Sel]
+
+				// jea: magic here!
+
 				if typesutil.IsJsPackage(obj.Pkg()) {
 					switch obj.Name() {
 					case "Debugger":

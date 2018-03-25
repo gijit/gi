@@ -7,7 +7,7 @@ import (
 )
 
 func IsJsPackage(pkg *types.Package) bool {
-	return pkg != nil && (pkg.Path() == "github.com/gijit/gi/pkg/gopherjs/js" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/glycerine/gofront/gopherjs/js"))
+	return pkg != nil && (pkg.Path() == "github.com/gijit/gi/pkg/luaapi" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/gijit/gi/pkg/luaapi"))
 }
 
 func IsJsObject(t types.Type) bool {

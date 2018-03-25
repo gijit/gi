@@ -118,7 +118,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 	}
 
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
-	pp("pi.importContext.Import='%#v'", pi.importContext.Import) // is nil!
+	pp("pi.importContext.Import='%#v'", pi.importContext.Import)
 	a, err := pi.importContext.Import(path)
 	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
@@ -160,7 +160,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !method.Exported() {
 				pkgPath = method.Pkg().Path()
 			}
-			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", __typ= __funcType(%s)}`, method.Name(), method.Name(), pkgPath, c.initArgs(method.Type()))
+			methods[i] = fmt.Sprintf(`{__prop= "%s", __name= %s, __pkg= "%s", __typ= __funcType(%s)}`, method.Name(), encodeString(method.Name()), pkgPath, c.initArgs(method.Type()))
 		}
 		return fmt.Sprintf("{%s}", strings.Join(methods, ", "))
 	case *types.Map:
@@ -187,7 +187,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 			if !field.Exported() {
 				pkgPath = field.Pkg().Path()
 			}
-			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= "%s", __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), field.Name(), field.Anonymous(), field.Exported(), c.typeName(0, field.Type()), encodeString(t.Tag(i)))
+			fields[i] = fmt.Sprintf(`{__prop= "%s", __name= %s, __anonymous= %t, __exported= %t, __typ= %s, __tag= %s}`, fieldName(t, i), encodeString(field.Name()), field.Anonymous(), field.Exported(), c.typeName(0, field.Type()), encodeString(t.Tag(i)))
 		}
 		return fmt.Sprintf(`"%s", {%s}`, pkgPath, strings.Join(fields, ", "))
 	case *types.Tuple:

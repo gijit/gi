@@ -79,11 +79,20 @@ func stopTimer(t *runtimeTimer) bool {
 	return wasActive
 }
 
-func loadLocation(name string) (*Location, error) {
-	return loadZoneFile(runtime.GOROOT()+"/lib/time/zoneinfo.zip", name)
+func forceZipFileForTesting(zipOnly bool) {
 }
 
-func forceZipFileForTesting(zipOnly bool) {
+var zoneSources = []string{
+	runtime.GOROOT() + "/lib/time/zoneinfo.zip",
+}
+
+// indexByte is copied from strings package to avoid importing it (since the real time package doesn't).
+func indexByte(s string, c byte) int {
+	return js.InternalObject(s).Call("indexOf", js.Global.Get("String").Call("fromCharCode", c)).Int()
+}
+
+func loadLocation(name string) (*Location, error) {
+	return loadZoneFile(runtime.GOROOT()+"/lib/time/zoneinfo.zip", name)
 }
 
 func initTestingZone() {
@@ -93,9 +102,4 @@ func initTestingZone() {
 	}
 	z.name = "Local"
 	localLoc = *z
-}
-
-// indexByte is copied from strings package to avoid importing it (since the real time package doesn't).
-func indexByte(s string, c byte) int {
-	return js.InternalObject(s).Call("indexOf", js.Global.Get("String").Call("fromCharCode", c)).Int()
 }

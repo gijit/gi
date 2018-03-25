@@ -24,11 +24,10 @@ func (t *_type) string() string {
 }
 
 func init() {
-	jsPkg := js.Global.Get("__packages").Get("github.com/gijit/gi/pkg/luaapi")
+	jsPkg := js.Global.Get("__packages").Get("github.com/gopherjs/gopherjs/js")
 	js.Global.Set("__jsObjectPtr", jsPkg.Get("Object").Get("ptr"))
 	js.Global.Set("__jsErrorPtr", jsPkg.Get("Error").Get("ptr"))
 	js.Global.Set("__throwRuntimeError", js.InternalObject(throw))
-
 	// avoid dead code elimination
 	var e error
 	e = &TypeAssertionError{}
@@ -44,7 +43,9 @@ func GOROOT() string {
 	if goroot != js.Undefined {
 		return goroot.String()
 	}
-	return sys.DefaultGoroot
+	// sys.DefaultGoroot is now gone, can't use it as fallback anymore.
+	// TODO: See if a better solution is needed.
+	return "/usr/local/go"
 }
 
 func Breakpoint() {
@@ -64,7 +65,7 @@ func Callers(skip int, pc []uintptr) int {
 	return 0
 }
 
-// CallersFrames is not implemented for GOARCH=gijit.
+// CallersFrames is not implemented for GOARCH=js.
 // TODO: Implement if possible.
 func CallersFrames(callers []uintptr) *Frames { return &Frames{} }
 
@@ -219,3 +220,11 @@ func KeepAlive(interface{}) {}
 func throw(s string) {
 	panic(errorString(s))
 }
+
+// These are used by panicwrap. Not implemented for GOARCH=js.
+// TODO: Implement if possible.
+func getcallerpc() uintptr         { return 0 }
+func findfunc(pc uintptr) funcInfo { return funcInfo{} }
+func funcname(f funcInfo) string   { return "" }
+
+type funcInfo struct{}

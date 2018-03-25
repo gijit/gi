@@ -437,7 +437,8 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 						pkgPath = method.Pkg().Path()
 					}
 					t := method.Type().(*types.Signature)
-					entry := fmt.Sprintf(`{__prop= "%s", __name= "%s", __pkg= "%s", typ= __funcType(%s)}`, name, method.Name(), pkgPath, c.initArgs(t))
+
+					entry := fmt.Sprintf(`{__prop= "%s", __name= %s, __pkg= "%s", typ= __funcType(%s)}`, name, encodeString(method.Name()), pkgPath, c.initArgs(t))
 					if _, isPtr := t.Recv().Type().(*types.Pointer); isPtr {
 						ptrMethods = append(ptrMethods, entry)
 						continue
