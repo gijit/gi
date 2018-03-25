@@ -27,7 +27,9 @@ import (
 func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (arch *Archive, err error) {
 	pp("FullPackageCompile() top. importPath='%s'", importPath)
 	defer func() {
-		pp("end of FullPackageCompile, returning arch='%#v'\n and arch.Pkg='%#v', err='%v'", arch, arch.Pkg, err)
+		if arch != nil {
+			pp("end of FullPackageCompile, returning arch='%#v'\n and arch.Pkg='%#v', err='%v'", arch, arch.Pkg, err)
+		}
 		pp("and stack is '%s'", string(debug.Stack()))
 	}()
 
