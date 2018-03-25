@@ -249,7 +249,12 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		// try a source import.
 		archive, err := ic.ImportSourcePackage(path, "")
 		if err == nil {
-
+			if archive == nil {
+				panic("why was archive nil if err was nil?")
+			}
+			if archive.Pkg == nil {
+				panic("why was archive.Pkg nil if err was nil?")
+			}
 			// success. execute the code to define
 			// functions in the lua namespace.
 			t0.regns = archive.Pkg.Name()
