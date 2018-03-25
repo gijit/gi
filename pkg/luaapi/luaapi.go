@@ -88,17 +88,17 @@ func (o *Object) Interface() interface{} { return o.object.Interface() }
 func (o *Object) Unsafe() uintptr { return o.object.Unsafe() }
 
 // Error encapsulates JavaScript errors. Those are turned into a Go panic and may be recovered, giving an *Error that holds the JavaScript error object.
-type Error222 struct {
+type Error struct {
 	*Object
 }
 
-// Error222 returns the message of the encapsulated JavaScript error object.
-func (err *Error222) Error222() string {
+// Error returns the message of the encapsulated JavaScript error object.
+func (err *Error) Error() string {
 	return "JavaScript error: " + err.Get("message").String()
 }
 
 // Stack returns the stack property of the encapsulated JavaScript error object.
-func (err *Error222) Stack() string {
+func (err *Error) Stack() string {
 	return err.Get("stack").String()
 }
 
@@ -171,6 +171,6 @@ type S []interface{}
 
 func init() {
 	// avoid dead code elimination
-	e := Error222{}
+	e := Error{}
 	_ = e
 }
