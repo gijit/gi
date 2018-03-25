@@ -265,6 +265,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			if err != nil {
 				return nil, err
 			}
+			archive.NewCodeText = [][]byte{code}
 			t0.run = code
 			panicOn(t0.Do())
 
