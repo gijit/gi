@@ -66,7 +66,11 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 
 	pp("config.Check on importPath='%s'", importPath)
-	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, addPreludeToNewPkg)
+	prelude := addPreludeToNewPkg
+	if importPath != "main" {
+		prelude = nil
+	}
+	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude)
 	if importError != nil {
 		return nil, importError
 	}
