@@ -91,10 +91,12 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	if d == nil {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
 		//debug
-		vv("debug the missing '%v', here is check.ObjMap:", obj.Name())
-		for k, v := range check.ObjMap {
-			vv("k='%v',   v='%#v'\n", k.Name(), v)
-		}
+		/*
+			vv("debug the missing '%v', here is check.ObjMap:", obj.Name())
+			for k, v := range check.ObjMap {
+				vv("k='%v',   v='%#v'\n", k.Name(), v)
+			}
+		*/
 		unreachable()
 	}
 	pp("obj = '%#v'/'%s'", obj, obj)

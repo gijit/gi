@@ -131,12 +131,19 @@ func ImportDependencies(archive *Archive, importPkg func(string) (*Archive, erro
 		paths[dep.ImportPath] = true
 		return nil
 	}
-	// TODO: restore this if need be...
-	/* jea: temp disable to see if 1000 passes
+	// jea: temp disable to see if 1000 passes: yes, this makes 1000 green. commenting it in goes red.
+	// but 1002 still reports red.
+	// /Users/jaten/go/src/github.com/gijit/gi/pkg/luaapi/luaapi.go:91:6: Error should have been declared
+	//
+	// with collectDependencies("runtime") in place, all 1000, 1001, and 1002 tests fail
+	//  with the "Error should have been declared" error above.
+	//
+	// with it commented out, tests 1000 and 1001 go green, but 1002 stays red.
+	//
 	if err := collectDependencies("runtime"); err != nil {
 		return nil, err
 	}
-	*/
+
 	for _, imp := range archive.Imports {
 		if err := collectDependencies(imp); err != nil {
 			return nil, err
@@ -161,7 +168,8 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter, isMain bool) error {
 
 	dceSelection := make(map[*Decl]struct{})
 
-	if len(pkgs) == 1 && !isMain {
+	// jea: debug try back in. TODO fix/revert if need be.
+	if false { // len(pkgs) == 1 && !isMain {
 		// skip this filtering stuff
 
 	} else {
