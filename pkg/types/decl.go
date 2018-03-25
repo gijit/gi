@@ -73,7 +73,7 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 // objDecl type-checks the declaration of obj in its respective (file) context.
 // See check.typ for the details on def and path.
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
-	pp("jea debug: types/decl.go:65, check.objDecl running top.")
+	//pp("jea debug: types/decl.go:76, check.objDecl running top.")
 	if obj.Type() != nil {
 		return // already checked - nothing to do
 	}
@@ -90,6 +90,11 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	d := check.ObjMap[obj]
 	if d == nil {
 		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
+		//debug
+		vv("debug the missing '%v', here is check.ObjMap:", obj.Name())
+		for k, v := range check.ObjMap {
+			vv("k='%v',   v='%#v'\n", k.Name(), v)
+		}
 		unreachable()
 	}
 	pp("obj = '%#v'/'%s'", obj, obj)
