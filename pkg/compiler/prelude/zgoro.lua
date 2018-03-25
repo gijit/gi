@@ -8,6 +8,10 @@
 -- channels: see reflect_goro.lua
 
 -- turn off zgoro for now, using chan.lua presently.
+-- just stub out __go as passthrough
+function __go(f, ...)
+   f(...)
+end
 
 --[==[
 
