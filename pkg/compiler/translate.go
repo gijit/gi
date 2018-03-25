@@ -488,7 +488,8 @@ func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) 
 	w := &SourceMapFilter{
 		Writer: &res,
 	}
-	err = WriteProgramCode([]*Archive{arch}, w)
+	isMain := true
+	err = WriteProgramCode([]*Archive{arch}, w, isMain)
 
 	return res.Bytes(), err
 }
