@@ -1,4 +1,4 @@
-// +build js,!windows
+// +build gijit,!windows
 
 package syscall
 

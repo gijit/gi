@@ -1,4 +1,4 @@
-// +build js
+// +build gijit
 
 package cookiejar_test
 
