@@ -1,4 +1,6 @@
-package build
+package compiler
+
+// formerly build_test.go was in pkg/gibuild/build_test.go
 
 import (
 	"fmt"
@@ -21,7 +23,7 @@ import (
 //
 // It checks all standard library packages. Each package is considered as a normal
 // package, as a test package, and as an external test package.
-func TestNativesDontImportExtraPackages(t *testing.T) {
+func Test1010NativesDontImportExtraPackages(t *testing.T) {
 	// Calculate the forward import graph for all standard library packages.
 	// It's needed for populateImportSet.
 	stdOnly := gobuild.Default
@@ -43,7 +45,7 @@ func TestNativesDontImportExtraPackages(t *testing.T) {
 			(*set)[p] = struct{}{}
 			switch p {
 			case "sync":
-				(*set)["github.com/gopherjs/gopherjs/nosync"] = struct{}{}
+				(*set)["github.com/gijit/gi/pkg/nosync"] = struct{}{}
 			}
 			transitiveImports := forward.Search(p)
 			for p := range transitiveImports {
