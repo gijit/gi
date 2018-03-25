@@ -23,6 +23,7 @@ var _ = debug.Stack
 
 var debugNilCount int
 var pp = verb.PP
+var vv = verb.VV
 var p1 = verb.P
 
 type expression struct {

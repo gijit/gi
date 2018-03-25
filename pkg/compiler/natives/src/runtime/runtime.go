@@ -10,7 +10,7 @@ import (
 
 const GOOS = sys.GOOS
 const GOARCH = "gijit"
-const Compiler = "gopherjs"
+const Compiler = "gijit"
 
 // fake for error.go
 type eface struct {
