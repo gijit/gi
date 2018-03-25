@@ -140,11 +140,13 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 	// or fake (dummy packages for failed imports). Incomplete but
 	// non-fake packages do require an import to complete them.
 	key := importKey{path, dir}
-	imp := check.impMap[key]
-	if imp != nil {
-		return imp
+	var imp *Package
+	if check.conf.AllowImportCaching {
+		imp = check.impMap[key]
+		if imp != nil {
+			return imp
+		}
 	}
-
 	// no package yet => import it
 	if path == "C" && check.conf.FakeImportC {
 		imp = NewPackage("C", "C")

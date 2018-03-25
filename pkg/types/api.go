@@ -130,6 +130,12 @@ type Config struct {
 	// If DisableUnusedImportCheck is set, packages are not checked
 	// for unused imports.
 	DisableUnusedImportCheck bool
+
+	// AllowImportCaching is critical for source imports --
+	// by default now we force all imports to re-compile every
+	// time, under the assumption that the user is likely
+	// editing the packages at the repl.
+	AllowImportCaching bool
 }
 
 // Info holds result type information for a type-checked package.

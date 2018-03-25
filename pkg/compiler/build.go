@@ -329,10 +329,13 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*Packag
 }
 
 func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
-	pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
-	if archive, ok := s.Archives[pkg.ImportPath]; ok {
-		fmt.Printf("build.go:234 using cached version of archive for path '%s'\n", pkg.ImportPath)
-		return archive, nil
+
+	if s.AllowImportCaching {
+		pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
+		if archive, ok := s.Archives[pkg.ImportPath]; ok {
+			pp("build.go:234 using cached version of archive for path '%s'\n", pkg.ImportPath)
+			return archive, nil
+		}
 	}
 
 	if pkg.PkgObj != "" {
@@ -389,28 +392,34 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 			}
 		}
 
-		pkgObjFileInfo, err := os.Stat(pkg.PkgObj)
-		if err == nil && !pkg.SrcModTime.After(pkgObjFileInfo.ModTime()) {
-			// package object is up to date, load from disk if library
-			pkg.UpToDate = true
-			if pkg.IsCommand() {
-				return nil, nil
-			}
+		cachingAllowed := false
+		if cachingAllowed {
+			pkgObjFileInfo, err := os.Stat(pkg.PkgObj)
+			if err == nil && !pkg.SrcModTime.After(pkgObjFileInfo.ModTime()) {
+				pp("\n\n package object is up to date, load from disk if library\n\n")
+				// package object is up to date, load from disk if library
+				pkg.UpToDate = true
+				if pkg.IsCommand() {
+					return nil, nil
+				}
 
-			objFile, err := os.Open(pkg.PkgObj)
-			if err != nil {
-				return nil, err
-			}
-			defer objFile.Close()
+				objFile, err := os.Open(pkg.PkgObj)
+				if err != nil {
+					return nil, err
+				}
+				defer objFile.Close()
 
-			archive, err := ReadArchive(pkg.PkgObj, pkg.ImportPath, objFile, s.Types)
-			if err != nil {
-				return nil, err
-			}
+				archive, err := ReadArchive(pkg.PkgObj, pkg.ImportPath, objFile, s.Types)
+				if err != nil {
+					return nil, err
+				}
 
-			s.Archives[pkg.ImportPath] = archive
-			return archive, err
-		}
+				pp("\n\n reading Archive from disk, filename='%s', import path='%s'. archive.Pkg='%#v'\n and archive='%#v'", pkg.PkgObj, pkg.ImportPath, archive.Pkg, archive)
+				s.Archives[pkg.ImportPath] = archive
+				return archive, err
+			} // end ReadArchive from disk
+
+		} // end if cachingAllowe
 	}
 
 	fileSet := token.NewFileSet()
@@ -424,6 +433,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 		Packages: s.Types,
 		Import: func(path string) (*Archive, error) {
 			if archive, ok := localImportPathCache[path]; ok {
+				pp("\n\n using cached archive from localImportPathCache... archive.Pkg='%#v'\n", archive.Pkg)
 				return archive, nil
 			}
 			_, archive, err := s.BuildImportPathWithSrcDir(path, pkg.Dir)
@@ -431,6 +441,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 				return nil, err
 			}
 			localImportPathCache[path] = archive
+			pp("\n\n saving archive into localImportPathCache. archive.Pkg='%#v'\n", archive.Pkg)
 			return archive, nil
 		},
 	}
@@ -438,6 +449,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	if err != nil {
 		return nil, err
 	}
+	pp("\n\n archive back from FullPackageCompile, archive.Pkg='%#v'\n", archive.Pkg)
 
 	for _, jsFile := range pkg.JSFiles {
 		code, err := ioutil.ReadFile(filepath.Join(pkg.Dir, jsFile))
@@ -456,6 +468,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	s.Archives[pkg.ImportPath] = archive
 
 	if pkg.PkgObj == "" || pkg.IsCommand() {
+		pp("\n\n returning early, pkg.PkgObj==\"\" or pkg.IsCommand()=%v, archive.Pkg='%#v'\n", pkg.IsCommand(), archive.Pkg)
 		return archive, nil
 	}
 

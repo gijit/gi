@@ -13,7 +13,7 @@ func Test1000ImportAGoSourcePackage(t *testing.T) {
 
 	cv.Convey(`import a Go source package`, t, func() {
 
-		FishMultipliesBy(2)
+		fishMultipliesBy(2)
 		code := `
 import "github.com/gijit/gi/pkg/compiler/spkg_tst"
 caught := spkg_tst.Fish(2)
@@ -38,11 +38,14 @@ func Test1001NoCachingOfImportsOfGoSourcePackages(t *testing.T) {
 
 	cv.Convey(`since they may be in flux, importing a Go source package must re-read the source every time, and not use a cached version`, t, func() {
 
-		defer FishMultipliesBy(2)
+		defer fishMultipliesBy(2) // cleanup
+
 		for i := 1; i <= 2; i++ {
-			FishMultipliesBy(i + 1) // 2, then 3
+			fmt.Printf("\n ... fishing for import caching, which is a no-no on source imports. They may change often. on i=%v\n\n", i)
+			fishMultipliesBy(i + 1) // 2, then 3
 			code := `
-import "github.com/gijit/gi/pkg/compiler/spkg_tst"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst"`
+			code2 := `
 caught := spkg_tst.Fish(2)
 `
 			vm, err := NewLuaVmWithPrelude(nil)
@@ -57,16 +60,24 @@ caught := spkg_tst.Fish(2)
 			// and verify that it happens correctly
 			LuaRunAndReport(vm, string(translation))
 
+			translation2, err := inc.Tr([]byte(code2))
+			panicOn(err)
+			fmt.Printf("\n translation2='%s'\n", translation2)
+
+			// and verify that it happens correctly
+			LuaRunAndReport(vm, string(translation2))
+
 			LuaMustInt64(vm, "caught", int64(2*(i+1)))
+			fmt.Printf("\n caught = %v\n", 2*(i+1))
+			cv.So(true, cv.ShouldBeTrue)
 		}
 	})
 }
 
-func FishMultipliesBy(i int) {
+func fishMultipliesBy(i int) {
 	f, err := os.Create("spkg_tst/spkg.go")
 	panicOn(err)
-	fmt.Fprintf(f, `
-package spkg_tst
+	fmt.Fprintf(f, `package spkg_tst
 
 func Fish(numPole int) (fishCaught int) {
 	return numPole * %v

@@ -119,6 +119,9 @@ type IncrState struct {
 
 	minify   bool
 	PrintAST bool
+
+	// default to no import caching
+	AllowImportCaching bool
 }
 
 func (tr *IncrState) Close() {
@@ -377,9 +380,10 @@ type PackageData struct {
 }
 
 type Session struct {
-	options  *Options
-	Archives map[string]*Archive
-	Types    map[string]*types.Package
+	options            *Options
+	Archives           map[string]*Archive
+	Types              map[string]*types.Package
+	AllowImportCaching bool
 }
 
 func NewSession(options *Options) *Session {
