@@ -253,7 +253,9 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			// success. execute the code to define
 			// functions in the lua namespace.
 			t0.regns = archive.Pkg.Name()
+			pp("calling WriteCommandPackage")
 			code, err := ic.CurPkg.Session.WriteCommandPackage(archive, "")
+			pp("back from WriteCommandPackage, err='%v', code is\n'%s'", err, string(code))
 			if err != nil {
 				return nil, err
 			}
