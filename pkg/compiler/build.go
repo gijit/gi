@@ -141,6 +141,7 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 		pkg.GoFiles = exclude(pkg.GoFiles, "fd_poll_runtime.go")
 	case "crypto/rand":
 		pkg.GoFiles = []string{"rand.go", "util.go"}
+		pkg.TestGoFiles = exclude(pkg.TestGoFiles, "rand_linux_test.go") // Don't want linux-specific tests (since linux-specific package files are excluded too).
 	}
 
 	if len(pkg.CgoFiles) > 0 {
@@ -225,6 +226,14 @@ func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTag
 // replaced by `_`. New identifiers that don't exist in original package get added.
 func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (files []*ast.File, err error) {
 	vv("parseAndAugment called! pkg.Name='%s'", pkg.Name)
+	//debug
+	defer func() {
+		r := recover()
+		vv("done with parseAndAugment of pkg.Name='%s', in panic unwind = %v", pkg.Name, r != nil)
+		if r != nil {
+			panic(r)
+		}
+	}()
 
 	// debug
 	defer func() {
@@ -411,6 +420,13 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (f
 func dumpFileAst(files []*ast.File, fileSet *token.FileSet) []byte {
 	var by bytes.Buffer
 	for _, f := range files {
+
+		fmt.Fprintf(&by, `
+///////////////////////////////////////////////////////////////
+////////////////     jea: starting on dumpFileAst of new file
+///////////////////////////////////////////////////////////////
+`)
+
 		for _, node := range f.Nodes {
 			err := printer.Fprint(&by, fileSet, node)
 			panicOn(err)
