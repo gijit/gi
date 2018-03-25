@@ -153,63 +153,72 @@ type dceInfo struct {
 	methodFilter string
 }
 
-func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
+func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter, isMain bool) error {
+	// jea: notice this assumption that main is the last package...
+	// This was right for GopherJS, but is now probably wrong in gijit.
 	mainPkg := pkgs[len(pkgs)-1]
 	minify := mainPkg.Minified
 
-	byFilter := make(map[string][]*dceInfo)
-	var pendingDecls []*Decl
-	for _, pkg := range pkgs {
-		for _, d := range pkg.Declarations {
-			if d.DceObjectFilter == "" && d.DceMethodFilter == "" {
-				pendingDecls = append(pendingDecls, d)
-				continue
-			}
-			info := &dceInfo{decl: d}
-			if d.DceObjectFilter != "" {
-				info.objectFilter = pkg.ImportPath + "." + d.DceObjectFilter
-				byFilter[info.objectFilter] = append(byFilter[info.objectFilter], info)
+	dceSelection := make(map[*Decl]struct{})
 
-				pp("appending to byFilter[info.objectFiler='%#v'] the following info='%#v'", info.objectFilter, info)
-			}
-			pp("d.DceMethodFilter is '%s'", d.DceMethodFilter)
+	if len(pkgs) == 1 && !isMain {
+		// skip this filtering stuff
 
-			if d.DceMethodFilter != "" {
+	} else {
 
-				info.methodFilter = pkg.ImportPath + "." + d.DceMethodFilter
-				byFilter[info.methodFilter] = append(byFilter[info.methodFilter], info)
-			} else {
+		byFilter := make(map[string][]*dceInfo)
+		var pendingDecls []*Decl
+		for _, pkg := range pkgs {
+			for _, d := range pkg.Declarations {
+				if d.DceObjectFilter == "" && d.DceMethodFilter == "" {
+					pendingDecls = append(pendingDecls, d)
+					continue
+				}
+				info := &dceInfo{decl: d}
+				if d.DceObjectFilter != "" {
+					info.objectFilter = pkg.ImportPath + "." + d.DceObjectFilter
+					byFilter[info.objectFilter] = append(byFilter[info.objectFilter], info)
+
+					pp("appending to byFilter[info.objectFiler='%#v'] the following info='%#v'", info.objectFilter, info)
+				}
+				pp("d.DceMethodFilter is '%s'", d.DceMethodFilter)
+				pp("d.DceObjectFilter is '%s'", d.DceObjectFilter)
+
+				if d.DceMethodFilter != "" {
+
+					info.methodFilter = pkg.ImportPath + "." + d.DceMethodFilter
+					byFilter[info.methodFilter] = append(byFilter[info.methodFilter], info)
+				}
 			}
 		}
-	}
 
-	dceSelection := make(map[*Decl]struct{})
-	pp("len(pendingDecls) is '%v'", len(pendingDecls))
-	for len(pendingDecls) != 0 {
-		d := pendingDecls[len(pendingDecls)-1]
-		pendingDecls = pendingDecls[:len(pendingDecls)-1]
+		pp("len(pendingDecls) is '%v'", len(pendingDecls)) // spkg_tst, 0 here, so nothing being allowed through.
+		for len(pendingDecls) != 0 {
+			d := pendingDecls[len(pendingDecls)-1]
+			pendingDecls = pendingDecls[:len(pendingDecls)-1]
 
-		pp("adding pendingDecls d to nil dceSelection map: d.='%#v'", d)
-		dceSelection[d] = struct{}{}
+			pp("adding pendingDecls d to nil dceSelection map: d.='%#v'", d)
+			dceSelection[d] = struct{}{}
 
-		for _, dep := range d.DceDeps {
-			pp("considering d.DceDeps, dep='%#v'", dep)
-			if infos, ok := byFilter[dep]; ok {
-				delete(byFilter, dep)
-				for _, info := range infos {
-					if info.objectFilter == dep {
-						info.objectFilter = ""
-					}
-					if info.methodFilter == dep {
-						info.methodFilter = ""
-					}
-					if info.objectFilter == "" && info.methodFilter == "" {
-						pendingDecls = append(pendingDecls, info.decl)
+			for _, dep := range d.DceDeps {
+				pp("considering d.DceDeps, dep='%#v'", dep)
+				if infos, ok := byFilter[dep]; ok {
+					delete(byFilter, dep)
+					for _, info := range infos {
+						if info.objectFilter == dep {
+							info.objectFilter = ""
+						}
+						if info.methodFilter == dep {
+							info.methodFilter = ""
+						}
+						if info.objectFilter == "" && info.methodFilter == "" {
+							pendingDecls = append(pendingDecls, info.decl)
+						}
 					}
 				}
 			}
 		}
-	}
+	} //end filtering stuff
 
 	if _, err := w.Write([]byte("\n(function()\n\n")); err != nil {
 		return err
@@ -229,10 +238,29 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 		if err := WritePkgCode(pkg, dceSelection, minify, w); err != nil {
 			return err
 		}
+
+		if !isMain {
+
+			// not Main: need to write the package to the global Lua env.
+
+			_, err := w.Write([]byte(fmt.Sprintf("\n %s = __packages[\"%s\"];\n",
+				pkg.Name, string(pkg.ImportPath))))
+
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	if _, err := w.Write([]byte(`
+	_, err := w.Write([]byte(`
   __synthesizeMethods();
+`))
+	if err != nil {
+		return err
+	}
+
+	if isMain {
+		_, err := w.Write([]byte(`
 
   local __mainPkg = __packages["` + string(mainPkg.ImportPath) + `"];
   local __rtTemp = __packages["runtime"]; 
@@ -241,8 +269,16 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
   end;
 
   __go(__mainPkg._init, {});
+`))
+
+		if err != nil {
+			return err
+		}
+	}
+	_, err = w.Write([]byte(`
 end)();
-`)); err != nil {
+`))
+	if err != nil {
 		return err
 	}
 

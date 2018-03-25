@@ -246,7 +246,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 	return files, nil
 }
 
-func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string) (out []byte, err error) {
+func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string, isMain bool) (out []byte, err error) {
 
 	buildPkg, err := NewReplContext(s.InstallSuffix(), s.options.BuildTags).ImportDir(packagePath, 0)
 	if err != nil {
@@ -266,7 +266,7 @@ func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string)
 		pkgObj = filepath.Base(packagePath) + ".gijit"
 	}
 	if pkg.IsCommand() && !pkg.UpToDate {
-		out, err = s.WriteCommandPackage(archive, pkgObj)
+		out, err = s.WriteCommandPackage(archive, pkgObj, isMain)
 		if err != nil {
 			return nil, err
 		}
@@ -301,7 +301,8 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 	if s.Types["main"].Name() != "main" {
 		return nil, fmt.Errorf("cannot build/run non-main package")
 	}
-	out, err = s.WriteCommandPackage(archive, pkgObj)
+	isMain := true
+	out, err = s.WriteCommandPackage(archive, pkgObj, isMain)
 	return
 }
 
@@ -486,7 +487,7 @@ func (s *Session) writeLibraryPackage(archive *Archive, pkgObj string) error {
 	return WriteArchive(archive, objFile)
 }
 
-func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) (out []byte, err error) {
+func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string, isMain bool) (out []byte, err error) {
 	var codeFile io.Writer
 	if s.options.WriteToFile {
 		if err := os.MkdirAll(filepath.Dir(pkgObj), 0777); err != nil {
@@ -535,7 +536,7 @@ func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string) (out []by
 	if err != nil {
 		return nil, err
 	}
-	err = WriteProgramCode(deps, sourceMapFilter)
+	err = WriteProgramCode(deps, sourceMapFilter, isMain)
 	return
 }
 
