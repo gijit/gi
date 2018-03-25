@@ -120,7 +120,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
 	pp("pi.importContext.Import='%#v'", pi.importContext.Import) // is nil!
 	a, err := pi.importContext.Import(path)
-	pp("jea debug: a *Archive back from pi.importContext.Import('%s') is '%#v'", path, a)
+	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
 		if *pi.importError == nil {
 			// If import failed, show first error of import only (https://github.com/gopherjs/gopherjs/issues/119).
@@ -128,6 +128,8 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 		}
 		return nil, err
 	}
+	// jea, why isn't this already set?
+	//pi.importContext.Packages[a.ImportPath] = pkg
 
 	tyPack := pi.importContext.Packages[a.ImportPath]
 
