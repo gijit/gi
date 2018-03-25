@@ -454,12 +454,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 
 	return &Archive{
-		ImportPath:   importPath,
-		Name:         typesPkg.Name(),
-		Imports:      importedPaths,
-		ExportData:   exportData,
-		Declarations: allDecls,
-		FileSet:      encodedFileSet.Bytes(),
-		Minified:     minify,
+		SavedArchive: SavedArchive{
+			ImportPath:   importPath,
+			Name:         typesPkg.Name(),
+			Imports:      importedPaths,
+			ExportData:   exportData,
+			Declarations: allDecls,
+			FileSet:      encodedFileSet.Bytes(),
+			Minified:     minify,
+		},
 	}, nil
 }

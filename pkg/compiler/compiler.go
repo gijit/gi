@@ -3,7 +3,10 @@ package compiler
 import (
 	"bytes"
 	"encoding/binary"
+
 	"encoding/gob"
+	"github.com/gijit/gi/pkg/ast"
+
 	"encoding/json"
 	"fmt"
 	"github.com/gijit/gi/pkg/token"
@@ -43,6 +46,12 @@ func init() {
 		reservedKeywords[w] = true
 	}
 
+	// register for gob
+	var iden ast.Ident
+	gob.Register(iden)
+	var fld ast.Field
+	gob.Register(fld)
+
 }
 
 type ErrorList []error
@@ -51,7 +60,7 @@ func (err ErrorList) Error() string {
 	return err[0].Error()
 }
 
-type Archive struct {
+type SavedArchive struct {
 	ImportPath   string
 	Name         string
 	Imports      []string
@@ -60,6 +69,10 @@ type Archive struct {
 	IncJSCode    []byte
 	FileSet      []byte
 	Minified     bool
+}
+
+type Archive struct {
+	SavedArchive
 
 	// above from GopherJS, below added for gijit.
 
@@ -301,7 +314,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 }
 
 func ReadArchive(filename, path string, r io.Reader, packages map[string]*types.Package) (*Archive, error) {
-	var a Archive
+	var a SavedArchive
 	if err := gob.NewDecoder(r).Decode(&a); err != nil {
 		return nil, err
 	}
@@ -312,11 +325,11 @@ func ReadArchive(filename, path string, r io.Reader, packages map[string]*types.
 		return nil, err
 	}
 
-	return &a, nil
+	return &Archive{SavedArchive: a}, nil
 }
 
 func WriteArchive(a *Archive, w io.Writer) error {
-	return gob.NewEncoder(w).Encode(a)
+	return gob.NewEncoder(w).Encode(a.SavedArchive)
 }
 
 type SourceMapFilter struct {

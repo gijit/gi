@@ -686,18 +686,20 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 	if a == nil {
 		return &Archive{
-			ImportPath:   importPath,
-			Name:         pkg.Name(),
-			Imports:      importedPaths,
-			ExportData:   exportData,
-			Declarations: allDecls,
-			FileSet:      encodedFileSet.Bytes(),
-			Minified:     minify,
+			SavedArchive: SavedArchive{
+				ImportPath:   importPath,
+				Name:         pkg.Name(),
+				Imports:      importedPaths,
+				ExportData:   exportData,
+				Declarations: allDecls,
+				FileSet:      encodedFileSet.Bytes(),
+				Minified:     minify,
+			},
 			NewCodeText:  newCodeText,
 			TypesInfo:    typesInfo,
 			Config:       config,
-			Pkg:          pkg,
 			Check:        check,
+			Pkg:          pkg,
 			FuncSrcCache: funcSrcCache,
 		}, nil
 	} else {

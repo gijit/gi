@@ -45,6 +45,14 @@ type Selection struct {
 	indirect bool   // set if there was any pointer indirection on the path
 }
 
+// to avoid the gob: type types.Selection has no exported fields error.
+func (v *Selection) GobEncode() ([]byte, error) {
+	return nil, nil
+}
+func (v *Selection) GobDecode([]byte) error {
+	return nil
+}
+
 // Kind returns the selection kind.
 func (s *Selection) Kind() SelectionKind { return s.kind }
 
