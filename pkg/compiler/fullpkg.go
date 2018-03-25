@@ -302,6 +302,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			FullName: o.FullName(),
 			Blocking: len(funcInfo.Blocking) != 0,
 		}
+		pp("doing codegen for function '%s'", d.FullName)
 		if fun.Recv == nil {
 			d.Vars = []string{c.objectName(o)}
 			d.DceObjectFilter = o.Name()
@@ -331,12 +332,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			}
 			d.DceObjectFilter = namedRecvType.Obj().Name()
 			if !fun.Name.IsExported() {
+				pp("func: adding ___tilde_ for d.DecMethodFilter")
 				d.DceMethodFilter = o.Name() + "___tilde_" //jea: was: "~"
 			}
 		}
 
 		d.DceDeps = collectDependencies(func() {
 			d.DeclCode = c.translateToplevelFunction(fun, funcInfo)
+			pp("translateToplevelFunction returned '%s'", d.DeclCode)
 		})
 		funcDecls = append(funcDecls, &d)
 	}
@@ -481,7 +484,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return nil, c.p.errList
 	}
 
-	pp("at end of FullPackageCompile of importPath='%s'", importPath)
+	pp("at end of FullPackageCompile of importPath='%s', here are allDecls:", importPath)
+	for k, d := range allDecls {
+		pp("allDecls[k=%v] has .DeclCode = '%s'", k, string(d.DeclCode))
+	}
 	return &Archive{
 		SavedArchive: SavedArchive{
 			ImportPath:   importPath,

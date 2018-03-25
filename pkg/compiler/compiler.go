@@ -169,22 +169,31 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
 			if d.DceObjectFilter != "" {
 				info.objectFilter = pkg.ImportPath + "." + d.DceObjectFilter
 				byFilter[info.objectFilter] = append(byFilter[info.objectFilter], info)
+
+				pp("appending to byFilter[info.objectFiler='%#v'] the following info='%#v'", info.objectFilter, info)
 			}
+			pp("d.DceMethodFilter is '%s'", d.DceMethodFilter)
+
 			if d.DceMethodFilter != "" {
+
 				info.methodFilter = pkg.ImportPath + "." + d.DceMethodFilter
 				byFilter[info.methodFilter] = append(byFilter[info.methodFilter], info)
+			} else {
 			}
 		}
 	}
 
 	dceSelection := make(map[*Decl]struct{})
+	pp("len(pendingDecls) is '%v'", len(pendingDecls))
 	for len(pendingDecls) != 0 {
 		d := pendingDecls[len(pendingDecls)-1]
 		pendingDecls = pendingDecls[:len(pendingDecls)-1]
 
+		pp("adding pendingDecls d to nil dceSelection map: d.='%#v'", d)
 		dceSelection[d] = struct{}{}
 
 		for _, dep := range d.DceDeps {
+			pp("considering d.DceDeps, dep='%#v'", dep)
 			if infos, ok := byFilter[dep]; ok {
 				delete(byFilter, dep)
 				for _, info := range infos {
@@ -253,12 +262,17 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("__packages[\"%s\"] = (function()\n", pkg.ImportPath)), minify)); err != nil {
 		return err
 	}
-	vars := []string{"_pkg = {}", "_init"}
+	vars := []string{"__pkg = {}", "_init"}
 	var filteredDecls []*Decl
 	for _, d := range pkg.Declarations {
-		if _, ok := dceSelection[d]; ok {
+		// jea TODO figure out why this dceSelection[d] was over filtering
+		// our spkg_tst.Fish method and it never showed up in the output.
+		if true {
+			// if _, ok := dceSelection[d]; ok {
 			vars = append(vars, d.Vars...)
 			filteredDecls = append(filteredDecls, d)
+		} else {
+			pp("rejected, filtered out Declaration d='%#v'  \n   because dceSelection[d]='%#v'", d, dceSelection[d])
 		}
 	}
 	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("\tlocal %s;\n", strings.Join(vars, ", "))), minify)); err != nil {
@@ -282,7 +296,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 
 	_, err := w.Write(removeWhitespace([]byte(`
    _init = function(self)
-   _pkg._init = function() end;
+   __pkg._init = function() end;
     -- jea compiler.go:260
     local __f
     local __c = false;
@@ -308,7 +322,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= _init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t_pkg._init = _init;\n\t return _pkg;\n end)();\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= _init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t__pkg._init = _init;\n\t return __pkg;\n end)();\n"), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified
