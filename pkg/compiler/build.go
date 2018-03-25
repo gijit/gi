@@ -6,6 +6,7 @@ import (
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/printer"
 	"github.com/gijit/gi/pkg/scanner"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
@@ -222,10 +223,17 @@ func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTag
 // as an existing file from the standard library). For all identifiers that exist
 // in the original AND the overrides, the original identifier in the AST gets
 // replaced by `_`. New identifiers that don't exist in original package get added.
-func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([]*ast.File, error) {
-	vv("\n\n parseAndAugment called! pkg.Name='%s'\n", pkg.Name)
+func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (files []*ast.File, err error) {
+	vv("parseAndAugment called! pkg.Name='%s'", pkg.Name)
 
-	var files []*ast.File
+	// debug
+	defer func() {
+
+		by := dumpFileAst(files, fileSet)
+		vv("jea debug, at end of parseAndAugment, files = '\n%s\n'", string(by))
+
+	}()
+
 	replacedDeclNames := make(map[string]bool)
 	funcName := func(d *ast.FuncDecl) string {
 		if d.Recv == nil || len(d.Recv.List) == 0 {
@@ -398,6 +406,18 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 		return nil, errList
 	}
 	return files, nil
+}
+
+func dumpFileAst(files []*ast.File, fileSet *token.FileSet) []byte {
+	var by bytes.Buffer
+	for _, f := range files {
+		for _, node := range f.Nodes {
+			err := printer.Fprint(&by, fileSet, node)
+			panicOn(err)
+			fmt.Fprintf(&by, "\n")
+		}
+	}
+	return by.Bytes()
 }
 
 type Options struct {
