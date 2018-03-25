@@ -161,8 +161,9 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 			}
 		} else {
 			// jea: our import "fmt" is calling here.
+			pp("jea debug: types/resolver.go:164, about to call importer.Import(path='%s')", path)
 			imp, err = importer.Import(path)
-			pp("\n jea debug: types/resolver.go:164, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
+			pp("jea debug: types/resolver.go:166, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
 			if imp == nil && err == nil {
 				fmt.Printf("\n jea debug: imp was nil!?! err was nil\n")
 				err = fmt.Errorf("Config.Importer.Import(%s) returned nil but no error", path)

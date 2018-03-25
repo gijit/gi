@@ -8,6 +8,7 @@ import (
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
+	//"runtime/debug"
 	"sort"
 	"strings"
 
@@ -22,7 +23,11 @@ import (
 // entire packages. For incremental interactivity,
 // see the incr.go:34 IncrementallyCompile() function.
 //
-func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
+func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (arch *Archive, err error) {
+	pp("FullPackageCompile() top. importPath='%s'", importPath)
+	defer func() {
+		pp("end of FullPackageCompile, returning arch='%#v', err='%v'", arch, err)
+	}()
 	typesInfo := &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
 		Defs:       make(map[*ast.Ident]types.Object),
@@ -133,7 +138,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			continue
 		}
 		c.p.pkgVars[importedPkg.Path()] = c.newVariableWithLevel(importedPkg.Name(), true, false)
-		fmt.Printf("importedPkg.Path() = '%s'; importedPkg='%#v'\n", importedPkg.Path(), importedPkg)
+		pp("importedPkg.Path() = '%s'; importedPkg='%#v'\n", importedPkg.Path(), importedPkg)
 		importedPaths = append(importedPaths, importedPkg.Path())
 	}
 	sort.Strings(importedPaths)

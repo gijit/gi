@@ -282,6 +282,8 @@ func (s *Session) BuildImportPath(path string) (*Archive, error) {
 }
 
 func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*PackageData, *Archive, error) {
+	pp("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'", path, srcDir)
+
 	pkg, err := importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags)
 
 	if err != nil {
@@ -297,6 +299,7 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*Packag
 }
 
 func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
+	pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
 	if archive, ok := s.Archives[pkg.ImportPath]; ok {
 		return archive, nil
 	}
