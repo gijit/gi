@@ -89,6 +89,9 @@ func main() {
 	cmdBuild.Flags().AddFlagSet(compilerFlags)
 	cmdBuild.Flags().AddFlagSet(flagWatch)
 
+	// jea: TODO, figure out when isMain should be true, and
+	//  when it should be false. Or eliminate the flag
+	//  and automatically take care of it.
 	isMain := true
 
 	cmdBuild.Run = func(cmd *cobra.Command, args []string) {
