@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7 jaten <jaten@betable.com> 1454914715 -0800	clone: from https://github.com/spf13/pflag
+7f60f83a2c81bc3c3c0d5297f61ddfa68da9d3b7 367864438f1b1a3c7db4da06a2f55b144e6784e0 jaten <jaten@betable.com> 1465867732 -0500	pull --ff-only: Fast-forward
+367864438f1b1a3c7db4da06a2f55b144e6784e0 103ce5cd2042f2fe629c1957abb64ab3e7f50235 Jason E. Aten <j.e.aten@gmail.com> 1471973238 +0100	pull --ff-only: Fast-forward
+103ce5cd2042f2fe629c1957abb64ab3e7f50235 5ccb023bc27df288a957c5e994cd44fd19619465 Jason E. Aten <j.e.aten@gmail.com> 1478461380 -0600	pull --ff-only origin master: Fast-forward
+5ccb023bc27df288a957c5e994cd44fd19619465 ee5fd03fd6acfd43e44aea0b4135958546ed8e73 Jason E. Aten <j.e.aten@gmail.com> 1521937639 -0500	pull origin master: Fast-forward
