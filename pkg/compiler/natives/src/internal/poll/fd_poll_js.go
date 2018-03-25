@@ -4,7 +4,7 @@ package poll
 
 import "time"
 
-// pollDesc is a no-op implementation of an I/O poller for GOARCH=js.
+// pollDesc is a no-op implementation of an I/O poller for GOARCH=gijit.
 //
 // Its implementation is based on NaCL in gc compiler (see GOROOT/src/internal/poll/fd_poll_nacl.go),
 // but it does even less.
