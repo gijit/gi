@@ -210,6 +210,7 @@ func (c *funcContext) initArgs(ty types.Type) string {
 }
 
 func (c *funcContext) translateToplevelFunction(fun *ast.FuncDecl, info *analysis.FuncInfo) []byte {
+	pp("translateToplevelFunction called! fun.Name.Name='%s'", fun.Name.Name)
 	o := c.p.Defs[fun.Name].(*types.Func)
 	sig := o.Type().(*types.Signature)
 	var recv *ast.Ident
