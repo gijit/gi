@@ -5,7 +5,7 @@ package strings
 import (
 	"unicode/utf8"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func IndexByte(s string, c byte) int {

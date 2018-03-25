@@ -5,7 +5,7 @@ package rand
 import (
 	"errors"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func init() {

@@ -5,7 +5,7 @@ package atomic
 import (
 	"unsafe"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func SwapInt32(addr *int32, new int32) int32 {

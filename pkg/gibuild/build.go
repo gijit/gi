@@ -98,6 +98,9 @@ func importWithSrcDir(path string, srcDir string, mode build.ImportMode, install
 	if strings.HasSuffix(pkg.ImportPath, "/vendor/github.com/gopherjs/gopherjs/js") {
 		return nil, fmt.Errorf("vendoring github.com/gopherjs/gopherjs/js package is not supported, see https://github.com/gopherjs/gopherjs/issues/415")
 	}
+	if strings.HasSuffix(pkg.ImportPath, "/vendor/github.com/gijit/gi/pkg/luaapi") {
+		return nil, fmt.Errorf("vendoring github.com/gijit/gi/pkg/luaapi package is not supported, see https://github.com/gopherjs/gopherjs/issues/415; gijit/gi/pkg/gibuild/build.go:102")
+	}
 
 	switch path {
 	case "os":

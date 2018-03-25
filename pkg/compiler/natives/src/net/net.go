@@ -6,7 +6,7 @@ import (
 	"errors"
 	"syscall"
 
-	"github.com/gijit/gi/pkg/gopherjs/js"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func Listen(net, laddr string) (Listener, error) {
