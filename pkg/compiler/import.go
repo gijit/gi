@@ -256,7 +256,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			pp("calling WriteCommandPackage")
 			isMain := false
 			code, err := ic.CurPkg.Session.WriteCommandPackage(archive, "", isMain)
-			fmt.Printf("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
+			pp("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
 			if err != nil {
 				return nil, err
 			}

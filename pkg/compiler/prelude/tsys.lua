@@ -1264,9 +1264,9 @@ end;
 
 
 __synthesizeMethods = function()
-   print("__synthesizeMethods called! ")
-   __st(__methodSynthesizers, "__methodSynthesizers")
-   print("we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
+   --print("__synthesizeMethods called! ")
+   --__st(__methodSynthesizers, "__methodSynthesizers")
+   --print("we have #__methodSynthesizers = "..tostring(#__methodSynthesizers))
    if __methodSynthesizers ~= nil then
       __ipairsZeroCheck(__methodSynthesizers)
    end
