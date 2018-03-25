@@ -19,6 +19,9 @@ func (ic *IncrState) ImportSourcePackage(path, pkgDir string) (res *Archive, err
 	if err != nil {
 		return nil, err
 	}
+	pp("back from BuildImportWithSrcDir(path='%s'), archive='%#v'", path, archive)
+	pp("back from BuildImportWithSrcDir(path='%s'), archive.Pkg='%#v'", path, archive.Pkg) // nil here
+	ic.CurPkg.importContext.Packages[archive.ImportPath] = archive.Pkg
 	ic.CurPkg.localImportPathCache[path] = archive
 
 	// very important, must do this or we won't locate the package!

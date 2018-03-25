@@ -8,7 +8,7 @@ import (
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
-	//"runtime/debug"
+	"runtime/debug"
 	"sort"
 	"strings"
 
@@ -27,6 +27,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	pp("FullPackageCompile() top. importPath='%s'", importPath)
 	defer func() {
 		pp("end of FullPackageCompile, returning arch='%#v', err='%v'", arch, err)
+		pp("and stack is '%s'", string(debug.Stack()))
 	}()
 	typesInfo := &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
@@ -459,6 +460,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return nil, c.p.errList
 	}
 
+	pp("at end of FullPackageCompile of importPath='%s'", importPath)
 	return &Archive{
 		SavedArchive: SavedArchive{
 			ImportPath:   importPath,
@@ -469,5 +471,6 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			FileSet:      encodedFileSet.Bytes(),
 			Minified:     minify,
 		},
+		Pkg: typesPkg,
 	}, nil
 }
