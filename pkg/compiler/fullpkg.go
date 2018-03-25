@@ -65,7 +65,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		},
 	}
 
-	pp("config.Check on importPath='%s'", importPath)
+	fmt.Printf("config.Check on importPath='%s'\n", importPath)
 	prelude := addPreludeToNewPkg
 	if importPath != "main" {
 		prelude = nil

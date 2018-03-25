@@ -131,10 +131,12 @@ func ImportDependencies(archive *Archive, importPkg func(string) (*Archive, erro
 		paths[dep.ImportPath] = true
 		return nil
 	}
-
+	// TODO: restore this if need be...
+	/* jea: temp disable to see if 1000 passes
 	if err := collectDependencies("runtime"); err != nil {
 		return nil, err
 	}
+	*/
 	for _, imp := range archive.Imports {
 		if err := collectDependencies(imp); err != nil {
 			return nil, err
@@ -227,7 +229,7 @@ func WriteProgramCode(pkgs []*Archive, w *SourceMapFilter) error {
   local __rtTemp = __packages["runtime"]; 
   if __rtTemp ~= nil then _init(); end;
 
-  __go(__mainPkg._init(), {});
+  __go(__mainPkg._init, {});
 end)();
 `)); err != nil {
 		return err
