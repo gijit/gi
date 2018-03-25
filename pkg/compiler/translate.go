@@ -48,15 +48,6 @@ func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 	importContext := &ImportContext{
 		Packages: make(map[string]*types.Package),
 		Import:   ic.GiImportFunc,
-		// from GopherJS:
-		/*
-			Import: func(path string) (*Archive, error) {
-				if path == pkg.ImportPath || path == pkg.ImportPath+"_test" {
-					return s.Archives[path], nil
-				}
-				return s.BuildImportPath(path)
-			},
-		*/
 	}
 
 	key := "main"
