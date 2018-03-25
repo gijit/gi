@@ -45,6 +45,8 @@ func TSPrintf(format string, a ...interface{}) {
 	Printf(format+"\n", a...)
 }
 
+var VV = TSPrintf
+
 // get timestamp for logging purposes
 func ts() string {
 	return time.Now().Format("2006-01-02 15:04:05.999 -0700 MST")

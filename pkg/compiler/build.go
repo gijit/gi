@@ -223,6 +223,8 @@ func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTag
 // in the original AND the overrides, the original identifier in the AST gets
 // replaced by `_`. New identifiers that don't exist in original package get added.
 func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([]*ast.File, error) {
+	vv("\n\n parseAndAugment called! pkg.Name='%s'\n", pkg.Name)
+
 	var files []*ast.File
 	replacedDeclNames := make(map[string]bool)
 	funcName := func(d *ast.FuncDecl) string {
@@ -278,6 +280,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) ([
 			return dir.Readdir(0)
 		},
 		OpenFile: func(name string) (r io.ReadCloser, err error) {
+			vv("\n nativesContext is opening file '%s'\n", name)
 			return natives.FS.Open(name)
 		},
 	}
