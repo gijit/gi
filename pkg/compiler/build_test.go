@@ -4,8 +4,8 @@ package compiler
 
 import (
 	"fmt"
-	gobuild "github.com/gijit/gi/pkg/gostd/build"
-	"github.com/gijit/gi/pkg/token"
+	gobuild "github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/token"
 	"strconv"
 	"strings"
 	"testing"
@@ -45,7 +45,7 @@ func Test1010NativesDontImportExtraPackages(t *testing.T) {
 			(*set)[p] = struct{}{}
 			switch p {
 			case "sync":
-				(*set)["github.com/gijit/gi/pkg/nosync"] = struct{}{}
+				(*set)["github.com/glycerine/gi/pkg/nosync"] = struct{}{}
 			}
 			transitiveImports := forward.Search(p)
 			for p := range transitiveImports {
@@ -96,7 +96,7 @@ func Test1010NativesDontImportExtraPackages(t *testing.T) {
 					if err != nil {
 						t.Fatalf("strconv.Unquote(%v): %v", imp.Path.Value, err)
 					}
-					if importPath == "github.com/gijit/gi/pkg/luaapi" {
+					if importPath == "github.com/glycerine/gi/pkg/luaapi" {
 						continue
 					}
 					if _, ok := realImports[importPath]; !ok {

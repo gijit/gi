@@ -24,13 +24,13 @@ func Test041RangeOverUtf8BytesInString(t *testing.T) {
 		// Resources:
 		//  run this test with: `go test -v -run 041`
 		//
-		// Rob Pike's blog: https://github.com/gijit/gi/blob/master/pkg/utf8/utf8.go
+		// Rob Pike's blog: https://github.com/glycerine/gi/blob/master/pkg/utf8/utf8.go
 		//
-		// see https://github.com/gijit/gi/issues/13 for discussion, and to note
+		// see https://github.com/glycerine/gi/issues/13 for discussion, and to note
 		//  progress and completion.
 		//
-		// See the lua code in https://github.com/gijit/gi/blob/master/pkg/utf8/utf8.lua
-		// See the Go code in https://github.com/gijit/gi/blob/master/pkg/utf8/utf8.go
+		// See the lua code in https://github.com/glycerine/gi/blob/master/pkg/utf8/utf8.lua
+		// See the Go code in https://github.com/glycerine/gi/blob/master/pkg/utf8/utf8.go
 
 		// From Rob Pike's blog https://blog.golang.org/strings
 		//

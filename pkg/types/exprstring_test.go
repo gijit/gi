@@ -5,10 +5,10 @@
 package types_test
 
 import (
-	"github.com/gijit/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/parser"
 	"testing"
 
-	. "github.com/gijit/gi/pkg/types"
+	. "github.com/glycerine/gi/pkg/types"
 )
 
 var testExprs = []testEntry{

@@ -6,7 +6,7 @@
 
 package types
 
-import "github.com/gijit/gi/pkg/constant"
+import "github.com/glycerine/gi/pkg/constant"
 
 // Conversion type-checks the conversion T(x).
 // The result is in x.

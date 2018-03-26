@@ -6,8 +6,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 // Eval returns the type and, if constant, the value for the

@@ -8,9 +8,9 @@ package gcimporter
 import (
 	"bufio"
 	"fmt"
-	"github.com/gijit/gi/pkg/gostd/build"
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/types"
 	"io"
 	"io/ioutil"
 	"os"

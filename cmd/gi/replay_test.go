@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gijit/gi/pkg/compiler"
+	"github.com/glycerine/gi/pkg/compiler"
 	cv "github.com/glycerine/goconvey/convey"
 )
 

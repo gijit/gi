@@ -6,10 +6,10 @@ package astutil
 
 import (
 	"bytes"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/format"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/format"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/token"
 	"reflect"
 	"strconv"
 	"testing"
@@ -926,7 +926,7 @@ import (
 	"os"
 	"utf8"
 
-	"github.com/gijit/gi/pkg/format"
+	"github.com/glycerine/gi/pkg/format"
 )
 `,
 		out: `package main
@@ -937,7 +937,7 @@ import (
 	"os"
 	"utf8"
 
-	"github.com/gijit/gi/pkg/format"
+	"github.com/glycerine/gi/pkg/format"
 )
 `,
 	},
@@ -953,7 +953,7 @@ import (
 	"os"   // c
 	"utf8" // d
 
-	"github.com/gijit/gi/pkg/format" // e
+	"github.com/glycerine/gi/pkg/format" // e
 )
 `,
 		out: `package main
@@ -965,7 +965,7 @@ import (
 	"os"   // c
 	"utf8" // d
 
-	"github.com/gijit/gi/pkg/format" // e
+	"github.com/glycerine/gi/pkg/format" // e
 )
 `,
 	},

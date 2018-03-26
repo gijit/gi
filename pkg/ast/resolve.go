@@ -9,8 +9,8 @@ package ast
 import (
 	"fmt"
 
-	"github.com/gijit/gi/pkg/scanner"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/scanner"
+	"github.com/glycerine/gi/pkg/token"
 	"strconv"
 )
 

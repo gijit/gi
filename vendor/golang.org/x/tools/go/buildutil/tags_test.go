@@ -2,7 +2,7 @@ package buildutil_test
 
 import (
 	"flag"
-	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/gostd/build"
 	"reflect"
 	"testing"
 

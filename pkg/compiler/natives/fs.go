@@ -3,13 +3,13 @@
 package natives
 
 import (
-	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/gostd/build"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 
-	//"github.com/gijit/gi/pkg/verb"
+	//"github.com/glycerine/gi/pkg/verb"
 	"github.com/shurcooL/httpfs/filter"
 )
 
@@ -23,7 +23,7 @@ func importPathToDir(importPath string) string {
 
 // FS is a virtual filesystem that contains native packages.
 var FS = filter.Keep(
-	http.Dir(importPathToDir("github.com/gijit/gi/pkg/compiler/natives")),
+	http.Dir(importPathToDir("github.com/glycerine/gi/pkg/compiler/natives")),
 	func(path string, fi os.FileInfo) bool {
 		if strings.HasSuffix(path, "~") {
 			//verb.VV("jea debug: native.FS rejecting path ending in ~tilde~: '%s'", path)

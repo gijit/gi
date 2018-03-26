@@ -3,7 +3,7 @@
 // tools with similar semantics.
 package gotool
 
-import "github.com/gijit/gi/pkg/gostd/build"
+import "github.com/glycerine/gi/pkg/gostd/build"
 
 // Export functions here to make it easier to keep the implementations up to date with upstream.
 

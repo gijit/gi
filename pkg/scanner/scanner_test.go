@@ -5,7 +5,7 @@
 package scanner
 
 import (
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"

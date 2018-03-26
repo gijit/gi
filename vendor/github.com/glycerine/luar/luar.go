@@ -10,7 +10,7 @@ import (
 	"runtime/debug"
 	"unsafe"
 
-	"github.com/gijit/gi/pkg/verb"
+	"github.com/glycerine/gi/pkg/verb"
 	"github.com/glycerine/golua/lua"
 )
 

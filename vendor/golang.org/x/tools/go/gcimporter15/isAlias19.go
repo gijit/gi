@@ -6,7 +6,7 @@
 
 package gcimporter
 
-import "github.com/gijit/gi/pkg/types"
+import "github.com/glycerine/gi/pkg/types"
 
 func isAlias(obj *types.TypeName) bool {
 	return obj.IsAlias()

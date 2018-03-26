@@ -5,7 +5,7 @@
 package constant
 
 import (
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"strings"
 	"testing"
 )

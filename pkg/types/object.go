@@ -7,9 +7,9 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/constant"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/constant"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 // An Object describes a named language entity such as a package,

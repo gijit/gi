@@ -7,8 +7,8 @@ package printer
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/token"
 	"io"
 	"os"
 	"strconv"
@@ -105,7 +105,7 @@ func (p *printer) internalError(msg ...interface{}) {
 	if debug {
 		fmt.Print(p.pos.String() + ": ")
 		fmt.Println(msg...)
-		panic("github.com/gijit/gi/pkg/printer")
+		panic("github.com/glycerine/gi/pkg/printer")
 	}
 }
 
@@ -969,7 +969,7 @@ func (p *printer) print(args ...interface{}) {
 
 		default:
 			fmt.Fprintf(os.Stderr, "print: unsupported argument %v (%T)\n", arg, arg)
-			panic("github.com/gijit/gi/pkg/printer type")
+			panic("github.com/glycerine/gi/pkg/printer type")
 		}
 		// data != ""
 
@@ -1152,7 +1152,7 @@ func (p *printer) printNode(node interface{}) error {
 	return nil
 
 unsupported:
-	return fmt.Errorf("github.com/gijit/gi/pkg/printer: unsupported node type %T", node)
+	return fmt.Errorf("github.com/glycerine/gi/pkg/printer: unsupported node type %T", node)
 }
 
 // ----------------------------------------------------------------------------

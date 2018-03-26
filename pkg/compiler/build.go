@@ -3,13 +3,13 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/gostd/build"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/printer"
-	"github.com/gijit/gi/pkg/scanner"
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/printer"
+	"github.com/glycerine/gi/pkg/scanner"
+	"github.com/glycerine/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/types"
 	"io"
 	"io/ioutil"
 	"os"
@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/gijit/gi/pkg/compiler/natives"
+	"github.com/glycerine/gi/pkg/compiler/natives"
 	"github.com/neelance/sourcemap"
 )
 
@@ -380,7 +380,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (f
 					if spec.Name == nil {
 						spec.Name = ast.NewIdent("sync")
 					}
-					spec.Path.Value = `"github.com/gijit/gi/pkg/nosync"`
+					spec.Path.Value = `"github.com/glycerine/gi/pkg/nosync"`
 				}
 			}
 		}

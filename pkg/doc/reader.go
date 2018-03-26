@@ -5,8 +5,8 @@
 package doc
 
 import (
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/token"
 	"regexp"
 	"sort"
 	"strconv"

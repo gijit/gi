@@ -6,7 +6,7 @@ package types
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 // A Package describes a Go package.

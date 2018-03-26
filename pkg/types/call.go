@@ -7,8 +7,8 @@
 package types
 
 import (
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 func (check *Checker) call(x *operand, e *ast.CallExpr) exprKind {

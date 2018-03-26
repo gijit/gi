@@ -9,9 +9,9 @@ package ast_test
 import (
 	"bytes"
 	"fmt"
-	. "github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/token"
+	. "github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/token"
 	"sort"
 	"testing"
 )
@@ -26,8 +26,8 @@ package p /* the name is p */
 import (
 	"bytes"     // bytes
 	"fmt"       // fmt
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/parser"
 )
 
 // T

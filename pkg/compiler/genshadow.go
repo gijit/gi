@@ -6,8 +6,8 @@ import (
 
 	"path/filepath"
 
-	"github.com/gijit/gi/pkg/importer"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/importer"
+	"github.com/glycerine/gi/pkg/types"
 )
 
 //

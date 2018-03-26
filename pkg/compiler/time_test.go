@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	"testing"
 
-	//"github.com/gijit/gi/pkg/verb"
+	//"github.com/glycerine/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 

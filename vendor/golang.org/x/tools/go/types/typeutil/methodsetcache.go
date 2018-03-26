@@ -7,7 +7,7 @@
 package typeutil
 
 import (
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/types"
 	"sync"
 )
 

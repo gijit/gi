@@ -4,18 +4,18 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/constant"
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/constant"
+	"github.com/glycerine/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/types"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"sync/atomic"
 
-	"github.com/gijit/gi/pkg/compiler/analysis"
-	"github.com/gijit/gi/pkg/compiler/typesutil"
+	"github.com/glycerine/gi/pkg/compiler/analysis"
+	"github.com/glycerine/gi/pkg/compiler/typesutil"
 )
 
 func (c *funcContext) Write(b []byte) (int, error) {

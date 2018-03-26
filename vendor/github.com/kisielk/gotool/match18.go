@@ -32,7 +32,7 @@ package gotool
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/gostd/build"
 	"log"
 	"os"
 	"path"

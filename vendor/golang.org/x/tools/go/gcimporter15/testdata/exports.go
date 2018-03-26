@@ -8,7 +8,7 @@
 package exports
 
 import (
-	"github.com/gijit/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/ast"
 )
 
 // Issue 3682: Correctly read dotted identifiers from export data.

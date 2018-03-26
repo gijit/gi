@@ -1,11 +1,11 @@
 package filter
 
 import (
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/types"
 
-	"github.com/gijit/gi/pkg/compiler/astutil"
+	"github.com/glycerine/gi/pkg/compiler/astutil"
 )
 
 func Assign(stmt ast.Stmt, info *types.Info, pkg *types.Package) ast.Stmt {

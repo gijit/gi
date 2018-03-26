@@ -5,7 +5,7 @@ package atomic
 import (
 	"unsafe"
 
-	js "github.com/gijit/gi/pkg/luaapi"
+	js "github.com/glycerine/gi/pkg/luaapi"
 )
 
 func SwapInt32(addr *int32, new int32) int32 {

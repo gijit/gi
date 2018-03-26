@@ -6,7 +6,7 @@ package gccgoimporter
 
 import (
 	"bytes"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/types"
 	"strings"
 	"testing"
 	"text/scanner"

@@ -7,10 +7,10 @@ package ast_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/format"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/format"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 // This example demonstrates how to inspect the AST of a Go program.
