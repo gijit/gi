@@ -155,7 +155,7 @@ func Test061CallFmtSummerWithDots(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-  	__type__.anon_sliceType = __sliceType(__type__.int); -- 'IMMEDIATE' anon type printing.
+  	__type__.anon_sliceType = __sliceType(__type__.int); -- IMMEDIATE anon type printing.
   	b = __type__.anon_sliceType({[0]=8LL, 9LL});
   	a = gitesting.SummerAny(__lazy_ellipsis(b));
 `)
@@ -183,7 +183,7 @@ func Test062SprintfOneSlice(t *testing.T) {
 		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		cv.So(string(translation), matchesLuaSrc, `
-__type__.anon_sliceType = __sliceType(__type__.int); -- 'IMMEDIATE' anon type printing.
+__type__.anon_sliceType = __sliceType(__type__.int); -- IMMEDIATE anon type printing.
 
   	a = fmt.Sprintf("yip %#v eee\n", __type__.anon_sliceType({[0]=4LL, 5LL, 6LL}));`)
 		LoadAndRunTestHelper(t, vm, translation)
