@@ -773,7 +773,7 @@ func TestFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := check.Files([]*ast.File{f}); err != nil {
+		if err := check.Files([]*ast.File{f}, 0); err != nil {
 			t.Error(err)
 		}
 	}

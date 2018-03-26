@@ -255,6 +255,9 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 
 	default:
 		// try a source import.
+		vv("should we source import? depth=%v", depth)
+		vv("stack ='%s'\n", stack())
+
 		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
 		if err == nil {
 			if archive == nil {

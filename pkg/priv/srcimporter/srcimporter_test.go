@@ -114,7 +114,7 @@ func TestImportedTypes(t *testing.T) {
 		importPath := s[0]
 		objName := s[1]
 
-		pkg, err := importer.ImportFrom(importPath, ".", 0)
+		pkg, err := importer.ImportFrom(importPath, ".", 0, 0)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -143,7 +143,7 @@ func TestReimport(t *testing.T) {
 
 	mathPkg := types.NewPackage("math", "math") // incomplete package
 	importer := New(&build.Default, token.NewFileSet(), map[string]*types.Package{mathPkg.Path(): mathPkg})
-	_, err := importer.ImportFrom("math", ".", 0)
+	_, err := importer.ImportFrom("math", ".", 0, 0)
 	if err == nil || !strings.HasPrefix(err.Error(), "reimport") {
 		t.Errorf("got %v; want reimport error", err)
 	}
@@ -154,7 +154,7 @@ func TestIssue20855(t *testing.T) {
 		t.Skip("no source code available")
 	}
 
-	pkg, err := importer.ImportFrom("github.com/glycerine/gi/pkg/internal/srcimporter/testdata/issue20855", ".", 0)
+	pkg, err := importer.ImportFrom("github.com/glycerine/gi/pkg/internal/srcimporter/testdata/issue20855", ".", 0, 0)
 	if err == nil || !strings.Contains(err.Error(), "missing function body") {
 		t.Fatalf("got unexpected or no error: %v", err)
 	}
