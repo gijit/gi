@@ -118,9 +118,9 @@ func (pi packageImporter) Import(path string, depth int) (*types.Package, error)
 	}
 
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
-	vv("path='%s', pi.importContext.Import='%#v'", path, pi.importContext.Import)
+	pp("path='%s', pi.importContext.Import='%#v'", path, pi.importContext.Import)
 	a, err := pi.importContext.Import(path, "", depth+1)
-	vv("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
+	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
 		if *pi.importError == nil {
 			// If import failed, show first error of import only (https://github.com/gopherjs/gopherjs/issues/119).
@@ -133,7 +133,7 @@ func (pi packageImporter) Import(path string, depth int) (*types.Package, error)
 	pi.importContext.Packages[a.ImportPath] = tyPack
 
 	// jea: import "fmt" gives not nil tyPack.
-	vv("end of compiler.packageImporter.Import(path='%s'), tyPack is '%#v'.", path, tyPack)
+	pp("end of compiler.packageImporter.Import(path='%s'), tyPack is '%#v'.", path, tyPack)
 	return tyPack, nil
 }
 
