@@ -44,11 +44,11 @@ func (check *Checker) declareFullPackage(scope *Scope, id *ast.Ident, obj Object
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
 	pp("declare called for obj.Name()='%s', id='%#v', scope='%#v'", obj.Name(), id, scope)
 
-	if check.conf.FullPackage {
-		check.declareFullPackage(scope, id, obj, pos)
-		return
-	}
-
+	/*	if check.conf.FullPackage {
+			check.declareFullPackage(scope, id, obj, pos)
+			return
+		}
+	*/
 	// spec: "The blank identifier, represented by the underscore
 	// character _, may be used in a declaration like any other
 	// identifier but the declaration does not introduce a new

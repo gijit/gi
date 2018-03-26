@@ -309,7 +309,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Printf("break%s;", normalLabel)
 			//c.PrintCond(data.endCase == 0, fmt.Sprintf("break%s;", normalLabel), fmt.Sprintf("__s = %d; continue%s;", data.endCase, blockingLabel))
 		case token.CONTINUE:
-			vv("data.postStmt = '%#v'", data.postStmt)
+			//pp("data.postStmt = '%#v'", data.postStmt)
 			if data.postStmt != nil {
 				data.postStmt()
 			}
