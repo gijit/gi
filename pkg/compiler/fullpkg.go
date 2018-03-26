@@ -420,12 +420,12 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					if t.NumFields() == 0 {
 						constructor = fmt.Sprintf("function(self) return self; end")
 					} else {
-						constructor = fmt.Sprintf("function(self, ...)\n\t\t if self == nil then self = {}; end\n")
-						constructor += fmt.Sprintf("\t\t\t local %s = ... ;\n", strings.Join(params, ", "))
+						constructor = fmt.Sprintf("function(self, ...) if self == nil then self = {}; end; ")
+						constructor += fmt.Sprintf("local %s = ... ; ", strings.Join(params, ", "))
 						for i := 0; i < t.NumFields(); i++ {
-							constructor += fmt.Sprintf("\t\t\t self.%[1]s = %[1]s_ or %[2]s;\n", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
+							constructor += fmt.Sprintf(" self.%[1]s = %[1]s_ or %[2]s; ", fieldName(t, i), c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String())
 						}
-						constructor += "\t\t return self; \n\t end\n" // jea: can't have a semicolon aftre 'end;' will mess up LuaJIT's parse.
+						constructor += " return self; end " // jea: can't have a semicolon aftre 'end;' will mess up LuaJIT's parse.
 						//constructor += fmt.Sprintf("\n\t %s.__constructor = %s;\n", typeName, constructor)
 					}
 				case *types.Basic, *types.Array, *types.Slice, *types.Chan, *types.Signature, *types.Interface, *types.Pointer, *types.Map:
