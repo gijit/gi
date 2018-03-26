@@ -185,7 +185,7 @@ if __preludePath == nil then
       origin = "__preludePath set from GIJIT_PRELUDE_DIR"
       __preludePath = dir .. "/"
    else
-      local defaultPreludePath = "/src/github.com/gijit/gi/pkg/compiler/prelude"
+      local defaultPreludePath = "/src/github.com/glycerine/gi/pkg/compiler/prelude"
       local gopath = os.getenv("GOPATH")
       if gopath ~= nil then
          origin = "__preludePath set from GOPATH"
