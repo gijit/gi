@@ -133,7 +133,7 @@ func (check *Checker) filename(fileNo int) string {
 	return fmt.Sprintf("file[%d]", fileNo)
 }
 
-func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
+func (check *Checker) importPackage(pos token.Pos, path, dir string, depth int) *Package {
 	// If we already have a package for the given (path, dir)
 	// pair, use it instead of doing a full import.
 	// Checker.impMap only caches packages that are marked Complete
@@ -157,15 +157,15 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 		if importer := check.conf.Importer; importer == nil {
 			err = fmt.Errorf("Config.Importer not installed")
 		} else if importerFrom, ok := importer.(ImporterFrom); ok {
-			imp, err = importerFrom.ImportFrom(path, dir, 0)
+			imp, err = importerFrom.ImportFrom(path, dir, 0, depth)
 			if imp == nil && err == nil {
 				err = fmt.Errorf("Config.Importer.ImportFrom(%s, %s, 0) returned nil but no error", path, dir)
 			}
 		} else {
 			// jea: our import "fmt" is calling here.
-			pp("jea debug: types/resolver.go:164, about to call importer.Import(path='%s')", path)
-			imp, err = importer.Import(path)
-			pp("jea debug: types/resolver.go:166, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
+			vv("jea debug: types/resolver.go:164, about to call importer.Import(path='%s')", path)
+			imp, err = importer.Import(path, depth+1)
+			vv("jea debug: types/resolver.go:166, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
 			if imp == nil && err == nil {
 				fmt.Printf("\n jea debug: imp was nil!?! err was nil\n")
 				err = fmt.Errorf("Config.Importer.Import(%s) returned nil but no error", path)
@@ -212,7 +212,7 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 // collectObjects collects all file and package objects and inserts them
 // into their respective scopes. It also performs imports and associates
 // methods with receiver base type names.
-func (check *Checker) collectObjects() {
+func (check *Checker) collectObjects(depth int) {
 	//pp("collectObjects top")
 	pkg := check.pkg
 
@@ -297,7 +297,7 @@ func (check *Checker) collectObjects() {
 							continue
 						}
 
-						imp := check.importPackage(s.Path.Pos(), path, fileDir)
+						imp := check.importPackage(s.Path.Pos(), path, fileDir, depth+1)
 						if imp == nil {
 							pp("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
 							continue

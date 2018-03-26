@@ -137,10 +137,10 @@ func openExportFile(fpath string) (reader io.ReadSeeker, closer io.Closer, err e
 // the map entry. Otherwise, the importer must load the package data for the
 // given path into a new *Package, record it in imports map, and return the
 // package.
-type Importer func(imports map[string]*types.Package, path, srcDir string, lookup func(string) (io.ReadCloser, error)) (*types.Package, error)
+type Importer func(imports map[string]*types.Package, path, srcDir string, lookup func(string) (io.ReadCloser, error), depth int) (*types.Package, error)
 
 func GetImporter(searchpaths []string, initmap map[*types.Package]InitData) Importer {
-	return func(imports map[string]*types.Package, pkgpath, srcDir string, lookup func(string) (io.ReadCloser, error)) (pkg *types.Package, err error) {
+	return func(imports map[string]*types.Package, pkgpath, srcDir string, lookup func(string) (io.ReadCloser, error), depth int) (pkg *types.Package, err error) {
 		// TODO(gri): Use srcDir.
 		// Or not. It's possible that srcDir will fade in importance as
 		// the go command and other tools provide a translation table

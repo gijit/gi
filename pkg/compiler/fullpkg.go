@@ -25,7 +25,7 @@ import (
 // see the incr.go:34 IncrementallyCompile() function.
 //
 func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (arch *Archive, err error) {
-	pp("FullPackageCompile() top. importPath='%s'", importPath)
+	vv("FullPackageCompile() top. importPath='%s'", importPath)
 	defer func() {
 		if arch != nil {
 			pp("end of FullPackageCompile, returning arch='%#v'\n and arch.Pkg='%#v', err='%v'", arch, arch.Pkg, err)
@@ -53,8 +53,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	var errList ErrorList
 	var previousErr error
 	config := &types.Config{
-		FullPackage:              true,
-		DisableUnusedImportCheck: false, // jea, differs from incremental check.
+		FullPackage:                   true,
+		AllowOverShadowedNakedReturns: true,  // jea add
+		DisableUnusedImportCheck:      false, // jea, differs from incremental check.
+		AllowUnusedVar:                true,
 		Importer: packageImporter{
 			importContext: importContext,
 			importError:   &importError,
@@ -70,13 +72,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		},
 	}
 
-	pp("config.Check on importPath='%s'\n", importPath)
+	vv("config.Check on importPath='%s'\n", importPath)
+	vv("stack ='%s'\n", stack())
 	prelude := addPreludeToNewPkg
 	if importPath != "main" {
 		prelude = nil
 	}
 	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude)
-	pp("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
+	vv("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
 	if importError != nil {
 		return nil, importError
 	}
@@ -95,10 +98,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 	importContext.Packages[importPath] = typesPkg
 
-	pp("about to call gcimporter.BExportData, with typesPkg='%#v'", typesPkg)
+	vv("about to call gcimporter.BExportData, with typesPkg='%#v'", typesPkg)
 	exportData := gcimporter.BExportData(nil, typesPkg)
 
-	pp("back from gcimporter.BExportData")
+	vv("back from gcimporter.BExportData")
 	encodedFileSet := bytes.NewBuffer(nil)
 	if err := fileSet.Write(json.NewEncoder(encodedFileSet).Encode); err != nil {
 		pp("got err back from fileSet.Write: err='%v'", err)
@@ -108,6 +111,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 
 	simplifiedFiles := make([]*ast.File, len(files))
 	for i, file := range files {
+		vv("simplifying file from pkg '%s' by calling astrewrite", file.Name.Name)
 		simplifiedFiles[i] = astrewrite.Simplify(file, typesInfo, false)
 	}
 
@@ -115,7 +119,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return false
 
 		// jea: avoid this, it imports shadow/math/rand by full path
-		archive, err := importContext.Import(f.Pkg().Path(), "")
+		archive, err := importContext.Import(f.Pkg().Path(), "", 0)
 		if err != nil {
 			panic(err)
 		}
@@ -127,7 +131,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		}
 		panic(fullName)
 	}
+	vv("about to call AnalyzePkg, on importPath='%s'", importPath)
 	pkgInfo := analysis.AnalyzePkg(simplifiedFiles, fileSet, typesInfo, typesPkg, isBlocking)
+	vv("back from AnalyzePkg on importPath='%s', pkgInfo = '%p'", importPath, pkgInfo)
 	c := &funcContext{
 		FuncInfo: pkgInfo.InitFuncInfo,
 		p: &pkgContext{

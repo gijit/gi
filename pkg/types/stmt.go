@@ -54,7 +54,9 @@ func (check *Checker) funcBody(decl *DeclInfo, name string, sig *Signature, body
 	// declare a variable inside a function body if the variable is never used."
 	// (One could check each scope after use, but that distributes this check
 	// over several places because CloseScope is not always called explicitly.)
-	check.usage(sig.scope)
+	if !check.conf.AllowUnusedVar {
+		check.usage(sig.scope)
+	}
 }
 
 func (check *Checker) usage(scope *Scope) {
@@ -450,9 +452,11 @@ func (check *Checker) stmt(ctxt stmtContext, s ast.Stmt) {
 				// with the same name as a result parameter is in scope at the place of the return."
 				for _, obj := range res.vars {
 					if _, alt := check.scope.LookupParent(obj.name, check.pos); alt != nil && alt != obj {
-						check.errorf(s.Pos(), "result parameter %s not in scope at return", obj.name)
-						check.errorf(alt.Pos(), "\tinner declaration of %s", obj)
-						// ok to continue
+						if !check.conf.AllowOverShadowedNakedReturns {
+							check.errorf(s.Pos(), "result parameter %s not in scope at return", obj.name)
+							check.errorf(alt.Pos(), "\tinner declaration of %s", obj)
+							// ok to continue
+						}
 					}
 				}
 			} else {

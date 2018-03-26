@@ -26,7 +26,8 @@ func GenShadowImport(importPath, dirForVendor, residentPkg, outDir string) error
 	}
 	var mode types.ImportMode
 	var err error
-	pkg, err = imp2.ImportFrom(importPath, dirForVendor, mode)
+	depth := 0
+	pkg, err = imp2.ImportFrom(importPath, dirForVendor, mode, depth)
 
 	if err != nil {
 		return err

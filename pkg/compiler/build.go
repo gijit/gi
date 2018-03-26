@@ -91,7 +91,7 @@ func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
 //
 // If an error occurs, Import returns a non-nil error and a nil
 // *PackageData.
-func (s *Session) Import(path string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
+func (s *Session) Import(path string, mode build.ImportMode, installSuffix string, buildTags []string, depth int) (*PackageData, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		// Getwd may fail if we're in GOARCH=js mode. That's okay, handle
@@ -99,10 +99,10 @@ func (s *Session) Import(path string, mode build.ImportMode, installSuffix strin
 		// Import will not be able to resolve relative import paths.
 		wd = ""
 	}
-	return s.importWithSrcDir(path, wd, mode, installSuffix, buildTags)
+	return s.importWithSrcDir(path, wd, mode, installSuffix, buildTags, depth)
 }
 
-func (s *Session) importWithSrcDir(path string, srcDir string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
+func (s *Session) importWithSrcDir(path string, srcDir string, mode build.ImportMode, installSuffix string, buildTags []string, depth int) (*PackageData, error) {
 	bctx := NewBuildContext(installSuffix, buildTags)
 	switch path {
 	case "syscall":
@@ -509,7 +509,7 @@ func (s *Session) InstallSuffix() string {
 	return ""
 }
 
-func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string, isMain bool) (out []byte, err error) {
+func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string, isMain bool, depth int) (out []byte, err error) {
 
 	buildPkg, err := NewBuildContext(s.InstallSuffix(), s.options.BuildTags).ImportDir(packagePath, 0)
 	if err != nil {
@@ -521,7 +521,7 @@ func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string,
 		return nil, err
 	}
 	pkg.JSFiles = jsFiles
-	archive, err := s.BuildPackage(pkg)
+	archive, err := s.BuildPackage(pkg, depth)
 	if err != nil {
 		return nil, err
 	}
@@ -540,7 +540,7 @@ func (s *Session) BuildDir(packagePath string, importPath string, pkgObj string,
 // filenames is the set of .go source files to compile,
 // pkgObj is the output file path,
 // packagePath is the current directory.
-func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath string) (out []byte, err error) {
+func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath string, depth int) (out []byte, err error) {
 	pkg := &PackageData{
 		Package: &build.Package{
 			Name:       "main",
@@ -557,7 +557,7 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 		pkg.GoFiles = append(pkg.GoFiles, file)
 	}
 
-	archive, err := s.BuildPackage(pkg)
+	archive, err := s.BuildPackage(pkg, depth)
 	if err != nil {
 		return nil, err
 	}
@@ -569,21 +569,21 @@ func (s *Session) BuildFiles(filenames []string, pkgObj string, packagePath stri
 	return
 }
 
-func (s *Session) BuildImportPath(path string) (*Archive, error) {
-	_, archive, err := s.BuildImportPathWithSrcDir(path, "")
+func (s *Session) BuildImportPath(path string, depth int) (*Archive, error) {
+	_, archive, err := s.BuildImportPathWithSrcDir(path, "", depth)
 	return archive, err
 }
 
-func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*PackageData, *Archive, error) {
-	pp("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'", path, srcDir)
+func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string, depth int) (*PackageData, *Archive, error) {
+	vv("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'", path, srcDir)
 
-	pkg, err := s.importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags)
+	pkg, err := s.importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags, depth)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	archive, err := s.BuildPackage(pkg)
+	archive, err := s.BuildPackage(pkg, depth)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -591,7 +591,7 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*Packag
 	return pkg, archive, nil
 }
 
-func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
+func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 
 	if s.AllowImportCaching {
 		pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
@@ -636,7 +636,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 				continue
 			}
 			// recursively pickup binaries instead of source packages.
-			archive, err := s.ic.GiImportFunc(importedPkgPath, pkg.Dir)
+			archive, err := s.ic.GiImportFunc(importedPkgPath, pkg.Dir, depth)
 			_ = archive
 			if err != nil {
 				return nil, err
@@ -702,11 +702,14 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	localImportPathCache := make(map[string]*Archive)
 	importContext := &ImportContext{
 		Packages: s.Types,
-		Import: func(path, pkgDir string) (*Archive, error) {
+		Import: func(path, pkgDir string, depth int) (*Archive, error) {
+			vv("callback to Import() in ImportContext: path='%s', pkgDir='%s'", path, pkgDir)
+			//if s.AllowImportCaching? TODO figure out balance between speed and editability.
 			if archive, ok := localImportPathCache[path]; ok {
-				pp("\n\n using cached archive from localImportPathCache... archive.Pkg='%#v'\n", archive.Pkg)
+				vv("\n\n using cached archive from localImportPathCache... archive.Pkg='%#v'\n", archive.Pkg)
 				return archive, nil
 			}
+
 			/* infinite loop of importing ourselves:
 
 			// binary import
@@ -720,7 +723,7 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 
 			*/
 			// source import
-			_, archive, err := s.BuildImportPathWithSrcDir(path, pkgDir)
+			_, archive, err := s.BuildImportPathWithSrcDir(path, pkgDir, depth)
 
 			if err != nil {
 				return nil, err
@@ -825,13 +828,13 @@ func (s *Session) WriteCommandPackage(archive *Archive, pkgObj string, isMain bo
 		sourceMapFilter.MappingCallback = NewMappingCallback(m, s.options.GOROOT, s.options.GOPATH, s.options.MapToLocalDisk)
 	}
 
-	deps, err := ImportDependencies(archive, func(path string) (*Archive, error) {
+	deps, err := ImportDependencies(archive, func(path string, depth int) (*Archive, error) {
 		if archive, ok := s.Archives[path]; ok {
 			return archive, nil
 		}
-		_, archive, err := s.BuildImportPathWithSrcDir(path, "")
+		_, archive, err := s.BuildImportPathWithSrcDir(path, "", depth)
 		return archive, err
-	})
+	}, 0)
 	if err != nil {
 		return nil, err
 	}

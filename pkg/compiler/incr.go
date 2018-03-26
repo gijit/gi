@@ -78,7 +78,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 		config = a.Config
 	} else {
 		config = &types.Config{
-			DisableUnusedImportCheck: true, // jea add
+			AllowOverShadowedNakedReturns: true, // jea add
+			DisableUnusedImportCheck:      true, // jea add
+			AllowUnusedVar:                true, // jea add
 			Importer: packageImporter{
 				importContext: importContext,
 				importError:   &importError,
@@ -157,7 +159,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			return false
 		}
 
-		archive, err := importContext.Import(f.Pkg().Path(), "")
+		archive, err := importContext.Import(f.Pkg().Path(), "", 0)
 		if err != nil {
 			panic(err)
 		}

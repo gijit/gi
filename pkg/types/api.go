@@ -61,7 +61,7 @@ type Importer interface {
 	// Import returns the imported package for the given import path.
 	// The semantics is like for ImporterFrom.ImportFrom except that
 	// dir and mode are ignored (since they are not present).
-	Import(path string) (*Package, error)
+	Import(path string, depth int) (*Package, error)
 }
 
 // ImportMode is reserved for future use.
@@ -72,7 +72,7 @@ type ImportMode int
 // Use go/importer to obtain an ImporterFrom implementation.
 type ImporterFrom interface {
 	// Importer is present for backward-compatibility. Calling
-	// Import(path) is the same as calling ImportFrom(path, "", 0);
+	// Import(path, depth) is the same as calling ImportFrom(path, "", 0, depth);
 	// i.e., locally vendored packages may not be found.
 	// The types package does not call Import if an ImporterFrom
 	// is present.
@@ -87,7 +87,7 @@ type ImporterFrom interface {
 	// The mode value must be 0; it is reserved for future use.
 	// Two calls to ImportFrom with the same path and dir must
 	// return the same package.
-	ImportFrom(path, dir string, mode ImportMode) (*Package, error)
+	ImportFrom(path, dir string, mode ImportMode, depth int) (*Package, error)
 }
 
 // A Config specifies the configuration for type checking.
@@ -142,6 +142,23 @@ type Config struct {
 	// traditional whole-package type checking paths rather than
 	// the incremental ones.
 	FullPackage bool
+
+	// AllowOverShadowedNakedReturns allows the stdlib strconv
+	// to compile without getting
+	// /usr/local/go/src/strconv/extfloat.go:372:2: result parameter exp10 not in scope at return
+	// in frexp10Many()
+	/*
+		// frexp10Many applies a common shift by a power of ten to a, b, c.
+		func frexp10Many(a, b, c *extFloat) (exp10 int) {
+			exp10, i := c.frexp10()
+			a.Multiply(powersOfTen[i])
+			b.Multiply(powersOfTen[i])
+			return
+		}
+	*/
+	AllowOverShadowedNakedReturns bool
+
+	AllowUnusedVar bool
 }
 
 // Info holds result type information for a type-checked package.
@@ -395,7 +412,8 @@ func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token
 		check = NewChecker(conf, fset, pkg, info)
 	}
 
-	return pkg, check, check.Files(files)
+	depth := 0
+	return pkg, check, check.Files(files, depth)
 }
 
 // AssertableTo reports whether a value of type V can be asserted to have type T.

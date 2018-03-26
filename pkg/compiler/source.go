@@ -10,7 +10,7 @@ import (
 
 var _ = fmt.Printf
 
-func (ic *IncrState) ImportSourcePackage(path, pkgDir string) (res *Archive, err error) {
+func (ic *IncrState) ImportSourcePackage(path, pkgDir string, depth int) (res *Archive, err error) {
 	pp("IncrState.ImportSourcePackage() top. path='%s', pkgDir='%s'", path, pkgDir)
 
 	if ic.AllowImportCaching {
@@ -21,7 +21,7 @@ func (ic *IncrState) ImportSourcePackage(path, pkgDir string) (res *Archive, err
 		}
 	}
 	ic.CurPkg.Session.ic = ic
-	_, archive, err := ic.CurPkg.Session.BuildImportPathWithSrcDir(path, pkgDir)
+	_, archive, err := ic.CurPkg.Session.BuildImportPathWithSrcDir(path, pkgDir, depth)
 	if err != nil {
 		return nil, err
 	}
