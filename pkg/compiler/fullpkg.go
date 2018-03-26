@@ -73,6 +73,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		prelude = nil
 	}
 	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude)
+	vv("back from config.Check on importPath='%s', err='%v'\n", importPath, err)
 	if importError != nil {
 		return nil, importError
 	}
@@ -91,11 +92,16 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 	importContext.Packages[importPath] = typesPkg
 
+	vv("about to call gcimporter.BExportData, with typesPkg='%#v'", typesPkg)
 	exportData := gcimporter.BExportData(nil, typesPkg)
+
+	vv("back from gcimporter.BExportData")
 	encodedFileSet := bytes.NewBuffer(nil)
 	if err := fileSet.Write(json.NewEncoder(encodedFileSet).Encode); err != nil {
+		vv("got err back from fileSet.Write: err='%v'", err)
 		return nil, err
 	}
+	vv("fileSet.Write gave nil err='%v'", err)
 
 	simplifiedFiles := make([]*ast.File, len(files))
 	for i, file := range files {

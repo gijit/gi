@@ -248,9 +248,9 @@ func (check *Checker) checkFiles(files []*ast.File) (err error) {
 	defer check.handleBailout(&err)
 
 	check.initFiles(files)
-	//pp("past check.initFiles")
+	vv("past check.initFiles")
 	check.collectObjects()
-	//pp("past check.collectObjects")
+	vv("past check.collectObjects")
 
 	check.packageObjects(check.resolveOrder())
 	pp("past check.packageObjects")

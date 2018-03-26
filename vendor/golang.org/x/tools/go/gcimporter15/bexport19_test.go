@@ -68,7 +68,7 @@ func TestTypeAliases(t *testing.T) {
 		t.Fatal(err)
 	}
 	var conf types.Config
-	pkg1, err := conf.Check("p", fset1, []*ast.File{f}, nil)
+	pkg1, _, err := conf.Check(nil, nil, "p", fset1, []*ast.File{f}, nil, nil)
 	if err == nil {
 		// foo in undeclared in src; we should see an error
 		t.Fatal("invalid source type-checked without error")

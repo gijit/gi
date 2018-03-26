@@ -16,12 +16,14 @@ import (
 	"github.com/gijit/gi/pkg/constant"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
-	"log"
+	"github.com/gijit/gi/pkg/verb"
 	"math"
 	"math/big"
 	"sort"
 	"strings"
 )
+
+var vv = verb.VV
 
 // If debugFormat is set, each integer and string value is preceded by a marker
 // and position information in the encoding. This mechanism permits an importer
@@ -107,7 +109,7 @@ func BExportData(fset *token.FileSet, pkg *types.Package) []byte {
 		p.typIndex[typ] = index
 	}
 	if len(p.typIndex) != len(predeclared) {
-		log.Fatalf("gcimporter: duplicate entries in type map?")
+		panic(fmt.Sprintf("gcimporter: duplicate entries in type map?"))
 	}
 
 	// write package data
@@ -150,7 +152,7 @@ func BExportData(fset *token.FileSet, pkg *types.Package) []byte {
 
 func (p *exporter) pkg(pkg *types.Package, emptypath bool) {
 	if pkg == nil {
-		log.Fatalf("gcimporter: unexpected nil pkg")
+		panic(fmt.Sprintf("gcimporter: unexpected nil pkg"))
 	}
 
 	// if we saw the package before, write its index (>= 0)
@@ -176,6 +178,7 @@ func (p *exporter) pkg(pkg *types.Package, emptypath bool) {
 }
 
 func (p *exporter) obj(obj types.Object) {
+	vv("obj = '%#v'", obj)
 	switch obj := obj.(type) {
 	case *types.Const:
 		p.tag(constTag)
@@ -185,6 +188,8 @@ func (p *exporter) obj(obj types.Object) {
 		p.value(obj.Val())
 
 	case *types.TypeName:
+		vv("*types.TypeName: obj = '%#v'", obj)
+
 		if isAlias(obj) {
 			p.tag(aliasTag)
 			p.pos(obj)
@@ -209,7 +214,7 @@ func (p *exporter) obj(obj types.Object) {
 		p.paramList(sig.Results(), false)
 
 	default:
-		log.Fatalf("gcimporter: unexpected object %v (%T)", obj, obj)
+		panic(fmt.Sprintf("gcimporter: unexpected object %v (%T)", obj, obj))
 	}
 }
 
@@ -273,7 +278,7 @@ func (p *exporter) qualifiedName(obj types.Object) {
 
 func (p *exporter) typ(t types.Type) {
 	if t == nil {
-		log.Fatalf("gcimporter: nil type")
+		panic(fmt.Sprintf("gcimporter: nil type"))
 	}
 
 	// Possible optimization: Anonymous pointer types *T where
@@ -356,7 +361,7 @@ func (p *exporter) typ(t types.Type) {
 		p.typ(t.Elem())
 
 	default:
-		log.Fatalf("gcimporter: unexpected type %T: %s", t, t)
+		panic(fmt.Sprintf("gcimporter: unexpected type %T: %s", t, t))
 	}
 }
 
@@ -422,7 +427,7 @@ func (p *exporter) fieldList(t *types.Struct) {
 
 func (p *exporter) field(f *types.Var) {
 	if !f.IsField() {
-		log.Fatalf("gcimporter: field expected")
+		panic(fmt.Sprintf("gcimporter: field expected"))
 	}
 
 	p.pos(f)
@@ -452,7 +457,7 @@ func (p *exporter) iface(t *types.Interface) {
 func (p *exporter) method(m *types.Func) {
 	sig := m.Type().(*types.Signature)
 	if sig.Recv() == nil {
-		log.Fatalf("gcimporter: method expected")
+		panic(fmt.Sprintf("gcimporter: method expected"))
 	}
 
 	p.pos(m)
@@ -575,13 +580,13 @@ func (p *exporter) value(x constant.Value) {
 		p.tag(unknownTag)
 
 	default:
-		log.Fatalf("gcimporter: unexpected value %v (%T)", x, x)
+		panic(fmt.Sprintf("gcimporter: unexpected value %v (%T)", x, x))
 	}
 }
 
 func (p *exporter) float(x constant.Value) {
 	if x.Kind() != constant.Float {
-		log.Fatalf("gcimporter: unexpected constant %v, want float", x)
+		panic(fmt.Sprintf("gcimporter: unexpected constant %v, want float", x))
 	}
 	// extract sign (there is no -0)
 	sign := constant.Sign(x)
@@ -616,7 +621,7 @@ func (p *exporter) float(x constant.Value) {
 	m.SetMantExp(&m, int(m.MinPrec()))
 	mant, acc := m.Int(nil)
 	if acc != big.Exact {
-		log.Fatalf("gcimporter: internal error")
+		panic(fmt.Sprintf("gcimporter: internal error"))
 	}
 
 	p.int(sign)
@@ -653,7 +658,7 @@ func (p *exporter) bool(b bool) bool {
 
 func (p *exporter) index(marker byte, index int) {
 	if index < 0 {
-		log.Fatalf("gcimporter: invalid index < 0")
+		panic(fmt.Sprintf("gcimporter: invalid index < 0"))
 	}
 	if debugFormat {
 		p.marker('t')
@@ -666,7 +671,7 @@ func (p *exporter) index(marker byte, index int) {
 
 func (p *exporter) tag(tag int) {
 	if tag >= 0 {
-		log.Fatalf("gcimporter: invalid tag >= 0")
+		panic(fmt.Sprintf("gcimporter: invalid tag >= 0"))
 	}
 	if debugFormat {
 		p.marker('t')
