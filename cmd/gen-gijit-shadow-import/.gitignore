@@ -1,3 +1,4 @@
 *~
 gen-gijit-shadow-import
 *.genimp.go
+shadow
