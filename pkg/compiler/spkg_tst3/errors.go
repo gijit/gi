@@ -1,6 +1,14 @@
+// Copyright 2010 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package spkg_tst3
 
-// under /usr/local/go/src/runtime2debug, this sufficed
-// to bring down the type checker.
+type ErrorW interface {
+}
 
-type Error interface{}
+type S struct {
+}
+
+// fails
+func (e *S) ErrorW() {}
