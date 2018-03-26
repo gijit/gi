@@ -116,12 +116,12 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	vv("GiImportFunc called with path = '%s'...", path)
+	pp("GiImportFunc called with path = '%s'...", path)
 
 	// check cache first
 	arch, ok := ic.Session.Archives[path]
 	if ok {
-		vv("ic.GiImportFunc cache hit for path '%s'", path)
+		pp("ic.GiImportFunc cache hit for path '%s'", path)
 		return arch, nil
 	}
 
@@ -178,7 +178,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		t0.run = append(t0.run, shadow_errors.InitLua()...)
 
 	case "fmt":
-		vv("GiImportFunc sees 'fmt', known and shadowed.")
+		pp("GiImportFunc sees 'fmt', known and shadowed.")
 		t0.regmap["fmt"] = shadow_fmt.Pkg
 		t0.regmap["__ctor__fmt"] = shadow_fmt.Ctor
 		t0.run = append(t0.run, shadow_fmt.InitLua()...)
@@ -269,8 +269,8 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 	default:
 		// try a source import?
 
-		vv("should we source import path='%s'? depth=%v", path, depth)
-		//vv("stack ='%s'\n", stack())
+		pp("should we source import path='%s'? depth=%v", path, depth)
+		//pp("stack ='%s'\n", stack())
 
 		if depth > 6 {
 			// not allowed
@@ -308,7 +308,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
 
 	}
-	vv("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
+	pp("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
 	panicOn(t0.Do())
 
 	// loading from real GOROOT/GOPATH.
@@ -317,7 +317,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 
 	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
 
-	vv("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: archive='%#v', err='%v'", path, pkgDir, depth, shadowPath, a, err)
+	pp("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: err='%v'", path, pkgDir, depth, shadowPath, err)
 	return a, err
 }
 
