@@ -293,7 +293,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 	// selector expressions.
 	if check.scope == nil {
 		// yep, this is the problem!
-		pp("jea debug problem! check.scope is nil in call.go:283, check.selector()")
+		//pp("jea debug problem! check.scope is nil in call.go:283, check.selector()")
 		//check.scope.Dump()
 		panic("scope should not be nil!")
 	} else {
@@ -304,7 +304,7 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 		//check.scope.Dump()
 		_, obj := check.scope.LookupParent(ident.Name, check.pos)
 
-		pp("jea debug: identifier refers to a package or struct? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // ident.Name="s", sel="inc", obj='&types.Var{object:types.object{parent:(*types.Scope)(0xc4200608a0), pos:215, pkg:(*types.Package)(0xc4200b8690), name:"s", typ:types.Type(nil), order_:0x4, scopePos_:0}, anonymous:false, visited:false, isField:false, used:false}'
+		//pp("jea debug: identifier refers to a package or struct? ok was true, ident.Name='%#v', sel='%#v', obj='%#v'", ident.Name, sel, obj) // ident.Name="s", sel="inc", obj='&types.Var{object:types.object{parent:(*types.Scope)(0xc4200608a0), pos:215, pkg:(*types.Package)(0xc4200b8690), name:"s", typ:types.Type(nil), order_:0x4, scopePos_:0}, anonymous:false, visited:false, isField:false, used:false}'
 
 		if pname, _ := obj.(*PkgName); pname != nil {
 			pp("inside the obj was *PkgName path...") // fmt.Sprintf not getting here, obj nil.
