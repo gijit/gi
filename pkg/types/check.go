@@ -14,8 +14,8 @@ import (
 
 // debugging/development support
 const (
-	debug = false // leave on during development
-	trace = false // turn on for detailed type resolution traces
+	debug = true // leave on during development
+	trace = true // turn on for detailed type resolution traces
 )
 
 // If Strict is set, the type-checker enforces additional
@@ -252,10 +252,10 @@ func (check *Checker) checkFiles(files []*ast.File) (err error) {
 	check.collectObjects()
 	vv("past check.collectObjects")
 
-	check.packageObjects(check.resolveOrder())
-	pp("past check.packageObjects")
+	check.packageObjects(check.resolveOrder()) // spkg_tst3.Error here
+	vv("past check.packageObjects")
 	check.functionBodies()
-	pp("past check.functionBodies")
+	vv("past check.functionBodies")
 	// jea:
 	check.initOrder()
 
@@ -267,10 +267,10 @@ func (check *Checker) checkFiles(files []*ast.File) (err error) {
 	for _, f := range check.delayed {
 		f()
 	}
-	pp("past delayed checks")
+	vv("past delayed checks")
 	check.recordUntyped()
 	check.pkg.complete = true
-	pp("past recordUntypes; complete = true, err = '%v'", err)
+	vv("past recordUntypes; complete = true, err = '%v'", err)
 	return
 }
 

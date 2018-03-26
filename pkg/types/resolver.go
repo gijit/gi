@@ -586,7 +586,7 @@ func (check *Checker) packageObjects(objList []Object) {
 	typePath := make([]*TypeName, 0, 8)
 
 	for _, obj := range objList {
-		check.objDecl(obj, nil, typePath)
+		check.objDecl(obj, nil, typePath) // spkg_tst3.Error here
 	}
 
 	// At this point we may have a non-empty check.methods map; this means that not all

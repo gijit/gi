@@ -53,12 +53,14 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	var errList ErrorList
 	var previousErr error
 	config := &types.Config{
+		DisableUnusedImportCheck: false, // jea, differs from incremental check.
 		Importer: packageImporter{
 			importContext: importContext,
 			importError:   &importError,
 		},
 		Sizes: sizes64,
 		Error: func(err error) {
+			panic(fmt.Sprintf("where error? err = '%v'", err))
 			if previousErr != nil && previousErr.Error() == err.Error() {
 				return
 			}
@@ -73,7 +75,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		prelude = nil
 	}
 	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude)
-	vv("back from config.Check on importPath='%s', err='%v'\n", importPath, err)
+	vv("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
 	if importError != nil {
 		return nil, importError
 	}

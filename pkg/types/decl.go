@@ -73,13 +73,16 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 // objDecl type-checks the declaration of obj in its respective (file) context.
 // See check.typ for the details on def and path.
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
-	//pp("jea debug: types/decl.go:76, check.objDecl running top.")
+	vv("jea debug: types/decl.go:76, check.objDecl running top.")
 	if obj.Type() != nil {
 		return // already checked - nothing to do
 	}
 
 	if trace {
 		check.trace(obj.Pos(), "-- declaring %s", obj.Name())
+		if obj.Name() == "Error" {
+			//panic("here?")
+		}
 		check.indent++
 		defer func() {
 			check.indent--
@@ -125,7 +128,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
-		check.typeDecl(obj, d.Typ, def, path, d.Alias)
+		check.typeDecl(obj, d.Typ, def, path, d.Alias) //  // spkg_tst3.Error here
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
@@ -314,7 +317,7 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 	// current approach is incorrect: In general we need to know
 	// and add all methods _before_ type-checking the type.
 	// See https://play.golang.org/p/WMpE0q2wK8
-	check.addMethodDecls(obj)
+	check.addMethodDecls(obj) //  // spkg_tst3.Error here
 }
 
 func (check *Checker) addMethodDecls(obj *TypeName) {
@@ -410,7 +413,7 @@ func (check *Checker) addMethodDecls(obj *TypeName) {
 
 	proceed:
 		// type-check
-		check.objDecl(m, nil, nil)
+		check.objDecl(m, nil, nil) // spkg_tst3.Error here
 
 		// methods with blank _ names cannot be found - don't keep them
 		if base != nil && m.name != "_" {
