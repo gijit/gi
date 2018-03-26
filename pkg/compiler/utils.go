@@ -688,10 +688,8 @@ func toJavaScriptTypeUppercase(t *types.Basic) string {
 	}
 }
 
-// gijit is always a 64-bit machine.
 func is64Bit(t *types.Basic) bool {
-	return t.Kind() == types.Int64 || t.Kind() == types.Uint64 ||
-		t.Kind() == types.Int || t.Kind() == types.Uint
+	return t.Kind() == types.Int64 || t.Kind() == types.Uint64
 }
 
 func isBoolean(t *types.Basic) bool {
