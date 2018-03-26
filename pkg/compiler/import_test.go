@@ -113,3 +113,27 @@ import "github.com/gijit/gi/pkg/compiler/spkg_tst2"
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1003ImportSourcePackageThatLoadsRuntime(t *testing.T) {
+
+	cv.Convey(`import a Go source package mimicing the problem with the 'runtime' package type checking`, t, func() {
+
+		code := `
+import "github.com/gijit/gi/pkg/compiler/spkg_tst3"
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustInt64(vm, "caught", 4)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

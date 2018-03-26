@@ -379,7 +379,7 @@ func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token
 		if path == "" || name == "." {
 			name = "main"
 		}
-		pp("NewPackage, using path='%s' and name='%s'", path, name)
+		vv("NewPackage, using path='%s' and name='%s'", path, name)
 		pkg = NewPackage(path, name)
 		if addPreludeToNewPkg != nil {
 			addPreludeToNewPkg(pkg)

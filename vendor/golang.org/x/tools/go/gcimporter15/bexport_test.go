@@ -7,8 +7,8 @@ package gcimporter_test
 import (
 	"fmt"
 	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"github.com/gijit/gi/pkg/parser"
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
@@ -300,7 +300,7 @@ func TestVeryLongFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	var conf types.Config
-	pkg, err := conf.Check("foo", fset1, []*ast.File{f}, nil)
+	pkg, _, err := conf.Check(nil, nil, "foo", fset1, []*ast.File{f}, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
