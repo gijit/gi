@@ -426,7 +426,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		case token.SUB:
 			switch {
 			case is64Bit(basic):
-				return c.formatExpr("%1s(-%2h, -%2l)", c.typeName(0, t), e.X)
+				//return c.formatExpr("%1s(-%2h, -%2l)", c.typeName(0, t), e.X)
+				return c.formatExpr("-(%1e)", e.X)
 			case isComplex(basic):
 				return c.formatExpr("-(%1e)", e.X)
 				//return c.formatExpr("-(%1r+%1i)", e.X)
@@ -438,7 +439,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 		case token.XOR:
 			if is64Bit(basic) {
-				return c.formatExpr("%1s(~%2h, ~%2l >>> 0)", c.typeName(0, t), e.X)
+				return c.formatExpr("__bit.bxor(%e)", e.X)
+				//return c.formatExpr("%1s(~%2h, ~%2l >>> 0)", c.typeName(0, t), e.X)
 			}
 			return c.fixNumber(c.formatExpr("~%e", e.X), basic)
 		case token.NOT:

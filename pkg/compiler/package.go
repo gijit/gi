@@ -103,7 +103,7 @@ type flowData struct {
 
 type ImportContext struct {
 	Packages map[string]*types.Package
-	Import   func(string) (*Archive, error)
+	Import   func(path, pkgDir string) (*Archive, error)
 }
 
 // packageImporter implements go/types.Importer interface.
@@ -119,7 +119,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
 	pp("pi.importContext.Import='%#v'", pi.importContext.Import)
-	a, err := pi.importContext.Import(path)
+	a, err := pi.importContext.Import(path, "")
 	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
 		if *pi.importError == nil {

@@ -20,6 +20,7 @@ func (ic *IncrState) ImportSourcePackage(path, pkgDir string) (res *Archive, err
 			return archive, nil
 		}
 	}
+	ic.CurPkg.Session.ic = ic
 	_, archive, err := ic.CurPkg.Session.BuildImportPathWithSrcDir(path, pkgDir)
 	if err != nil {
 		return nil, err
