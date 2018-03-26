@@ -103,12 +103,27 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
-2018 March 25 update
+2018 March 26 update - private
+----------------------------
+Release v1.6.4 has reasonable
+source-based imports of other
+packages. Tests 1000, 1001, and
+1003. We also had a branch
+that went a little futher.
+`mixed_bin_src_import`
+unfornately broke many tests,
+though we may return to it
+someday. For now v1.6.4
+has all green tests with
+1002 commented out.
+
+2018 March 25 update - privage
 --------------------
 Release v1.6.0 brings the initial implementation
 of import functionality for source packages.
 
-2018 March 6 update
+
+2018 March 6 update (last public release)
 -------------------
 The release v1.4.x series improves the shadow
 import system to provide  constructors and
