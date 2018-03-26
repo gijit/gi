@@ -1,14 +1,9 @@
-// Copyright 2010 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
 package spkg_tst3
 
-type ErrorW interface {
-}
+type ErrorW2 interface{}
 
-type S struct {
-}
+type S struct{}
 
-// fails
-func (e *S) ErrorW() {}
+// fails- typechecks ErrorW2 to a nil type, because these
+// two share the same name.
+func (*S) ErrorW2() {}

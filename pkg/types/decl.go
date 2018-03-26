@@ -102,9 +102,9 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		*/
 		unreachable()
 	}
-	pp("obj = '%#v'/'%s'", obj, obj)
-	pp("obj.Name() = '%s'", obj.Name())
-	pp("d = '%#v'/'%s'", d, d)
+	vv("obj = '%#v'/'%s'", obj, obj)
+	vv("obj.Name() = '%s'", obj.Name())
+	vv("d = '%#v'/'%s'", d, d)
 
 	// save/restore current context and setup object context
 	defer func(ctxt context) {
@@ -132,7 +132,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
-		pp("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
+		vv("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
