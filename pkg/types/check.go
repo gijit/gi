@@ -14,8 +14,8 @@ import (
 
 // debugging/development support
 const (
-	debug = true // leave on during development
-	trace = true // turn on for detailed type resolution traces
+	debug = false // leave on during development
+	trace = true  // turn on for detailed type resolution traces
 )
 
 // If Strict is set, the type-checker enforces additional
@@ -363,16 +363,33 @@ func (check *Checker) recordDefAtScope(id *ast.Ident, obj Object, scope *Scope, 
 }
 
 func (check *Checker) recordDef(id *ast.Ident, obj Object) {
-	//pp("check.recordDef for id='%s', obj='%#v'/'%s'", id.Name, obj, obj)
+	if obj == nil {
+		return
+	}
+
+	// obj='&types.Func
+	// vs
+	// obj='&types.TypeName{
+	vv("check.recordDef for id='%s', obj='%#v'/'%s'. obj.Type()='%#v'", id.Name, obj, obj, obj.Type())
+	_, objIsTypeName := obj.(*TypeName)
+	//_, objIsFunc := obj.(*Func)
+
 	assert(id != nil)
-	//check.scope.Dump()
+	check.scope.Dump()
 
 	// are we replacing an earlier definition?
+
+	// CAREFUL. We have to allow an interface and method names
+	// to be the same. The runtime package defines an Error
+	// interface, and methods called Error() on a type.
+	//
 	if check.scope != nil && obj != nil {
 		oname := obj.Name()
 		prior := check.scope.Lookup(oname)
 		if prior != nil {
-			// fmt.Printf("prior found for id='%s', prior='%#v'\n", id.Name, prior)
+			//_, priorIsTypeName := obj.(*TypeName)
+			//_, priorIsFunc := obj.(*Func)
+			vv("prior found for id='%s', prior='%#v'/ prior.Type()='%#v'\n", id.Name, prior, prior.Type())
 
 			// jea: for the REPL, if this is a type,
 			// we will need to delete the old version of the type
@@ -382,10 +399,16 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 			switch prior.(type) {
 			//case *Var:
 			case *TypeName:
-				check.deleteFromObjMapPriorTypeName(oname)
+				// obj and prior must *both be type names* for us to do this delete.
+				// Otherwise we do a wrongful delete when a method name
+				// clashes with an interface name.
+				if objIsTypeName {
+					vv("deleting prior type!!?!")
+					check.deleteFromObjMapPriorTypeName(oname)
+				}
 			}
 		} else {
-			//pp("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
+			//vv("prior was nil, for obj.Name()='%s'!, here is stack:\n%s\n", obj.Name(), string(runtimedebug.Stack()))
 			//check.scope.DeleteByName(obj.Name())
 		}
 	}
