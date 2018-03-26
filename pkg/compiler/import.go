@@ -101,7 +101,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 
 	// minimize luar stuff for now, focus on pure Lua runtime.
 	goImportFromLua := func(path string) {
-		ic.GiImportFunc(path, "")
+		ic.GiImportFunc(path, "", 0)
 	}
 	stacksClosure := func() {
 		showLuaStacks(ic.goro.vm)
@@ -112,7 +112,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 	})
 }
 
-func (ic *IncrState) GiImportFunc(path, pkgDir string) (*Archive, error) {
+func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
 	pp("GiImportFunc called with path = '%s'... TODO: pure Lua packages. No go/binary/luar based stuff for now\n", path)
@@ -255,7 +255,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string) (*Archive, error) {
 
 	default:
 		// try a source import.
-		archive, err := ic.ImportSourcePackage(path, pkgDir)
+		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
 		if err == nil {
 			if archive == nil {
 				panic("why was archive nil if err was nil?")
@@ -291,7 +291,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string) (*Archive, error) {
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.
 	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
-	return ic.ActuallyImportPackage(path, "", shadowPath)
+	return ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
 }
 
 func omitAnyShadowPathPrefix(path string) string {
@@ -448,7 +448,7 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 // However, the binary loader is *much* faster.
 //
 // dir provides where to import from, to honor vendored packages.
-func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
+func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string, depth int) (*Archive, error) {
 	pp("IncrState.ActuallyImportPackage(path='%s', dir='%s', shadowPath='%s'", path, dir, shadowPath)
 	pp("stack='%s'", string(debug.Stack()))
 	var pkg *types.Package
@@ -462,7 +462,7 @@ func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archi
 	}
 	var mode types.ImportMode
 	var err error
-	pkg, err = imp2.ImportFrom(path, dir, mode)
+	pkg, err = imp2.ImportFrom(path, dir, mode, depth)
 
 	if err != nil {
 		return nil, err

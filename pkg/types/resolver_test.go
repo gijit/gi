@@ -22,11 +22,11 @@ type resolveTestImporter struct {
 	imported map[string]bool
 }
 
-func (imp *resolveTestImporter) Import(string) (*Package, error) {
+func (imp *resolveTestImporter) Import(string, int) (*Package, error) {
 	panic("should not be called")
 }
 
-func (imp *resolveTestImporter) ImportFrom(path, srcDir string, mode ImportMode) (*Package, error) {
+func (imp *resolveTestImporter) ImportFrom(path, srcDir string, mode ImportMode, depth int) (*Package, error) {
 	if mode != 0 {
 		panic("mode must be 0")
 	}

@@ -5,8 +5,8 @@
 package srcimporter
 
 import (
-	"github.com/glycerine/gi/pkg/priv/testenv"
 	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/priv/testenv"
 	"github.com/glycerine/gi/pkg/token"
 	"github.com/glycerine/gi/pkg/types"
 	"io/ioutil"
@@ -23,7 +23,7 @@ var importer = New(&build.Default, token.NewFileSet(), make(map[string]*types.Pa
 
 func doImport(t *testing.T, path, srcDir string) {
 	t0 := time.Now()
-	if _, err := importer.ImportFrom(path, srcDir, 0); err != nil {
+	if _, err := importer.ImportFrom(path, srcDir, 0, 0); err != nil {
 		// don't report an error if there's no buildable Go files
 		if _, nogo := err.(*build.NoGoError); !nogo {
 			t.Errorf("import %q failed (%v)", path, err)

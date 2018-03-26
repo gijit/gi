@@ -103,7 +103,7 @@ type flowData struct {
 
 type ImportContext struct {
 	Packages map[string]*types.Package
-	Import   func(path, pkgDir string) (*Archive, error)
+	Import   func(path, pkgDir string, depth int) (*Archive, error)
 }
 
 // packageImporter implements go/types.Importer interface.
@@ -112,14 +112,14 @@ type packageImporter struct {
 	importError   *error // A pointer to importError in Compile.
 }
 
-func (pi packageImporter) Import(path string) (*types.Package, error) {
+func (pi packageImporter) Import(path string, depth int) (*types.Package, error) {
 	if path == "unsafe" {
 		return types.Unsafe, nil
 	}
 
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
-	pp("pi.importContext.Import='%#v'", pi.importContext.Import)
-	a, err := pi.importContext.Import(path, "")
+	vv("path='%s', pi.importContext.Import='%#v'", path, pi.importContext.Import)
+	a, err := pi.importContext.Import(path, "", depth+1)
 	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
 		if *pi.importError == nil {
@@ -134,7 +134,7 @@ func (pi packageImporter) Import(path string) (*types.Package, error) {
 	tyPack := pi.importContext.Packages[a.ImportPath]
 
 	// jea: import "fmt" gives not nil tyPack.
-	pp("end of compiler.packageImporter.Import(), tyPack is '%#v'", tyPack)
+	vv("end of compiler.packageImporter.Import(path='%s'), tyPack is '%#v'", path, tyPack)
 	return tyPack, nil
 }
 

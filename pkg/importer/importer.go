@@ -83,15 +83,15 @@ type gcimports struct {
 	lookup   Lookup
 }
 
-func (m *gcimports) Import(path string) (*types.Package, error) {
-	return m.ImportFrom(path, "" /* no vendoring */, 0)
+func (m *gcimports) Import(path string, depth int) (*types.Package, error) {
+	return m.ImportFrom(path, "" /* no vendoring */, 0, depth)
 }
 
-func (m *gcimports) ImportFrom(path, srcDir string, mode types.ImportMode) (*types.Package, error) {
+func (m *gcimports) ImportFrom(path, srcDir string, mode types.ImportMode, depth int) (*types.Package, error) {
 	if mode != 0 {
 		panic("mode must be 0")
 	}
-	return gcimporter.Import(m.packages, path, srcDir, m.lookup)
+	return gcimporter.Import(m.packages, path, srcDir, m.lookup, depth)
 }
 
 // gccgo importer
@@ -102,13 +102,13 @@ type gccgoimports struct {
 	lookup   Lookup
 }
 
-func (m *gccgoimports) Import(path string) (*types.Package, error) {
-	return m.ImportFrom(path, "" /* no vendoring */, 0)
+func (m *gccgoimports) Import(path string, depth int) (*types.Package, error) {
+	return m.ImportFrom(path, "" /* no vendoring */, 0, depth)
 }
 
-func (m *gccgoimports) ImportFrom(path, srcDir string, mode types.ImportMode) (*types.Package, error) {
+func (m *gccgoimports) ImportFrom(path, srcDir string, mode types.ImportMode, depth int) (*types.Package, error) {
 	if mode != 0 {
 		panic("mode must be 0")
 	}
-	return m.importer(m.packages, path, srcDir, m.lookup)
+	return m.importer(m.packages, path, srcDir, m.lookup, depth)
 }

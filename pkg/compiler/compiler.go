@@ -110,20 +110,20 @@ type Dependency struct {
 	Method string
 }
 
-func ImportDependencies(archive *Archive, importPkg func(string) (*Archive, error)) ([]*Archive, error) {
+func ImportDependencies(archive *Archive, importPkg func(pth string, depth int) (*Archive, error), depth int) ([]*Archive, error) {
 	var deps []*Archive
 	paths := make(map[string]bool)
-	var collectDependencies func(path string) error
-	collectDependencies = func(path string) error {
+	var collectDependencies func(path string, depth int) error
+	collectDependencies = func(path string, depth int) error {
 		if paths[path] {
 			return nil
 		}
-		dep, err := importPkg(path)
+		dep, err := importPkg(path, depth)
 		if err != nil {
 			return err
 		}
 		for _, imp := range dep.Imports {
-			if err := collectDependencies(imp); err != nil {
+			if err := collectDependencies(imp, depth+1); err != nil {
 				return err
 			}
 		}
@@ -146,7 +146,7 @@ func ImportDependencies(archive *Archive, importPkg func(string) (*Archive, erro
 		}
 	*/
 	for _, imp := range archive.Imports {
-		if err := collectDependencies(imp); err != nil {
+		if err := collectDependencies(imp, depth+1); err != nil {
 			return nil, err
 		}
 	}

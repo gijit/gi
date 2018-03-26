@@ -90,7 +90,6 @@ func Fish(numPole int) (fishCaught int) {
 	f.Close()
 }
 
-/*
 func Test1002ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 
 	cv.Convey(`import a Go source package that imports 'fmt', and so loads 'runtime' in turn by source, rather than by binary import.`, t, func() {
@@ -114,7 +113,6 @@ import "github.com/glycerine/gi/pkg/compiler/spkg_tst2"
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
-*/
 
 func Test1003ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 
