@@ -11,3 +11,7 @@ func P(format string, a ...interface{}) {
 		fmt.Printf(format, a...)
 	}
 }
+
+func ToString(format string, a ...interface{}) string {
+	return fmt.Sprintf(format, a...)
+}

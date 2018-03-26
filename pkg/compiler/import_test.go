@@ -96,6 +96,8 @@ func Test1002ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 
 		code := `
 import "github.com/glycerine/gi/pkg/compiler/spkg_tst2"
+chk := spkg_tst2.Verbose
+callres := spkg_tst2.ToString("Hello %s", "world")
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -109,7 +111,8 @@ import "github.com/glycerine/gi/pkg/compiler/spkg_tst2"
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		//LuaMustInt64(vm, "caught", 4)
+		LuaMustBool(vm, "chk", false)
+		LuaMustString(vm, "callres", "Hello world")
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
