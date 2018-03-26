@@ -261,7 +261,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			pp("calling WriteCommandPackage")
 			isMain := false
 			code, err := ic.CurPkg.Session.WriteCommandPackage(archive, "", isMain)
-			vv("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
+			pp("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
 			if err != nil {
 				return nil, err
 			}
@@ -272,7 +272,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 			return archive, err
 		}
 		// source import failed.
-		vv("source import of '%s' failed: '%v'", path, err)
+		pp("source import of '%s' failed: '%v'", path, err)
 
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
