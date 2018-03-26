@@ -3,6 +3,7 @@ package compiler
 import (
 	"bytes"
 	"encoding/binary"
+	"strings"
 
 	"encoding/gob"
 	"github.com/gijit/gi/pkg/ast"
@@ -12,7 +13,6 @@ import (
 	"github.com/gijit/gi/pkg/token"
 	"github.com/gijit/gi/pkg/types"
 	"io"
-	"strings"
 
 	prelude "github.com/gijit/gi/pkg/compiler/prelude_lua"
 	gcimporter "golang.org/x/tools/go/gcimporter15"
@@ -313,9 +313,17 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 	for _, d := range pkg.Declarations {
 		// jea TODO figure out why this dceSelection[d] was over filtering
 		// our spkg_tst.Fish method and it never showed up in the output.
-		if true {
-			// if _, ok := dceSelection[d]; ok {
-			vars = append(vars, d.Vars...)
+
+		// jea: gotta not mix our types into our variables...
+		vv("d.Vars is '%#v'; dceSelection[d]='%v'", d.Vars, dceSelection[d])
+		if true { // _, ok := dceSelection[d]; ok {
+
+			// jea: hack, exclude those with '.', since they won't compile anyway...
+			for _, v := range d.Vars {
+				if !strings.Contains(v, ".") {
+					vars = append(vars, v)
+				}
+			}
 			filteredDecls = append(filteredDecls, d)
 		} else {
 			pp("rejected, filtered out Declaration d='%#v'  \n   because dceSelection[d]='%#v'", d, dceSelection[d])
