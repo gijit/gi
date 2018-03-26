@@ -17,7 +17,34 @@ import (
 	//gibuild "github.com/glycerine/gi/pkg/gibuild"
 )
 
-// the incremental translation state
+// IncrState holds the incremental translation
+// (Golang-source-to-Lua-souce compilation) state.
+type IncrState struct {
+
+	// allow multiple packages to
+	// be worked on at once.
+	pkgMap map[string]*IncrPkg
+
+	CurPkg *IncrPkg
+
+	// the vm lets us add import bindings
+	// like `import "fmt"` on demand.
+	// Update: But this is now per-goroutine,
+	// needing syncrhonization, so front end doesn't get to touch.
+	// vm *luajit.State
+	goro *Goro
+
+	cfg *GIConfig
+
+	minify   bool
+	PrintAST bool
+
+	// default to no import caching
+	AllowImportCaching bool
+
+	Session *Session
+}
+
 func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 
 	if lvm == nil {
@@ -33,6 +60,8 @@ func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 		pkgMap: make(map[string]*IncrPkg),
 		cfg:    cfg,
 	}
+	ic.Session = NewSession(&Options{}, ic)
+
 	pack := &build.Package{
 		Name:       "main",
 		ImportPath: "main",
@@ -63,12 +92,13 @@ type IncrPkg struct {
 
 	pack          *build.Package
 	fileSet       *token.FileSet
-	importContext *ImportContext
+	importContext *ImportContext // has Packages map[string]*types.Package
 	Arch          *Archive
 
-	localImportPathCache map[string]*Archive
-	Session              *Session
-	ic                   *IncrState
+	// use ic.Session.Archives instead.
+	//localImportPathCache map[string]*Archive
+
+	ic *IncrState
 }
 
 func newIncrPkg(key string,
@@ -79,8 +109,6 @@ func newIncrPkg(key string,
 	ic *IncrState,
 ) *IncrPkg {
 
-	opt := &Options{}
-
 	return &IncrPkg{
 		key:           key,
 		pack:          pack,
@@ -88,37 +116,14 @@ func newIncrPkg(key string,
 		importContext: importContext,
 		Arch:          archive,
 
-		localImportPathCache: make(map[string]*Archive),
-		Session:              NewSession(opt, ic),
-		ic:                   ic,
+		// use ic.Session.Archives instead.
+		//localImportPathCache: make(map[string]*Archive),
+
+		ic: ic,
 	}
 }
 
 type UniqPkgPath string
-
-type IncrState struct {
-
-	// allow multiple packages to
-	// be worked on at once.
-	pkgMap map[string]*IncrPkg
-
-	CurPkg *IncrPkg
-
-	// the vm lets us add import bindings
-	// like `import "fmt"` on demand.
-	// Update: But this is now per-goroutine,
-	// needing syncrhonization, so front end doesn't get to touch.
-	// vm *luajit.State
-	goro *Goro
-
-	cfg *GIConfig
-
-	minify   bool
-	PrintAST bool
-
-	// default to no import caching
-	AllowImportCaching bool
-}
 
 func (tr *IncrState) Close() {
 	tr.goro.halt.RequestStop()

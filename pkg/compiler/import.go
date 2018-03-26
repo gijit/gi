@@ -116,9 +116,14 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
-	pp("GiImportFunc called with path = '%s'... TODO: pure Lua packages. No go/binary/luar based stuff for now\n", path)
+	vv("GiImportFunc called with path = '%s'...", path)
 
-	//return nil, nil
+	// check cache first
+	arch, ok := ic.Session.Archives[path]
+	if ok {
+		vv("ic.GiImportFunc cache hit for path '%s'", path)
+		return arch, nil
+	}
 
 	var pkg *types.Package
 	t0 := ic.goro.newTicket("", true)
@@ -173,6 +178,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		t0.run = append(t0.run, shadow_errors.InitLua()...)
 
 	case "fmt":
+		vv("GiImportFunc sees 'fmt', known and shadowed.")
 		t0.regmap["fmt"] = shadow_fmt.Pkg
 		t0.regmap["__ctor__fmt"] = shadow_fmt.Ctor
 		t0.run = append(t0.run, shadow_fmt.InitLua()...)
@@ -264,7 +270,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		// try a source import?
 
 		vv("should we source import path='%s'? depth=%v", path, depth)
-		vv("stack ='%s'\n", stack())
+		//vv("stack ='%s'\n", stack())
 
 		if depth > 6 {
 			// not allowed
@@ -284,7 +290,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 			t0.regns = archive.Pkg.Name()
 			pp("calling WriteCommandPackage")
 			isMain := false
-			code, err := ic.CurPkg.Session.WriteCommandPackage(archive, "", isMain)
+			code, err := ic.Session.WriteCommandPackage(archive, "", isMain)
 			pp("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
 			if err != nil {
 				return nil, err
@@ -302,12 +308,17 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
 
 	}
+	vv("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
 	panicOn(t0.Do())
 
 	// loading from real GOROOT/GOPATH.
 	// Omit vendor support for now, for sanity.
 	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
-	return ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
+
+	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
+
+	vv("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: archive='%#v', err='%v'", path, pkgDir, depth, shadowPath, a, err)
+	return a, err
 }
 
 func omitAnyShadowPathPrefix(path string) string {
@@ -498,6 +509,8 @@ func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string, depth i
 
 	// very important, must do this or we won't locate the package!
 	ic.CurPkg.importContext.Packages[path] = pkg
+	ic.Session.Archives[path] = res
+	ic.Session.Archives[pkg.Path()] = res
 
 	return res, nil
 }
