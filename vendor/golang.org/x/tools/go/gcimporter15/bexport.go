@@ -178,7 +178,7 @@ func (p *exporter) pkg(pkg *types.Package, emptypath bool) {
 }
 
 func (p *exporter) obj(obj types.Object) {
-	vv("obj = '%#v'", obj)
+	//pp("obj = '%#v'", obj)
 	switch obj := obj.(type) {
 	case *types.Const:
 		p.tag(constTag)
@@ -188,7 +188,7 @@ func (p *exporter) obj(obj types.Object) {
 		p.value(obj.Val())
 
 	case *types.TypeName:
-		vv("*types.TypeName: obj = '%#v'", obj)
+		//pp("*types.TypeName: obj = '%#v'", obj)
 
 		if isAlias(obj) {
 			p.tag(aliasTag)

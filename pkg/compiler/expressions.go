@@ -833,18 +833,30 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 						if id, ok := c.identifierConstant(e.Args[0]); ok {
 							if e.Ellipsis.IsValid() {
 								objVar := c.newVariable("obj")
-								return c.formatExpr("(%s = %s, %s.%s.apply(%s, %s))", objVar, recv, objVar, id, objVar, externalizeExpr(e.Args[1]))
+								_ = objVar
+								// return c.formatExpr("(%s = %s, %s[__externalize(%e, __String)].apply(%s, %s))", objVar, recv, objVar, e.Args[0], objVar, externalizeExpr(e.Args[1]))
+								return c.formatExpr("(%s.%s(%s, %s))", recv, id, recv, externalizeExpr(e.Args[1]))
 							}
-							return c.formatExpr("%s(%s)", globalRef(id), externalizeArgs(e.Args[1:]))
+							return c.formatExpr("(%s(%s))", globalRef(id), externalizeArgs(e.Args[1:]))
 						}
 						if e.Ellipsis.IsValid() {
 							objVar := c.newVariable("obj")
-							return c.formatExpr("(%s = %s, %s[__externalize(%e, __String)].apply(%s, %s))", objVar, recv, objVar, e.Args[0], objVar, externalizeExpr(e.Args[1]))
+							_ = objVar
+							//
+							// return  (obj = o.object, obj[__externalize(name, __String)].apply(obj, __externalize(args, __type__.luaapi.anon_sliceType))) ;
+							//
+							//return c.formatExpr("(%s = %s, %s[__externalize(%e, __String)].apply(%s, %s))", objVar, recv, objVar, e.Args[0], objVar, externalizeExpr(e.Args[1]))
+							//
+							// attempt at lua:
+							//  interface conversion: interface {} is *ast.Ident, not string
+							return c.formatExpr("%s[%e](%s, %e)", recv, e.Args[0], recv, e.Args[1])
 						}
-						return c.formatExpr("%s[__externalize(%e, __String)](%s)", recv, e.Args[0], externalizeArgs(e.Args[1:]))
+						//return c.formatExpr("%s[__externalize(%e, __String)](%s)", recv, e.Args[0], externalizeArgs(e.Args[1:]))
+						return c.formatExpr("%e[%e](%e)", recv, e.Args[0], externalizeArgs(e.Args[1:]))
 					case "Invoke":
 						if e.Ellipsis.IsValid() {
-							return c.formatExpr("%s.apply(undefined, %s)", recv, externalizeExpr(e.Args[0]))
+							//return c.formatExpr("%s.apply(undefined, %s)", recv, externalizeExpr(e.Args[0]))
+							return c.formatExpr("%s(nil, %s)", recv, externalizeExpr(e.Args[0]))
 						}
 						return c.formatExpr("%s(%s)", recv, externalizeArgs(e.Args))
 					case "New":
@@ -1573,10 +1585,10 @@ func (c *funcContext) fixNumber(value *expression, basic *types.Basic) (xprn *ex
 		// jea
 		fallthrough
 		//return c.formatParenExpr("%s << 16 >>> 16", value)
-	case types.Uint32, types.Uint, types.Uintptr:
+	case types.Uint32, types.Uint, types.Uintptr, types.Uint64:
 		// jea
 		fallthrough
-		//return c.formatParenExpr("%s >>> 0", value)
+	//return c.formatParenExpr("%s >>> 0", value)
 	case types.Int32, types.Int, types.Int64, types.UntypedInt:
 		// jea
 		//return c.formatParenExpr("%s >> 0", value)

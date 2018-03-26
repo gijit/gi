@@ -23,8 +23,31 @@ func (check *Checker) reportAltDecl(obj Object) {
 	}
 }
 
+func (check *Checker) declareFullPackage(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
+	// spec: "The blank identifier, represented by the underscore
+	// character _, may be used in a declaration like any other
+	// identifier but the declaration does not introduce a new
+	// binding."
+	if obj.Name() != "_" {
+		if alt := scope.Insert(obj); alt != nil {
+			check.errorf(obj.Pos(), "%s redeclared in this block", obj.Name())
+			check.reportAltDecl(alt)
+			return
+		}
+		obj.setScopePos(pos)
+	}
+	if id != nil {
+		check.recordDef(id, obj)
+	}
+}
+
 func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token.Pos) {
 	pp("declare called for obj.Name()='%s', id='%#v', scope='%#v'", obj.Name(), id, scope)
+
+	if check.conf.FullPackage {
+		check.declareFullPackage(scope, id, obj, pos)
+		return
+	}
 
 	// spec: "The blank identifier, represented by the underscore
 	// character _, may be used in a declaration like any other
@@ -73,6 +96,10 @@ func (check *Checker) declare(scope *Scope, id *ast.Ident, obj Object, pos token
 // objDecl type-checks the declaration of obj in its respective (file) context.
 // See check.typ for the details on def and path.
 func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
+	if check.conf.FullPackage {
+		check.traditionalFullPackageObjDecl(obj, def, path)
+		return
+	}
 	//pp("jea debug: types/decl.go:76, check.objDecl running top.")
 	if obj.Type() != nil {
 		return // already checked - nothing to do
@@ -128,11 +155,64 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
 	case *TypeName:
 		// invalid recursive types are detected via path
-		check.typeDecl(obj, d.Typ, def, path, d.Alias) //  // spkg_tst3.Error here
+		check.typeDecl(obj, d.Typ, def, path, d.Alias)
 	case *Func:
 		// functions may be recursive - no need to track dependencies
 		// jea: new function declarations happen here.
 		//pp("check.objDecl calling check.funcDecl with obj='%v', d='%#v'", obj.Name(), d)
+		check.funcDecl(obj, d)
+	default:
+		unreachable()
+	}
+}
+
+// objDecl type-checks the declaration of obj in its respective (file) context.
+// See check.typ for the details on def and path.
+func (check *Checker) traditionalFullPackageObjDecl(obj Object, def *Named, path []*TypeName) {
+	if obj.Type() != nil {
+		return // already checked - nothing to do
+	}
+
+	if trace {
+		check.trace(obj.Pos(), "-- declaring %s", obj.Name())
+		check.indent++
+		defer func() {
+			check.indent--
+			check.trace(obj.Pos(), "=> %s", obj)
+		}()
+	}
+
+	d := check.ObjMap[obj]
+	if d == nil {
+		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
+		unreachable()
+	}
+
+	// save/restore current context and setup object context
+	defer func(ctxt context) {
+		check.context = ctxt
+	}(check.context)
+	check.context = context{
+		scope: d.File,
+	}
+
+	// Const and var declarations must not have initialization
+	// cycles. We track them by remembering the current declaration
+	// in check.decl. Initialization expressions depending on other
+	// consts, vars, or functions, add dependencies to the current
+	// check.decl.
+	switch obj := obj.(type) {
+	case *Const:
+		check.decl = d // new package-level const decl
+		check.constDecl(obj, d.Typ, d.Init)
+	case *Var:
+		check.decl = d // new package-level var decl
+		check.varDecl(obj, d.Lhs, d.Typ, d.Init)
+	case *TypeName:
+		// invalid recursive types are detected via path
+		check.typeDecl(obj, d.Typ, def, path, d.Alias)
+	case *Func:
+		// functions may be recursive - no need to track dependencies
 		check.funcDecl(obj, d)
 	default:
 		unreachable()
@@ -317,7 +397,7 @@ func (check *Checker) typeDecl(obj *TypeName, typ ast.Expr, def *Named, path []*
 	// current approach is incorrect: In general we need to know
 	// and add all methods _before_ type-checking the type.
 	// See https://play.golang.org/p/WMpE0q2wK8
-	check.addMethodDecls(obj) //  // spkg_tst3.Error here
+	check.addMethodDecls(obj)
 }
 
 func (check *Checker) addMethodDecls(obj *TypeName) {

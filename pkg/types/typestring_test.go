@@ -5,10 +5,10 @@
 package types_test
 
 import (
-	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/token"
 	"testing"
 
@@ -25,7 +25,7 @@ func makePkg(src string) (*Package, *Checker, error) {
 	}
 	// use the package name as package path
 	conf := Config{Importer: importer.Default()}
-	return conf.Check(nil, nil, file.Name.Name, fset, []*ast.File{file}, nil)
+	return conf.Check(nil, nil, file.Name.Name, fset, []*ast.File{file}, nil, nil)
 }
 
 type testEntry struct {

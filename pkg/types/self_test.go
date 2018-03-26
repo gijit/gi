@@ -28,7 +28,7 @@ func TestSelf(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	_, _, err = conf.Check(nil, nil, "github.com/gijit/gi/pkg/types", fset, files, nil)
+	_, _, err = conf.Check(nil, nil, "github.com/gijit/gi/pkg/types", fset, files, nil, nil)
 	if err != nil {
 		// Importing go/constant doesn't work in the
 		// build dashboard environment. Don't report an error
@@ -65,7 +65,7 @@ func runbench(t *testing.T, path string, ignoreFuncBodies bool) {
 	b := testing.Benchmark(func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			conf := Config{IgnoreFuncBodies: ignoreFuncBodies}
-			conf.Check(nil, nil, path, fset, files, nil)
+			conf.Check(nil, nil, path, fset, files, nil, nil)
 		}
 	})
 

@@ -2,7 +2,7 @@
 
 package sync
 
-import "github.com/gijit/gi/pkg/luaapi"
+import js "github.com/gijit/gi/pkg/luaapi"
 
 var semWaiters = make(map[*uint32][]chan bool)
 

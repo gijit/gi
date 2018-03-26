@@ -53,6 +53,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	var errList ErrorList
 	var previousErr error
 	config := &types.Config{
+		FullPackage:              true,
 		DisableUnusedImportCheck: false, // jea, differs from incremental check.
 		Importer: packageImporter{
 			importContext: importContext,
