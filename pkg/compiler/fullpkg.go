@@ -24,7 +24,7 @@ import (
 // entire packages. For incremental interactivity,
 // see the incr.go:34 IncrementallyCompile() function.
 //
-func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (arch *Archive, err error) {
+func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool, depth int) (arch *Archive, err error) {
 	vv("FullPackageCompile() top. importPath='%s'", importPath)
 	defer func() {
 		if arch != nil {
@@ -73,12 +73,11 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 
 	vv("config.Check on importPath='%s'\n", importPath)
-	vv("stack ='%s'\n", stack())
 	prelude := addPreludeToNewPkg
 	if importPath != "main" {
 		prelude = nil
 	}
-	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude)
+	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude, depth+1)
 	vv("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
 	if importError != nil {
 		return nil, importError

@@ -170,8 +170,8 @@ func (tr *IncrState) Tr(src []byte) ([]byte, error) {
 		panic(msg)
 		return nil, fmt.Errorf(msg)
 	}
-
-	tr.CurPkg.Arch, err = IncrementallyCompile(tr.CurPkg.Arch, tr.CurPkg.pack.ImportPath, files, tr.CurPkg.fileSet, tr.CurPkg.importContext, tr.minify)
+	depth := 0
+	tr.CurPkg.Arch, err = IncrementallyCompile(tr.CurPkg.Arch, tr.CurPkg.pack.ImportPath, files, tr.CurPkg.fileSet, tr.CurPkg.importContext, tr.minify, depth)
 	panicOn(err)
 	//pp("archive = '%#v'", tr.CurPkg.Arch)
 	//pp("len(tr.CurPkg.Arch.Declarations)= '%v'", len(tr.CurPkg.Arch.Declarations))
@@ -214,7 +214,7 @@ func (tr *IncrState) prependAns(src []byte) []byte {
 // full package
 
 // FullPackage: translate a full package from go to Lua.
-func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) {
+func (tr *IncrState) FullPackage(src []byte, importPath string, depth int) ([]byte, error) {
 	pp("FullPackage top.")
 
 	fileSet := token.NewFileSet()
@@ -231,7 +231,7 @@ func (tr *IncrState) FullPackage(src []byte, importPath string) ([]byte, error) 
 	}
 
 	//tr.CurPkg.Arch,
-	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify)
+	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify, depth+1)
 	panicOn(err)
 	arch.ImportPath = "main"
 	//pp("archive = '%#v'", tr.CurPkg.Arch)

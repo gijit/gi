@@ -141,7 +141,7 @@ func (p *Importer) ImportFrom(path, srcDir string, mode types.ImportMode, depth 
 		Importer: p,
 		Sizes:    p.sizes,
 	}
-	pkg, _, err = conf.Check(nil, nil, bp.ImportPath, p.fset, files, nil, nil)
+	pkg, _, err = conf.Check(nil, nil, bp.ImportPath, p.fset, files, nil, nil, 0)
 	if err != nil {
 		// If there was a hard error it is possibly unsafe
 		// to use the package as it may not be fully populated.

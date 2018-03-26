@@ -38,7 +38,7 @@ func addPreludeToNewPkg(pkg *types.Package) {
 	}
 }
 
-func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool) (*Archive, error) {
+func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool, depth int) (*Archive, error) {
 
 	pp("jea debug, top of incrementallyCompile()."+
 		" importPath='%s' here is what files has:", importPath)
@@ -109,7 +109,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	if importPath != "main" {
 		prelude = nil
 	}
-	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, prelude)
+	pkg, check, err = config.Check(pkg, check, importPath, fileSet, files, typesInfo, prelude, depth+1)
 	if importError != nil {
 		//pp("config.Check: importError")
 		return nil, importError

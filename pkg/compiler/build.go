@@ -575,7 +575,7 @@ func (s *Session) BuildImportPath(path string, depth int) (*Archive, error) {
 }
 
 func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string, depth int) (*PackageData, *Archive, error) {
-	vv("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'", path, srcDir)
+	vv("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'. depth=%v", path, srcDir, depth)
 
 	pkg, err := s.importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags, depth)
 
@@ -733,7 +733,7 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 			return archive, nil
 		},
 	}
-	archive, err := FullPackageCompile(pkg.ImportPath, files, fileSet, importContext, s.options.Minify)
+	archive, err := FullPackageCompile(pkg.ImportPath, files, fileSet, importContext, s.options.Minify, depth+1)
 	if err != nil {
 		return nil, err
 	}

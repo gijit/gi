@@ -157,7 +157,7 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string, depth int) 
 		if importer := check.conf.Importer; importer == nil {
 			err = fmt.Errorf("Config.Importer not installed")
 		} else if importerFrom, ok := importer.(ImporterFrom); ok {
-			imp, err = importerFrom.ImportFrom(path, dir, 0, depth)
+			imp, err = importerFrom.ImportFrom(path, dir, 0, depth+1)
 			if imp == nil && err == nil {
 				err = fmt.Errorf("Config.Importer.ImportFrom(%s, %s, 0) returned nil but no error", path, dir)
 			}

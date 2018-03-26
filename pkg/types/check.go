@@ -242,14 +242,16 @@ func (check *Checker) handleBailout(err *error) {
 }
 
 // Files checks the provided files as part of the checker's package.
-func (check *Checker) Files(files []*ast.File, depth int) error { return check.checkFiles(files, depth) }
+func (check *Checker) Files(files []*ast.File, depth int) error {
+	return check.checkFiles(files, depth)
+}
 
 func (check *Checker) checkFiles(files []*ast.File, depth int) (err error) {
 	defer check.handleBailout(&err)
 
 	check.initFiles(files)
 	//pp("past check.initFiles")
-	check.collectObjects(depth)
+	check.collectObjects(depth + 1)
 	//pp("past check.collectObjects")
 
 	check.packageObjects(check.resolveOrder())

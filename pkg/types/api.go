@@ -392,7 +392,7 @@ func (init *Initializer) String() string {
 // The package is specified by a list of *ast.Files and corresponding
 // file set, and the package path the package is identified with.
 // The clean path must not be empty or dot (".").
-func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token.FileSet, files []*ast.File, info *Info, addPreludeToNewPkg func(pkg *Package)) (*Package, *Checker, error) {
+func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token.FileSet, files []*ast.File, info *Info, addPreludeToNewPkg func(pkg *Package), depth int) (*Package, *Checker, error) {
 	// jea: gotta make these incremental, not new every time!
 	if pkg == nil {
 		// jea, I used to have:
@@ -412,8 +412,7 @@ func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token
 		check = NewChecker(conf, fset, pkg, info)
 	}
 
-	depth := 0
-	return pkg, check, check.Files(files, depth)
+	return pkg, check, check.Files(files, depth+1)
 }
 
 // AssertableTo reports whether a value of type V can be asserted to have type T.
