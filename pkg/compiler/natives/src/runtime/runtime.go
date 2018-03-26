@@ -2,11 +2,10 @@
 
 package runtime
 
-/*
 import (
 	"runtime/internal/sys"
 
-	"github.com/gijit/gi/pkg/luaapi"
+	js "github.com/gijit/gi/pkg/luaapi"
 )
 
 const GOOS = sys.GOOS
@@ -229,4 +228,3 @@ func findfunc(pc uintptr) funcInfo { return funcInfo{} }
 func funcname(f funcInfo) string   { return "" }
 
 type funcInfo struct{}
-*/
