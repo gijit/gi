@@ -252,7 +252,7 @@ func (check *Checker) checkFiles(files []*ast.File) (err error) {
 	check.collectObjects()
 	//pp("past check.collectObjects")
 
-	check.packageObjects(check.resolveOrder()) // spkg_tst3.Error here
+	check.packageObjects(check.resolveOrder())
 	//pp("past check.packageObjects")
 	check.functionBodies()
 	//pp("past check.functionBodies")
@@ -366,11 +366,17 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 	if obj == nil {
 		return
 	}
+	if check.conf.FullPackage {
+		if m := check.Defs; m != nil {
+			m[id] = obj
+		}
+		return
+	}
 
 	// obj='&types.Func
 	// vs
 	// obj='&types.TypeName{
-	//pp("check.recordDef for id='%s', obj='%#v'/'%s'. obj.Type()='%#v'", id.Name, obj, obj, obj.Type())
+	vv("check.recordDef for id='%s', obj='%#v'/'%s'. obj.Type()='%#v'", id.Name, obj, obj, obj.Type())
 	_, objIsTypeName := obj.(*TypeName)
 	//_, objIsFunc := obj.(*Func)
 
@@ -389,7 +395,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 		if prior != nil {
 			//_, priorIsTypeName := obj.(*TypeName)
 			//_, priorIsFunc := obj.(*Func)
-			//pp("prior found for id='%s', prior='%#v'/ prior.Type()='%#v'\n", id.Name, prior, prior.Type())
+			vv("prior found for id='%s', prior='%#v'/ prior.Type()='%#v'\n", id.Name, prior, prior.Type())
 
 			// jea: for the REPL, if this is a type,
 			// we will need to delete the old version of the type
@@ -403,7 +409,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 				// Otherwise we do a wrongful delete when a method name
 				// clashes with an interface name.
 				if objIsTypeName {
-					//pp("deleting prior type!!?!")
+					vv("deleting prior type!!?! : '%s'", oname)
 					check.deleteFromObjMapPriorTypeName(oname)
 				}
 			}

@@ -136,6 +136,12 @@ type Config struct {
 	// time, under the assumption that the user is likely
 	// editing the packages at the repl.
 	AllowImportCaching bool
+
+	// FullPackage true indicates we are type checking
+	// an import, a full package, and can use the
+	// traditional whole-package type checking paths rather than
+	// the incremental ones.
+	FullPackage bool
 }
 
 // Info holds result type information for a type-checked package.

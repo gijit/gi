@@ -6,10 +6,10 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/ast"
 	"github.com/gijit/gi/pkg/importer"
 	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
 	"github.com/gijit/gi/pkg/token"
 	"sort"
 	"testing"
@@ -133,7 +133,7 @@ func TestResolveIdents(t *testing.T) {
 	conf := Config{Importer: importer}
 	uses := make(map[*ast.Ident]Object)
 	defs := make(map[*ast.Ident]Object)
-	_, _, err := conf.Check(nil, nil, "testResolveIdents", fset, files, &Info{Defs: defs, Uses: uses})
+	_, _, err := conf.Check(nil, nil, "testResolveIdents", fset, files, &Info{Defs: defs, Uses: uses}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
