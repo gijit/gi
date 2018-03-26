@@ -299,7 +299,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (f
 			return dir.Readdir(0)
 		},
 		OpenFile: func(name string) (r io.ReadCloser, err error) {
-			vv("\n nativesContext is opening file '%s'\n", name)
+			//pp("\n nativesContext is opening file '%s'\n", name)
 			return natives.FS.Open(name)
 		},
 	}

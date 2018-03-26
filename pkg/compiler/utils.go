@@ -486,7 +486,7 @@ func (c *funcContext) typeName(level int, ty types.Type) (res string) {
 
 func (c *funcContext) getPkgName() string {
 	pkgName := c.p.Pkg.Name()
-	vv("pkgName='%s'", pkgName)
+	//pp("pkgName='%s'", pkgName)
 	if pkgName == "main" {
 		pkgName = ""
 	} else {
