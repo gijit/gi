@@ -115,7 +115,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return false
 
 		// jea: avoid this, it imports shadow/math/rand by full path
-		archive, err := importContext.Import(f.Pkg().Path())
+		archive, err := importContext.Import(f.Pkg().Path(), "")
 		if err != nil {
 			panic(err)
 		}

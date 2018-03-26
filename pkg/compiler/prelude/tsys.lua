@@ -329,7 +329,8 @@ __floatKey = function(f)
 end;
 
 __flatten64 = function(x)
-   return x.__high * 4294967296 + x.__low;
+   --return x.__high * 4294967296 + x.__low;
+   return x
 end;
 
 

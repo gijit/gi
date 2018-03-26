@@ -29,7 +29,10 @@ import (
 	"github.com/gijit/gi/pkg/compiler/shadow/regexp"
 	shadow_runtime "github.com/gijit/gi/pkg/compiler/shadow/runtime"
 	shadow_runtime_debug "github.com/gijit/gi/pkg/compiler/shadow/runtime/debug"
+	shadow_strconv "github.com/gijit/gi/pkg/compiler/shadow/strconv"
 	"github.com/gijit/gi/pkg/compiler/shadow/time"
+
+	"runtime/debug"
 
 	// gonum
 	shadow_blas "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
@@ -98,7 +101,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 
 	// minimize luar stuff for now, focus on pure Lua runtime.
 	goImportFromLua := func(path string) {
-		ic.GiImportFunc(path)
+		ic.GiImportFunc(path, "")
 	}
 	stacksClosure := func() {
 		showLuaStacks(ic.goro.vm)
@@ -109,7 +112,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 	})
 }
 
-func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
+func (ic *IncrState) GiImportFunc(path, pkgDir string) (*Archive, error) {
 
 	// `import "fmt"` means that path == "fmt", for example.
 	pp("GiImportFunc called with path = '%s'... TODO: pure Lua packages. No go/binary/luar based stuff for now\n", path)
@@ -218,6 +221,11 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 		t0.regmap["__ctor__debug"] = shadow_runtime_debug.Ctor
 		t0.run = append(t0.run, shadow_runtime_debug.InitLua()...)
 
+	case "strconv":
+		t0.regmap["strconv"] = shadow_strconv.Pkg
+		t0.regmap["__ctor__strconv"] = shadow_strconv.Ctor
+		t0.run = append(t0.run, shadow_strconv.InitLua()...)
+
 	case "io/ioutil":
 		t0.regmap["ioutil"] = shadow_io_ioutil.Pkg
 		t0.regmap["__ctor__ioutil"] = shadow_io_ioutil.Ctor
@@ -247,7 +255,7 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 
 	default:
 		// try a source import.
-		archive, err := ic.ImportSourcePackage(path, "")
+		archive, err := ic.ImportSourcePackage(path, pkgDir)
 		if err == nil {
 			if archive == nil {
 				panic("why was archive nil if err was nil?")
@@ -284,7 +292,6 @@ func (ic *IncrState) GiImportFunc(path string) (*Archive, error) {
 	// Omit vendor support for now, for sanity.
 	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
 	return ic.ActuallyImportPackage(path, "", shadowPath)
-	//return ic.ActuallyImportPackage(path, "", path)
 }
 
 func omitAnyShadowPathPrefix(path string) string {
@@ -442,6 +449,8 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 //
 // dir provides where to import from, to honor vendored packages.
 func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
+	vv("IncrState.ActuallyImportPackage(path='%s', dir='%s', shadowPath='%s'", path, dir, shadowPath)
+	vv("stack='%s'", string(debug.Stack()))
 	var pkg *types.Package
 
 	//imp := importer.For("source", nil) // Default()

@@ -2,6 +2,8 @@
 
 local ffi = require("ffi")
 
+__bit = require("bit")
+
 if jit.os == "Windows" then
    ffi.cdef[[
    long long int _atoi64(const char *nptr);

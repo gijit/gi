@@ -5,7 +5,7 @@ package time
 import (
 	"runtime"
 
-	"github.com/gijit/gi/pkg/luaapi"
+	js "github.com/gijit/gi/pkg/luaapi"
 )
 
 // Make sure time.Unix func and time.Time struct it returns are always included with this package (despite DCE),
@@ -91,6 +91,7 @@ func indexByte(s string, c byte) int {
 	return js.InternalObject(s).Call("indexOf", js.Global.Get("String").Call("fromCharCode", c)).Int()
 }
 
+/*
 func loadLocation(name string) (*Location, error) {
 	return loadZoneFile(runtime.GOROOT()+"/lib/time/zoneinfo.zip", name)
 }
@@ -103,3 +104,4 @@ func initTestingZone() {
 	z.name = "Local"
 	localLoc = *z
 }
+*/

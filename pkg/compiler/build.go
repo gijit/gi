@@ -17,6 +17,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	//"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -90,7 +91,7 @@ func NewBuildContext(installSuffix string, buildTags []string) *build.Context {
 //
 // If an error occurs, Import returns a non-nil error and a nil
 // *PackageData.
-func Import(path string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
+func (s *Session) Import(path string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		// Getwd may fail if we're in GOARCH=js mode. That's okay, handle
@@ -98,10 +99,10 @@ func Import(path string, mode build.ImportMode, installSuffix string, buildTags 
 		// Import will not be able to resolve relative import paths.
 		wd = ""
 	}
-	return importWithSrcDir(path, wd, mode, installSuffix, buildTags)
+	return s.importWithSrcDir(path, wd, mode, installSuffix, buildTags)
 }
 
-func importWithSrcDir(path string, srcDir string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
+func (s *Session) importWithSrcDir(path string, srcDir string, mode build.ImportMode, installSuffix string, buildTags []string) (*PackageData, error) {
 	bctx := NewBuildContext(installSuffix, buildTags)
 	switch path {
 	case "syscall":
@@ -480,9 +481,10 @@ type Session struct {
 	Types              map[string]*types.Package
 	Watcher            *fsnotify.Watcher
 	AllowImportCaching bool
+	ic                 *IncrState
 }
 
-func NewSession(options *Options) *Session {
+func NewSession(options *Options, ic *IncrState) *Session {
 	if options.GOROOT == "" {
 		options.GOROOT = build.Default.GOROOT
 	}
@@ -494,6 +496,7 @@ func NewSession(options *Options) *Session {
 	s := &Session{
 		options:  options,
 		Archives: make(map[string]*Archive),
+		ic:       ic,
 	}
 	s.Types = make(map[string]*types.Package)
 	return s
@@ -574,7 +577,7 @@ func (s *Session) BuildImportPath(path string) (*Archive, error) {
 func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string) (*PackageData, *Archive, error) {
 	pp("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'", path, srcDir)
 
-	pkg, err := importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags)
+	pkg, err := s.importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags)
 
 	if err != nil {
 		return nil, nil, err
@@ -632,14 +635,22 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 			if importedPkgPath == "unsafe" || ignored {
 				continue
 			}
-			importedPkg, _, err := s.BuildImportPathWithSrcDir(importedPkgPath, pkg.Dir)
+			// recursively pickup binaries instead of source packages.
+			archive, err := s.ic.GiImportFunc(importedPkgPath, pkg.Dir)
+			_ = archive
 			if err != nil {
 				return nil, err
 			}
-			impModTime := importedPkg.SrcModTime
-			if impModTime.After(pkg.SrcModTime) {
-				pkg.SrcModTime = impModTime
-			}
+			/*
+				importedPkg, _, err := s.BuildImportPathWithSrcDir(importedPkgPath, pkg.Dir)
+				if err != nil {
+					return nil, err
+				}
+				impModTime := importedPkg.SrcModTime
+				if impModTime.After(pkg.SrcModTime) {
+					pkg.SrcModTime = impModTime
+				}
+			*/
 		}
 
 		for _, name := range append(pkg.GoFiles, pkg.JSFiles...) {
@@ -691,12 +702,26 @@ func (s *Session) BuildPackage(pkg *PackageData) (*Archive, error) {
 	localImportPathCache := make(map[string]*Archive)
 	importContext := &ImportContext{
 		Packages: s.Types,
-		Import: func(path string) (*Archive, error) {
+		Import: func(path, pkgDir string) (*Archive, error) {
 			if archive, ok := localImportPathCache[path]; ok {
 				pp("\n\n using cached archive from localImportPathCache... archive.Pkg='%#v'\n", archive.Pkg)
 				return archive, nil
 			}
-			_, archive, err := s.BuildImportPathWithSrcDir(path, pkg.Dir)
+			/* infinite loop of importing ourselves:
+
+			// binary import
+			//vv("calling GiImportFunc with path='%s', pkgDir='%s', stack='%s'",
+			//	path, pkgDir, string(debug.Stack()))
+
+			archive, err := s.ic.GiImportFunc(path, pkgDir)
+			if archive == nil {
+				panic("archive was nil??")
+			}
+
+			*/
+			// source import
+			_, archive, err := s.BuildImportPathWithSrcDir(path, pkgDir)
+
 			if err != nil {
 				return nil, err
 			}

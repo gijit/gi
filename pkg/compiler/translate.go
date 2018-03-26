@@ -45,7 +45,7 @@ func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 	}
 
 	key := "main"
-	pk := newIncrPkg(key, pack, fileSet, importContext, nil)
+	pk := newIncrPkg(key, pack, fileSet, importContext, nil, ic)
 
 	ic.pkgMap[key] = pk
 	ic.CurPkg = pk
@@ -68,6 +68,7 @@ type IncrPkg struct {
 
 	localImportPathCache map[string]*Archive
 	Session              *Session
+	ic                   *IncrState
 }
 
 func newIncrPkg(key string,
@@ -75,7 +76,7 @@ func newIncrPkg(key string,
 	fileSet *token.FileSet,
 	importContext *ImportContext,
 	archive *Archive,
-
+	ic *IncrState,
 ) *IncrPkg {
 
 	opt := &Options{}
@@ -88,7 +89,8 @@ func newIncrPkg(key string,
 		Arch:          archive,
 
 		localImportPathCache: make(map[string]*Archive),
-		Session:              NewSession(opt),
+		Session:              NewSession(opt, ic),
+		ic:                   ic,
 	}
 }
 

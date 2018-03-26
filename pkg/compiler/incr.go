@@ -157,7 +157,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 			return false
 		}
 
-		archive, err := importContext.Import(f.Pkg().Path())
+		archive, err := importContext.Import(f.Pkg().Path(), "")
 		if err != nil {
 			panic(err)
 		}
