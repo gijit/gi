@@ -213,7 +213,7 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string) *Package {
 // into their respective scopes. It also performs imports and associates
 // methods with receiver base type names.
 func (check *Checker) collectObjects() {
-	vv("collectObjects top")
+	//pp("collectObjects top")
 	pkg := check.pkg
 
 	// pkgImports is the set of packages already imported by any package file seen
@@ -232,7 +232,7 @@ func (check *Checker) collectObjects() {
 		// The package identifier denotes the current package,
 		// but there is no corresponding package object.
 		check.recordDef(file.Name, nil)
-		vv("back from check.recordDef")
+		//pp("back from check.recordDef")
 
 		// Use the actual source file extent rather than *ast.File extent since the
 		// latter doesn't include comments which appear at the start or end of the file.

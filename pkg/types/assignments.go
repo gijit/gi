@@ -13,7 +13,6 @@ import (
 )
 
 var pp = verb.PP
-var vv = verb.VV
 
 // assignment reports whether x can be assigned to a variable of type T,
 // if necessary by attempting to convert untyped values to the appropriate
