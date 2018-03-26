@@ -1794,7 +1794,7 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
          typ.pkgPath = pkgPath;
          typ.fields = fields;
          for i,f in ipairs(fields) do
-            if not f.__typ.comparable then
+            if f.__typ == nil or not f.__typ.comparable then
                typ.comparable = false;
                break;
             end
