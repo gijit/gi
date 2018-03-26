@@ -476,12 +476,12 @@ type PackageData struct {
 }
 
 type Session struct {
-	options            *Options
-	Archives           map[string]*Archive
-	Types              map[string]*types.Package
-	Watcher            *fsnotify.Watcher
-	AllowImportCaching bool
-	ic                 *IncrState
+	options  *Options
+	Archives map[string]*Archive
+	Types    map[string]*types.Package
+	Watcher  *fsnotify.Watcher
+	//AllowImportCaching bool
+	ic *IncrState
 }
 
 func NewSession(options *Options, ic *IncrState) *Session {
@@ -593,13 +593,15 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string, depth in
 
 func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 
-	if s.AllowImportCaching {
-		pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
-		if archive, ok := s.Archives[pkg.ImportPath]; ok {
-			pp("build.go:234 using cached version of archive for path '%s'\n", pkg.ImportPath)
-			return archive, nil
-		}
+	//if s.AllowImportCaching {
+
+	pp("Session.BuildPackage() top. pkg.ImportPath='%s'", pkg.ImportPath)
+	if archive, ok := s.Archives[pkg.ImportPath]; ok {
+		pp("build.go:234 using cached version of archive for path '%s'\n", pkg.ImportPath)
+		return archive, nil
 	}
+
+	//}
 
 	if pkg.PkgObj != "" {
 		var fileInfo os.FileInfo
@@ -685,8 +687,10 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 					return nil, err
 				}
 
-				pp("\n\n reading Archive from disk, filename='%s', import path='%s'. archive.Pkg='%#v'\n and archive='%#v'", pkg.PkgObj, pkg.ImportPath, archive.Pkg, archive)
+				vv("\n\n Just read Archive from disk, filename='%s', import path='%s'. archive.Pkg='%#v'\n and archive='%#v'", pkg.PkgObj, pkg.ImportPath, archive.Pkg, archive)
+
 				s.Archives[pkg.ImportPath] = archive
+
 				return archive, err
 			} // end ReadArchive from disk
 
@@ -699,16 +703,21 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 		return nil, err
 	}
 
-	localImportPathCache := make(map[string]*Archive)
+	//localImportPathCache := make(map[string]*Archive)
 	importContext := &ImportContext{
 		Packages: s.Types,
 		Import: func(path, pkgDir string, depth int) (*Archive, error) {
 			vv("callback to Import() in ImportContext: path='%s', pkgDir='%s'", path, pkgDir)
 			//if s.AllowImportCaching? TODO figure out balance between speed and editability.
-			if archive, ok := localImportPathCache[path]; ok {
-				vv("\n\n using cached archive from localImportPathCache... archive.Pkg='%#v'\n", archive.Pkg)
+			//if archive, ok := localImportPathCache[path]; ok {
+
+			// jea: change to use s.Archvies instead of localImportPathCache
+			if archive, ok := s.Archives[path]; ok {
+				vv("\n\n using cached archive from s.Archives for path ='%s'... archive.Pkg='%#v'\n",
+					path, archive.Pkg)
 				return archive, nil
 			}
+			vv("path '%s' is not in our s.Archives, which has '%v'", path, summarizeArchives(s.Archives))
 
 			/* infinite loop of importing ourselves:
 
@@ -728,8 +737,15 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 			if err != nil {
 				return nil, err
 			}
-			localImportPathCache[path] = archive
-			pp("\n\n saving archive into localImportPathCache. archive.Pkg='%#v'\n", archive.Pkg)
+
+			// TODO: might be messed with by vendoring. Handle that later.
+			s.Archives[path] = archive
+			selfDescPath := archive.Pkg.Path()
+			if path != selfDescPath {
+				s.Archives[selfDescPath] = archive
+			}
+			pp("\n\n saving archive into s.Archive[path='%s']. archive.Pkg='%#v'\n",
+				path, archive.Pkg)
 			return archive, nil
 		},
 	}
@@ -737,7 +753,7 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 	if err != nil {
 		return nil, err
 	}
-	pp("\n\n archive back from FullPackageCompile, archive.Pkg='%#v'\n", archive.Pkg)
+	vv("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
 
 	for _, jsFile := range pkg.JSFiles {
 		code, err := ioutil.ReadFile(filepath.Join(pkg.Dir, jsFile))
@@ -917,4 +933,11 @@ func (s *Session) WaitForChange() {
 		}
 	}()
 	s.Watcher.Close()
+}
+
+func summarizeArchives(m map[string]*Archive) (s string) {
+	for k := range m {
+		s += k + ", "
+	}
+	return
 }
