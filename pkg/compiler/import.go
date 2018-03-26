@@ -22,6 +22,7 @@ import (
 	shadow_io_ioutil "github.com/glycerine/gi/pkg/compiler/shadow/io/ioutil"
 	"io/ioutil"
 
+	shadow_errors "github.com/glycerine/gi/pkg/compiler/shadow/errors"
 	"github.com/glycerine/gi/pkg/compiler/shadow/math"
 	shadow_math_rand "github.com/glycerine/gi/pkg/compiler/shadow/math/rand"
 	"github.com/glycerine/gi/pkg/compiler/shadow/os"
@@ -165,6 +166,12 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		t0.regmap["bytes"] = shadow_bytes.Pkg
 		t0.regmap["__ctor__bytes"] = shadow_bytes.Ctor
 		t0.run = append(t0.run, shadow_bytes.InitLua()...)
+
+	case "errors":
+		t0.regmap["errors"] = shadow_errors.Pkg
+		t0.regmap["__ctor__errors"] = shadow_errors.Ctor
+		t0.run = append(t0.run, shadow_errors.InitLua()...)
+
 	case "fmt":
 		t0.regmap["fmt"] = shadow_fmt.Pkg
 		t0.regmap["__ctor__fmt"] = shadow_fmt.Ctor
@@ -254,9 +261,15 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		t0.regmap["unit"] = shadow_unit.Pkg
 
 	default:
-		// try a source import.
-		vv("should we source import? depth=%v", depth)
+		// try a source import?
+
+		vv("should we source import path='%s'? depth=%v", path, depth)
 		vv("stack ='%s'\n", stack())
+
+		if depth > 6 {
+			// not allowed
+			return nil, fmt.Errorf("deep source imports forbidden for performance reasons. problem with import of package '%s' (not shadowed? [1]) depth=%v ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, depth)
+		}
 
 		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
 		if err == nil {
