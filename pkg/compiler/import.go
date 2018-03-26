@@ -449,8 +449,8 @@ func getFunForIncr(pkg *types.Package) *types.Func {
 //
 // dir provides where to import from, to honor vendored packages.
 func (ic *IncrState) ActuallyImportPackage(path, dir, shadowPath string) (*Archive, error) {
-	vv("IncrState.ActuallyImportPackage(path='%s', dir='%s', shadowPath='%s'", path, dir, shadowPath)
-	vv("stack='%s'", string(debug.Stack()))
+	pp("IncrState.ActuallyImportPackage(path='%s', dir='%s', shadowPath='%s'", path, dir, shadowPath)
+	pp("stack='%s'", string(debug.Stack()))
 	var pkg *types.Package
 
 	//imp := importer.For("source", nil) // Default()
