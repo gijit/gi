@@ -376,7 +376,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 	// obj='&types.Func
 	// vs
 	// obj='&types.TypeName{
-	vv("check.recordDef for id='%s', obj='%#v'/'%s'. obj.Type()='%#v'", id.Name, obj, obj, obj.Type())
+	//pp("check.recordDef for id='%s', obj='%#v'/'%s'. obj.Type()='%#v'", id.Name, obj, obj, obj.Type())
 	_, objIsTypeName := obj.(*TypeName)
 	//_, objIsFunc := obj.(*Func)
 
@@ -395,7 +395,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 		if prior != nil {
 			//_, priorIsTypeName := obj.(*TypeName)
 			//_, priorIsFunc := obj.(*Func)
-			vv("prior found for id='%s', prior='%#v'/ prior.Type()='%#v'\n", id.Name, prior, prior.Type())
+			//pp("prior found for id='%s', prior='%#v'/ prior.Type()='%#v'\n", id.Name, prior, prior.Type())
 
 			// jea: for the REPL, if this is a type,
 			// we will need to delete the old version of the type
@@ -409,7 +409,7 @@ func (check *Checker) recordDef(id *ast.Ident, obj Object) {
 				// Otherwise we do a wrongful delete when a method name
 				// clashes with an interface name.
 				if objIsTypeName {
-					vv("deleting prior type!!?! : '%s'", oname)
+					//pp("deleting prior type!!?! : '%s'", oname)
 					check.deleteFromObjMapPriorTypeName(oname)
 				}
 			}
