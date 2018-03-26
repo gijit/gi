@@ -5,10 +5,10 @@
 package srcimporter
 
 import (
-	"github.com/gijit/gi/pkg/priv/testenv"
-	"github.com/gijit/gi/pkg/gostd/build"
-	"github.com/gijit/gi/pkg/token"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/priv/testenv"
+	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/types"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
@@ -154,7 +154,7 @@ func TestIssue20855(t *testing.T) {
 		t.Skip("no source code available")
 	}
 
-	pkg, err := importer.ImportFrom("github.com/gijit/gi/pkg/internal/srcimporter/testdata/issue20855", ".", 0)
+	pkg, err := importer.ImportFrom("github.com/glycerine/gi/pkg/internal/srcimporter/testdata/issue20855", ".", 0)
 	if err == nil || !strings.Contains(err.Error(), "missing function body") {
 		t.Fatalf("got unexpected or no error: %v", err)
 	}

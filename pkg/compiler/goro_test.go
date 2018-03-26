@@ -4,8 +4,8 @@ import (
 	//"fmt"
 	"testing"
 
-	//"github.com/gijit/gi/pkg/token"
-	//"github.com/gijit/gi/pkg/types"
+	//"github.com/glycerine/gi/pkg/token"
+	//"github.com/glycerine/gi/pkg/types"
 	cv "github.com/glycerine/goconvey/convey"
 	//"github.com/glycerine/luar"
 )

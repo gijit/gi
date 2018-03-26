@@ -2,8 +2,8 @@ package compiler
 
 import (
 	"fmt"
-	//"github.com/gijit/gi/pkg/token"
-	//"github.com/gijit/gi/pkg/types"
+	//"github.com/glycerine/gi/pkg/token"
+	//"github.com/glycerine/gi/pkg/types"
 	//golua "github.com/glycerine/golua/lua"
 	//"github.com/glycerine/luar"
 )

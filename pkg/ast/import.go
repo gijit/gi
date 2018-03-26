@@ -5,7 +5,7 @@
 package ast
 
 import (
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"sort"
 	"strconv"
 )

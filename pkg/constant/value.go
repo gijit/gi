@@ -14,7 +14,7 @@ package constant
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"math"
 	"math/big"
 	"strconv"

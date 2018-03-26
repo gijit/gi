@@ -10,7 +10,7 @@
 package buildutil // import "golang.org/x/tools/go/buildutil"
 
 import (
-	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/glycerine/gi/pkg/gostd/build"
 	"os"
 	"path/filepath"
 	"sort"

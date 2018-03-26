@@ -8,9 +8,9 @@ package types
 
 import (
 	"bytes"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/constant"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/constant"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 // An operandMode specifies the (addressing) mode of an operand.

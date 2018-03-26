@@ -8,15 +8,15 @@ package types_test
 
 import (
 	"fmt"
-	//"github.com/gijit/gi/pkg/priv/testenv"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/importer"
-	"github.com/gijit/gi/pkg/parser"
+	//"github.com/glycerine/gi/pkg/priv/testenv"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/importer"
+	"github.com/glycerine/gi/pkg/parser"
 	"sort"
 	"strings"
 	"testing"
 
-	. "github.com/gijit/gi/pkg/types"
+	. "github.com/glycerine/gi/pkg/types"
 )
 
 func TestIssue5770(t *testing.T) {
@@ -219,7 +219,7 @@ func TestIssue13898(t *testing.T) {
 	const src0 = `
 package main
 
-import "github.com/gijit/gi/pkg/types"
+import "github.com/glycerine/gi/pkg/types"
 
 func main() {
 	var info types.Info
@@ -233,8 +233,8 @@ func main() {
 package main
 
 import (
-	"github.com/gijit/gi/pkg/types"
-	_ "github.com/gijit/gi/pkg/importer"
+	"github.com/glycerine/gi/pkg/types"
+	_ "github.com/glycerine/gi/pkg/importer"
 )
 
 func main() {
@@ -250,8 +250,8 @@ func main() {
 package main
 
 import (
-	_ "github.com/gijit/gi/pkg/importer"
-	"github.com/gijit/gi/pkg/types"
+	_ "github.com/glycerine/gi/pkg/importer"
+	"github.com/glycerine/gi/pkg/types"
 )
 
 func main() {

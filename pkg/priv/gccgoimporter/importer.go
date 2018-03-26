@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"debug/elf"
 	"fmt"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/types"
 	"io"
 	"os"
 	"os/exec"

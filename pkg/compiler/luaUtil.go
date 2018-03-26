@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gijit/gi/pkg/verb"
+	"github.com/glycerine/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 )

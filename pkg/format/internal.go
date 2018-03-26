@@ -11,10 +11,10 @@ package format
 
 import (
 	"bytes"
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/printer"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/printer"
+	"github.com/glycerine/gi/pkg/token"
 	"strings"
 )
 

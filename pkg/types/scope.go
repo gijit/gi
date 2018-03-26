@@ -9,7 +9,7 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"io"
 	"sort"
 	"strings"

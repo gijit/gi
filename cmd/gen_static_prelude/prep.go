@@ -13,7 +13,7 @@ import (
 func main() {
 
 	gopath := os.Getenv("GOPATH")
-	compiler := gopath + "/src/github.com/gijit/gi/pkg/compiler"
+	compiler := gopath + "/src/github.com/glycerine/gi/pkg/compiler"
 	prelude := compiler + "/prelude"
 	gentarget := compiler + "/prelude_static.go"
 	var fs http.FileSystem = http.Dir(prelude)

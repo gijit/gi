@@ -5,7 +5,7 @@ package runtime
 import (
 	"runtime/internal/sys"
 
-	js "github.com/gijit/gi/pkg/luaapi"
+	js "github.com/glycerine/gi/pkg/luaapi"
 )
 
 const GOOS = sys.GOOS

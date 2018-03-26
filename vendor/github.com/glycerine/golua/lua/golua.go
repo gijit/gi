@@ -14,7 +14,7 @@ import "C"
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/verb"
+	"github.com/glycerine/gi/pkg/verb"
 	"reflect"
 	"runtime/debug"
 	"sync"

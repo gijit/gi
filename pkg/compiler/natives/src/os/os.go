@@ -5,7 +5,7 @@ package os
 import (
 	"errors"
 
-	"github.com/gijit/gi/pkg/luaapi"
+	"github.com/glycerine/gi/pkg/luaapi"
 )
 
 func runtime_args() []string { // not called on Windows

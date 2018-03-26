@@ -6,7 +6,7 @@ import (
 	"errors"
 	"syscall"
 
-	"github.com/gijit/gi/pkg/luaapi"
+	"github.com/glycerine/gi/pkg/luaapi"
 )
 
 func Listen(net, laddr string) (Listener, error) {

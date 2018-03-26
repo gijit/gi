@@ -9,7 +9,7 @@ package loader_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/token"
 	"log"
 	"path/filepath"
 	"runtime"

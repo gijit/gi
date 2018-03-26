@@ -6,8 +6,8 @@ package parser_test
 
 import (
 	"fmt"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/token"
 )
 
 func ExampleParseFile() {

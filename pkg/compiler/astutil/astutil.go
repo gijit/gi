@@ -1,8 +1,8 @@
 package astutil
 
 import (
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/types"
 )
 
 func RemoveParens(e ast.Expr) ast.Expr {

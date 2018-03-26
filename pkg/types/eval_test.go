@@ -7,15 +7,15 @@
 package types_test
 
 import (
-	"github.com/gijit/gi/pkg/ast"
-	"github.com/gijit/gi/pkg/importer"
-	"github.com/gijit/gi/pkg/parser"
-	"github.com/gijit/gi/pkg/priv/testenv"
-	"github.com/gijit/gi/pkg/token"
+	"github.com/glycerine/gi/pkg/ast"
+	"github.com/glycerine/gi/pkg/importer"
+	"github.com/glycerine/gi/pkg/parser"
+	"github.com/glycerine/gi/pkg/priv/testenv"
+	"github.com/glycerine/gi/pkg/token"
 	"strings"
 	"testing"
 
-	. "github.com/gijit/gi/pkg/types"
+	. "github.com/glycerine/gi/pkg/types"
 )
 
 func testEval(t *testing.T, fset *token.FileSet, pkg *Package, pos token.Pos, expr string, typ Type, typStr, valStr string) {
