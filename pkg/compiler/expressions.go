@@ -821,7 +821,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 						}
 						return c.formatExpr("%s[__externalize(%e, __String)] = %s", recv, e.Args[0], externalizeExpr(e.Args[1]))
 					case "Delete":
-						return c.formatExpr("delete %s[__externalize(%e, __String)]", recv, e.Args[0])
+						//return c.formatExpr("delete %s[__externalize(%e, __String)]", recv, e.Args[0])
+						return c.formatExpr("delete(%s, %e)", recv, e.Args[0])
 					case "Length":
 						return c.formatExpr("__parseInt(%s.length)", recv)
 					case "Index":
