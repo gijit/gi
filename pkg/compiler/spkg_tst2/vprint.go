@@ -6,6 +6,8 @@ import (
 
 var Verbose bool = false
 
+var A, B = true, false
+
 func P(format string, a ...interface{}) {
 	if Verbose {
 		fmt.Printf(format, a...)

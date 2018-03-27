@@ -316,7 +316,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		// our spkg_tst.Fish method and it never showed up in the output.
 
 		// jea: gotta not mix our types into our variables...
-		//pp("d.Vars is '%#v'; dceSelection[d]='%v'", d.Vars, dceSelection[d])
+		vv("d.Vars is '%#v'; dceSelection[d]='%v'", d.Vars, dceSelection[d])
 		if true { // _, ok := dceSelection[d]; ok {
 
 			// jea: hack, exclude those with '.', since they won't compile anyway...
