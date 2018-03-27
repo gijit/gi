@@ -320,7 +320,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 				"\t\t\t--[[ fullpkg.go:320, for importPath='%s' --]]\n", importPath))...)
 			d.Vars = append(d.Vars, c.localVars...)
 			// jea add:
-			d.initializePackageVars(lhs)
+			//d.initializePackageVars(lhs)
 		})
 		if len(init.Lhs) == 1 {
 			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
