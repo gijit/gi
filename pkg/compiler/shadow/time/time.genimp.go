@@ -104,6 +104,8 @@ __type__.time ={};
 __type__.time.Location = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Location",
+ __str = "Location",
+ exported = true,
  __call = function(t, src)
    return __ctor__time.Location(src)
  end,
@@ -118,6 +120,8 @@ setmetatable(__type__.time.Location, __type__.time.Location);
 __type__.time.ParseError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ParseError",
+ __str = "ParseError",
+ exported = true,
  __call = function(t, src)
    return __ctor__time.ParseError(src)
  end,
@@ -132,6 +136,8 @@ setmetatable(__type__.time.ParseError, __type__.time.ParseError);
 __type__.time.Ticker = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Ticker",
+ __str = "Ticker",
+ exported = true,
  __call = function(t, src)
    return __ctor__time.Ticker(src)
  end,
@@ -146,6 +152,8 @@ setmetatable(__type__.time.Ticker, __type__.time.Ticker);
 __type__.time.Time = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Time",
+ __str = "Time",
+ exported = true,
  __call = function(t, src)
    return __ctor__time.Time(src)
  end,
@@ -160,6 +168,8 @@ setmetatable(__type__.time.Time, __type__.time.Time);
 __type__.time.Timer = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Timer",
+ __str = "Timer",
+ exported = true,
  __call = function(t, src)
    return __ctor__time.Timer(src)
  end,

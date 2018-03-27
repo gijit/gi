@@ -59,6 +59,8 @@ __type__.atomic ={};
 __type__.atomic.Value = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Value",
+ __str = "Value",
+ exported = true,
  __call = function(t, src)
    return __ctor__atomic.Value(src)
  end,

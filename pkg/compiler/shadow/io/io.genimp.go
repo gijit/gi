@@ -301,6 +301,8 @@ __type__.io ={};
 __type__.io.LimitedReader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "LimitedReader",
+ __str = "LimitedReader",
+ exported = true,
  __call = function(t, src)
    return __ctor__io.LimitedReader(src)
  end,
@@ -315,6 +317,8 @@ setmetatable(__type__.io.LimitedReader, __type__.io.LimitedReader);
 __type__.io.PipeReader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PipeReader",
+ __str = "PipeReader",
+ exported = true,
  __call = function(t, src)
    return __ctor__io.PipeReader(src)
  end,
@@ -329,6 +333,8 @@ setmetatable(__type__.io.PipeReader, __type__.io.PipeReader);
 __type__.io.PipeWriter = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PipeWriter",
+ __str = "PipeWriter",
+ exported = true,
  __call = function(t, src)
    return __ctor__io.PipeWriter(src)
  end,
@@ -343,6 +349,8 @@ setmetatable(__type__.io.PipeWriter, __type__.io.PipeWriter);
 __type__.io.SectionReader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SectionReader",
+ __str = "SectionReader",
+ exported = true,
  __call = function(t, src)
    return __ctor__io.SectionReader(src)
  end,

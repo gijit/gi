@@ -90,6 +90,8 @@ __type__.bytes ={};
 __type__.bytes.Buffer = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Buffer",
+ __str = "Buffer",
+ exported = true,
  __call = function(t, src)
    return __ctor__bytes.Buffer(src)
  end,
@@ -104,6 +106,8 @@ setmetatable(__type__.bytes.Buffer, __type__.bytes.Buffer);
 __type__.bytes.Reader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Reader",
+ __str = "Reader",
+ exported = true,
  __call = function(t, src)
    return __ctor__bytes.Reader(src)
  end,
