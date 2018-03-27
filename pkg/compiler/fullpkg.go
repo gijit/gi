@@ -197,7 +197,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
-			InitCode: append([]byte(fmt.Sprintf("\t\t if %s.__init ~= nil then\n", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte("\t\t end; -- fullpkg.go:198")...)...),
+			InitCode: append([]byte(fmt.Sprintf("\t\t if %[1]s ~= nil and %[1]s.__init ~= nil then\n\t", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte("\t\t end; -- fullpkg.go:198\n")...)...),
 		})
 	}
 
