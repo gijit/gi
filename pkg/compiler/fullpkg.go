@@ -173,7 +173,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 	sort.Strings(importedPaths)
 	for _, impPath := range importedPaths {
-		id := c.newIdent(fmt.Sprintf(`%s.__init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
+		pkgShort := c.p.pkgVars[impPath]
+
+		id := c.newIdent(fmt.Sprintf(`%s.__init`, pkgShort), types.NewSignature(nil, nil, nil, false))
 		call := &ast.CallExpr{Fun: id}
 		c.Blocking[call] = true
 		c.Flattened[call] = true
@@ -187,12 +189,15 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			//
 			// confirm by going back to just one, the direct assignment:
 			//
-			DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
+			DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", omitAnyShadowPathPrefix(impPath))),
+
+			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n\t%s = __packages[\"%s\"];\n", omitAnyShadowPathPrefix(impPath), c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
+			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
-			InitCode: c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }),
+			InitCode: append([]byte(fmt.Sprintf("\t\t if %s.__init ~= nil then\n", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte("\t\t end; -- fullpkg.go:198")...)...),
 		})
 	}
 
