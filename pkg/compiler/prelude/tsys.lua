@@ -1179,7 +1179,7 @@ __tfunBasicMT = {
             end
             if not self.__dfsNode.made then
                --turn off to bootstrap, TODO: enable this!
-               --self.__dfsNode:makeRequiredTypes()
+               self.__dfsNode:makeRequiredTypes()
             end
             
             -- get zero value if no args
@@ -1303,6 +1303,17 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    local typ ={
       __str = str,
    };
+   typ.bloom = function()
+      if typ == nil or typ.kind == nil then
+         return
+      end
+      if __isBasicTyp(typ) then
+         return -- basic types are always leaf nodes, no children.
+      end
+      
+      print("bloom called for typ (TODO add self-instantiation code here):")
+      __st(typ)
+   end   
    typ.__dfsNode = __dfsGlobal:newDfsNode(str, typ)
 
    setmetatable(typ, __tfunBasicMT)
@@ -1950,10 +1961,6 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
    typ.methods = typ.methods or {};
    typ.methodSetCache = nil;
    typ.comparable = true;
-   typ.bloom = function()
-      print("bloom called for typ:")
-      __st(typ)
-   end
    --print("*** returning from __newType with typ=")
    --__st(typ)
    return typ;
