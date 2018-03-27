@@ -30,6 +30,8 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				bTn := types.NewTypeName(0, nil, "B", anInt)
 				bTy := types.NewNamed(bTn, anInt, nil)
 
+				cv.So(aTy, cv.ShouldNotEqual, bTy)
+
 				cTn := types.NewTypeName(0, nil, "C", anInt)
 				cTy := types.NewNamed(cTn, anInt, nil)
 

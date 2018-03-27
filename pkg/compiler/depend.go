@@ -109,16 +109,19 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 		}
 	}
 
-	_, present := s.dfsDedup[ch.typ]
-	if present {
-		// child was previously generated, so
-		// we don't need to worry about this
-		// dependency
-		return
-	}
-
+	// dedup happens in newDfsNode now.
+	/*
+		prior, present := s.dfsDedup[ch.typ]
+		if present {
+			// child was previously generated, so
+			// we don't need to worry about this
+			// dependency
+			vv("dedup child, previously seen: %s was seen as %s", ch.name, prior.name)
+			return
+		}
+	*/
 	if par.dedupChildren[ch] {
-		// avoid adding same child twice.
+		vv("avoid adding same child twice to a parent.")
 		return
 	}
 
