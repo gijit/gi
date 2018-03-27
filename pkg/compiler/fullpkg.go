@@ -25,7 +25,7 @@ import (
 // see the incr.go:34 IncrementallyCompile() function.
 //
 func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.FileSet, importContext *ImportContext, minify bool, depth int) (arch *Archive, err error) {
-	vv("FullPackageCompile() top. importPath='%s'", importPath)
+	pp("FullPackageCompile() top. importPath='%s'", importPath)
 	defer func() {
 		if arch != nil {
 			pp("end of FullPackageCompile, returning arch='%#v'\n and arch.Pkg='%#v', err='%v'", arch, arch.Pkg, err)
@@ -72,13 +72,13 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		},
 	}
 
-	vv("config.Check on importPath='%s'\n", importPath)
+	pp("config.Check on importPath='%s'\n", importPath)
 	prelude := addPreludeToNewPkg
 	if importPath != "main" {
 		prelude = nil
 	}
 	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude, depth+1)
-	vv("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
+	pp("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
 	if importError != nil {
 		return nil, importError
 	}
@@ -97,10 +97,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 	importContext.Packages[importPath] = typesPkg
 
-	vv("about to call gcimporter.BExportData, with typesPkg='%#v'", typesPkg)
+	pp("about to call gcimporter.BExportData, with typesPkg='%#v'", typesPkg)
 	exportData := gcimporter.BExportData(nil, typesPkg)
 
-	vv("back from gcimporter.BExportData")
+	pp("back from gcimporter.BExportData")
 	encodedFileSet := bytes.NewBuffer(nil)
 	if err := fileSet.Write(json.NewEncoder(encodedFileSet).Encode); err != nil {
 		pp("got err back from fileSet.Write: err='%v'", err)
@@ -110,7 +110,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 
 	simplifiedFiles := make([]*ast.File, len(files))
 	for i, file := range files {
-		vv("simplifying file from pkg '%s' by calling astrewrite", file.Name.Name)
+		pp("simplifying file from pkg '%s' by calling astrewrite", file.Name.Name)
 		simplifiedFiles[i] = astrewrite.Simplify(file, typesInfo, false)
 	}
 
@@ -130,9 +130,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		}
 		panic(fullName)
 	}
-	vv("about to call AnalyzePkg, on importPath='%s'", importPath)
+	pp("about to call AnalyzePkg, on importPath='%s'", importPath)
 	pkgInfo := analysis.AnalyzePkg(simplifiedFiles, fileSet, typesInfo, typesPkg, isBlocking)
-	vv("back from AnalyzePkg on importPath='%s', pkgInfo = '%p'", importPath, pkgInfo)
+	pp("back from AnalyzePkg on importPath='%s', pkgInfo = '%p'", importPath, pkgInfo)
 	c := &funcContext{
 		FuncInfo: pkgInfo.InitFuncInfo,
 		p: &pkgContext{
@@ -269,18 +269,18 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	varsWithInit := make(map[*types.Var]bool)
 	for _, init := range c.p.InitOrder {
 		for _, o := range init.Lhs {
-			vv("varsWithInit true for o='%#v'", o)
+			pp("varsWithInit true for o='%#v'", o)
 			varsWithInit[o] = true
 		}
 	}
 	for _, o := range vars {
-		vv("ranging over vars, o = '%#v'", o)
+		pp("ranging over vars, o = '%#v'", o)
 		var d Decl
 		if !o.Exported() {
-			vv("o not exported")
+			pp("o not exported")
 			d.Vars = []string{c.objectName(o)}
 		} else {
-			vv("o exported")
+			pp("o exported")
 		}
 		if c.p.HasPointer[o] && !o.Exported() {
 			d.Vars = append(d.Vars, c.varPtrName(o))
@@ -317,7 +317,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			//test 1002: Verbose = false is written here.
 			// jea add:
 			d.InitCode = append(d.InitCode, []byte(fmt.Sprintf(
-				"\t\t\t--[[ fullpkg.go:321 --]] print(\"99999999 jea debug! package initialization code called, for '%s'!\")\n", importPath))...)
+				"\t\t\t--[[ fullpkg.go:320, for importPath='%s' --]]\n", importPath))...)
 			d.Vars = append(d.Vars, c.localVars...)
 			// jea add:
 			d.initializePackageVars(lhs)
@@ -531,9 +531,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return nil, c.p.errList
 	}
 
-	vv("at end of FullPackageCompile of importPath='%s', here are allDecls:", importPath)
+	pp("at end of FullPackageCompile of importPath='%s', here are allDecls:", importPath)
 	for k, d := range allDecls {
-		vv("allDecls[k=%v] has .DeclCode = '%s'", k, string(d.DeclCode))
+		pp("allDecls[k=%v] has .DeclCode = '%s'", k, string(d.DeclCode))
 	}
 	return &Archive{
 		SavedArchive: SavedArchive{

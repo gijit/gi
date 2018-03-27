@@ -755,10 +755,10 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 	}
 	pp("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
 	pp(" here is the global env:")
-	s.showGlobal()
+	//s.showGlobal()
 	defer func() {
 		pp("upon leaving Session.BuildPackage(), here is the global env:")
-		s.showGlobal()
+		//s.showGlobal()
 		pp("and here is stack: '%s'", stack())
 	}()
 

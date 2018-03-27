@@ -351,7 +351,6 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 
 	_, err := w.Write(removeWhitespace([]byte(`
       __init = function(self)
-         print("jea debug: 88888888888888888 compiler.go:354. __init() called on package.")
          __pkg.__init = function() end;
          -- jea compiler.go:355
          local __f
