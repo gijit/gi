@@ -399,7 +399,7 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 
 		if o.Pkg() != c.p.Pkg || (isVarOrConst(o) && o.Exported()) {
 			pkgPrefix := c.pkgVar(o.Pkg())
-			vv("o.Pkg() = '%#v', o.Name()='%#v'; pkgPrefix='%s'. c.p.Pkg='%s'",
+			pp("o.Pkg() = '%#v', o.Name()='%#v'; pkgPrefix='%s'. c.p.Pkg='%s'",
 				o.Pkg(), o.Name(), pkgPrefix, c.p.Pkg)
 			if pkgPrefix == "" {
 				return o.Name()
@@ -409,7 +409,7 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 	}
 
 	name, ok := c.p.objectNames[o]
-	vv("utils.go:406, name='%v', ok='%v'", name, ok)
+	pp("utils.go:406, name='%v', ok='%v'", name, ok)
 	if !ok {
 		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o), false)
 		pp("name='%#v', o.Name()='%v'", name, o.Name())

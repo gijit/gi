@@ -227,11 +227,11 @@ func ImportDir(dir string, mode build.ImportMode, installSuffix string, buildTag
 // replaced by `_`. New identifiers that don't exist in original package get added.
 func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (files []*ast.File, err error) {
 	/*
-		vv("parseAndAugment called! pkg.Name='%s'", pkg.Name)
+		pp("parseAndAugment called! pkg.Name='%s'", pkg.Name)
 		//debug
 		defer func() {
 			r := recover()
-			vv("done with parseAndAugment of pkg.Name='%s', in panic unwind = %v", pkg.Name, r != nil)
+			pp("done with parseAndAugment of pkg.Name='%s', in panic unwind = %v", pkg.Name, r != nil)
 			if r != nil {
 				panic(r)
 			}
@@ -242,7 +242,7 @@ func parseAndAugment(pkg *build.Package, isTest bool, fileSet *token.FileSet) (f
 			defer func() {
 
 				by := dumpFileAst(files, fileSet)
-				vv("jea debug, at end of parseAndAugment, files = '\n%s\n'", string(by))
+				pp("jea debug, at end of parseAndAugment, files = '\n%s\n'", string(by))
 
 			}()
 	*/
@@ -575,7 +575,7 @@ func (s *Session) BuildImportPath(path string, depth int) (*Archive, error) {
 }
 
 func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string, depth int) (*PackageData, *Archive, error) {
-	vv("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'. depth=%v", path, srcDir, depth)
+	pp("Session.BuildImportPathWithSrcDir() top. path='%s', srcDir='%s'. depth=%v", path, srcDir, depth)
 
 	pkg, err := s.importWithSrcDir(path, srcDir, 0, s.InstallSuffix(), s.options.BuildTags, depth)
 
@@ -687,7 +687,7 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 					return nil, err
 				}
 
-				vv("\n\n Just read Archive from disk, filename='%s', import path='%s'. archive.Pkg='%#v'\n and archive='%#v'", pkg.PkgObj, pkg.ImportPath, archive.Pkg, archive)
+				pp("\n\n Just read Archive from disk, filename='%s', import path='%s'. archive.Pkg='%#v'\n and archive='%#v'", pkg.PkgObj, pkg.ImportPath, archive.Pkg, archive)
 
 				s.Archives[pkg.ImportPath] = archive
 
@@ -707,22 +707,22 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 	importContext := &ImportContext{
 		Packages: s.Types,
 		Import: func(path, pkgDir string, depth int) (*Archive, error) {
-			vv("callback to Import() in ImportContext: path='%s', pkgDir='%s'", path, pkgDir)
+			pp("callback to Import() in ImportContext: path='%s', pkgDir='%s'", path, pkgDir)
 			//if s.AllowImportCaching? TODO figure out balance between speed and editability.
 			//if archive, ok := localImportPathCache[path]; ok {
 
 			// jea: change to use s.Archvies instead of localImportPathCache
 			if archive, ok := s.Archives[path]; ok {
-				vv("\n\n using cached archive from s.Archives for path ='%s'... archive.Pkg='%#v'\n",
+				pp("\n\n using cached archive from s.Archives for path ='%s'... archive.Pkg='%#v'\n",
 					path, archive.Pkg)
 				return archive, nil
 			}
-			vv("path '%s' is not in our s.Archives, which has '%v'", path, summarizeArchives(s.Archives))
+			pp("path '%s' is not in our s.Archives, which has '%v'", path, summarizeArchives(s.Archives))
 
 			/* infinite loop of importing ourselves:
 
 			// binary import
-			//vv("calling GiImportFunc with path='%s', pkgDir='%s', stack='%s'",
+			//pp("calling GiImportFunc with path='%s', pkgDir='%s', stack='%s'",
 			//	path, pkgDir, string(debug.Stack()))
 
 			archive, err := s.ic.GiImportFunc(path, pkgDir)
@@ -753,13 +753,13 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 	if err != nil {
 		return nil, err
 	}
-	vv("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
-	vv(" here is the global env:")
+	pp("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
+	pp(" here is the global env:")
 	s.showGlobal()
 	defer func() {
-		vv("upon leaving Session.BuildPackage(), here is the global env:")
+		pp("upon leaving Session.BuildPackage(), here is the global env:")
 		s.showGlobal()
-		vv("and here is stack: '%s'", stack())
+		pp("and here is stack: '%s'", stack())
 	}()
 
 	for _, jsFile := range pkg.JSFiles {
