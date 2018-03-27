@@ -35,20 +35,22 @@ type dfsNode struct {
 	visited       bool
 
 	createCode []byte
+	printed    bool
 }
 
 func (me *dfsNode) bloom(w io.Writer, s *dfsState) {
-	/*
-		if len(me.createCode) > 0 {
-			_, err := w.Write(me.createCode)
-			panicOn(err)
-		}
-	*/
+	// only print once.
+	if me.printed {
+		return
+	}
 	if len(s.codeMap) > 0 {
 		code, ok := s.codeMap[me.typ]
 		if ok {
-			_, err := w.Write([]byte(code))
-			panicOn(err)
+			if !me.printed {
+				me.printed = true
+				_, err := w.Write([]byte(code))
+				panicOn(err)
+			}
 		}
 	}
 }
@@ -132,7 +134,9 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 		// back it out, in case we recover, as the 1200 test does.
 		par.children = par.children[:n]
 		delete(par.dedupChildren, ch)
-		panic("cycles not allowed")
+		cyc := fmt.Sprintf("parent:'%s' -> child:'%s' completes a cycle", par.name, ch.name)
+
+		panic(fmt.Sprintf("cycles not allowed: '%s'", cyc))
 	}
 }
 

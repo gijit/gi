@@ -2344,17 +2344,18 @@ end;
 
 function __interfaceStrHelper(m)
    local s = ""
-   if m.pkg ~= "" then
-      s = m.pkg .. "."
+   if m.__pkg ~= "" then
+      s = m.__pkg .. "."
    end
    return s .. m.__name .. string.sub(m.__typ.__str, 6) -- sub for removing "__kind"
 end
 
 __interfaceTypes = {};
 __interfaceType = function(methods)
+
    
    local typeKey = __mapAndJoinStrings("_", methods, function(m)
-                                          return m.pkg .. "," .. m.__name .. "," .. m.__typ.id;
+                                          return m.__pkg .. "," .. m.__name .. "," .. m.__typ.id;
    end)
    local typ = __interfaceTypes[typeKey];
    if typ == nil then

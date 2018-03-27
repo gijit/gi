@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"fmt"
-	"os"
+	//"os"
 	"testing"
 
 	"github.com/glycerine/gi/pkg/types"
@@ -101,8 +101,8 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				expectEq(s.dfsOrder[5], a)
 				expectEq(s.dfsOrder[6], g)
 
-				s.genCode(os.Stdout)
-				//s.genCode(devNull(0))
+				//s.genCode(os.Stdout)
+				s.genCode(devNull(0))
 			}
 
 		}

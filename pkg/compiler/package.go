@@ -210,9 +210,10 @@ func (c *funcContext) initArgs(ty types.Type) string {
 	case *types.Map:
 		return fmt.Sprintf("%s, %s", c.typeName(t.Key(), t), c.typeName(t.Elem(), t))
 	case *types.Pointer:
-		return fmt.Sprintf("%s", c.typeName(t.Elem(), t))
+		//vv("t.Elem()='%#v',  t='%#v'", t.Elem().String(), t.String()) // t.Elem="main.S", t="*main.S"
+		return fmt.Sprintf("%s", c.typeName(t.Elem(), nil))
 	case *types.Slice:
-		return fmt.Sprintf("%s", c.typeName(t.Elem(), t))
+		return fmt.Sprintf("%s", c.typeName(t.Elem(), nil))
 	case *types.Signature:
 		params := make([]string, t.Params().Len())
 		for i := range params {
