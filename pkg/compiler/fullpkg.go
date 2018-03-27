@@ -261,13 +261,18 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	varsWithInit := make(map[*types.Var]bool)
 	for _, init := range c.p.InitOrder {
 		for _, o := range init.Lhs {
+			vv("varsWithInit true for o='%#v'", o)
 			varsWithInit[o] = true
 		}
 	}
 	for _, o := range vars {
+		vv("ranging over vars, o = '%#v'", o)
 		var d Decl
 		if !o.Exported() {
+			vv("o not exported")
 			d.Vars = []string{c.objectName(o)}
+		} else {
+			vv("o exported")
 		}
 		if c.p.HasPointer[o] && !o.Exported() {
 			d.Vars = append(d.Vars, c.varPtrName(o))
@@ -301,8 +306,12 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					Rhs: []ast.Expr{init.Rhs},
 				}, nil)
 			})
-			d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:304 --]]")...)
+			//test 1002: Verbose = false is written here.
+			// jea add:
+			d.InitCode = append(d.InitCode, []byte("\t\t\t--[[ fullpkg.go:311 --]]\n")...)
 			d.Vars = append(d.Vars, c.localVars...)
+			// jea add:
+			d.initializePackageVars(lhs)
 		})
 		if len(init.Lhs) == 1 {
 			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
@@ -513,9 +522,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		return nil, c.p.errList
 	}
 
-	pp("at end of FullPackageCompile of importPath='%s', here are allDecls:", importPath)
+	vv("at end of FullPackageCompile of importPath='%s', here are allDecls:", importPath)
 	for k, d := range allDecls {
-		pp("allDecls[k=%v] has .DeclCode = '%s'", k, string(d.DeclCode))
+		vv("allDecls[k=%v] has .DeclCode = '%s'", k, string(d.DeclCode))
 	}
 	return &Archive{
 		SavedArchive: SavedArchive{
@@ -534,4 +543,18 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		Check:        chk,
 		FuncSrcCache: funcSrcCache,
 	}, nil
+}
+
+// jea add:
+func (d *Decl) initializePackageVars(lhs []ast.Expr) {
+	code := bytes.NewBuffer(nil)
+	for _, e := range lhs {
+		nm := nameHelper(e)
+		d.Vars = append(d.Vars, nm)
+
+		if ast.IsExported(nm) {
+			fmt.Fprintf(code, "\t\t__pkg.%[1]s = %[1]s; -- fullpkg.go:556\n", nm)
+		}
+	}
+	d.InitCode = append(d.InitCode, code.Bytes()...)
 }

@@ -489,6 +489,8 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 										})
 										d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:490 --]]")...)
 										d.Vars = append(d.Vars, c.localVars...)
+										// jea add:
+										d.initializePackageVars(lhs)
 									})
 									if len(init.Lhs) == 1 {
 										if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {

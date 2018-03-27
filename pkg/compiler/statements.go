@@ -1013,14 +1013,14 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 	if _, ok := rhs.(*ast.BasicLit); ok && define {
 		if lhsType == nil {
 			if ident, ok := lhs.(*ast.Ident); ok {
-				return fmt.Sprintf("%s%s = %s; -- statements.go:966", local, ident.Name, rhsExpr) // skip __copy
+				return fmt.Sprintf("%s%s = %s; -- statements.go:1016", local, ident.Name, rhsExpr) // skip __copy
 			}
 			panic("what goes here?")
 		} else {
 			//pp("jea debug, about to start translateExpr on lhs='%#v'", lhs)
 			tlhs := c.translateExpr(lhs, nil)
 			//pp("jea debug, assign with lhsType != nil. tlhs='%#v'", tlhs)
-			return fmt.Sprintf("%s%s = %s; -- statements.go:973", local, tlhs, rhsExpr) // skip __copy
+			return fmt.Sprintf("%s%s = %s; -- statements.go:1023", local, tlhs, rhsExpr) // skip __copy
 		}
 	}
 	pp("rhsExpr = '%#v'; src='%s'", rhsExpr, rhsExpr.str)
