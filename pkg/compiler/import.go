@@ -120,10 +120,14 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 
 	// check cache first
 	arch, ok := ic.Session.Archives[path]
-	if ok {
-		pp("ic.GiImportFunc cache hit for path '%s'", path)
-		return arch, nil
-	}
+	_, _ = arch, ok
+	/*
+		if ok {
+			pp("ic.GiImportFunc cache hit for path '%s'", path)
+			return arch, nil
+		}
+	*/
+	pp("no cache hit for path '%s'", path)
 
 	var pkg *types.Package
 	t0 := ic.goro.newTicket("", true)
