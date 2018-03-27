@@ -491,10 +491,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					methods = append(methods, entry)
 				}
 				if len(methods) > 0 {
-					c.Printf("%s.__methods_desc = {%s};", c.typeName(0, named), strings.Join(methods, ", "))
+					c.Printf("%s.__methods_desc = {%s};", c.typeName(named, nil), strings.Join(methods, ", "))
 				}
 				if len(ptrMethods) > 0 {
-					c.Printf("%s.__methods_desc = {%s};", c.typeName(0, types.NewPointer(named)), strings.Join(ptrMethods, ", "))
+					c.Printf("%s.__methods_desc = {%s};", c.typeName(types.NewPointer(named), nil), strings.Join(ptrMethods, ", "))
 				}
 			})
 			switch t := o.Type().Underlying().(type) {

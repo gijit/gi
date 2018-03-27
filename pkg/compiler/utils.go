@@ -177,7 +177,7 @@ func (c *funcContext) translateArgs(sig *types.Signature, argExprs []ast.Expr, e
 	//return append(args[:paramsLen-1], fmt.Sprintf("awesome new %s([%s])", c.typeName(varargType), strings.Join(args[paramsLen-1:], ", ")))
 
 	// c.typeName(varargType) : "sliceType" -> "_gi_NewSlice"
-	newOper := translateTypeNameToNewOper(c.typeName(0, varargType))
+	newOper := translateTypeNameToNewOper(c.typeName(varargType, nil))
 
 	pp("jea debug, utils.go: paramsLen = %v; newOper=%#v", paramsLen, newOper)
 	for i := range args {
@@ -484,9 +484,9 @@ func (c *funcContext) typeNameReport(level int, ty types.Type) string {
 	return anonType.Name()
 }
 
-func (c *funcContext) typeName(level int, ty types.Type) (res string) {
-
-	res, _, _, _ = c.typeNameWithAnonInfo(ty)
+func (c *funcContext) typeName(ty types.Type, parent types.Type) (res string) {
+	// parent is nil or equal to ty, ignore the parent.
+	res, _, _, _ = c.typeNameWithAnonInfo(ty, parent)
 	return
 }
 
@@ -505,13 +505,24 @@ func (c *funcContext) getPkgName() string {
 }
 
 func (c *funcContext) typeNameWithAnonInfo(
-	ty types.Type,
+	ty, parent types.Type,
 ) (
 	res string,
 	isAnon bool,
 	anonType *types.TypeName,
 	createdVarName string,
 ) {
+
+	// For the dependency graph, if parent is nil or
+	// equal to ty, then ignore the parent.
+	//
+	if parent != nil && parent != ty {
+		parNode := c.p.typeDepend.newDfsNode(parent.String(), parent, nil)
+		chNode := c.p.typeDepend.newDfsNode(ty.String(), ty, nil)
+		if parNode != chNode {
+			c.p.typeDepend.addChild(parNode, chNode)
+		}
+	}
 
 	pkgName := c.getPkgName()
 
@@ -561,7 +572,15 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
+		parNode := c.p.typeDepend.newDfsNode(ty.String(), ty, nil)
+		chNode := c.p.typeDepend.newDfsNode(anonType.Type().String(), anonType.Type(), nil)
+		if parNode != chNode {
+			c.p.typeDepend.addChild(parNode, chNode)
+		}
+
 		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:564\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
+		c.p.typeDefineLuaCode[anonType] = anonTypePrint
+
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
@@ -596,7 +615,7 @@ func (c *funcContext) externalize(s string, t types.Type) string {
 			return "null"
 		}
 	}
-	return fmt.Sprintf("__externalize(%s, %s)", s, c.typeName(0, t))
+	return fmt.Sprintf("__externalize(%s, %s)", s, c.typeName(t, nil))
 }
 
 func (c *funcContext) handleEscapingVars(n ast.Node) {

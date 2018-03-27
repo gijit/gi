@@ -20,14 +20,14 @@ import (
 var dependTestMode = false
 
 func isBasicTyp(n *dfsNode) bool {
-	_, ok := n.typ.Type().(*types.Basic)
+	_, ok := n.typ.(*types.Basic)
 	return ok
 }
 
 type dfsNode struct {
 	id            int
 	name          string
-	typ           types.Object
+	typ           types.Type
 	stale         bool
 	made          bool
 	children      []*dfsNode
@@ -70,7 +70,7 @@ func (me *dfsNode) makeRequiredTypes(w io.Writer, s *dfsState) {
 	me.bloom(w, s)
 }
 
-func (s *dfsState) newDfsNode(name string, typ types.Object, createCode []byte) *dfsNode {
+func (s *dfsState) newDfsNode(name string, typ types.Type, createCode []byte) *dfsNode {
 	if typ == nil {
 		panic("typ cannot be nil in newDfsNode")
 	}
@@ -185,8 +185,8 @@ func (s *dfsState) markGraphUnVisited() {
 func (s *dfsState) reset() {
 	// empty the graph
 	s.dfsOrder = []*dfsNode{}
-	s.dfsNodes = []*dfsNode{}                // node stored in value.
-	s.dfsDedup = map[types.Object]*dfsNode{} // payloadTyp key -> node value.
+	s.dfsNodes = []*dfsNode{}              // node stored in value.
+	s.dfsDedup = map[types.Type]*dfsNode{} // payloadTyp key -> node value.
 	s.dfsNextID = 0
 	s.stale = false
 }
@@ -245,21 +245,21 @@ func (s *dfsState) hasTypes() bool {
 type dfsState struct {
 	dfsNodes  []*dfsNode
 	dfsOrder  []*dfsNode
-	dfsDedup  map[types.Object]*dfsNode
+	dfsDedup  map[types.Type]*dfsNode
 	dfsNextID int
 	stale     bool
-	codeMap   map[types.Object]string
+	codeMap   map[types.Type]string
 }
 
 func NewDFSState() *dfsState {
 	return &dfsState{
 		dfsNodes: []*dfsNode{},
 		dfsOrder: []*dfsNode{},
-		dfsDedup: make(map[types.Object]*dfsNode),
-		codeMap:  make(map[types.Object]string),
+		dfsDedup: make(map[types.Type]*dfsNode),
+		codeMap:  make(map[types.Type]string),
 	}
 }
 
-func (s *dfsState) setCodeMap(c map[types.Object]string) {
+func (s *dfsState) setCodeMap(c map[types.Type]string) {
 	s.codeMap = c
 }
