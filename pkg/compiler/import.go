@@ -299,7 +299,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 			pp("calling WriteCommandPackage")
 			isMain := false
 			code, err := ic.Session.WriteCommandPackage(archive, "", isMain)
-			pp("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
+			p1("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
 			// fmt is okay here.
 			if err != nil {
 				return nil, err
