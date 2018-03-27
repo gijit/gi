@@ -380,6 +380,15 @@ func isPkgLevel(o types.Object) bool {
 	return o.Parent() != nil && o.Parent().Parent() == types.Universe
 }
 
+func (c *funcContext) objectNameWithPackagePrefix(o types.Object) (nam string) {
+	nam = c.objectName(o)
+	if strings.Contains(nam, ".") {
+		return nam
+	}
+	pkgPrefix := c.pkgVar(o.Pkg())
+	return pkgPrefix + nam
+}
+
 func (c *funcContext) objectName(o types.Object) (nam string) {
 	defer func() {
 		pp("objectName called for o='%#v', returning '%s'", o, nam)
@@ -389,11 +398,8 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 		c.p.dependencies[o] = true
 
 		if o.Pkg() != c.p.Pkg || (isVarOrConst(o) && o.Exported()) {
-			// jea, foregoing pkg vars with the __Pkg. prefix, for now.
-			// return o.Name() // jea was this, until we needed fmt.Sprintf
-			// jea debug here for fmt.Sprintf
 			pkgPrefix := c.pkgVar(o.Pkg())
-			pp("o.Pkg() = '%#v', o.Name()='%#v'; pkgPrefix='%s'. c.p.Pkg='%s'",
+			vv("o.Pkg() = '%#v', o.Name()='%#v'; pkgPrefix='%s'. c.p.Pkg='%s'",
 				o.Pkg(), o.Name(), pkgPrefix, c.p.Pkg)
 			if pkgPrefix == "" {
 				return o.Name()
@@ -403,7 +409,7 @@ func (c *funcContext) objectName(o types.Object) (nam string) {
 	}
 
 	name, ok := c.p.objectNames[o]
-	pp("utils.go:307, name='%v', ok='%v'", name, ok)
+	vv("utils.go:406, name='%v', ok='%v'", name, ok)
 	if !ok {
 		name = c.newVariableWithLevel(o.Name(), isPkgLevel(o), false)
 		pp("name='%#v', o.Name()='%v'", name, o.Name())

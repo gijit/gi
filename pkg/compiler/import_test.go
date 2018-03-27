@@ -106,9 +106,12 @@ callres := spkg_tst2.ToString("Hello %s", "world")
 
 		translation, err := inc.Tr([]byte(code))
 		panicOn(err)
-		fmt.Printf("\n translation='%s'\n", translation)
 
 		// and verify that it happens correctly
+		vv("dump gls just before running translation")
+		LuaRunAndReport(vm, "__gls();")
+		vv("above is global env jsut before we run this translation:")
+		fmt.Printf("\n translation='%s'\n", translation)
 		LuaRunAndReport(vm, string(translation))
 
 		LuaMustBool(vm, "chk", false)
