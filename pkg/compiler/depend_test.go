@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	//"fmt"
+	"fmt"
 	"testing"
 
 	"github.com/glycerine/gi/pkg/types"
@@ -13,6 +13,7 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 
 	cv.Convey("dfs on type tree should work", t, func() {
 
+		dependTestMode = true
 		testDFS := func() {
 			s := NewDFSState()
 
@@ -97,6 +98,6 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 
 func expectEq(a, b *dfsNode) {
 	if a != b {
-		panic("ouch")
+		panic(fmt.Sprintf("ouch: expected equal: %#v and %#v", a.name, b.name))
 	}
 }
