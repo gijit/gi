@@ -144,3 +144,30 @@ import "github.com/glycerine/gi/pkg/compiler/spkg_tst3"
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1004ImportArrayOfSliceOfBytes(t *testing.T) {
+
+	cv.Convey(`rbuf like import revealed an issue, see spkg_tst4 for minimal example`, t, func() {
+
+		code := `
+import "github.com/glycerine/gi/pkg/compiler/spkg_tst4"
+r := NewR();
+chk := r.Get1();
+
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustInt64(vm, "caught", 4)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
