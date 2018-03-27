@@ -392,6 +392,7 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
    end;
 
    __pkg.__init = __init;
+   __pkg.__init(); -- jea add this
    return __pkg;
 end)();
 `), minify)); err != nil {

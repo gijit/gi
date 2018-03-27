@@ -23,8 +23,8 @@ func (c *funcContext) Write(b []byte) (int, error) {
 	c.output = append(c.output, b...)
 	pp("func.ContextWrite, c.output is now '%v'", string(c.output))
 	// DEBUG:
-	if strings.HasPrefix(string(c.output), "	sum1 = adder(5, 5)") {
-	}
+	//if strings.Contains(string(c.output), "._init") {
+	//}
 	return len(b), nil
 }
 

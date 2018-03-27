@@ -182,14 +182,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		importDecls = append(importDecls, &Decl{
 			Vars: []string{c.p.pkgVars[impPath]},
 
-			// jea: we suspect these two import methods are colliding,
-			// example:
-			//   fmt = __packages["github.com/glycerine/gi/pkg/compiler/shadow/fmt"];
-			//   __go_import("fmt");
-			//
-			// confirm by going back to just one, the direct assignment:
-			//
-			DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", omitAnyShadowPathPrefix(impPath))),
+			DeclCode: []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t local %[1]s = _G.%[1]s;\n", omitAnyShadowPathPrefix(impPath))),
 
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n\t%s = __packages[\"%s\"];\n", omitAnyShadowPathPrefix(impPath), c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
