@@ -17,8 +17,8 @@ import (
 
 var dfsTestMode = false
 
-func isBasicTyp(typ types.Type) bool {
-	_, ok := typ.(*types.Basic)
+func isBasicTyp(n *dfsNode) bool {
+	_, ok := n.typ.(*types.Basic)
 	return ok
 }
 
@@ -31,6 +31,8 @@ type dfsNode struct {
 	children      []*dfsNode
 	dedupChildren map[*dfsNode]bool
 	visited       bool
+
+	createCode []byte
 }
 
 func (me *dfsNode) bloom() {
@@ -48,7 +50,7 @@ func (me *dfsNode) makeRequiredTypes() {
 		return
 	}
 	me.made = true
-	if isBasicTyp(me.typ) {
+	if isBasicTyp(me) {
 		return // basic types are always leaf nodes, no children.
 	}
 
@@ -83,26 +85,26 @@ func (s *dfsState) newDfsNode(name string, typ types.Type) *dfsNode {
 }
 
 // par should be a node; e.g. typ.dfsNode
-func (s *dfsState) addChild(me *dfsNode, parTyp, chTyp types.Type) {
+func (s *dfsState) addChild(par, ch *dfsNode) {
 
-	if parTyp == nil {
-		panic("parTyp cannot be nil in addChild")
+	if par == nil {
+		panic("par cannot be nil in addChild")
 	}
-	if chTyp == nil {
-		panic("chTyp cannot be nil in addChild")
+	if ch == nil {
+		panic("ch cannot be nil in addChild")
 	}
 
 	// we can skip all basic types,
 	// as they are already defined.
-	if isBasicTyp(chTyp) {
+	if isBasicTyp(ch) {
 		return
 	}
-	if isBasicTyp(parTyp) {
+	if isBasicTyp(par) {
 		panic(fmt.Sprintf("addChild error: parent was basic type. "+
-			"cannot add child to basic typ %v", parTyp))
+			"cannot add child to basic typ %v", par))
 	}
 
-	_, present := s.dfsDedup[chTyp]
+	_, present := s.dfsDedup[ch.typ]
 	if present {
 		// child was previously generated, so
 		// we don't need to worry about this
@@ -110,12 +112,12 @@ func (s *dfsState) addChild(me *dfsNode, parTyp, chTyp types.Type) {
 		return
 	}
 
-	parNode := s.dfsDedup[parTyp]
+	parNode := s.dfsDedup[par.typ]
 	if parNode == nil {
-		parNode = s.newDfsNode("TODO-par", parTyp)
+		parNode = s.newDfsNode("TODO-par", par.typ)
 	}
 
-	chNode := s.newDfsNode("TODO-ch", chTyp)
+	chNode := s.newDfsNode("TODO-ch", ch.typ)
 	if parNode.dedupChildren[chNode] {
 		// avoid adding same child twice.
 		return
@@ -143,7 +145,8 @@ func (s *dfsState) markGraphUnVisited() {
 	s.stale = false
 }
 
-func (me *dfsState) emptyOutGraph() {
+func (me *dfsState) reset() {
+	// empty the graph
 	me.dfsOrder = []*dfsNode{}
 	me.dfsNodes = []*dfsNode{}              // node stored in value.
 	me.dfsDedup = map[types.Type]*dfsNode{} // payloadTyp key -> node value.
@@ -205,67 +208,3 @@ func NewDFSState() *dfsState {
 		dfsDedup: make(map[types.Type]*dfsNode),
 	}
 }
-
-/*
-// test. To test, change the //[[ above to //-[[
-//       and issue dofile('dfs.lua')
-dofile 'tutil.lua' // must be in prelude dir to test.
-
-func __testDFS() {
-   __dfsTestMode = true
-    s := __NewDFSState()
-
-   // verify that reset()
-   // works by doing two passes.
-
-   for i =1,2 do
-      s.reset()
-
-      local aPayload = nil
-      local a = s.newDfsNode("a", aPayload)
-
-      local adup = s.newDfsNode("a", aPayload)
-      if adup != a {
-          panic( "dedup failed.")
-      }
-
-      local b = s.newDfsNode("b", nil)
-      local c = s.newDfsNode("c", nil)
-      local d = s.newDfsNode("d", nil)
-      local e = s.newDfsNode("e", nil)
-      local f = s.newDfsNode("f", nil)
-
-      // separate island:
-      local g = s.newDfsNode("g", nil)
-
-      s.addChild(a, b)
-
-      // check dedup of child add
-      local startCount = #a.children
-      s.addChild(a, b)
-      if #a.children != startCount {
-          panic("child dedup failed.")
-      }
-
-      s.addChild(b, c)
-      s.addChild(b, d)
-      s.addChild(d, e)
-      s.addChild(d, f)
-
-      s.doDFS()
-
-      s.showDFSOrder()
-
-      __expectEq(s.dfsOrder[1], c)
-      __expectEq(s.dfsOrder[2], e)
-      __expectEq(s.dfsOrder[3], f)
-      __expectEq(s.dfsOrder[4], d)
-      __expectEq(s.dfsOrder[5], b)
-      __expectEq(s.dfsOrder[6], a)
-      __expectEq(s.dfsOrder[7], g)
-   }
-
-}
-__testDFS()
-__testDFS()
-*/
