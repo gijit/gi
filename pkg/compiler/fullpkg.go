@@ -178,8 +178,18 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		c.Blocking[call] = true
 		c.Flattened[call] = true
 		importDecls = append(importDecls, &Decl{
-			Vars:     []string{c.p.pkgVars[impPath]},
-			DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
+			Vars: []string{c.p.pkgVars[impPath]},
+
+			// jea: we suspect these two import methods are colliding,
+			// example:
+			//   fmt = __packages["github.com/glycerine/gi/pkg/compiler/shadow/fmt"];
+			//   __go_import("fmt");
+			//
+			// confirm by going back to just one, the direct assignment:
+			//
+			DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
+			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
+
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
 			InitCode: c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }),
@@ -308,7 +318,8 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			})
 			//test 1002: Verbose = false is written here.
 			// jea add:
-			d.InitCode = append(d.InitCode, []byte("\t\t\t--[[ fullpkg.go:311 --]]\n")...)
+			d.InitCode = append(d.InitCode, []byte(fmt.Sprintf(
+				"\t\t\t--[[ fullpkg.go:321 --]] print(\"99999999 jea debug! package initialization code called, for '%s'!\")\n", importPath))...)
 			d.Vars = append(d.Vars, c.localVars...)
 			// jea add:
 			d.initializePackageVars(lhs)
