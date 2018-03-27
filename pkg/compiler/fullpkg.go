@@ -511,7 +511,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			DceObjectFilter: t.Name(),
 		}
 		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s); -- fullpkg.go:479\n", t.Name(), strings.ToLower(typeKind(t.Type())[6:]), c.initArgs(t.Type())))
+			d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s); -- fullpkg.go:514\n", t.Name(), strings.ToLower(typeKind(t.Type())[6:]), c.initArgsNoPkgForPrimitives(t.Type())))
 		})
 		typeDecls = append(typeDecls, &d)
 	}

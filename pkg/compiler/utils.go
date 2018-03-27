@@ -491,6 +491,9 @@ func (c *funcContext) typeName(level int, ty types.Type) (res string) {
 }
 
 func (c *funcContext) getPkgName() string {
+	if c.PkgNameOverride {
+		return c.PkgNameOverrideValue
+	}
 	pkgName := c.p.Pkg.Name()
 	//pp("pkgName='%s'", pkgName)
 	if pkgName == "main" {
@@ -558,7 +561,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 		c.p.anonTypeMap.Set(ty, anonType)
 		createdVarName = varName
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:550\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgs(anonType.Type()), whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:564\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
 		// gotta generate the type immediately for the REPL.
 		// But the pointer  needs to come after the struct it references.
 
