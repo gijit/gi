@@ -174,6 +174,18 @@ func (s *dfsState) showDFSOrder() {
 	}
 }
 
+// in depth-first order, so dependencies are
+// defined before things that depend on them.
+func (s *dfsState) genCode(w io.Writer) {
+	if s.stale {
+		s.doDFS()
+	}
+	for i, n := range s.dfsOrder {
+		pp("dfs order %v is %v : %v", i, n.id, n.name)
+		n.makeRequiredTypes(w)
+	}
+}
+
 func (s *dfsState) doDFS() {
 	s.markGraphUnVisited()
 	for _, n := range s.dfsNodes {
