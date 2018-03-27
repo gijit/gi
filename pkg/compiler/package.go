@@ -159,7 +159,7 @@ func isPrim(ty types.Type) bool {
 	}
 
 	_, ok := et.(*types.Basic)
-	vv("for et=%#v, ty='%#v'/%T, isPrim=%v", et, ty, ty, ok)
+	pp("for et=%#v, ty='%#v'/%T, isPrim=%v", et, ty, ty, ok)
 	return ok
 }
 

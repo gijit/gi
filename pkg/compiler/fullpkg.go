@@ -9,6 +9,7 @@ import (
 	"github.com/glycerine/gi/pkg/printer"
 	"github.com/glycerine/gi/pkg/token"
 	"github.com/glycerine/gi/pkg/types"
+	"github.com/glycerine/gi/pkg/verb"
 	"runtime/debug"
 	"sort"
 	"strings"
@@ -193,7 +194,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
-			InitCode: append([]byte(fmt.Sprintf("\t\t if %[1]s ~= nil and %[1]s.__init ~= nil then\n\t", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte("\t\t end; -- fullpkg.go:198\n")...)...),
+			InitCode: append([]byte(fmt.Sprintf("\t\t if %[1]s ~= nil and %[1]s.__init ~= nil then\n\t", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte(fmt.Sprintf("\t\t end; --where: %s\n", verb.FileLine(1)))...)...),
 		})
 	}
 
@@ -290,10 +291,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		}
 		if _, ok := varsWithInit[o]; !ok {
 			d.DceDeps = collectDependencies(func() {
-				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s; --fullpkg.go:277\n",
+				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s; --where: %s\n",
 					// c.objectName(o),
 					c.objectNameWithPackagePrefix(o),
-					c.translateExpr(c.zeroValue(o.Type()), nil).String()))
+					c.translateExpr(c.zeroValue(o.Type()), nil).String(), verb.FileLine(1)))
 			})
 		}
 		d.DceObjectFilter = o.Name()
@@ -320,7 +321,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			//test 1002: Verbose = false is written here.
 			// jea add:
 			d.InitCode = append(d.InitCode, []byte(fmt.Sprintf(
-				"\t\t\t--[[ fullpkg.go:320, for importPath='%s' --]]\n", importPath))...)
+				"\t\t\t--[[ where: %s, for importPath='%s' --]]\n",
+				verb.FileLine(1),
+				importPath))...)
 			d.Vars = append(d.Vars, c.localVars...)
 		})
 		if len(init.Lhs) == 1 {
@@ -359,7 +362,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					}
 					c.translateStmt(&ast.ExprStmt{X: call}, nil)
 				})
-				d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:343 --]]")...)
+				d.InitCode = append(d.InitCode, []byte(fmt.Sprintf(" --[[ where: %s --]]", verb.FileLine(1)))...)
 				d.DceObjectFilter = ""
 			}
 		}
@@ -500,7 +503,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			switch t := o.Type().Underlying().(type) {
 			case *types.Array, *types.Chan, *types.Interface, *types.Map, *types.Pointer, *types.Slice, *types.Signature, *types.Struct:
 				d.TypeInitCode = c.CatchOutput(0, func() {
-					c.Printf("%s.%s.%s.init(%s); -- fullpkg.go:463", "__type__", typesPkg.Name(), c.objectName(o), c.initArgs(t))
+					c.Printf("__type__.%s.%s.init(%s); --where: %s\n", typesPkg.Name(), c.objectName(o), c.initArgs(t), verb.FileLine(1))
 				})
 			}
 		})
@@ -514,7 +517,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			DceObjectFilter: t.Name(),
 		}
 		d.DceDeps = collectDependencies(func() {
-			d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s); -- fullpkg.go:514\n", t.Name(), strings.ToLower(typeKind(t.Type())[6:]), c.initArgsNoPkgForPrimitives(t.Type())))
+			d.DeclCode = []byte(fmt.Sprintf("\t%s = __%sType(%s); --where: %s\n", t.Name(), strings.ToLower(typeKind(t.Type())[6:]), c.initArgsNoPkgForPrimitives(t.Type()), verb.FileLine(1)))
 		})
 		typeDecls = append(typeDecls, &d)
 	}
