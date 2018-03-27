@@ -93,6 +93,9 @@ type funcContext struct {
 	TypeNameSetting typeNameSetting
 
 	topLevelRepl bool
+
+	PkgNameOverride      bool
+	PkgNameOverrideValue string
 }
 
 type flowData struct {
@@ -137,6 +140,42 @@ func (pi packageImporter) Import(path string, depth int) (*types.Package, error)
 	return tyPack, nil
 }
 
+func isPrim(ty types.Type) bool {
+	et := elemType(ty)
+	if et == nil {
+		return false
+	}
+	_, ok := et.(*types.Basic)
+	vv("for et=%#v, ty='%#v'/%T, isPrim=%v", et, ty, ty, ok)
+	return ok
+}
+
+// mirror what initArgs will switch on.
+func elemType(ty types.Type) types.Type {
+
+	switch t := ty.(type) {
+	case *types.Basic:
+		return ty
+	case *types.Array:
+		return t.Elem()
+	case *types.Chan:
+		return t.Elem()
+	case *types.Slice:
+		return t.Elem()
+	}
+	return nil
+}
+
+func (c *funcContext) initArgsNoPkgForPrimitives(ty types.Type) string {
+	if isPrim(ty) {
+		c.PkgNameOverride = true
+		c.PkgNameOverrideValue = ""
+		s := c.initArgs(ty)
+		c.PkgNameOverride = false
+		return s
+	}
+	return c.initArgs(ty)
+}
 func (c *funcContext) initArgs(ty types.Type) string {
 
 	prev := c.TypeNameSetting
