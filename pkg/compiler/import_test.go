@@ -151,7 +151,7 @@ func Test1004ImportArrayOfSliceOfBytes(t *testing.T) {
 
 		code := `
 import "github.com/glycerine/gi/pkg/compiler/spkg_tst4"
-r := NewR();
+r := spkg_tst4.NewR();
 chk := r.Get1();
 
 `
