@@ -529,30 +529,49 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				return c.formatExpr(`__integerByZeroCheck(%1e %% %2e)`, e.X, e.Y)
 			case token.SHL, token.SHR:
 				op := e.Op.String()
-				if e.Op == token.SHR && isUnsigned(basic) {
-					op = ">>>"
+				if e.Op == token.SHR {
+					if isUnsigned(basic) {
+						op = "__bit.rshift"
+					} else {
+						op = "__bit.arshift" // arithemetic right shift
+					}
+				} else {
+					op = "__bit.lshift"
 				}
 				if v := c.p.Types[e.Y].Value; v != nil {
 					i, _ := constant.Uint64Val(constant.ToInt(v))
-					if i >= 32 {
-						return c.formatExpr("0")
+					if i >= 64 {
+						return c.formatExpr("0LL")
 					}
-					return c.fixNumber(c.formatExpr("%e %s %s", e.X, op, strconv.FormatUint(i, 10)), basic)
+					return c.fixNumber(c.formatExpr("%s(%e, %s)", op, e.X, strconv.FormatUint(i, 10)), basic)
 				}
-				if e.Op == token.SHR && !isUnsigned(basic) {
-					return c.fixNumber(c.formatParenExpr("%e >> __min(%f, 31)", e.X, e.Y), basic)
-				}
-				y := c.newVariable("y")
-				return c.fixNumber(c.formatExpr("(%s = %f, %s < 32 ? (%e %s %s) : 0)", y, e.Y, y, e.X, op, y), basic)
-			case token.AND, token.OR:
+				return c.fixNumber(c.formatExpr("%s(%e, %e)", op, e.X, e.Y), basic)
+
+				//if e.Op == token.SHR && !isUnsigned(basic) {
+				//	return c.fixNumber(c.formatParenExpr("%e >> __min(%f, 31)", e.X, e.Y), basic)
+				//}
+				//y := c.newVariable("y")
+				//return c.fixNumber(c.formatExpr("(%s = %f, %s < 32 ? (%e %s %s) : 0)", y, e.Y, y, e.X, op, y), basic)
+
+				//	token.AND     // & bitwise AND
+				//  token.OR      // | bitwise OR
+			case token.AND:
+				return c.formatParenExpr("__bit.band(%e, %e)", e.X, e.Y)
+			case token.OR:
+				return c.formatParenExpr("__bit.bor(%e, %e)", e.X, e.Y)
+				/* was case token.AND, token.OR:
 				if isUnsigned(basic) {
 					return c.formatParenExpr("(%e %t %e) >>> 0", e.X, e.Op, e.Y)
 				}
 				return c.formatParenExpr("%e %t %e", e.X, e.Op, e.Y)
+				*/
 			case token.AND_NOT:
-				return c.fixNumber(c.formatParenExpr("%e & ~%e", e.X, e.Y), basic)
+				// AND(a, NOT(b))
+				return c.formatParenExpr("__bit.band(%e, __bit.bnot(%e))", e.X, e.Y)
+				// return c.fixNumber(c.formatParenExpr("%e & ~%e", e.X, e.Y), basic)
 			case token.XOR:
-				return c.fixNumber(c.formatParenExpr("%e ^ %e", e.X, e.Y), basic)
+				return c.formatParenExpr("__bit.bxor(%e, %e)", e.X, e.Y)
+				//return c.fixNumber(c.formatParenExpr("%e ^ %e", e.X, e.Y), basic)
 			default:
 				panic(e.Op)
 			}
@@ -1592,38 +1611,10 @@ func (c *funcContext) fixNumber(value *expression, basic *types.Basic) (xprn *ex
 		pp("returning from fixNumber with xprn='%s'", x2s(xprn))
 	}()
 	switch basic.Kind() {
-	case types.Int8:
-		// jea
-		fallthrough
-		//return c.formatParenExpr("%s << 24 >> 24", value)
-	case types.Uint8:
-		// jea
-		fallthrough
-		//return c.formatParenExpr("%s << 24 >>> 24", value)
-	case types.Int16:
-		// jea
-		fallthrough
-		//return c.formatParenExpr("%s << 16 >> 16", value)
-	case types.Uint16:
-		// jea
-		fallthrough
-		//return c.formatParenExpr("%s << 16 >>> 16", value)
-	case types.Uint32, types.Uint, types.Uintptr, types.Uint64:
-		// jea
-		fallthrough
-	//return c.formatParenExpr("%s >>> 0", value)
-	case types.Int32, types.Int, types.Int64, types.UntypedInt:
-		// jea
-		//return c.formatParenExpr("%s >> 0", value)
-		return c.formatParenExpr("%s", value)
-	case types.Float32:
-		// jea:
-		return value
-		//return c.formatExpr("__fround(%s)", value) // // fround returns the nearest 32-bit single precision float representation of a Number.
-	case types.Float64:
+	case types.Float32, types.Float64:
 		return value
 	default:
-		panic(fmt.Sprintf("fixNumber: unhandled basic.Kind(): %s", basic.String()))
+		return c.formatParenExpr("%s", value)
 	}
 }
 
