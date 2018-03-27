@@ -2,13 +2,19 @@ package compiler
 
 import (
 	"fmt"
-	"os"
+	//"os"
 	"testing"
 
 	"github.com/glycerine/gi/pkg/types"
 
 	cv "github.com/glycerine/goconvey/convey"
 )
+
+type devNull int
+
+func (devNull) Write(p []byte) (int, error) {
+	return len(p), nil
+}
 
 func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 
@@ -48,21 +54,21 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				gTn := types.NewTypeName(0, nil, "G", anInt)
 				gTy := types.NewNamed(gTn, anInt, nil)
 
-				a := s.newDfsNode("a", aTy, []byte("//test code for a"))
+				a := s.newDfsNode("a", aTy, []byte("//test code for a\n"))
 
 				adup := s.newDfsNode("a", aTy, []byte("//test code for adup"))
 				if adup != a {
 					panic("dedup failed.")
 				}
 
-				var b = s.newDfsNode("b", bTy, []byte("//test code for b"))
-				var c = s.newDfsNode("c", cTy, []byte("//test code for c"))
-				var d = s.newDfsNode("d", dTy, []byte("//test code for d"))
-				var e = s.newDfsNode("e", eTy, []byte("//test code for e"))
-				var f = s.newDfsNode("f", fTy, []byte("//test code for f"))
+				var b = s.newDfsNode("b", bTy, []byte("//test code for b\n"))
+				var c = s.newDfsNode("c", cTy, []byte("//test code for c\n"))
+				var d = s.newDfsNode("d", dTy, []byte("//test code for d\n"))
+				var e = s.newDfsNode("e", eTy, []byte("//test code for e\n"))
+				var f = s.newDfsNode("f", fTy, []byte("//test code for f\n"))
 
 				// separate island:
-				var g = s.newDfsNode("g", gTy, []byte("//test code for g"))
+				var g = s.newDfsNode("g", gTy, []byte("//test code for g\n"))
 
 				s.addChild(a, b)
 
@@ -90,7 +96,8 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				expectEq(s.dfsOrder[5], a)
 				expectEq(s.dfsOrder[6], g)
 
-				s.genCode(os.Stdout)
+				//s.genCode(os.Stdout)
+				s.genCode(devNull(0))
 			}
 
 		}

@@ -52,10 +52,6 @@ func (me *dfsNode) makeRequiredTypes(w io.Writer) {
 		return
 	}
 	me.made = true
-	if isBasicTyp(me) {
-		return // basic types are always leaf nodes, no children.
-	}
-
 	for _, ch := range me.children {
 		ch.makeRequiredTypes(w)
 	}
@@ -109,19 +105,8 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 		}
 	}
 
-	// dedup happens in newDfsNode now.
-	/*
-		prior, present := s.dfsDedup[ch.typ]
-		if present {
-			// child was previously generated, so
-			// we don't need to worry about this
-			// dependency
-			vv("dedup child, previously seen: %s was seen as %s", ch.name, prior.name)
-			return
-		}
-	*/
 	if par.dedupChildren[ch] {
-		vv("avoid adding same child twice to a parent.")
+		pp("avoid adding same child twice to a parent.")
 		return
 	}
 
@@ -160,7 +145,7 @@ func (s *dfsState) dfsHelper(node *dfsNode) {
 		s.dfsHelper(ch)
 	}
 
-	vv("post-order visit sees node %v : %v", node.id, node.name)
+	pp("post-order visit sees node %v : %v", node.id, node.name)
 	s.dfsOrder = append(s.dfsOrder, node)
 
 }
@@ -170,7 +155,7 @@ func (s *dfsState) showDFSOrder() {
 		s.doDFS()
 	}
 	for i, n := range s.dfsOrder {
-		vv("dfs order %v is %v : %v", i, n.id, n.name)
+		pp("dfs order %v is %v : %v", i, n.id, n.name)
 	}
 }
 
