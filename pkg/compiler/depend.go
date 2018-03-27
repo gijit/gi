@@ -113,6 +113,48 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 	par.children = append(par.children, ch)
 	par.dedupChildren[ch] = true
 	s.stale = true
+
+	if s.hasCycle() {
+		panic("cycles not allowed")
+	}
+}
+
+func (s *dfsState) hasCycle() bool {
+	s.markGraphUnVisited()
+	s.stale = true
+	for _, n := range s.dfsNodes {
+		ancestors := make(map[*dfsNode]bool)
+		if s.hasCycleHelper(n, ancestors) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *dfsState) hasCycleHelper(node *dfsNode, ancestors map[*dfsNode]bool) bool {
+	if node == nil {
+		return false
+	}
+	if node.visited {
+		return false
+	}
+	node.visited = true
+	ancestors[node] = true
+
+	for _, ch := range node.children {
+		if ancestors[ch] {
+			vv("found cycle: backedge from '%v' to '%v'", node.name, ch.name)
+			return true
+		}
+		if s.hasCycleHelper(ch, ancestors) {
+			return true
+		}
+	}
+
+	// key to the cycle detection while allowing diamonds:
+	delete(ancestors, node)
+
+	return false
 }
 
 func (s *dfsState) markGraphUnVisited() {
@@ -123,13 +165,13 @@ func (s *dfsState) markGraphUnVisited() {
 	s.stale = false
 }
 
-func (me *dfsState) reset() {
+func (s *dfsState) reset() {
 	// empty the graph
-	me.dfsOrder = []*dfsNode{}
-	me.dfsNodes = []*dfsNode{}              // node stored in value.
-	me.dfsDedup = map[types.Type]*dfsNode{} // payloadTyp key -> node value.
-	me.dfsNextID = 0
-	me.stale = false
+	s.dfsOrder = []*dfsNode{}
+	s.dfsNodes = []*dfsNode{}              // node stored in value.
+	s.dfsDedup = map[types.Type]*dfsNode{} // payloadTyp key -> node value.
+	s.dfsNextID = 0
+	s.stale = false
 }
 
 func (s *dfsState) dfsHelper(node *dfsNode) {

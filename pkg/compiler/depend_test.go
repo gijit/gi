@@ -84,6 +84,11 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				s.addChild(d, e)
 				s.addChild(d, f)
 
+				// cycle rejected
+				cv.So(func() {
+					s.addChild(c, a)
+				}, cv.ShouldPanic)
+
 				s.doDFS()
 
 				s.showDFSOrder()
