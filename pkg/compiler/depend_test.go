@@ -2,7 +2,7 @@ package compiler
 
 import (
 	"fmt"
-	//"os"
+	"os"
 	"testing"
 
 	"github.com/glycerine/gi/pkg/types"
@@ -40,35 +40,35 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				cv.So(aTy, cv.ShouldNotEqual, bTy)
 
 				cTn := types.NewTypeName(0, nil, "C", anInt)
-				cTy := types.NewNamed(cTn, anInt, nil)
+				//cTy := types.NewNamed(cTn, anInt, nil)
 
 				dTn := types.NewTypeName(0, nil, "D", anInt)
-				dTy := types.NewNamed(dTn, anInt, nil)
+				//dTy := types.NewNamed(dTn, anInt, nil)
 
 				eTn := types.NewTypeName(0, nil, "E", anInt)
-				eTy := types.NewNamed(eTn, anInt, nil)
+				//eTy := types.NewNamed(eTn, anInt, nil)
 
 				fTn := types.NewTypeName(0, nil, "F", anInt)
-				fTy := types.NewNamed(fTn, anInt, nil)
+				//fTy := types.NewNamed(fTn, anInt, nil)
 
 				gTn := types.NewTypeName(0, nil, "G", anInt)
-				gTy := types.NewNamed(gTn, anInt, nil)
+				//gTy := types.NewNamed(gTn, anInt, nil)
 
-				a := s.newDfsNode("a", aTy, []byte("//test code for a\n"))
+				a := s.newDfsNode("a", aTn, []byte("//test code for a\n"))
 
-				adup := s.newDfsNode("a", aTy, []byte("//test code for adup"))
+				adup := s.newDfsNode("a", aTn, []byte("//test code for adup"))
 				if adup != a {
 					panic("dedup failed.")
 				}
 
-				var b = s.newDfsNode("b", bTy, []byte("//test code for b\n"))
-				var c = s.newDfsNode("c", cTy, []byte("//test code for c\n"))
-				var d = s.newDfsNode("d", dTy, []byte("//test code for d\n"))
-				var e = s.newDfsNode("e", eTy, []byte("//test code for e\n"))
-				var f = s.newDfsNode("f", fTy, []byte("//test code for f\n"))
+				var b = s.newDfsNode("b", bTn, []byte("//test code for b\n"))
+				var c = s.newDfsNode("c", cTn, []byte("//test code for c\n"))
+				var d = s.newDfsNode("d", dTn, []byte("//test code for d\n"))
+				var e = s.newDfsNode("e", eTn, []byte("//test code for e\n"))
+				var f = s.newDfsNode("f", fTn, []byte("//test code for f\n"))
 
 				// separate island:
-				var g = s.newDfsNode("g", gTy, []byte("//test code for g\n"))
+				var g = s.newDfsNode("g", gTn, []byte("//test code for g\n"))
 
 				s.addChild(a, b)
 
@@ -101,8 +101,8 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 				expectEq(s.dfsOrder[5], a)
 				expectEq(s.dfsOrder[6], g)
 
-				//s.genCode(os.Stdout)
-				s.genCode(devNull(0))
+				s.genCode(os.Stdout)
+				//s.genCode(devNull(0))
 			}
 
 		}

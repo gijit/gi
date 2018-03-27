@@ -20,14 +20,14 @@ import (
 var dependTestMode = false
 
 func isBasicTyp(n *dfsNode) bool {
-	_, ok := n.typ.(*types.Basic)
+	_, ok := n.typ.Type().(*types.Basic)
 	return ok
 }
 
 type dfsNode struct {
 	id            int
 	name          string
-	typ           types.Type
+	typ           types.Object
 	stale         bool
 	made          bool
 	children      []*dfsNode
@@ -37,9 +37,20 @@ type dfsNode struct {
 	createCode []byte
 }
 
-func (me *dfsNode) bloom(w io.Writer) {
-	_, err := w.Write(me.createCode)
-	panicOn(err)
+func (me *dfsNode) bloom(w io.Writer, s *dfsState) {
+	/*
+		if len(me.createCode) > 0 {
+			_, err := w.Write(me.createCode)
+			panicOn(err)
+		}
+	*/
+	if len(s.codeMap) > 0 {
+		code, ok := s.codeMap[me.typ]
+		if ok {
+			_, err := w.Write([]byte(code))
+			panicOn(err)
+		}
+	}
 }
 
 // a func on nodes to force instantiation of
@@ -48,18 +59,18 @@ func (me *dfsNode) bloom(w io.Writer) {
 // lazily instantated. Calls me.typ.bloom
 // on our subtree in depth-first order.
 //
-func (me *dfsNode) makeRequiredTypes(w io.Writer) {
+func (me *dfsNode) makeRequiredTypes(w io.Writer, s *dfsState) {
 	if me.made {
 		return
 	}
 	me.made = true
 	for _, ch := range me.children {
-		ch.makeRequiredTypes(w)
+		ch.makeRequiredTypes(w, s)
 	}
-	me.bloom(w)
+	me.bloom(w, s)
 }
 
-func (s *dfsState) newDfsNode(name string, typ types.Type, createCode []byte) *dfsNode {
+func (s *dfsState) newDfsNode(name string, typ types.Object, createCode []byte) *dfsNode {
 	if typ == nil {
 		panic("typ cannot be nil in newDfsNode")
 	}
@@ -80,6 +91,7 @@ func (s *dfsState) newDfsNode(name string, typ types.Type, createCode []byte) *d
 	s.dfsNextID++
 	s.dfsDedup[typ] = node
 	s.dfsNodes = append(s.dfsNodes, node)
+	s.codeMap[typ] = string(createCode)
 
 	return node
 }
@@ -111,11 +123,15 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 		return
 	}
 
+	n := len(par.children)
 	par.children = append(par.children, ch)
 	par.dedupChildren[ch] = true
 	s.stale = true
 
 	if s.hasCycle() {
+		// back it out, in case we recover, as the 1200 test does.
+		par.children = par.children[:n]
+		delete(par.dedupChildren, ch)
 		panic("cycles not allowed")
 	}
 }
@@ -169,8 +185,8 @@ func (s *dfsState) markGraphUnVisited() {
 func (s *dfsState) reset() {
 	// empty the graph
 	s.dfsOrder = []*dfsNode{}
-	s.dfsNodes = []*dfsNode{}              // node stored in value.
-	s.dfsDedup = map[types.Type]*dfsNode{} // payloadTyp key -> node value.
+	s.dfsNodes = []*dfsNode{}                // node stored in value.
+	s.dfsDedup = map[types.Object]*dfsNode{} // payloadTyp key -> node value.
 	s.dfsNextID = 0
 	s.stale = false
 }
@@ -210,7 +226,7 @@ func (s *dfsState) genCode(w io.Writer) {
 	}
 	for i, n := range s.dfsOrder {
 		pp("dfs order %v is %v : %v", i, n.id, n.name)
-		n.makeRequiredTypes(w)
+		n.makeRequiredTypes(w, s)
 	}
 }
 
@@ -229,15 +245,21 @@ func (s *dfsState) hasTypes() bool {
 type dfsState struct {
 	dfsNodes  []*dfsNode
 	dfsOrder  []*dfsNode
-	dfsDedup  map[types.Type]*dfsNode
+	dfsDedup  map[types.Object]*dfsNode
 	dfsNextID int
 	stale     bool
+	codeMap   map[types.Object]string
 }
 
 func NewDFSState() *dfsState {
 	return &dfsState{
 		dfsNodes: []*dfsNode{},
 		dfsOrder: []*dfsNode{},
-		dfsDedup: make(map[types.Type]*dfsNode),
+		dfsDedup: make(map[types.Object]*dfsNode),
+		codeMap:  make(map[types.Object]string),
 	}
+}
+
+func (s *dfsState) setCodeMap(c map[types.Object]string) {
+	s.codeMap = c
 }

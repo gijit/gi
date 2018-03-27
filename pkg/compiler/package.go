@@ -23,7 +23,12 @@ type pkgContext struct {
 	*analysis.Info
 	additionalSelections map[*ast.SelectorExpr]selection
 
-	typeNames    []*types.TypeName
+	typeNames []*types.TypeName
+
+	// jea add
+	typeDepend        *dfsState
+	typeDefineLuaCode map[types.Object]string
+
 	pkgVars      map[string]string
 	objectNames  map[types.Object]string
 	varPtrNames  map[*types.Var]string
