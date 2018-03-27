@@ -121,7 +121,7 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 				return c.formatExpr("%s == __gi_ifaceNil", refVar)
 			}
 			// jea, type assertion place 1
-			return c.formatExpr(`__assertType(%s, %s, 1)`, refVar, c.typeName(0, c.p.TypeOf(cond)))
+			return c.formatExpr(`__assertType(%s, %s, 1)`, refVar, c.typeName(c.p.TypeOf(cond), nil))
 			//return c.formatExpr("__assertType(%s, %s, true)[1]", refVar, c.typeName(0, c.p.TypeOf(cond)))
 		}
 		var caseClauses []*ast.CaseClause
@@ -1036,17 +1036,17 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			pp("not a refelct value, underlying is array or struct")
 			if define {
 				pp("define is true, not a refelct value, underlying is array or struct")
-				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType)
+				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType, nil)
 				pp("debug __gi_clone2 arg: c.typeName(0, lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
-					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(0, anonType.Type()))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type(), nil))
 
 				} else {
-					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(0, lhsType))
+					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(lhsType, nil))
 
 				}
 			}
-			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(0, lhsType), c.translateExpr(lhs, nil), rhsExpr)
+			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(lhsType, nil), c.translateExpr(lhs, nil), rhsExpr)
 		}
 	}
 

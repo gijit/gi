@@ -900,13 +900,13 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			if len(methods) > 0 {
 				// jea: the call to c.typeName(0, ) will add to anonType if named is anonymous, which obviously is unlikely since we're in the named type function.
 
-				tnn := c.typeName(0, named)
+				tnn := c.typeName(named, nil)
 				pp("tnn = '%s'", tnn)
 				c.Printf("%s.__methods_desc = {%s}; -- incr.go:817 for methods\n", tnn, strings.Join(methods, ", "))
 
 			}
 			if len(ptrMethods) > 0 {
-				pn := c.typeName(0, types.NewPointer(named)) // "kind_ptrType"
+				pn := c.typeName(types.NewPointer(named), named) // "kind_ptrType"
 				pp("newPtrTypeName='%s'", pn)
 				pp("c.objectName(o)='%s'", c.objectName(o))
 				pn = "__type__." + c.objectName(o)

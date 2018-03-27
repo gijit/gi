@@ -29,46 +29,46 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 
 			for i := 1; i < 2; i++ {
 				s.reset()
-				anInt := types.Typ[types.Int]
+				//anInt := types.Typ[types.Int]
 
-				aTn := types.NewTypeName(0, nil, "A", anInt)
-				aTy := types.NewNamed(aTn, anInt, nil)
+				aTn := types.NewTypeName(0, nil, "A", types.Typ[types.Int])
+				aTy := types.NewNamed(aTn, types.Typ[types.Int], nil)
 
-				bTn := types.NewTypeName(0, nil, "B", anInt)
-				bTy := types.NewNamed(bTn, anInt, nil)
+				bTn := types.NewTypeName(0, nil, "B", types.Typ[types.String])
+				bTy := types.NewNamed(bTn, types.Typ[types.String], nil)
 
 				cv.So(aTy, cv.ShouldNotEqual, bTy)
 
-				cTn := types.NewTypeName(0, nil, "C", anInt)
-				//cTy := types.NewNamed(cTn, anInt, nil)
+				cTn := types.NewTypeName(0, nil, "C", types.Typ[types.Int8])
+				cTy := types.NewNamed(cTn, types.Typ[types.Int8], nil)
 
-				dTn := types.NewTypeName(0, nil, "D", anInt)
-				//dTy := types.NewNamed(dTn, anInt, nil)
+				dTn := types.NewTypeName(0, nil, "D", types.Typ[types.Int16])
+				dTy := types.NewNamed(dTn, types.Typ[types.Int16], nil)
 
-				eTn := types.NewTypeName(0, nil, "E", anInt)
-				//eTy := types.NewNamed(eTn, anInt, nil)
+				eTn := types.NewTypeName(0, nil, "E", types.Typ[types.Int32])
+				eTy := types.NewNamed(eTn, types.Typ[types.Int32], nil)
 
-				fTn := types.NewTypeName(0, nil, "F", anInt)
-				//fTy := types.NewNamed(fTn, anInt, nil)
+				fTn := types.NewTypeName(0, nil, "F", types.Typ[types.Int64])
+				fTy := types.NewNamed(fTn, types.Typ[types.Int64], nil)
 
-				gTn := types.NewTypeName(0, nil, "G", anInt)
-				//gTy := types.NewNamed(gTn, anInt, nil)
+				gTn := types.NewTypeName(0, nil, "G", types.Typ[types.Uint])
+				gTy := types.NewNamed(gTn, types.Typ[types.Uint], nil)
 
-				a := s.newDfsNode("a", aTn, []byte("//test code for a\n"))
+				a := s.newDfsNode("a", aTy, []byte("//test code for a\n"))
 
-				adup := s.newDfsNode("a", aTn, []byte("//test code for adup"))
+				adup := s.newDfsNode("a", aTy, []byte("//test code for adup"))
 				if adup != a {
 					panic("dedup failed.")
 				}
 
-				var b = s.newDfsNode("b", bTn, []byte("//test code for b\n"))
-				var c = s.newDfsNode("c", cTn, []byte("//test code for c\n"))
-				var d = s.newDfsNode("d", dTn, []byte("//test code for d\n"))
-				var e = s.newDfsNode("e", eTn, []byte("//test code for e\n"))
-				var f = s.newDfsNode("f", fTn, []byte("//test code for f\n"))
+				var b = s.newDfsNode("b", bTy, []byte("//test code for b\n"))
+				var c = s.newDfsNode("c", cTy, []byte("//test code for c\n"))
+				var d = s.newDfsNode("d", dTy, []byte("//test code for d\n"))
+				var e = s.newDfsNode("e", eTy, []byte("//test code for e\n"))
+				var f = s.newDfsNode("f", fTy, []byte("//test code for f\n"))
 
 				// separate island:
-				var g = s.newDfsNode("g", gTn, []byte("//test code for g\n"))
+				var g = s.newDfsNode("g", gTy, []byte("//test code for g\n"))
 
 				s.addChild(a, b)
 
