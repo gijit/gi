@@ -593,7 +593,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				c.caseCounter++
 				resultVar := c.newVariable("_v")
 				c.Printf("if (not (%s)) then %s = false; __s = %d; goto ::s::; end", c.translateExpr(e.X, nil), resultVar, skipCase)
-				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
+				c.Printf("%s = %s; elseif __s == %d then ", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				//c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
@@ -605,7 +605,8 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				resultVar := c.newVariable("_v")
 				// was "continue s;"
 				c.Printf("if (%s) then %s = true; __s = %d; goto ::s::; end", c.translateExpr(e.X, nil), resultVar, skipCase)
-				c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
+				c.Printf("%s = %s; elseif __s == %d then ", resultVar, c.translateExpr(e.Y, nil), skipCase)
+				//c.Printf("%s = %s; case %d:", resultVar, c.translateExpr(e.Y, nil), skipCase)
 				return c.formatExpr("%s", resultVar)
 			}
 			return c.formatExpr("%e or %e", e.X, e.Y)
