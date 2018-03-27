@@ -85,19 +85,20 @@ func (c *funcContext) translateStmt(stmt ast.Stmt, label *types.Label) {
 			c.Indent(func() {
 				c.translateStmtList(clause.Body)
 			})
-			c.Printf("case %d:", data.endCase)
+			c.Printf("elseif __s ==  %d then  --[[ statements.go:88 --]] ", data.endCase)
 			return
 		}
 
 		if label != nil || analysis.HasBreak(clause) {
 			if label != nil {
-				c.Printf("%s:", label.Name())
+				c.Printf(" ::%s:: ", label.Name())
 			}
-			c.Printf("switch (0) { default:")
+			c.Printf(" do ")
+			//c.Printf("switch (0) { default:")
 			c.Indent(func() {
 				c.translateStmtList(clause.Body)
 			})
-			c.Printf("}")
+			c.Printf(" end ")
 			return
 		}
 
@@ -545,7 +546,7 @@ __defer_func(%s)
 	case *ast.LabeledStmt:
 		label := c.p.Defs[s.Label].(*types.Label)
 		if c.GotoLabel[label] {
-			c.PrintCond(true, "::"+s.Label.Name+"::", fmt.Sprintf("case %d:", c.labelCase(label)))
+			c.PrintCond(true, "::"+s.Label.Name+"::", fmt.Sprintf(" elseif __s == %d then  --[[ statements.go:549 --]] ", c.labelCase(label)))
 		}
 		c.translateStmt(s.Stmt, label)
 
@@ -715,7 +716,7 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 
 	for i, clause := range caseClauses {
 		c.SetPos(clause.Pos())
-		c.PrintCond(!flatten, fmt.Sprintf("%sif (%s) then ", prefix, condStrs[i]), fmt.Sprintf("case %d:", caseOffset+i))
+		c.PrintCond(!flatten, fmt.Sprintf("%sif (%s) then ", prefix, condStrs[i]), fmt.Sprintf(" elseif __s == %d then  --[[ statements.go:719 --]] ", caseOffset+i))
 		c.Indent(func() {
 			c.translateStmtList(clause.Body)
 			if flatten && (i < len(caseClauses)-1 || defaultClause != nil) && !endsWithReturn(clause.Body) {
@@ -727,13 +728,13 @@ func (c *funcContext) translateBranchingStmt(caseClauses []*ast.CaseClause, defa
 	}
 
 	if defaultClause != nil {
-		c.PrintCond(!flatten, prefix+" ", fmt.Sprintf("case %d:", caseOffset+len(caseClauses)))
+		c.PrintCond(!flatten, prefix+" ", fmt.Sprintf(" elseif __s ==  %d then --[[ statements.go:731 --]] ", caseOffset+len(caseClauses)))
 		c.Indent(func() {
 			c.translateStmtList(defaultClause.Body)
 		})
 	}
 
-	c.PrintCond(!flatten, " end "+suffix, fmt.Sprintf("case %d:", endCase))
+	c.PrintCond(!flatten, " end "+suffix, fmt.Sprintf(" elseif __s ==  %d then  --[[ statements.go:737 --]] ", endCase))
 }
 
 func (c *funcContext) translateLoopingStmt(cond func() string, body *ast.BlockStmt, bodyPrefix, post func(), label *types.Label, flatten bool) {
@@ -933,7 +934,7 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 	if !flatten && label != nil {
 		c.Printf("%s:", label.Name())
 	}
-	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf("case %d:", data.beginCase))
+	c.PrintCond(!flatten, "while (true) do", fmt.Sprintf(" elseif __s == %d then  --[[ statements.go:937 --]] ", data.beginCase))
 	c.Indent(func() {
 		condStr := cond()
 		if condStr != "true" {
@@ -961,7 +962,7 @@ func (c *funcContext) translateBodyHelper(cond func() string, body *ast.BlockStm
 
 		c.p.escapingVars = prevEV
 	})
-	c.PrintCond(!flatten, " end ", fmt.Sprintf("__s = %d; continue; case %d:", data.beginCase, data.endCase))
+	c.PrintCond(!flatten, " end ", fmt.Sprintf("__s = %d; goto ::continue::; elseif __s == %d then  --[[ statements.go:965 --]] ", data.beginCase, data.endCase))
 }
 
 func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
