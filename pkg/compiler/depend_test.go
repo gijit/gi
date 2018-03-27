@@ -21,23 +21,44 @@ func Test1200DepthFirstSearchOfTypeDependencies(t *testing.T) {
 
 			for i := 1; i < 2; i++ {
 				s.reset()
+				anInt := types.Typ[types.Int]
 
-				aPayload := types.Typ[types.Int]
-				a := s.newDfsNode("a", aPayload)
+				aTn := types.NewTypeName(0, nil, "A", anInt)
+				aTy := types.NewNamed(aTn, anInt, nil)
 
-				adup := s.newDfsNode("a", aPayload)
+				bTn := types.NewTypeName(0, nil, "B", anInt)
+				bTy := types.NewNamed(bTn, anInt, nil)
+
+				cTn := types.NewTypeName(0, nil, "C", anInt)
+				cTy := types.NewNamed(cTn, anInt, nil)
+
+				dTn := types.NewTypeName(0, nil, "D", anInt)
+				dTy := types.NewNamed(dTn, anInt, nil)
+
+				eTn := types.NewTypeName(0, nil, "E", anInt)
+				eTy := types.NewNamed(eTn, anInt, nil)
+
+				fTn := types.NewTypeName(0, nil, "F", anInt)
+				fTy := types.NewNamed(fTn, anInt, nil)
+
+				gTn := types.NewTypeName(0, nil, "G", anInt)
+				gTy := types.NewNamed(gTn, anInt, nil)
+
+				a := s.newDfsNode("a", aTy, []byte("//test code for a"))
+
+				adup := s.newDfsNode("a", aTy, []byte("//test code for adup"))
 				if adup != a {
 					panic("dedup failed.")
 				}
 
-				var b = s.newDfsNode("b", nil)
-				var c = s.newDfsNode("c", nil)
-				var d = s.newDfsNode("d", nil)
-				var e = s.newDfsNode("e", nil)
-				var f = s.newDfsNode("f", nil)
+				var b = s.newDfsNode("b", bTy, []byte("//test code for b"))
+				var c = s.newDfsNode("c", cTy, []byte("//test code for c"))
+				var d = s.newDfsNode("d", dTy, []byte("//test code for d"))
+				var e = s.newDfsNode("e", eTy, []byte("//test code for e"))
+				var f = s.newDfsNode("f", fTy, []byte("//test code for f"))
 
 				// separate island:
-				var g = s.newDfsNode("g", nil)
+				var g = s.newDfsNode("g", gTy, []byte("//test code for g"))
 
 				s.addChild(a, b)
 
