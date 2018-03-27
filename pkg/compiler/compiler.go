@@ -306,10 +306,17 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 	if _, err := w.Write(pkg.IncJSCode); err != nil {
 		return err
 	}
-	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("__packages[\"%s\"] = (function()\n", pkg.ImportPath)), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf(`
+__packages["%s"] = (function()
+	local __pkg = {};
+    setmetatable(__pkg, {__index = _G})
+    setfenv(1, __pkg);
+
+`, pkg.ImportPath)), minify)); err != nil {
 		return err
 	}
-	vars := []string{"__pkg", "__init"}
+	//vars := []string{"__pkg", "__init"}
+	vars := []string{}
 	var filteredDecls []*Decl
 	for _, d := range pkg.Declarations {
 		// jea TODO figure out why this dceSelection[d] was over filtering
@@ -330,9 +337,10 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			pp("rejected, filtered out Declaration d='%#v'  \n   because dceSelection[d]='%#v'", d, dceSelection[d])
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("\tlocal %s;\n\t__pkg={};\n", strings.Join(vars, ", "))), minify)); err != nil {
-		return err
-	}
+	/*	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf("\tlocal %s;\n\t__pkg={};\n", strings.Join(vars, ", "))), minify)); err != nil {
+			return err
+		}
+	*/
 	for _, d := range filteredDecls {
 		if _, err := w.Write(d.DeclCode); err != nil {
 			return err
