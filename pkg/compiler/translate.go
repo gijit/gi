@@ -40,7 +40,7 @@ type IncrState struct {
 	PrintAST bool
 
 	// default to no import caching
-	AllowImportCaching bool
+	//AllowImportCaching bool
 
 	Session *Session
 }

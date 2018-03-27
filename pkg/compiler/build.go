@@ -754,6 +754,13 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 		return nil, err
 	}
 	vv("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
+	vv(" here is the global env:")
+	s.showGlobal()
+	defer func() {
+		vv("upon leaving Session.BuildPackage(), here is the global env:")
+		s.showGlobal()
+		vv("and here is stack: '%s'", stack())
+	}()
 
 	for _, jsFile := range pkg.JSFiles {
 		code, err := ioutil.ReadFile(filepath.Join(pkg.Dir, jsFile))
@@ -940,4 +947,11 @@ func summarizeArchives(m map[string]*Archive) (s string) {
 		s += k + ", "
 	}
 	return
+}
+
+func (s *Session) showGlobal() {
+	t0 := s.ic.goro.newTicket("", true)
+
+	t0.run = []byte("__gls()")
+	panicOn(t0.Do())
 }

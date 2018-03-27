@@ -173,7 +173,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	}
 	sort.Strings(importedPaths)
 	for _, impPath := range importedPaths {
-		id := c.newIdent(fmt.Sprintf(`%s._init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
+		id := c.newIdent(fmt.Sprintf(`%s.__init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
 		call := &ast.CallExpr{Fun: id}
 		c.Blocking[call] = true
 		c.Flattened[call] = true
@@ -274,7 +274,10 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		}
 		if _, ok := varsWithInit[o]; !ok {
 			d.DceDeps = collectDependencies(func() {
-				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s;\n", c.objectName(o), c.translateExpr(c.zeroValue(o.Type()), nil).String()))
+				d.InitCode = []byte(fmt.Sprintf("\t\t%s = %s; --fullpkg.go:277\n",
+					// c.objectName(o),
+					c.objectNameWithPackagePrefix(o),
+					c.translateExpr(c.zeroValue(o.Type()), nil).String()))
 			})
 		}
 		d.DceObjectFilter = o.Name()
@@ -298,6 +301,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					Rhs: []ast.Expr{init.Rhs},
 				}, nil)
 			})
+			d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:304 --]]")...)
 			d.Vars = append(d.Vars, c.localVars...)
 		})
 		if len(init.Lhs) == 1 {
@@ -336,6 +340,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 					}
 					c.translateStmt(&ast.ExprStmt{X: call}, nil)
 				})
+				d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:343 --]]")...)
 				d.DceObjectFilter = ""
 			}
 		}

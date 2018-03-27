@@ -350,23 +350,24 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 	}
 
 	_, err := w.Write(removeWhitespace([]byte(`
-   __init = function(self)
-   __pkg.__init = function() end;
-    -- jea compiler.go:260
-    local __f
-    local __c = false;
-    local __s = 0;
-    local __r;
-    if self ~= nil and self.__blk ~= nil then
-         __f = self;
-         __c = true;
-         __s = __f.__s;
-         __r = __f.__r;
-    end;
-     ::s::
-    while (true) do
-         --switch (__s)
-    if __s == 0 then
+      __init = function(self)
+
+         __pkg.__init = function() end;
+         -- jea compiler.go:355
+         local __f
+         local __c = false;
+         local __s = 0;
+         local __r;
+         if self ~= nil and self.__blk ~= nil then
+            __f = self;
+            __c = true;
+            __s = __f.__s;
+            __r = __f.__r;
+         end;
+         ::s::
+         while (true) do
+            --switch (__s)
+            if __s == 0 then
 `), minify))
 
 	if err != nil {
@@ -377,7 +378,23 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 			return err
 		}
 	}
-	if _, err := w.Write(removeWhitespace([]byte("\t\t--jea compiler.go:238\n end;\n\t\t return;\n\t end;\n\t\t if __f == nil then\n\t __f = { __blk= __init };\n\t end;\n\t  __f.__s = __s;\n\t __f.__r = __r;\n\t return __f;\n\t end;\n\t__pkg.__init = __init;\n\t return __pkg;\n end)();\n"), minify)); err != nil {
+	if _, err := w.Write(removeWhitespace([]byte(`
+            --jea compiler.go:382
+            end;
+         return;
+      end;
+      if __f == nil then
+         __f = { __blk= __init };
+      end;
+      __f.__s = __s;
+      __f.__r = __r;
+      return __f;
+   end;
+
+   __pkg.__init = __init;
+   return __pkg;
+end)();
+`), minify)); err != nil {
 		return err
 	}
 	if _, err := w.Write([]byte("\n")); err != nil { // keep this \n even when minified

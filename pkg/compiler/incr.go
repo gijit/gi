@@ -219,7 +219,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	}
 	sort.Strings(importedPaths)
 	for _, impPath := range importedPaths {
-		id := c.newIdent(fmt.Sprintf(`%s._init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
+		id := c.newIdent(fmt.Sprintf(`%s.__init`, c.p.pkgVars[impPath]), types.NewSignature(nil, nil, nil, false))
 		call := &ast.CallExpr{Fun: id}
 		c.Blocking[call] = true
 		c.Flattened[call] = true
@@ -342,6 +342,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 								}
 								c.translateStmt(&ast.ExprStmt{X: call}, nil)
 							})
+							de.InitCode = append(de.InitCode, []byte(" --[[ incr.go:345 --]]")...)
 							de.DceObjectFilter = ""
 						}
 					}
@@ -435,7 +436,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 										// which needs to end up in code.
 										x := c.translateExpr(c.zeroValue(o.Type()), nil).String()
 										preamble := string(c.output)
-										de.InitCode = []byte(fmt.Sprintf("%s\n\t\t%s = %s;\n", preamble, c.objectName(o), x))
+										de.InitCode = []byte(fmt.Sprintf("%s\n\t\t%s = %s; --incr.go:439\n", preamble, c.objectName(o), x))
 
 										pp("placeN+1, appending to newCodeText: d.InitCode='%s'", string(de.InitCode))
 										newCodeText = append(newCodeText, de.InitCode)
@@ -486,6 +487,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 												Rhs: []ast.Expr{init.Rhs},
 											}, nil)
 										})
+										d.InitCode = append(d.InitCode, []byte(" --[[ fullpkg.go:490 --]]")...)
 										d.Vars = append(d.Vars, c.localVars...)
 									})
 									if len(init.Lhs) == 1 {
