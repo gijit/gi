@@ -276,7 +276,7 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		p1("should we source import path='%s'? depth=%v", path, depth)
 		//pp("stack ='%s'\n", stack())
 
-		if depth > 6 {
+		if depth > 7 {
 			// not allowed
 			return nil, fmt.Errorf("deep source imports forbidden for performance reasons. problem with import of package '%s' (not shadowed? [1]) depth=%v ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, depth)
 		}
