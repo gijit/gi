@@ -319,8 +319,6 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 			d.InitCode = append(d.InitCode, []byte(fmt.Sprintf(
 				"\t\t\t--[[ fullpkg.go:320, for importPath='%s' --]]\n", importPath))...)
 			d.Vars = append(d.Vars, c.localVars...)
-			// jea add:
-			//d.initializePackageVars(lhs)
 		})
 		if len(init.Lhs) == 1 {
 			if !analysis.HasSideEffect(init.Rhs, c.p.Info.Info) {
@@ -552,18 +550,4 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		Check:        chk,
 		FuncSrcCache: funcSrcCache,
 	}, nil
-}
-
-// jea add:
-func (d *Decl) initializePackageVars(lhs []ast.Expr) {
-	code := bytes.NewBuffer(nil)
-	for _, e := range lhs {
-		nm := nameHelper(e)
-		d.Vars = append(d.Vars, nm)
-
-		if ast.IsExported(nm) {
-			fmt.Fprintf(code, "\t\t__pkg.%[1]s = %[1]s; -- fullpkg.go:556\n", nm)
-		}
-	}
-	d.InitCode = append(d.InitCode, code.Bytes()...)
 }
