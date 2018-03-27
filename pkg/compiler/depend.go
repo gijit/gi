@@ -16,7 +16,7 @@ import (
 //  leaf types before the compound
 //  types that need them defined.
 
-var dfsTestMode = false
+var dependTestMode = false
 
 func isBasicTyp(n *dfsNode) bool {
 	_, ok := n.typ.(*types.Basic)
@@ -99,12 +99,14 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 
 	// we can skip all basic types,
 	// as they are already defined.
-	if isBasicTyp(ch) {
-		return
-	}
-	if isBasicTyp(par) {
-		panic(fmt.Sprintf("addChild error: parent was basic type. "+
-			"cannot add child to basic typ %v", par))
+	if !dependTestMode {
+		if isBasicTyp(ch) {
+			return
+		}
+		if isBasicTyp(par) {
+			panic(fmt.Sprintf("addChild error: parent was basic type. "+
+				"cannot add child to basic typ %v", par))
+		}
 	}
 
 	_, present := s.dfsDedup[ch.typ]
