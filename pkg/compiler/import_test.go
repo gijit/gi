@@ -109,8 +109,8 @@ callres := spkg_tst2.ToString("Hello %s", "world")
 		panicOn(err)
 
 		// and verify that it happens correctly
-		pp("dump gls just before running translation")
-		LuaRunAndReport(vm, "__gls();")
+		//pp("dump gls just before running translation")
+		//LuaRunAndReport(vm, "__gls();")
 		pp("above is global env just before we run this translation:")
 		fmt.Printf("\n translation='%s'\n", translation)
 		LuaRunAndReport(vm, string(translation))
