@@ -283,8 +283,8 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 
 		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
 
-		vv("GiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
-		ic.Session.showGlobal()
+		pp("GiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
+		//ic.Session.showGlobal()
 
 		if err == nil {
 			if archive == nil {
@@ -296,25 +296,25 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 			// success. execute the code to define
 			// functions in the lua namespace.
 			t0.regns = archive.Pkg.Name()
-			vv("calling WriteCommandPackage")
+			pp("calling WriteCommandPackage")
 			isMain := false
 			code, err := ic.Session.WriteCommandPackage(archive, "", isMain)
-			vv("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
+			pp("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
 			// fmt is okay here.
 			if err != nil {
 				return nil, err
 			}
 
-			vv("GiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
-			ic.Session.showGlobal()
+			pp("GiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
+			//ic.Session.showGlobal()
 
 			archive.NewCodeText = [][]byte{code}
 			t0.run = code
 			panicOn(t0.Do())
 
 			// now fmt is gone from _G! Arg. why? it should be there now!!
-			vv("GiImportFunc: upon return from t0.run() for path='%s' with code='%s', here is the global env:", path, string(code))
-			ic.Session.showGlobal()
+			pp("GiImportFunc: upon return from t0.run() for path='%s' with code='%s', here is the global env:", path, string(code))
+			//ic.Session.showGlobal()
 
 			return archive, err
 		}
