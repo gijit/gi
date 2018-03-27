@@ -167,7 +167,47 @@ chk := r.Get1();
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		//LuaMustInt64(vm, "caught", 4)
+		LuaMustString(vm, "chk", "world")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
+
+func Test1005ArrayOfSliceOfBytes(t *testing.T) {
+
+	cv.Convey(`array of slice of bytes, direct, no import`, t, func() {
+
+		code := `
+type R struct {
+	A [2][]byte
+}
+
+func NewR() *R {
+	r := &R{}
+	r.A[0] = []byte("hello")
+	r.A[1] = []byte("world")
+	return r
+}
+
+func (r *R) Get1() string {
+	return string(r.A[1])
+}
+r := NewR();
+chk := r.Get1();
+
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		LuaMustString(vm, "chk", "world")
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
