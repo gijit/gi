@@ -150,6 +150,14 @@ func isPrim(ty types.Type) bool {
 	if et == nil {
 		return false
 	}
+	// want emptyInterface to be primitive too!
+	iface, isIface := et.(*types.Interface)
+	if isIface {
+		if iface.Empty() {
+			return true
+		}
+	}
+
 	_, ok := et.(*types.Basic)
 	vv("for et=%#v, ty='%#v'/%T, isPrim=%v", et, ty, ty, ok)
 	return ok
