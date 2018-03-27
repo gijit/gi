@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/glycerine/gi/pkg/types"
 )
@@ -35,8 +36,9 @@ type dfsNode struct {
 	createCode []byte
 }
 
-func (me *dfsNode) bloom() {
-	panic("TODO")
+func (me *dfsNode) bloom(w io.Writer) {
+	_, err := w.Write(me.createCode)
+	panicOn(err)
 }
 
 // a func on nodes to force instantiation of
@@ -45,7 +47,7 @@ func (me *dfsNode) bloom() {
 // lazily instantated. Calls me.typ.bloom
 // on our subtree in depth-first order.
 //
-func (me *dfsNode) makeRequiredTypes() {
+func (me *dfsNode) makeRequiredTypes(w io.Writer) {
 	if me.made {
 		return
 	}
@@ -55,12 +57,12 @@ func (me *dfsNode) makeRequiredTypes() {
 	}
 
 	for _, ch := range me.children {
-		ch.makeRequiredTypes()
+		ch.makeRequiredTypes(w)
 	}
-	me.bloom()
+	me.bloom(w)
 }
 
-func (s *dfsState) newDfsNode(name string, typ types.Type) *dfsNode {
+func (s *dfsState) newDfsNode(name string, typ types.Type, createCode []byte) *dfsNode {
 	if typ == nil {
 		panic("typ cannot be nil in newDfsNode")
 	}
@@ -76,6 +78,7 @@ func (s *dfsState) newDfsNode(name string, typ types.Type) *dfsNode {
 		typ:           typ,
 		stale:         true,
 		dedupChildren: make(map[*dfsNode]bool),
+		createCode:    createCode,
 	}
 	s.dfsNextID++
 	s.dfsDedup[typ] = node
@@ -112,28 +115,13 @@ func (s *dfsState) addChild(par, ch *dfsNode) {
 		return
 	}
 
-	parNode := s.dfsDedup[par.typ]
-	if parNode == nil {
-		parNode = s.newDfsNode("TODO-par", par.typ)
-	}
-
-	chNode := s.newDfsNode("TODO-ch", ch.typ)
-	if parNode.dedupChildren[chNode] {
+	if par.dedupChildren[ch] {
 		// avoid adding same child twice.
 		return
 	}
 
-	//pnc := len(parNode.children)
-
-	// jea: huh?
-	//	if pnc > 0 {
-	// we lazily instantiate children
-	// for better diagnostics.
-	//		parNode.children = nil
-	//	}
-
-	parNode.dedupChildren[chNode] = true
-	parNode.children = append(parNode.children, chNode)
+	par.children = append(par.children, ch)
+	par.dedupChildren[ch] = true
 	s.stale = true
 }
 
