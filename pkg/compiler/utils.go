@@ -578,7 +578,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 			c.p.typeDepend.addChild(parNode, chNode)
 		}
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:564\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:581\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
 		c.p.typeDefineLuaCode[anonType] = anonTypePrint
 
 		// gotta generate the type immediately for the REPL.

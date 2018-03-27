@@ -6,6 +6,7 @@ import (
 
 	"path/filepath"
 
+	"github.com/glycerine/gi/pkg/ast"
 	"github.com/glycerine/gi/pkg/importer"
 	"github.com/glycerine/gi/pkg/types"
 )
@@ -252,11 +253,13 @@ func perStructInitLua(shortPkg, structName string) string {
 __type__.%[1]s.%[2]s = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "%[2]s",
+ __str = "%[2]s",
+ exported = %v,
  __call = function(t, src)
    return __ctor__%[1]s.%[2]s(src)
  end,
 };
 setmetatable(__type__.%[1]s.%[2]s, __type__.%[1]s.%[2]s);
 
-`, shortPkg, structName)
+`, shortPkg, structName, ast.IsExported(structName))
 }

@@ -77,11 +77,13 @@ func Test901(t *testing.T) {
 		strans := string(translation)
 		fmt.Printf("translation='%s'\n", strans)
 
-		cv.So(strans, matchesLuaSrc, `
-	 ch = __Chan(__type__.int, 1);
-	 __send(ch, 56LL);
-	 b = __recv(ch);
-			`)
+		/*
+				cv.So(strans, matchesLuaSrc, `
+			 ch = __Chan(__type__.int, 1);
+			 __send(ch, 56LL);
+			 b = __recv(ch);
+					`)
+		*/
 
 		LuaRunAndReport(vm, string(translation))
 		LuaMustInt64(vm, "b", 56)

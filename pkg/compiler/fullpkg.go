@@ -519,13 +519,16 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		typeDecls = append(typeDecls, &d)
 	}
 
-	var linearTypeGraph bytes.Buffer
-	c.p.typeDepend.genCode(&linearTypeGraph)
-	lin := &Decl{
-		TypeInitCode: linearTypeGraph.Bytes(),
-	}
+	/*
+		var linearTypeGraph bytes.Buffer
+		c.p.typeDepend.genCode(&linearTypeGraph)
+		lin := &Decl{
+			TypeInitCode: linearTypeGraph.Bytes(),
+		}
 
-	allDecls := []*Decl{lin}
+		allDecls := []*Decl{lin}
+	*/
+	var allDecls []*Decl
 	for _, d := range append(append(append(importDecls, typeDecls...), varDecls...), funcDecls...) {
 		d.DeclCode = removeWhitespace(d.DeclCode, minify)
 		d.MethodListCode = removeWhitespace(d.MethodListCode, minify)
