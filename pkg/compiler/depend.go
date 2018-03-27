@@ -15,6 +15,7 @@ import (
 //  traversal will print
 //  leaf types before the compound
 //  types that need them defined.
+//  See dfsState.genCode() for that.
 
 var dependTestMode = false
 
