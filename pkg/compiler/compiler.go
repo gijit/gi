@@ -307,12 +307,13 @@ func WritePkgCode(pkg *Archive, dceSelection map[*Decl]struct{}, minify bool, w 
 		return err
 	}
 	if _, err := w.Write(removeWhitespace([]byte(fmt.Sprintf(`
-__packages["%s"] = (function()
+__type__.%[2]s = __type__.%[2]s or {};
+__packages["%[1]s"] = (function()
 	local __pkg = {};
     setmetatable(__pkg, {__index = _G})
     setfenv(1, __pkg);
 
-`, pkg.ImportPath)), minify)); err != nil {
+`, pkg.ImportPath, pkg.Pkg.Name())), minify)); err != nil {
 		return err
 	}
 	//vars := []string{"__pkg", "__init"}
