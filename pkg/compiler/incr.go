@@ -176,6 +176,9 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 	c := &funcContext{
 		FuncInfo: pkgInfo.InitFuncInfo,
 		p: &pkgContext{
+			typeDepend:        NewDFSState(),
+			typeDefineLuaCode: make(map[types.Object]string),
+
 			Info:                 pkgInfo,
 			additionalSelections: make(map[*ast.SelectorExpr]selection),
 
