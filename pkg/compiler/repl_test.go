@@ -421,6 +421,8 @@ __type__.Yumo = __newType(8, __kindMap, "main.Yumo", true, "main", true, nil);
 
 __type__.Yumo.init(__type__.int, __type__.string);
 
+__type__.anon_mapType = __mapType(__type__.int, __type__.string); 
+
 yesso = __makeMap({[2LL]="two"}, __type__.int, __type__.string, __type__.Yumo);
 
 `)
