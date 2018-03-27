@@ -755,7 +755,7 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 	}
 	pp("archive back from FullPackageCompile, pkg.ImportPath='%v'\n", pkg.ImportPath)
 	pp(" here is the global env:")
-	//s.showGlobal()
+	//S.showGlobal()
 	defer func() {
 		pp("upon leaving Session.BuildPackage(), here is the global env:")
 		//s.showGlobal()
@@ -949,6 +949,7 @@ func summarizeArchives(m map[string]*Archive) (s string) {
 	return
 }
 
+// debug utility to run __gls from Go code.
 func (s *Session) showGlobal() {
 	t0 := s.ic.goro.newTicket("", true)
 
