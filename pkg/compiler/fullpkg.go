@@ -519,16 +519,21 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		typeDecls = append(typeDecls, &d)
 	}
 
-	/*
-		var linearTypeGraph bytes.Buffer
-		c.p.typeDepend.genCode(&linearTypeGraph)
-		lin := &Decl{
-			TypeInitCode: linearTypeGraph.Bytes(),
-		}
-
-		allDecls := []*Decl{lin}
-	*/
 	var allDecls []*Decl
+
+	// jea: hmm... this wasn't necessary to get to green.
+	// And the linearTypeGraph never has any code in it...wierd.
+	var linearTypeGraph bytes.Buffer
+	c.p.typeDepend.genCode(&linearTypeGraph)
+	code := linearTypeGraph.Bytes()
+	if len(code) > 0 {
+		vv("linearTypeGraph = '%s'", string(code))
+	}
+	lin := &Decl{
+		TypeInitCode: code,
+	}
+	allDecls = append(allDecls, lin)
+
 	for _, d := range append(append(append(importDecls, typeDecls...), varDecls...), funcDecls...) {
 		d.DeclCode = removeWhitespace(d.DeclCode, minify)
 		d.MethodListCode = removeWhitespace(d.MethodListCode, minify)
