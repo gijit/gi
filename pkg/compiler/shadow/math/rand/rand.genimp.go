@@ -81,6 +81,8 @@ __type__.rand ={};
 __type__.rand.Rand = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Rand",
+ __str = "Rand",
+ exported = true,
  __call = function(t, src)
    return __ctor__rand.Rand(src)
  end,
@@ -95,6 +97,8 @@ setmetatable(__type__.rand.Rand, __type__.rand.Rand);
 __type__.rand.Zipf = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Zipf",
+ __str = "Zipf",
+ exported = true,
  __call = function(t, src)
    return __ctor__rand.Zipf(src)
  end,

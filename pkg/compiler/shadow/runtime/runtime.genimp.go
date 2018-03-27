@@ -148,6 +148,8 @@ __type__.runtime ={};
 __type__.runtime.BlockProfileRecord = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "BlockProfileRecord",
+ __str = "BlockProfileRecord",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.BlockProfileRecord(src)
  end,
@@ -162,6 +164,8 @@ setmetatable(__type__.runtime.BlockProfileRecord, __type__.runtime.BlockProfileR
 __type__.runtime.Frame = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Frame",
+ __str = "Frame",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.Frame(src)
  end,
@@ -176,6 +180,8 @@ setmetatable(__type__.runtime.Frame, __type__.runtime.Frame);
 __type__.runtime.Frames = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Frames",
+ __str = "Frames",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.Frames(src)
  end,
@@ -190,6 +196,8 @@ setmetatable(__type__.runtime.Frames, __type__.runtime.Frames);
 __type__.runtime.Func = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Func",
+ __str = "Func",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.Func(src)
  end,
@@ -204,6 +212,8 @@ setmetatable(__type__.runtime.Func, __type__.runtime.Func);
 __type__.runtime.MemProfileRecord = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "MemProfileRecord",
+ __str = "MemProfileRecord",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.MemProfileRecord(src)
  end,
@@ -218,6 +228,8 @@ setmetatable(__type__.runtime.MemProfileRecord, __type__.runtime.MemProfileRecor
 __type__.runtime.MemStats = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "MemStats",
+ __str = "MemStats",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.MemStats(src)
  end,
@@ -232,6 +244,8 @@ setmetatable(__type__.runtime.MemStats, __type__.runtime.MemStats);
 __type__.runtime.StackRecord = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StackRecord",
+ __str = "StackRecord",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.StackRecord(src)
  end,
@@ -246,6 +260,8 @@ setmetatable(__type__.runtime.StackRecord, __type__.runtime.StackRecord);
 __type__.runtime.TypeAssertionError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "TypeAssertionError",
+ __str = "TypeAssertionError",
+ exported = true,
  __call = function(t, src)
    return __ctor__runtime.TypeAssertionError(src)
  end,

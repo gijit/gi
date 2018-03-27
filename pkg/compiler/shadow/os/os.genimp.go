@@ -189,6 +189,8 @@ __type__.os ={};
 __type__.os.File = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "File",
+ __str = "File",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.File(src)
  end,
@@ -203,6 +205,8 @@ setmetatable(__type__.os.File, __type__.os.File);
 __type__.os.LinkError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "LinkError",
+ __str = "LinkError",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.LinkError(src)
  end,
@@ -217,6 +221,8 @@ setmetatable(__type__.os.LinkError, __type__.os.LinkError);
 __type__.os.PathError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PathError",
+ __str = "PathError",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.PathError(src)
  end,
@@ -231,6 +237,8 @@ setmetatable(__type__.os.PathError, __type__.os.PathError);
 __type__.os.ProcAttr = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ProcAttr",
+ __str = "ProcAttr",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.ProcAttr(src)
  end,
@@ -245,6 +253,8 @@ setmetatable(__type__.os.ProcAttr, __type__.os.ProcAttr);
 __type__.os.Process = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Process",
+ __str = "Process",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.Process(src)
  end,
@@ -259,6 +269,8 @@ setmetatable(__type__.os.Process, __type__.os.Process);
 __type__.os.ProcessState = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ProcessState",
+ __str = "ProcessState",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.ProcessState(src)
  end,
@@ -273,6 +285,8 @@ setmetatable(__type__.os.ProcessState, __type__.os.ProcessState);
 __type__.os.SyscallError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SyscallError",
+ __str = "SyscallError",
+ exported = true,
  __call = function(t, src)
    return __ctor__os.SyscallError(src)
  end,

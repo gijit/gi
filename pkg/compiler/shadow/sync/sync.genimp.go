@@ -102,6 +102,8 @@ __type__.sync ={};
 __type__.sync.Cond = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Cond",
+ __str = "Cond",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.Cond(src)
  end,
@@ -116,6 +118,8 @@ setmetatable(__type__.sync.Cond, __type__.sync.Cond);
 __type__.sync.Map = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Map",
+ __str = "Map",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.Map(src)
  end,
@@ -130,6 +134,8 @@ setmetatable(__type__.sync.Map, __type__.sync.Map);
 __type__.sync.Mutex = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Mutex",
+ __str = "Mutex",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.Mutex(src)
  end,
@@ -144,6 +150,8 @@ setmetatable(__type__.sync.Mutex, __type__.sync.Mutex);
 __type__.sync.Once = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Once",
+ __str = "Once",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.Once(src)
  end,
@@ -158,6 +166,8 @@ setmetatable(__type__.sync.Once, __type__.sync.Once);
 __type__.sync.Pool = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Pool",
+ __str = "Pool",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.Pool(src)
  end,
@@ -172,6 +182,8 @@ setmetatable(__type__.sync.Pool, __type__.sync.Pool);
 __type__.sync.RWMutex = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "RWMutex",
+ __str = "RWMutex",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.RWMutex(src)
  end,
@@ -186,6 +198,8 @@ setmetatable(__type__.sync.RWMutex, __type__.sync.RWMutex);
 __type__.sync.WaitGroup = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "WaitGroup",
+ __str = "WaitGroup",
+ exported = true,
  __call = function(t, src)
    return __ctor__sync.WaitGroup(src)
  end,

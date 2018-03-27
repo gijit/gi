@@ -125,6 +125,8 @@ __type__.reflect ={};
 __type__.reflect.Method = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Method",
+ __str = "Method",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.Method(src)
  end,
@@ -139,6 +141,8 @@ setmetatable(__type__.reflect.Method, __type__.reflect.Method);
 __type__.reflect.SelectCase = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SelectCase",
+ __str = "SelectCase",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.SelectCase(src)
  end,
@@ -153,6 +157,8 @@ setmetatable(__type__.reflect.SelectCase, __type__.reflect.SelectCase);
 __type__.reflect.SliceHeader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SliceHeader",
+ __str = "SliceHeader",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.SliceHeader(src)
  end,
@@ -167,6 +173,8 @@ setmetatable(__type__.reflect.SliceHeader, __type__.reflect.SliceHeader);
 __type__.reflect.StringHeader = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StringHeader",
+ __str = "StringHeader",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.StringHeader(src)
  end,
@@ -181,6 +189,8 @@ setmetatable(__type__.reflect.StringHeader, __type__.reflect.StringHeader);
 __type__.reflect.StructField = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StructField",
+ __str = "StructField",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.StructField(src)
  end,
@@ -195,6 +205,8 @@ setmetatable(__type__.reflect.StructField, __type__.reflect.StructField);
 __type__.reflect.Value = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Value",
+ __str = "Value",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.Value(src)
  end,
@@ -209,6 +221,8 @@ setmetatable(__type__.reflect.Value, __type__.reflect.Value);
 __type__.reflect.ValueError = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ValueError",
+ __str = "ValueError",
+ exported = true,
  __call = function(t, src)
    return __ctor__reflect.ValueError(src)
  end,

@@ -38,6 +38,8 @@ __type__.regexp ={};
 __type__.regexp.Regexp = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Regexp",
+ __str = "Regexp",
+ exported = true,
  __call = function(t, src)
    return __ctor__regexp.Regexp(src)
  end,

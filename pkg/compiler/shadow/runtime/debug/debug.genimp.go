@@ -40,6 +40,8 @@ __type__.debug ={};
 __type__.debug.GCStats = {
  __name = "native_Go_struct_type_wrapper",
  __native_type = "GCStats",
+ __str = "GCStats",
+ exported = true,
  __call = function(t, src)
    return __ctor__debug.GCStats(src)
  end,
