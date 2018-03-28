@@ -255,6 +255,7 @@ __type__ ={}; -- global repo of types
 __global ={};
 __module ={};
 __packages = {}
+__type__.__packages = __packages
 __idCounter = 0;
 __pkg = {};
 

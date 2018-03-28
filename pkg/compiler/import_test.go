@@ -211,3 +211,29 @@ chk := r.Get1();
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1006DotImport(t *testing.T) {
+
+	cv.Convey(`import . "spkg_tst5" should work; a dot import`, t, func() {
+
+		code := `
+import . "github.com/glycerine/gi/pkg/compiler/spkg_tst5"
+tm := Astm("2017-07-05T13:31:00Z")
+
+`
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(code))
+		panicOn(err)
+		fmt.Printf("\n translation='%s'\n", translation)
+
+		// and verify that it happens correctly
+		LuaRunAndReport(vm, string(translation))
+
+		//LuaMustString(vm, "chk", "world")
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}

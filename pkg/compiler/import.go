@@ -2,41 +2,38 @@ package compiler
 
 import (
 	"fmt"
+	"io/ioutil"
 	"path"
 	"reflect"
+	"runtime/debug"
 	"strings"
 
 	"github.com/glycerine/gi/pkg/importer"
 	"github.com/glycerine/gi/pkg/token"
 	"github.com/glycerine/gi/pkg/types"
-	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/luar"
 
+	golua "github.com/glycerine/golua/lua"
+
 	// shadow_ imports: available inside the REPL
-	"github.com/glycerine/gi/pkg/compiler/shadow/bytes"
-	"github.com/glycerine/gi/pkg/compiler/shadow/fmt"
-	"github.com/glycerine/gi/pkg/compiler/shadow/io"
 
-	shadow_sync "github.com/glycerine/gi/pkg/compiler/shadow/sync"
-	shadow_sync_atomic "github.com/glycerine/gi/pkg/compiler/shadow/sync/atomic"
-
-	shadow_io_ioutil "github.com/glycerine/gi/pkg/compiler/shadow/io/ioutil"
-	"io/ioutil"
-
+	shadow_bytes "github.com/glycerine/gi/pkg/compiler/shadow/bytes"
 	shadow_encoding_binary "github.com/glycerine/gi/pkg/compiler/shadow/encoding/binary"
-
 	shadow_errors "github.com/glycerine/gi/pkg/compiler/shadow/errors"
-	"github.com/glycerine/gi/pkg/compiler/shadow/math"
+	shadow_fmt "github.com/glycerine/gi/pkg/compiler/shadow/fmt"
+	shadow_io "github.com/glycerine/gi/pkg/compiler/shadow/io"
+	shadow_io_ioutil "github.com/glycerine/gi/pkg/compiler/shadow/io/ioutil"
+	shadow_math "github.com/glycerine/gi/pkg/compiler/shadow/math"
 	shadow_math_rand "github.com/glycerine/gi/pkg/compiler/shadow/math/rand"
-	"github.com/glycerine/gi/pkg/compiler/shadow/os"
+	shadow_os "github.com/glycerine/gi/pkg/compiler/shadow/os"
 	shadow_reflect "github.com/glycerine/gi/pkg/compiler/shadow/reflect"
-	"github.com/glycerine/gi/pkg/compiler/shadow/regexp"
+	shadow_regexp "github.com/glycerine/gi/pkg/compiler/shadow/regexp"
 	shadow_runtime "github.com/glycerine/gi/pkg/compiler/shadow/runtime"
 	shadow_runtime_debug "github.com/glycerine/gi/pkg/compiler/shadow/runtime/debug"
 	shadow_strconv "github.com/glycerine/gi/pkg/compiler/shadow/strconv"
-	"github.com/glycerine/gi/pkg/compiler/shadow/time"
-
-	"runtime/debug"
+	shadow_sync "github.com/glycerine/gi/pkg/compiler/shadow/sync"
+	shadow_sync_atomic "github.com/glycerine/gi/pkg/compiler/shadow/sync/atomic"
+	shadow_time "github.com/glycerine/gi/pkg/compiler/shadow/time"
 
 	// gonum
 	shadow_blas "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
@@ -105,7 +102,7 @@ func (ic *IncrState) EnableImportsFromLua() {
 
 	// minimize luar stuff for now, focus on pure Lua runtime.
 	goImportFromLua := func(path string) {
-		ic.GiImportFunc(path, "", 0)
+		ic.RunTimeGiImportFunc(path, "", 0)
 	}
 	stacksClosure := func() {
 		showLuaStacks(ic.goro.vm)
@@ -116,10 +113,10 @@ func (ic *IncrState) EnableImportsFromLua() {
 	})
 }
 
-func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
+func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
+	vv("RunTimeGiImportFunc called with path = '%s'...", path)
 
 	// `import "fmt"` means that path == "fmt", for example.
-	pp("GiImportFunc called with path = '%s'...", path)
 
 	// check cache first
 	arch, ok := ic.Session.Archives[path]
@@ -320,14 +317,10 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 			t0.run = code
 			panicOn(t0.Do())
 
-			// now fmt is gone from _G! Arg. why? it should be there now!!
-			pp("GiImportFunc: upon return from t0.run() for path='%s' with code='%s', here is the global env:", path, string(code))
-			//ic.Session.showGlobal()
-
 			return archive, err
 		}
 		// source import failed.
-		pp("source import of '%s' failed: '%v'", path, err)
+		fmt.Printf("source import of package '%s' failed: '%v'", path, err)
 
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
@@ -343,6 +336,97 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
 
 	pp("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: err='%v'", path, pkgDir, depth, shadowPath, err)
+	return a, err
+}
+
+///////////////////
+///////////////////
+//////
+//////  Compile time import
+//////
+///////////////////
+///////////////////
+func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
+	vv("CompileTimeGiImportFunc called with path = '%s'...", path)
+
+	// `import "fmt"` means that path == "fmt", for example.
+
+	// check cache first
+	arch, ok := ic.Session.Archives[path]
+	_, _ = arch, ok
+	/*
+		if ok {
+			pp("ic.GiImportFunc cache hit for path '%s'", path)
+			return arch, nil
+		}
+	*/
+	pp("no cache hit for path '%s'", path)
+
+	var code []byte
+	switch path {
+	// gen-gijit-shadow outputs to pkg/compiler/shadow/...
+	case "bytes":
+		code = []byte(`__go_import("bytes");`)
+
+		// we need to load the type-checking info into arch.Pkg
+		// now so that the compile can complete.
+
+	default:
+		// try a source import?
+
+		p1("should we source import path='%s'? depth=%v", path, depth)
+		pp("stack ='%s'\n", stack())
+
+		if depth > 7 {
+			// not allowed
+			return nil, fmt.Errorf("deep source imports forbidden for performance reasons. problem with import of package '%s' (not shadowed? [1]) depth=%v ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, depth)
+		}
+
+		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
+
+		pp("GiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
+		//ic.Session.showGlobal()
+
+		if err == nil {
+			if archive == nil {
+				panic("why was archive nil if err was nil?")
+			}
+			if archive.Pkg == nil {
+				panic("why was archive.Pkg nil if err was nil?")
+			}
+			// success at source import.
+
+			pp("calling WriteCommandPackage")
+			isMain := false
+			code, err = ic.Session.WriteCommandPackage(archive, "", isMain)
+			p1("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
+			// fmt is okay here.
+			if err != nil {
+				return nil, err
+			}
+
+			pp("GiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
+			//ic.Session.showGlobal()
+
+			archive.NewCodeText = [][]byte{code}
+
+			return archive, nil
+		}
+		// source import failed.
+		fmt.Printf("source import of package '%s' failed: '%v'", path, err)
+
+		// need to run gen-gijit-shadow-import
+		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
+	}
+
+	// successfully match path to a shadow package, bring in its
+	// type info now.
+	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
+	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
+	if err != nil {
+		return nil, err
+	}
+	a.NewCodeText = [][]byte{code}
 	return a, err
 }
 
