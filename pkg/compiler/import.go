@@ -421,13 +421,21 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 			incr := getFunForIncr(pkg)
 			scope.Insert(incr)
 
-			ic.CurPkg.importContext.Packages[path] = pkg
-			return &Archive{
+			code = []byte(fmt.Sprintf(`__go_import("%s");`, path))
+			a := &Archive{
 				SavedArchive: SavedArchive{
 					ImportPath: path,
 				},
-				Pkg: pkg,
-			}, nil
+				NewCodeText: [][]byte{code},
+				Pkg:         pkg,
+			}
+			a.Pkg.ClientExtra = a
+			ic.CurPkg.importContext.Packages[path] = pkg
+			ic.Session.Archives[path] = a
+			ic.Session.Archives[pkg.Path()] = a
+
+			vv("a.NewCodeText='%v'", string(a.NewCodeText[0]))
+			return a, nil
 		}
 
 	default:
@@ -468,6 +476,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 			//ic.Session.showGlobal()
 
 			archive.NewCodeText = [][]byte{code}
+			archive.Pkg.ClientExtra = archive
 
 			return archive, nil
 		}
@@ -488,6 +497,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 		return nil, err
 	}
 	a.NewCodeText = [][]byte{code}
+	a.Pkg.ClientExtra = a
 	return a, err
 }
 
