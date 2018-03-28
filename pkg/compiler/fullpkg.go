@@ -78,7 +78,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	if importPath != "main" {
 		prelude = nil
 	}
-	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude, depth+1)
+	typesPkg, chk, err := config.Check(nil, nil, importPath, fileSet, files, typesInfo, prelude, depth)
 	pp("back from config.Check on importPath='%s', err='%v', typesPkg='%#v'\n", importPath, err, typesPkg)
 	if importError != nil {
 		return nil, importError
@@ -187,14 +187,9 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		importDecls = append(importDecls, &Decl{
 			Vars: []string{c.p.pkgVars[impPath]},
 
-			DeclCode: []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(impPath, false), omitAnyShadowPathPrefix(impPath, true))),
+			DeclCode: []byte(fmt.Sprintf("\t __go_run_import(\"%[1]s\");\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(impPath, false), omitAnyShadowPathPrefix(impPath, true))),
+			//DeclCode: []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(impPath, false), omitAnyShadowPathPrefix(impPath, true))),
 
-			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n\t%s = __packages[\"%s\"];\n", omitAnyShadowPathPrefix(impPath), c.p.pkgVars[impPath], impPath)),
-			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
-			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
-
-			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n", c.p.pkgVars[impPath], impPath)),
-			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n", impPath)),
 			InitCode: append([]byte(fmt.Sprintf("\t\t if %[1]s ~= nil and %[1]s.__init ~= nil then\n\t", pkgShort)), append(c.CatchOutput(1, func() { c.translateStmt(&ast.ExprStmt{X: call}, nil) }), []byte(fmt.Sprintf("\t\t end; --where: %s\n", verb.FileLine(1)))...)...),
 		})
 	}

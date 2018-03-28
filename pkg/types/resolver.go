@@ -157,14 +157,14 @@ func (check *Checker) importPackage(pos token.Pos, path, dir string, depth int) 
 		if importer := check.conf.Importer; importer == nil {
 			err = fmt.Errorf("Config.Importer not installed")
 		} else if importerFrom, ok := importer.(ImporterFrom); ok {
-			imp, err = importerFrom.ImportFrom(path, dir, 0, depth+1)
+			imp, err = importerFrom.ImportFrom(path, dir, 0, depth)
 			if imp == nil && err == nil {
 				err = fmt.Errorf("Config.Importer.ImportFrom(%s, %s, 0) returned nil but no error", path, dir)
 			}
 		} else {
 			// jea: our import "fmt" is calling here.
 			//pp("jea debug: types/resolver.go:164, about to call importer.Import(path='%s')", path)
-			imp, err = importer.Import(path, depth+1)
+			imp, err = importer.Import(path, depth)
 			//pp("jea debug: types/resolver.go:166, back from importer.Import(path='%s') imp='%#v', err='%v'\n", path, imp, err)
 			if imp == nil && err == nil {
 				fmt.Printf("\n jea debug: imp was nil!?! err was nil\n")
@@ -297,7 +297,7 @@ func (check *Checker) collectObjects(depth int) {
 							continue
 						}
 
-						imp := check.importPackage(s.Path.Pos(), path, fileDir, depth+1)
+						imp := check.importPackage(s.Path.Pos(), path, fileDir, depth)
 						if imp == nil {
 							pp("\n jea debug types/resolver.go: check.importPackage(path='%s') returned nil.\n", path)
 							continue

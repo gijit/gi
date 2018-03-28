@@ -412,7 +412,7 @@ func (conf *Config) Check(pkg *Package, check *Checker, path string, fset *token
 		check = NewChecker(conf, fset, pkg, info)
 	}
 
-	return pkg, check, check.Files(files, depth+1)
+	return pkg, check, check.Files(files, depth)
 }
 
 // AssertableTo reports whether a value of type V can be asserted to have type T.

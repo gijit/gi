@@ -126,7 +126,7 @@ func ImportDependencies(archive *Archive, importPkg func(pth string, depth int) 
 			return err
 		}
 		for _, imp := range dep.Imports {
-			if err := collectDependencies(imp, depth+1); err != nil {
+			if err := collectDependencies(imp, depth); err != nil {
 				return err
 			}
 		}
@@ -149,7 +149,7 @@ func ImportDependencies(archive *Archive, importPkg func(pth string, depth int) 
 		}
 	*/
 	for _, imp := range archive.Imports {
-		if err := collectDependencies(imp, depth+1); err != nil {
+		if err := collectDependencies(imp, depth); err != nil {
 			return nil, err
 		}
 	}
