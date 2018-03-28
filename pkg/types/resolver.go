@@ -308,7 +308,9 @@ func (check *Checker) collectObjects(depth int) {
 						// (this functionality is provided as a convenience
 						// for clients; it is not needed for type-checking)
 						if !pkgImports[imp] {
+							// jea: dedup of pkg.imports accomplished thusly.
 							pkgImports[imp] = true
+							// jea: this is check.pkg.imports
 							pkg.imports = append(pkg.imports, imp)
 						}
 

@@ -139,6 +139,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		p: &pkgContext{
 			typeDepend:        NewDFSState(),
 			typeDefineLuaCode: make(map[types.Object]string),
+			importedPackages:  make(map[string]*types.Package),
 
 			Info:                 pkgInfo,
 			additionalSelections: make(map[*ast.SelectorExpr]selection),

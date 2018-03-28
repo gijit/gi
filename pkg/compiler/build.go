@@ -588,6 +588,9 @@ func (s *Session) BuildImportPathWithSrcDir(path string, srcDir string, depth in
 		return nil, nil, err
 	}
 
+	// jea: allow recovery of *Archive from pkg alone.
+	archive.Pkg.ClientExtra = archive
+
 	return pkg, archive, nil
 }
 
@@ -638,7 +641,7 @@ func (s *Session) BuildPackage(pkg *PackageData, depth int) (*Archive, error) {
 				continue
 			}
 			// recursively pickup binaries instead of source packages.
-			archive, err := s.ic.GiImportFunc(importedPkgPath, pkg.Dir, depth)
+			archive, err := s.ic.CompileTimeGiImportFunc(importedPkgPath, pkg.Dir, depth)
 			_ = archive
 			if err != nil {
 				return nil, err

@@ -70,7 +70,7 @@ func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
 	fileSet := token.NewFileSet() // positions are relative to fileSet
 	importContext := &ImportContext{
 		Packages: make(map[string]*types.Package),
-		Import:   ic.GiImportFunc,
+		Import:   ic.CompileTimeGiImportFunc,
 	}
 
 	key := "main"

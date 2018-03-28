@@ -28,6 +28,7 @@ type pkgContext struct {
 	// jea add
 	typeDepend        *dfsState
 	typeDefineLuaCode map[types.Object]string
+	importedPackages  map[string]*types.Package
 
 	pkgVars      map[string]string
 	objectNames  map[types.Object]string

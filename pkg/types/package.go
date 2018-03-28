@@ -17,6 +17,9 @@ type Package struct {
 	complete bool
 	imports  []*Package
 	fake     bool // scope lookup errors are silently dropped if package is fake (internal use only)
+
+	// allow clients to tag along additional info. e.g. an *Archive
+	ClientExtra interface{}
 }
 
 // jea: avoid gob encoding errors
