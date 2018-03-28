@@ -2,6 +2,7 @@ package compiler
 
 import (
 	"fmt"
+	"path"
 	"reflect"
 	"strings"
 
@@ -345,12 +346,12 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 	return a, err
 }
 
-func omitAnyShadowPathPrefix(path string) string {
+func omitAnyShadowPathPrefix(pth string) string {
 	const prefix = "github.com/glycerine/gi/pkg/compiler/shadow/"
-	if strings.HasPrefix(path, prefix) {
-		return path[len(prefix):]
+	if strings.HasPrefix(pth, prefix) {
+		return path.Base(pth[len(prefix):])
 	}
-	return path
+	return path.Base(pth)
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
