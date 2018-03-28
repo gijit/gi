@@ -22,6 +22,8 @@ import (
 	shadow_io_ioutil "github.com/glycerine/gi/pkg/compiler/shadow/io/ioutil"
 	"io/ioutil"
 
+	shadow_encoding_binary "github.com/glycerine/gi/pkg/compiler/shadow/encoding/binary"
+
 	shadow_errors "github.com/glycerine/gi/pkg/compiler/shadow/errors"
 	"github.com/glycerine/gi/pkg/compiler/shadow/math"
 	shadow_math_rand "github.com/glycerine/gi/pkg/compiler/shadow/math/rand"
@@ -175,6 +177,11 @@ func (ic *IncrState) GiImportFunc(path, pkgDir string, depth int) (*Archive, err
 		t0.regmap["bytes"] = shadow_bytes.Pkg
 		t0.regmap["__ctor__bytes"] = shadow_bytes.Ctor
 		t0.run = append(t0.run, shadow_bytes.InitLua()...)
+
+	case "encoding/binary":
+		t0.regmap["binary"] = shadow_encoding_binary.Pkg
+		t0.regmap["__ctor__binary"] = shadow_encoding_binary.Ctor
+		t0.run = append(t0.run, shadow_encoding_binary.InitLua()...)
 
 	case "errors":
 		t0.regmap["errors"] = shadow_errors.Pkg
