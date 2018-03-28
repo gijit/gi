@@ -283,7 +283,7 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 ///////////////////
 ///////////////////
 func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
-	vv("CompileTimeGiImportFunc called with path = '%s'...", path)
+	vv("CompileTimeGiImportFunc called with path = '%s'... depth=%v", path, depth)
 
 	// `import "fmt"` means that path == "fmt", for example.
 
