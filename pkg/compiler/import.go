@@ -113,6 +113,15 @@ func (ic *IncrState) EnableImportsFromLua() {
 	})
 }
 
+////////////////
+////////////////
+//////      ////
+//////      ///
+///////////////    Runtime import
+/////////////////
+/////       //////
+/////        //////
+////          //////
 func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
 	vv("RunTimeGiImportFunc called with path = '%s'...", path)
 
@@ -161,13 +170,19 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 			t0.regmap["Incr"] = Incr
 			panicOn(t0.Do())
 
-			ic.CurPkg.importContext.Packages[path] = pkg
-			return &Archive{
+			a := &Archive{
 				SavedArchive: SavedArchive{
 					ImportPath: path,
 				},
 				Pkg: pkg,
-			}, nil
+			}
+			a.Pkg.ClientExtra = a
+			a.NewCodeText = [][]byte{}
+			ic.CurPkg.importContext.Packages[path] = pkg
+			ic.Session.Archives[path] = a
+			ic.Session.Archives[pkg.Path()] = a
+
+			return a, nil
 		}
 
 		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
@@ -314,6 +329,8 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 			//ic.Session.showGlobal()
 
 			archive.NewCodeText = [][]byte{code}
+			archive.Pkg.ClientExtra = archive
+
 			t0.run = code
 			panicOn(t0.Do())
 
@@ -326,7 +343,7 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
 
 	}
-	pp("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
+	vv("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
 	panicOn(t0.Do())
 
 	// loading from real GOROOT/GOPATH.
@@ -334,8 +351,10 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
 
 	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
+	a.NewCodeText = [][]byte{}
+	a.Pkg.ClientExtra = a
 
-	pp("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: err='%v'", path, pkgDir, depth, shadowPath, err)
+	vv("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: err='%v'", path, pkgDir, depth, shadowPath, err)
 	return a, err
 }
 
@@ -362,7 +381,8 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	*/
 	pp("no cache hit for path '%s'", path)
 
-	var code []byte
+	code := []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t __type__.%[2]s = {};\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(path, false), omitAnyShadowPathPrefix(path, true)))
+
 	switch path {
 
 	// all these are shadowed, see below for the load of type checking info.
@@ -421,7 +441,6 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 			incr := getFunForIncr(pkg)
 			scope.Insert(incr)
 
-			code = []byte(fmt.Sprintf(`__go_import("%s");`, path))
 			a := &Archive{
 				SavedArchive: SavedArchive{
 					ImportPath: path,
@@ -487,8 +506,6 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
 	}
 
-	code = []byte(fmt.Sprintf(`__go_import("%s");`, path))
-
 	// successfully match path to a shadow package, bring in its
 	// type info now.
 	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
@@ -501,12 +518,18 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	return a, err
 }
 
-func omitAnyShadowPathPrefix(pth string) string {
+func omitAnyShadowPathPrefix(pth string, base bool) string {
 	const prefix = "github.com/glycerine/gi/pkg/compiler/shadow/"
 	if strings.HasPrefix(pth, prefix) {
-		return path.Base(pth[len(prefix):])
+		if base {
+			return path.Base(pth[len(prefix):])
+		}
+		return pth[len(prefix):]
 	}
-	return path.Base(pth)
+	if base {
+		return path.Base(pth)
+	}
+	return pth
 }
 
 func getFunForSprintf(pkg *types.Package) *types.Func {
