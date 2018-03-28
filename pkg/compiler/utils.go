@@ -316,6 +316,20 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool, isType bo
 	// on at the end.
 	// Answer, this was generating different tmp variables with different
 	// names. Use a gensym instead.
+	// Answer2, this is renaming the variables that collide with
+	// reservedKeywords to be other things.
+
+	/* gopherjs logic:
+	if n > 0 {
+		varName = fmt.Sprintf("%s$%d", name, n)
+	}
+	*/
+
+	// definitely must rename 'in' and other Lua keywords
+	// that are legal Go identifiers.
+	if n > 0 && reservedKeywords[name] {
+		varName = fmt.Sprintf("%s_%d", name, n)
+	}
 
 	if isType { // jea add
 		if n > 0 {
