@@ -8,6 +8,12 @@ func Astm(s string) time.Time {
 	return t
 }
 
+func panicOn(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 /*
 type B
 b := &ar{imin: 1, input:  &stream{sym: "AAPL"}}
