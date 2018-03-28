@@ -1202,6 +1202,11 @@ func Test1991bytesReturnValue(t *testing.T) {
 
 		// native:
 
+		// this also produces a collision between the
+		// Go package name 'debug' and the Lua library
+		// 'debug'. For now we'll remove the Lua library
+		// from the keyword list since we aren't using it
+		// yet.
 		code3 := `import "runtime/debug"`
 		code4 := `d := string(debug.Stack()); e := d[:9]`
 
