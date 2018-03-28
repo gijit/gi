@@ -364,12 +364,71 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 
 	var code []byte
 	switch path {
+
+	// all these are shadowed, see below for the load of type checking info.
+
 	// gen-gijit-shadow outputs to pkg/compiler/shadow/...
 	case "bytes":
-		code = []byte(`__go_import("bytes");`)
+	case "encoding/binary":
+	case "errors":
+	case "fmt":
+	case "io":
+	case "math":
+	case "math/rand":
+	case "os":
+	case "reflect":
+	case "regexp":
+	case "sync":
+	case "sync/atomic":
+	case "time":
+	case "runtime":
+	case "runtime/debug":
+	case "strconv":
+	case "io/ioutil":
+		// gonum:
+	case "gonum.org/v1/gonum/blas":
+	case "gonum.org/v1/gonum/fd":
+	case "gonum.org/v1/gonum/floats":
+	case "gonum.org/v1/gonum/graph":
+	case "gonum.org/v1/gonum/integrate":
+	case "gonum.org/v1/gonum/lapack":
+	case "gonum.org/v1/gonum/mat":
+	case "gonum.org/v1/gonum/optimize":
+	case "gonum.org/v1/gonum/stat":
+	case "gonum.org/v1/gonum/unit":
 
 		// we need to load the type-checking info into arch.Pkg
 		// now so that the compile can complete.
+
+	case "gitesting":
+		// test only:
+		fmt.Printf("ic.cfg.IsTestMode = %v\n", ic.cfg.IsTestMode)
+		if ic.cfg.IsTestMode {
+			//fmt.Print("\n registering gitesting.SumArrayInt64! \n")
+			pkg := types.NewPackage("gitesting", "gitesting")
+			pkg.MarkComplete()
+			scope := pkg.Scope()
+
+			suma := getFunForSumArrayInt64(pkg)
+			scope.Insert(suma)
+
+			summer := getFunForSummer(pkg)
+			scope.Insert(summer)
+
+			summerAny := getFunForSummerAny(pkg)
+			scope.Insert(summerAny)
+
+			incr := getFunForIncr(pkg)
+			scope.Insert(incr)
+
+			ic.CurPkg.importContext.Packages[path] = pkg
+			return &Archive{
+				SavedArchive: SavedArchive{
+					ImportPath: path,
+				},
+				Pkg: pkg,
+			}, nil
+		}
 
 	default:
 		// try a source import?
@@ -418,6 +477,8 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 		// need to run gen-gijit-shadow-import
 		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
 	}
+
+	code = []byte(fmt.Sprintf(`__go_import("%s");`, path))
 
 	// successfully match path to a shadow package, bring in its
 	// type info now.
