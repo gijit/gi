@@ -187,7 +187,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 		importDecls = append(importDecls, &Decl{
 			Vars: []string{c.p.pkgVars[impPath]},
 
-			DeclCode: []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t local %[1]s = _G.%[1]s;\n", omitAnyShadowPathPrefix(impPath))),
+			DeclCode: []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(impPath, false), omitAnyShadowPathPrefix(impPath, true))),
 
 			//DeclCode: []byte(fmt.Sprintf("\t__go_import(\"%s\");\n\t%s = __packages[\"%s\"];\n", omitAnyShadowPathPrefix(impPath), c.p.pkgVars[impPath], impPath)),
 			//DeclCode: []byte(fmt.Sprintf("\t%s = __packages[\"%s\"];\n\t__go_import(\"%s\");\n", c.p.pkgVars[impPath], impPath, omitAnyShadowPathPrefix(impPath))),
