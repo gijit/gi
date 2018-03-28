@@ -1217,3 +1217,27 @@ func Test1991bytesReturnValue(t *testing.T) {
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1992keywordProtected(t *testing.T) {
+
+	cv.Convey(`the 'in' keyword in Lua is legal variable name in Go, see that it is protected`, t, func() {
+
+		code := `
+func f(in int) int {
+	return in + 1
+}
+b := f(1)
+`
+		// expect b to give 2
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 2)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
