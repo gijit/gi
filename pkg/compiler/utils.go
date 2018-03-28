@@ -329,6 +329,7 @@ func (c *funcContext) newVariableWithLevel(name string, pkgLevel bool, isType bo
 	// that are legal Go identifiers.
 	if n > 0 && reservedKeywords[name] {
 		varName = fmt.Sprintf("%s_%d", name, n)
+		pp("reserved word collision observed, renaming '%s' -> '%s'", name, varName)
 	}
 
 	if isType { // jea add
