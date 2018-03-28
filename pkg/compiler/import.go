@@ -381,7 +381,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	*/
 	pp("no cache hit for path '%s'", path)
 
-	code := []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t __type__.%[2]s = {};\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(path, false), omitAnyShadowPathPrefix(path, true)))
+	code := []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t __type__.%[2]s = __type__.%[2]s or {};\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(path, false), omitAnyShadowPathPrefix(path, true)))
 
 	switch path {
 
