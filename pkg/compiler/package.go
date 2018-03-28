@@ -128,7 +128,7 @@ func (pi packageImporter) Import(path string, depth int) (*types.Package, error)
 
 	pp("pi = '%#v', pi.importContext='%#v'", pi, pi.importContext)
 	pp("path='%s', pi.importContext.Import='%#v'", path, pi.importContext.Import)
-	a, err := pi.importContext.Import(path, "", depth+1)
+	a, err := pi.importContext.Import(path, "", depth)
 	pp("jea debug: a *Archive back from pi.importContext.Import('%s') (err='%v') archive is '%#v'", path, err, a)
 	if err != nil {
 		if *pi.importError == nil {

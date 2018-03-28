@@ -101,15 +101,33 @@ func registerLuarReqs(vm *golua.State) {
 func (ic *IncrState) EnableImportsFromLua() {
 
 	// minimize luar stuff for now, focus on pure Lua runtime.
-	goImportFromLua := func(path string) {
+
+	// running an import means calling the
+	// package's __init() function, and entering
+	// any Luar bindings into the global namespace.
+	goRunImportFromLua := func(path string) {
+		// __go_run_import calls here.
 		ic.RunTimeGiImportFunc(path, "", 0)
 	}
+
+	// compilation allows type checking
+	// against the package; it loads an Archive/package
+	// into Go memory but does not call __init(). It
+	// should not make any changes to the Lua
+	// memory or state because no Lua code is actually
+	// executed yet.
+	goCompileImportFromLua := func(path string) {
+		// __go_compile_import calls here.
+		ic.CompileTimeGiImportFunc(path, "", 0)
+	}
+
 	stacksClosure := func() {
 		showLuaStacks(ic.goro.vm)
 	}
 	luar.Register(ic.goro.vm, "", luar.Map{
-		"__go_import": goImportFromLua,
-		"__stacks":    stacksClosure,
+		"__go_run_import":     goRunImportFromLua,
+		"__go_compile_import": goCompileImportFromLua,
+		"__stacks":            stacksClosure,
 	})
 }
 
@@ -117,28 +135,15 @@ func (ic *IncrState) EnableImportsFromLua() {
 ////////////////
 //////      ////
 //////      ///
-///////////////    Runtime import
+///////////////    Import runtime.
 /////////////////
-/////       //////
-/////        //////
-////          //////
-func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
+/////       //////      // running an import means calling the
+/////        //////  	// package's __init() function, and entering
+////          //////    // any Luar bindings into the global namespace.
+////           //////
+func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 	vv("RunTimeGiImportFunc called with path = '%s'...", path)
 
-	// `import "fmt"` means that path == "fmt", for example.
-
-	// check cache first
-	arch, ok := ic.Session.Archives[path]
-	_, _ = arch, ok
-	/*
-		if ok {
-			pp("ic.GiImportFunc cache hit for path '%s'", path)
-			return arch, nil
-		}
-	*/
-	pp("no cache hit for path '%s'", path)
-
-	var pkg *types.Package
 	t0 := ic.goro.newTicket("", true)
 
 	switch path {
@@ -147,21 +152,6 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 		fmt.Printf("ic.cfg.IsTestMode = %v\n", ic.cfg.IsTestMode)
 		if ic.cfg.IsTestMode {
 			//fmt.Print("\n registering gitesting.SumArrayInt64! \n")
-			pkg = types.NewPackage("gitesting", "gitesting")
-			pkg.MarkComplete()
-			scope := pkg.Scope()
-
-			suma := getFunForSumArrayInt64(pkg)
-			scope.Insert(suma)
-
-			summer := getFunForSummer(pkg)
-			scope.Insert(summer)
-
-			summerAny := getFunForSummerAny(pkg)
-			scope.Insert(summerAny)
-
-			incr := getFunForIncr(pkg)
-			scope.Insert(incr)
 
 			t0.regns = "gitesting"
 			t0.regmap["SumArrayInt64"] = sumArrayInt64
@@ -169,23 +159,8 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 			t0.regmap["SummerAny"] = SummerAny
 			t0.regmap["Incr"] = Incr
 			panicOn(t0.Do())
-
-			a := &Archive{
-				SavedArchive: SavedArchive{
-					ImportPath: path,
-				},
-				Pkg: pkg,
-			}
-			a.Pkg.ClientExtra = a
-			a.NewCodeText = [][]byte{}
-			ic.CurPkg.importContext.Packages[path] = pkg
-			ic.Session.Archives[path] = a
-			ic.Session.Archives[pkg.Path()] = a
-
-			return a, nil
 		}
 
-		// gen-gijit-shadow outputs to pkg/compiler/shadow/...
 	case "bytes":
 		t0.regmap["bytes"] = shadow_bytes.Pkg
 		t0.regmap["__ctor__bytes"] = shadow_bytes.Ctor
@@ -291,71 +266,13 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) (*Archi
 		t0.regmap["unit"] = shadow_unit.Pkg
 
 	default:
-		// try a source import?
-
-		p1("should we source import path='%s'? depth=%v", path, depth)
-		//pp("stack ='%s'\n", stack())
-
-		if depth > 7 {
-			// not allowed
-			return nil, fmt.Errorf("deep source imports forbidden for performance reasons. problem with import of package '%s' (not shadowed? [1]) depth=%v ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, depth)
-		}
-
-		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
-
-		pp("GiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
-		//ic.Session.showGlobal()
-
-		if err == nil {
-			if archive == nil {
-				panic("why was archive nil if err was nil?")
-			}
-			if archive.Pkg == nil {
-				panic("why was archive.Pkg nil if err was nil?")
-			}
-			// success. execute the code to define
-			// functions in the lua namespace.
-			t0.regns = archive.Pkg.Name()
-			pp("calling WriteCommandPackage")
-			isMain := false
-			code, err := ic.Session.WriteCommandPackage(archive, "", isMain)
-			p1("back from WriteCommandPackage for path='%s', err='%v', code is\n'%s'", path, err, string(code))
-			// fmt is okay here.
-			if err != nil {
-				return nil, err
-			}
-
-			pp("GiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
-			//ic.Session.showGlobal()
-
-			archive.NewCodeText = [][]byte{code}
-			archive.Pkg.ClientExtra = archive
-
-			t0.run = code
-			panicOn(t0.Do())
-
-			return archive, err
-		}
-		// source import failed.
-		fmt.Printf("source import of package '%s' failed: '%v'", path, err)
-
-		// need to run gen-gijit-shadow-import
-		return nil, fmt.Errorf("error on import: problem with package '%s' (not shadowed? [1]): '%v'. ... [footnote 1] To shadow it, run gen-gijit-shadow-import on the package, add a case and import above, and recompile gijit.", path, err)
-
+		// source import
+		// don't need to compile again, just call pkg.__init()
+		t0.run = []byte(fmt.Sprintf("%s.__init();", omitAnyShadowPathPrefix(path, true)))
 	}
-	vv("GiImportFunc executing t0.Do() to run: '%s'", string(t0.run))
-	panicOn(t0.Do())
-
-	// loading from real GOROOT/GOPATH.
-	// Omit vendor support for now, for sanity.
-	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
-
-	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
-	a.NewCodeText = [][]byte{}
-	a.Pkg.ClientExtra = a
-
-	vv("returning from GiImportFunc(path='%v', pkgDir='%v', depth=%v) with shadowPath='%s'. Result: err='%v'", path, pkgDir, depth, shadowPath, err)
-	return a, err
+	err := t0.Do()
+	vv("GiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)
+	return err
 }
 
 ///////////////////
@@ -381,7 +298,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	*/
 	pp("no cache hit for path '%s'", path)
 
-	code := []byte(fmt.Sprintf("\t __go_import(\"%[1]s\");\n\t __type__.%[2]s = __type__.%[2]s or {};\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(path, false), omitAnyShadowPathPrefix(path, true)))
+	code := []byte(fmt.Sprintf("\t __go_run_import(\"%[1]s\");\n\t __type__.%[2]s = __type__.%[2]s or {};\n\t local %[2]s = _G.%[2]s;\n", omitAnyShadowPathPrefix(path, false), omitAnyShadowPathPrefix(path, true)))
 
 	switch path {
 

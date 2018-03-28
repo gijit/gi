@@ -236,7 +236,7 @@ func (tr *IncrState) FullPackage(src []byte, importPath string, depth int) ([]by
 	}
 
 	//tr.CurPkg.Arch,
-	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify, depth+1)
+	arch, err := FullPackageCompile(importPath, files, fileSet, tr.CurPkg.importContext, tr.minify, depth)
 	panicOn(err)
 	arch.ImportPath = "main"
 	//pp("archive = '%#v'", tr.CurPkg.Arch)
