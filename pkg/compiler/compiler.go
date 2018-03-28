@@ -42,9 +42,10 @@ func init() {
 	}
 
 	// lua/gijit system already in-use method names
-	// "debug" removed from list, collides with Go "runtime/debug" lib in test 1991.
+	// "debug" and "math" removed from list.
+	// These collides with Go libs. e.g. "runtime/debug" lib in test 1991. "math" in test 199.
 	// TODO: handle Go packages with name collisions with the reservedKeyword list.
-	for _, w := range []string{"_G", "_VERSION", "assert", "bit", "byte", "cmath", "collectgarbage", "complex", "complex128", "complex64", "coroutine", "dofile", "error", "float32", "float64", "gcinfo", "getfenv", "getmetatable", "golua_default_msghandler", "imag", "int", "int16", "int32", "int64", "int8", "io", "ipairs", "jit", "load", "loadfile", "loadstring", "luar", "math", "module", "newproxy", "next", "os", "package", "pairs", "panic", "pcall", "print", "rawequal", "rawget", "rawlen", "rawset", "real", "recover", "require", "select", "setfenv", "setmetatable", "string", "table", "tonumber", "tostring", "type", "uint", "uint16", "uint32", "uint64", "uint8", "unpack", "xpcall"} {
+	for _, w := range []string{"_G", "_VERSION", "assert", "bit", "byte", "cmath", "collectgarbage", "complex", "complex128", "complex64", "coroutine", "dofile", "error", "float32", "float64", "gcinfo", "getfenv", "getmetatable", "golua_default_msghandler", "imag", "int", "int16", "int32", "int64", "int8", "io", "ipairs", "jit", "load", "loadfile", "loadstring", "luar", "module", "newproxy", "next", "os", "package", "pairs", "panic", "pcall", "print", "rawequal", "rawget", "rawlen", "rawset", "real", "recover", "require", "select", "setfenv", "setmetatable", "string", "table", "tonumber", "tostring", "type", "uint", "uint16", "uint32", "uint64", "uint8", "unpack", "xpcall"} {
 		reservedKeywords[w] = true
 	}
 
