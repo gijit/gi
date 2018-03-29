@@ -296,7 +296,7 @@ func Test087ShadowRegexp(t *testing.T) {
 
 		// need the side effect of loading `import "fmt"` package.
 		translation, err := inc.Tr([]byte(src))
-		vv("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+		pp("go:'%s'  -->  '%s' in lua\n", src, string(translation))
 
 		// gotta translate to a.FindStringIndex(), not a:FindStringIndex()
 		// because FindStringIndex doesn't take a first 'self' parameter.

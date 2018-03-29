@@ -526,7 +526,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 	c.p.typeDepend.genCode(&linearTypeGraph)
 	code := linearTypeGraph.Bytes()
 	if len(code) > 0 {
-		vv("linearTypeGraph = '%s'", string(code))
+		pp("linearTypeGraph = '%s'", string(code))
 	}
 	lin := &Decl{
 		TypeInitCode: code,

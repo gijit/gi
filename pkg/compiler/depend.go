@@ -164,7 +164,7 @@ func (s *dfsState) hasCycleHelper(node *dfsNode, ancestors map[*dfsNode]bool) bo
 
 	for _, ch := range node.children {
 		if ancestors[ch] {
-			vv("found cycle: backedge from '%v' to '%v'", node.name, ch.name)
+			//pp("found cycle: backedge from '%v' to '%v'", node.name, ch.name)
 			return true
 		}
 		if s.hasCycleHelper(ch, ancestors) {
