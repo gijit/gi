@@ -136,14 +136,14 @@ func (ic *IncrState) EnableImportsFromLua() {
 //////      ////
 //////       ////
 //////     ////
-///////////////    Import runtime.
+///////////////    Import: runtime.
 /////////////////
-/////       //////      // running an import means calling the
-/////        //////  	// package's __init() function, and entering
-////          //////    // any Luar bindings into the global namespace.
+/////       //////      Running an import means calling the
+/////        //////  	package's __init() function, and entering
+////          //////    any Luar bindings into the global namespace.
 ////           //////
 func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
-	vv("RunTimeGiImportFunc called with path = '%s'...", path)
+	pp("RunTimeGiImportFunc called with path = '%s'...", path)
 
 	// if we insist on the eval coroutine, which
 	// is already running us (our parent Lua), then the import
@@ -282,19 +282,19 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 		t0.run = []byte(fmt.Sprintf("%s.__init();", omitAnyShadowPathPrefix(path, true)))
 	}
 	err := t0.Do()
-	vv("RunTimeGiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)
+	pp("RunTimeGiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)
 	return err
 }
 
 ///////////////////
 ///////////////////
 //////
-//////  Compile time import
+//////  Import: compile time
 //////
 ///////////////////
 ///////////////////
 func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*Archive, error) {
-	vv("CompileTimeGiImportFunc called with path = '%s'... depth=%v", path, depth)
+	pp("CompileTimeGiImportFunc called with path = '%s'... depth=%v", path, depth)
 
 	// `import "fmt"` means that path == "fmt", for example.
 
