@@ -218,9 +218,9 @@ func Test1006DotImport(t *testing.T) {
 
 		code := `
 import . "github.com/glycerine/gi/pkg/compiler/spkg_tst5"
-tm := Astm("2017-07-05T13:31:00Z")
-
+b := Incr(1)
 `
+		code2 := `c := Incr(4)`
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
 		defer vm.Close()
@@ -230,10 +230,21 @@ tm := Astm("2017-07-05T13:31:00Z")
 		panicOn(err)
 		fmt.Printf("\n translation='%s'\n", translation)
 
+		// we were repeating the whole package import
+		// with every command. Ugh. Don't do that.
+
 		// and verify that it happens correctly
 		LuaRunAndReport(vm, string(translation))
 
-		//LuaMustString(vm, "chk", "world")
+		LuaMustInt64(vm, "b", 2)
 		cv.So(true, cv.ShouldBeTrue)
+
+		translation2, err := inc.Tr([]byte(code2))
+		panicOn(err)
+		fmt.Printf("\n translation2='%s'\n", translation2)
+		cv.So(string(translation2), matchesLuaSrc,
+			`  	c = spkg_tst5.Incr(4LL);`)
+		LuaRunAndReport(vm, string(translation2))
+		LuaMustInt64(vm, "c", 5)
 	})
 }
