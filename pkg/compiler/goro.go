@@ -7,6 +7,7 @@ import (
 
 	"time"
 
+	"github.com/glycerine/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/idem"
 	"github.com/glycerine/luar"
@@ -254,6 +255,7 @@ func (r *Goro) do(t *ticket) {
 }
 
 func (t *ticket) Do() error {
+	pp("ticket.Do() called, run='%s'", string(t.run))
 	t.myGoro.do(t)
 	if t.runErr != nil {
 		return t.runErr
@@ -273,7 +275,7 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 	lvm := goro.lvm
 
 	s := string(run)
-	//pp("LuaRun top. s='%s'. stack='%s'", s, string(debug.Stack()))
+	pp("privateRun top. start of s='%s'.", s[:intMin(len(s), 100)])
 	vm := lvm.vm
 	startTop := vm.GetTop()
 	defer vm.SetTop(startTop)
@@ -291,20 +293,20 @@ func (goro *Goro) privateRun(run []byte, useEvalCoroutine bool) error {
 		vm.PushString(s)
 
 		//fmt.Printf("good: found __eval (0x%x). it is at -2 of the stack, our running code at -1. running '%s'\n", eval, s)
-		//fmt.Printf("before vm.Call(1,0), stacks are:")
-		//if verb.Verbose {
-		//showLuaStacks(vm)
-		//}
+		if verb.VerboseVerbose {
+			fmt.Printf("before vm.Call(1,0), stacks are:")
+			showLuaStacks(vm)
+		}
 
 		vm.Call(1, 0)
 		// if things crash, this is the first place
 		// to check for an error: dump the Lua stack.
 		// With high probability, it will yield clues to the problem.
 
-		//fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
-		//if verb.Verbose {
-		//showLuaStacks(vm)
-		//}
+		if verb.VerboseVerbose {
+			fmt.Printf("\nafter vm.Call(1,0), stacks are:\n")
+			showLuaStacks(vm)
+		}
 
 		return nil
 	} else {
