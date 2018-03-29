@@ -8,6 +8,9 @@ func Astm(s string) time.Time {
 	return t
 }
 
+func Incr(a int) int {
+	return a + 1
+}
 func panicOn(err error) {
 	if err != nil {
 		panic(err)

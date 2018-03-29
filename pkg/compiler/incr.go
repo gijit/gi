@@ -239,7 +239,12 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 					newCode.Write(b)
 				}
 				pp("newCode is '%s'", string(newCode.Bytes()))
+
+				// Now the imported package has been merged with newCodeText,
+				// clear it so that is doesn't persist for every input hereafter.
+				arc.NewCodeText = [][]byte{}
 			}
+
 		}
 		importDecls = append(importDecls, &Decl{
 			Vars: []string{c.p.pkgVars[impPath]},
