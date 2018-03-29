@@ -238,7 +238,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 				for _, b := range arc.NewCodeText {
 					newCode.Write(b)
 				}
-				pp("newCode is '%s'", string(newCode.Bytes()))
+				//pp("newCode is '%s'", string(newCode.Bytes()))
 
 				// Now the imported package has been merged with newCodeText,
 				// clear it so that is doesn't persist for every input hereafter.

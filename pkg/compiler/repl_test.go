@@ -1207,12 +1207,12 @@ func Test1991bytesReturnValue(t *testing.T) {
 		// 'debug'. For now we'll remove the Lua library
 		// from the keyword list since we aren't using it
 		// yet.
-		code3 := `import "runtime/debug"`
+		code3 := `import "runtime/debug";`
 		code4 := `d := string(debug.Stack()); e := d[:9]`
 
 		translation3 := inc.trMust([]byte(code3))
 		fmt.Printf("\n translation3='%s'\n", translation3)
-		LuaRunAndReport(vm, string(translation))
+		LuaRunAndReport(vm, string(translation3))
 
 		translation4 := inc.trMust([]byte(code4))
 		fmt.Printf("\n translation4='%s'\n", translation4)
