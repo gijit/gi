@@ -103,6 +103,17 @@ Install both mingw64 and make before building gijit. These are prerequisites.
 most recent status
 ------------------
 
+2018 March 29 update - private
+------------------------------
+Release v1.8.0 has much more
+robust and tested source based
+imports of packages. Binary
+packages can be compiled
+into the `gi` REPL, and then
+`import`-ed at runtime. Source
+packages can be read and
+compiled at runtime.
+
 2018 March 26 update - private
 ----------------------------
 Release v1.6.5 has reasonable
