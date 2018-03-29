@@ -131,10 +131,11 @@ func (ic *IncrState) EnableImportsFromLua() {
 	})
 }
 
-////////////////
-////////////////
+//////////////
+///////////////
 //////      ////
-//////      ///
+//////       ////
+//////     ////
 ///////////////    Import runtime.
 /////////////////
 /////       //////      // running an import means calling the
@@ -144,7 +145,15 @@ func (ic *IncrState) EnableImportsFromLua() {
 func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 	vv("RunTimeGiImportFunc called with path = '%s'...", path)
 
-	t0 := ic.goro.newTicket("", true)
+	// if we insist on the eval coroutine, which
+	// is already running us (our parent Lua), then the import
+	// gets delayed until after the rest of
+	// our Lua code finishes. Then that code fails (e.g. test 087)
+	// because our import hasn't been done in sequence as
+	// programmed. So we must run not on
+	// the eval coroutine but immediately.
+	useEvalCoroutine := false
+	t0 := ic.goro.newTicket("", useEvalCoroutine)
 
 	switch path {
 	case "gitesting":
@@ -158,7 +167,9 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 			t0.regmap["Summer"] = Summer
 			t0.regmap["SummerAny"] = SummerAny
 			t0.regmap["Incr"] = Incr
-			panicOn(t0.Do())
+			err := t0.Do()
+			panicOn(err)
+			return err
 		}
 
 	case "bytes":
@@ -177,7 +188,7 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 		t0.run = append(t0.run, shadow_errors.InitLua()...)
 
 	case "fmt":
-		pp("GiImportFunc sees 'fmt', known and shadowed.")
+		pp("RunTimeGiImportFunc sees 'fmt', known and shadowed.")
 		t0.regmap["fmt"] = shadow_fmt.Pkg
 		t0.regmap["__ctor__fmt"] = shadow_fmt.Ctor
 		t0.run = append(t0.run, shadow_fmt.InitLua()...)
@@ -271,7 +282,7 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 		t0.run = []byte(fmt.Sprintf("%s.__init();", omitAnyShadowPathPrefix(path, true)))
 	}
 	err := t0.Do()
-	vv("GiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)
+	vv("RunTimeGiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)
 	return err
 }
 
@@ -292,7 +303,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	_, _ = arch, ok
 	/*
 		if ok {
-			pp("ic.GiImportFunc cache hit for path '%s'", path)
+			pp("ic.CompileTimeGiImportFunc cache hit for path '%s'", path)
 			return arch, nil
 		}
 	*/
@@ -370,7 +381,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 			ic.Session.Archives[path] = a
 			ic.Session.Archives[pkg.Path()] = a
 
-			vv("a.NewCodeText='%v'", string(a.NewCodeText[0]))
+			pp("a.NewCodeText='%v'", string(a.NewCodeText[0]))
 			return a, nil
 		}
 
@@ -387,7 +398,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 
 		archive, err := ic.ImportSourcePackage(path, pkgDir, depth+1)
 
-		pp("GiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
+		pp("CompileTimeGiImportFunc: upon return from ic.ImportSourcePackage(path='%s'), here is the global env:", path)
 		//ic.Session.showGlobal()
 
 		if err == nil {
@@ -408,7 +419,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 				return nil, err
 			}
 
-			pp("GiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
+			pp("CompileTimeGiImportFunc: upon return from ic.Session.WriteCommandPackage() for path='%s', here is the global env:", path)
 			//ic.Session.showGlobal()
 
 			archive.NewCodeText = [][]byte{code}
@@ -432,7 +443,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	}
 	a.NewCodeText = [][]byte{code}
 	a.Pkg.ClientExtra = a
-	return a, err
+	return a, nil
 }
 
 func omitAnyShadowPathPrefix(pth string, base bool) string {
