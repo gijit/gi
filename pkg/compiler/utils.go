@@ -999,6 +999,21 @@ func stripOuterParen(s string) (r string) {
 	return r[1 : n-1]
 }
 
+func stripOuterDoubleQuotes(s string) (r string) {
+	r = strings.TrimSpace(s)
+	n := len(r)
+	if n < 2 {
+		return r
+	}
+	if r[0] != '"' || r[len(r)-1] != '"' {
+		return r
+	}
+	if n == 2 {
+		return ""
+	}
+	return r[1 : n-1]
+}
+
 // function(a) blah -> blah
 func stripFirstFunctionAndArg(s string) (head, body string) {
 	st := strings.TrimSpace(s)

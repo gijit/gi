@@ -787,11 +787,18 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			if o, ok := obj.(*types.Builtin); ok {
 				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid(), exprType)
 			}
+
+			nm := obj.Name()
+			vv("Ident is '%s'", nm)
+
+			if nm == "__callLua" {
+				return c.translateBuiltin(nm, sig, e.Args, e.Ellipsis.IsValid(), exprType)
+			}
 			// jea magic here!
 			// gopherjs doc said: InternalObject returns the internal JavaScript object
 			// that represents i. Not intended for public use.
 			//
-			if typesutil.IsJsPackage(obj.Pkg()) && obj.Name() == "InternalObject" {
+			if typesutil.IsJsPackage(obj.Pkg()) && nm == "InternalObject" {
 				return c.translateExpr(e.Args[0], nil)
 			}
 			return c.translateCall(e, sig, c.translateExpr(f, nil))
@@ -1260,6 +1267,11 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("recover()")
 	case "close":
 		return c.formatExpr("__close(%e)", args[0])
+	case "__callLua":
+		// just straight passthrough into the Lua source
+		x := c.formatExpr("%e", args[0])
+		x.str = stripOuterDoubleQuotes(x.str)
+		return x
 	default:
 		panic(fmt.Sprintf("Unhandled builtin: %s\n", name))
 	}
