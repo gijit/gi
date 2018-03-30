@@ -8,6 +8,7 @@ import (
 	"github.com/glycerine/gi/pkg/parser"
 	"github.com/glycerine/gi/pkg/token"
 	"github.com/glycerine/gi/pkg/types"
+	"github.com/glycerine/zygomys/zygo"
 	//"github.com/glycerine/gi/pkg/verb"
 	"unicode"
 	//luajit "github.com/glycerine/golua/lua"
@@ -43,6 +44,8 @@ type IncrState struct {
 	//AllowImportCaching bool
 
 	Session *Session
+
+	zlisp *zygo.Zlisp
 }
 
 func NewIncrState(lvm *LuaVm, cfg *GIConfig) *IncrState {
