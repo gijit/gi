@@ -788,11 +788,27 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 				return c.translateBuiltin(o.Name(), sig, e.Args, e.Ellipsis.IsValid(), exprType)
 			}
 
+			// magical, non-Go functions, specific to gijit.
 			nm := obj.Name()
-			vv("Ident is '%s'", nm)
+			pp("Ident is '%s'", nm)
+			switch nm {
+			case "__lua":
+				a0 := e.Args[0]
+				val := c.p.Types[a0].Value
+				if val == nil {
+					panic("could not get argument to __lua")
+				}
+				pp("val = '%v'", val)
+				return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(a0, nil).String()))}
 
-			if nm == "__callLua" {
-				return c.translateBuiltin(nm, sig, e.Args, e.Ellipsis.IsValid(), exprType)
+			case "__zygo":
+				a0 := e.Args[0]
+				val := c.p.Types[a0].Value
+				if val == nil {
+					panic("could not get argument to __zygo")
+				}
+				vv("val = '%v'", val)
+				return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(a0, nil).String()))}
 			}
 			// jea magic here!
 			// gopherjs doc said: InternalObject returns the internal JavaScript object
@@ -1267,15 +1283,6 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("recover()")
 	case "close":
 		return c.formatExpr("__close(%e)", args[0])
-	case "__callLua":
-		// just straight passthrough into the Lua source
-
-		e := args[0]
-		if val := c.p.Types[e].Value; val != nil {
-			vv("val = '%v'", val)
-			return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(e, nil).String()))}
-		}
-		panic("could not get args[0] as string")
 	default:
 		panic(fmt.Sprintf("Unhandled builtin: %s\n", name))
 	}

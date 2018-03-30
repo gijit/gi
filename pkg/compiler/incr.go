@@ -31,6 +31,7 @@ func addPreludeToNewPkg(pkg *types.Package) {
 	scope.Insert(getFunForGijitPrintQuoted(pkg))
 
 	scope.Insert(getFunFor__callLua(pkg))
+	scope.Insert(getFunFor__callZygo(pkg))
 
 	// allow tostring from Go, to call the Lua builtin.
 	scope.Insert(getFunFor__tostring(pkg))

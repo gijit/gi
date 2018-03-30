@@ -7,10 +7,10 @@ import (
 )
 
 func Test1500CallLuaFromGijit(t *testing.T) {
-	cv.Convey(`within gijit code: a, err := __callLua("3LL + 4LL"); should return int64(7) and nil error`, t, func() {
+	cv.Convey(`within gijit code: a, err := __lua("3LL + 4LL"); should return int64(7) and nil error`, t, func() {
 
 		src := `
-a, err := __callLua("3LL + 4LL");
+a, err := __lua("3LL + 4LL");
 `
 
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -30,9 +30,9 @@ a, err := __callLua("3LL + 4LL");
 }
 
 func Test1501CallLuaFromGijitPassStrings(t *testing.T) {
-	cv.Convey("within gijit code: a, err := __callLua(`\"hello \" .. \"world\"`); should return `hello world` and nil error", t, func() {
+	cv.Convey("within gijit code: a, err := __lua(`\"hello \" .. \"world\"`); should return `hello world` and nil error", t, func() {
 
-		src := "a, err := __callLua(`\"hello \" .. \"world\"`);"
+		src := "a, err := __lua(`\"hello \" .. \"world\"`);"
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
