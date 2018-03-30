@@ -92,7 +92,6 @@ func registerLuarReqs(vm *golua.State) {
 
 	luar.Register(vm, "", luar.Map{
 		"__refSelCaseVal": refSelCaseVal,
-		"__callLua":       gijitCallLua,
 	})
 
 	registerBasicReflectTypes(vm)
@@ -661,6 +660,8 @@ func getFunForGijitPrintQuoted(pkg *types.Package) *types.Func {
 	return fun
 }
 
+// __callLua: just skip compilation and
+//            pass through as compiled code directly
 func getFunFor__callLua(pkg *types.Package) *types.Func {
 	// func __callLua(s string) (interface{}, error)
 	var recv *types.Var
@@ -676,10 +677,6 @@ func getFunFor__callLua(pkg *types.Package) *types.Func {
 	sig := types.NewSignature(recv, params, results, variadic)
 	fun := types.NewFunc(token.NoPos, pkg, "__callLua", sig)
 	return fun
-}
-
-func gijitCallLua(s string) (interface{}, error) {
-	return int64(7), nil
 }
 
 /* time stuff
