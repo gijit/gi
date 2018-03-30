@@ -105,6 +105,10 @@ most recent status
 
 2018 March 29 update - private
 ------------------------------
+Release v1.9.0 includes the
+`func __callLua(s string) (interface{}, error)` function to call
+Lua code directly from `gijit` Go code.
+
 Release v1.8.0 has much more
 robust and tested source based
 imports of packages. Binary
@@ -113,6 +117,7 @@ into the `gi` REPL, and then
 `import`-ed at runtime. Source
 packages can be read and
 compiled at runtime.
+
 
 2018 March 26 update - private
 ----------------------------
