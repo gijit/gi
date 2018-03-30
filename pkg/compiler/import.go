@@ -129,6 +129,19 @@ func (ic *IncrState) EnableImportsFromLua() {
 		"__go_compile_import": goCompileImportFromLua,
 		"__stacks":            stacksClosure,
 	})
+
+	// Enable __zygo() calls. Type checking established
+	// by getFunFor__callZygo. See incr.go and
+	// addPreludeToNewPkg() where that is invoked and
+	// the function signature is injected into
+	// the toplevel Go scope.
+	//
+	ic.zlisp = initZygo()
+	luar.Register(ic.goro.vm, "", luar.Map{
+		"__zygo": func(s string) (interface{}, error) {
+			return callZygo(ic.zlisp, s)
+		},
+	})
 }
 
 //////////////
