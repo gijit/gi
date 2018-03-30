@@ -799,7 +799,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 					panic("could not get argument to __lua")
 				}
 				pp("val = '%v'", val)
-				return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(a0, nil).String()))}
+				return &expression{str: stripOuterDoubleQuotes(elimSlashDQ(c.translateExpr(a0, nil).String()))}
 
 			case "__zygo":
 				a0 := e.Args[0]
@@ -808,7 +808,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 					panic("could not get argument to __zygo")
 				}
 				vv("val = '%v'", val)
-				return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(a0, nil).String()))}
+				return &expression{str: callZygo(stripOuterDoubleQuotes(elimSlashDQ(c.translateExpr(a0, nil).String())))}
 			}
 			// jea magic here!
 			// gopherjs doc said: InternalObject returns the internal JavaScript object
