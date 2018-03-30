@@ -336,15 +336,17 @@ func LuaMustInt(lvm *LuaVm, varname string, expect int) {
 	}
 }
 
-func LuaMustNilGolangError(lvm *LuaVm, varname string) {
+func LuaMustBeNilGolangError(lvm *LuaVm, varname string) {
 	vm := lvm.vm
 	vm.GetGlobal(varname)
 	top := vm.GetTop()
-	if vm.IsNil(top) {
-		panic(fmt.Sprintf("global variable '%s' is nil", varname))
-	}
 	if top < 1 {
 		panic(fmt.Sprintf("top was less than 1: top=%v", top))
+	}
+	if vm.IsNil(top) {
+		// good, done
+		vm.Pop(1)
+		return
 	}
 	iface := vm.ToGoInterface(top)
 	value_err := iface.(error)
@@ -356,6 +358,25 @@ func LuaMustNilGolangError(lvm *LuaVm, varname string) {
 	}
 	vm.Pop(1)
 }
+
+func LuaToGolangError(lvm *LuaVm, varname string) error {
+	vm := lvm.vm
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	if top < 1 {
+		panic(fmt.Sprintf("top was less than 1: top=%v", top))
+	}
+	if vm.IsNil(top) {
+		// good, done. Assume it was a nil error.
+		vm.Pop(1)
+		return nil
+	}
+	iface := vm.ToGoInterface(top)
+	value_err := iface.(error)
+	vm.Pop(1)
+	return value_err
+}
+
 func LuaMustInt64(lvm *LuaVm, varname string, expect int64) {
 
 	vm := lvm.vm

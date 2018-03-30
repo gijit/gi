@@ -25,6 +25,6 @@ a, err := __callLua("3LL + 4LL");
 		LoadAndRunTestHelper(t, vm, translation)
 
 		LuaMustInt64(vm, "a", 7)
-		LuaMustNilGolangError(vm, "err")
+		LuaMustBeNilGolangError(vm, "err")
 	})
 }

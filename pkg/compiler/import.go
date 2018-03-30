@@ -92,6 +92,7 @@ func registerLuarReqs(vm *golua.State) {
 
 	luar.Register(vm, "", luar.Map{
 		"__refSelCaseVal": refSelCaseVal,
+		"__callLua":       gijitCallLua,
 	})
 
 	registerBasicReflectTypes(vm)
@@ -658,6 +659,27 @@ func getFunForGijitPrintQuoted(pkg *types.Package) *types.Func {
 	sig := types.NewSignature(recv, params, results, variadic)
 	fun := types.NewFunc(token.NoPos, pkg, "__gijit_printQuoted", sig)
 	return fun
+}
+
+func getFunFor__callLua(pkg *types.Package) *types.Func {
+	// func __callLua(s string) (interface{}, error)
+	var recv *types.Var
+	emptyInterface := types.NewInterface(nil, nil)
+	errTypeName := types.Universe.Lookup("error").(*types.TypeName)
+	results := types.NewTuple(
+		types.NewVar(token.NoPos, pkg, "", emptyInterface),
+		types.NewVar(token.NoPos, pkg, "", errTypeName.Type()),
+	)
+	str := types.Typ[types.String]
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "s", str))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "__callLua", sig)
+	return fun
+}
+
+func gijitCallLua(s string) (interface{}, error) {
+	return int64(7), nil
 }
 
 /* time stuff
