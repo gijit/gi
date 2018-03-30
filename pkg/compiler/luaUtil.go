@@ -336,6 +336,26 @@ func LuaMustInt(lvm *LuaVm, varname string, expect int) {
 	}
 }
 
+func LuaMustNilGolangError(lvm *LuaVm, varname string) {
+	vm := lvm.vm
+	vm.GetGlobal(varname)
+	top := vm.GetTop()
+	if vm.IsNil(top) {
+		panic(fmt.Sprintf("global variable '%s' is nil", varname))
+	}
+	if top < 1 {
+		panic(fmt.Sprintf("top was less than 1: top=%v", top))
+	}
+	iface := vm.ToGoInterface(top)
+	value_err := iface.(error)
+
+	pp("LuaMustInt64, expected nil; observe value_err='%v'", value_err)
+	if value_err != nil {
+		DumpLuaStack(vm)
+		panic(fmt.Sprintf("expected nil, got %v for '%v'", value_err, varname))
+	}
+	vm.Pop(1)
+}
 func LuaMustInt64(lvm *LuaVm, varname string, expect int64) {
 
 	vm := lvm.vm

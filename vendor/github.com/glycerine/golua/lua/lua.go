@@ -557,6 +557,18 @@ func (L *State) ToGoStruct(index int) (f interface{}) {
 	return L.Shared.registry[fid]
 }
 
+func (L *State) ToGoInterface(index int) interface{} {
+	if !L.IsGoStruct(index) {
+		return nil
+	}
+	fid := C.clua_togostruct(L.S, C.int(index))
+	if fid < 0 {
+		return nil
+	}
+	pp("querying fid = '%v'\n", fid)
+	return L.Shared.registry[fid]
+}
+
 // lua_tostring
 func (L *State) ToString(index int) string {
 	var size C.size_t
