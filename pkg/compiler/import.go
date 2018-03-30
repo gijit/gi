@@ -660,10 +660,10 @@ func getFunForGijitPrintQuoted(pkg *types.Package) *types.Func {
 	return fun
 }
 
-// __callLua: just skip compilation and
+// __lua: just skip compilation and
 //            pass through as compiled code directly
 func getFunFor__callLua(pkg *types.Package) *types.Func {
-	// func __callLua(s string) (interface{}, error)
+	// func __lua(s string) (interface{}, error)
 	var recv *types.Var
 	emptyInterface := types.NewInterface(nil, nil)
 	errTypeName := types.Universe.Lookup("error").(*types.TypeName)
@@ -675,7 +675,26 @@ func getFunFor__callLua(pkg *types.Package) *types.Func {
 	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "s", str))
 	variadic := false
 	sig := types.NewSignature(recv, params, results, variadic)
-	fun := types.NewFunc(token.NoPos, pkg, "__callLua", sig)
+	fun := types.NewFunc(token.NoPos, pkg, "__lua", sig)
+	return fun
+}
+
+// __zygo: pass to string zygo, return result and error.
+//
+func getFunFor__callZygo(pkg *types.Package) *types.Func {
+	// func __zygo(s string) (interface{}, error)
+	var recv *types.Var
+	emptyInterface := types.NewInterface(nil, nil)
+	errTypeName := types.Universe.Lookup("error").(*types.TypeName)
+	results := types.NewTuple(
+		types.NewVar(token.NoPos, pkg, "", emptyInterface),
+		types.NewVar(token.NoPos, pkg, "", errTypeName.Type()),
+	)
+	str := types.Typ[types.String]
+	params := types.NewTuple(types.NewVar(token.NoPos, pkg, "s", str))
+	variadic := false
+	sig := types.NewSignature(recv, params, results, variadic)
+	fun := types.NewFunc(token.NoPos, pkg, "__zygo", sig)
 	return fun
 }
 

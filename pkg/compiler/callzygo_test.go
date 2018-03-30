@@ -7,10 +7,10 @@ import (
 )
 
 func Test1502CallZygoFromGijit(t *testing.T) {
-	cv.Convey(`within gijit code: a, err := __callZygo("3 + 4"); should return int64(7) and nil error`, t, func() {
+	cv.Convey(`within gijit code: a, err := __zygo("3 + 4"); should return int64(7) and nil error`, t, func() {
 
 		src := `
-a, err := __callZygo("3 + 4");
+a, err := __zygo("3 + 4");
 `
 
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -30,9 +30,9 @@ a, err := __callZygo("3 + 4");
 }
 
 func Test1503CallZygoFromGijitPassStrings(t *testing.T) {
-	cv.Convey("within gijit code: a, err := __callZygo(`\"hello \" .. \"world\"`); should return `hello world` and nil error", t, func() {
+	cv.Convey("within gijit code: a, err := __zygo(`\"hello \" .. \"world\"`); should return `hello world` and nil error", t, func() {
 
-		src := "a, err := __callZygo(`concat\"hello \" \"world\")`);"
+		src := "a, err := __zygo(`concat\"hello \" \"world\")`);"
 
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
