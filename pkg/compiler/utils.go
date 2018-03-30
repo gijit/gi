@@ -1010,7 +1010,7 @@ func stripOuterDoubleQuotes(s string) (r string) {
 }
 
 // \"hi\"  -> "hi"
-func elimDQ(s string) string {
+func elimSlashDQ(s string) string {
 	n := len(s)
 	if n <= 1 {
 		return s

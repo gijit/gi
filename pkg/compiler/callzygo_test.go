@@ -10,7 +10,7 @@ func Test1502CallZygoFromGijit(t *testing.T) {
 	cv.Convey(`within gijit code: a, err := __zygo("3 + 4"); should return int64(7) and nil error`, t, func() {
 
 		src := `
-a, err := __zygo("3 + 4");
+a, err := __zygo("3LL + 4LL");
 `
 
 		vm, err := NewLuaVmWithPrelude(nil)
