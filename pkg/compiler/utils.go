@@ -1002,16 +1002,37 @@ func stripOuterParen(s string) (r string) {
 func stripOuterDoubleQuotes(s string) (r string) {
 	r = strings.TrimSpace(s)
 	n := len(r)
-	if n < 2 {
-		return r
+	if (r[0] == '`' && r[len(r)-1] == '`') ||
+		(r[0] == '"' && r[len(r)-1] == '"') {
+		return r[1 : n-1]
 	}
-	if r[0] != '"' || r[len(r)-1] != '"' {
-		return r
+	return r
+}
+
+// \"hi\"  -> "hi"
+func elimDQ(s string) string {
+	n := len(s)
+	if n <= 1 {
+		return s
 	}
-	if n == 2 {
-		return ""
+	m := n
+	b := make([]byte, n)
+	j := 0
+	for i := 0; i < n; i++ {
+		c := s[i]
+		//vv("at i=%v, c='%v'", i, string(c))
+		if c == '\\' && i < n-1 && s[i+1] == '"' {
+			//vv("dropping; s[i+1]='%v'", string(s[i+1]))
+			b[j] = s[i+1]
+			i++
+			m--
+		} else {
+			//vv("keeping; i=%v, m-1=%v", i, m-1)
+			b[j] = s[i]
+		}
+		j++
 	}
-	return r[1 : n-1]
+	return string(b[:m])
 }
 
 // function(a) blah -> blah
