@@ -28,3 +28,24 @@ a, err := __callLua("3LL + 4LL");
 		LuaMustBeNilGolangError(vm, "err")
 	})
 }
+
+func Test1501CallLuaFromGijitPassStrings(t *testing.T) {
+	cv.Convey("within gijit code: a, err := __callLua(`\"hello \" .. \"world\"`); should return `hello world` and nil error", t, func() {
+
+		src := "a, err := __callLua(`\"hello \" .. \"world\"`);"
+
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation, err := inc.Tr([]byte(src))
+		panicOn(err)
+		vv("go:'%s'  -->  '%s' in lua\n", src, string(translation))
+
+		LoadAndRunTestHelper(t, vm, translation)
+
+		LuaMustString(vm, "a", "hello world")
+		LuaMustBeNilGolangError(vm, "err")
+	})
+}

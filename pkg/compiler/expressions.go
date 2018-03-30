@@ -1269,9 +1269,13 @@ func (c *funcContext) translateBuiltin(name string, sig *types.Signature, args [
 		return c.formatExpr("__close(%e)", args[0])
 	case "__callLua":
 		// just straight passthrough into the Lua source
-		x := c.formatExpr("%e", args[0])
-		x.str = stripOuterDoubleQuotes(x.str)
-		return x
+
+		e := args[0]
+		if val := c.p.Types[e].Value; val != nil {
+			vv("val = '%v'", val)
+			return &expression{str: stripOuterDoubleQuotes(elimDQ(c.translateExpr(e, nil).String()))}
+		}
+		panic("could not get args[0] as string")
 	default:
 		panic(fmt.Sprintf("Unhandled builtin: %s\n", name))
 	}
