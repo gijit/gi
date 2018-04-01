@@ -1397,3 +1397,5 @@ using CGO, and their MIT license can be found in their sub-directories
 and online at http://luajit.org/ and https://github.com/LuaJIT/LuaJIT/blob/master/COPYRIGHT
 See the subdirectories of vendored and utilized libraries for their
 license details.
+
+The CLA-bot is from Colin Eberhardt. https://colineberhardt.github.io/cla-bot/  See http://blog.scottlogic.com/2017/07/16/clabot.html
