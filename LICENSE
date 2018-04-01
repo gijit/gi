@@ -53,9 +53,14 @@ You accept and agree to the following terms and conditions for Your present and 
 -- end CLA --
 
 Copyright (c) 2018 Jason E. Aten, Ph.D. All rights reserved.
-This project licensed under the 3-clause BSD style license below.
-Other code included in sub-directories has the same license,
-or an MIT license which is detailed below.
+This project licensed as described by this LICENSE file, including
+the CLA above for contributions and contributors,
+and the 3-clause BSD style license below.
+
+Other code included in sub-directories has the same
+BSD style license, an MIT license which is detailed below,
+or a similar license as found in the individual sub
+directory.
 
 Code dervied from the Google Go gc compiler is
 "Copyright (c) 2017 The Go Authors. All rights reserved."
@@ -72,13 +77,14 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
 
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
+   * Redistributions of source code must retain this LICENSE file,
+the above copyright notice and CLA, this list of conditions,
+and the following disclaimer.
+   * Redistributions in binary form must reproduce the text of
+this LICENSE file, the above copyright notice and CLA, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+   * Neither the name of _TheProject_ nor Google Inc. nor the names of its
 contributors may be used to endorse or promote products derived from
 this software without specific prior written permission.
 
