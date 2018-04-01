@@ -1387,7 +1387,7 @@ The Lua equivalent is string.sub(s, 5)
 
 Author: Jason E. Aten
 
-License: 3-clause BSD.
+License summary: 3-clause BSD + CLA. See the LICENSE file for details.
 
 Credits: some code here is dervied from the Go standard
 libraries, the Go gc compiler,  and from Richard Musiol's excellent Gopherjs project.
