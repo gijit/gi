@@ -9,7 +9,7 @@
 package buildutil_test
 
 import (
-	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"sort"
 	"strings"
 	"testing"

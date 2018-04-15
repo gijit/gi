@@ -10,9 +10,9 @@ package loader_test
 
 import (
 	"fmt"
-	"github.com/glycerine/gi/pkg/gostd/build"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/types"
 	"path/filepath"
 	"reflect"
 	"sort"

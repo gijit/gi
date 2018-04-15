@@ -6,7 +6,7 @@ package astutil
 
 import (
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 	"reflect"
 	"sort"
 )

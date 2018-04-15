@@ -4,7 +4,7 @@
 
 package typeutil
 
-import "github.com/glycerine/gi/pkg/types"
+import "github.com/gijit/gi/pkg/types"
 
 // Dependencies returns all dependencies of the specified packages.
 //

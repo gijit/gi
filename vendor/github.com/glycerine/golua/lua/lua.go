@@ -23,7 +23,7 @@ import (
 	"unsafe"
 
 	"fmt"
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var pp = verb.PP

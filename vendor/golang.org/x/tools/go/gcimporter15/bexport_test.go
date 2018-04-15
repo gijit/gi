@@ -6,12 +6,12 @@ package gcimporter_test
 
 import (
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/gostd/build"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"reflect"
 	"runtime"
 	"strings"

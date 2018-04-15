@@ -7,7 +7,7 @@ package loader
 import (
 	"errors"
 	"fmt"
-	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"os/exec"
 	"strings"
 )

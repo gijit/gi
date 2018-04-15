@@ -8,7 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/gostd/build"
 	"io"
 	"io/ioutil"
 	"path/filepath"

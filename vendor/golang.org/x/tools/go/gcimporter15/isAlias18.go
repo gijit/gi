@@ -6,7 +6,7 @@
 
 package gcimporter
 
-import "github.com/glycerine/gi/pkg/types"
+import "github.com/gijit/gi/pkg/types"
 
 func isAlias(obj *types.TypeName) bool {
 	return false // there are no type aliases before Go 1.9

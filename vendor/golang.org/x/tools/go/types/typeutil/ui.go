@@ -6,7 +6,7 @@ package typeutil
 
 // This file defines utilities for user interfaces that display types.
 
-import "github.com/glycerine/gi/pkg/types"
+import "github.com/gijit/gi/pkg/types"
 
 // IntuitiveMethodSet returns the intuitive method set of a type T,
 // which is the set of methods you can call on an addressable value of
