@@ -24,6 +24,7 @@ a, err := __zygo("3 + 4");
 
 		LoadAndRunTestHelper(t, vm, translation)
 
+		// not yet working; a is nil.
 		//LuaMustInt64(vm, "a", 7)
 		LuaMustBeNilGolangError(vm, "err")
 	})
