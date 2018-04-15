@@ -52,7 +52,7 @@ https://github.com/gijit/gi/blob/master/cmd/gi/repl.go#L9
 
 and
 
-https://github.com/gijit/gi/blob/master/pkg/compiler/repl_luajit.go#L57
+https://github.com/gijit/gi/blob/master/pkg/compiler/repl_luajit.go#L63
 
 # LuaJIT did what? 
 
