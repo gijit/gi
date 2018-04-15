@@ -25,6 +25,30 @@ by weak type-checking or hard-to-refactor code,
 and performance should not suffer just because
 you require interaction with your data.
 
+# status and limitations
+
+Generally quite usable for small scripting
+tasks. See the open issues on github for
+specific open bugs.
+
+[x] Done: pointers.
+[x] Done: structs.
+[x] Done: interfaces and type assertions.
+[x] Done: defer and recover.
+[x] Done: func creates closures.
+
+[ ] Parially done: Imports of binary and source packages. Some
+    source imports work, some binary imports work. But others
+    do not. Your mileage may vary. Please file github issues
+    as you encounter specific issues.
+
+[ ] Paritally done: goroutines, select, channels. What is
+    missing is that Timers and timeouts are not done.
+    Also goroutines are implemented with Lua's coroutines,
+    so they won't interact with the goroutines from
+    a binary Go package.
+
+
 quick install
 -------------
 See https://github.com/gijit/gi/releases for binary releases that can be run directly without building from source. To build from source:
