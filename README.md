@@ -31,6 +31,7 @@ Generally quite usable for small scripting
 tasks. See the open issues on github for
 specific open bugs.
 
+~~~
 [x] Done: pointers.
 [x] Done: structs.
 [x] Done: interfaces and type assertions.
@@ -47,7 +48,7 @@ specific open bugs.
     Also goroutines are implemented with Lua's coroutines,
     so they won't interact with the goroutines from
     a binary Go package.
-
+~~~
 
 quick install
 -------------
