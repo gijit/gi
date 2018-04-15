@@ -32,6 +32,7 @@ tasks. See the open issues on github for
 specific open bugs.
 
 ~~~
+[x] Done: all the basic types and control structures.
 [x] Done: pointers.
 [x] Done: structs.
 [x] Done: interfaces and type assertions.
