@@ -49,6 +49,19 @@ specific open bugs.
     Also goroutines are implemented with Lua's coroutines,
     so they won't interact with the goroutines from
     a binary Go package.
+
+A little elaboration on that last point. I initially
+implemented goroutines using reflect, but LuaJIT isn't
+particularly happy about being called from a non-main
+thread. Most exploratory data analysis works
+fine, and I figure by the time your code needs
+goroutines, you probably want to shift to using
+fully compiled Go code in a library anyway.
+So there are no immediate plans to put more
+work into the timers and goroutines. Simply
+use a compiled library, and call it from `gijit`
+if you need them.
+
 ~~~
 
 quick install
