@@ -3,7 +3,7 @@ package compiler
 import (
 	"flag"
 
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 type GIConfig struct {

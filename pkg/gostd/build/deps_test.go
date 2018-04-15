@@ -186,7 +186,7 @@ var pkgDeps = map[string][]string{
 	"testing":                                          {"L2", "flag", "fmt", "internal/race", "os", "runtime/debug", "runtime/pprof", "runtime/trace", "time"},
 	"testing/iotest":                                   {"L2", "log"},
 	"testing/quick":                                    {"L2", "flag", "fmt", "reflect", "time"},
-	"github.com/glycerine/gi/pkg/priv/testenv": {"L2", "OS", "flag", "testing", "syscall"},
+	"github.com/gijit/gi/pkg/priv/testenv": {"L2", "OS", "flag", "testing", "syscall"},
 
 	// L4 is defined as L3+fmt+log+time, because in general once
 	// you're using L3 packages, use of fmt, log, or time is not a big deal.
@@ -198,32 +198,32 @@ var pkgDeps = map[string][]string{
 	},
 
 	// Go parser.
-	"github.com/glycerine/gi/pkg/ast":     {"L4", "OS", "github.com/glycerine/gi/pkg/scanner", "github.com/glycerine/gi/pkg/token"},
-	"github.com/glycerine/gi/pkg/doc":     {"L4", "github.com/glycerine/gi/pkg/ast", "github.com/glycerine/gi/pkg/token", "regexp", "text/template"},
-	"github.com/glycerine/gi/pkg/parser":  {"L4", "OS", "github.com/glycerine/gi/pkg/ast", "github.com/glycerine/gi/pkg/scanner", "github.com/glycerine/gi/pkg/token"},
-	"github.com/glycerine/gi/pkg/printer": {"L4", "OS", "github.com/glycerine/gi/pkg/ast", "github.com/glycerine/gi/pkg/scanner", "github.com/glycerine/gi/pkg/token", "text/tabwriter"},
-	"github.com/glycerine/gi/pkg/scanner": {"L4", "OS", "github.com/glycerine/gi/pkg/token"},
-	"github.com/glycerine/gi/pkg/token":   {"L4"},
+	"github.com/gijit/gi/pkg/ast":     {"L4", "OS", "github.com/gijit/gi/pkg/scanner", "github.com/gijit/gi/pkg/token"},
+	"github.com/gijit/gi/pkg/doc":     {"L4", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/token", "regexp", "text/template"},
+	"github.com/gijit/gi/pkg/parser":  {"L4", "OS", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/scanner", "github.com/gijit/gi/pkg/token"},
+	"github.com/gijit/gi/pkg/printer": {"L4", "OS", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/scanner", "github.com/gijit/gi/pkg/token", "text/tabwriter"},
+	"github.com/gijit/gi/pkg/scanner": {"L4", "OS", "github.com/gijit/gi/pkg/token"},
+	"github.com/gijit/gi/pkg/token":   {"L4"},
 
 	"GOPARSER": {
-		"github.com/glycerine/gi/pkg/ast",
-		"github.com/glycerine/gi/pkg/doc",
-		"github.com/glycerine/gi/pkg/parser",
-		"github.com/glycerine/gi/pkg/printer",
-		"github.com/glycerine/gi/pkg/scanner",
-		"github.com/glycerine/gi/pkg/token",
+		"github.com/gijit/gi/pkg/ast",
+		"github.com/gijit/gi/pkg/doc",
+		"github.com/gijit/gi/pkg/parser",
+		"github.com/gijit/gi/pkg/printer",
+		"github.com/gijit/gi/pkg/scanner",
+		"github.com/gijit/gi/pkg/token",
 	},
 
-	"github.com/glycerine/gi/pkg/format": {"L4", "GOPARSER", "internal/format"},
+	"github.com/gijit/gi/pkg/format": {"L4", "GOPARSER", "internal/format"},
 	"internal/format":                       {"L4", "GOPARSER"},
 
 	// Go type checking.
-	"github.com/glycerine/gi/pkg/constant":                {"L4", "github.com/glycerine/gi/pkg/token", "math/big"},
-	"github.com/glycerine/gi/pkg/importer":                {"L4", "github.com/glycerine/gi/pkg/gostd/build", "github.com/glycerine/gi/pkg/priv/gccgoimporter", "github.com/glycerine/gi/pkg/priv/gcimporter", "github.com/glycerine/gi/pkg/priv/srcimporter", "github.com/glycerine/gi/pkg/token", "github.com/glycerine/gi/pkg/types"},
-	"github.com/glycerine/gi/pkg/priv/gcimporter":    {"L4", "OS", "github.com/glycerine/gi/pkg/gostd/build", "github.com/glycerine/gi/pkg/constant", "github.com/glycerine/gi/pkg/token", "github.com/glycerine/gi/pkg/types", "text/scanner"},
-	"github.com/glycerine/gi/pkg/priv/gccgoimporter": {"L4", "OS", "debug/elf", "github.com/glycerine/gi/pkg/constant", "github.com/glycerine/gi/pkg/token", "github.com/glycerine/gi/pkg/types", "text/scanner"},
-	"github.com/glycerine/gi/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/glycerine/gi/pkg/ast", "github.com/glycerine/gi/pkg/gostd/build", "github.com/glycerine/gi/pkg/parser", "github.com/glycerine/gi/pkg/token", "github.com/glycerine/gi/pkg/types", "path/filepath"},
-	"github.com/glycerine/gi/pkg/types":                   {"L4", "GOPARSER", "container/heap", "github.com/glycerine/gi/pkg/constant"},
+	"github.com/gijit/gi/pkg/constant":                {"L4", "github.com/gijit/gi/pkg/token", "math/big"},
+	"github.com/gijit/gi/pkg/importer":                {"L4", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/priv/gccgoimporter", "github.com/gijit/gi/pkg/priv/gcimporter", "github.com/gijit/gi/pkg/priv/srcimporter", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types"},
+	"github.com/gijit/gi/pkg/priv/gcimporter":    {"L4", "OS", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/constant", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "text/scanner"},
+	"github.com/gijit/gi/pkg/priv/gccgoimporter": {"L4", "OS", "debug/elf", "github.com/gijit/gi/pkg/constant", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "text/scanner"},
+	"github.com/gijit/gi/pkg/priv/srcimporter":   {"L4", "fmt", "github.com/gijit/gi/pkg/ast", "github.com/gijit/gi/pkg/gostd/build", "github.com/gijit/gi/pkg/parser", "github.com/gijit/gi/pkg/token", "github.com/gijit/gi/pkg/types", "path/filepath"},
+	"github.com/gijit/gi/pkg/types":                   {"L4", "GOPARSER", "container/heap", "github.com/gijit/gi/pkg/constant"},
 
 	// One of a kind.
 	"archive/tar":         {"L4", "OS", "syscall", "os/user"},
@@ -253,7 +253,7 @@ var pkgDeps = map[string][]string{
 	"encoding/pem":        {"L4"},
 	"encoding/xml":        {"L4", "encoding"},
 	"flag":                {"L4", "OS"},
-	"github.com/glycerine/gi/pkg/gostd/build": {"L4", "OS", "GOPARSER"},
+	"github.com/gijit/gi/pkg/gostd/build": {"L4", "OS", "GOPARSER"},
 	"html":                     {"L4"},
 	"image/draw":               {"L4", "image/internal/imageutil"},
 	"image/gif":                {"L4", "compress/lzw", "image/color/palette", "image/draw"},

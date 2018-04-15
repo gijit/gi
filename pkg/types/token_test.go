@@ -8,7 +8,7 @@
 package types
 
 import (
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"testing"
 )
 

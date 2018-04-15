@@ -6,9 +6,9 @@ import (
 
 	"path/filepath"
 
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/types"
 )
 
 //

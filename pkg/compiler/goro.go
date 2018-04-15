@@ -7,7 +7,7 @@ import (
 
 	"time"
 
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 	"github.com/glycerine/idem"
 	"github.com/glycerine/luar"

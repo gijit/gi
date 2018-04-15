@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 )
 
 /*

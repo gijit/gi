@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/glycerine/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/compiler"
 	"path"
 )
 
@@ -39,10 +39,10 @@ func main() {
 			`====================
 gijit: a go interpreter, just-in-time.
 ====================
-https://github.com/glycerine/gi
+https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten. All rights reserved.
 License: 3-clause BSD. See the LICENSE file at
-https://github.com/glycerine/gi/blob/master/LICENSE
+https://github.com/gijit/gi/blob/master/LICENSE
 ====================
   [ gijit/gi is an interactive Golang environment,
     also known as a REPL or Read-Eval-Print-Loop.]

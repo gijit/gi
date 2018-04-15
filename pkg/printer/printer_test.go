@@ -9,9 +9,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -369,7 +369,7 @@ func identCount(f *ast.File) int {
 func TestSourcePos(t *testing.T) {
 	const src = `
 package p
-import ( "github.com/glycerine/gi/pkg/printer"; "math" )
+import ( "github.com/gijit/gi/pkg/printer"; "math" )
 const pi = 3.14; var x = 0
 type t struct{ x, y, z int; u, v, w float32 }
 func (t *t) foo(a, b, c int) int {

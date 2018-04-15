@@ -7,8 +7,8 @@ package scanner_test
 import (
 	"fmt"
 
-	"github.com/glycerine/gi/pkg/scanner"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 )
 
 func ExampleScanner_Scan() {

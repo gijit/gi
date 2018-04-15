@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"unsafe"
 
-	//"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
-	"github.com/glycerine/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var p = verb.P

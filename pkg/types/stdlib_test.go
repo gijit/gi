@@ -9,13 +9,13 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/gostd/build"
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/priv/testenv"
-	"github.com/glycerine/gi/pkg/scanner"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/glycerine/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 var (

@@ -8,44 +8,44 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"github.com/glycerine/luar"
 
 	golua "github.com/glycerine/golua/lua"
 
 	// shadow_ imports: available inside the REPL
 
-	shadow_bytes "github.com/glycerine/gi/pkg/compiler/shadow/bytes"
-	shadow_encoding_binary "github.com/glycerine/gi/pkg/compiler/shadow/encoding/binary"
-	shadow_errors "github.com/glycerine/gi/pkg/compiler/shadow/errors"
-	shadow_fmt "github.com/glycerine/gi/pkg/compiler/shadow/fmt"
-	shadow_io "github.com/glycerine/gi/pkg/compiler/shadow/io"
-	shadow_io_ioutil "github.com/glycerine/gi/pkg/compiler/shadow/io/ioutil"
-	shadow_math "github.com/glycerine/gi/pkg/compiler/shadow/math"
-	shadow_math_rand "github.com/glycerine/gi/pkg/compiler/shadow/math/rand"
-	shadow_os "github.com/glycerine/gi/pkg/compiler/shadow/os"
-	shadow_reflect "github.com/glycerine/gi/pkg/compiler/shadow/reflect"
-	shadow_regexp "github.com/glycerine/gi/pkg/compiler/shadow/regexp"
-	shadow_runtime "github.com/glycerine/gi/pkg/compiler/shadow/runtime"
-	shadow_runtime_debug "github.com/glycerine/gi/pkg/compiler/shadow/runtime/debug"
-	shadow_strconv "github.com/glycerine/gi/pkg/compiler/shadow/strconv"
-	shadow_sync "github.com/glycerine/gi/pkg/compiler/shadow/sync"
-	shadow_sync_atomic "github.com/glycerine/gi/pkg/compiler/shadow/sync/atomic"
-	shadow_time "github.com/glycerine/gi/pkg/compiler/shadow/time"
+	shadow_bytes "github.com/gijit/gi/pkg/compiler/shadow/bytes"
+	shadow_encoding_binary "github.com/gijit/gi/pkg/compiler/shadow/encoding/binary"
+	shadow_errors "github.com/gijit/gi/pkg/compiler/shadow/errors"
+	shadow_fmt "github.com/gijit/gi/pkg/compiler/shadow/fmt"
+	shadow_io "github.com/gijit/gi/pkg/compiler/shadow/io"
+	shadow_io_ioutil "github.com/gijit/gi/pkg/compiler/shadow/io/ioutil"
+	shadow_math "github.com/gijit/gi/pkg/compiler/shadow/math"
+	shadow_math_rand "github.com/gijit/gi/pkg/compiler/shadow/math/rand"
+	shadow_os "github.com/gijit/gi/pkg/compiler/shadow/os"
+	shadow_reflect "github.com/gijit/gi/pkg/compiler/shadow/reflect"
+	shadow_regexp "github.com/gijit/gi/pkg/compiler/shadow/regexp"
+	shadow_runtime "github.com/gijit/gi/pkg/compiler/shadow/runtime"
+	shadow_runtime_debug "github.com/gijit/gi/pkg/compiler/shadow/runtime/debug"
+	shadow_strconv "github.com/gijit/gi/pkg/compiler/shadow/strconv"
+	shadow_sync "github.com/gijit/gi/pkg/compiler/shadow/sync"
+	shadow_sync_atomic "github.com/gijit/gi/pkg/compiler/shadow/sync/atomic"
+	shadow_time "github.com/gijit/gi/pkg/compiler/shadow/time"
 
 	// gonum
-	shadow_blas "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
-	shadow_fd "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/diff/fd"
-	shadow_floats "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/floats"
-	shadow_graph "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/graph"
-	shadow_integrate "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/integrate"
-	shadow_lapack "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/lapack"
-	shadow_mat "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/mat"
-	shadow_optimize "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/optimize"
-	shadow_stat "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/stat"
-	shadow_unit "github.com/glycerine/gi/pkg/compiler/shadow/gonum.org/v1/gonum/unit"
+	shadow_blas "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/blas"
+	shadow_fd "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/diff/fd"
+	shadow_floats "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/floats"
+	shadow_graph "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/graph"
+	shadow_integrate "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/integrate"
+	shadow_lapack "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/lapack"
+	shadow_mat "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/mat"
+	shadow_optimize "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/optimize"
+	shadow_stat "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/stat"
+	shadow_unit "github.com/gijit/gi/pkg/compiler/shadow/gonum.org/v1/gonum/unit"
 
 	// actuals
 	"gonum.org/v1/gonum/blas"
@@ -450,7 +450,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 
 	// successfully match path to a shadow package, bring in its
 	// type info now.
-	shadowPath := "github.com/glycerine/gi/pkg/compiler/shadow/" + path
+	shadowPath := "github.com/gijit/gi/pkg/compiler/shadow/" + path
 	a, err := ic.ActuallyImportPackage(path, "", shadowPath, depth+1)
 	if err != nil {
 		return nil, err
@@ -461,7 +461,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 }
 
 func omitAnyShadowPathPrefix(pth string, base bool) string {
-	const prefix = "github.com/glycerine/gi/pkg/compiler/shadow/"
+	const prefix = "github.com/gijit/gi/pkg/compiler/shadow/"
 	if strings.HasPrefix(pth, prefix) {
 		if base {
 			return path.Base(pth[len(prefix):])

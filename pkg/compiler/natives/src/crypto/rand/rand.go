@@ -5,7 +5,7 @@ package rand
 import (
 	"errors"
 
-	"github.com/glycerine/gi/pkg/luaapi"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 func init() {

@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/printer"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/printer"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
+	"github.com/gijit/gi/pkg/verb"
 	"runtime/debug"
 	"sort"
 	"strings"
 
-	"github.com/glycerine/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/compiler/analysis"
 	"github.com/neelance/astrewrite"
 	"golang.org/x/tools/go/gcimporter15"
 )
@@ -431,7 +431,7 @@ func FullPackageCompile(importPath string, files []*ast.File, fileSet *token.Fil
 				lhs := fmt.Sprintf("%s.%s", lhsPre, typeName)
 				// jea comment out for now... b/c getting stuff like:
 				//
-				// __type__.GONZAGA = _pkg.GONZAGA --[[ fullpkg.go:395 --]]  = __newType(16, __kindInterface, "spkg_tst.GONZAGA", true, "github.com/glycerine/gi/pkg/compiler/spkg_tst", true, nil);
+				// __type__.GONZAGA = _pkg.GONZAGA --[[ fullpkg.go:395 --]]  = __newType(16, __kindInterface, "spkg_tst.GONZAGA", true, "github.com/gijit/gi/pkg/compiler/spkg_tst", true, nil);
 				//
 				/*if isPkgLevel(o) {
 					lhs += " = _pkg." + encodeIdent(o.Name()) + " --[[ fullpkg.go:395 --]] "

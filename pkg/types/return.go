@@ -7,8 +7,8 @@
 package types
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // isTerminating reports if s is a terminating statement.

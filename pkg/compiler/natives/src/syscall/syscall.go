@@ -5,7 +5,7 @@ package syscall
 import (
 	"unsafe"
 
-	"github.com/glycerine/gi/pkg/luaapi"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 var warningPrinted = false

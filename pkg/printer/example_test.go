@@ -7,10 +7,10 @@ package printer_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/printer"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/printer"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"testing"
 )

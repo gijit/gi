@@ -2,12 +2,12 @@ package typesutil
 
 import (
 	//"fmt"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 	"strings"
 )
 
 func IsJsPackage(pkg *types.Package) bool {
-	return pkg != nil && (pkg.Path() == "github.com/glycerine/gi/pkg/luaapi" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/glycerine/gi/pkg/luaapi"))
+	return pkg != nil && (pkg.Path() == "github.com/gijit/gi/pkg/luaapi" || strings.HasSuffix(pkg.Path(), "/vendor/github.com/gijit/gi/pkg/luaapi"))
 }
 
 func IsJsObject(t types.Type) bool {
@@ -21,7 +21,7 @@ func IsJsObject(t types.Type) bool {
 
 func IsLuarPackage(pkg *types.Package) bool {
 	//fmt.Printf("\n pkg.Path()='%s'\n", pkg.Path())
-	return pkg != nil && strings.HasPrefix(pkg.Path(), "github.com/glycerine/gi/pkg/compiler/shadow")
+	return pkg != nil && strings.HasPrefix(pkg.Path(), "github.com/gijit/gi/pkg/compiler/shadow")
 }
 
 func IsLuarObject(t types.Type) bool {

@@ -3,7 +3,7 @@
 package math
 
 import (
-	js "github.com/glycerine/gi/pkg/luaapi"
+	js "github.com/gijit/gi/pkg/luaapi"
 )
 
 var math = js.Global.Get("Math")

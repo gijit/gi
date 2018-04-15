@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/glycerine/gi/pkg/compiler"
+	"github.com/gijit/gi/pkg/compiler"
 )
 
-var defaultPreludePath = "src/github.com/glycerine/gi/pkg/compiler/shadow"
+var defaultPreludePath = "src/github.com/gijit/gi/pkg/compiler/shadow"
 
 var defaultPreludePathParts []string
 

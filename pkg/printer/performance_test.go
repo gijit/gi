@@ -9,8 +9,8 @@ package printer
 
 import (
 	"bytes"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/parser"
 	"io"
 	"io/ioutil"
 	"log"

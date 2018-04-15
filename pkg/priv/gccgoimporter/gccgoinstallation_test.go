@@ -5,7 +5,7 @@
 package gccgoimporter
 
 import (
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 	"runtime"
 	"testing"
 )
@@ -67,14 +67,14 @@ var importablePackages = [...]string{
 	"expvar",
 	"flag",
 	"fmt",
-	"github.com/glycerine/gi/pkg/ast",
-	"github.com/glycerine/gi/pkg/gostd/build",
-	"github.com/glycerine/gi/pkg/doc",
-	"github.com/glycerine/gi/pkg/format",
-	"github.com/glycerine/gi/pkg/parser",
-	"github.com/glycerine/gi/pkg/printer",
-	"github.com/glycerine/gi/pkg/scanner",
-	"github.com/glycerine/gi/pkg/token",
+	"github.com/gijit/gi/pkg/ast",
+	"github.com/gijit/gi/pkg/gostd/build",
+	"github.com/gijit/gi/pkg/doc",
+	"github.com/gijit/gi/pkg/format",
+	"github.com/gijit/gi/pkg/parser",
+	"github.com/gijit/gi/pkg/printer",
+	"github.com/gijit/gi/pkg/scanner",
+	"github.com/gijit/gi/pkg/token",
 	"hash/adler32",
 	"hash/crc32",
 	"hash/crc64",

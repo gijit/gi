@@ -27,18 +27,18 @@ package types_test
 
 import (
 	"flag"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/priv/testenv"
-	"github.com/glycerine/gi/pkg/scanner"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
 	"io/ioutil"
 	"regexp"
 	"strings"
 	"testing"
 
-	. "github.com/glycerine/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 var (

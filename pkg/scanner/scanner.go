@@ -16,7 +16,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // An ErrorHandler may be provided to Scanner.Init. If a syntax error is

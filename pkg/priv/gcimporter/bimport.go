@@ -7,9 +7,9 @@ package gcimporter
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"sort"
 	"strconv"
 	"strings"

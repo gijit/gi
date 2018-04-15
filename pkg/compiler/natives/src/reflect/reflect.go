@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"unsafe"
 
-	"github.com/glycerine/gi/pkg/luaapi"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 var initialized = false

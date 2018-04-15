@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/glycerine/gi/pkg/luaapi"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 // streamReader implements an io.ReadCloser wrapper for ReadableStream of https://fetch.spec.whatwg.org/.

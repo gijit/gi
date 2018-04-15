@@ -3,19 +3,19 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/gostd/build"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"github.com/glycerine/zygomys/zygo"
-	//"github.com/glycerine/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	"unicode"
 	//luajit "github.com/glycerine/golua/lua"
 	//"github.com/kisielk/gotool"
 	//"github.com/shurcooL/go-goon"
-	//gbuild "github.com/glycerine/gi/pkg/gostd/build"
-	//gibuild "github.com/glycerine/gi/pkg/gibuild"
+	//gbuild "github.com/gijit/gi/pkg/gostd/build"
+	//gibuild "github.com/gijit/gi/pkg/gibuild"
 )
 
 // IncrState holds the incremental translation

@@ -5,8 +5,8 @@
 package issue13742
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
-	. "github.com/glycerine/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
+	. "github.com/gijit/gi/pkg/ast"
 )
 
 // Both F0 and G0 should appear as functions.

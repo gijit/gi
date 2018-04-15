@@ -6,10 +6,10 @@ package doc_test
 
 import (
 	"bytes"
-	"github.com/glycerine/gi/pkg/doc"
-	"github.com/glycerine/gi/pkg/format"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/doc"
+	"github.com/gijit/gi/pkg/format"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"testing"
 )

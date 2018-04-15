@@ -6,12 +6,12 @@
 package importer
 
 import (
-	"github.com/glycerine/gi/pkg/gostd/build"
-	"github.com/glycerine/gi/pkg/priv/gccgoimporter"
-	"github.com/glycerine/gi/pkg/priv/gcimporter"
-	"github.com/glycerine/gi/pkg/priv/srcimporter"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/gostd/build"
+	"github.com/gijit/gi/pkg/priv/gccgoimporter"
+	"github.com/gijit/gi/pkg/priv/gcimporter"
+	"github.com/gijit/gi/pkg/priv/srcimporter"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"io"
 	"runtime"
 )

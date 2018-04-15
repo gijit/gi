@@ -7,9 +7,9 @@
 package types
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // debugging/development support

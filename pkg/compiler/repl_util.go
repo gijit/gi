@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err error) {

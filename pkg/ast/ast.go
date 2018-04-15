@@ -8,7 +8,7 @@
 package ast
 
 import (
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 	"unicode"
 	"unicode/utf8"

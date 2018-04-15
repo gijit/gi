@@ -5,8 +5,8 @@
 package gccgoimporter
 
 import (
-	"github.com/glycerine/gi/pkg/priv/testenv"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/types"
 	"io/ioutil"
 	"os"
 	"os/exec"

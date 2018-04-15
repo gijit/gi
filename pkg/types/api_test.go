@@ -7,17 +7,17 @@ package types_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/priv/testenv"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/token"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 
-	. "github.com/glycerine/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 func pkgFor(path, source string, info *Info) (*Package, *Checker, error) {
@@ -1373,7 +1373,7 @@ func TestFailedImport(t *testing.T) {
 	const src = `
 package p
 
-import foo "github.com/glycerine/gi/pkg/types/thisdirectorymustnotexistotherwisethistestmayfail/foo" // should only see an error here
+import foo "github.com/gijit/gi/pkg/types/thisdirectorymustnotexistotherwisethistestmayfail/foo" // should only see an error here
 
 const c = foo.C
 type T = foo.T

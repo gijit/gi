@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 )
 
 //  depend.go

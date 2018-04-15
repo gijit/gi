@@ -10,7 +10,7 @@ import (
 	"net/textproto"
 	"strconv"
 
-	"github.com/glycerine/gi/pkg/luaapi"
+	"github.com/gijit/gi/pkg/luaapi"
 )
 
 var DefaultTransport = func() RoundTripper {

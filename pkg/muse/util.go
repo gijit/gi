@@ -2,10 +2,10 @@ package muse
 
 import (
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/compiler/analysis"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"github.com/neelance/astrewrite"
 
 	"golang.org/x/tools/go/types/typeutil"

@@ -22,10 +22,10 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/scanner"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/scanner"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var pp = verb.PP
@@ -468,7 +468,7 @@ func (p *parser) atComma(context string, follow token.Token) bool {
 
 func assert(cond bool, msg string) {
 	if !cond {
-		panic("github.com/glycerine/gi/pkg/parser internal error: " + msg)
+		panic("github.com/gijit/gi/pkg/parser internal error: " + msg)
 	}
 }
 

@@ -9,7 +9,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 )
 
 // A Scope maintains the set of named language entities declared

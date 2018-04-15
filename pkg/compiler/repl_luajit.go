@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/glycerine/gi/pkg/front"
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/front"
+	"github.com/gijit/gi/pkg/verb"
 	golua "github.com/glycerine/golua/lua"
 )
 
@@ -386,7 +386,7 @@ readtop:
 		fmt.Printf(`
 ======================
 gijit: a go interpreter, just-in-time
-https://github.com/glycerine/gi
+https://github.com/gijit/gi
 Type Go expressions or statements
 directly after the prompt, or use one of 
 these special commands.

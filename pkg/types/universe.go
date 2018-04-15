@@ -7,8 +7,8 @@
 package types
 
 import (
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/token"
 	"strings"
 )
 

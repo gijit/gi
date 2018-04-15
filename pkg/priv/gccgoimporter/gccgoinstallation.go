@@ -6,7 +6,7 @@ package gccgoimporter
 
 import (
 	"bufio"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 	"os"
 	"os/exec"
 	"path/filepath"

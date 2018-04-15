@@ -5,7 +5,7 @@ import (
 	//"os"
 	"testing"
 
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/types"
 
 	cv "github.com/glycerine/goconvey/convey"
 )

@@ -4,7 +4,7 @@
 
 package doc
 
-import "github.com/glycerine/gi/pkg/ast"
+import "github.com/gijit/gi/pkg/ast"
 
 type Filter func(string) bool
 

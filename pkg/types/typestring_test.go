@@ -5,14 +5,14 @@
 package types_test
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/importer"
-	"github.com/glycerine/gi/pkg/parser"
-	"github.com/glycerine/gi/pkg/priv/testenv"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/importer"
+	"github.com/gijit/gi/pkg/parser"
+	"github.com/gijit/gi/pkg/priv/testenv"
+	"github.com/gijit/gi/pkg/token"
 	"testing"
 
-	. "github.com/glycerine/gi/pkg/types"
+	. "github.com/gijit/gi/pkg/types"
 )
 
 const filename = "<src>"

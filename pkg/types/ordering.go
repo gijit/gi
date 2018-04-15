@@ -7,7 +7,7 @@
 package types
 
 import (
-	"github.com/glycerine/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 	"sort"
 )
 

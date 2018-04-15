@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	//"github.com/glycerine/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 
@@ -15,7 +15,7 @@ func Test1000ImportAGoSourcePackage(t *testing.T) {
 
 		fishMultipliesBy(2)
 		code := `
-import "github.com/glycerine/gi/pkg/compiler/spkg_tst"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst"
 caught := spkg_tst.Fish(2)
 `
 		vm, err := NewLuaVmWithPrelude(nil)
@@ -44,7 +44,7 @@ func Test1001NoCachingOfImportsOfGoSourcePackages(t *testing.T) {
 			fmt.Printf("\n ... fishing for import caching, which is a no-no on source imports. They may change often. on i=%v\n\n", i)
 			fishMultipliesBy(i + 1) // 2, then 3
 			code := `
-import "github.com/glycerine/gi/pkg/compiler/spkg_tst"`
+import "github.com/gijit/gi/pkg/compiler/spkg_tst"`
 			code2 := `
 caught := spkg_tst.Fish(2)
 `
@@ -95,7 +95,7 @@ func Test1002ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 	cv.Convey(`import a Go source package that imports 'fmt', and so loads 'runtime' in turn by source, rather than by binary import.`, t, func() {
 
 		code := `
-import "github.com/glycerine/gi/pkg/compiler/spkg_tst2"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst2"
 chk := spkg_tst2.Verbose
 spkg_tst2.Verbose = true
 callres := spkg_tst2.ToString("Hello %s", "world")
@@ -126,7 +126,7 @@ func Test1003ImportSourcePackageThatLoadsRuntime(t *testing.T) {
 	cv.Convey(`import a Go source package mimicing the problem with the 'runtime' package type checking`, t, func() {
 
 		code := `
-import "github.com/glycerine/gi/pkg/compiler/spkg_tst3"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst3"
 `
 		vm, err := NewLuaVmWithPrelude(nil)
 		panicOn(err)
@@ -150,7 +150,7 @@ func Test1004ImportArrayOfSliceOfBytes(t *testing.T) {
 	cv.Convey(`rbuf like import revealed an issue, see spkg_tst4 for minimal example`, t, func() {
 
 		code := `
-import "github.com/glycerine/gi/pkg/compiler/spkg_tst4"
+import "github.com/gijit/gi/pkg/compiler/spkg_tst4"
 r := spkg_tst4.NewR();
 chk := r.Get1();
 
@@ -217,7 +217,7 @@ func Test1006DotImport(t *testing.T) {
 	cv.Convey(`import . "spkg_tst5" should work; a dot import`, t, func() {
 
 		code := `
-import . "github.com/glycerine/gi/pkg/compiler/spkg_tst5"
+import . "github.com/gijit/gi/pkg/compiler/spkg_tst5"
 b := Incr(1)
 `
 		code2 := `c := Incr(4)`

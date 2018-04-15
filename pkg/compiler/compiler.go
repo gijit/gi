@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	"encoding/gob"
-	"github.com/glycerine/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/ast"
 
 	"encoding/json"
 	"fmt"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"io"
 
-	prelude "github.com/glycerine/gi/pkg/compiler/prelude_lua"
+	prelude "github.com/gijit/gi/pkg/compiler/prelude_lua"
 	gcimporter "golang.org/x/tools/go/gcimporter15"
 )
 
@@ -136,7 +136,7 @@ func ImportDependencies(archive *Archive, importPkg func(pth string, depth int) 
 	}
 	// jea: temp disable to see if 1000 passes: yes, this makes 1000 green. commenting it in goes red.
 	// but 1002 still reports red.
-	// /Users/jaten/go/src/github.com/glycerine/gi/pkg/luaapi/luaapi.go:91:6: Error should have been declared
+	// /Users/jaten/go/src/github.com/gijit/gi/pkg/luaapi/luaapi.go:91:6: Error should have been declared
 	//
 	// with collectDependencies("runtime") in place, all 1000, 1001, and 1002 tests fail
 	//  with the "Error should have been declared" error above.

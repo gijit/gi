@@ -10,8 +10,8 @@ package printer
 
 import (
 	"bytes"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/token"
 	"strconv"
 	"strings"
 	"unicode"

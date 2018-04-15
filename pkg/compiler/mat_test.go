@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	//"github.com/glycerine/gi/pkg/verb"
+	//"github.com/gijit/gi/pkg/verb"
 	cv "github.com/glycerine/goconvey/convey"
 )
 

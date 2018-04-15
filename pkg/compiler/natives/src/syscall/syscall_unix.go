@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"unsafe"
 
-	js "github.com/glycerine/gi/pkg/luaapi"
+	js "github.com/gijit/gi/pkg/luaapi"
 )
 
 func runtime_envs() []string {

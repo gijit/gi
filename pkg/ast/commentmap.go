@@ -7,7 +7,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/token"
+	"github.com/gijit/gi/pkg/token"
 	"sort"
 )
 

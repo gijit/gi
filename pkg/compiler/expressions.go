@@ -3,20 +3,20 @@ package compiler
 import (
 	"bytes"
 	"fmt"
-	"github.com/glycerine/gi/pkg/ast"
-	"github.com/glycerine/gi/pkg/constant"
-	"github.com/glycerine/gi/pkg/printer"
-	"github.com/glycerine/gi/pkg/token"
-	"github.com/glycerine/gi/pkg/types"
+	"github.com/gijit/gi/pkg/ast"
+	"github.com/gijit/gi/pkg/constant"
+	"github.com/gijit/gi/pkg/printer"
+	"github.com/gijit/gi/pkg/token"
+	"github.com/gijit/gi/pkg/types"
 	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/glycerine/gi/pkg/compiler/analysis"
-	"github.com/glycerine/gi/pkg/compiler/astutil"
-	"github.com/glycerine/gi/pkg/compiler/typesutil"
-	"github.com/glycerine/gi/pkg/verb"
+	"github.com/gijit/gi/pkg/compiler/analysis"
+	"github.com/gijit/gi/pkg/compiler/astutil"
+	"github.com/gijit/gi/pkg/compiler/typesutil"
+	"github.com/gijit/gi/pkg/verb"
 )
 
 var _ = debug.Stack
