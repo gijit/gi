@@ -1,27 +1,10 @@
 gijit: a just-in-time trace-compiled golang interpreter
 =======
-`gijit` aims at being a scalable Go REPL
+`gijit` is a scalable Go REPL
 for doing interactive coding and data analysis.
 It is backed by LuaJIT, a Just-in-Time
 trace compiler. The REPL binary is called
-simply `gi`, as it is a "go interpreter".
-
-quick install
--------------
-See https://github.com/gijit/gi/releases for binary releases that can be run directly without building from source. For source builds:
-~~~
-# use go1.10 or later.
-$ go get -d github.com/gijit/gi/cmd/gi
-$ cd $GOPATH/src/github.com/gijit/gi
-$ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
-$ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18
-   for notes on installing both mingw64 and make, which are pre-requisites.)
-$ make install
-$ gi
-~~~
-See also https://github.com/gijit/gi/issues/18 for windows install-from-source help.
-
-For various releases there are pre-compiled binaries (https://github.com/gijit/gi/releases). They have the prelude compiled in now. They run standalone, without needing to install the source. Note that the importing of source packages (e.g. custom ones) is not yet functional. Importing shadowed (binary Go) packages works. These include the commonly used `fmt`, `os`, `math/rand`, and others listed here https://github.com/gijit/gi/tree/master/pkg/compiler/shadow
+simply `gi`, for "go interpreter".
 
 # the dream
 
@@ -34,7 +17,6 @@ Go has big advantages over Python, R, and Matlab.
 It has good type checking, reasonable compiled performance,
 and excellent multicore support.
 
-
 # the aim
 
 We want to provide one excellent integrated REPL for Go.
@@ -42,6 +24,24 @@ Exploratory data analysis should not be hampered
 by weak type-checking or hard-to-refactor code,
 and performance should not suffer just because
 you require interaction with your data.
+
+quick install
+-------------
+See https://github.com/gijit/gi/releases for binary releases that can be run directly without building from source. To build from source:
+~~~
+# use go1.10 or later.
+$ go get -d github.com/gijit/gi/cmd/gi
+$ cd $GOPATH/src/github.com/gijit/gi
+$ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
+$ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18
+   for notes on installing both mingw64 and make, which are pre-requisites.)
+$ make install
+$ gi
+~~~
+See also https://github.com/gijit/gi/issues/18 for windows install-from-source help.
+
+For various releases there are pre-compiled binaries (https://github.com/gijit/gi/releases). They have batteries included; the prelude is compiled. They run standalone. There is no need to install the `gijit` source with `git`. Importing some source packages works. Importing shadowed (binary Go) packages works. These include the commonly used `fmt`, `os`, `math/rand`, and others listed here https://github.com/gijit/gi/tree/master/pkg/compiler/shadow
+
 
 # Q: Can I embed `gijit` in my app?
 
@@ -54,16 +54,9 @@ and
 
 https://github.com/gijit/gi/blob/master/pkg/compiler/repl_luajit.go#L57
 
-# of course we need a backend to develop against
+# LuaJIT did what? 
 
-Considering possible backends,
-I compared node.js, chez scheme, otto,
-gopher-lua, and LuaJIT.
-
-# LuaJIT did what?  Will Golang run on GPU?
-
-LuaJIT in particular is an amazing
-backend to target. In our quick and
+LuaJIT is an amazing backend. In our quick and
 dirty 500x500 random matrix multiplication
 benchmark, LuaJIT *beat even statically compiled go*
 code by a factor of 3x. Go's time was 360 msec.
@@ -80,7 +73,7 @@ And, Torch7 has GPU support. [1][2]
 
 [2] https://github.com/torch/torch7/wiki/Cheatsheet#gpu-support
 
-Will golang (Go) run on GPUs?  It might be possible!
+Will golang (Go) run on GPUs?  It might be possible, someday.
 
 # installation from source
 
@@ -97,15 +90,17 @@ $ (On windows: run `windows.bat` to build libluajit.a ; note pre-reqs below.)
 $ make install
 $ gi
 ~~~
-See https://github.com/gijit/gi/issues/18 for windows install help.
-Install both mingw64 and make before building gijit. These are prerequisites.
+To build from source on windows, see https://github.com/gijit/gi/issues/18
+for windows install help.
+Install both mingw64 and make before building gijit. These are prerequisites
+for building from source. The released windows binaries will run without them.
 
 most recent status
 ------------------
 
-2018 March 29 update - private
+2018 March 29 update
 ------------------------------
-Release v1.9.0 includes the
+Release v1.9.2 includes the
 `func __callLua(s string) (interface{}, error)` function to call
 Lua code directly from `gijit` Go code.
 
@@ -118,8 +113,7 @@ into the `gi` REPL, and then
 packages can be read and
 compiled at runtime.
 
-
-2018 March 26 update - private
+2018 March 26 update
 ----------------------------
 Release v1.6.5 has reasonable
 source-based imports of other
@@ -128,13 +122,12 @@ packages. Tests 1000, 1001, and
 All green tests with
 1002 commented out.
 
-2018 March 25 update - private
+2018 March 25 update
 --------------------
 Release v1.6.0 brings the initial implementation
 of import functionality for source packages.
 
-
-2018 March 6 update (last public release)
+2018 March 6 update
 -------------------
 The release v1.4.x series improves the shadow
 import system to provide  constructors and
@@ -741,9 +734,7 @@ gi>
 2018 Jan 29 update
 -------
 What is left to do: pointers, interfaces, go-routines,
-and channels. The channels and go-routines will just wrap the
-existing go runtime functionality, using reflection
-and Luar.
+and channels.
 
 Release v0.8.0 has command line history available with
 the up-arrow/down-arrow. This is a nice supplement to
