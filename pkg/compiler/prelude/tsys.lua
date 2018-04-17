@@ -1939,7 +1939,12 @@ __newType = function(size, kind, str, named, pkg, exported, constructor)
       
       typ.zero = function()
          --print("in zero() for array...")
-         return __newAnyArrayValue(typ.elem, typ.len)
+
+         local array = {}
+         for i =0, typ.len -1 do
+            array[i]= typ.elem();
+         end
+         return array;
       end;
 
    elseif kind == __kindStruct then

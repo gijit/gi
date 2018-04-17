@@ -19,7 +19,7 @@ function __gi_GetRangeCheck(x, i)
 end;
 
 function __gi_SetRangeCheck(x, i, val)
-  --print("SetRangeCheck. x=", __st(x), " i=", i, " val=", val)
+  --print("SetRangeCheck. x=".. __st(x) .." i="..tostring(i).." val=", val)
   if x == nil or i < 0 or i >= #x then
      error("index out of range; i="..tostring(i)..". #x is "..tostring(#x))
   end
