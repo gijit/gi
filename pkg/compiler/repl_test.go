@@ -1246,3 +1246,26 @@ b := f(1)
 		cv.So(true, cv.ShouldBeTrue)
 	})
 }
+
+func Test1993ArrayOfArrayHasTypeAndLenWorking(t *testing.T) {
+
+	cv.Convey(`var a [3][3]float64;  a[2][2] = 3.14; The assignment should succeed and not fail a bounds check.`, t, func() {
+
+		code := `
+var a [3][3]float64
+a[2][2] = 3.14
+b := len(a[2])
+`
+		// expect b to give 3
+		vm, err := NewLuaVmWithPrelude(nil)
+		panicOn(err)
+		defer vm.Close()
+		inc := NewIncrState(vm, nil)
+
+		translation := inc.trMust([]byte(code))
+		fmt.Printf("\n translation='%s'\n", translation)
+		LuaRunAndReport(vm, string(translation))
+		LuaMustInt64(vm, "b", 3)
+		cv.So(true, cv.ShouldBeTrue)
+	})
+}
