@@ -13,7 +13,7 @@ import (
 	"github.com/gijit/gi/pkg/verb"
 )
 
-func translateAndCatchPanic(inc *IncrState, src []byte) (translation string, err error) {
+func TranslateAndCatchPanic(inc *IncrState, src []byte) (translation string, err error) {
 	defer func() {
 		recov := recover()
 		if recov != nil {

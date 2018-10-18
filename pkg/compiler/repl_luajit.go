@@ -506,7 +506,7 @@ func (r *Repl) Eval(src string) error {
 		r.prevSrc = ""
 
 		r.setPrompt()
-		translation, err := translateAndCatchPanic(r.inc, []byte(src))
+		translation, err := TranslateAndCatchPanic(r.inc, []byte(src))
 		if err != nil {
 			fmt.Printf("oops: '%v' on input '%s'\n", err, strings.TrimSpace(src))
 			translation = "\n"
