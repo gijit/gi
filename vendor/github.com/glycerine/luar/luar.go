@@ -1361,8 +1361,7 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case 0: // means it wasn't a ctype
 
 			// jea: desparately... guess its a Go string and try that...
-			vv("desparately tring to get correct type for idx %v", idx)
-			lua.DumpLuaStack(L)
+			//vv("desparately tring to get correct type for idx %v", idx)
 			v.Set(reflect.ValueOf(L.ToString(idx)))
 			return xtraExpandedCount, nil
 		}
