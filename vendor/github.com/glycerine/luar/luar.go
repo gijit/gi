@@ -15,6 +15,7 @@ import (
 )
 
 var pp = verb.PP
+var vv = verb.VV
 
 // ConvError records a conversion error from value 'From' to value 'To'.
 type ConvError struct {
@@ -1296,9 +1297,9 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		}
 
 	case 10: // LUA_TCDATA aka cdata
-		//pp("luaToGo cdata case, L.Type(idx) = '%v'", L.Type(idx))
-		ctype := L.LuaJITctypeID(-1)
-		//pp("luar.go sees ctype = %v", ctype)
+		//vv("luaToGo cdata case, L.Type(idx=%v) = '%v'", idx, L.Type(idx))
+		ctype := L.LuaJITctypeID(idx)
+		//vv("luar.go sees ctype = %v", ctype)
 		switch ctype {
 		case 5: //  int8
 		case 6: //  uint8
@@ -1360,6 +1361,8 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case 0: // means it wasn't a ctype
 
 			// jea: desparately... guess its a Go string and try that...
+			vv("desparately tring to get correct type for idx %v", idx)
+			lua.DumpLuaStack(L)
 			v.Set(reflect.ValueOf(L.ToString(idx)))
 			return xtraExpandedCount, nil
 		}
