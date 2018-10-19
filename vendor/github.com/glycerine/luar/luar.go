@@ -1358,6 +1358,10 @@ func luaToGo(L *lua.State, idx int, v reflect.Value, visited map[uintptr]reflect
 		case 14: //  float64
 
 		case 0: // means it wasn't a ctype
+
+			// jea: desparately... guess its a Go string and try that...
+			v.Set(reflect.ValueOf(L.ToString(idx)))
+			return xtraExpandedCount, nil
 		}
 
 		return xtraExpandedCount, ConvError{From: luaDesc(L, idx), To: v.Type()}
