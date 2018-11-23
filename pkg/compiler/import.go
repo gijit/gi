@@ -31,6 +31,7 @@ import (
 	shadow_runtime "github.com/gijit/gi/pkg/compiler/shadow/runtime"
 	shadow_runtime_debug "github.com/gijit/gi/pkg/compiler/shadow/runtime/debug"
 	shadow_strconv "github.com/gijit/gi/pkg/compiler/shadow/strconv"
+	shadow_strings "github.com/gijit/gi/pkg/compiler/shadow/strings"
 	shadow_sync "github.com/gijit/gi/pkg/compiler/shadow/sync"
 	shadow_sync_atomic "github.com/gijit/gi/pkg/compiler/shadow/sync/atomic"
 	shadow_time "github.com/gijit/gi/pkg/compiler/shadow/time"
@@ -262,6 +263,11 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 		t0.regmap["__ctor__strconv"] = shadow_strconv.Ctor
 		t0.run = append(t0.run, shadow_strconv.InitLua()...)
 
+	case "strings":
+		t0.regmap["strings"] = shadow_strings.Pkg
+		t0.regmap["__ctor__strings"] = shadow_strings.Ctor
+		t0.run = append(t0.run, shadow_strings.InitLua()...)
+
 	case "io/ioutil":
 		t0.regmap["ioutil"] = shadow_io_ioutil.Pkg
 		t0.regmap["__ctor__ioutil"] = shadow_io_ioutil.Ctor
@@ -346,6 +352,7 @@ func (ic *IncrState) CompileTimeGiImportFunc(path, pkgDir string, depth int) (*A
 	case "runtime":
 	case "runtime/debug":
 	case "strconv":
+	case "strings":
 	case "io/ioutil":
 		// gonum:
 	case "gonum.org/v1/gonum/blas":

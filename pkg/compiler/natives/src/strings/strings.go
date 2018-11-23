@@ -2,6 +2,7 @@
 
 package strings
 
+/*
 import (
 	"unicode/utf8"
 
@@ -65,3 +66,4 @@ func (b *Builder) copyCheck() {
 		panic("strings: illegal use of non-zero Builder copied by value")
 	}
 }
+*/
