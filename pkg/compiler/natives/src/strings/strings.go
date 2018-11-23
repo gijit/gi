@@ -5,7 +5,7 @@ package strings
 import (
 	"unicode/utf8"
 
-	"github.com/gijit/gi/pkg/luaapi"
+	js "github.com/gijit/gi/pkg/luaapi"
 )
 
 func IndexByte(s string, c byte) int {
