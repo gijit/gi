@@ -2,7 +2,7 @@ package zygo
 
 import (
 	"fmt"
-	tm "github.com/glycerine/tmframe"
+	//tm "github.com/glycerine/tmframe"
 	"reflect"
 	"time"
 )
@@ -337,10 +337,10 @@ func init() {
 		return new(time.Time), nil
 	}})
 
-	gsr.RegisterUserdef(&RegisteredType{GenDefMap: true, Factory: func(env *Zlisp, h *SexpHash) (interface{}, error) {
-		return new(tm.Frame), nil
-	}}, true, "tm.Frame")
-
+	/*	gsr.RegisterUserdef(&RegisteredType{GenDefMap: true, Factory: func(env *Zlisp, h *SexpHash) (interface{}, error) {
+			return new(tm.Frame), nil
+		}}, true, "tm.Frame")
+	*/
 	// add Sexp types
 
 	gsr.RegisterBuiltin("symbol", &RegisteredType{GenDefMap: false, Factory: func(env *Zlisp, h *SexpHash) (interface{}, error) {
