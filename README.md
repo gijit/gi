@@ -38,13 +38,11 @@ specific open bugs.
 [x] Done: interfaces and type assertions.
 [x] Done: defer and recover.
 [x] Done: func creates closures.
+[x] Done: import of binary and source packages.
 
-[ ] Parially done: Imports of binary and source packages. Some
-    source imports work, some binary imports work. But others
-    do not. Your mileage may vary. Please file github issues
-    as you encounter specific issues.
+Limitations:
 
-[ ] Paritally done: goroutines, select, channels. What is
+_ Paritally done: goroutines, select, channels. What is
     missing is that Timers and timeouts are not done.
     Also goroutines are implemented with Lua's coroutines,
     so they won't interact with the goroutines from
@@ -68,7 +66,7 @@ quick install
 -------------
 See https://github.com/gijit/gi/releases for binary releases that can be run directly without building from source. To build from source:
 ~~~
-# use go1.10 or later.
+# use go1.10.x  We don't support go1.11.y at the moment.
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi
 $ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
@@ -136,6 +134,16 @@ for building from source. The released windows binaries will run without them.
 
 most recent status
 ------------------
+
+2018 Dec 14 update
+------------------------------
+Releaes v1.9.5 brings much improved interaction with
+native struct values (from imports of compiled Go packages such
+as those in the standard libary). Native structs
+can be used as fields in new struct created on
+the fly in the interpreter. Native methods can be
+invoked on those native struct values.
+
 
 2018 March 29 update
 ------------------------------
