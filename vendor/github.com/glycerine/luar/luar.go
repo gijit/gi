@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"runtime/debug"
 	"unsafe"
 
@@ -291,6 +292,10 @@ func callGoFunction(L *lua.State, v reflect.Value, args []reflect.Value) []refle
 	return results
 }
 
+func getFunctionName(fun reflect.Value) string {
+	return runtime.FuncForPC(fun.Pointer()).Name()
+}
+
 func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 	switch f := v.Interface().(type) {
 	case func(*lua.State) int:
@@ -301,6 +306,17 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 	argsT := make([]reflect.Type, t.NumIn())
 	for i := range argsT {
 		argsT[i] = t.In(i)
+	}
+
+	// NB (jea): we wish their was a more efficient way to distinguish
+	// methods (with a receiver argument) from functions (no receiver)
+	// with reflect. However this is what I could come up with.
+	// Better methods welcome, but this appears to work for now.
+	//
+	isMethod := getFunctionName(v) == "reflect.methodValueCall"
+	receiverOffset := 0
+	if isMethod {
+		receiverOffset = 1
 	}
 
 	return func(L *lua.State) int {
@@ -316,7 +332,7 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 		args := make([]reflect.Value, len(argsT))
 		for i, t := range argsT {
 			val := reflect.New(t)
-			_, err := LuaToGo(L, i+1, val.Interface())
+			_, err := LuaToGo(L, i+1+receiverOffset, val.Interface())
 			if err != nil {
 				pp("problem point 1")
 				L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
