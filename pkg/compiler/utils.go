@@ -243,7 +243,19 @@ func (c *funcContext) zeroValue(ty types.Type) ast.Expr {
 		default:
 			panic(fmt.Sprintf("Unhandled basic type: %v\n", t))
 		}
-	case *types.Array, *types.Struct:
+	case *types.Array:
+		return c.setType(&ast.CompositeLit{}, ty)
+	case *types.Struct:
+		// shadow (binary Go) structs just need to be
+		// instantiated--we skip the Lua type system.
+		isShadow, shortTyp := isShadowStruct(ty.String())
+		if isShadow {
+			//vv("found shadow '%s'; create call to type ctor, e.g. a __type__.time.Time() call.", shortTyp)
+			return &ast.CallExpr{
+				Fun:  c.newIdent("__type__."+shortTyp, types.NewSignature(nil, nil, types.NewTuple(types.NewVar(0, nil, "", ty)), false)),
+				Args: []ast.Expr{},
+			}
+		}
 		return c.setType(&ast.CompositeLit{}, ty)
 	case *types.Chan, *types.Interface, *types.Map, *types.Signature, *types.Slice, *types.Pointer:
 		// fall through to "nil"
@@ -501,7 +513,7 @@ func (c *funcContext) typeNameReport(level int, ty types.Type) string {
 
 func (c *funcContext) typeName(ty types.Type, parent types.Type) (res string) {
 	// parent is nil or equal to ty, ignore the parent.
-	res, _, _, _ = c.typeNameWithAnonInfo(ty, parent)
+	res, _, _, _, _ = c.typeNameWithAnonInfo(ty, parent)
 	return
 }
 
@@ -526,6 +538,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 	isAnon bool,
 	anonType *types.TypeName,
 	createdVarName string,
+	isShadow bool, // from binary package
 ) {
 
 	// For the dependency graph, if parent is nil or
@@ -540,10 +553,14 @@ func (c *funcContext) typeNameWithAnonInfo(
 	}
 
 	pkgName := c.getPkgName()
+	var shortTyp string
+	isShadow, shortTyp = isShadowStruct(ty.String())
+	_ = shortTyp
+	//vv("ty.String() = '%s' -> %v isShadow: shortTyp='%s'", ty.String(), isShadow, shortTyp)
 
 	whenAnonPrint := c.TypeNameSetting
 
-	pp("in typeNameWithAnonInfo, ty='%v'; whenAnonPrint=%v\n", ty.String(), whenAnonPrint)
+	//vv("in typeNameWithAnonInfo, ty='%v'; whenAnonPrint=%v\n", ty.String(), whenAnonPrint)
 	switch t := ty.(type) {
 	case *types.Basic:
 		jst := toJavaScriptType(t)
@@ -593,7 +610,7 @@ func (c *funcContext) typeNameWithAnonInfo(
 			c.p.typeDepend.addChild(parNode, chNode)
 		}
 
-		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:581\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
+		anonTypePrint := fmt.Sprintf("\n\t%s = __%sType(%s); -- %s anon type printing. utils.go:596\n", varName, strings.ToLower(typeKind(anonType.Type())[6:]), c.initArgsNoPkgForPrimitives(anonType.Type()), whenAnonPrint.String())
 		c.p.typeDefineLuaCode[anonType] = anonTypePrint
 
 		// gotta generate the type immediately for the REPL.
@@ -1087,4 +1104,30 @@ func translateTypeNameToNewOper(typeName string) string {
 		return "_gi_NewSlice HUH?? --where is this used? utils.go:942"
 	}
 	panic(fmt.Sprintf("what here? for typeName = '%s'", typeName))
+}
+
+// "github.com/gijit/gi/pkg/compiler/shadow/time.Location" -> "time", "Location"
+func extractBasePackageName(pkg string) (shortPkg, typ string) {
+	splt := strings.Split(pkg, ".")
+	n := len(splt)
+	penult := pkg
+	if n > 1 {
+		penult = splt[n-2]
+		typ = splt[n-1]
+	}
+
+	slash := strings.Split(penult, "/")
+	n = len(slash)
+	if n <= 1 {
+		shortPkg = penult
+	}
+	shortPkg = slash[n-1]
+	return
+}
+
+func isShadowStruct(pkgName string) (is bool, typeName string) {
+	base, typ := extractBasePackageName(pkgName)
+	is = strings.Contains(pkgName, "/pkg/compiler/shadow/") || binaryPackage[base]
+	typeName = base + "." + typ
+	return
 }

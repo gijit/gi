@@ -1037,7 +1037,8 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 			pp("not a refelct value, underlying is array or struct")
 			if define {
 				pp("define is true, not a refelct value, underlying is array or struct")
-				typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(lhsType, nil)
+				typName, isAnon, anonType, createdNm, isShadow := c.typeNameWithAnonInfo(lhsType, nil)
+				_ = isShadow
 				pp("debug __gi_clone2 arg: c.typeName(0, lhsType)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
 				if isAnon {
 					return fmt.Sprintf(`%s = __clone(%s, %s);`, c.translateExpr(lhs, nil), rhsExpr, c.typeName(anonType.Type(), nil))
@@ -1047,7 +1048,17 @@ func (c *funcContext) translateAssign(lhs, rhs ast.Expr, define bool) string {
 
 				}
 			}
-			return fmt.Sprintf("%s.__copy(%s, %s);", c.typeName(lhsType, nil), c.translateExpr(lhs, nil), rhsExpr)
+			// binary shadow struct values need special handling.
+			tn := c.typeName(lhsType, nil)
+			shortPkg, typ := extractBasePackageName(tn)
+			isShad, shortType := isShadowStruct(tn)
+			pp("here, writing __copy for type = '%s'; shortPkg=%v, typ=%v, isShad=%v, shortType=%v", tn, shortPkg, typ, isShad, shortType)
+			if isShad {
+				// special handling for shadow binary struct value
+				return fmt.Sprintf("%s = %s; -- statements.go:1058\n", c.translateExpr(lhs, nil), rhsExpr)
+			} else {
+				return fmt.Sprintf("%s.__copy(%s, %s); -- statements.go:1060\n", c.typeName(lhsType, nil), c.translateExpr(lhs, nil), rhsExpr)
+			}
 		}
 	}
 

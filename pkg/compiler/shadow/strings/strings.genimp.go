@@ -93,6 +93,7 @@ __type__.strings ={};
 -----------------
 
 __type__.strings.Builder = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Builder",
  __str = "Builder",
@@ -109,6 +110,7 @@ setmetatable(__type__.strings.Builder, __type__.strings.Builder);
 -----------------
 
 __type__.strings.Reader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Reader",
  __str = "Reader",
@@ -125,6 +127,7 @@ setmetatable(__type__.strings.Reader, __type__.strings.Reader);
 -----------------
 
 __type__.strings.Replacer = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Replacer",
  __str = "Replacer",

@@ -61,6 +61,9 @@ import (
 	"gonum.org/v1/gonum/unit"
 )
 
+// distinguish binary imports from source imports
+var binaryPackage = make(map[string]bool)
+
 func init() {
 	a := 1
 	b := interface{}(&a)
@@ -169,6 +172,7 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 	useEvalCoroutine := false
 	t0 := ic.goro.newTicket("", useEvalCoroutine)
 
+	var srcImport bool
 	switch path {
 	case "gitesting":
 		// test only:
@@ -297,8 +301,12 @@ func (ic *IncrState) RunTimeGiImportFunc(path, pkgDir string, depth int) error {
 
 	default:
 		// source import
+		srcImport = true
 		// don't need to compile again, just call pkg.__init()
 		t0.run = []byte(fmt.Sprintf("%s.__init();", omitAnyShadowPathPrefix(path, true)))
+	}
+	if !srcImport {
+		binaryPackage[path] = true
 	}
 	err := t0.Do()
 	pp("RunTimeGiImportFunc executed t0.Do() to run: '%s', got back err='%v'", string(t0.run), err)

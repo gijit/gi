@@ -440,6 +440,7 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 						pp("named type codegen for '%s' generated: '%s'", o, string(by))
 					}
 				case token.VAR:
+					//vv("we're in the token.VAR")
 					for _, spec := range d.Specs {
 						for _, name := range spec.(*ast.ValueSpec).Names {
 							if !isBlank(name) {
@@ -469,9 +470,21 @@ func IncrementallyCompile(a *Archive, importPath string, files []*ast.File, file
 
 										// jea, this is getting our "var x [3]int" decl,
 										// which needs to end up in code.
-										x := c.translateExpr(c.zeroValue(o.Type()), nil).String()
+										//vv("about to translateExpr on zero value for o.Type()='%v' with name='%s'", o.Type().String(), o.Name())
+										// test 923, name='tm'
+										var x string
+										typStr := o.Type().String()
+										if isShad, typShortName := isShadowStruct(typStr); isShad {
+											//vv("type '%s' is a binary struct", typStr)
+											// binary, call the ctor
+											// ex: __type__.time.Time()
+											x = "__type__." + typShortName + "()"
+										} else {
+											//vv("type '%s' is not binary struct", typStr)
+											x = c.translateExpr(c.zeroValue(o.Type()), nil).String()
+										}
 										preamble := string(c.output)
-										de.InitCode = []byte(fmt.Sprintf("%s\n\t\t%s = %s; --incr.go:439\n", preamble, c.objectName(o), x))
+										de.InitCode = []byte(fmt.Sprintf("%s\n\t\t%s = %s; --incr.go:486\n", preamble, c.objectName(o), x))
 
 										pp("placeN+1, appending to newCodeText: d.InitCode='%s'", string(de.InitCode))
 										newCodeText = append(newCodeText, de.InitCode)
@@ -786,15 +799,18 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			typeName := "__type__." + c.objectName(o)
 			lhs := typeName
 			if isPkgLevel(o) {
+				//vv("detected package qualifier! is it shadow? typeName='%s'", typeName)
+				// incr.go:801 2018-12-12 23:40:44.465 -0600 CST detected package qualifier! is it shadow? typeName='__type__.S'
+
 				// jea: might need to attend to package names
 				//  eventually, or not.
-				//lhs += " = __pkg." + encodeIdent(o.Name()) + " -- incr.go:746\n"
+				//lhs += " = __pkg." + encodeIdent(o.Name()) + " -- incr.go:800\n"
 			}
 			size := int64(0)
 
 			switch t := o.Type().Underlying().(type) {
 			case *types.Struct:
-				pp("incr.go:580, in a Struct")
+				//vv("incr.go:580, in a Struct")
 
 				// avoid collision between self and parameter names
 				// in the constructor definition. Use self_ or self__
@@ -952,7 +968,7 @@ func (c *funcContext) oneNamedType(collectDependencies func(f func()) []string, 
 			d.TypeInitCode = c.CatchOutput(0, func() {
 				// jea: we need to initialize our interfaces with
 				// their methods.
-				c.Printf("%s.init(%s); -- incr.go:873", "__type__."+c.objectName(o), c.initArgs(t))
+				c.Printf("%s.init(%s); -- incr.go:971", "__type__."+c.objectName(o), c.initArgs(t))
 				_ = t // jea add
 				// after methods init, then constructor
 				if set_constructor != "" {

@@ -57,6 +57,7 @@ __type__.atomic ={};
 -----------------
 
 __type__.atomic.Value = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Value",
  __str = "Value",

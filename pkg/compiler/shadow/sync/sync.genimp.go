@@ -100,6 +100,7 @@ __type__.sync ={};
 -----------------
 
 __type__.sync.Cond = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Cond",
  __str = "Cond",
@@ -116,6 +117,7 @@ setmetatable(__type__.sync.Cond, __type__.sync.Cond);
 -----------------
 
 __type__.sync.Map = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Map",
  __str = "Map",
@@ -132,6 +134,7 @@ setmetatable(__type__.sync.Map, __type__.sync.Map);
 -----------------
 
 __type__.sync.Mutex = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Mutex",
  __str = "Mutex",
@@ -148,6 +151,7 @@ setmetatable(__type__.sync.Mutex, __type__.sync.Mutex);
 -----------------
 
 __type__.sync.Once = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Once",
  __str = "Once",
@@ -164,6 +168,7 @@ setmetatable(__type__.sync.Once, __type__.sync.Once);
 -----------------
 
 __type__.sync.Pool = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Pool",
  __str = "Pool",
@@ -180,6 +185,7 @@ setmetatable(__type__.sync.Pool, __type__.sync.Pool);
 -----------------
 
 __type__.sync.RWMutex = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "RWMutex",
  __str = "RWMutex",
@@ -196,6 +202,7 @@ setmetatable(__type__.sync.RWMutex, __type__.sync.RWMutex);
 -----------------
 
 __type__.sync.WaitGroup = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "WaitGroup",
  __str = "WaitGroup",

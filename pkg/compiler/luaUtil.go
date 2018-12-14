@@ -47,6 +47,10 @@ func (lvm *LuaVm) Close() {
 	<-lvm.goro.halt.Done.Chan
 }
 
+func (lvm *LuaVm) GetGoluaState() *golua.State {
+	return lvm.vm
+}
+
 // can't be called on main thread
 // and MainCThread() must have already
 // been started.
@@ -419,6 +423,22 @@ func LuaMustEvalToInt64(lvm *LuaVm, xpr string, expect int64) {
 	vm.Pop(1)
 }
 
+func LuaToInt64(lvm *LuaVm, xpr string) int64 {
+
+	vm := lvm.vm
+	evalme := "__tmp = " + xpr
+	fmt.Printf("evalme = '%s'\n", evalme)
+	LuaRun(lvm, evalme, true)
+	vm.GetGlobal("__tmp")
+	top := vm.GetTop()
+	if vm.IsNil(top) {
+		panic(fmt.Sprintf("global variable '__tmp' is nil, after running: '%s'", evalme))
+	}
+	value_int := vm.CdataToInt64(top)
+	vm.Pop(1)
+	return value_int
+}
+
 func LuaInGlobalEnv(lvm *LuaVm, varname string) bool {
 
 	vm := lvm.vm
@@ -668,4 +688,18 @@ func intMax(a, b int) int {
 		return a
 	}
 	return b
+}
+
+var ErrStackEmpty = fmt.Errorf("no value on top of lua stack")
+
+func LuaTopToFloat64(lvm *LuaVm) (float64, error) {
+
+	vm := lvm.vm
+	top := vm.GetTop()
+	if top < 1 {
+		return 0, ErrStackEmpty
+	}
+	value := vm.ToNumber(top)
+	vm.Pop(1)
+	return value, nil
 }

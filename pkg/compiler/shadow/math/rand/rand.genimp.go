@@ -79,6 +79,7 @@ __type__.rand ={};
 -----------------
 
 __type__.rand.Rand = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Rand",
  __str = "Rand",
@@ -95,6 +96,7 @@ setmetatable(__type__.rand.Rand, __type__.rand.Rand);
 -----------------
 
 __type__.rand.Zipf = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Zipf",
  __str = "Zipf",

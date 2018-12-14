@@ -43,8 +43,11 @@ __type__.binary ={};
 -----------------
 
 __type__.binary.BigEndian = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "BigEndian",
+ __str = "BigEndian",
+ exported = true,
  __call = function(t, src)
    return __ctor__binary.BigEndian(src)
  end,
@@ -57,8 +60,11 @@ setmetatable(__type__.binary.BigEndian, __type__.binary.BigEndian);
 -----------------
 
 __type__.binary.LittleEndian = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "LittleEndian",
+ __str = "LittleEndian",
+ exported = true,
  __call = function(t, src)
    return __ctor__binary.LittleEndian(src)
  end,

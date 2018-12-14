@@ -187,6 +187,7 @@ __type__.os ={};
 -----------------
 
 __type__.os.File = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "File",
  __str = "File",
@@ -203,6 +204,7 @@ setmetatable(__type__.os.File, __type__.os.File);
 -----------------
 
 __type__.os.LinkError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "LinkError",
  __str = "LinkError",
@@ -219,6 +221,7 @@ setmetatable(__type__.os.LinkError, __type__.os.LinkError);
 -----------------
 
 __type__.os.PathError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PathError",
  __str = "PathError",
@@ -235,6 +238,7 @@ setmetatable(__type__.os.PathError, __type__.os.PathError);
 -----------------
 
 __type__.os.ProcAttr = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ProcAttr",
  __str = "ProcAttr",
@@ -251,6 +255,7 @@ setmetatable(__type__.os.ProcAttr, __type__.os.ProcAttr);
 -----------------
 
 __type__.os.Process = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Process",
  __str = "Process",
@@ -267,6 +272,7 @@ setmetatable(__type__.os.Process, __type__.os.Process);
 -----------------
 
 __type__.os.ProcessState = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ProcessState",
  __str = "ProcessState",
@@ -283,6 +289,7 @@ setmetatable(__type__.os.ProcessState, __type__.os.ProcessState);
 -----------------
 
 __type__.os.SyscallError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SyscallError",
  __str = "SyscallError",

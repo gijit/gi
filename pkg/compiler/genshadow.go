@@ -251,6 +251,7 @@ func perStructInitLua(shortPkg, structName string) string {
 -----------------
 
 __type__.%[1]s.%[2]s = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "%[2]s",
  __str = "%[2]s",

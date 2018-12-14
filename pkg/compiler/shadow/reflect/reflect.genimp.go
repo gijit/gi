@@ -123,6 +123,7 @@ __type__.reflect ={};
 -----------------
 
 __type__.reflect.Method = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Method",
  __str = "Method",
@@ -139,6 +140,7 @@ setmetatable(__type__.reflect.Method, __type__.reflect.Method);
 -----------------
 
 __type__.reflect.SelectCase = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SelectCase",
  __str = "SelectCase",
@@ -155,6 +157,7 @@ setmetatable(__type__.reflect.SelectCase, __type__.reflect.SelectCase);
 -----------------
 
 __type__.reflect.SliceHeader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SliceHeader",
  __str = "SliceHeader",
@@ -171,6 +174,7 @@ setmetatable(__type__.reflect.SliceHeader, __type__.reflect.SliceHeader);
 -----------------
 
 __type__.reflect.StringHeader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StringHeader",
  __str = "StringHeader",
@@ -187,6 +191,7 @@ setmetatable(__type__.reflect.StringHeader, __type__.reflect.StringHeader);
 -----------------
 
 __type__.reflect.StructField = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StructField",
  __str = "StructField",
@@ -203,6 +208,7 @@ setmetatable(__type__.reflect.StructField, __type__.reflect.StructField);
 -----------------
 
 __type__.reflect.Value = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Value",
  __str = "Value",
@@ -219,6 +225,7 @@ setmetatable(__type__.reflect.Value, __type__.reflect.Value);
 -----------------
 
 __type__.reflect.ValueError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ValueError",
  __str = "ValueError",

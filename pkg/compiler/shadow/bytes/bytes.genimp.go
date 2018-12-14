@@ -88,6 +88,7 @@ __type__.bytes ={};
 -----------------
 
 __type__.bytes.Buffer = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Buffer",
  __str = "Buffer",
@@ -104,6 +105,7 @@ setmetatable(__type__.bytes.Buffer, __type__.bytes.Buffer);
 -----------------
 
 __type__.bytes.Reader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Reader",
  __str = "Reader",

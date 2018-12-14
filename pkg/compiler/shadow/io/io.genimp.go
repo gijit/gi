@@ -299,6 +299,7 @@ __type__.io ={};
 -----------------
 
 __type__.io.LimitedReader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "LimitedReader",
  __str = "LimitedReader",
@@ -315,6 +316,7 @@ setmetatable(__type__.io.LimitedReader, __type__.io.LimitedReader);
 -----------------
 
 __type__.io.PipeReader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PipeReader",
  __str = "PipeReader",
@@ -331,6 +333,7 @@ setmetatable(__type__.io.PipeReader, __type__.io.PipeReader);
 -----------------
 
 __type__.io.PipeWriter = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "PipeWriter",
  __str = "PipeWriter",
@@ -347,6 +350,7 @@ setmetatable(__type__.io.PipeWriter, __type__.io.PipeWriter);
 -----------------
 
 __type__.io.SectionReader = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "SectionReader",
  __str = "SectionReader",

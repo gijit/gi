@@ -62,6 +62,7 @@ __type__.strconv ={};
 -----------------
 
 __type__.strconv.NumError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "NumError",
  __str = "NumError",

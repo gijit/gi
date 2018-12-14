@@ -52,9 +52,10 @@ func (c *funcContext) exprToString(expr ast.Expr) string {
 // desiredType can be nil. When present, for example, it guides
 // the proper signed vs. unsigned translation of int,int64 types.
 func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn *expression) {
+	//vv("top of translateExpr")
 
 	exprType := c.p.TypeOf(expr)
-	pp("expr in Go is '%s'", c.exprToString(expr)) // __send
+	//vv("expr in Go is '%s'", c.exprToString(expr)) // __send
 	desiredStr := "<nil>"
 	if desiredType != nil {
 		desiredStr = desiredType.String()
@@ -175,6 +176,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 	// into their native Lua (was javascript) equivalents.
 	//
 	if obj != nil && typesutil.IsJsPackage(obj.Pkg()) {
+		pp("package or obj.Name() is '%s'", obj.Name())
 		switch obj.Name() {
 		case "Global":
 			return c.formatExpr("__global")
@@ -185,7 +187,7 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 		}
 	}
 
-	//pp("expressions.go:115, expr is '%#v'/Type=%T", expr, expr)
+	pp("expressions.go:188, expr is '%#v'/Type=%T", expr, expr)
 	switch e := expr.(type) {
 	case *ast.CompositeLit:
 		// jea: this depends on the initializers!
@@ -286,7 +288,15 @@ func (c *funcContext) translateExpr(expr ast.Expr, desiredType types.Type) (xprn
 			}
 			if isKeyValue {
 				for i := range elements {
-					elements[i] = c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String()
+					// special case the shadow structs
+					tn := t.Field(i).Type().String()
+					//vv("tn = '%s'", tn)
+					isShad, shortPkgAndTyp := isShadowStruct(tn)
+					if isShad {
+						elements[i] = fmt.Sprintf("__type__.%s()", shortPkgAndTyp)
+					} else {
+						elements[i] = c.translateExpr(c.zeroValue(t.Field(i).Type()), nil).String()
+					}
 				}
 				for _, element := range e.Elts {
 					kve := element.(*ast.KeyValueExpr)
@@ -1478,8 +1488,15 @@ func (c *funcContext) translateImplicitConversionWithCloning(expr ast.Expr, desi
 			// And for passing an array to a function argument (by-value of course).
 			pp("debug __clone arg: c.typeName(desiredType, nil)='%s'", c.typeName(desiredType, nil))
 
-			typName, isAnon, anonType, createdNm := c.typeNameWithAnonInfo(desiredType, nil)
-			pp("debug __clone arg: c.typeName(desiredType, nil)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v'", typName, createdNm, isAnon, anonType)
+			typName, isAnon, anonType, createdNm, isShadow := c.typeNameWithAnonInfo(desiredType, nil)
+			pp("debug __clone arg: c.typeName(desiredType, nil)='%s'; createdNm='%s'; isAnon='%v', anonType='%#v', isShadow=%v", typName, createdNm, isAnon, anonType, isShadow)
+			if isShadow {
+				_, shortTyp := isShadowStruct(desiredType.String())
+				_ = shortTyp
+				return c.formatExpr(`%e --[[ isShadow true, expressions.go:1494 --]]`, expr)
+				//return c.formatExpr(`%e = __type__.%s() --[[ isShadow true, expressions.go:1494 --]]`, expr, shortTyp)
+				// return c.formatExpr(`%e = %s() --[[ isShadow true, expressions.go:1494 --]]`, expr, c.typeName(anonType.Type(), nil))
+			}
 			if isAnon {
 				return c.formatExpr(`__clone(%e, %s)`, expr, c.typeName(anonType.Type(), nil))
 			} else {

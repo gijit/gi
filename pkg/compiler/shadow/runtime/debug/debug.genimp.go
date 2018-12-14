@@ -38,6 +38,7 @@ __type__.debug ={};
 -----------------
 
 __type__.debug.GCStats = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "GCStats",
  __str = "GCStats",

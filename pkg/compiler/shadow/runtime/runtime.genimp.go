@@ -146,6 +146,7 @@ __type__.runtime ={};
 -----------------
 
 __type__.runtime.BlockProfileRecord = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "BlockProfileRecord",
  __str = "BlockProfileRecord",
@@ -162,6 +163,7 @@ setmetatable(__type__.runtime.BlockProfileRecord, __type__.runtime.BlockProfileR
 -----------------
 
 __type__.runtime.Frame = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Frame",
  __str = "Frame",
@@ -178,6 +180,7 @@ setmetatable(__type__.runtime.Frame, __type__.runtime.Frame);
 -----------------
 
 __type__.runtime.Frames = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Frames",
  __str = "Frames",
@@ -194,6 +197,7 @@ setmetatable(__type__.runtime.Frames, __type__.runtime.Frames);
 -----------------
 
 __type__.runtime.Func = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Func",
  __str = "Func",
@@ -210,6 +214,7 @@ setmetatable(__type__.runtime.Func, __type__.runtime.Func);
 -----------------
 
 __type__.runtime.MemProfileRecord = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "MemProfileRecord",
  __str = "MemProfileRecord",
@@ -226,6 +231,7 @@ setmetatable(__type__.runtime.MemProfileRecord, __type__.runtime.MemProfileRecor
 -----------------
 
 __type__.runtime.MemStats = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "MemStats",
  __str = "MemStats",
@@ -242,6 +248,7 @@ setmetatable(__type__.runtime.MemStats, __type__.runtime.MemStats);
 -----------------
 
 __type__.runtime.StackRecord = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "StackRecord",
  __str = "StackRecord",
@@ -258,6 +265,7 @@ setmetatable(__type__.runtime.StackRecord, __type__.runtime.StackRecord);
 -----------------
 
 __type__.runtime.TypeAssertionError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "TypeAssertionError",
  __str = "TypeAssertionError",

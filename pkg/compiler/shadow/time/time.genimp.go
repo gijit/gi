@@ -102,6 +102,7 @@ __type__.time ={};
 -----------------
 
 __type__.time.Location = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Location",
  __str = "Location",
@@ -118,6 +119,7 @@ setmetatable(__type__.time.Location, __type__.time.Location);
 -----------------
 
 __type__.time.ParseError = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "ParseError",
  __str = "ParseError",
@@ -134,6 +136,7 @@ setmetatable(__type__.time.ParseError, __type__.time.ParseError);
 -----------------
 
 __type__.time.Ticker = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Ticker",
  __str = "Ticker",
@@ -150,6 +153,7 @@ setmetatable(__type__.time.Ticker, __type__.time.Ticker);
 -----------------
 
 __type__.time.Time = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Time",
  __str = "Time",
@@ -166,6 +170,7 @@ setmetatable(__type__.time.Time, __type__.time.Time);
 -----------------
 
 __type__.time.Timer = {
+ id=0,
  __name = "native_Go_struct_type_wrapper",
  __native_type = "Timer",
  __str = "Timer",
