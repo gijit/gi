@@ -303,7 +303,8 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 	}
 
 	t := v.Type()
-	argsT := make([]reflect.Type, t.NumIn())
+	nIn := t.NumIn()
+	argsT := make([]reflect.Type, nIn)
 	for i := range argsT {
 		argsT[i] = t.In(i)
 	}
@@ -313,7 +314,9 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 	// with reflect. However this is what I could come up with.
 	// Better methods welcome, but this appears to work for now.
 	//
-	isMethod := getFunctionName(v) == "reflect.methodValueCall"
+	fname := getFunctionName(v)
+	isMethod := fname == "reflect.methodValueCall"
+	//vv("fname = '%s'; isMethod=%v, v='%#v', v.Interface()='%v'", fname, isMethod, v, v.Interface())
 	receiverOffset := 0
 	if isMethod {
 		receiverOffset = 1
@@ -323,10 +326,22 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 		var lastT reflect.Type
 		isVariadic := t.IsVariadic()
 
+		//vv("len(argsT) = %v, isVariadic=%v", len(argsT), isVariadic)
+
 		if isVariadic {
 			n := len(argsT)
 			lastT = argsT[n-1].Elem()
 			argsT = argsT[:n-1]
+		}
+
+		// hackish. temp work around for not getting the
+		// receiver passed in sometimes. 087 imp_test for regexp in particular.
+		if receiverOffset > 0 {
+			numOnStack := L.GetTop()
+			if numOnStack <= len(argsT) {
+				// looks like we didn't get the receiver. Bug in caller?
+				receiverOffset = 0
+			}
 		}
 
 		args := make([]reflect.Value, len(argsT))
@@ -335,6 +350,7 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 			_, err := LuaToGo(L, i+1+receiverOffset, val.Interface())
 			if err != nil {
 				pp("problem point 1")
+				//lua.DumpLuaStack(L)
 				L.RaiseError(fmt.Sprintf("cannot convert Go function argument #%v: %v", i, err))
 			}
 			args[i] = val.Elem()
@@ -343,7 +359,7 @@ func goToLuaFunction(L *lua.State, v reflect.Value) lua.LuaGoFunction {
 		if isVariadic {
 			pp("we have a variadic function!. len(argsT)=%v", len(argsT))
 			n := L.GetTop()
-			for i := len(argsT) + 1; i <= n; i++ {
+			for i := len(argsT) + 1 + receiverOffset; i <= n; i++ {
 				// jea: assumes any varargs in the actual call have been
 				// pushed onto the stack.
 
