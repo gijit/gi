@@ -136,7 +136,7 @@ func testBuiltinSignature(t *testing.T, name, src0, want string) {
 	conf := Config{Importer: importer.Default()}
 	uses := make(map[*ast.Ident]Object)
 	types := make(map[ast.Expr]TypeAndValue)
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Uses: uses, Types: types}, nil)
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Uses: uses, Types: types}, nil, 0)
 	if err != nil {
 		t.Errorf("%s: %s", src0, err)
 		return

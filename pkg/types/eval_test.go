@@ -162,7 +162,7 @@ func TestEvalPos(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	pkg, _, err := conf.Check(nil, nil, "p", fset, files, nil, nil)
+	pkg, _, err := conf.Check(nil, nil, "p", fset, files, nil, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

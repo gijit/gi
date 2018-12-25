@@ -133,7 +133,7 @@ func TestResolveIdents(t *testing.T) {
 	conf := Config{Importer: importer}
 	uses := make(map[*ast.Ident]Object)
 	defs := make(map[*ast.Ident]Object)
-	_, _, err := conf.Check(nil, nil, "testResolveIdents", fset, files, &Info{Defs: defs, Uses: uses}, nil)
+	_, _, err := conf.Check(nil, nil, "testResolveIdents", fset, files, &Info{Defs: defs, Uses: uses}, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

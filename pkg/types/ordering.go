@@ -75,7 +75,7 @@ func (check *Checker) interfaceFor(obj Object) *ast.InterfaceType {
 	}
 	d := check.ObjMap[obj]
 	if d == nil {
-		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
+		check.dump("%v: %v should have been declared", obj.Pos(), obj.Name())
 		unreachable()
 	}
 	if d.Typ == nil {
