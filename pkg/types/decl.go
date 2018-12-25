@@ -119,7 +119,7 @@ func (check *Checker) objDecl(obj Object, def *Named, path []*TypeName) {
 
 	d := check.ObjMap[obj]
 	if d == nil {
-		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
+		check.dump("%v: %v should have been declared", obj.Pos(), obj.Name())
 		//debug
 		/*
 			//pp("debug the missing '%v', here is check.ObjMap:", obj.Name())
@@ -184,7 +184,7 @@ func (check *Checker) traditionalFullPackageObjDecl(obj Object, def *Named, path
 
 	d := check.ObjMap[obj]
 	if d == nil {
-		check.dump("%s: %s should have been declared", obj.Pos(), obj.Name())
+		check.dump("%v: %v should have been declared", obj.Pos(), obj.Name())
 		unreachable()
 	}
 

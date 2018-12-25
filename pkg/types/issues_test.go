@@ -27,7 +27,7 @@ func TestIssue5770(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, nil, nil) // do not crash
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, nil, nil, 0) // do not crash
 	want := "undeclared name: T"
 	if err == nil || !strings.Contains(err.Error(), want) {
 		t.Errorf("got: %v; want: %s", err, want)
@@ -53,7 +53,7 @@ var (
 
 	var conf Config
 	types := make(map[ast.Expr]TypeAndValue)
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Types: types}, nil)
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Types: types}, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func f() int {
 
 	var conf Config
 	types := make(map[ast.Expr]TypeAndValue)
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Types: types}, nil)
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Types: types}, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +135,7 @@ type T struct{} // receiver type after method declaration
 
 	var conf Config
 	defs := make(map[*ast.Ident]Object)
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Defs: defs}, nil)
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Defs: defs}, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ L7 uses var z int`
 	conf := Config{Error: func(err error) { t.Log(err) }}
 	defs := make(map[*ast.Ident]Object)
 	uses := make(map[*ast.Ident]Object)
-	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Defs: defs, Uses: uses}, nil)
+	_, _, err = conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, &Info{Defs: defs, Uses: uses}, nil, 0)
 	if s := fmt.Sprint(err); !strings.HasSuffix(s, "cannot assign to w") {
 		t.Errorf("Check: unexpected error: %s", s)
 	}
@@ -304,7 +304,7 @@ func TestIssue22525(t *testing.T) {
 
 	got := "\n"
 	conf := Config{Error: func(err error) { got += err.Error() + "\n" }}
-	conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, nil, nil)
+	conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, nil, nil, 0)
 	want := `
 1:27: a declared but not used
 1:30: b declared but not used

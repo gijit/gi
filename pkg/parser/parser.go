@@ -2445,22 +2445,17 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 	return decl
 }
 
-func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
-	//pp("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
+func (p *parser) parseDeclOrNode(sync func(*parser)) (nd ast.Node, gotExpr bool) {
+	pp("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
 
-	// jea: instead, we'll try Lua style '=' in front of the expression.
-	// That will cause us to compile __ans := RHS, and then print(__ans);
-	//
-	// jea: started to try and allow expressions alone, but still todo...
-	// not sure if this is a good idea or not. B/c would mess up
-	// detection of errors in normal compiled code...? try it and see.
-
-	//case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
-	//x := p.parseExpr(false)
-	//pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
-	//return x
+	// allow expressions alone, like a calculator.
+	case token.INT, token.STRING, token.FLOAT, token.CHAR, token.LPAREN:
+		x := p.parseExpr(false)
+		p.expectSemi()
+		pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
+		return x, true
 
 	case token.ARROW,
 		token.IDENT,
@@ -2471,9 +2466,9 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) ast.Node {
 		token.GOTO,
 		token.SELECT,
 		token.MUL:
-		return p.parseStmt()
+		return p.parseStmt(), false
 	}
-	return p.parseDecl(sync)
+	return p.parseDecl(sync), false
 }
 
 func (p *parser) parseDecl(sync func(*parser)) ast.Decl {
@@ -2535,11 +2530,13 @@ func (p *parser) parseFile() *ast.File {
 	}
 
 	// jea: for gijit, we don't insist on a package clause.
+	pp("in p.parseFile(), about to openScope()")
 
 	p.openScope()
 	p.pkgScope = p.topScope
 	// change from []ast.Decl to []ast.Node
 	var nodes []ast.Node
+	var isExpr []bool
 	if p.mode&PackageClauseOnly == 0 {
 		// import decls
 		for p.tok == token.IMPORT {
@@ -2549,9 +2546,19 @@ func (p *parser) parseFile() *ast.File {
 		if p.mode&ImportsOnly == 0 {
 			// rest of package body
 			for p.tok != token.EOF {
-				y := p.parseDeclOrNode(syncDecl)
+				y, gotExpr := p.parseDeclOrNode(syncDecl)
+				pp("back from p.parseDeclOrNode, y = '%#v'", y)
 				if y != nil {
-					nodes = append(nodes, y)
+					_, isBad := y.(*ast.BadDecl)
+					pp("isBad = %v", isBad)
+					if !isBad {
+						nodes = append(nodes, y)
+						if gotExpr {
+							isExpr = append(isExpr, true)
+						} else {
+							isExpr = append(isExpr, false)
+						}
+					}
 				}
 			}
 		}
@@ -2577,6 +2584,7 @@ func (p *parser) parseFile() *ast.File {
 		Package:    pos,
 		Name:       ident,
 		Nodes:      nodes,
+		IsExpr:     isExpr,
 		Scope:      p.pkgScope,
 		Imports:    p.imports,
 		Unresolved: p.unresolved[0:i],

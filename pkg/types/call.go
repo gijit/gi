@@ -247,7 +247,7 @@ func (check *Checker) argument(fun ast.Expr, sig *Signature, i int, x *operand, 
 		typ = sig.params.vars[n-1].typ
 		if debug {
 			if _, ok := typ.(*Slice); !ok {
-				check.dump("%s: expected unnamed slice type, got %s", sig.params.vars[n-1].Pos(), typ)
+				check.dump("%v: expected unnamed slice type, got %v", sig.params.vars[n-1].Pos(), typ)
 			}
 		}
 	default:
@@ -265,7 +265,7 @@ func (check *Checker) argument(fun ast.Expr, sig *Signature, i int, x *operand, 
 			return
 		}
 		if _, ok := x.typ.Underlying().(*Slice); !ok && x.typ != Typ[UntypedNil] { // see issue #18268
-			check.errorf(x.pos(), "cannot use %s as parameter of type %s", x, typ)
+			check.errorf(x.pos(), "cannot use %v as parameter of type %v", x, typ)
 			return
 		}
 	} else if sig.variadic && i >= n-1 {
@@ -273,7 +273,7 @@ func (check *Checker) argument(fun ast.Expr, sig *Signature, i int, x *operand, 
 		typ = typ.(*Slice).elem
 	}
 
-	check.assignment(x, typ, check.sprintf("argument to %s", fun))
+	check.assignment(x, typ, check.sprintf("argument to %v", fun))
 }
 
 func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
@@ -444,8 +444,8 @@ func (check *Checker) selector(x *operand, e *ast.SelectorExpr) {
 				mset := NewMethodSet(typ)
 				if m := mset.Lookup(check.pkg, sel); m == nil || m.obj != obj {
 					pp("sel='%v'; m == nil? : %v", sel, m == nil) // true here
-					check.dump("e.Pos(): %s: (%s).%v -> %s", e.Pos(), typ, obj.name, m)
-					check.dump("mset: %s\n", mset)
+					check.dump("e.Pos(): %v: (%v).%v -> %v", e.Pos(), typ, obj.name, m)
+					check.dump("mset: %v\n", mset)
 					// jea debug
 					panic("method sets and lookup don't agree")
 				}

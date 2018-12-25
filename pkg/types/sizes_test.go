@@ -24,7 +24,7 @@ func findStructType(t *testing.T, src string) *types.Struct {
 	}
 	info := types.Info{Types: make(map[ast.Expr]types.TypeAndValue)}
 	var conf types.Config
-	_, _, err = conf.Check(nil, nil, "x", fset, []*ast.File{f}, &info, nil)
+	_, _, err = conf.Check(nil, nil, "x", fset, []*ast.File{f}, &info, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ const _ = unsafe.Offsetof(struct{ x int64 }{}.x)
 		Importer: importer.Default(),
 		Sizes:    &types.StdSizes{WordSize: 8, MaxAlign: 8},
 	}
-	_, _, err = conf.Check(nil, nil, "x", fset, []*ast.File{f}, &info, nil)
+	_, _, err = conf.Check(nil, nil, "x", fset, []*ast.File{f}, &info, nil, 0)
 	if err != nil {
 		t.Fatal(err)
 	}

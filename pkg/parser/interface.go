@@ -92,6 +92,7 @@ func ParseFile(fset *token.FileSet, filename string, src interface{}, mode Mode)
 	// get source
 	text, err := readSource(filename, src)
 	if err != nil {
+		//pp("err from readSource: '%v'", err)
 		return nil, err
 	}
 
@@ -122,7 +123,7 @@ func ParseFile(fset *token.FileSet, filename string, src interface{}, mode Mode)
 	// parse source
 	p.init(fset, filename, text, mode)
 	f = p.parseFile()
-
+	//pp("back from p.parseFile() ok.")
 	return
 }
 

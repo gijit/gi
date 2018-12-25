@@ -147,16 +147,38 @@ func (tr *IncrState) Tr(src []byte) ([]byte, error) {
 
 	// detect the leading '=' and turn it into
 	// __gijit_ans :=
-	src = tr.prependAns(src)
+	var didPrepend bool
+	src, didPrepend = tr.prependAns(src)
 
 	pp("after prependAns, src = '%s'", src)
 
 	// classic
+doParse:
 	file, err := parser.ParseFile(tr.CurPkg.fileSet, "", src, 0)
 	if err != nil {
 		pp("we got an error on the ParseFile: '%v'", err)
 	}
 	panicOn(err)
+
+	// expression 1st thing? re-parse with ans prepended.
+	if !didPrepend {
+		shouldPrepend := false
+		if len(file.IsExpr) > 0 && file.IsExpr[0] {
+			shouldPrepend = true
+		}
+
+		// unfortunately for simple function calls, because
+		// they could return 2 or more values, we can't just
+		// blindly wrap them assuming that the return only 1.
+
+		if shouldPrepend {
+			prev := tr.cfg.CalculatorMode
+			tr.cfg.CalculatorMode = true // force pre-pending of "ans = "
+			src, didPrepend = tr.prependAns(src)
+			tr.cfg.CalculatorMode = prev
+			goto doParse
+		}
+	}
 	pp("we got past the ParseFile !")
 
 	if tr.PrintAST {
@@ -202,7 +224,11 @@ var gijitAnsSuffix = []byte("}\n __gijit_printQuoted(__gijit_ans...);")
 
 // at the beginning of src, transform a first '='[^=] into
 // "__gijit_ans := "
-func (tr *IncrState) prependAns(src []byte) []byte {
+func (tr *IncrState) prependAns(src []byte) (ret []byte, didPrepend bool) {
+	//fmt.Printf("prependAns starting with '%s'\n", string(src))
+	//defer func() {
+	//	fmt.Printf("prependAns returning ret='%s'\n", string(ret))
+	//}()
 	nsrc := len(src)
 	leftTrimmed := bytes.TrimLeftFunc(src, unicode.IsSpace)
 	trimmed := bytes.TrimFunc(src, unicode.IsSpace)
@@ -210,13 +236,13 @@ func (tr *IncrState) prependAns(src []byte) []byte {
 	leftdiff := nsrc - n
 	if tr.cfg.CalculatorMode {
 		middle := removeTrailingSemicolon(trimmed[leftdiff:])
-		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...)
+		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...), true
 	}
 	if n > 1 && leftTrimmed[0] == '=' && leftTrimmed[1] != '=' {
 		middle := removeTrailingSemicolon(trimmed[leftdiff+1:])
-		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...)
+		return append(gijitAnsPrefix, append(middle, gijitAnsSuffix...)...), true
 	}
-	return src
+	return src, false
 }
 
 // full package

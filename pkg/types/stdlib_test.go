@@ -120,7 +120,7 @@ func testTestDir(t *testing.T, path string, ignore ...string) {
 		file, err := parser.ParseFile(fset, filename, nil, 0)
 		if err == nil {
 			conf := Config{Importer: stdLibImporter}
-			_, _, err = conf.Check(nil, nil, filename, fset, []*ast.File{file}, nil, nil)
+			_, _, err = conf.Check(nil, nil, filename, fset, []*ast.File{file}, nil, nil, 0)
 		}
 
 		if expectErrors {
@@ -226,7 +226,7 @@ func typecheck(t *testing.T, path string, filenames []string) {
 		Importer: stdLibImporter,
 	}
 	info := Info{Uses: make(map[*ast.Ident]Object)}
-	conf.Check(nil, nil, path, fset, files, &info, nil)
+	conf.Check(nil, nil, path, fset, files, &info, nil, 0)
 	pkgCount++
 
 	// Perform checks of API invariants.

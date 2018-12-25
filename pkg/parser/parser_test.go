@@ -548,3 +548,22 @@ type x int // comment
 		t.Errorf("got %q, want %q", comment, "// comment")
 	}
 }
+
+// jea add: let expressions such as 2+3 be sufficient, so
+// the top level can do arithmetic.
+func TestParseFileWithJustAnExpressionAtTopLevel(t *testing.T) {
+
+	src := "1 + 2"
+	fileSet := token.NewFileSet()
+	_, err := ParseFile(fileSet, "", src, 0)
+	if err != nil {
+		t.Errorf("ParseFile(%q): %v", src, err) // expected declaration, found 'INT' 1
+	}
+
+	src = "(1 + 2)"
+	//	fileSet := token.NewFileSet()
+	_, err = ParseFile(fileSet, "", src, 0)
+	if err != nil {
+		t.Errorf("ParseFile(%q): %v", src, err) // expected declaration, found 'INT' 1
+	}
+}

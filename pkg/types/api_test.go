@@ -28,7 +28,7 @@ func pkgFor(path, source string, info *Info) (*Package, *Checker, error) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	return conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, info, nil)
+	return conf.Check(nil, nil, f.Name.Name, fset, []*ast.File{f}, info, nil, 0)
 }
 
 func mustTypecheck(t *testing.T, path, source string, info *Info) string {
@@ -744,7 +744,7 @@ func TestMultiFileInitOrder(t *testing.T) {
 		{[]*ast.File{fileB, fileA}, "[b = 2 a = 1]"},
 	} {
 		var info Info
-		if _, _, err := new(Config).Check(nil, nil, "main", fset, test.files, &info, nil); err != nil {
+		if _, _, err := new(Config).Check(nil, nil, "main", fset, test.files, &info, nil, 0); err != nil {
 			t.Fatal(err)
 		}
 		if got := fmt.Sprint(info.InitOrder); got != test.want {
@@ -810,7 +810,7 @@ func TestSelection(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pkg, _, err := conf.Check(nil, nil, path, fset, []*ast.File{f}, &Info{Selections: selections}, nil)
+		pkg, _, err := conf.Check(nil, nil, path, fset, []*ast.File{f}, &Info{Selections: selections}, nil, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -974,7 +974,7 @@ func TestIssue8518(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		pkg, _, _ := conf.Check(nil, nil, path, fset, []*ast.File{f}, nil, nil) // errors logged via conf.Error
+		pkg, _, _ := conf.Check(nil, nil, path, fset, []*ast.File{f}, nil, nil, 0) // errors logged via conf.Error
 		imports[path] = pkg
 	}
 
@@ -1086,7 +1086,7 @@ func TestScopeLookupParent(t *testing.T) {
 	var info Info
 	makePkg := func(path string, files ...*ast.File) {
 		var err error
-		imports[path], _, err = conf.Check(nil, nil, path, fset, files, &info, nil)
+		imports[path], _, err = conf.Check(nil, nil, path, fset, files, &info, nil, 0)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1229,7 +1229,7 @@ func TestIssue15305(t *testing.T) {
 	info := &Info{
 		Types: make(map[ast.Expr]TypeAndValue),
 	}
-	conf.Check(nil, nil, "p", fset, []*ast.File{f}, info, nil) // ignore result
+	conf.Check(nil, nil, "p", fset, []*ast.File{f}, info, nil, 0) // ignore result
 	for e, tv := range info.Types {
 		if _, ok := e.(*ast.CallExpr); ok {
 			if tv.Type != Typ[Int16] {
@@ -1266,7 +1266,7 @@ func TestCompositeLitTypes(t *testing.T) {
 		info := &Info{
 			Types: make(map[ast.Expr]TypeAndValue),
 		}
-		if _, _, err = new(Config).Check(nil, nil, "p", fset, []*ast.File{f}, info, nil); err != nil {
+		if _, _, err = new(Config).Check(nil, nil, "p", fset, []*ast.File{f}, info, nil, 0); err != nil {
 			t.Fatalf("%s: %v", test.lit, err)
 		}
 
@@ -1327,7 +1327,7 @@ func f(x int) { y := x; print(y) }
 	info := &Info{
 		Defs: make(map[*ast.Ident]Object),
 	}
-	if _, _, err = new(Config).Check(nil, nil, "p", fset, []*ast.File{f}, info, nil); err != nil {
+	if _, _, err = new(Config).Check(nil, nil, "p", fset, []*ast.File{f}, info, nil, 0); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1404,7 +1404,7 @@ func f(x T) T { return foo.F(x) }
 		info := &Info{
 			Uses: make(map[*ast.Ident]Object),
 		}
-		pkg, _, _ := conf.Check(nil, nil, "p", fset, files, info, nil)
+		pkg, _, _ := conf.Check(nil, nil, "p", fset, files, info, nil, 0)
 		if pkg == nil {
 			t.Errorf("for %s importer, type-checking failed to return a package", compiler)
 			continue

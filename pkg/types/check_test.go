@@ -265,7 +265,7 @@ func checkFiles(t *testing.T, testfiles []string) {
 			errlist = append(errlist, err)
 		}
 	}
-	conf.Check(nil, nil, pkgName, fset, files, nil, nil)
+	conf.Check(nil, nil, pkgName, fset, files, nil, nil, 0)
 
 	if *listErrors {
 		return
