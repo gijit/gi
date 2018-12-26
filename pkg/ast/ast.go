@@ -995,6 +995,7 @@ type File struct {
 	Nodes []Node // top-level statements, expressions, decls; or nil
 
 	IsExpr []bool // flag, IsExpr[i] is true iff Nodes[i] is an expression.
+	IsStmt []bool // flag, IsStmt[i] is true iff Nodes[i] is an statement.
 
 	Scope      *Scope          // package scope (this file only)
 	Imports    []*ImportSpec   // imports in this file

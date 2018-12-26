@@ -360,7 +360,7 @@ x = __type__.anon_arrayType();
 
 		// printing length
 		code = `println(len(x))`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `print(3LL);`)
+		cv.So(string(inc.trMustPre([]byte(code), false)), matchesLuaSrc, `print(3LL);`)
 	})
 }
 
@@ -445,7 +445,7 @@ func Test017DeleteFromMap(t *testing.T) {
   	x = __makeMap({[3LL]="hello", [4LL]="gophers"}, __type__.int, __type__.string, __type__.anon_mapType);
 `)
 		code = `delete(x, 3)`
-		cv.So(string(inc.trMust([]byte(code))), matchesLuaSrc, `x("delete",3LL);`)
+		cv.So(string(inc.trMustPre([]byte(code), false)), matchesLuaSrc, `x("delete",3LL);`)
 	})
 }
 
@@ -807,7 +807,7 @@ println("hello")
 		defer vm.Close()
 		inc := NewIncrState(vm, nil)
 
-		translation := inc.trMust([]byte(code))
+		translation := inc.trMustPre([]byte(code), false)
 
 		cv.So(string(translation), matchesLuaSrc,
 			`print("hello");`)

@@ -2445,7 +2445,7 @@ func (p *parser) parseFuncDecl() *ast.FuncDecl {
 	return decl
 }
 
-func (p *parser) parseDeclOrNode(sync func(*parser)) (nd ast.Node, gotExpr bool) {
+func (p *parser) parseDeclOrNode(sync func(*parser)) (nd ast.Node, gotExpr, gotStmt bool) {
 	pp("jea debug in parseDeclOrNode: p.tok= '%v'/ p.lit='%s' at p.pos=%v\n", p.tok, p.lit, p.pos)
 
 	switch p.tok {
@@ -2455,7 +2455,7 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) (nd ast.Node, gotExpr bool)
 		x := p.parseExpr(false)
 		p.expectSemi()
 		pp("parseDeclOrNode parsed top level expression, got x='%#v'", x)
-		return x, true
+		return x, true, false
 
 	case token.ARROW,
 		token.IDENT,
@@ -2466,9 +2466,9 @@ func (p *parser) parseDeclOrNode(sync func(*parser)) (nd ast.Node, gotExpr bool)
 		token.GOTO,
 		token.SELECT,
 		token.MUL:
-		return p.parseStmt(), false
+		return p.parseStmt(), false, true
 	}
-	return p.parseDecl(sync), false
+	return p.parseDecl(sync), false, false
 }
 
 func (p *parser) parseDecl(sync func(*parser)) ast.Decl {
@@ -2537,6 +2537,7 @@ func (p *parser) parseFile() *ast.File {
 	// change from []ast.Decl to []ast.Node
 	var nodes []ast.Node
 	var isExpr []bool
+	var isStmt []bool
 	if p.mode&PackageClauseOnly == 0 {
 		// import decls
 		for p.tok == token.IMPORT {
@@ -2546,7 +2547,7 @@ func (p *parser) parseFile() *ast.File {
 		if p.mode&ImportsOnly == 0 {
 			// rest of package body
 			for p.tok != token.EOF {
-				y, gotExpr := p.parseDeclOrNode(syncDecl)
+				y, gotExpr, gotStmt := p.parseDeclOrNode(syncDecl)
 				pp("back from p.parseDeclOrNode, y = '%#v'", y)
 				if y != nil {
 					_, isBad := y.(*ast.BadDecl)
@@ -2557,6 +2558,11 @@ func (p *parser) parseFile() *ast.File {
 							isExpr = append(isExpr, true)
 						} else {
 							isExpr = append(isExpr, false)
+						}
+						if gotStmt {
+							isStmt = append(isStmt, true)
+						} else {
+							isStmt = append(isStmt, false)
 						}
 					}
 				}
@@ -2585,6 +2591,7 @@ func (p *parser) parseFile() *ast.File {
 		Name:       ident,
 		Nodes:      nodes,
 		IsExpr:     isExpr,
+		IsStmt:     isStmt,
 		Scope:      p.pkgScope,
 		Imports:    p.imports,
 		Unresolved: p.unresolved[0:i],

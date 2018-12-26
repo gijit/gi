@@ -27,7 +27,13 @@ func TranslateAndCatchPanic(inc *IncrState, src []byte) (translation string, err
 	ssrc := string(src)
 	pp("about to translate Go source '%s'", ssrc)
 
-	by, err := inc.Tr([]byte(src))
+	prependAnsOK := true
+	by, err := inc.TrWithPrepend([]byte(src), prependAnsOK)
+	if err != nil {
+		// try without allowing prepend of ans
+		prependAnsOK = false
+		by, err = inc.TrWithPrepend([]byte(src), prependAnsOK)
+	}
 	if err != nil {
 		return "", err
 	}

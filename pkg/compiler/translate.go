@@ -141,19 +141,37 @@ func (tr *IncrState) trMust(src []byte) []byte {
 	return by
 }
 
+func (tr *IncrState) trMustPre(src []byte, pre bool) []byte {
+	by, err := tr.TrWithPrepend(src, pre)
+	panicOn(err)
+	return by
+}
+
 // Tr: translate from go to Lua, statement by statement or
 // expression by expression
-func (tr *IncrState) Tr(src []byte) ([]byte, error) {
+func (tr *IncrState) Tr(src []byte) (by []byte, err error) {
+	return tr.TrWithPrepend(src, true)
+}
+
+func (tr *IncrState) TrWithPrepend(src []byte, prependOk bool) (by []byte, err error) {
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			pp("Tr sees panic of: '%v'", r)
+			err = fmt.Errorf("%v", r)
+		}
+	}()
 
 	// detect the leading '=' and turn it into
 	// __gijit_ans :=
-	var didPrepend bool
-	src, didPrepend = tr.prependAns(src)
-
-	pp("after prependAns, src = '%s'", src)
+	var didPrepend, shouldPrepend bool
+	if prependOk {
+		src, didPrepend = tr.prependAns(src)
+		pp("after prependAns, src = '%s'", src)
+	}
 
 	// classic
-doParse:
 	file, err := parser.ParseFile(tr.CurPkg.fileSet, "", src, 0)
 	if err != nil {
 		pp("we got an error on the ParseFile: '%v'", err)
@@ -161,8 +179,7 @@ doParse:
 	panicOn(err)
 
 	// expression 1st thing? re-parse with ans prepended.
-	if !didPrepend {
-		shouldPrepend := false
+	if prependOk && !didPrepend {
 		if len(file.IsExpr) > 0 && file.IsExpr[0] {
 			shouldPrepend = true
 		}
@@ -170,13 +187,22 @@ doParse:
 		// unfortunately for simple function calls, because
 		// they could return 2 or more values, we can't just
 		// blindly wrap them assuming that the return only 1.
+		if len(file.IsStmt) == 1 && file.IsStmt[0] {
+			shouldPrepend = true
+		}
 
 		if shouldPrepend {
+			pp("should prepend is true, trying parse with ans prepend")
 			prev := tr.cfg.CalculatorMode
 			tr.cfg.CalculatorMode = true // force pre-pending of "ans = "
 			src, didPrepend = tr.prependAns(src)
 			tr.cfg.CalculatorMode = prev
-			goto doParse
+
+			file2, err := parser.ParseFile(tr.CurPkg.fileSet, "", src, 0)
+			if err == nil {
+				file = file2
+			} // else we leave file as in, since it parsed without the prepend..
+			pp("after shouldPrepend, ParseFile gave err = '%v'; src='%s'", err, src)
 		}
 	}
 	pp("we got past the ParseFile !")
