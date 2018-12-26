@@ -135,6 +135,15 @@ for building from source. The released windows binaries will run without them.
 most recent status
 ------------------
 
+2018 Dec 25 update
+------------------------------
+The REPL is now a better calculator and displayer of answers.
+Simple math like `1 + 2` and expressions like `math.Exp(4)`
+will print their answers automatically.
+
+Also we slimmed down the repo of history, here at v2.0.2;
+the original repo will be renamed `gi-large` and we will take over as `gi`.
+
 2018 Dec 14 update
 ------------------------------
 Releaes v1.9.5 brings much improved interaction with
