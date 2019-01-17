@@ -28,7 +28,7 @@ func TestSelf(t *testing.T) {
 	}
 
 	conf := Config{Importer: importer.Default()}
-	_, _, err = conf.Check(nil, nil, "github.com/glycerine/gi/pkg/types", fset, files, nil, nil, 0)
+	_, _, err = conf.Check(nil, nil, "github.com/gijit/gi/pkg/types", fset, files, nil, nil, 0)
 	if err != nil {
 		// Importing go/constant doesn't work in the
 		// build dashboard environment. Don't report an error
