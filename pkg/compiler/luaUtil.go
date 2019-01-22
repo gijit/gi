@@ -673,7 +673,7 @@ func getChannelFromGlobal(lvm *LuaVm, varname string, leaveOnTop bool) (interfac
 		// cleanup
 		vm.Pop(1)
 	}
-	return (*i.(*reflect.Value)).Interface(), nil
+	return i.(*reflect.Value).Interface(), nil
 }
 
 func intMin(a, b int) int {
