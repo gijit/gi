@@ -6,6 +6,9 @@ It is backed by LuaJIT, a Just-in-Time
 trace compiler. The REPL binary is called
 simply `gi`, for "go interpreter".
 
+NB: `gi` was last built with go1.10.4. It hasn't be updated for go11/12,
+so please use go1.10.4 with it for now.
+
 # the dream
 
 Go, if it only had a decent REPL, could be a great
