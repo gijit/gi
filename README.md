@@ -1280,7 +1280,7 @@ gi: a go interpreter
 ====================
 https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten. All rights reserved.
-License: 3-clause BSD. See the LICENSE file at
+License: MIT. See the LICENSE file at
 https://github.com/gijit/gi/blob/master/LICENSE
 ====================
   [ gi is an interactive Golang environment,
@@ -1465,7 +1465,7 @@ The Lua equivalent is string.sub(s, 5)
 
 Author: Jason E. Aten
 
-License summary: 3-clause BSD + CLA. See the LICENSE file for details.
+License summary: MIT.
 
 Credits: some code here is dervied from the Go standard
 libraries, the Go gc compiler,  and from Richard Musiol's excellent Gopherjs project.

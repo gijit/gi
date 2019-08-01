@@ -41,7 +41,7 @@ gijit: a go interpreter, just-in-time.
 ====================
 https://github.com/gijit/gi
 Copyright (c) 2018, Jason E. Aten. All rights reserved.
-License: 3-clause BSD. See the LICENSE file at
+License: MIT. See the LICENSE file at
 https://github.com/gijit/gi/blob/master/LICENSE
 ====================
   [ gijit/gi is an interactive Golang environment,
