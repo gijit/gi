@@ -54,7 +54,6 @@ func (lvm *LuaVm) GetGoluaState() *golua.State {
 // can't be called on main thread
 // and MainCThread() must have already
 // been started.
-//
 func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 
 	var vm *golua.State
@@ -137,14 +136,17 @@ func NewLuaVmWithPrelude(cfg *GIConfig) (lvm *LuaVm, err error) {
 			nm := fi.Name()
 			// also load timezone, for windows
 			if nm == "zoneinfo" {
-				//fmt.Printf("loading zoneinfo/\n")
-				f, err := preludeFiles.Open("zoneinfo/America/New_York")
-				panicOn(err)
-				nyctzdata, err := ioutil.ReadAll(f)
-				panicOn(err)
-				nyc, err = time.LoadLocationFromTZData("America/New_York", nyctzdata)
-				panicOn(err)
-				//fmt.Printf("nyc is '%s'\n", nyc)
+				// NB commenting this out since it has gone stale since the Go fixes > go.1.10
+				/*
+					//fmt.Printf("loading zoneinfo/\n")
+					f, err := preludeFiles.Open("zoneinfo/America/New_York")
+					panicOn(err)
+					nyctzdata, err := ioutil.ReadAll(f)
+					panicOn(err)
+					nyc, err = time.LoadLocationFromTZData("America/New_York", nyctzdata)
+					panicOn(err)
+					//fmt.Printf("nyc is '%s'\n", nyc)
+				*/
 			} else {
 				if !fi.IsDir() && fi.Size() > 0 && strings.HasSuffix(nm, ".lua") {
 					if !strings.HasSuffix(nm, "_test.lua") {
@@ -634,7 +636,6 @@ func sumArrayInt64(a [3]int64) (tot int64) {
 // If successful and leaveOnTop is true, we leave the channel on the top of the stack.
 // Do vm.Pop(1) to clean it up. On failure, or if leaveOnTop is false, we
 // leave the stack clean/as it found it.
-//
 func getChannelFromGlobal(lvm *LuaVm, varname string, leaveOnTop bool) (interface{}, error) {
 	vm := lvm.vm
 	vm.GetGlobal(varname)
