@@ -72,7 +72,8 @@ See https://github.com/gijit/gi/releases for binary releases that can be run dir
 # use go1.10.x  We don't support go1.11.y at the moment.
 $ go get -d github.com/gijit/gi/cmd/gi
 $ cd $GOPATH/src/github.com/gijit/gi
-$ (On posix/mac/linux: run `./posix.sh` to build libluajit.a)
+$ (On posix/old macOS/linux: run `./posix.sh` to build libluajit.a)
+$ (On recent macOS: run `./macos.sh` to build libluajit.a with MACOSX_DEPLOYMENT_TARGET=10.14)
 $ (On windows: run `windows.bat` to build libluajit.a; see https://github.com/gijit/gi/issues/18
    for notes on installing both mingw64 and make, which are pre-requisites.)
 $ make install
